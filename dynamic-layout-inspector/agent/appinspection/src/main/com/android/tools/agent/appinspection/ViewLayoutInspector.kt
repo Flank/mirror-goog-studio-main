@@ -67,6 +67,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 private const val LAYOUT_INSPECTION_ID = "layoutinspector.view.inspection"
 
@@ -226,6 +227,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
     }
 
+    private class SnapshotRequest {
+        enum class State { NEW, PROCESSING }
+        val result = CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>()
+        val state = AtomicReference(State.NEW)
+    }
+
     private class InspectorState {
         /**
          * A mapping of root view IDs to data that should be accessed across multiple threads.
@@ -254,9 +261,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * when content for that window is processed it will be set into the Deferred rather than
          * sent back as a normal Event.
          */
-        var snapshotRequests: MutableMap<Long, CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>> =
-            ConcurrentHashMap()
-
+        var snapshotRequests: MutableMap<Long, SnapshotRequest> = ConcurrentHashMap()
     }
 
     private val stateLock = Any()
@@ -317,12 +322,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         val captureExecutor = Executor { command ->
             sequentialExecutor.execute {
-                val snapshotRequest: CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>?
+                var snapshotRequest: SnapshotRequest?
                 var context: CaptureContext
                 var screenshotSettings: ScreenshotSettings
                 var skipSystemViews: Boolean
                 synchronized(stateLock) {
-                    snapshotRequest = state.snapshotRequests.remove(root.uniqueDrawingId)
+                    snapshotRequest = state.snapshotRequests[root.uniqueDrawingId]
+                    if (snapshotRequest?.state?.compareAndSet(
+                            SnapshotRequest.State.NEW, SnapshotRequest.State.PROCESSING) != true) {
+                        snapshotRequest = null
+                    }
                     if (snapshotRequest != null) {
                         skipSystemViews = false
                         screenshotSettings = ScreenshotSettings(Screenshot.Type.SKP)
@@ -357,6 +366,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // We always have to do this even if we don't use the bytes it gives us,
                     // because otherwise an internal queue backs up
                     command.run()
+
+                    // If we have a snapshot request, we can remove it from the request map now that
+                    // it's no longer needed to indicate that SKPs need to be collected.
+                    if (snapshotRequest != null) {
+                        state.snapshotRequests.remove(root.uniqueDrawingId)
+                    }
 
                     val screenshot = when(screenshotSettings.type) {
                         Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
@@ -442,7 +457,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         }
                     }
                 }
-                snapshotResponse?.let { snapshotRequest?.complete(it.build()) }
+                snapshotResponse?.let { snapshotRequest?.result?.complete(it.build()) }
             }
         }
 
@@ -580,9 +595,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         CoroutineScope(environment.executors().primary().asCoroutineDispatcher()).launch {
             val roots = ThreadUtils.runOnMainThreadAsync { getRootViews() }.await()
             val windowSnapshots = roots.map { view ->
-                CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>().also {
+                SnapshotRequest().also {
                     state.snapshotRequests[view.uniqueDrawingId] = it
-                }
+                }.result
             }
             ThreadUtils.runOnMainThread { roots.forEach { it.invalidate() } }
 
