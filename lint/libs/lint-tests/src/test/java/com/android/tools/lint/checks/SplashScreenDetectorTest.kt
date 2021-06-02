@@ -23,7 +23,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 class SplashScreenDetectorTest : AbstractCheckTest() {
     override fun getDetector() = SplashScreenDetector()
 
-    fun testSplashScreen1() {
+    fun testDocumentationExample() {
         lint().files(
             kotlin(
                 """
@@ -40,7 +40,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
             // v7 AppCompatActivity stub
             java(
                 """
-                package android.support.v7.app;
+                package android.support.v7.app; // HIDE-FROM-DOCUMENTATION
                 public class AppCompatActivity extends android.app.Activity {
                 }
                 """

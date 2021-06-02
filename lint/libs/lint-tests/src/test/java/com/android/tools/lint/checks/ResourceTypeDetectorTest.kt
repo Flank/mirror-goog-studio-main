@@ -21,6 +21,33 @@ import com.android.tools.lint.detector.api.Detector
 class ResourceTypeDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ResourceTypeDetector()
 
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.DrawableRes
+                import androidx.annotation.StringRes
+
+                fun setLabels(@StringRes titleId: Int) {
+                    // ...
+                }
+
+                fun setIcon(@DrawableRes iconId: Int, @StringRes descId: Int) {
+                    setLabels(iconId) // bug: should have passed descId. Both are ints but of wrong type.
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test.kt:9: Error: Expected resource of type string [ResourceType]
+                setLabels(iconId) // bug: should have passed descId. Both are ints but of wrong type.
+                          ~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     fun testColorInt() {
         // Needs updated annotations!
         val expected =

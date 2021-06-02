@@ -22,7 +22,7 @@ class GetContentDescriptionOverrideTest : AbstractCheckTest() {
         return GetContentDescriptionOverrideDetector()
     }
 
-    fun testGetContentDescriptionOverrideExtendingView() {
+    fun testDocumentationExample() {
         lint().files(
             java(
                 """

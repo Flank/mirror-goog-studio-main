@@ -74,7 +74,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
 
                 You can work around this by writing your own inline assert method instead:
 
-                ```
+                ```kotlin
                 @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
                 inline fun assert(condition: () -> Boolean) {
                     if (_Assertions.ENABLED && !condition()) {

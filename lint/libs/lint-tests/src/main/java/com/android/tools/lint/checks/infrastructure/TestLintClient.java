@@ -131,7 +131,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import kotlin.io.FilesKt;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -1126,7 +1125,7 @@ public class TestLintClient extends LintCliClient {
         }
     }
 
-    private Incident checkIncidentSerialization(@NotNull Incident incident) {
+    private Incident checkIncidentSerialization(@NonNull Incident incident) {
         // Check persistence: serialize and deserialize the issue metadata and continue using the
         // deserialized version. It also catches cases where a detector modifies the incident
         // after reporting it.
@@ -1141,7 +1140,7 @@ public class TestLintClient extends LintCliClient {
             //noinspection MissingVendor
             IssueRegistry registry =
                     new IssueRegistry() {
-                        @NotNull
+                        @NonNull
                         @Override
                         public List<Issue> getIssues() {
                             return issueList;

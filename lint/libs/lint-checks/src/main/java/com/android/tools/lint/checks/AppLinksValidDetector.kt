@@ -853,22 +853,22 @@ class AppLinksValidDetector : Detector(), XmlScanner {
 
                 For example, the following two `<intent-filter>` declarations are the same:
                 ```xml
-                `<intent-filter>`
-                    `<data android:scheme="http" android:host="example.com" />`
-                    `<data android:scheme="https" android:host="example.org" />`
-                `</intent-filter>`
+                <intent-filter>
+                    <data android:scheme="http" android:host="example.com" />
+                    <data android:scheme="https" android:host="example.org" />
+                </intent-filter>
                 ```
 
                 ```xml
-                `<intent-filter>`
-                    `<data android:scheme="http"/>`
-                    `<data android:scheme="https"/>`
-                    `<data android:host="example.com" />`
-                    `<data android:host="example.org" />`
-                `</intent-filter>`
+                <intent-filter>
+                    <data android:scheme="http"/>
+                    <data android:scheme="https"/>
+                    <data android:host="example.com" />
+                    <data android:host="example.org" />
+                </intent-filter>
                 ```
 
-                They both handle all of the following: \
+                They both handle all of the following:
                 * http://example.com
                 * https://example.com
                 * http://example.org

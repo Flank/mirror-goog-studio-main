@@ -23,6 +23,37 @@ class ChildCountDetectorTest : AbstractCheckTest() {
         return ChildCountDetector()
     }
 
+    fun testScrollView() {
+        lint().files(
+            xml(
+                "res/layout/has_children.xml",
+                """
+                <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                  <android.support.constraint.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                  </android.support.constraint.ConstraintLayout>
+                    <ListView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                </ScrollView>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/has_children.xml:1: Warning: A scroll view can have only one child [ScrollViewCount]
+            <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+             ~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testChildCount() {
         lint().files(
             xml(

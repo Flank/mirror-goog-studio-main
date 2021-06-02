@@ -229,13 +229,13 @@ class LintDriverCrashTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                res/drawable/drawable.xml:7: Warning: Should be using uppercase letters [ColorCasing]
+                res/drawable/drawable.xml:7: Warning: Should be using uppercase letters [_ColorCasing]
                       android:fillColor="#ffe000"
                                          ~~~~~~~
-                res/drawable/drawable.xml:14: Warning: Should be using uppercase letters [ColorCasing]
+                res/drawable/drawable.xml:14: Warning: Should be using uppercase letters [_ColorCasing]
                       android:fillColor="#fff000"
                                          ~~~~~~~
-                res/drawable/drawable.xml:21: Warning: Should be using uppercase letters [ColorCasing]
+                res/drawable/drawable.xml:21: Warning: Should be using uppercase letters [_ColorCasing]
                       android:fillColor="#ffe000"
                                          ~~~~~~~
                 0 errors, 3 warnings
@@ -286,7 +286,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
         companion object {
             val COLOR_REGEX = Regex("#[a-fA-F\\d]{3,8}")
             val ISSUE_COLOR_CASING = Issue.create(
-                "ColorCasing",
+                "_ColorCasing",
                 "Raw colors should be defined with uppercase letters.",
                 "Colors should have uppercase letters. #FF0099 is valid while #ff0099 isn't since the ff should be written in uppercase.",
                 Category.CORRECTNESS, 5, Severity.WARNING,

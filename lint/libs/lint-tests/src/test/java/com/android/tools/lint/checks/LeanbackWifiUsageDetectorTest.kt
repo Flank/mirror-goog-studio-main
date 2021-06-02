@@ -44,7 +44,7 @@ class LeanbackWifiUsageDetectorTest : AbstractCheckTest() {
         )
     }
 
-    fun testUseWifiAccessStatePermission() {
+    fun testDocumentationExample() {
         lint().files(
             manifest(
                 """

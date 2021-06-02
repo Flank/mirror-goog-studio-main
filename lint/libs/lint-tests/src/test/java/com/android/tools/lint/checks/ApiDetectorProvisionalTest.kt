@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class ApiDetectorProvisionalTest : AbstractCheckTest() {
+    @Suppress("LintDocExample")
     fun testBasicProvisional() {
         // Here we have a library with minSdk 2, which has two violations; one
         // for API level 4, one for API level 14. When we analyze this from an

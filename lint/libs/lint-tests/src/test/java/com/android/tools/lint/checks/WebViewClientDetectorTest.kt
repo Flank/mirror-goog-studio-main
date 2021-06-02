@@ -22,6 +22,7 @@ class WebViewClientDetectorTest : AbstractCheckTest() {
         return WebViewClientDetector()
     }
 
+    @Suppress("LintDocExample")
     fun testOnReceivedSslError_expectWarnings() {
         lint().files(
             manifest(
@@ -143,10 +144,6 @@ class WebViewClientDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(
-            """
-            No warnings.
-            """
-        )
+        ).run().expectClean()
     }
 }

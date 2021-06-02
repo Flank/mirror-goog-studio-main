@@ -125,7 +125,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             explicit nullness information here with either `@NonNull` or `@Nullable`.
 
             You can set the environment variable
+            ```
                 `ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED=true`
+            ```
             if you want lint to ignore classes and members that have been annotated with
             `@Deprecated`.
             """,
@@ -145,7 +147,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             explanation = """
             For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
 
-            Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.
+            Accessor methods require a `get` prefix or for boolean-returning methods an `is` prefix can be used.
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#property-prefixes",
             category = Category.INTEROPERABILITY_KOTLIN,

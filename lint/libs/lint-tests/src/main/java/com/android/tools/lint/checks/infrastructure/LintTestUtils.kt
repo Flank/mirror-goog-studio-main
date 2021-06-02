@@ -31,6 +31,10 @@ import org.junit.Assert.fail
  * some basic validation of comparison operators. As an example, the
  * ApiClassTest takes 100 randomly chosen elements from the large list
  * and checks those, with a different seed each time.)
+ *
+ * TODO: See
+ *     https://r8-review.googlesource.com/c/r8/+/60142/1/src/main/java/com/android/tools/r8/utils/ListUtils.java#225
+ *     for an O(n^2) implementation
  */
 fun <T : Comparable<T>> checkTransitiveComparator(list: List<T>) {
     // TODO: Consider caching the comparisons of all the pairs in the list
