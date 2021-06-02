@@ -18,7 +18,6 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -26,15 +25,18 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.utils.appendCapitalized
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -177,5 +179,22 @@ fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContaine
             }
             it.kotlin.setSrcDirs(listOf(sourceDir.sourceDirectories))
         }
+    }
+}
+
+/**
+ * Attempts to find the corresponding `kapt` configurations for the source sets of the given
+ * variant. The returned list may be incomplete or empty if unsuccessful.
+ */
+fun findKaptConfigurationsForVariant(
+    project: Project,
+    creationConfig: ComponentCreationConfig
+): List<Configuration> {
+    return creationConfig.variantSources.sortedSourceProviders.mapNotNull { sourceSet ->
+        val kaptConfigurationName = if (sourceSet.name != SourceSet.MAIN_SOURCE_SET_NAME)
+            "kapt".appendCapitalized(sourceSet.name)
+        else
+            "kapt"
+        project.configurations.findByName(kaptConfigurationName)
     }
 }
