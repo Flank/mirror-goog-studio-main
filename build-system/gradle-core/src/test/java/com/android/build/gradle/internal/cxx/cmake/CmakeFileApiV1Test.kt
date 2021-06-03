@@ -15,10 +15,15 @@
  */
 package com.android.build.gradle.internal.cxx.cmake
 
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.text
 import com.android.testutils.TestUtils
 import com.android.utils.cxx.streamCompileCommandsV2
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -28,6 +33,21 @@ class CmakeFileApiV1Test {
 
     @get:Rule
     var temporaryFolder = TemporaryFolder()
+
+    private val logger = TestLoggingEnvironment()
+
+    private class TestLoggingEnvironment : ThreadLoggingEnvironment() {
+        override fun log(message: LoggingMessage) {
+            if (message.level == LoggingMessage.LoggingLevel.ERROR) {
+                error(message.text())
+            }
+        }
+    }
+
+    @After
+    fun after() {
+        logger.close()
+    }
 
     private val bazelFolderBase = "tools/base/build-system/gradle-core/src/test/data/cmake-file-api-samples"
 
@@ -389,5 +409,16 @@ class CmakeFileApiV1Test {
         )
         streamCompileCommandsV2(compileCommandsJsonBin) {
         }
+    }
+
+    @Test
+    fun `bug 187134648 OBJECT-library`() {
+        val replyFolder = prepareReplyFolder("multiple-object-library")
+        val result = readCmakeFileApiReply(replyFolder) { }
+        assertThat(
+            result
+                .libraries!!
+                .getValue("object_dependency::@6890427a1f51a3e7e1df")
+                .output).isNull()
     }
 }

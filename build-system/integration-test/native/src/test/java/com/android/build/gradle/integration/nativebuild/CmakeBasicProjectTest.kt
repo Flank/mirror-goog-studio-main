@@ -245,6 +245,32 @@ class CmakeBasicProjectTest(
         project.execute("assembleDebug")
     }
 
+
+    @Test
+    fun `bug 187134648 OBJECT-library`() {
+        // https://issuetracker.google.com/158317988
+        // runtimeFiles doesn't work pre-3.7 because there's no CMake server.
+        if (cmakeVersionInDsl == "3.6.0") return
+        if (cmakeVersionInDsl == "3.10.2") return
+        project.buildFile.resolveSibling("object_src1.cpp").writeText("void foo() {}")
+        project.buildFile.resolveSibling("object_src2.cpp").writeText("void bar() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+
+            add_library(object_dependency OBJECT)
+            target_sources(object_dependency PRIVATE object_src1.cpp object_src2.cpp)
+
+            add_library(native_lib SHARED)
+            target_link_libraries(native_lib PRIVATE object_dependency)
+            """.trimIndent())
+
+        project.execute("generateJsonModelDebug")
+
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+    }
+
     @Test
     fun `runtimeFiles are included even if not built yet`() {
         // https://issuetracker.google.com/158317988

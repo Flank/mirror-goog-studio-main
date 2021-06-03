@@ -1,0 +1,68 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "native_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-native_lib-Debug-436c3b4ca2c049046711.json",
+					"name" : "native_lib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "object_dependency::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-object_dependency-Debug-8b4d43d981fdb2a750db.json",
+					"name" : "object_dependency",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tests/CmakeBasicProjectTest/bug_187134648_OBJECT_library_version_3_18_1_/project/.cxx/Debug/3g3a161r/armeabi-v7a",
+		"source" : "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tests/CmakeBasicProjectTest/bug_187134648_OBJECT_library_version_3_18_1_/project"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 1
+	}
+}
