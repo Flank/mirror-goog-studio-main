@@ -20,6 +20,7 @@ import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryBuildType
 import com.android.build.api.dsl.Ndk
+import com.android.build.api.dsl.PostProcessing
 import com.android.build.api.dsl.Shaders
 import com.android.build.api.dsl.TestBuildType
 import com.android.build.gradle.internal.errors.DeprecationReporter
@@ -511,7 +512,7 @@ abstract class BuildType @Inject constructor(
     /** This DSL is incubating and subject to change.  */
     @get:Internal
     @get:Incubating
-    val postprocessing: PostProcessingBlock
+    override val postprocessing: PostProcessingBlock
         get() {
             checkPostProcessingConfiguration(
                 PostProcessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing"
@@ -527,6 +528,10 @@ abstract class BuildType @Inject constructor(
             PostProcessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing"
         )
         action.execute(_postProcessing)
+    }
+
+    override fun postprocessing(action: PostProcessing.() -> Unit) {
+        postprocessing(Action { action.invoke(it) })
     }
 
     /** Describes how postProcessing was configured. Not to be used from the DSL.  */

@@ -161,6 +161,10 @@ interface BuildType : Named, VariantDimension, ExtensionAware {
      */
     val matchingFallbacks: MutableList<String>
 
+    @get:Incubating
+    val postprocessing: PostProcessing
+    @Incubating
+    fun postprocessing(action: PostProcessing.() -> Unit)
 
     @Incubating
     @Deprecated("Replaced with property matchingFallbacks")
