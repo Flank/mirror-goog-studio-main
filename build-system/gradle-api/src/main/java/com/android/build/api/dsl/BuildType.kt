@@ -189,6 +189,11 @@ interface BuildType : Named, VariantDimension, ExtensionAware {
     @get:Incubating
     val matchingFallbacks: MutableList<String>
 
+    @get:Incubating
+    val postprocessing: PostProcessing
+    @Incubating
+    fun postprocessing(action: PostProcessing.() -> Unit)
+
     /**
      * Copies all properties from the given build type.
      *
