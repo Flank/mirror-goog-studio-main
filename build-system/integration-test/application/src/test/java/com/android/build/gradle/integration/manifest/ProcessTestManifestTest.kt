@@ -19,11 +19,13 @@ package com.android.build.gradle.integration.manifest
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertTrue
 
 class ProcessTestManifestTest {
     @JvmField @Rule
@@ -212,6 +214,98 @@ class ProcessTestManifestTest {
         assertThat(manifestContent).contains("android:supportsRtl=\"true\"")
         // merged from androidTestFlavor1
         assertThat(manifestContent).contains("android:allowBackup=\"true\"")
+    }
+    
+    @Test
+    fun testUnitTestManifestPlaceholdersFromTestedVariant() {
+        project.buildFile.appendText("""
+            android {
+                buildTypes {
+                    release {
+                        manifestPlaceholders = ["label": "unit test from tested variant"]
+                    }
+                }
+                testOptions {
+                    unitTests {
+                        includeAndroidResources = true
+                    }
+                }
+            }
+        """.trimIndent())
+        project.file("src/main/AndroidManifest.xml").delete()
+        FileUtils.createFile(
+                project.file("src/main/AndroidManifest.xml"),
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            package="com.example.helloworld"
+                            android:versionCode="1"
+                            android:versionName="1.0">
+
+                    <application android:label="${'$'}{label}">
+                        <activity android:name=".HelloWorld"
+                                  android:label="@string/app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+
+                        <receiver android:name="com.example.helloworld.MainReceiver" />
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        val result = project.executor().run("processReleaseUnitTestManifest")
+        assertTrue { result.failedTasks.isEmpty()}
+        val manifestFile = project.file("build/intermediates/packaged_manifests/releaseUnitTest/AndroidManifest.xml")
+        assertThat(manifestFile).contains("android:label=\"unit test from tested variant\"")
+    }
+
+    @Test
+    fun testUnitTestManifestPlaceholdersFromVariantApi() {
+        project.buildFile.appendText("""
+            android {
+                testOptions {
+                    unitTests {
+                        includeAndroidResources = true
+                    }
+                }
+            }
+            androidComponents {
+                onVariants(selector().all(), { variant ->
+                    variant.unitTest.manifestPlaceholders["label"] = "unit test from tested variant"
+                })
+            }
+        """.trimIndent())
+        project.file("src/main/AndroidManifest.xml").delete()
+        FileUtils.createFile(
+                project.file("src/main/AndroidManifest.xml"),
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            package="com.example.helloworld"
+                            android:versionCode="1"
+                            android:versionName="1.0">
+
+                    <application android:label="${'$'}{label}">
+                        <activity android:name=".HelloWorld"
+                                  android:label="@string/app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+
+                        <receiver android:name="com.example.helloworld.MainReceiver" />
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        val result = project.executor().run("processReleaseUnitTestManifest")
+        assertTrue { result.failedTasks.isEmpty()}
+        val manifestFile = project.file("build/intermediates/packaged_manifests/releaseUnitTest/AndroidManifest.xml")
+        assertThat(manifestFile).contains("android:label=\"unit test from tested variant\"")
     }
 
     private fun assertManifestContentContainsString(
