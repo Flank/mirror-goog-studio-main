@@ -45,15 +45,16 @@ class LintStandaloneVitalTest {
 
         result.stderr.use {
             assertThat(it).contains(
-                "" +
-                        "Lint found errors in the project; aborting build.\n" +
-                        "  \n" +
-                        "  Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n" +
-                        "  ...\n" +
-                        "  lintOptions {\n" +
-                        "      abortOnError false\n" +
-                        "  }\n" +
-                        "  ..."
+                """
+                    Lint found errors in the project; aborting build.
+
+                    Fix the issues identified by lint, or add the following to your build script to proceed with errors:
+                    ...
+                    lintOptions {
+                        abortOnError false
+                    }
+                    ...
+                """.trimIndent()
             )
         }
 
