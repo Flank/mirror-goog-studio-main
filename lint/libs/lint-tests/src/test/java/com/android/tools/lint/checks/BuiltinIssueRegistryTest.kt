@@ -49,36 +49,6 @@ class BuiltinIssueRegistryTest : TestCase() {
         }
     }
 
-    fun testSomething() {
-        for (issue in BuiltinIssueRegistry().issues) {
-            val implementation = issue.implementation
-            if (!Scope.checkSingleFile(implementation.scope) && !implementation.analysisScopes.any { Scope.checkSingleFile(it) }) {
-                println("${implementation.detectorClass.simpleName}: ${issue.id}")
-            }
-        }
-        /*
-CordovaVersionDetector: VulnerableCordovaVersion
-InvalidPackageDetector: InvalidPackage
-LayoutConsistencyDetector: InconsistentLayout
-LocaleFolderDetector: LocaleFolder
-LocaleFolderDetector: GetLocales
-LocaleFolderDetector: InvalidResourceFolder
-LocaleFolderDetector: UseAlpha2
-LocaleFolderDetector: WrongRegion
-MediaCapabilitiesDetector: MediaCapabilities
-MergeRootFrameLayoutDetector: MergeRootFrame
-OverdrawDetector: Overdraw
-OverrideDetector: DalvikOverride
-RequiredAttributeDetector: RequiredSize
-StringCasingDetector: DuplicateStrings
-TranslucentViewDetector: TranslucentOrientation
-UnpackedNativeCodeDetector: UnpackedNativeCode
-UnusedResourceDetector: UnusedResources
-UnusedResourceDetector: UnusedIds
-WrongThreadInterproceduralDetector: WrongThreadInterprocedural
-         */
-    }
-
     fun testUnique() {
         // Check that ids are unique
         val ids = HashSet<String>()
