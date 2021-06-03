@@ -86,23 +86,16 @@ class ToastDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         toastName: String
     ) {
-        val method = node.getParentOfType<UMethod>(UMethod::class.java) ?: return
+        val method = node.getParentOfType(UMethod::class.java) ?: return
         val shown = AtomicBoolean(false)
         val escapes = AtomicBoolean(false)
         val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
             override fun receiver(call: UCallExpression) {
-                if (isShowCall(call)) {
+                if (getMethodName(call) == "show") {
                     shown.set(true)
+                    return
                 }
                 super.receiver(call)
-            }
-
-            private fun isShowCall(call: UCallExpression): Boolean {
-                val methodName = getMethodName(call)
-                if (methodName == "show") {
-                    return true
-                }
-                return false
             }
 
             override fun field(field: UElement) {

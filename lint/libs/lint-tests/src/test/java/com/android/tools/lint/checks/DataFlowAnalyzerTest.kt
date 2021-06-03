@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.ToastDetectorTest.Companion.snackbarStubs
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -33,6 +34,12 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.junit.Assert.assertNotEquals
 import java.io.File
 
+/**
+ * Unit tests for the data flow analyzer. Note that there are
+ * also a number of additional unit tests in CleanupDetectorTest,
+ * ToastDetectorTest, SliceDetectorTest and WorkManagerDetectorTest, and
+ * over time possibly others.
+ */
 class DataFlowAnalyzerTest : TestCase() {
     fun testJava() {
         val parsed = LintUtilsTest.parse(
@@ -74,7 +81,8 @@ class DataFlowAnalyzerTest : TestCase() {
                 super.receiver(call)
             }
         }
-        target.getParentOfType<UMethod>(UMethod::class.java)?.accept(analyzer)
+        val method = target.getParentOfType(UMethod::class.java)
+        method?.accept(analyzer)
 
         assertEquals("e, f, g, toString", receivers.joinToString { it })
 
@@ -124,7 +132,8 @@ class DataFlowAnalyzerTest : TestCase() {
                 super.receiver(call)
             }
         }
-        target.getParentOfType<UMethod>(UMethod::class.java)?.accept(analyzer)
+        val method = target.getParentOfType(UMethod::class.java)
+        method?.accept(analyzer)
 
         assertEquals("e, f, g, toString, apply, h", receivers.joinToString { it })
 
@@ -152,7 +161,7 @@ class DataFlowAnalyzerTest : TestCase() {
     fun testKotlinStandardFunctions() {
         // Makes sure the semantics of let, apply, also, with and run are handled correctly.
         // Regression test for https://issuetracker.google.com/187437289.
-        TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile()).files(
+        lint().files(
             kotlin(
                 """
                 @file:Suppress("unused")
@@ -270,16 +279,7 @@ class DataFlowAnalyzerTest : TestCase() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                package test.pkg;
-                public class R {
-                    public static final class string {
-                        public static final int app_name = 0x7f0a0000;
-                    }
-                }
-                """
-            ).indented()
+            rClass
         ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run().expect(
             """
             src/test/pkg/StandardTest.kt:16: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
@@ -301,4 +301,405 @@ class DataFlowAnalyzerTest : TestCase() {
             """
         )
     }
+
+    fun testNestedExtensionMethods() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.content.Context
+                import android.widget.Toast
+
+                class ExtensionAndNesting {
+                    fun test1(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 1
+                            .extension().show()
+                    }
+
+                    fun test2(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 2
+                            .extension().extension().show()
+                    }
+
+                    fun test3(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 3
+                            .apply {
+                                show()
+                            }
+                    }
+
+                    fun test4(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 4
+                            .apply {
+                                extension().show()
+                            }
+                    }
+
+                    fun test5(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 5
+                            .apply {
+                                extension().apply {
+                                    show()
+                                }
+                            }
+                    }
+
+                    fun test6(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 6
+                            .extension().also {
+                                it.show()
+                            }
+                    }
+
+                    fun test7(context: Context) {
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 7
+                            .apply {
+                                extension().apply {
+                                    extension().also {
+                                        it.show()
+                                    }
+                                }
+                            }
+                    }
+                }
+                private fun Toast.extension(): Toast = this
+                """
+            ).indented(),
+            rClass
+        ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run().expectClean()
+    }
+
+    fun testBlocksAndReturns() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.content.Context
+                import android.widget.Toast
+
+                class ExtensionAndNesting {
+                    fun testRun(context: Context) =
+                        Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG).run { // OK 1
+                            this.toString()
+                            show()
+                        }
+
+                    fun testWith(context: Context) =
+                        with(Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG)) { // OK 2
+                            show()
+                            this.toString()
+                        }
+
+                    fun test(c: Context, r: Int, d: Int) {
+                        with(Toast.makeText(c, r, d)) { show() } // OK 3
+
+                        // Returning context object
+                        Toast.makeText(c, r, d).also { println("it") }.show()  // OK 4
+                        Toast.makeText(c, r, d).apply { println("it") }.show() // OK 5
+                        // Returning lambda result
+                        with("hello") { Toast.makeText(c, r, d) }.show() // OK 6
+                        "hello".let { Toast.makeText(c, r, d) }.show() // OK 7
+                        "hello".run { Toast.makeText(c, r, d) }.show() // OK 8
+                    }
+
+                    fun testContextReturns(c: Context, r: Int, d: Int) {
+                        val toast1 = Toast.makeText(c, r, d) // OK
+                        toast1.apply {
+                            Toast.makeText(c, r, d) // ERROR 1
+                        }.show() // applies to toast1, not lambda result
+
+                        Toast.makeText(c, r, d).also { // OK
+                            Toast.makeText(c, r, d) // ERROR 2
+                        }.show() // Applies to context object, not lambda result
+                    }
+
+                    fun testReturns(c: Context, r: Int, d: Int) {
+                        return Toast.makeText(c, r, d).show()  // OK 9
+                    }
+
+                    fun testReturns2(c: Context, r: Int, d: Int) = Toast.makeText(c, r, d).show() // OK 10
+                }
+
+                private fun Toast.extension(): Toast = this
+                """
+            ).indented(),
+            rClass
+        ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run().expect(
+            """
+            src/test/pkg/ExtensionAndNesting.kt:36: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                        Toast.makeText(c, r, d) // ERROR 1
+                        ~~~~~~~~~~~~~~
+            src/test/pkg/ExtensionAndNesting.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                        Toast.makeText(c, r, d) // ERROR 2
+                        ~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testNonTopLevelReferences() {
+        // References to this are not direct children inside the lambda
+        lint().files(
+            kotlin(
+                """
+                import android.view.View
+                import com.google.android.material.snackbar.Snackbar
+
+                fun test(parent: View, msg: String, duration: Int) {
+                    Snackbar.make(parent, msg, duration).apply { // OK 1
+                        if (true) {
+                            show()
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            *snackbarStubs
+        ).issues(ToastDetector.ISSUE).run().expectClean()
+    }
+
+    fun testNestedLambdas() {
+        lint().files(
+            kotlin(
+                """
+                import android.view.View
+                import com.google.android.material.snackbar.BaseTransientBottomBar
+                import com.google.android.material.snackbar.Snackbar
+
+                fun test(parent: View, msg: String, duration: Int, bar: BaseTransientBottomBar<Snackbar>) {
+                    Snackbar.make(parent, msg, duration).apply { // ERROR 1
+                        Snackbar.make(parent, msg, duration).apply { // OK 1
+                            show()
+                        }
+                    }
+
+                    Snackbar.make(parent, msg, duration).apply { // ERROR 2
+                        bar.apply {
+                            show()
+                        }
+                    }
+
+                    Snackbar.make(parent, msg, duration).apply { // OK 2
+                        setActionTextColor(0).show()
+                    }
+
+                    Snackbar.make(parent, msg, duration).apply { // OK 3
+                        // Here, setAnchorView is a Snackbar method, but it's
+                        // inherited, so its type is not == Snackbar.
+                        setAnchorView(parent).show()
+                    }
+
+                    Snackbar.make(parent, msg, duration).apply { // OK 4
+                        "hello".apply {
+                            show()
+                        }
+                    }
+
+                    Snackbar.make(parent, msg, duration).apply { // OK 5
+                        // Checking explicit this reference, since it has a different AST node
+                        this.show()
+                    }
+                }
+
+                """
+            ).indented(),
+            *snackbarStubs
+        ).issues(ToastDetector.ISSUE).run().expect(
+            """
+            src/test.kt:6: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                Snackbar.make(parent, msg, duration).apply { // ERROR 1
+                ~~~~~~~~~~~~~
+            src/test.kt:12: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                Snackbar.make(parent, msg, duration).apply { // ERROR 2
+                ~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testNestedScopes() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.content.Context
+                import android.view.View
+                import android.widget.Toast
+                import com.google.android.material.snackbar.Snackbar
+
+                fun test(context: Context, unrelated: Toast) {
+                    val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 1
+                    toast.apply {
+                        unrelated.show()
+                    }
+                }
+
+                fun test2(context: Context) {
+                    Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 1
+                        .apply {
+                            extension().also {
+                                // This would bind to the current also block
+                                //it.show()
+                                // but this binds to the outer apply block because
+                                // there's no show()
+                                show()
+                            }
+                        }
+                }
+
+                fun test3(context: Context) {
+                    Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // OK 2
+                        .apply {
+                            "hello".apply {
+                                show()
+                            }
+                        }
+                }
+
+                fun test4(parent: View, msg: String, duration: Int) {
+                    Snackbar.make(parent, msg, duration).apply { // ERROR 2
+                        fun show() { }
+                        show()
+                    }
+                }
+
+                private fun Toast.extension(): Toast = this
+                """
+            ).indented(),
+            rClass,
+            *snackbarStubs
+        ).testModes(TestMode.DEFAULT).issues(ToastDetector.ISSUE).run()
+            .expect(
+                """
+                src/test/pkg/test.kt:11: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                    val toast = Toast.makeText(context, R.string.app_name, Toast.LENGTH_LONG) // ERROR 1
+                                ~~~~~~~~~~~~~~
+                src/test/pkg/test.kt:40: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                    Snackbar.make(parent, msg, duration).apply { // ERROR 2
+                    ~~~~~~~~~~~~~
+                0 errors, 2 warnings
+                """
+            )
+    }
+
+    fun testIgnoredArguments() {
+        lint().files(
+            kotlin(
+                """
+                import android.content.Context
+                import android.util.Log
+                import android.widget.Toast
+
+                fun test(c: Context, r: Int, d: Int) {
+                    val toast = Toast.makeText(c, r, d) // ERROR
+                    // Both of these calls should be ignored via ignoreArgument so shouldn't be considered an escape
+                    println(toast)
+                    Log.d("tag", toast.toString())
+                }
+                """
+            ).indented(),
+            *snackbarStubs
+        ).issues(ToastDetector.ISSUE).run().expect(
+            """
+            src/test.kt:6: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+                val toast = Toast.makeText(c, r, d) // ERROR
+                            ~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testClone() {
+        // Methods that are named clone (& similar) should not be treated as transferring
+        // the value even though their types match the expectation
+        lint().files(
+            kotlin(
+                """
+                import android.view.View
+                import com.google.android.material.snackbar.Snackbar
+
+                fun test(parent: View, msg: String, duration: Int) {
+                    Snackbar.make(parent, msg, duration).clone().toDebug().show() // ERROR
+                }
+                """
+            ).indented(),
+            // Note: using a different stub here since we're adding methods that don't exist in a real snackbar
+            // to simulate this scenario
+            java(
+                """
+                package com.google.android.material.snackbar;
+                import android.view.View;
+                public class Snackbar {
+                    public void show() { }
+                    public static Snackbar make(View view, int resId, int duration) {
+                       return null;
+                    }
+                    public Snackbar clone() { return new Snackbar(); }
+                    public Snackbar toDebug() { return new Snackbar(); }
+                }
+                """
+            )
+        ).issues(ToastDetector.ISSUE).run().expect(
+            """
+            src/test.kt:5: Warning: Snackbar created but not shown: did you forget to call show() ? [ShowToast]
+                Snackbar.make(parent, msg, duration).clone().toDebug().show() // ERROR
+                ~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testCasts() {
+        lint().files(
+            kotlin(
+                """
+                import android.content.Context
+                import android.widget.Toast
+
+                class MyToast(context: Context) : Toast(context) {
+                    fun intermediate(): MyToast {
+                        return this
+                    }
+                }
+
+                fun test1(context: Context, s: Int, d: Int) {
+                    val toast = Toast.makeText(context, s, d) as Toast // OK 1
+                    toast.show()
+                }
+
+                fun test2(context: Context, s: Int, d: Int) {
+                    val toast = Toast.makeText(context, s, d) as MyToast // OK 2
+                    toast.show()
+                }
+
+                fun test3(context: Context, s: Int, d: Int) {
+                    val toast = Toast.makeText(context, s, d) as MyToast // OK 3
+                    toast.intermediate().show()
+                }
+                """
+            ).indented(),
+        ).issues(ToastDetector.ISSUE).run().expectClean()
+    }
+
+    private fun lint() = TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
+
+    private val rClass = java(
+        """
+        package test.pkg;
+        public class R {
+            public static final class string {
+                public static final int app_name = 0x7f0a0000;
+            }
+        }
+        """
+    ).indented()
 }
