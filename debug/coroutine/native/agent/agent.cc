@@ -87,6 +87,9 @@ int installDebugProbes(JNIEnv* jni) {
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesImpl");
   if (klass == nullptr) {
+    // clear exception thrown by failed FindClass
+    jni->ExceptionClear();
+
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl not found");
     return -1;
   }
@@ -213,6 +216,9 @@ bool setAgentPremainInstalledStatically(JNIEnv* jni) {
   jclass klass_agentPremain =
       jni->FindClass("kotlinx/coroutines/debug/AgentPremain");
   if (klass_agentPremain == nullptr) {
+    // clear exception thrown by failed FindClass
+    jni->ExceptionClear();
+
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain not found.");
     return false;
   }
