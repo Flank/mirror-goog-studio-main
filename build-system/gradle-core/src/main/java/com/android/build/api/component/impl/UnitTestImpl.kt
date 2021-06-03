@@ -134,8 +134,13 @@ open class UnitTestImpl @Inject constructor(
         }
 
     /**
-     * for unit tests, the placeholders are always empty.
+     * for unit tests, the placeholders are from the tested variant.
      */
-    override val manifestPlaceholders: MapProperty<String, String> =
-            internalServices.mapPropertyOf(String::class.java, String::class.java, mapOf())
+    override val manifestPlaceholders: MapProperty<String, String> by lazy {
+        internalServices.mapPropertyOf(
+                String::class.java,
+                String::class.java,
+                variantDslInfo.manifestPlaceholders
+        )
+    }
 }
