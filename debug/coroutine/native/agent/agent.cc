@@ -274,7 +274,7 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // set AgentPremain#isInstalledStatically to true
   bool setSuccessful = setAgentPremainInstalledStatically(jni);
-  if (setSuccessful) {
+  if (!setSuccessful) {
     SetEventNotification(jvmti, JVMTI_DISABLE,
                          JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
     return;
