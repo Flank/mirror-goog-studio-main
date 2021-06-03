@@ -97,9 +97,18 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             }
         }
 
-        throw when (execResult) {
-            ERRNO_ERRORS -> RuntimeException(message)
-            ERRNO_USAGE -> IllegalStateException("Internal Error: Unexpected lint usage")
+        when (execResult) {
+            ERRNO_ERRORS -> {
+                logger.error(message)
+                throw RuntimeException(
+                    if (parameters.android.get() && parameters.fatalOnly.get()) {
+                        "Lint found fatal errors while assembling a release target."
+                    } else {
+                        "Lint found errors in the project; aborting build."
+                    }
+                )
+            }
+            ERRNO_USAGE -> throw IllegalStateException("Internal Error: Unexpected lint usage")
             ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
             ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
             ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")

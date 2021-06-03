@@ -51,6 +51,7 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
                                 lintOptions {
                                     abortOnError false
                                     quiet false
+                                    error 'AllowBackup'
                                 }
                             }
                         """.trimIndent()
@@ -66,6 +67,28 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
         TestFileUtils.searchAndReplace(project.buildFile, "quiet false", "quiet true")
         project.getExecutor().withArgument("--info").run("lintDebug")
         ScannerSubject.assertThat(project.buildResult.stdout).doesNotContain("Scanning ")
+    }
+
+    // Regression test for b/187329866
+    @Test
+    fun testErrorMessage() {
+        TestFileUtils.searchAndReplace(project.buildFile, "abortOnError false", "abortOnError true")
+        project.getExecutor().expectFailure().run("lintDebug")
+        ScannerSubject.assertThat(project.buildResult.stderr).contains(
+            """
+                Lint found errors in the project; aborting build.
+
+                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
+                ...
+                android {
+                    lintOptions {
+                        abortOnError false
+                    }
+                }
+                ...
+
+            """.trimIndent()
+        )
     }
 
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
