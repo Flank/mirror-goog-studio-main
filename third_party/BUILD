@@ -1660,7 +1660,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2:org.gradle.gradle-tooling-api.7.0",
+    export_artifact = "//prebuilts/tools/common/m2:org.gradle.gradle-tooling-api.7.1",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )
