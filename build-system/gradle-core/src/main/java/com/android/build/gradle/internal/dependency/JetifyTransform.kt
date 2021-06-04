@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.Version
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.FileMapping
@@ -142,6 +144,20 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
                 skipLibsWithAndroidXReferences = true
             )
         } catch (exception: Exception) {
+            // AGP 7.0 is using ASM 7 and therefore is not able to read jars containing Java 13+
+            // bytecode. As those jars are likely recently developed, they probably don't use
+            // legacy support libraries and do not need to be jetified. We bypass them for now,
+            // but add a warning just in case.
+            if (exception.message?.contains("Unsupported class file major version") == true) {
+                LoggerWrapper.getLogger(JetifyTransform::class.java).warning(
+                    "Jetifier skipped processing '${inputFile.path}' as it contains Java 13+ bytecode (root cause: \"${exception.message}\").\n" +
+                            "If you still want Jetifier to process that artifact, try updating ASM in your buildscript classpath as described at https://issuetracker.google.com/issues/159151549#comment7.\n" +
+                            "To suppress this warning, add ${StringOption.JETIFIER_IGNORE_LIST.propertyName}=${inputFile.name} to gradle.properties (or set ${BooleanOption.ENABLE_JETIFIER.propertyName}=false if you don't need Jetifier)."
+                )
+                inputFile.copyTo(outputFile, overwrite = true)
+                return
+            }
+
             var message =
                 "Failed to transform '$inputFile' using Jetifier." +
                         " Reason: ${exception.javaClass.simpleName}, message: ${exception.message}." +
