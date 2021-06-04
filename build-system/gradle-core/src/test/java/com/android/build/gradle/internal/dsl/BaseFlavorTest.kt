@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 internal class BaseFlavorTest {
@@ -46,5 +49,20 @@ internal class BaseFlavorTest {
         val messages = (dslServices.logger as FakeLogger).infos
         Truth.assertThat(messages).hasSize(1)
         Truth.assertThat(messages[0]).doesNotContain("sensitiveValue")
+    }
+
+    @Test
+    fun setProguardFilesTest() {
+        val flavor: ApplicationBaseFlavor = object : BaseFlavor("someFlavor", dslServices) {}
+        flavor.apply {
+            // Check set replaces
+            proguardFiles += dslServices.file("replaced")
+            setProguardFiles(listOf("test"))
+            assertThat(proguardFiles).hasSize(1)
+            assertThat(proguardFiles.single()).hasName("test")
+            // Check set self doesn't clear
+            setProguardFiles(proguardFiles)
+            assertThat(proguardFiles.single()).hasName("test")
+        }
     }
 }

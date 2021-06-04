@@ -32,6 +32,7 @@ import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
+import com.google.common.collect.Iterables
 import java.io.File
 import org.gradle.api.Action
 
@@ -261,11 +262,10 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         }
     }
 
-    fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
+    override fun setProguardFiles(proguardFileIterable: Iterable<*>) {
+        val replacementFiles = Iterables.toArray(proguardFileIterable, Any::class.java)
         proguardFiles.clear()
-        for (file in proguardFileIterable) {
-            proguardFile(file)
-        }
+        proguardFiles(*replacementFiles)
     }
 
     override var testProguardFiles: MutableList<File>

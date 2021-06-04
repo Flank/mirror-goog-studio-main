@@ -26,6 +26,7 @@ import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
+import com.android.testutils.truth.PathSubject
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -114,6 +115,22 @@ class BuildTypeTest {
             original.isShrinkResources
             // Covered by _useProguard
             original.isUseProguard
+        }
+    }
+
+    @Test
+    fun setProguardFilesTest() {
+        val buildType : com.android.build.api.dsl.BuildType =
+            dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+        buildType.apply {
+            // Check set replaces
+            proguardFiles += dslServices.file("replaced")
+            setProguardFiles(listOf("test"))
+            Truth.assertThat(proguardFiles).hasSize(1)
+            PathSubject.assertThat(proguardFiles.single()).hasName("test")
+            // Check set self doesn't clear
+            setProguardFiles(proguardFiles)
+            PathSubject.assertThat(proguardFiles.single()).hasName("test")
         }
     }
 
