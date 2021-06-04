@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
@@ -55,6 +56,8 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
+import com.android.utils.cxx.streamCompileCommands
+import com.android.utils.cxx.streamCompileCommandsV2
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Before
@@ -634,6 +637,33 @@ apply plugin: 'com.android.application'
         assertThat(stateModificationTime).isNotEqualTo(0)
         assertThat(generationRecord).exists()
         assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
+    }
+
+    // https://issuetracker.google.com/187448826
+    @Test
+    fun `bug 187448826 precompiled header works`() {
+        // Precompiled header support was added in CMake 3.16
+        if (cmakeVersionInDsl == "3.6.0") return // Unknown CMake command "target_precompile_headers".
+        if (cmakeVersionInDsl == "3.10.2") return // Unknown CMake command "target_precompile_headers".
+        project.buildFile.resolveSibling("stdheader.h").writeText("")
+        project.buildFile.resolveSibling("src1.cpp").writeText("void foo() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.4.1)
+            add_library(foo SHARED src1.cpp)
+            find_library(log-lib log)
+            target_precompile_headers(foo PUBLIC stdheader.h)
+            target_link_libraries(foo ${'$'}{log-lib})
+            """.trimIndent())
+        project.execute("assembleDebug")
+
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.ARMEABI_V7A }
+        val outputFiles = mutableListOf<String>()
+        streamCompileCommandsV2(abi.compileCommandsJsonBinFile) {
+            outputFiles.add(outputFile.name)
+        }
+        assertThat(outputFiles).contains("cmake_pch.hxx.pch")
     }
 
     @Test
