@@ -730,6 +730,7 @@ com.android.build.api.dsl.VariantDimension.resValue: void (java.lang.String, jav
 com.android.build.api.dsl.VariantDimension.setManifestPlaceholders: java.lang.Void (java.util.Map<java.lang.String, ?>)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepFile: void (java.io.File)
 com.android.build.api.dsl.VariantDimension.setMultiDexKeepProguard: void (java.io.File)
+com.android.build.api.dsl.VariantDimension.setProguardFiles: java.lang.Object (java.lang.Iterable<?>)
 com.android.build.api.dsl.VariantDimension.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.testProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.VariantDimension.testProguardFiles: java.lang.Object (java.lang.Object[])

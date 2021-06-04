@@ -117,6 +117,14 @@ interface VariantDimension {
     fun proguardFiles(vararg files: Any): Any
 
     /**
+     * Replaces the ProGuard configuration files.
+     *
+     * This method has a return value for legacy reasons.
+     */
+    @Incubating
+    fun setProguardFiles(proguardFileIterable: Iterable<*>): Any
+
+        /**
      * The collection of proguard rule files to be used when processing test code.
      *
      * Test code needs to be processed to apply the same obfuscation as was done to main code.

@@ -323,14 +323,12 @@ abstract class BuildType @Inject constructor(
      * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
      * full path to the files. They are identical except for enabling optimizations.
      */
-    fun setProguardFiles(proguardFileIterable: Iterable<*>): BuildType {
+    override fun setProguardFiles(proguardFileIterable: Iterable<*>): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setProguardFiles")
+        val replacementFiles = Iterables.toArray(proguardFileIterable, Any::class.java)
         proguardFiles.clear()
         proguardFiles(
-            *Iterables.toArray(
-                proguardFileIterable,
-                Any::class.java
-            )
+            *replacementFiles
         )
         return this
     }
