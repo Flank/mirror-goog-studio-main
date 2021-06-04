@@ -61,6 +61,7 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
+    @Mock lateinit var mockCoverageOutputDir: File
     @Mock lateinit var mockManagedDevice: UtpManagedDevice
     @Mock lateinit var mockUtpTestResultListenerServerRunner: UtpTestResultListenerServerRunner
     @Mock lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
@@ -78,7 +79,7 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
                 any(), any(), any(), any(), any(), any(), any(),
-                any(), any(), any(), any(), any())).then {
+                any(), any(), any(), any(), any(), any())).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())
@@ -154,6 +155,7 @@ class ManagedDeviceTestRunnerTest {
         runner.runTests(
                 mockManagedDevice,
                 resultDir.toFile(),
+                mockCoverageOutputDir,
                 "projectName",
                 "variantName",
                 mockTestData,

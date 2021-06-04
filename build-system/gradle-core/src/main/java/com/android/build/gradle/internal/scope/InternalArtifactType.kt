@@ -134,6 +134,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object UNIT_TEST_CODE_COVERAGE: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS), Replaceable
     // The jacoco code coverage from the device provider tasks.
     object DEVICE_PROVIDER_CODE_COVERAGE: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
+    // The jacoco code coverage from the managed device instrumentation test tasks.
+    object MANAGED_DEVICE_CODE_COVERAGE: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // The automatically generated jacoco config file
     object JACOCO_CONFIG_RESOURCES_JAR: InternalArtifactType<RegularFile>(FILE)
 

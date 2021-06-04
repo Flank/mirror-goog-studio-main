@@ -1936,6 +1936,31 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 }
                 deviceToProvider[managedDevice.name] = managedDeviceTestTask
             }
+
+            // Register a test coverage report generation task to every managedDeviceCheck
+            // task.
+            if (testedVariant.variantDslInfo.isTestCoverageEnabled) {
+                val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
+                    project, JacocoTask.getJacocoVersion(androidTestProperties))
+                val reportTask = taskFactory.register(
+                    JacocoReportTask.CreationActionManagedDeviceTest(
+                        androidTestProperties, jacocoAntConfiguration))
+                testedVariant.taskContainer.coverageReportTask.dependsOn(reportTask)
+                for (managedDevice in managedDevices) {
+                    taskFactory.configure(
+                        managedDeviceAllVariantsTaskName(managedDevice)
+                    ) { managedDeviceTests: Task ->
+                        managedDeviceTests.dependsOn(reportTask)
+                    }
+                }
+                // Run the report task after all tests are finished on all devices.
+                deviceToProvider.values.forEach { managedDeviceTestTask ->
+                    reportTask.configure {
+                        it.mustRunAfter(managedDeviceTestTask)
+                    }
+                }
+            }
+
             // Lastly the Device Group Tasks.
             for (group in extension.testOptions.deviceGroups) {
                 val variantDeviceGroupTask = taskFactory.register(

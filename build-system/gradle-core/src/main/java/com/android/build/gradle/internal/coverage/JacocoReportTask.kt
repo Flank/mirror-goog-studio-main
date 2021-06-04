@@ -194,6 +194,28 @@ abstract class JacocoReportTask : NonIncrementalTask() {
         }
     }
 
+    class CreationActionManagedDeviceTest(
+        testComponentProperties: TestComponentImpl,
+        override val jacocoAntConfiguration: Configuration
+    ) : BaseCreationAction(testComponentProperties, jacocoAntConfiguration) {
+
+        override val name: String
+            get() = computeTaskName("createManagedDevice", "CoverageReport")
+
+        override fun configure(task: JacocoReportTask) {
+            super.configure(task)
+            task.description =
+                "Creates JaCoCo test coverage report from data gathered on the Gradle managed device."
+            creationConfig
+                .artifacts
+                .setTaskInputToFinalProduct(
+                    InternalArtifactType.MANAGED_DEVICE_CODE_COVERAGE,
+                    task.jacocoConnectedTestsCoverageDir
+                )
+
+        }
+    }
+
     interface JacocoWorkParameters : WorkParameters {
         val coverageFiles: ConfigurableFileCollection
         val reportDir: DirectoryProperty
