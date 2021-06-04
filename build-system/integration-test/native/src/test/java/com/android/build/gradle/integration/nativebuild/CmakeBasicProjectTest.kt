@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -51,6 +50,7 @@ import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
+import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -181,6 +181,31 @@ class CmakeBasicProjectTest(
         assertThat(commands)
             .named(abi.miniConfigFile.path)
             .contains("-v")
+    }
+
+    // See b/159434435
+    @Test
+    fun `bug 159434435 -C flag passed to CMake via arguments`() {
+        val properties = project.buildFile.resolveSibling("Properties.cmake")
+        properties.writeText("")
+        val path = properties.absolutePath.replace("\\", "/")
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            android.defaultConfig.externalNativeBuild.cmake.arguments.addAll("-C$path")
+            """.trimIndent()
+        )
+
+        // Skip extra validations on 3.10.2 since CMake server doesn't use
+        // CreateProcess to invoke CMake.
+        if (cmakeVersionInDsl == "3.10.2") return
+
+        // For the others, validate that the cmake.exe process had our flag
+        enableCxxStructuredLogging(project)
+        project.execute("generateJsonModelDebug")
+        println(project.readStructuredLogs(::decodeExecuteProcess))
+        val process = project.readStructuredLogs(::decodeExecuteProcess).first()
+        assertThat(process.argsList).contains("-C$path")
     }
 
     // See b/134086362
