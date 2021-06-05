@@ -365,6 +365,9 @@ public final class FakeAdbServer implements AutoCloseable {
                     ListDevicesCommandHandler.LONG_COMMAND, () -> new ListDevicesCommandHandler(true));
             setHostCommandHandler(
                     TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
+            setHostCommandHandler(
+                    TrackDevicesCommandHandler.LONG_COMMAND,
+                    () -> new TrackDevicesCommandHandler(true));
             setHostCommandHandler(ForwardCommandHandler.COMMAND, ForwardCommandHandler::new);
             setHostCommandHandler(KillForwardCommandHandler.COMMAND,
                     KillForwardCommandHandler::new);
