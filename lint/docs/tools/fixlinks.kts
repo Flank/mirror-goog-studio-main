@@ -1,7 +1,6 @@
 #!kotlinc
 
 import java.io.File
-import java.util.Locale
 import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
@@ -19,6 +18,7 @@ class FixLinks {
         }
         for (path in args) {
             val file = File(path)
+            println("Processing links in $file")
             if (!file.isFile) {
                 System.err.println("${file.canonicalFile} does not exist")
                 exitProcess(1)
@@ -34,11 +34,11 @@ class FixLinks {
         source = source.replace("api-guide/../usage/", "usage/")
         source = source.replace("usage/../api-guide/", "api-guide/")
 
-        val absolutePathPattern = Pattern.compile("file:.*tools/base/lint/docs/")
-        val linkPattern = Pattern.compile("\"([^\"]+)/(.+)\\.md\\.(html)\"")
+        val absolutePathPattern = Pattern.compile("file:[^>]*tools/base/lint/docs/")
+        val linkPattern = Pattern.compile("\"([^\"]+)/([^>]+)\\.md\\.(html)\"")
 
         var offset = 0
-        while(true) {
+        while (true) {
             val matcher = absolutePathPattern.matcher(source)
             if (matcher.find(offset)) {
                 source = source.substring(0, matcher.start()) + source.substring(matcher.end())
@@ -49,14 +49,14 @@ class FixLinks {
         }
 
         offset = 0
-        while(true) {
+        while (true) {
             val matcher = linkPattern.matcher(source)
             if (matcher.find(offset)) {
                 val start = matcher.start(1)
                 val end = matcher.end(3)
                 val anchorFile = File(file.parentFile, matcher.group().removeSurrounding("\""))
                 if (!anchorFile.exists()) {
-                    System.err.println("Unexpected link reference $anchorFile does not exist" )
+                    System.err.println("Unexpected link reference $anchorFile does not exist")
                     exitProcess(1)
                 }
                 val anchorFileContents = anchorFile.readText()
@@ -65,9 +65,11 @@ class FixLinks {
                     offset = start
                     continue
                 }
-                val anchorHeading = anchorFileContents.substring(anchorHeadingIndex,
-                    anchorFileContents.indexOf('\n', anchorHeadingIndex + 1))
-                val anchor = "#" + anchorHeading.filter { it.isLetter() || it == ':' }.toLowerCase(Locale.ROOT)
+                val anchorHeading = anchorFileContents.substring(
+                    anchorHeadingIndex,
+                    anchorFileContents.indexOf('\n', anchorHeadingIndex + 1)
+                )
+                val anchor = "#" + anchorHeading.filter { it.isLetter() || it == ':' || it == '.' }.lowercase()
                 source = source.substring(0, start) + anchor + source.substring(end)
                 offset = start
                 continue

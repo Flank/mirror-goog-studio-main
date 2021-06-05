@@ -77,12 +77,15 @@ class Main {
             if (addSeparator(sb)) {
                 sb.append('\n')
             }
-            sb.append(line.stripTrailing().replace("\t", "    "))
+            sb.append(line.trimEnd().replace("\t", "    "))
         }
         var formatted = sb.toString()
 
-        if (smartQuotes && (file.name.endsWith(".md") || file.name.endsWith(".html") ||
-                    file.name.endsWith(".txt"))) {
+        if (smartQuotes && (
+            file.name.endsWith(".md") || file.name.endsWith(".html") ||
+                file.name.endsWith(".txt")
+            )
+        ) {
             formatted = fixQuotes(formatted)
         }
         if (formatted != text) {
@@ -106,8 +109,9 @@ class Main {
                 inCode = !inCode
             } else if (column == 0) {
                 if (formatted.startsWith("<style", i) ||
-                   formatted.startsWith("<meta", i) ||
-                        formatted.startsWith("<!-- Markdeep:", i)) {
+                    formatted.startsWith("<meta", i) ||
+                    formatted.startsWith("<!-- Markdeep:", i)
+                ) {
                     skipLine = true
                 } else if (c == '`' && formatted.startsWith("```", i)) {
                     inPre = !inPre
@@ -154,6 +158,6 @@ class Main {
         }
 
         return sb[sb.length - 1] != '\n' ||
-                sb[sb.length - 2] != '\n'
+            sb[sb.length - 2] != '\n'
     }
 }
