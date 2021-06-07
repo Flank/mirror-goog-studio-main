@@ -516,14 +516,22 @@ interface SourceCodeScanner : FileScanner {
     fun visitClass(context: JavaContext, lambda: ULambdaExpression)
 
     /**
-     * Returns a list of fully qualified names for super classes that
-     * this detector cares about. If not null, this detector will
-     * **only** be called if the current class is a subclass of one of
-     * the specified superclasses. Lint will invoke [visitClass] (and
-     * sometimes [visitClass] when it encounters subclasses and lambdas
-     * for these types.
+     * Returns a list of fully qualified names for annotations that
+     * this detector cares about. Lint looks for elements that are
+     * **associated** with an annotated element, and will invoke
+     * [visitAnnotationUsage] for each usage.
      *
-     * @return a list of fully qualified names
+     * **Note**: This doesn't visit the annotations themselves; this
+     * visits *usages* of the annotation. For example, let's say
+     * you have a method that is annotated with an annotation. The
+     * annotation element itself, and the method declaration, will not
+     * be visited, but the return statement, as well as any calls to the
+     * method, will. To check annotation declarations themselves, return
+     * UAnnotation::class.java from [getApplicableConstructorTypes]
+     * and return a [UElementHandler] from [createUastHandler]
+     * where you override [UElementHandler.visitAnnotation].
+     *
+     * @return a list of fully qualified annotation names
      */
     fun applicableAnnotations(): List<String>?
 

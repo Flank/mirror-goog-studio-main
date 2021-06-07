@@ -453,12 +453,6 @@ abstract class Configuration(
                     location = location,
                     fix = LintFix.create().data(ATTR_ID, id)
                 )
-            } else {
-                client.log(
-                    Severity.WARNING,
-                    null,
-                    dir?.path + ": " + message
-                )
             }
         }
     }

@@ -19,7 +19,8 @@ package com.android.tools.lint.checks
 class WatchFaceEditorDetectorTest : AbstractCheckTest() {
     override fun getDetector() = WatchFaceEditorDetector()
 
-    fun testWrongLaunchMode() {
+    fun testDocumentationExample() {
+        // Wrong launch mode
         lint().files(
             xml(
                 "AndroidManifest.xml",

@@ -457,7 +457,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "import android.os.Parcel;\n"
                                         + "import android.os.Parcelable;\n"
-                                        + "import android.support.annotation.NonNull;\n"
+                                        + "import androidx.annotation.NonNull;\n"
                                         + "\n"
                                         + "/** @noinspection ClassNameDiffersFromFileName, MethodMayBeStatic */ "
                                         + "public class BaseParcelable implements Parcelable {\n"
@@ -495,7 +495,8 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "    public void writeToParcel(@NonNull Parcel dest, int flags) {\n"
                                         + "        dest.writeString(mValue);\n"
                                         + "    }\n"
-                                        + "}\n"))
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }

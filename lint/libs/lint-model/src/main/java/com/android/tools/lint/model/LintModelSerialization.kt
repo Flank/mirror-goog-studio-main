@@ -707,7 +707,7 @@ private class LintModelModuleWriter(
             printer.printAttribute("noLines", VALUE_TRUE, indent)
         }
         if (lintOptions.quiet) {
-            printer.printAttribute("isQuiet", VALUE_TRUE, indent)
+            printer.printAttribute("quiet", VALUE_TRUE, indent)
         }
         if (lintOptions.checkAllWarnings) {
             printer.printAttribute("checkAllWarnings", VALUE_TRUE, indent)

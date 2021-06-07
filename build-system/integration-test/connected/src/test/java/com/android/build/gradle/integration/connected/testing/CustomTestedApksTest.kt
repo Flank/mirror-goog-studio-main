@@ -106,12 +106,12 @@ class CustomTestedApksTest {
                         }
                     }
                     targetProjectPath = ":app"
-                    properties["android.experimental.self-instrumenting"] = true
+                    experimentalProperties["android.experimental.self-instrumenting"] = true
                 }
 
                 androidComponents {
                    beforeVariants(selector().all()) {
-                        enable = buildType == 'benchmark'
+                        enabled = buildType == 'benchmark'
                     }
                 }
 

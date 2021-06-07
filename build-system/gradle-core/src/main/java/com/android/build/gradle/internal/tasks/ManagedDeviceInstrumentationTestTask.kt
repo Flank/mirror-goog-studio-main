@@ -30,8 +30,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
-import com.android.build.gradle.internal.test.recordCrashedTestRun
-import com.android.build.gradle.internal.test.recordOkTestRun
+import com.android.build.gradle.internal.test.recordCrashedInstrumentedTestRun
+import com.android.build.gradle.internal.test.recordOkInstrumentedTestRun
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.test.report.TestReport
 import com.android.build.gradle.internal.testing.TestData
@@ -243,7 +243,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                         LoggerWrapper(logger)
                 )
             } catch (e: Exception) {
-                recordCrashedTestRun(
+                recordCrashedInstrumentedTestRun(
                         dependencies,
                         testRunnerFactory.executionEnum.get(),
                         false,
@@ -258,7 +258,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         val report = TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir)
         val results = report.generateReport()
 
-        recordOkTestRun(
+        recordOkInstrumentedTestRun(
                 dependencies,
                 testRunnerFactory.executionEnum.get(),
                 false,

@@ -557,8 +557,20 @@ class TableExtractor(
     }
 
     if (allowRawString) {
+        val raw = flattenedXml.rawString.let { raw ->
+            // Remove space, newline character wrapping (typically due to IDE formatting)
+            // and user added quotations for styleable children due to lack of type.
+            val isNotWrappingChar: (Char) -> Boolean = { it !in setOf(' ', '\n') }
+            val firstNonWrappingIndex = raw.indexOfFirst(isNotWrappingChar)
+            val lastNonWrappingIndex = raw.indexOfLast(isNotWrappingChar)
+            raw.substring(
+                if (firstNonWrappingIndex == - 1) 0 else firstNonWrappingIndex,
+                if (lastNonWrappingIndex == - 1) 0 else lastNonWrappingIndex + 1
+            )
+                .removeSurrounding("\"")
+        }
       return RawString(
-        table.stringPool.makeRef(flattenedXml.rawString, StringPool.Context(config=config)))
+        table.stringPool.makeRef(raw, StringPool.Context(config=config)))
     }
 
     return null

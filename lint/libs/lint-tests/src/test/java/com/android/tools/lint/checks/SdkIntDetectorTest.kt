@@ -15,11 +15,55 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [SdkIntDetector] */
 class SdkIntDetectorTest : AbstractCheckTest() {
+    fun testDocumentationExample() {
+        lint().files(
+            manifest().minSdk(4),
+            projectProperties().library(true),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import android.os.Build.VERSION
+                import android.os.Build.VERSION.SDK_INT
+                import android.os.Build.VERSION_CODES
+
+                fun isNougat(): Boolean {
+                    return VERSION.SDK_INT >= VERSION_CODES.N
+                }
+
+                fun isAtLeast(api: Int): Boolean {
+                    return VERSION.SDK_INT >= api
+                }
+
+                inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        block()
+                    }
+                    return this
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:8: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=VERSION_CODES.N) [AnnotateVersionCheck]
+            fun isNougat(): Boolean {
+                ~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: This method should be annotated with @ChecksSdkIntAtLeast(parameter=0) [AnnotateVersionCheck]
+            fun isAtLeast(api: Int): Boolean {
+                ~~~~~~~~~
+            src/test/pkg/test.kt:16: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=Build.VERSION_CODES.O, lambda=1) [AnnotateVersionCheck]
+            inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                             ~~~~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
+            """
+        )
+    }
+
     fun testChecksSdkIntAtLeast() {
         lint().files(
             manifest().minSdk(4),
@@ -109,7 +153,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 }
 
                 @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-                fun isNougat3(): Boolean {  // Should NOT annotate (already annotateD)
+                fun isNougat3(): Boolean {  // Should NOT annotate (already annotated)
                     return VERSION.SDK_INT >= VERSION_CODES.N
                 }
 
@@ -185,7 +229,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                     }
 
                     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-                    public static boolean isNougat2() {  // Should NOT annotate (already annotateD)
+                    public static boolean isNougat2() {  // Should NOT annotate (already annotated)
                         return SDK_INT >= N;
                     }
 
@@ -211,10 +255,12 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            checkSdkIntAnnotation,
-            supportJar
-        ).run().expect(
-            """
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            // Allow BuildCompat to not resolve since we recognize it by name
+            .allowCompilationErrors()
+            .run().expect(
+                """
             src/test/pkg/JavaVersionChecks.java:13: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=N) [AnnotateVersionCheck]
                 public static boolean isNougat1() { // 1: Should annotate
                                       ~~~~~~~~~
@@ -295,8 +341,8 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 ~~~~~~~~~~~~~
             0 errors, 26 warnings
             """
-        ).expectFixDiffs(
-            """
+            ).expectFixDiffs(
+                """
             Fix for src/test/pkg/JavaVersionChecks.java line 13: Annotate with @ChecksSdkIntAtLeast:
             @@ -13 +13
             +     @ChecksSdkIntAtLeast(api=N)
@@ -376,19 +422,110 @@ class SdkIntDetectorTest : AbstractCheckTest() {
             @@ -79 +79
             + @ChecksSdkIntAtLeast(api=VERSION_CODES.N_MR1)
             """
-        )
+            )
     }
 
-    companion object {
-        private val checkSdkIntAnnotation = VersionChecksTest.checkSdkIntAnnotation
+    fun test189154435() {
+        // Regression test for
+        // 189154435: AnnotateVersionCheck considers "Context" a lambda
+        lint().files(
+            projectProperties().library(true),
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.content.Intent;
+                import android.os.Build;
+
+                public class AnnotateTest {
+                    private static final String ACTION_ENABLE_WEAR_BATTERY_SAVER = "ACTION_ENABLE_WEAR_BATTERY_SAVER";
+                    private static final String ACTION_ENTER_TWM = "ACTION_ENTER_TWM";
+
+                    public void showToggleBatterySaverConfirmation(Context context) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            context.startActivity(
+                                    new Intent(ACTION_ENABLE_WEAR_BATTERY_SAVER).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testFunctions() {
+        lint().files(
+            projectProperties().library(true),
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.os.Build
+                import java.util.function.Function
+
+                open class MyJavaFunction : Function<String, Int> {
+                    override fun apply(p0: String): Int {
+                        return p0.length
+                    }
+                }
+
+                open class MyKotlinFunction : Function1<String, Int> {
+                    override fun invoke(p1: String): Int {
+                        return p1.length
+                    }
+                }
+
+                fun test1(function: MyKotlinFunction, arg: String) {
+                    if (Build.VERSION.SDK_INT > 26) {
+                        function.invoke(arg)
+                    }
+                }
+
+                // TODO: What about androidx.arch.core.util ?
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+                import java.util.function.Function;
+
+                public class FunctionTest {
+                    void test(Function<String, Integer> function, String arg) {
+                        if (Build.VERSION.SDK_INT > 26) {
+                            function.apply(arg);
+                        }
+                    }
+                    void test2(MyJavaFunction function, String arg) {
+                        if (Build.VERSION.SDK_INT > 26) {
+                            function.apply(arg);
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/FunctionTest.java:7: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+                void test(Function<String, Integer> function, String arg) {
+                     ~~~~
+            src/test/pkg/FunctionTest.java:12: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+                void test2(MyJavaFunction function, String arg) {
+                     ~~~~~
+            src/test/pkg/MyJavaFunction.kt:20: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+            fun test1(function: MyKotlinFunction, arg: String) {
+                ~~~~~
+            0 errors, 3 warnings
+            """
+        )
     }
 
     override fun getDetector(): Detector {
         return SdkIntDetector()
     }
-
-    private val supportJar: TestFile = base64gzip(
-        ApiDetectorTest.SUPPORT_JAR_PATH,
-        AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
-    )
 }

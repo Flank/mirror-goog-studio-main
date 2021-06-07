@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTest
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Renderscript

@@ -40,6 +40,51 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         return true;
     }
 
+    public void testDocumentationExample() {
+        lint().files(
+                        xml(
+                                "res/layout/main.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        android:id=\"@+id/layout\">\n"
+                                        + "    <Button\n"
+                                        + "        android:id=\"@+id/button1\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "</LinearLayout>\n"),
+                        xml(
+                                "res/values/strings.xml",
+                                "<resources>\n"
+                                        + "    <string name=\"app_name\">Test</string>\n"
+                                        + "    <string name=\"some_string\">Some String</string>\n"
+                                        + "</resources>"),
+                        java(
+                                ""
+                                        + "import android.app.Activity;\n"
+                                        + "import android.os.Bundle;\n"
+                                        + "\n"
+                                        + "public class MyActivity extends Activity {\n"
+                                        + "    @Override\n"
+                                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                                        + "        super.onCreate(savedInstanceState);\n"
+                                        + "        setContentView(R.layout.main);\n"
+                                        + "        String name = getString(R.string.app_name);\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .issues(UnusedResourceDetector.ISSUE, UnusedResourceDetector.ISSUE_IDS)
+                .run()
+                .expect(
+                        "res/values/strings.xml:3: Warning: The resource R.string.some_string appears to be unused [UnusedResources]\n"
+                                + "    <string name=\"some_string\">Some String</string>\n"
+                                + "            ~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/main.xml:2: Warning: The resource R.id.layout appears to be unused [UnusedIds]\n"
+                                + "        android:id=\"@+id/layout\">\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/main.xml:4: Warning: The resource R.id.button1 appears to be unused [UnusedIds]\n"
+                                + "        android:id=\"@+id/button1\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 3 warnings");
+    }
+
     public void testUnused() {
         String expected =
                 ""
@@ -815,6 +860,23 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testPublicLibrary() {
+        // Regression test for
+        // 187343720: UnusedResources lint check does not work correctly for libraries
+        lint().files(
+                        xml(
+                                "res/values/resources.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name='Theme.AppCompat' parent='@style/Theme.Other'/>\n"
+                                        + "    <style name='Theme.Other'/>\n"
+                                        + "    <public type='style' name='Theme.AppCompat' />"
+                                        + "</resources>"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
     public void testDynamicResources() {
         String expected =
                 ""
@@ -1228,7 +1290,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:id=\"@+id/activity_main\"\n"
                                         + "    android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\"\n"
-                                        + "    tools:context=\"com.example.tnorbye.myapplication.MainActivity\">\n"
+                                        + "    tools:context=\"test.pkg.myapplication.MainActivity\">\n"
                                         + "\n"
                                         + "    <TextView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
@@ -1520,6 +1582,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
                         xml(
+                                "src/main/res/layout/activity_method_import.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
                                 "src/main/res/layout/activity_ignored.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1554,6 +1623,22 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "public class MethodReferenceActivity {\n"
                                         + "    public void test(LayoutInflater inflater){\n"
                                         + "        ActivityMethodReferenceBinding::inflate;\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // View Binding usage here will reference activity_method_import.xml
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "import static my.pkg.databinding.ActivityMethodImportBinding.inflate;\n"
+                                        // + "import
+                                        // my.pkg.databinding.ActivityMethodImportBinding;\n"
+                                        + "\n"
+                                        + "public class MethodImportActivity {\n"
+                                        + "    public void test(LayoutInflater inflater){\n"
+                                        + "        inflate(inflater);\n"
                                         + "    }\n"
                                         + "}\n"),
 
@@ -1604,6 +1689,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
                         java(
                                 ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodImportBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodImportBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
@@ -1645,6 +1741,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "src/main/res/layout/activity_method_import.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
 
                         // View Binding usage here will reference activity_dot_syntax.xml
                         kotlin(
@@ -1674,6 +1777,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
 
+                        // View Binding usage here will reference activity_method_import.xml
+                        kotlin(
+                                ""
+                                        + "package my.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import my.pkg.databinding.ActivityMethodImportBinding.inflate\n"
+                                        + "\n"
+                                        + "class MethodImportActivity {\n"
+                                        + "    fun test(inflater: LayoutInflater){\n"
+                                        + "        inflate(inflater)\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
                         // Here we provide code that would have been generated for view binding /
                         // provided by the view binding lirary
                         java(
@@ -1695,6 +1812,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "public final class ActivityMethodReferenceBinding implements androidx.viewbinding.ViewBinding {\n"
                                         + "  public static ActivityMethodReferenceBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodImportBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodImportBinding inflate(LayoutInflater inflater) {\n"
                                         + "    return this;\n"
                                         + "  }\n"
                                         + "}\n"),
@@ -1990,7 +2118,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg\n"
                                         + "\n"
-                                        + "import android.support.annotation.StringRes\n"
+                                        + "import androidx.annotation.StringRes\n"
                                         + "import android.app.Activity\n"
                                         + "import android.app.AlertDialog\n"
                                         + "\n"
@@ -2018,7 +2146,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
                                         + "       <string name=\"abc_abc.abc.abc_abc\">ABC</string>\n"
-                                        + "</resources>\n"))
+                                        + "</resources>\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();

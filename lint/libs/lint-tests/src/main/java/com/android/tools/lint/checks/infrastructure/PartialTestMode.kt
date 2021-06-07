@@ -20,7 +20,6 @@ import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_MIN_SDK_VERSION
 import com.android.SdkConstants.ATTR_TARGET_SDK_VERSION
-import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.TAG_USES_SDK
 import com.android.sdklib.SdkVersionInfo.getApiByBuildCode
 import com.android.tools.lint.client.api.Configuration
@@ -50,7 +49,7 @@ internal class PartialTestMode : TestMode(
         return context.task.incrementalFileName == null
     }
 
-    override fun before(context: TestModeContext): Any? {
+    override fun before(context: TestModeContext): Any {
         val task = context.task
         val projectFolders = context.projectFolders
         val projects = task.projects
@@ -77,30 +76,6 @@ internal class PartialTestMode : TestMode(
         return State(manifest, contents, overrides)
     }
 
-    private fun deleteCompiledSources(
-        projects: Collection<ProjectDescription>,
-        context: TestModeContext
-    ) {
-        // Delete sources for any compiled files since when analyzing a project
-        // you can only see the local sources.
-        for (project in projects) {
-            for (file in project.files) {
-                // TODO: Consider whether I need to remove sources from within jars too?
-                // Check whether resolve finds them first.
-
-                if (file is CompiledSourceFile && !file.targetRelativePath.endsWith(DOT_JAR)) {
-                    for (dir in context.projectFolders) {
-                        val source = File(dir, file.source.targetRelativePath)
-                        if (source.exists()) {
-                            source.delete()
-                            break
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     override val eventListener: ((TestModeContext, EventType, Any?) -> Unit) =
         { context, type, s ->
             // Before merging the report, restore the manifest.
@@ -118,7 +93,7 @@ internal class PartialTestMode : TestMode(
                 // In fact maybe we should remove the binaries too, and perhaps
                 // even everything (right now it might need lint.xml files and
                 // project metadata files.)
-                deleteCompiledSources(context.projects, context)
+                deleteCompiledSources(context.projects, context, deleteSourceFiles = true)
             } else if (type == EventType.SCANNING_PROJECT ||
                 type == EventType.SCANNING_LIBRARY_PROJECT
             ) {
@@ -162,9 +137,9 @@ internal class PartialTestMode : TestMode(
         results merged to generate the report.
 
         Alternatively, if this difference is expected, you can set the
-        eventType() set to include only one of these two, or turn off
-        the equality check altogether via `.testModesIdenticalOutput(false)`.
-        You can then check each output by passing in a `testType` parameter
+        `testModes(...)` to include only one of these two, or turn off
+        the equality check altogether via `.expectIdenticalTestModeOutput(false)`.
+        You can then check each output by passing in a `testMode` parameter
         to `expect`(...).
         """.trimIndent()
 

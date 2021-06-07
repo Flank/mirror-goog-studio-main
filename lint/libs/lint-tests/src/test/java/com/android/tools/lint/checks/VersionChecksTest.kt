@@ -16,7 +16,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
-import com.android.tools.lint.checks.infrastructure.TestFile
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
 import com.android.tools.lint.detector.api.Detector
 
@@ -1470,7 +1470,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
                 import androidx.core.os.BuildCompat;
 
                 import static android.os.Build.VERSION.SDK_INT;
@@ -1586,7 +1586,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         "GP2Y7pJT9C+SvhI3tgQAAA=="
                 )
             ),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(
@@ -1744,7 +1744,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
                 import test.utils.Utils;
                 import static test.utils.Utils.isNougat;
                 import static test.utils.Utils.versionCheck;
@@ -1796,6 +1796,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         }
                     """
                 ).indented(),
+                0x64a854c9,
                 """
                     test/utils/Utils.class:
                     H4sIAAAAAAAAAHWTy27TQBSG/0nSTC7OpQmlaaEtpQXSIGGQkECiQrRuKlmk
@@ -1812,15 +1813,24 @@ class VersionChecksTest : AbstractCheckTest() {
                     t5PPy7iTSEgnLaxC/hstPETxH5PQHcg3AwAA
                     """
             ),
-            mSupportJar
-        ).issues(*issues).run().expect(
-            """
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(*issues)
+            // If we only supply the bytecode, lint would have to analyze bytecode
+            // to recognize version checks inside a compiled method; it doesn't do that;
+            // this is what the SdkIntDetector is for (encouraging use of annotations
+            // which captures the info). However, when we analyze the source code in a
+            // library we can record the information as partial state, so this *does*
+            // work in partial analysis which we want to test here.
+            .skipTestModes(TestMode.BYTECODE_ONLY)
+            .run()
+            .expect(
+                """
             src/test/pkg/CheckInLibraryTest.java:14: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
                     if (versionCheck(14)) { methodN(); } // ERROR
                                             ~~~~~~~
             1 errors, 0 warnings
             """
-        )
+            )
     }
 
     fun testVersionCheckMethodsInBinaryOperator() {
@@ -1961,7 +1971,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.os.Build;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
 
                 @SuppressWarnings({"WeakerAccess", "unused"})
                 public class TestPrecededByVersionCheck {
@@ -2028,7 +2038,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
                 src/test/pkg/TestPrecededByVersionCheck.java:24: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
@@ -2327,7 +2337,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Build
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
 
                 @RequiresApi(21)
                 fun requires21() { }
@@ -2346,7 +2356,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -2432,7 +2442,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -2460,7 +2470,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     channel.description = "test"
                 }"""
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -2472,7 +2482,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.os.Build;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
 
                 @SuppressWarnings({"unused", ClassNameDiffersFromFileName})
                 public class NestedIfs {
@@ -2496,7 +2506,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -2568,7 +2578,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
                 import android.app.job.JobScheduler;
 
                 @RequiresApi(WorkManager.MIN_JOB_SCHEDULER_API_LEVEL)
@@ -2581,7 +2591,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/SystemJobScheduler.java:11: Error: Call requires API level 24 (current min is 23): android.app.job.JobScheduler#getPendingJob [NewApi]
@@ -2601,7 +2611,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Build
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
 
                 class UnconditionalReturn2 {
                     fun test() =
@@ -2619,7 +2629,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -2657,7 +2667,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages(false)
     }
 
@@ -2688,7 +2698,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages(false)
     }
 
@@ -2742,7 +2752,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages(false)
     }
 
@@ -2757,7 +2767,7 @@ class VersionChecksTest : AbstractCheckTest() {
 
                 package test.pkg
 
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
                 import foo.bar.common.os.AndroidVersion
                 import foo.bar.common.os.AndroidVersion.isAtLeastQ
 
@@ -2778,8 +2788,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
-        ).run().expectClean()
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .allowCompilationErrors() // Deliberate resolve errors
+            .run().expectClean()
     }
 
     fun testChecksSdkIntAtLeast() {
@@ -2795,7 +2807,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
 
                 fun test() {
                     if (versionCheck1) {
@@ -2879,8 +2891,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ),
-            checkSdkIntAnnotation,
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(
@@ -2893,7 +2904,7 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-// TODO: Test out of order parameters!
+    // TODO: Test out of order parameters!
     fun testChecksSdkIntAtLeastLambda() {
         // Regression test for https://issuetracker.google.com/120255046
         // The @ChecksSdkIntAtLeast annotation allows annotating methods and
@@ -2905,7 +2916,7 @@ class VersionChecksTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
                 class Scratch {
                     @RequiresApi(24)
                     public static void requiresApiN() {
@@ -2953,8 +2964,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            checkSdkIntAnnotation,
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
 // TODO: Add in other positions, maybe even out of order, to make sure we handle it right
@@ -2978,7 +2988,7 @@ class VersionChecksTest : AbstractCheckTest() {
 
                 import test.pkg.constants.Constants;
                 import test.pkg.utils.*;
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
 
                 fun test() {
                     if (versionCheck1) {
@@ -3068,6 +3078,41 @@ class VersionChecksTest : AbstractCheckTest() {
                     "8cHE9EpLMnOKhdhDQZR3iRKDFgMA7UDMuUcAAAA="
             ),
             bytecode(
+                "libs/lib1.jar",
+                kotlin(
+                    "src/test/pkg/utils/utils2.kt",
+                    """
+                    @file:Suppress("RemoveRedundantQualifierName", "unused")
+
+                    package test.pkg.utils
+                    import android.os.Build
+                    import androidx.annotation.ChecksSdkIntAtLeast
+
+                    fun mytest() {
+                        println("mytest")
+                    }
+
+                    """
+                ),
+                """
+                test/pkg/utils/Utils2Kt.class:
+                H4sIAAAAAAAAAG1QyU4CQRB9PQMMjCi44IL7loAHR4g3vBgTEyIuEeXCqZGO
+                aZnpMUyP0Ru/pAcPHgxnP8pYPTeNfajlvVfVVfX1/fEJ4BC7DAtaRNp7HNx7
+                sZZ+5N0aWz/TDhhD8YE/cc/n6t677D2IO0JthkzwYooY7Eq1k0X6l679EmkR
+                OMgSHcYkKrUSUobe1VAq3dZDwYNGHi4mcsghzzD7j8DBFIPzaABfUZNK6+8o
+                jWonjyKmXRQwwzDdGoTal8o7F5r3ueYNBit4smlPZgxNyQYmsAh/liY6oKhf
+                o//Ho4w7HrlW0SpniuNR2TpghqozqkUuuUt9f0C7pE7CvmAotKQSF3HQE8Mb
+                3vMJcdthPLwTp9IkS9ex0jIQHRlJYo+VCjXXMlQRarCQgnkkQxoZ8puUVQm3
+                yE/OOGf20Rsm994x+5rItsi6CUnHSqJtswU2sEO+Roo5alTqwm5ivokFslhs
+                UvdyE8tY6YJFWMVaF1aEdIT1HzzAfZH9AQAA
+                """,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcClz
+                8cHE9EpLMnOKhThCQZSRd4kQO5jlXaLEoMUAAMCpI5xRAAAA
+                """
+            ),
+            bytecode(
                 "libs/lib2.jar",
                 java(
                     """
@@ -3093,21 +3138,20 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                     """
                 ),
-                "test/pkg/Constants.class:" +
-                    "H4sIAAAAAAAAAG2Rz08aQRTHv8MisICKVGr9LepBPHQTPfSgMaHENptslLDI" +
-                    "gYsZYMQRmCG7g/GP8tL0UOOhf0D/qMa3G4Otetj3Zt687/t8Z/bP38ffAL5g" +
-                    "N4sUVjJYzWIN6zZmsJHGZhpbDEv+Rb1+3mj6l95ps3nauPTr1Zp79p2BtRlW" +
-                    "GxNl5Ei46laGsjMUVaW04UZqFTJUPK56gZa9O4dP607tWnQHod8buMpUjSd4" +
-                    "aI4YLD6WFpkpMaSOpZLmhGp7lRZDsqZ7gmHek0qcTUYdETQ5kRgKfWFaIghp" +
-                    "aDzzIFa03x4c0jX2vBt+y50hV33HN4FU/aO2GzXbYx7wkTAiiPAJhsxxd/hs" +
-                    "IOvrSdAV32SEm6vRpQxXJvwcjcpjFnNEvNI6jXIe29jJI40MQ9GI0DjjQd+Z" +
-                    "KsjTC/68cyO6hmHhpfRV66HgiohkfbopvWO60kaZ/k+KvDIsR0DKNu1ylLP0" +
-                    "5VzkkaQF2aM4T0frlBnlmf1fYD9iZYFiKi5mSL2AIhJx60pco3ew7l/15d5S" +
-                    "bHzA4j9C611h4T9hycVHYi5NzZWfiXYx8QDrJ5KvDS5S/BRNxvITd5pGLLEC" +
-                    "AAA="
+                "test/pkg/constants/Constants.class:" +
+                    "H4sIAAAAAAAAAG1RTU8bMRB9zoYkm6QQKCnlm5QeSA9dqT30AEIKEa1WWkGU" +
+                    "DTnkgpyNG0wSO9p1UH9UL4hDEYf+AH4UYnYFoQUOnrGf5817Y9/e3fwF8A0f" +
+                    "88hgJYfVPNawbmMGG1lsZrHFsOSfNBrHzZZ/6h22WofNU79Rq7tHPxhYh2G1" +
+                    "OVFGjoSrLmQku0NRU0obbqRWEUPV46oXatn75fAp7tTPRDCI/N7AVaZmPMEj" +
+                    "s8tg8bG0yEyZIbMnlTT7hO1U2wzpuu4JhjlPKnE0GXVF2OKkxFDqC9MWYURN" +
+                    "k55fEkbn5cVXGmPHO+cX3Bly1Xd8E0rV3+24cbE95iEfCSPCWD7FkNsLhg8G" +
+                    "8r6ehIH4LmO52ToNZbgy0ee4VRFvMEuKP7XOolLEB2wXkUWOYc2IyDjjQd8J" +
+                    "HhnOlEvunowcd89FYBjmn6ADrYeCK9KmIaaH8iv2qx1U6Kcy5JphOZambNOp" +
+                    "QDlPq+CiiDRtyCjFObpap8woz3z6A3aZMEsUMwmYI/Y8FpBKSlcSjF7E+v2s" +
+                    "rvBSxcZbLP5DtF4llv4jll28I82lqbnKg6K9kLqGdYX0c4OLFN/HnbF8D6c8" +
+                    "O3S7AgAA"
             ),
-            checkSdkIntAnnotation,
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(
@@ -3122,13 +3166,12 @@ class VersionChecksTest : AbstractCheckTest() {
 
     fun testPolyadic() {
         lint().files(
-            classpath(),
             manifest().minSdk(14),
             java(
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
                 import android.os.Build;
                 import android.os.Build.VERSION_CODES;
                 import static android.os.Build.VERSION.SDK_INT;
@@ -3162,7 +3205,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            mSupportJar
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(
@@ -3179,7 +3222,6 @@ class VersionChecksTest : AbstractCheckTest() {
         // Regression test for b/172930073
         // Need to gracefully handle the next version of Android
         lint().files(
-            classpath(),
             manifest().minSdk(14),
             java(
                 """
@@ -3188,7 +3230,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 import android.os.Build;
                 import androidx.annotation.ChecksSdkIntAtLeast;
                 import androidx.core.os.BuildCompat;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
 
                 public class TestS {
                     public int test() {
@@ -3235,47 +3277,91 @@ class VersionChecksTest : AbstractCheckTest() {
 
                 public class Build {
                     public static class VERSION_CODES {
-                        public static final int CUR_DEVELOPMENT = 1000;
+                        public static final int CUR_DEVELOPMENT = 10000;
                         public static final int S = CUR_DEVELOPMENT;
                     }
                 }
                 """
             ).indented(),
-            mSupportJar,
-            checkSdkIntAnnotation
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
-    companion object {
-        @JvmField
-        val checkSdkIntAnnotation: TestFile = java(
-            """
-            package androidx.annotation;
-            import static java.lang.annotation.ElementType.FIELD;
-            import static java.lang.annotation.ElementType.METHOD;
-            import static java.lang.annotation.RetentionPolicy.CLASS;
-            import java.lang.annotation.Documented;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.Target;
-            @Documented
-            @Retention(CLASS)
-            @Target({METHOD, FIELD})
-            public @interface ChecksSdkIntAtLeast {
-                int api() default -1;
-                String codename() default "";
-                int parameter() default -1;
-                int lambda() default -1;
-            }
-            """
-        ).indented()
+    fun testNextPlatformHandling2() {
+        lint().files(
+            manifest().minSdk(14),
+            kotlin(
+                """
+                import android.os.Build
+                import androidx.annotation.RequiresApi;
+                import androidx.core.os.BuildCompat
+
+                @RequiresApi(Build.VERSION_CODES.S)
+                private fun requiresSFunction() {
+                }
+
+                fun testIsAtLeastS() {
+                    if (BuildCompat.isAtLeastS()) {
+                        requiresSFunction();
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.core.os;
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class BuildCompat {
+                    @ChecksSdkIntAtLeast(codename = "S")
+                    public static boolean isAtLeastS() {
+                        return VERSION.CODENAME.equals("S");
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package android.os;
+
+                public class Build {
+                    public static class VERSION_CODES {
+                        public static final int S = 10000;
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testWhen() {
+        // Regression test for issue 189459502
+        lint().files(
+            kotlin(
+                """
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                private val supportsRenderNode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+                private val capture = when {
+                    supportsRenderNode -> RenderNodeCapture()
+                    else -> "fallback"
+                }
+
+
+                @RequiresApi(29)
+                fun RenderNodeCapture() {
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     override fun getDetector(): Detector {
         return ApiDetector()
     }
-
-    private val mSupportJar: TestFile = base64gzip(
-        ApiDetectorTest.SUPPORT_JAR_PATH,
-        AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
-    )
 }

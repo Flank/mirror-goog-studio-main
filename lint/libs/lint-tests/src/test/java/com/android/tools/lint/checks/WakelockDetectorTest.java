@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class WakelockDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -60,6 +59,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        mWakeLock.acquire(); // Never released\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0xc0ebdd47,
                                 "test/pkg/WakelockActivity1.class:"
                                         + "H4sIAAAAAAAAAI1SXWsTQRQ9kybZzXbbtGlNNVptYq2bbXHxqQ8RQQNCJVUh"
                                         + "RZ8nm2GZZjMbZyep/VmCpuCD+OyPEu8GlwYV9OXcD+499/P7jy9fARzjyIGL"
@@ -118,6 +118,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        }\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0xc96ea509,
                                 "test/pkg/WakelockActivity2.class:"
                                         + "H4sIAAAAAAAAAKVRy0rDQBQ9k9bExNSqffmoWh8LdWHAjQtFkIqotCIoCu6m"
                                         + "7SCxcaYkqdJP8TMEUXDh0oUfJd6pDS5EXLg5987JvefcQ94/Xl4BbGLJgYWi"
@@ -170,6 +171,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(\"test\");\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0xd6baedd7,
                                 "test/pkg/WakelockActivity3.class:"
                                         + "H4sIAAAAAAAAAIVTXU8TQRQ9Qz92u13oh7QISgUFbAuyKioajIlpQkJSkKQE"
                                         + "n6fbSbN0O1N3p638LH2oxgfjsz/KeLemtIk1brL3a+6cc+7M7s9f374DOMQr"
@@ -232,6 +234,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(\"test\");\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0xd4e36181,
                                 "test/pkg/WakelockActivity4.class:"
                                         + "H4sIAAAAAAAAAI1Ta08TQRQ9U0q3XRZplzeCAgK2RVlFBBV8YBMSkoIkJfh5"
                                         + "WCbN0u1s3Z1S+VdqtBo/GL+Z+KOMdxYLjZJINnvn3NeZO2d2f/76+g3AGl6a"
@@ -288,6 +291,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(\"test\");\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x651fd32a,
                                 "test/pkg/WakelockActivity5.class:"
                                         + "H4sIAAAAAAAAAIVTW08TQRg9Qy/bbhd6kRZBqaCAbUHWG6LBmJgmJCQFSUrw"
                                         + "ebqdbJZuZ+vutJWfpQ/V+GB89kcZv6kpbWKNm+x3m2/OOd/M7s9f374DOMQr"
@@ -398,6 +402,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(\"test\");\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x6a6b5888,
                                 "test/pkg/WakelockActivity6.class:"
                                         + "H4sIAAAAAAAAAIVVXVcTVxTdExImGYavIFiRKqChIUFGQaUaUWkQjYaPGpZ9"
                                         + "6NMwuSuOGWbSmQnob+if6OqLz/Yh7epD26c+9DfZru57IQHUtcys3HPvuefu"
@@ -454,6 +459,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        }\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x60d5f773,
                                 "test/pkg/WakelockActivity7$1.class:"
                                         + "H4sIAAAAAAAAAIWR20oDMRCG/9ja7WG126qtZ6tUqBVcveqFIogoCvWAil6n"
                                         + "21Bj10R204qP5YUIXvgAPpQ42yqCUg0kk/z/x8wkeXt/eQVQw1IKMYynEceE"
@@ -510,6 +516,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "\t\t}\n"
                                                 + "\t}\n"
                                                 + "}\n"),
+                                0xba033ad3,
                                 "test/pkg/WakelockActivity8.class:"
                                         + "H4sIAAAAAAAAAI1SW2sTQRT+Jk2yyXbbXGxTjbY2tdZcaldToUJE0IBYSFRI"
                                         + "UfBtshnCNpvZdHeS2p/izyhoCj6Iz/4mEc+sDQYVlIFzm3P5zuXr90+fARzg"
@@ -557,6 +564,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        mWakeLock.acquire(2000L);\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x6249352d,
                                 "test/pkg/WakelockActivity9.class:"
                                         + "H4sIAAAAAAAAAI1STW/TQBB9mzqxY9x8EVIIFNqSFsct9bFCQUgQCakogUqp"
                                         + "ynnjrCw3zjrYm5T+LCRIJQ6IMyd+EWIcYTUCJNjDfGnmzZvZ+fbj8xcAR3BN"
@@ -608,6 +616,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        }\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x123f396e,
                                 "test/pkg/WakelockActivity9.class:"
                                         + "H4sIAAAAAAAAAI1STW/TQBB9mzqxY9x8EVIIFNqSFsct9bFCQUgQCakogUqp"
                                         + "ynnjrCw3zjrYm5T+LCRIJQ6IMyd+EWIcYTUCJNjDfGnmzZvZ+fbj8xcAR3BN"
@@ -659,6 +668,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                                                 + "        pm.newWakeLock(FULL_WAKE_LOCK|ACQUIRE_CAUSES_WAKEUP, \"Test\"); // OK\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0x133baae,
                                 "test/pkg/PowerManagerFlagTest.class:"
                                         + "H4sIAAAAAAAAAIVSS0vDQBD+pq+0NWqtWp/1WaVqMUcPFS8FQUhVqOh5my4h"
                                         + "tm4kWV8/y0sFD+LZHyXOqkURxUDmm5n95pthZ19eH58A7GDNwkQeQ5i0UMpi"

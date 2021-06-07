@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantBuilder
 
-/**
- * Extension for Application module variant.
- *
- * An application module is created when a build script is applying the 'com.android.application'
- * plugin.
- */
+@Deprecated(
+    message= "Use the com.android.build.api.variant package",
+    replaceWith = ReplaceWith(
+        "ApplicationAndroidComponentsExtension",
+        "com.android.build.api.variant.ApplicationAndroidComponentsExtension"
+    ),
+    level = DeprecationLevel.WARNING
+)
 interface ApplicationAndroidComponentsExtension:
-        AndroidComponentsExtension<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>
+    com.android.build.api.variant.ApplicationAndroidComponentsExtension

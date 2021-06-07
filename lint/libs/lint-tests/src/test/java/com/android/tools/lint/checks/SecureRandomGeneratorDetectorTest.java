@@ -206,6 +206,7 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                                                 + "        Cipher cipher = Cipher.getInstance(transform);\n"
                                                 + "    }\n"
                                                 + "}\n"),
+                                0xce82aa68,
                                 "test/pkg/CipherTest1.class:"
                                         + "H4sIAAAAAAAAAI1S2U7bQBQ9Q7xAaghlSxegDaE0EIrV9qEPVJUq1FYRSyuC"
                                         + "eHfskTM0GVv2GJHP6gsgHvoB/aiqd2JUkihVseUzvnfuOXeZ+fX75ieAd3hZ"
@@ -265,6 +266,7 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                                     + "        random.nextBytes(bytes);\n"
                                     + "    }\n"
                                     + "}\n"),
+                    0x1326b88d,
                     ""
                             + "test/pkg/PrngCalls.class:"
                             + "H4sIAAAAAAAAAJ1SXU8TQRQ9s7TdZVkKXUEpX4oCtuVj/UDBgmKLqMSKhBqM"

@@ -38,8 +38,12 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
+import com.intellij.psi.impl.source.tree.TreeElement
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -51,11 +55,14 @@ import org.jetbrains.uast.psi.UElementWithLocation
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.log10
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 
+// Fully qualified names here:
+// class traffics in Project from both lint and openapi so be explicit
+@Suppress("RemoveRedundantQualifierName")
 open class DefaultUastParser(
-    // Fully qualified names here:
-    // class traffics in Project from both lint and openapi so be explicit
     project: com.android.tools.lint.detector.api.Project?,
     val ideaProject: com.intellij.openapi.project.Project
 ) : UastParser() {
@@ -173,8 +180,7 @@ open class DefaultUastParser(
      * @param element the element to create a location for
      * @return a location for the given node
      */
-    override // subclasses may want to override/optimize
-    fun getLocation(context: JavaContext, element: PsiElement): Location {
+    override fun getLocation(context: JavaContext, element: PsiElement): Location {
         var range: TextRange? = null
 
         if (element is PsiCompiledElement) {
@@ -257,17 +263,43 @@ open class DefaultUastParser(
         return Location.NONE
     }
 
-    override // subclasses may want to override/optimize
-    fun getCallLocation(
+    override fun getCallLocation(
         context: JavaContext,
         call: UCallExpression,
         includeReceiver: Boolean,
         includeArguments: Boolean
     ): Location {
+        if (includeArguments) {
+            call.valueArguments.lastOrNull()?.let { lastArgument ->
+                val argumentsEnd = lastArgument.sourcePsi?.endOffset
+                val callEnds = call.sourcePsi?.endOffset
+                if (argumentsEnd != null && callEnds != null && argumentsEnd > callEnds) {
+                    // The call element has arguments that are outside of its own range.
+                    // This typically means users are making a function call using
+                    // assignment syntax, e.g. key = value instead of setKey(value);
+                    // here the call range is just "key" and the arguments range is "value".
+                    // Create a range which merges these two.
+                    val startElement = if (includeReceiver) call.receiver ?: call else call
+                    // Work around UAST bug where the value argument list points directly to the
+                    // string content node instead of a node containing the opening and closing
+                    // tokens as well. We need to include the closing tags in the range as well!
+                    val next = (lastArgument.sourcePsi as? KtLiteralStringTemplateEntry)?.nextSibling as? TreeElement
+                    val delta = if (next != null && next.elementType == KtTokens.CLOSING_QUOTE) {
+                        next.textLength
+                    } else {
+                        0
+                    }
+                    return getRangeLocation(context, startElement, 0, lastArgument, delta)
+                }
+            }
+        }
+
         val receiver = call.receiver
         if (!includeReceiver || receiver == null) {
             if (includeArguments) {
                 // Method with arguments but no receiver is the default range for UCallExpressions
+                // modulo the scenario with arguments outside the call, handled at the beginning
+                // of this method
                 return getLocation(context, call)
             }
             // Just the method name
@@ -351,8 +383,8 @@ open class DefaultUastParser(
     ): Location {
         val contents = context.getContents()
         val fromRange = from.textRange
-        val start = Math.max(0, fromRange.startOffset + fromDelta)
-        val end = Math.min(
+        val start = max(0, fromRange.startOffset + fromDelta)
+        val end = min(
             contents?.length ?: Integer.MAX_VALUE,
             to.textRange.endOffset + toDelta
         )
@@ -407,9 +439,9 @@ open class DefaultUastParser(
         }
 
         if (fromRange != null && toRange != null) {
-            val start = Math.max(0, fromRange.startOffset + fromDelta)
-            val end = Math.min(
-                if (contents == null) Integer.MAX_VALUE else contents.length,
+            val start = max(0, fromRange.startOffset + fromDelta)
+            val end = min(
+                contents?.length ?: Integer.MAX_VALUE,
                 toRange.endOffset + toDelta
             )
             if (end <= start) {

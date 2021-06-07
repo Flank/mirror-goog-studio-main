@@ -17,6 +17,7 @@ package com.android.build.api.variant
 
 import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
+import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -104,10 +105,10 @@ interface Variant : Component, HasAndroidResources {
     val proguardFiles: ListProperty<RegularFile>
 
     /**
-     * Additional per variant properties.
+     * Additional per variant experimental properties.
      *
-     * Initialized from [com.android.build.api.dsl.CommonExtension.properties]
+     * Initialized from [com.android.build.api.dsl.CommonExtension.experimentalProperties]
      */
-    val properties: MapProperty<String, Any>
-
+    @get:Incubating
+    val experimentalProperties: MapProperty<String, Any>
 }

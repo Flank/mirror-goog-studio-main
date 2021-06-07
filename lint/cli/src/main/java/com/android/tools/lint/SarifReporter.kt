@@ -625,22 +625,38 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             } else {
                 listOf(lintFix)
             }
+
+        val performer = LintFixPerformer(client, false)
+        val edits = try {
+            fixes.map { fix -> Pair(fix, performer.computeEdits(incident, fix)) }
+        } catch (exception: Throwable) {
+            // Computing fixes can result in errors, e.g. with overlapping
+            // edits or invalid regular expressions etc; in this case,
+            // omit all the fixes
+            client.log(exception, "Couldn't compute fix edits for ${lintFix.getDisplayName()}")
+            return
+        }
+
         var indent = indent
         writer.indent(indent++).write("\"fixes\": [\n")
-        fixes.forEachIndexed { index, fix ->
-            writeQuickFix(incident, fix, index == fixes.size - 1, indent)
+        edits.forEachIndexed { index, (fix, files) ->
+            writeQuickFix(incident, fix, files, index == fixes.size - 1, indent)
         }
         writer.indent(--indent).write("],\n")
     }
 
-    private fun writeQuickFix(incident: Incident, fix: LintFix, last: Boolean, indent: Int) {
-        val performer = LintFixPerformer(client, false)
-        val files = performer.computeEdits(incident, fix)
+    private fun writeQuickFix(
+        incident: Incident,
+        fix: LintFix,
+        files: List<LintFixPerformer.PendingEditFile>,
+        last: Boolean,
+        indent: Int
+    ) {
         // Only write fixes that have corresponding edits, since there are quickfixes
         // in lint that just communicate data to the IDE to act on or for example to
         // perform a navigation/selection to take you to the right place but cannot
         // actually figure out what to change
-        if (files != null && files.isNotEmpty() && files.any { it.edits.isNotEmpty() }) {
+        if (files.isNotEmpty() && files.any { it.edits.isNotEmpty() }) {
             var indent = indent
             val description = fix.getDisplayName() ?: "Fix"
             writer.indent(indent++).write("{\n")

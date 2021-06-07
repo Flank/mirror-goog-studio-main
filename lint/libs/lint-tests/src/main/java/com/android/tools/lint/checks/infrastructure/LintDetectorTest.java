@@ -83,7 +83,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -575,6 +574,20 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * <p>Note: To only include the bytecode, not the source, use {@link #bytecode(String, TestFile,
      * String...)} instead.
      */
+    public static CompiledSourceFile compiled(
+            @NonNull String into,
+            @NonNull TestFile source,
+            long checksum,
+            @NonNull String... encoded) {
+        return TestFiles.compiled(into, source, checksum, encoded);
+    }
+
+    /**
+     * Like {@link #compiled(String, TestFile, long, String...)}, but does not specify a checksum
+     *
+     * @deprecated Use the version with a checksum instead
+     */
+    @Deprecated
     public static CompiledSourceFile compiled(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         return TestFiles.compiled(into, source, encoded);
@@ -1156,9 +1169,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Nullable
         @Override
         public Severity getDefinedSeverity(
-                @NotNull Issue issue,
-                @NotNull Configuration source,
-                @NotNull Severity visibleDefault) {
+                @NonNull Issue issue,
+                @NonNull Configuration source,
+                @NonNull Severity visibleDefault) {
             // In unit tests, include issues that are ignored by default
             Severity severity = issue.getDefaultSeverity();
             if (severity == Severity.IGNORE) {

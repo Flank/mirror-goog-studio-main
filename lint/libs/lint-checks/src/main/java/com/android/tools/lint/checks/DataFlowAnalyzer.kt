@@ -18,23 +18,30 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.skipParentheses
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLocalVariable
+import com.intellij.psi.PsiMember
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UBinaryExpression
+import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULabeledExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UPostfixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
@@ -43,6 +50,7 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
+import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
@@ -55,7 +63,14 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/** Helper class for analyzing data flow. */
+/**
+ * Helper class for analyzing data flow. To use it, initialize it with
+ * one or more AST elements that you want to track, and then visit a
+ * method scope with this analyzer. It has a number of callback methods
+ * you can override to find out when the value is returned, or used as
+ * an argument in a call, or used as a receiver in a call, etc. See
+ * `lint/docs/api-guide/dataflow-analyzer.md.html` for more.
+ */
 abstract class DataFlowAnalyzer(
     val initial: Collection<UElement>,
     initialReferences: Collection<PsiVariable> = emptyList()
@@ -81,8 +96,90 @@ abstract class DataFlowAnalyzer(
     ) {
     }
 
+    /**
+     * If a tracked element is passed as an argument, [argument] will
+     * be invoked unless this method returns true. This lets you exempt
+     * certain methods from being treated as an escape, such as logging
+     * methods.
+     */
+    open fun ignoreArgument(call: UCallExpression, reference: UElement): Boolean {
+        val name = call.methodName ?: return false
+        if (name == "print" || name == "println" || name == "log") {
+            return true
+        } else if (name.length == 1) {
+            val receiver = call.receiver
+            if (receiver is USimpleNameReferenceExpression && receiver.identifier == "Log") {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Tries to guess whether the given method call returns self. This
+     * is intended to be able to tell that in a constructor call chain
+     * foo().bar().baz() is still invoking methods on the foo instance.
+     */
+    open fun returnsSelf(call: UCallExpression): Boolean {
+        val resolvedCall = call.resolve() ?: return false
+        if (call.returnType is PsiPrimitiveType) {
+            return false
+        }
+
+        // Some method names can suggest that this is not returning itself
+        if (ignoreCopies()) {
+            getMethodName(call)?.let { name ->
+                if (name == "copy" || name == "clone" ||
+                    name.startsWith("to") && name.length > 2 && Character.isUpperCase(name[2])
+                ) {
+                    return false
+                }
+            }
+        }
+
+        val containingClass = resolvedCall.containingClass ?: return false
+        val returnTypeClass = (call.returnType as? PsiClassType)?.resolve()
+        if (returnTypeClass == containingClass) {
+            return true
+        }
+
+        // Kotlin stdlib functions also return "this" but for various
+        // reasons don't have the right return type
+        if (isReturningContext(call)) {
+            return true
+        }
+
+        // Return a subtype is also likely self; see for example Snackbar
+        if (returnTypeClass != null &&
+            containingClass.name != "Object" && returnTypeClass.isInheritor(containingClass, true)
+        ) {
+            return true
+        }
+
+        // Check if this is an extension method whose return type matches receiver
+        if (call.returnType == getTypeOfExtensionMethod(resolvedCall)) {
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     * Normally [returnsSelf] will try to guess whether a method returns
+     * itself, and one of the heuristics is whether the method returns
+     * the type of its containing class. However, there are some clues
+     * in the names when this may not be the case, such as "copy", or
+     * "clone", or "toX" (a common conversion method convention in
+     * Kotlin). However, there may be scenarios where you **do** want
+     * to consider these methods as transferring the tracked value,
+     * and in that case you can return false from this method instead.
+     */
+    open fun ignoreCopies(): Boolean = true
+
     protected val references: MutableSet<PsiElement> = LinkedHashSet()
     protected val instances: MutableSet<UElement> = LinkedHashSet()
+    protected val received: MutableSet<UElement> = LinkedHashSet()
+    protected val types: MutableSet<PsiClass> = LinkedHashSet()
 
     init {
         if (references.isEmpty()) {
@@ -92,11 +189,13 @@ abstract class DataFlowAnalyzer(
             instances.addAll(initial)
             for (element in initial) {
                 if (element is UCallExpression) {
-                    val parent = element.uastParent
+                    val parent = skipParentheses(element.uastParent)
                     if (parent is UQualifiedReferenceExpression && parent.selector == element) {
                         instances.add(parent)
                     }
                 }
+                val type = (element as? UExpression)?.getExpressionType() as? PsiClassType
+                type?.resolve()?.let { types.add(it) }
             }
         }
     }
@@ -137,14 +236,22 @@ abstract class DataFlowAnalyzer(
                     }
                 }
             }
+        } else if (received.contains(node)) {
+            // We've already marked this (receiver-less) call as having been invoked on
+            // a tracked element. For example, in tracker.apply { foo() }, foo has no
+            // receiver, but if we've already determined that it binds to a method
+            // in the tracked class, we've recorded that here to mark this as
+            // being received on a tracked element.
+            matched = true
         } else {
-            val lambda = node.uastParent as? ULambdaExpression
-                ?: node.uastParent?.uastParent as? ULambdaExpression
+            val parent = skipParentheses(node.uastParent)
+            val parentParent = skipParentheses(parent?.uastParent)
+            val lambda = parent as? ULambdaExpression
+                ?: parentParent as? ULambdaExpression
                 // Kotlin 1.3.50 may add another layer UImplicitReturnExpression
-                ?: node.uastParent?.uastParent?.uastParent as? ULambdaExpression
-            if (lambda != null && lambda.uastParent is UCallExpression &&
-                isScopingThis(lambda.uastParent as UCallExpression)
-            ) {
+                ?: skipParentheses(parentParent)?.uastParent as? ULambdaExpression
+            val lambdaCall = skipParentheses(lambda?.uastParent) as? UCallExpression
+            if (lambdaCall != null && isReturningContext(lambdaCall)) {
                 if (instances.contains(node)) {
                     matched = true
                 }
@@ -153,20 +260,7 @@ abstract class DataFlowAnalyzer(
                 if (args.size == 2 && instances.contains(args[0]) &&
                     args[1] is ULambdaExpression
                 ) {
-                    val body = (args[1] as ULambdaExpression).body
-                    instances.add(body)
-                    if (body is UBlockExpression) {
-                        for (expression in body.expressions) {
-                            if (expression is UReturnExpression) {
-                                // The with or apply call is returned
-                                expression.returnExpression?.let(instances::add)
-                            } else {
-                                // When we have with(X) { statementList }, and X is a tracked instance, also treat
-                                // each of the statements in the body as being invoked on the instance
-                                instances.add(expression)
-                            }
-                        }
-                    }
+                    handleLambdaSuffix(args[1] as ULambdaExpression, node)
                 }
             }
         }
@@ -174,13 +268,25 @@ abstract class DataFlowAnalyzer(
         if (matched) {
             if (!initial.contains(node)) {
                 receiver(node)
+
+                if (isReturningContext(node)) {
+                    val parent = skipParentheses(node.uastParent)
+                    val parentCall = skipParentheses(parent?.uastParent)
+                    if (parentCall is UCallExpression) {
+                        // The node is being passed as an argument to a method, e.g.
+                        //  call(arg1, arg2, something.also { })
+                        if (!ignoreArgument(parentCall, node)) {
+                            argument(parentCall, node)
+                        }
+                    }
+                }
             }
             if (returnsSelf(node)) {
                 instances.add(node)
-                val parent = node.uastParent as? UQualifiedReferenceExpression
+                val parent = skipParentheses(node.uastParent) as? UQualifiedReferenceExpression
                 if (parent != null) {
                     instances.add(parent)
-                    val parentParent = parent.uastParent as? UQualifiedReferenceExpression
+                    val parentParent = skipParentheses(parent.uastParent) as? UQualifiedReferenceExpression
                     val chained = parentParent?.selector
                     if (chained != null) {
                         instances.add(chained)
@@ -190,47 +296,158 @@ abstract class DataFlowAnalyzer(
 
             val lambda = node.valueArguments.lastOrNull() as? ULambdaExpression
             if (lambda != null) {
-                if (isScopingIt(node)) {
-                    // If we have X.let { Y }, and X is a tracked instance, we should now
-                    // also track references to the "it" variable (or whatever the lambda
-                    // variable is called). Same case for X.also { Y }.
-                    if (lambda.valueParameters.size == 1) {
-                        val resolved = receiver?.tryResolve()
-                        if (resolved != null && references.contains(resolved)) {
-                            val lambdaVar = lambda.valueParameters.first()
-                            instances.add(lambdaVar)
-                            addVariableReference(lambdaVar)
-                        }
-                    }
-                } else if (isScopingThis(node)) {
-                    val body = lambda.body
-                    if (body is UBlockExpression) {
-                        for (expression in body.expressions) {
-                            if (expression is UReturnExpression) {
-                                expression.returnExpression?.let(instances::add)
-                            } else {
-                                instances.add(expression)
-                            }
-                        }
-                    }
-                }
+                handleLambdaSuffix(lambda, node)
             }
         }
 
         for (expression in node.valueArguments) {
             if (instances.contains(expression)) {
-                argument(node, expression)
-            } else if (expression is UReferenceExpression) {
-                val resolved = expression.resolve()
-
-                if (resolved != null && references.contains(resolved)) {
+                if (!ignoreArgument(node, expression)) {
                     argument(node, expression)
+                }
+            } else if (expression is UReferenceExpression) {
+                if (references.contains(expression.resolve())) {
+                    if (!ignoreArgument(node, expression)) {
+                        argument(node, expression)
+                    }
                     break
                 }
             }
         }
 
         return super.visitCallExpression(node)
+    }
+
+    private fun handleLambdaSuffix(lambda: ULambdaExpression, node: UCallExpression) {
+        if (isScopingIt(node)) {
+            // If we have X.let { Y }, and X is a tracked instance, we should now
+            // also track references to the "it" variable (or whatever the lambda
+            // variable is called). Same case for X.also { Y }.
+            if (lambda.valueParameters.size == 1) {
+                val lambdaVar = lambda.valueParameters.first()
+                instances.add(lambdaVar)
+                addVariableReference(lambdaVar)
+            }
+        } else if (isScopingThis(node)) {
+            /*
+            We have a lambda, where the tracked instance is "this", e.g.
+                target.apply {
+                   first()
+                   second().something()
+                   descriptor = Integer.valueOf(0)
+                   ...
+                   if (third) { fourth(1) } else fourth(2)
+                   "string".apply {
+                      fifth()
+                   }
+                   sixth.seventh()
+                }
+
+            When we end up visiting the elements inside the lambda body, we want
+            to flag any calls that are invoked on this tracked instance.
+
+            This won't work with the normal call receiver approach, where for
+            each call we see if the receiver has already been tagged as referencing
+            our tracked instance, since here there are no receivers.
+
+            The bigger complication is knowing whether a given element is actually
+            referencing "this". In the above example, this depends a lot on what
+            the declarations look like. For example, if "first" is a method in
+            the type of target, then it does, otherwise it does not. And the
+            call to fifth() is in a nested lambda where "this" is a different
+            object (a string), but if string does not define a method called
+            "fifth", it *will* bind to the "fifth" method in the outer apply
+            block. Note also that this isn't just for calls; the assignment to
+            descriptor for example could be a field reference in the target class,
+            or it could be to an unrelated variable or field in a scope outside
+            this apply block.
+
+            This is all a long way of saying that that we cannot just look
+            at the top level expressions of the lambda, and that we need to
+            figure out the binding for each receiver in nested blocks. Ideally,
+            this information would simply be available in UAST, or even by
+            looking inside the Kotlin PSI. However, the information is not there,
+            so we'll need to use some approximations. What we'll do is resolve
+            the reference, find its type, and then search outwards for the
+            first scope that has a compatible type.
+            */
+
+            lambda.body.accept(object : AbstractUastVisitor() {
+                private fun checkBinding(node: UElement, resolved: PsiElement?, target: MutableSet<UElement>) {
+                    val member = resolved as? PsiMember ?: return
+                    val containingClass = member.containingClass
+                    if (isMatchingType(containingClass)) {
+                        target.add(node)
+                    }
+
+                    if (member is PsiMethod) {
+                        getTypeOfExtensionMethod(member)?.resolve()?.let { extensionClass ->
+                            if (isMatchingType(extensionClass)) {
+                                target.add(node)
+                            }
+                        }
+                    }
+                }
+
+                override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
+                    checkBinding(node, node.resolve(), received)
+                    return super.visitSimpleNameReferenceExpression(node)
+                }
+
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    val callReceiver = node.receiver
+                    if (callReceiver == null) {
+                        checkBinding(node, node.resolve(), received)
+                    } else if (callReceiver is UThisExpression) {
+                        // "this" could still reference an outer this scope, not just
+                        // the closest one
+                        checkBinding(callReceiver, node.resolve(), instances)
+                    }
+                    return super.visitCallExpression(node)
+                }
+
+                override fun visitLambdaExpression(node: ULambdaExpression): Boolean {
+                    // If we run into another lambda that also scopes this, and it's
+                    // of the same type, then stop recursing, since inside this lambda,
+                    // that other scope will take over.
+                    val parent = skipParentheses(node.uastParent) as? UCallExpression
+                    val typeClass = (parent?.getExpressionType() as? PsiClassType)?.resolve()
+                    instances.contains(lambda)
+                    if (isMatchingType(typeClass)) {
+                        // type matches; don't visit the lambda body since it hides this
+                        if (parent != null && isScopingThis(parent)) {
+                            return true
+                        }
+                    }
+                    return super.visitLambdaExpression(node)
+                }
+            })
+        }
+    }
+
+    /**
+     * Returns true if the given class matches the types of tracked
+     * element scopes
+     */
+    private fun isMatchingType(containingClass: PsiClass?): Boolean {
+        containingClass ?: return false
+
+        if (types.any { containingClass == it }) {
+            return true
+        }
+
+        if (containingClass.name != "Object" && types.any { it.isInheritor(containingClass, true) }) {
+            return true
+        }
+
+        return false
+    }
+
+    override fun afterVisitParenthesizedExpression(node: UParenthesizedExpression) {
+        if (instances.contains(node.expression)) {
+            instances.add(node)
+        }
+        super.afterVisitParenthesizedExpression(node)
     }
 
     override fun afterVisitVariable(node: UVariable) {
@@ -260,6 +477,14 @@ abstract class DataFlowAnalyzer(
         }
 
         super.afterVisitPostfixExpression(node)
+    }
+
+    override fun afterVisitBinaryExpressionWithType(node: UBinaryExpressionWithType) {
+        val element = node.operand
+        if (instances.contains(element)) {
+            instances.add(node)
+        }
+        super.afterVisitBinaryExpressionWithType(node)
     }
 
     protected fun addVariableReference(node: UVariable) {
@@ -302,7 +527,7 @@ abstract class DataFlowAnalyzer(
     override fun afterVisitIfExpression(node: UIfExpression) {
         if (node !is JavaUIfExpression) { // Does not apply to Java
             // Handle Elvis operator
-            val parent = node.uastParent
+            val parent = skipParentheses(node.uastParent)
             if (parent is KotlinUElvisExpression) {
                 val then = node.thenExpression
                 if (then is USimpleNameReferenceExpression) {
@@ -366,6 +591,7 @@ abstract class DataFlowAnalyzer(
             when (val lhs = node.leftOperand.tryResolve()) {
                 is UVariable -> addVariableReference(lhs)
                 is PsiLocalVariable -> references.add(lhs)
+                is PsiParameter -> references.add(lhs)
                 is PsiField -> field(rhs)
             }
         } else if (rhs is UReferenceExpression) {
@@ -374,6 +600,7 @@ abstract class DataFlowAnalyzer(
                 clearLhs = false
                 when (val lhs = node.leftOperand.tryResolve()) {
                     is UVariable -> addVariableReference(lhs)
+                    is PsiParameter -> references.add(lhs)
                     is PsiLocalVariable -> references.add(lhs)
                     is PsiField -> field(rhs)
                 }
@@ -406,38 +633,62 @@ abstract class DataFlowAnalyzer(
     }
 
     /**
-     * Tries to guess whether the given method call returns self. This
-     * is intended to be able to tell that in a constructor call chain
-     * foo().bar().baz() is still invoking methods on the foo instance.
+     * Dump the tracked elements of the analyzer; this is used for
+     * debugging only. Left in the code since it's really useful anytime
+     * we need to debug what's happening (including when debugging
+     * checks using the data flow analyzer).
      */
-    open fun returnsSelf(call: UCallExpression): Boolean {
-        val resolvedCall = call.resolve() ?: return false
-        if (call.returnType is PsiPrimitiveType) {
-            return false
+    override fun toString(): String {
+        val sb = StringBuilder()
+        sb.append("Instances:\n")
+        for (instance in instances) {
+            sb.append(instance.id())
+            sb.append("\n")
         }
-        val containingClass = resolvedCall.containingClass ?: return false
-        val returnTypeClass = (call.returnType as? PsiClassType)?.resolve()
-        if (returnTypeClass == containingClass) {
-            return true
-        }
-
-        // Kotlin stdlib functions also return "this" but for various reasons
-        // don't have the right return type
-        if (isReturningContext(call)) {
-            return true
+        if (received.isNotEmpty()) {
+            sb.append("Receivers:\n")
+            for (receiver in received) {
+                sb.append(receiver.id())
+                sb.append("\n")
+            }
         }
 
-        // Return a subtype is also likely self; see for example Snackbar
-        if (returnTypeClass != null && returnTypeClass.isInheritor(containingClass, true) &&
-            containingClass.name != "Object"
-        ) {
-            return true
-        }
+        return sb.toString()
+    }
 
-        return false
+    /**
+     * Computes identifying string for the given element; used for
+     * debugging only
+     */
+    private fun UElement.id(): String {
+        val s = Integer.toHexString(System.identityHashCode(this)) + ":" +
+            this.sourcePsi?.text?.replace(Regex("\\s+"), " ")
+        val max = 100
+        return if (s.length > max) {
+            s.substring(0, max / 2) + "..." + s.substring(max / 2 + 3)
+        } else {
+            s
+        }
     }
 
     companion object {
+        /**
+         * If this method looks like an extension method, return its
+         * receiver type
+         */
+        fun getTypeOfExtensionMethod(method: PsiMethod): PsiClassType? {
+            // If this is an extension method whose return type matches receiver
+            val parameterList = method.parameterList
+            if (parameterList.parametersCount > 0) {
+                val firstParameter = parameterList.getParameter(0)
+                if (firstParameter is PsiParameter && firstParameter.name.startsWith("\$this\$")) {
+                    return firstParameter.type as? PsiClassType
+                }
+            }
+
+            return null
+        }
+
         fun getVariableElement(
             rhs: UCallExpression,
             allowChainedCalls: Boolean,

@@ -70,6 +70,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":generateDebugBuildConfig" to FROM_CACHE,
         ":generateDebugResources" to UP_TO_DATE,
         ":generateDebugResValues" to FROM_CACHE,
+        ":javaPreCompileDebug" to FROM_CACHE,
         ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
@@ -89,8 +90,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         } else {
             mapOf(
-                ":clean" to UP_TO_DATE,
-                ":javaPreCompileDebug" to FROM_CACHE
+                ":clean" to UP_TO_DATE
             )
         }
     ).plus(

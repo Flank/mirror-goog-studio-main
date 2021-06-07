@@ -169,6 +169,8 @@ enum class BooleanOption(
 
     ENABLE_ART_PROFILES("android.experimental.enableArtProfiles", false, FeatureStage.Experimental),
 
+    USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
@@ -183,8 +185,6 @@ enum class BooleanOption(
 
     /** Whether to use lint's partial analysis functionality. */
     USE_LINT_PARTIAL_ANALYSIS("android.enableParallelLint", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
-
-    USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 

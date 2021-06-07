@@ -29,6 +29,7 @@
 
 #include "proto/transport.grpc.pb.h"
 #include "utils/device_info.h"
+#include "utils/fd_utils.h"
 #include "utils/log.h"
 #include "utils/socket_utils.h"
 #include "utils/stopwatch.h"
@@ -342,8 +343,14 @@ void Agent::RunHeartbeatThread() {
 
     if (is_daemon_alive != was_daemon_alive) {
       lock_guard<std::mutex> guard(callback_mutex_);
-      for (auto callback : daemon_status_changed_callbacks_) {
-        callback(is_daemon_alive);
+      for (auto itor = daemon_status_changed_callbacks_.begin();
+           itor != daemon_status_changed_callbacks_.end();) {
+        auto callback = *itor;
+        if (callback(is_daemon_alive)) {
+          itor = daemon_status_changed_callbacks_.erase(itor);
+        } else {
+          itor++;
+        }
       }
       was_daemon_alive = is_daemon_alive;
     }
@@ -376,19 +383,38 @@ void Agent::RunSocketThread() {
         // is recycled (it's a shared_ptr<>), it seems the 'previous' fd would
         // be closed, and the re-instantiated stubs will point to a closed
         // target. Therefore, we duplicate the fd to force it to be different.
-        if (current_fd_ == fd) {
-          fd = dup(receive_fd);
+        if (current_fd_ != -1) {
+          if (current_fd_ == receive_fd) {
+            fd = dup(receive_fd);
+          }
+          CloseFdAndLogAtError(current_fd_);
+          current_fd_ = -1;
         }
         std::ostringstream os;
         os << kGrpcUnixSocketAddrPrefix << "&" << fd;
         ConnectToDaemon(os.str());
+        // Cannot close the fd here even though the agent owns it (it will be
+        // dup()ed by gRPC library). The dup() happens when the target is used
+        // by the first gRPC call which may happen in another thread (e.g.,
+        // heartbeat).
         current_fd_ = fd;
         AddDaemonStatusChangedCallback([this](bool becomes_alive) {
-          // If the daemon is no longer alive, we should close the fd because
-          // it's a client connecting to the abstract domain socket. Otherwise,
-          // the open reference would prevent the socket from disappearing
-          // which would prevent the daemon from successful restarting.
-          if (!becomes_alive) close(this->current_fd_);
+          if (becomes_alive) return false;  // don't remove this callback
+
+          // The daemon is no longer alive; the grpc target is no longer valid.
+          // grpc_target_initialized_ being false would pause subsequent gRPC
+          // calls until the daemon is reconnected.
+          std::unique_lock<std::mutex> lock(connect_mutex_);
+          grpc_target_initialized_ = false;
+          // We should close the fd because it's a client connecting to the
+          // abstract domain socket. Otherwise, the open reference might prevent
+          // the socket from disappearing which would prevent the daemon from
+          // successful restarting.
+          if (current_fd_ != -1) {
+            CloseFdAndLogAtError(current_fd_);
+            current_fd_ = -1;
+          }
+          return true;  // remove this callback if execution reaches here
         });
       }
     }
@@ -413,6 +439,8 @@ void Agent::ConnectToDaemon(const std::string& target) {
   // services to prevent a task to acquire a service stub but gets freed
   // below.
   lock_guard<std::mutex> guard(connect_mutex_);
+  Log::V(Log::Tag::TRANSPORT, "Create gRPC channel on fd-based target '%s'",
+         target.c_str());
 
   // Override default channel arguments in gRPC to limit the reconnect delay
   // to 1 second when the daemon is unavailable. GRPC's default arguments may

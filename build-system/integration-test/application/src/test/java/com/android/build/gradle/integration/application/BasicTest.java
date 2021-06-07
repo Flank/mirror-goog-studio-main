@@ -112,6 +112,14 @@ public class BasicTest {
                 model.getProjectType(),
                 AndroidProjectTypes.PROJECT_TYPE_LIBRARY);
         assertEquals("Project Type", AndroidProjectTypes.PROJECT_TYPE_APP, model.getProjectType());
+
+        Truth.assertWithMessage("Namespace")
+                .that(model.getNamespace())
+                .isEqualTo("com.android.tests.basic");
+        Truth.assertWithMessage("AndroidTestNamespace")
+                .that(model.getAndroidTestNamespace())
+                .isEqualTo("com.android.tests.basic.test");
+
         assertEquals(
                 "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());
         assertFalse("Non empty bootclasspath", model.getBootClasspath().isEmpty());

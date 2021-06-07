@@ -16,7 +16,13 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.GeneratesAar
-import com.android.build.api.variant.HasAndroidResources
-
-interface TestFixtures: GeneratesAar, HasAndroidResources, Component
+@Deprecated(
+    message= "Use the com.android.build.api.variant package",
+    replaceWith = ReplaceWith(
+        "TestFixtures",
+        "com.android.build.api.variant.TestFixtures"
+    ),
+    level = DeprecationLevel.WARNING
+)
+interface TestFixtures: com.android.build.api.variant.TestFixtures,
+        Component

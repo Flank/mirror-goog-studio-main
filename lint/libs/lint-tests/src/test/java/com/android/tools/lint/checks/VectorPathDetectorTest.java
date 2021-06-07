@@ -113,15 +113,15 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                                         + "\"/>"))
                 .incremental("res/drawable/my_vector.xml")
                 .run()
-                .maxLineLength(100)
+                .maxLineLength(210)
                 .expect(
                         ""
-                                + "res/drawable/my_vector.xml:16: Warning: Very long vector path (1622 characters), which is bad for p…\n"
+                                + "res/drawable/my_vector.xml:16: Warning: Very long vector path (1622 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]\n"
                                 + "      android:pathData=\"@string/airplane_mask_clip_path_enabled\"/>\n"
                                 + "                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "res/drawable/my_vector.xml:37: Warning: Very long vector path (1623 characters), which is bad for p…\n"
-                                + "        android:pathData=\"M 37.8337860107,-40.3974914551 c 0,0 -35.8077850342,31.5523681641 -35.807…\n"
-                                + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
+                                + "res/drawable/my_vector.xml:37: Warning: Very long vector path (1623 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector. [VectorPath]\n"
+                                + "        android:pathData=\"M 37.8337860107,-40.3974914551 c 0,0 -35.8077850342,31.5523681641 -35.8077850342,31.5523681641 c 0,0 40.9884796143,40.9278411865 40.9884796143,40.9278411865 c 0,0 -2.61700439453,2.093…\n"
+                                + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
                                 + "0 errors, 2 warnings\n");
     }
 

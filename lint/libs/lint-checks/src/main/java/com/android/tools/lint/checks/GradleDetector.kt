@@ -1051,7 +1051,7 @@ open class GradleDetector : Detector(), GradleScanner {
             checkSupportLibraries(context, dependency, version, newerVersion, cookie)
         }
 
-        if (newerVersion != null && newerVersion > version) {
+        if (newerVersion != null && version > GradleVersion(0, 0, 0) && newerVersion > version) {
             val versionString = newerVersion.toString()
             val message = getNewerVersionAvailableMessage(dependency, versionString, null)
             val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
@@ -2114,7 +2114,7 @@ open class GradleDetector : Detector(), GradleScanner {
         minor: Int,
         micro: Int
     ): GradleVersion? {
-        return if (!version1.isAtLeast(major, minor, micro)) {
+        return if (version1 > GradleVersion(0, 0, 0) && !version1.isAtLeast(major, minor, micro)) {
             GradleVersion(major, minor, micro)
         } else null
     }
@@ -2124,7 +2124,7 @@ open class GradleDetector : Detector(), GradleScanner {
         major: Int,
         minor: Int
     ): GradleVersion? {
-        return if (!version1.isAtLeast(major, minor, 0)) {
+        return if (version1 > GradleVersion(0, 0, 0) && !version1.isAtLeast(major, minor, 0)) {
             GradleVersion(major, minor)
         } else null
     }
@@ -2133,7 +2133,7 @@ open class GradleDetector : Detector(), GradleScanner {
         version1: GradleVersion,
         version2: GradleVersion
     ): GradleVersion? {
-        return if (version1 < version2) {
+        return if (version1 > GradleVersion(0, 0, 0) && version1 < version2) {
             version2
         } else null
     }
@@ -2608,7 +2608,6 @@ open class GradleDetector : Detector(), GradleScanner {
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
-            .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
             .addMoreInfo("https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
 
         /** Using a deprecated library. */
@@ -2641,7 +2640,7 @@ open class GradleDetector : Detector(), GradleScanner {
             briefDescription = "Data Binding without Annotation Processing",
             moreInfo = "https://kotlinlang.org/docs/reference/kapt.html",
             explanation = """
-                Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin. \
+                Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin.
                 """,
             category = Category.CORRECTNESS,
             priority = 1,

@@ -19,7 +19,8 @@ package com.android.tools.lint.checks
 class TileProviderDetectorTest : AbstractCheckTest() {
     override fun getDetector() = TileProviderDetector()
 
-    fun testMissingPermission() {
+    fun testDocumentationExample() {
+        // Missing permission
         lint().files(
             xml(
                 "AndroidManifest.xml",

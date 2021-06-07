@@ -164,7 +164,6 @@ class CustomRuleTest {
     @Test
     fun testLegacyLombokJavaLintRule() {
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             java(
                 "" +
@@ -214,7 +213,6 @@ class CustomRuleTest {
     @Test
     fun testLegacyPsiJavaLintRule() {
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             java(
                 "" +
@@ -264,7 +262,6 @@ class CustomRuleTest {
     @Test
     fun testOlderLintApiOk() {
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             java(
                 "package test.pkg;\n" +
@@ -284,7 +281,6 @@ class CustomRuleTest {
     @Test
     fun testNewerLintApi() {
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             java(
                 "package test.pkg;\n" +
@@ -315,7 +311,6 @@ class CustomRuleTest {
     fun testOlderLintApiWithSupportedMinApi() {
         // Current API set to 1000, but minApi 1 so should be compatible
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             java(
                 "package test.pkg;\n" +
@@ -345,7 +340,6 @@ class CustomRuleTest {
         //       0: getstatic     #6                  // Field ALL:Ljava/util/List;
         //       3: areturn
         lint().files(
-            classpath(),
             manifest().minSdk(1),
             xml(
                 "res/values/strings.xml",

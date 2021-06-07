@@ -162,14 +162,12 @@ class DefaultLintModelDependencyGraph(
     override val roots: List<LintModelDependency>,
     private val libraryResolver: LintModelLibraryResolver
 ) : LintModelDependencyGraph {
-    /**
-     * All libraries that we depend on, keyed by artifact address
-     */
+    /** All libraries that we depend on, keyed by artifact address */
     private val transitiveDependencies = mutableMapOf<String, LintModelDependency>()
 
     /**
-     * All transitive dependencies with known maven names, keyed by maven name
-     * (groupId:artifactId)
+     * All transitive dependencies with known maven names, keyed by
+     * maven name (groupId:artifactId)
      */
     private val mavenTransitiveDependencies = mutableMapOf<String, LintModelDependency>()
 

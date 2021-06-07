@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.testutils.TestUtils
 import com.android.tools.lint.HtmlReporter.Companion.REPORT_PREFERENCE_PROPERTY
 import com.android.tools.lint.checks.BuiltinIssueRegistry
+import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.LogDetector
@@ -28,6 +29,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintDriver
@@ -35,6 +37,7 @@ import com.android.tools.lint.client.api.LintRequest
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestName
 import java.io.File
 
@@ -42,7 +45,11 @@ class HtmlReporterTest {
     @get:Rule
     val testName = TestName()
 
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
+
     private fun checkReportOutput(expected: String) {
+        val rootDirectory = temporaryFolder.newFolder()
         val factory: () -> TestLintClient = {
             val client = object : TestLintClient() {
                 override fun createDriver(
@@ -58,6 +65,9 @@ class HtmlReporterTest {
                 }
             }
             client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
+            client.flags.isFullPath = false
+            client.pathVariables.clear()
+            client.pathVariables.add("TEST_ROOT", rootDirectory)
             client
         }
 
@@ -82,36 +92,56 @@ class HtmlReporterTest {
         }
 
         val testName = javaClass.simpleName + "_" + testName.methodName
-        TestLintTask.lint().testName(testName).sdkHome(TestUtils.getSdk().toFile()).files(
-            manifest(
-                """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="test.pkg">
-                    <uses-sdk android:minSdkVersion="10" />
-                </manifest>
-                """
-            ),
-            xml(
-                "res/layout/main.xml",
-                """
-                <Button xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:id="@+id/button1"
-                    android:text="Fooo" />
-                """
-            ),
-            xml(
-                "res/layout/main2.xml",
-                """
-                <Button xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:id="@+id/button1"
-                    android:text="Bar" />
-                """
-            ),
-            image("res/drawable-hdpi/icon1.png", 48, 48).fill(-0xff00d7),
-            image("res/drawable-hdpi/icon2.png", 49, 49).fill(-0xff00d7),
-            image("res/drawable-hdpi/icon3.png", 49, 49).fill(-0xff00d7),
-            image("res/drawable-hdpi/icon4.png", 49, 49).fill(-0xff00d7)
-        )
+        TestLintTask.lint()
+            // Set a custom directory such that lint doesn't delete the source directory after a run;
+            // we need to access it after the test run for syntax highlighting in the reporting pass.
+            .rootDirectory(rootDirectory)
+            .testName(testName).sdkHome(TestUtils.getSdk().toFile()).files(
+                manifest(
+                    """
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        package="test.pkg">
+                        <uses-sdk android:minSdkVersion="10" />
+                    </manifest>
+                    """
+                ).indented(),
+                xml(
+                    "res/layout/main.xml",
+                    """
+                    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/button1"
+                        android:text="Fooo" />
+                    """
+                ).indented(),
+                xml(
+                    "res/layout/main2.xml",
+                    """
+                    <Button xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/button1"
+                        android:text="Bar" />
+                    """
+                ).indented(),
+                xml(
+                    "res/values/strings.xml",
+                    """
+                    <resources>
+                        <string name="app_name">App Name</string>
+                    </resources>
+                    """
+                ).indented(),
+                xml(
+                    "res/values/strings2.xml",
+                    """
+                    <resources>
+                        <string name="app_name">App Name</string>
+                    </resources>
+                    """
+                ).indented(),
+                image("res/drawable-hdpi/icon1.png", 48, 48).fill(-0xff00d7),
+                image("res/drawable-hdpi/icon2.png", 49, 49).fill(-0xff00d7),
+                image("res/drawable-hdpi/icon3.png", 49, 49).fill(-0xff00d7),
+                image("res/drawable-hdpi/icon4.png", 49, 49).fill(-0xff00d7)
+            )
             .issues(
                 ManifestDetector.USES_SDK,
                 HardcodedValuesDetector.ISSUE,
@@ -119,9 +149,13 @@ class HtmlReporterTest {
                 // Not reported, but for the disabled-list
                 ManifestDetector.MOCK_LOCATION,
                 // Not reported, but disabled by default and enabled via flags (b/111035260)
-                LogDetector.CONDITIONAL
+                LogDetector.CONDITIONAL,
+                // Issue which reports multiple linked locations to test the nested display
+                // and secondary location offsets
+                DuplicateResourceDetector.ISSUE
             )
             .clientFactory(factory)
+            .testModes(TestMode.DEFAULT)
             .run()
             .expectHtml(expected, transformer)
         HardcodedValuesDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
@@ -166,7 +200,7 @@ document.getElementById(id).style.display = 'none';
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
   <header class="mdl-layout__header">
     <div class="mdl-layout__header-row">
-      <span class="mdl-layout-title">Lint Report: 4 warnings</span>
+      <span class="mdl-layout-title">Lint Report: 1 error and 4 warnings</span>
       <div class="mdl-layout-spacer"></div>
       <nav class="mdl-navigation mdl-layout--large-screen-only">
 Check performed at ＄DATE</nav>
@@ -177,6 +211,7 @@ Check performed at ＄DATE</nav>
     <nav class="mdl-navigation">
       <a class="mdl-navigation__link" href="#overview"><i class="material-icons">dashboard</i>Overview</a>
       <a class="mdl-navigation__link" href="#UsesMinSdkAttributes"><i class="material-icons warning-icon">warning</i>Minimum SDK and target SDK attributes not defined (1)</a>
+      <a class="mdl-navigation__link" href="#DuplicateDefinition"><i class="material-icons error-icon">error</i>Duplicate definitions of resources (1)</a>
       <a class="mdl-navigation__link" href="#IconDuplicates"><i class="material-icons warning-icon">warning</i>Duplicated icons under different names (1)</a>
       <a class="mdl-navigation__link" href="#HardcodedText"><i class="material-icons warning-icon">warning</i>Hardcoded text (2)</a>
     </nav>
@@ -196,6 +231,9 @@ Check performed at ＄DATE</nav>
 <tr>
 <td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#UsesMinSdkAttributes">UsesMinSdkAttributes</a>: Minimum SDK and target SDK attributes not defined</td></tr>
+<tr>
+<td class="countColumn">1</td><td class="issueColumn"><i class="material-icons error-icon">error</i>
+<a href="#DuplicateDefinition">DuplicateDefinition</a>: Duplicate definitions of resources</td></tr>
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Usability:Icons">Usability:Icons</a>
 </td></tr>
 <tr>
@@ -223,13 +261,11 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/AndroidManifest.xml">AndroidManifest.xml</a>:4</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
-<span class="lineno"> 1 </span>
-<span class="lineno"> 2 </span>              <span class="tag">&lt;manifest</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
-<span class="lineno"> 3 </span>                  <span class="attribute">package</span>=<span class="value">"test.pkg"</span>>
-<span class="caretline"><span class="lineno"> 4 </span>                  <span class="tag">&lt;</span><span class="warning"><span class="tag">uses-sdk</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">minSdkVersion</span>=<span class="value">"10"</span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 5 </span>              <span class="tag">&lt;/manifest></span>
-<span class="lineno"> 6 </span>              </pre>
+<span class="location"><a href="app/AndroidManifest.xml">AndroidManifest.xml</a>:3</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;manifest</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
+<span class="lineno"> 2 </span>    <span class="attribute">package</span>=<span class="value">"test.pkg"</span>>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="tag">&lt;</span><span class="warning"><span class="tag">uses-sdk</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">minSdkVersion</span>=<span class="value">"10"</span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 4 </span><span class="tag">&lt;/manifest></span></pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationUsesMinSdkAttributes" style="display: none;">
@@ -258,6 +294,50 @@ The manifest should contain a <code>&lt;uses-sdk></code> element which defines t
 Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="UsesMinSdkAttributesCardLink" onclick="hideid('UsesMinSdkAttributesCard');">
 Dismiss</button>            </div>
             </div>
+          </section><a name="DuplicateDefinition"></a>
+<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="DuplicateDefinitionCard" style="display: block;">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Duplicate definitions of resources</h2>
+  </div>
+              <div class="mdl-card__supporting-text">
+<div class="issue">
+<div class="warningslist">
+<span class="location"><a href="app/res/values/strings2.xml">res/values/strings2.xml</a>:2</span>: <span class="message"><code>app_name</code> has already been defined in this folder</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;resources></span>
+<span class="caretline"><span class="lineno"> 2 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="error"><span class="attribute">name</span>=<span class="value">"app_name"</span></span>>App Name<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 3 </span><span class="tag">&lt;/resources></span></pre>
+
+<ul><span class="location"><a href="app/res/values/strings.xml">res/values/strings.xml</a>:2</span>: <span class="message">Previously defined here</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;resources></span>
+<span class="caretline"><span class="lineno"> 2 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="error"><span class="attribute">name</span>=<span class="value">"app_name"</span></span>>App Name<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 3 </span><span class="tag">&lt;/resources></span></pre>
+</ul></div>
+<div class="metadata"><div class="explanation" id="explanationDuplicateDefinition" style="display: none;">
+You can define a resource multiple times in different resource folders; that's how string translations are done, for example. However, defining the same resource more than once in the same resource folder is likely an error, for example attempting to add a new resource without realizing that the name is already used, and so on.<br/>To suppress this error, use the issue id "DuplicateDefinition" as explained in the <a href="#SuppressInfo">Suppressing Warnings and Errors</a> section.<br/>
+<br/></div>
+</div>
+</div>
+<div class="chips">
+<span class="mdl-chip">
+    <span class="mdl-chip__text">DuplicateDefinition</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Correctness</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Error</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Priority 6/10</span>
+</span>
+</div>
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="explanationDuplicateDefinitionLink" onclick="reveal('explanationDuplicateDefinition');">
+Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="DuplicateDefinitionCardLink" onclick="hideid('DuplicateDefinitionCard');">
+Dismiss</button>            </div>
+            </div>
           </section>
 <a name="Usability:Icons"></a>
 <a name="IconDuplicates"></a>
@@ -269,11 +349,11 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
-<ul><span class="location"><a href="../default/app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message></span><br /><span class="location"><a href="../default/app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message></span><br /></ul><table>
-<tr><td><a href="../default/app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon2.png" /></a>
-</td><td><a href="../default/app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon3.png" /></a>
-</td><td><a href="../default/app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon4.png" /></a>
+<span class="location"><a href="app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
+<ul><span class="location"><a href="app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message></span><br /><span class="location"><a href="app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message></span><br /></ul><table>
+<tr><td><a href="app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon2.png" /></a>
+</td><td><a href="app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon3.png" /></a>
+</td><td><a href="app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon4.png" /></a>
 </td></tr><tr><th>hdpi</th><th>hdpi</th><th>hdpi</th></tr>
 </table>
 </div>
@@ -316,19 +396,15 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/res/layout/main.xml">res/layout/main.xml</a>:4</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
-<span class="lineno"> 1 </span>
-<span class="lineno"> 2 </span>                <span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
-<span class="lineno"> 3 </span>                    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
-<span class="caretline"><span class="lineno"> 4 </span>                    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Fooo"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 5 </span>                </pre>
+<span class="location"><a href="app/res/layout/main.xml">res/layout/main.xml</a>:3</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
+<span class="lineno"> 2 </span>    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Fooo"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></pre>
 
-<span class="location"><a href="../default/app/res/layout/main2.xml">res/layout/main2.xml</a>:4</span>: <span class="message">Hardcoded string "Bar", should use <code>@string</code> resource</span><br /><pre class="errorlines">
-<span class="lineno"> 1 </span>
-<span class="lineno"> 2 </span>                <span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
-<span class="lineno"> 3 </span>                    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
-<span class="caretline"><span class="lineno"> 4 </span>                    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Bar"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 5 </span>                </pre>
+<span class="location"><a href="app/res/layout/main2.xml">res/layout/main2.xml</a>:3</span>: <span class="message">Hardcoded string "Bar", should use <code>@string</code> resource</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
+<span class="lineno"> 2 </span>    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Bar"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationHardcodedText" style="display: none;">
@@ -516,7 +592,7 @@ document.getElementById(id).style.display = 'none';
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
   <header class="mdl-layout__header">
     <div class="mdl-layout__header-row">
-      <span class="mdl-layout-title">Lint Report: 4 warnings</span>
+      <span class="mdl-layout-title">Lint Report: 1 error and 4 warnings</span>
       <div class="mdl-layout-spacer"></div>
       <nav class="mdl-navigation mdl-layout--large-screen-only">
 Check performed at ＄DATE</nav>
@@ -527,6 +603,7 @@ Check performed at ＄DATE</nav>
     <nav class="mdl-navigation">
       <a class="mdl-navigation__link" href="#overview"><i class="material-icons">dashboard</i>Overview</a>
       <a class="mdl-navigation__link" href="#UsesMinSdkAttributes"><i class="material-icons warning-icon">warning</i>Minimum SDK and target SDK attributes not defined (1)</a>
+      <a class="mdl-navigation__link" href="#DuplicateDefinition"><i class="material-icons error-icon">error</i>Duplicate definitions of resources (1)</a>
       <a class="mdl-navigation__link" href="#IconDuplicates"><i class="material-icons warning-icon">warning</i>Duplicated icons under different names (1)</a>
       <a class="mdl-navigation__link" href="#HardcodedText"><i class="material-icons warning-icon">warning</i>Hardcoded text (2)</a>
     </nav>
@@ -546,6 +623,9 @@ Check performed at ＄DATE</nav>
 <tr>
 <td class="countColumn">1</td><td class="issueColumn"><i class="material-icons warning-icon">warning</i>
 <a href="#UsesMinSdkAttributes">UsesMinSdkAttributes</a>: Minimum SDK and target SDK attributes not defined</td></tr>
+<tr>
+<td class="countColumn">1</td><td class="issueColumn"><i class="material-icons error-icon">error</i>
+<a href="#DuplicateDefinition">DuplicateDefinition</a>: Duplicate definitions of resources</td></tr>
 <tr><td class="countColumn"></td><td class="categoryColumn"><a href="#Usability:Icons">Usability:Icons</a>
 </td></tr>
 <tr>
@@ -573,10 +653,10 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/AndroidManifest.xml">AndroidManifest.xml</a>:4</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
-<span class="lineno"> 3 </span>                    <span class="attribute">package</span>=<span class="value">"test.pkg"</span>>
-<span class="caretline"><span class="lineno"> 4 </span>                    <span class="tag">&lt;</span><span class="warning"><span class="tag">uses-sdk</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">minSdkVersion</span>=<span class="value">"10"</span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 5 </span>                <span class="tag">&lt;/manifest></span></pre>
+<span class="location"><a href="app/AndroidManifest.xml">AndroidManifest.xml</a>:3</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
+<span class="lineno"> 2 </span>    <span class="attribute">package</span>=<span class="value">"test.pkg"</span>>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="tag">&lt;</span><span class="warning"><span class="tag">uses-sdk</span></span><span class="attribute"> </span><span class="prefix">android:</span><span class="attribute">minSdkVersion</span>=<span class="value">"10"</span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 4 </span><span class="tag">&lt;/manifest></span></pre>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationUsesMinSdkAttributes" style="display: none;">
@@ -605,6 +685,50 @@ The manifest should contain a <code>&lt;uses-sdk></code> element which defines t
 Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="UsesMinSdkAttributesCardLink" onclick="hideid('UsesMinSdkAttributesCard');">
 Dismiss</button>            </div>
             </div>
+          </section><a name="DuplicateDefinition"></a>
+<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="DuplicateDefinitionCard" style="display: block;">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Duplicate definitions of resources</h2>
+  </div>
+              <div class="mdl-card__supporting-text">
+<div class="issue">
+<div class="warningslist">
+<span class="location"><a href="app/res/values/strings2.xml">res/values/strings2.xml</a>:2</span>: <span class="message"><code>app_name</code> has already been defined in this folder</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;resources></span>
+<span class="caretline"><span class="lineno"> 2 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="error"><span class="attribute">name</span>=<span class="value">"app_name"</span></span>>App Name<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 3 </span><span class="tag">&lt;/resources></span></pre>
+
+<ul><span class="location"><a href="app/res/values/strings.xml">res/values/strings.xml</a>:2</span>: <span class="message">Previously defined here</span><br /><pre class="errorlines">
+<span class="lineno"> 1 </span><span class="tag">&lt;resources></span>
+<span class="caretline"><span class="lineno"> 2 </span>    <span class="tag">&lt;string</span><span class="attribute"> </span><span class="error"><span class="attribute">name</span>=<span class="value">"app_name"</span></span>>App Name<span class="tag">&lt;/string></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 3 </span><span class="tag">&lt;/resources></span></pre>
+</ul></div>
+<div class="metadata"><div class="explanation" id="explanationDuplicateDefinition" style="display: none;">
+You can define a resource multiple times in different resource folders; that's how string translations are done, for example. However, defining the same resource more than once in the same resource folder is likely an error, for example attempting to add a new resource without realizing that the name is already used, and so on.<br/>To suppress this error, use the issue id "DuplicateDefinition" as explained in the <a href="#SuppressInfo">Suppressing Warnings and Errors</a> section.<br/>
+<br/></div>
+</div>
+</div>
+<div class="chips">
+<span class="mdl-chip">
+    <span class="mdl-chip__text">DuplicateDefinition</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Correctness</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Error</span>
+</span>
+<span class="mdl-chip">
+    <span class="mdl-chip__text">Priority 6/10</span>
+</span>
+</div>
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+<button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="explanationDuplicateDefinitionLink" onclick="reveal('explanationDuplicateDefinition');">
+Explain</button><button class="mdl-button mdl-js-button mdl-js-ripple-effect" id="DuplicateDefinitionCardLink" onclick="hideid('DuplicateDefinitionCard');">
+Dismiss</button>            </div>
+            </div>
           </section>
 <a name="Usability:Icons"></a>
 <a name="IconDuplicates"></a>
@@ -616,11 +740,11 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
-<ul><span class="location"><a href="../default/app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message></span><br /><span class="location"><a href="../default/app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message></span><br /></ul><table>
-<tr><td><a href="../default/app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon2.png" /></a>
-</td><td><a href="../default/app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon3.png" /></a>
-</td><td><a href="../default/app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon4.png" /></a>
+<span class="location"><a href="app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
+<ul><span class="location"><a href="app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message></span><br /><span class="location"><a href="app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message></span><br /></ul><table>
+<tr><td><a href="app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon2.png" /></a>
+</td><td><a href="app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon3.png" /></a>
+</td><td><a href="app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon4.png" /></a>
 </td></tr><tr><th>hdpi</th><th>hdpi</th><th>hdpi</th></tr>
 </table>
 </div>
@@ -663,10 +787,9 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../default/app/res/layout/main.xml">res/layout/main.xml</a>:4</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
-<span class="lineno"> 3 </span>                    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
-<span class="caretline"><span class="lineno"> 4 </span>                    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Fooo"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 5 </span>                </pre>
+<span class="location"><a href="app/res/layout/main.xml">res/layout/main.xml</a>:3</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
+<span class="lineno"> 2 </span>    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
+<span class="caretline"><span class="lineno"> 3 </span>    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Fooo"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></pre>
 
 <br/><b>NOTE: 1 results omitted.</b><br/><br/></div>
 <div class="metadata"><div class="explanation" id="explanationHardcodedText" style="display: none;">

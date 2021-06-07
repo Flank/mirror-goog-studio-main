@@ -27,9 +27,9 @@ class RangeDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.FloatRange;
-                import android.support.annotation.IntRange;
-                import android.support.annotation.Size;
+                import androidx.annotation.FloatRange;
+                import androidx.annotation.IntRange;
+                import androidx.annotation.Size;
 
                 @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class RangeTest {
@@ -187,7 +187,6 @@ class RangeDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -329,8 +328,8 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
                 "src/test/pkg/RangesMultiple.java",
                 """
                 package test.pkg;
-                import android.support.annotation.FloatRange;
-                import android.support.annotation.IntRange;
+                import androidx.annotation.FloatRange;
+                import androidx.annotation.IntRange;
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class RangesMultiple {
                     private static final float[] VALID_FLOAT_ARRAY = new float[] {10.0f, 12.0f, 15.0f};
@@ -381,7 +380,6 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
 
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -423,7 +421,7 @@ src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]
                 """
                 package test.pkg;
 
-                import android.support.annotation.FloatRange;
+                import androidx.annotation.FloatRange;
 
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
                 public class FloatRangeTest {
@@ -438,7 +436,6 @@ src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -480,8 +477,8 @@ src/test/pkg/FloatRangeTest.java:10: Error: Value must be ≤ -5.0 (was -3.0) [R
                 "" +
                     "package android.support.design.widget;\n" +
                     "\n" +
-                    "import android.support.annotation.IntDef;\n" +
-                    "import android.support.annotation.IntRange;\n" +
+                    "import androidx.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntRange;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "import java.lang.annotation.RetentionPolicy;\n" +
@@ -503,7 +500,6 @@ src/test/pkg/FloatRangeTest.java:10: Error: Value must be ≤ -5.0 (was -3.0) [R
                     "    public static final int LENGTH_LONG = 0;\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(RangeDetector.RANGE, TypedefDetector.TYPE_DEF)
@@ -524,8 +520,8 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
                 "" +
                     "package pkg.my.myapplication;\n" +
                     "\n" +
-                    "import android.support.annotation.NonNull;\n" +
-                    "import android.support.annotation.Size;\n" +
+                    "import androidx.annotation.NonNull;\n" +
+                    "import androidx.annotation.Size;\n" +
                     "\n" +
                     "public class SizeTest2 {\n" +
                     "    @Size(3)\n" +
@@ -539,7 +535,6 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -552,8 +547,8 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
                     "\n" +
                     "package pkg.my.myapplication;\n" +
                     "\n" +
-                    "import android.support.annotation.IntRange;\n" +
-                    "import android.support.annotation.Size;\n" +
+                    "import androidx.annotation.IntRange;\n" +
+                    "import androidx.annotation.Size;\n" +
                     "\n" +
                     "@SuppressWarnings({\"WeakerAccess\", \"ConstantConditions\", \"UnusedParameters\", \"unused\"})\n" +
                     "public class X {\n" +
@@ -621,7 +616,6 @@ src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFI
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -639,10 +633,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "src/test/pkg/ConstructorTest.java",
                 """
                 package test.pkg;
-                import android.support.annotation.DrawableRes;
-                import android.support.annotation.IntRange;
-                import android.support.annotation.UiThread;
-                import android.support.annotation.WorkerThread;
+                import androidx.annotation.DrawableRes;
+                import androidx.annotation.IntRange;
+                import androidx.annotation.UiThread;
+                import androidx.annotation.WorkerThread;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored"})
                 public class ConstructorTest {
@@ -661,7 +655,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -674,7 +667,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.IntRange;\n" +
+                    "import androidx.annotation.IntRange;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    public int forcedMeasureHeight = -1;\n" +
@@ -714,7 +707,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .run().expectInlinedMessages()
@@ -727,7 +719,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.IntRange;\n" +
+                    "import androidx.annotation.IntRange;\n" +
                     "\n" +
                     "import java.util.ArrayList;\n" +
                     "import java.util.List;\n" +
@@ -767,7 +759,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -781,7 +772,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "" +
                     "package test.pkg\n" +
                     "\n" +
-                    "import android.support.annotation.FloatRange\n" +
+                    "import androidx.annotation.FloatRange\n" +
                     "import android.util.Log\n" +
                     "\n" +
                     "fun foo(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
@@ -792,7 +783,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "    Log.d(\"AppLog\", \"Radius:\" + radius)\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -803,8 +793,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 "" +
                     "package test.pkg\n" +
                     "\n" +
-                    "import android.support.annotation.FloatRange\n" +
-                    "import android.support.annotation.IntRange\n" +
+                    "import androidx.annotation.FloatRange\n" +
+                    "import androidx.annotation.IntRange\n" +
                     "\n" +
                     "fun check(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
                     "}\n" +
@@ -819,7 +809,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "    check(100.0f) // ERROR\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -841,7 +830,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             java(
                 """
                     package test.pkg;
-                    import android.support.annotation.FloatRange;
+                    import androidx.annotation.FloatRange;
                     import java.util.Random;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
@@ -857,7 +846,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -869,7 +857,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             java(
                 """
                     package test.pkg;
-                    import android.support.annotation.Size;
+                    import androidx.annotation.Size;
                     import java.util.Random;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
@@ -884,7 +872,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -897,7 +884,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             kotlin(
                 """
                     package test.pkg
-                    import android.support.annotation.Size
+                    import androidx.annotation.Size
 
                     class SizeTest {
                         fun method(@Size(5) collection: IntArray) { }
@@ -912,7 +899,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -929,8 +915,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             java(
                 "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.FloatRange;\n" +
-                    "import android.support.annotation.IntRange;\n" +
+                    "import androidx.annotation.FloatRange;\n" +
+                    "import androidx.annotation.IntRange;\n" +
                     "import jar.jar.AnnotationsClass;\n" +
                     "\n" +
                     "public class TestClass {\n" +
@@ -957,8 +943,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 java(
                     "package jar.jar;\n" +
                         "\n" +
-                        "import android.support.annotation.FloatRange;\n" +
-                        "import android.support.annotation.IntRange;\n" +
+                        "import androidx.annotation.FloatRange;\n" +
+                        "import androidx.annotation.IntRange;\n" +
                         "\n" +
                         "public class AnnotationsClass {\n" +
                         "   public static void floatParamBetween0And100(@FloatRange(from = 0.0D,to = 100.0D) float f) {\n" +
@@ -980,7 +966,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "AA=="
 
             ),
-            classpath(SUPPORT_JAR_PATH),
             SUPPORT_ANNOTATIONS_JAR
         )
             .run()
@@ -1033,8 +1018,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             kotlin(
                 """
                 package test.pkg
-                import android.support.annotation.IntRange
-                import android.support.annotation.Size
+                import androidx.annotation.IntRange
+                import androidx.annotation.Size
                 import test.pkg.ColorSpace.Companion.MaxId
                 import test.pkg.ColorSpace.Companion.MinId
                 private fun isSrgb(

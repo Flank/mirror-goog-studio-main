@@ -65,11 +65,11 @@ class EmptyActivityProjectBuilder {
     private val appDependencies: MutableList<GradleProject> = mutableListOf()
 
     /**
-     * Whether Kotlin is used in the app subproject or any of the library subprojects.
+     * Whether Kotlin is used in any of the library subprojects.
      *
-     * Note: It is a `var` because its value can be updated when library subprojects are added.
+     * It is a `var` because its value will be updated when library subprojects are added.
      */
-    private var kotlinUsedInSubProjects: Boolean = useKotlin
+    private var kotlinUsedInLibrarySubprojects: Boolean = false
 
     init {
         if (useGradleBuildCache) {
@@ -92,7 +92,7 @@ class EmptyActivityProjectBuilder {
             .fromTestApp(subProjectsBuilder.build())
             .withConfigurationCaching(withConfigurationCaching)
 
-        rootProjectBuilder.withKotlinGradlePlugin(kotlinUsedInSubProjects)
+        rootProjectBuilder.withKotlinGradlePlugin(useKotlin || kotlinUsedInLibrarySubprojects)
 
         if (useAndroidX) {
             rootProjectBuilder
@@ -324,7 +324,7 @@ class EmptyActivityProjectBuilder {
             appDependencies.add(lib)
         }
         if (useKotlin) {
-            kotlinUsedInSubProjects = true
+            kotlinUsedInLibrarySubprojects = true
         }
         return this
     }
@@ -355,7 +355,7 @@ class EmptyActivityProjectBuilder {
             appDependencies.add(lib)
         }
         if (useKotlin) {
-            kotlinUsedInSubProjects = true
+            kotlinUsedInLibrarySubprojects = true
         }
         return this
     }

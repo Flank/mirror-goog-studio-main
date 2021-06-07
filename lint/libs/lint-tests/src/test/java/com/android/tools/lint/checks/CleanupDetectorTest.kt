@@ -264,20 +264,19 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun testCommit() {
-
         val expected =
             """
             src/test/pkg/CommitTest.java:25: Warning: This transaction should be completed with a commit() call [CommitTransaction]
-                    getFragmentManager().beginTransaction(); // Missing commit
+                    getFragmentManager().beginTransaction(); // ERROR 1
                                          ~~~~~~~~~~~~~~~~
             src/test/pkg/CommitTest.java:30: Warning: This transaction should be completed with a commit() call [CommitTransaction]
-                    FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // Missing commit
+                    FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // ERROR 2
                                                                             ~~~~~~~~~~~~~~~~
             src/test/pkg/CommitTest.java:39: Warning: This transaction should be completed with a commit() call [CommitTransaction]
-                    getFragmentManager().beginTransaction(); // Missing commit
+                    getFragmentManager().beginTransaction(); // ERROR 3
                                          ~~~~~~~~~~~~~~~~
             src/test/pkg/CommitTest.java:65: Warning: This transaction should be completed with a commit() call [CommitTransaction]
-                    getSupportFragmentManager().beginTransaction();
+                    getSupportFragmentManager().beginTransaction(); // ERROR 4
                                                 ~~~~~~~~~~~~~~~~
             0 errors, 4 warnings
             """
@@ -298,26 +297,26 @@ class CleanupDetectorTest : AbstractCheckTest() {
                     @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "ConstantConditions", "UnusedAssignment", "MethodMayBeStatic"})
                     public class CommitTest extends Activity {
                         public void ok1() {
-                            getFragmentManager().beginTransaction().commit();
+                            getFragmentManager().beginTransaction().commit(); // OK 1
                         }
 
                         public void ok2() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 2
                             transaction.commit();
                         }
 
                         public void ok3() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 3
                             transaction.commitAllowingStateLoss();
                         }
 
                         public void error1() {
-                            getFragmentManager().beginTransaction(); // Missing commit
+                            getFragmentManager().beginTransaction(); // ERROR 1
                         }
 
-                        public void error() {
-                            FragmentTransaction transaction1 = getFragmentManager().beginTransaction();
-                            FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // Missing commit
+                        public void error2() {
+                            FragmentTransaction transaction1 = getFragmentManager().beginTransaction(); // OK
+                            FragmentTransaction transaction2 = getFragmentManager().beginTransaction(); // ERROR 2
                             transaction1.commit();
                         }
 
@@ -326,11 +325,11 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         }
 
                         private void error3() {
-                            getFragmentManager().beginTransaction(); // Missing commit
+                            getFragmentManager().beginTransaction(); // ERROR 3
                         }
 
                         public void ok4(FragmentManager manager, String tag) {
-                            FragmentTransaction ft = manager.beginTransaction();
+                            FragmentTransaction ft = manager.beginTransaction(); // OK 4
                             ft.add(null, tag);
                             ft.commit();
                         }
@@ -342,59 +341,59 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         }
 
                         public void ok5() {
-                            getSupportFragmentManager().beginTransaction().commit();
+                            getSupportFragmentManager().beginTransaction().commit(); // OK 5
                         }
 
                         public void ok6(android.support.v4.app.FragmentManager manager, String tag) {
-                            android.support.v4.app.FragmentTransaction ft = manager.beginTransaction();
+                            android.support.v4.app.FragmentTransaction ft = manager.beginTransaction(); // OK 6
                             ft.add(null, tag);
                             ft.commit();
                         }
 
                         public void error4() {
-                            getSupportFragmentManager().beginTransaction();
+                            getSupportFragmentManager().beginTransaction(); // ERROR 4
                         }
 
                         android.support.v4.app.Fragment mFragment1 = null;
                         Fragment mFragment2 = null;
 
                         public void ok7() {
-                            getSupportFragmentManager().beginTransaction().add(android.R.id.content, mFragment1).commit();
+                            getSupportFragmentManager().beginTransaction().add(android.R.id.content, mFragment1).commit(); // OK 7
                         }
 
                         public void ok8() {
-                            getFragmentManager().beginTransaction().add(android.R.id.content, mFragment2).commit();
+                            getFragmentManager().beginTransaction().add(android.R.id.content, mFragment2).commit(); // OK 8
                         }
 
                         public void ok10() {
                             // Test chaining
                             FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction().addToBackStack("test").attach(mFragment2).detach(mFragment2)
+                            fragmentManager.beginTransaction().addToBackStack("test").attach(mFragment2).detach(mFragment2) // OK 10
                             .disallowAddToBackStack().hide(mFragment2).setBreadCrumbShortTitle("test")
                             .show(mFragment2).setCustomAnimations(0, 0).commit();
                         }
 
                         public void ok9() {
                             FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction().commit();
+                            fragmentManager.beginTransaction().commit(); // OK 9
                         }
 
                         public void ok11() {
                             FragmentTransaction transaction;
                             // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction();
+                            transaction = getFragmentManager().beginTransaction(); // OK 11
                             transaction.commit();
                         }
 
                         public void ok12() {
                             FragmentTransaction transaction;
-                            transaction = (getFragmentManager().beginTransaction());
+                            transaction = (getFragmentManager().beginTransaction()); // OK 12
                             transaction.commit();
                         }
 
                         @SuppressWarnings("UnnecessaryLocalVariable")
                         public void ok13() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 13
                             FragmentTransaction temp;
                             temp = transaction;
                             temp.commitAllowingStateLoss();
@@ -402,24 +401,26 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
                         @SuppressWarnings("UnnecessaryLocalVariable")
                         public void ok14() {
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                            FragmentTransaction transaction = getFragmentManager().beginTransaction(); // OK 14
                             FragmentTransaction temp = transaction;
                             temp.commitAllowingStateLoss();
                         }
 
+                        // This error is not yet caught by lint; see clearLhs in DataFlowAnalyzer
                         public void error5(FragmentTransaction unrelated) {
                             FragmentTransaction transaction;
                             // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction();
+                            transaction = getFragmentManager().beginTransaction(); // ERROR 5
                             transaction = unrelated;
                             transaction.commit();
                         }
 
+                        // This error is not yet caught by lint; see clearLhs in DataFlowAnalyzer
                         public void error6(FragmentTransaction unrelated) {
                             FragmentTransaction transaction;
                             FragmentTransaction transaction2;
                             // Comment in between variable declaration and assignment
-                            transaction = getFragmentManager().beginTransaction();
+                            transaction = getFragmentManager().beginTransaction(); // ERROR 6
                             transaction2 = transaction;
                             transaction2 = unrelated;
                             transaction2.commit();
@@ -1711,7 +1712,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.content.SharedPreferences
-                import androidx.content.edit
+                import androidx.core.content.edit
 
                 fun test(sharedPreferences: SharedPreferences, key: String, value: Boolean) {
                     sharedPreferences.edit {
@@ -2105,6 +2106,25 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 "                      ~~~~~~~~~~~\n" +
                 "0 errors, 4 warnings"
         )
+    }
+
+    fun testAnimatorApply() {
+        lint().files(
+            kotlin(
+                """
+                import android.animation.AnimatorSet
+                import android.animation.ValueAnimator
+
+                fun main() {
+                  AnimatorSet().apply {
+                    playTogether(
+                      ValueAnimator.ofFloat().apply { }
+                    )
+                  }.start()
+                }
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
     fun testNotNullAssertionOperator() {

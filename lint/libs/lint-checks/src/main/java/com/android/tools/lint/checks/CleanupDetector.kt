@@ -31,22 +31,16 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.skipParentheses
-import com.google.common.collect.Lists
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
 import com.intellij.psi.PsiVariable
 import com.intellij.psi.util.PsiTreeUtil.getParentOfType
-import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
-import org.jetbrains.uast.ULambdaExpression
-import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UReferenceExpression
@@ -55,15 +49,8 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
-import org.jetbrains.uast.UastCallKind
-import org.jetbrains.uast.getOutermostQualified
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.getQualifiedChain
-import org.jetbrains.uast.tryResolve
-import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
-import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Checks for missing `recycle` calls on resources that encourage it,
@@ -234,15 +221,14 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         recycleType: String,
         recycleName: String
     ) {
-        val method = node.getParentOfType<UMethod>(UMethod::class.java) ?: return
-        val recycled = AtomicBoolean(false)
-        val escapes = AtomicBoolean(false)
+        val method = node.getParentOfType(UMethod::class.java) ?: return
+        var recycled = false
+        var escapes = false
         val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
             override fun receiver(call: UCallExpression) {
                 if (isCleanup(call)) {
-                    recycled.set(true)
+                    recycled = true
                 }
-                super.receiver(call)
             }
 
             private fun isCleanup(call: UCallExpression): Boolean {
@@ -278,7 +264,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
 
             override fun field(field: UElement) {
-                escapes.set(true)
+                escapes = true
             }
 
             override fun argument(
@@ -305,30 +291,33 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     }
                 }
 
-                escapes.set(true)
+                escapes = true
             }
 
             override fun returns(expression: UReturnExpression) {
-                escapes.set(true)
+                escapes = true
             }
         }
         method.accept(visitor)
 
-        if (!recycled.get() && !escapes.get()) {
+        if (!recycled && !escapes) {
             val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
-            val message: String
-            message = if (RECYCLE == recycleName) {
-                String.format(
-                    "This `%1\$s` should be recycled after use with `#recycle()`",
-                    className
-                )
-            } else if (START == recycleName) {
-                "This animation should be started with `#start()`"
-            } else {
-                String.format(
-                    "This `%1\$s` should be freed up after use with `#%2\$s()`",
-                    className, recycleName
-                )
+            val message = when (recycleName) {
+                RECYCLE -> {
+                    String.format(
+                        "This `%1\$s` should be recycled after use with `#recycle()`",
+                        className
+                    )
+                }
+                START -> {
+                    "This animation should be started with `#start()`"
+                }
+                else -> {
+                    String.format(
+                        "This `%1\$s` should be freed up after use with `#%2\$s()`",
+                        className, recycleName
+                    )
+                }
             }
 
             var locationNode: UElement? = node.methodIdentifier
@@ -345,95 +334,47 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         calledMethod: PsiMethod
     ) {
-        // TODO: Switch to new DataFlowAnalyzer
         if (isBeginTransaction(context, calledMethod)) {
-            val boundVariable = getVariableElement(node, true, true)
-            if (isCommittedInChainedCalls(context, node)) {
-                return
-            }
-
-            if (boundVariable != null) {
-                val method = node.getParentOfType<UMethod>(UMethod::class.java) ?: return
-
-                val commitVisitor = object : FinishVisitor(context, boundVariable) {
-                    override fun isCleanupCall(call: UCallExpression): Boolean {
-                        if (isTransactionCommitMethodCall(this.context, call)) {
-                            val chain = call.getOutermostQualified().getQualifiedChain()
-                            if (chain.isEmpty()) {
-                                return false
-                            }
-
-                            var operand: UExpression? = chain[0]
-                            if (operand != null) {
-                                var resolved = operand.tryResolve()
-
-                                if (resolved != null && variables.contains(resolved)) {
-                                    return true
-                                } else if (resolved is PsiMethod &&
-                                    operand is UCallExpression &&
-                                    isCommittedInChainedCalls(
-                                            this.context, operand
-                                        )
-                                ) {
-                                    // Check that the target of the committed chains is the
-                                    // right variable!
-                                    while (operand is UCallExpression) {
-                                        operand = operand.receiver
-                                    }
-                                    if (operand is UResolvable) {
-                                        resolved = operand.resolve()
-                                        if (resolved != null && variables.contains(resolved)) {
-                                            return true
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (isShowFragmentMethodCall(this.context, call)) {
-                            val arguments = call.valueArguments
-                            if (arguments.size == 2) {
-                                val first = arguments[0]
-                                val resolved = first.tryResolve()
-
-                                if (resolved != null && variables.contains(resolved)) {
-                                    return true
-                                }
-                            }
-                        }
-                        return false
+            val method = node.getParentOfType(UMethod::class.java) ?: return
+            var committed = false
+            var escaped = false
+            val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
+                override fun receiver(call: UCallExpression) {
+                    if (isTransactionCommitMethodCall(context, call) ||
+                        isShowFragmentMethodCall(context, call)
+                    ) {
+                        committed = true
                     }
                 }
 
-                method.accept(commitVisitor)
-                if (commitVisitor.isCleanedUp || commitVisitor.variableEscapes()) {
-                    return
+                override fun field(field: UElement) {
+                    escaped = true
+                }
+
+                override fun argument(
+                    call: UCallExpression,
+                    reference: UElement
+                ) {
+                    escaped = true
+                }
+
+                override fun returns(expression: UReturnExpression) {
+                    escaped = true
                 }
             }
+            method.accept(visitor)
 
-            val message = "This transaction should be completed with a `commit()` call"
-            context.report(COMMIT_FRAGMENT, node, context.getNameLocation(node), message)
+            if (!committed && !escaped) {
+                val message = "This transaction should be completed with a `commit()` call"
+                context.report(COMMIT_FRAGMENT, node, context.getNameLocation(node), message)
+            }
         }
-    }
-
-    private fun isCommittedInChainedCalls(
-        context: JavaContext,
-        node: UCallExpression
-    ): Boolean {
-        // Look for chained calls since the FragmentManager methods all return "this"
-        // to allow constructor chaining, e.g.
-        //    getFragmentManager().beginTransaction().addToBackStack("test")
-        //            .disallowAddToBackStack().hide(mFragment2).setBreadCrumbShortTitle("test")
-        //            .show(mFragment2).setCustomAnimations(0, 0).commit();
-        val checker: (JavaContext, UCallExpression) -> Boolean = { c, call ->
-            isTransactionCommitMethodCall(c, call) || isShowFragmentMethodCall(c, call)
-        }
-        return isCommittedInChainedCalls(context, node, checker)
     }
 
     private fun isTransactionCommitMethodCall(
         context: JavaContext,
         call: UCallExpression
     ): Boolean {
-
         val methodName = getMethodName(call)
         return (
             COMMIT == methodName ||
@@ -462,20 +403,13 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         v4FragmentClass: String,
         returnForUnresolved: Boolean
     ): Boolean {
-        val method = call.resolve()
-        return if (method != null) {
-            val containingClass = method.containingClass
-            val evaluator = context.evaluator
-            evaluator.extendsClass(
-                containingClass,
-                fragmentClass,
-                false
-            ) || evaluator.extendsClass(containingClass, v4FragmentClass, false)
-        } else {
-            // If we *can't* resolve the method call, caller can decide
-            // whether to consider the method called or not
-            returnForUnresolved
-        }
+        // If we *can't* resolve the method call, caller can decide
+        // whether to consider the method called or not
+        val method = call.resolve() ?: return returnForUnresolved
+        val containingClass = method.containingClass
+        val evaluator = context.evaluator
+        return evaluator.extendsClass(containingClass, fragmentClass, false) ||
+            evaluator.extendsClass(containingClass, v4FragmentClass, false)
     }
 
     private fun checkEditorApplied(
@@ -483,7 +417,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         calledMethod: PsiMethod
     ) {
-        // TODO: Switch to new DataFlowAnalyzer
         if (isSharedEditorCreation(context, calledMethod)) {
             if (node.valueArguments.isNotEmpty()) {
                 // Passing parameters to edit(); that's not the built-in edit method
@@ -492,72 +425,39 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 return
             }
 
-            val boundVariable = getVariableElement(
-                node,
-                allowChainedCalls = true,
-                allowFields = true
-            )
-            if (isEditorCommittedInChainedCalls(context, node)) {
-                return
-            }
-
-            if (boundVariable != null) {
-                val method = node.getParentOfType<UMethod>(UMethod::class.java) ?: return
-
-                val commitVisitor = object : FinishVisitor(context, boundVariable) {
-                    override fun isCleanupCall(call: UCallExpression): Boolean {
-                        if (isEditorApplyMethodCall(this.context, call) || isEditorCommitMethodCall(
-                                this.context,
-                                call
-                            )
-                        ) {
-                            val chain = call.getOutermostQualified().getQualifiedChain()
-                            if (chain.isEmpty()) {
-                                return false
-                            }
-
-                            var operand: UExpression? = chain[0]
-                            if (operand != null) {
-                                var resolved = operand.tryResolve()
-
-                                if (resolved != null && variables.contains(resolved)) {
-                                    return true
-                                } else if (resolved is PsiMethod &&
-                                    operand is UCallExpression &&
-                                    isEditorCommittedInChainedCalls(
-                                            this.context, operand
-                                        )
-                                ) {
-                                    // Check that the target of the committed chains is the
-                                    // right variable!
-                                    while (operand is UCallExpression) {
-                                        operand = operand.receiver
-                                    }
-                                    if (operand is UResolvable) {
-                                        resolved = operand.resolve()
-                                        if (resolved != null && variables.contains(resolved)) {
-                                            return true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return false
+            val method = node.getParentOfType(UMethod::class.java) ?: return
+            var applied = false
+            var escaped = false
+            val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
+                override fun receiver(call: UCallExpression) {
+                    if (isEditorApplyMethodCall(context, call) ||
+                        isEditorCommitMethodCall(context, call)
+                    ) {
+                        applied = true
                     }
                 }
 
-                method.accept(commitVisitor)
-                if (commitVisitor.isCleanedUp || commitVisitor.variableEscapes()) {
-                    return
+                override fun field(field: UElement) {
+                    escaped = true
                 }
-            } else if (node.getParentOfType<UElement>(UReturnExpression::class.java) != null) {
-                // Allocation is in a return statement
-                return
-            }
 
-            val message =
-                "`SharedPreferences.edit()` without a corresponding `commit()` or " + "`apply()` call"
-            context.report(SHARED_PREF, node, context.getLocation(node), message)
+                override fun argument(
+                    call: UCallExpression,
+                    reference: UElement
+                ) {
+                    escaped = true
+                }
+
+                override fun returns(expression: UReturnExpression) {
+                    escaped = true
+                }
+            }
+            method.accept(visitor)
+
+            if (!applied && !escaped) {
+                val message = "`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+                context.report(SHARED_PREF, node, context.getLocation(node), message)
+            }
         }
     }
 
@@ -575,63 +475,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     containingClass, ANDROID_CONTENT_SHARED_PREFERENCES, false
                 ) && evaluator.typeMatches(type, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR)
                 )
-        }
-
-        return false
-    }
-
-    private fun isEditorCommittedInChainedCalls(
-        context: JavaContext,
-        node: UCallExpression
-    ): Boolean {
-        val checker: (JavaContext, UCallExpression) -> Boolean = { c, call ->
-            isEditorCommitMethodCall(c, call) || isEditorApplyMethodCall(c, call)
-        }
-        return isCommittedInChainedCalls(context, node, checker)
-    }
-
-    private fun isCommittedInChainedCalls(
-        context: JavaContext,
-        node: UCallExpression,
-        isCommitCall: (JavaContext, UCallExpression) -> Boolean
-    ): Boolean {
-        val chain = node.getOutermostQualified().getQualifiedChain()
-        if (chain.isNotEmpty()) {
-            val lastExpression = chain[chain.size - 1]
-            if (lastExpression is UCallExpression) {
-                if (isCommitCall(context, lastExpression)) {
-                    return true
-                }
-
-                // with, run, let, apply, etc chained to the end of this call
-                if (lastArgCallsCommit(context, lastExpression, isCommitCall)) {
-                    return true
-                }
-            }
-
-            // Check preceding calls too (but not for chained lambdas)
-            for (i in chain.size - 2 downTo 1) {
-                val call = chain[i]
-                if (call === node || call !is UCallExpression) {
-                    break
-                } else if (isCommitCall(context, call)) {
-                    return true
-                }
-            }
-        }
-
-        // Surrounding with-call?
-        val parentCall = node.getParentOfType<UCallExpression>(UCallExpression::class.java)
-        if (parentCall != null) {
-            val methodName = getMethodName(parentCall)
-            if ("with" == methodName) {
-                val args = parentCall.valueArguments
-                return args.size == 2 && lastArgCallsCommit(
-                    context,
-                    parentCall,
-                    isCommitCall
-                )
-            }
         }
 
         return false
@@ -754,185 +597,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         }
 
         return false
-    }
-
-    /**
-     * Visitor which checks whether an operation is "finished"; in the
-     * case of a FragmentTransaction we're looking for a "commit" call;
-     * in the case of a TypedArray we're looking for a "recycle", call,
-     * in the case of a database cursor we're looking for a "close"
-     * call, etc.
-     */
-    private abstract class FinishVisitor(
-        protected val context: JavaContext,
-        private val originalVariableNode: PsiVariable
-    ) : AbstractUastVisitor() {
-        protected val variables: MutableList<PsiVariable>
-
-        var isCleanedUp: Boolean = false
-            private set
-
-        private var escapes: Boolean = false
-
-        init {
-            variables = Lists.newArrayList(originalVariableNode)
-        }
-
-        fun variableEscapes(): Boolean {
-            return escapes
-        }
-
-        override fun visitElement(node: UElement): Boolean {
-            return isCleanedUp || super.visitElement(node)
-        }
-
-        protected abstract fun isCleanupCall(call: UCallExpression): Boolean
-
-        override fun visitCallExpression(node: UCallExpression): Boolean {
-            if (node.kind === UastCallKind.METHOD_CALL) {
-                visitMethodCallExpression(node)
-            }
-            return super.visitCallExpression(node)
-        }
-
-        private fun visitMethodCallExpression(call: UCallExpression) {
-            if (isCleanedUp) {
-                return
-            }
-
-            // Look for escapes
-            if (!escapes) {
-                for (expression in call.valueArguments) {
-                    if (expression is UResolvable) {
-                        val resolved = expression.resolve()
-                        if (resolved != null && variables.contains(resolved)) {
-                            val wasEscaped = escapes
-                            escapes = true
-
-                            // Special case: MotionEvent.obtain(MotionEvent): passing in an
-                            // event here does not recycle the event, and we also know it
-                            // doesn't escape
-                            if (OBTAIN == getMethodName(call)) {
-                                val method = call.resolve()
-                                if (context.evaluator
-                                    .isMemberInClass(method, MOTION_EVENT_CLS)
-                                ) {
-                                    escapes = wasEscaped
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (isCleanupCall(call)) {
-                isCleanedUp = true
-            }
-        }
-
-        override fun visitVariable(node: UVariable): Boolean {
-            if (node is ULocalVariable) {
-                val initializer = node.uastInitializer
-                if (initializer is UResolvable) {
-                    val resolved = initializer.resolve()
-                    if (resolved != null && variables.contains(resolved)) {
-                        val psi = node.sourcePsi as? PsiVariable
-                        psi?.let { variables.add(it) }
-                    }
-                }
-            }
-
-            return super.visitVariable(node)
-        }
-
-        override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
-            if (!node.isAssignment()) {
-                return super.visitBinaryExpression(node)
-            }
-
-            // TEMPORARILY DISABLED; see testDatabaseCursorReassignment
-            // This can result in some false positives right now. Play it
-            // safe instead.
-            var clearLhs = false
-
-            val rhs = node.rightOperand
-            if (rhs is UResolvable) {
-                val resolved = rhs.resolve()
-                if (resolved != null && variables.contains(resolved)) {
-                    clearLhs = false
-                    val lhs = node.leftOperand.tryResolve()
-                    if (lhs is PsiLocalVariable) {
-                        variables.add(lhs)
-                    } else if (lhs is PsiField) {
-                        escapes = true
-                    }
-                }
-            }
-
-            if (clearLhs) {
-                // If we reassign one of the variables, clear it out
-                val lhs = node.leftOperand.tryResolve()
-                if (lhs != null && lhs != originalVariableNode && variables.contains(lhs)) {
-                    variables.remove(lhs)
-                }
-            }
-
-            return super.visitBinaryExpression(node)
-        }
-
-        override fun visitReturnExpression(node: UReturnExpression): Boolean {
-            val returnValue = node.returnExpression
-            if (returnValue is UResolvable) {
-                val resolved = returnValue.resolve()
-                if (resolved != null && variables.contains(resolved)) {
-                    escapes = true
-                }
-            }
-
-            return super.visitReturnExpression(node)
-        }
-    }
-
-    private fun lastArgCallsCommit(
-        context: JavaContext,
-        methodInvocation: UCallExpression,
-        checker: (JavaContext, UCallExpression) -> Boolean
-    ): Boolean {
-        val args = methodInvocation.valueArguments
-        if (args.isNotEmpty()) {
-            val last = args[args.size - 1]
-            if (last is ULambdaExpression) {
-                val body = last.body
-                return callsCommit(context, body, checker)
-            }
-        }
-
-        return false
-    }
-
-    private fun callsCommit(
-        context: JavaContext,
-        node: UElement,
-        checker: (JavaContext, UCallExpression) -> Boolean
-    ): Boolean {
-        val visitor = CommitCallVisitor(context, checker)
-        node.accept(visitor)
-        return visitor.isFound
-    }
-
-    private class CommitCallVisitor(
-        private val context: JavaContext,
-        private val isCommitCall: (JavaContext, UCallExpression) -> Boolean
-    ) : AbstractUastVisitor() {
-        var isFound: Boolean = false
-            private set
-
-        override fun visitCallExpression(node: UCallExpression): Boolean {
-            if (isCommitCall(context, node)) {
-                isFound = true
-            }
-            return super.visitCallExpression(node)
-        }
     }
 
     companion object {

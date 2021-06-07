@@ -72,6 +72,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -86,6 +87,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import kotlin.io.FilesKt;
+import kotlin.text.StringsKt;
 import org.jetbrains.kotlin.config.ApiVersion;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -116,6 +118,7 @@ public class Main {
     private static final String ARG_LIST_IDS = "--list";
     private static final String ARG_SHOW = "--show";
     private static final String ARG_QUIET = "--quiet";
+    private static final String ARG_GENERATE_DOCS = "--generate-docs";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_FULL_PATH = "--fullpath";
@@ -1312,6 +1315,14 @@ public class Main {
                 argumentState.mode = LintDriver.DriverMode.ANALYSIS_ONLY;
             } else if (arg.equals(ARG_REPORT_ONLY)) {
                 argumentState.mode = LintDriver.DriverMode.MERGE;
+            } else if (arg.equals(ARG_GENERATE_DOCS)) {
+                if (index != 0) {
+                    System.err.println(
+                            ARG_GENERATE_DOCS + " cannot be used in combination with other flags.");
+                    printUsage(System.err);
+                    return ERRNO_INVALID_ARGS;
+                }
+                return LintIssueDocGenerator.run(Arrays.copyOfRange(args, 1, args.length), true);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -1828,7 +1839,6 @@ public class Main {
     }
 
     private static void printUsage(PrintStream out) {
-        // TODO: Look up launcher script name!
         String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
@@ -1851,6 +1861,10 @@ public class Main {
                     "List available issues along with full explanations.",
                     ARG_SHOW + " <ids>",
                     "Show full explanations for the given list of issue id's.",
+                    ARG_GENERATE_DOCS,
+                    "Generates documentation for all the lint checks. This flag cannot be combined "
+                            + "with other lint flags, and it has its own sub-flags. Invoke on its own "
+                            + "to see what they are.",
                     ARG_FATAL_ONLY,
                     "Only check for fatal severity issues",
                     ARG_AUTO_FIX,
@@ -2007,7 +2021,10 @@ public class Main {
                 });
     }
 
-    private static void printUsage(PrintStream out, String[] args) {
+    static void printUsage(PrintStream out, String[] args) {
+        // Used to emit Markdeep usage docs to update lint/docs/usage/flags.md.html
+        boolean md = false;
+
         int argWidth = 0;
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
@@ -2024,6 +2041,32 @@ public class Main {
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
             String description = args[i + 1];
+            //noinspection ConstantConditions
+            if (md) {
+                if (arg.isEmpty()) {
+                    out.print("## ");
+                    out.println(StringsKt.removeSuffix(description.trim(), ":"));
+                    out.println();
+                } else {
+                    out.print("`");
+                    int index = arg.indexOf(' ');
+                    if (index != -1) {
+                        out.print(arg.substring(0, index));
+                        out.print("` ");
+                        String remainder = arg.substring(index + 1);
+                        // Switch from say <list> to *list*
+                        remainder = remainder.replace('<', '*').replace('>', '*');
+                        out.print(remainder);
+                    } else {
+                        out.print(arg);
+                        out.print('`');
+                    }
+                    out.println();
+                    out.print(wrap(": " + description, 70, "  "));
+                    out.println("");
+                }
+                continue;
+            }
             if (arg.isEmpty()) {
                 out.println(description);
             } else {

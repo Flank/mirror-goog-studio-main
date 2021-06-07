@@ -22,9 +22,9 @@ import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintClient.Companion.clientName
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Scope.values
 import junit.framework.TestCase
 import java.util.EnumSet
-import java.util.HashSet
 
 class BuiltinIssueRegistryTest : TestCase() {
     override fun setUp() {
@@ -35,7 +35,7 @@ class BuiltinIssueRegistryTest : TestCase() {
     @Throws(IllegalAccessException::class)
     fun testCapacities() {
         val registry = TestIssueRegistry()
-        for (scope in Scope.values()) {
+        for (scope in values()) {
             val scopeSet = EnumSet.of(scope)
             checkCapacity(registry, scopeSet)
         }
@@ -82,9 +82,9 @@ class BuiltinIssueRegistryTest : TestCase() {
         val registry = object : BuiltinIssueRegistry() {
             fun isCacheable() = cacheable()
         }
-        val old = LintClient.clientName
+        val old = clientName
         try {
-            TestLintClient(LintClient.CLIENT_STUDIO); // side effect: sets client name
+            TestLintClient(LintClient.CLIENT_STUDIO) // side effect: sets client name
             assertTrue(registry.isCacheable())
             TestLintClient(LintClient.CLIENT_GRADLE)
             assertFalse(registry.isCacheable())

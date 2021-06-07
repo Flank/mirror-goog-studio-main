@@ -21,23 +21,52 @@ import com.android.tools.lint.detector.api.Detector
 class CheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()
 
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+                import java.math.BigDecimal
+
+                @CheckResult
+                fun BigDecimal.double() = this + this
+
+                fun test(score: BigDecimal): BigDecimal {
+                    score.double()
+                    return score
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:10: Warning: The result of double is not used [CheckResult]
+                score.double()
+                ~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testCheckResult() {
         val expected =
             """
-src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
-        bitmap.extractAlpha(); // WARNING
-        ~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/Intersect.java:7: Warning: The result of intersect is not used. If the rectangles do not intersect, no change is made and the original rectangle is not modified. These methods return false to indicate that this has happened. [CheckResult]
-    rect.intersect(aLeft, aTop, aRight, aBottom);
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/CheckPermissions.java:10: Warning: The result of checkCallingOrSelfPermission is not used; did you mean to call #enforceCallingOrSelfPermission(String,String)? [UseCheckPermission]
-        context.checkCallingOrSelfPermission(Manifest.permission.INTERNET); // WRONG
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is not used; did you mean to call #enforcePermission(String,int,int,String)? [UseCheckPermission]
-        context.checkPermission(Manifest.permission.INTERNET, 1, 1);
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-0 errors, 4 warnings
-"""
+            src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
+                    bitmap.extractAlpha(); // WARNING
+                    ~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/Intersect.java:7: Warning: The result of intersect is not used. If the rectangles do not intersect, no change is made and the original rectangle is not modified. These methods return false to indicate that this has happened. [CheckResult]
+                rect.intersect(aLeft, aTop, aRight, aBottom);
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CheckPermissions.java:10: Warning: The result of checkCallingOrSelfPermission is not used; did you mean to call #enforceCallingOrSelfPermission(String,String)? [UseCheckPermission]
+                    context.checkCallingOrSelfPermission(Manifest.permission.INTERNET); // WRONG
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is not used; did you mean to call #enforcePermission(String,int,int,String)? [UseCheckPermission]
+                    context.checkPermission(Manifest.permission.INTERNET, 1, 1);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
         lint().files(
             java(
                 """
@@ -91,7 +120,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                   }
                 }"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -142,16 +170,17 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     public @interface CanIgnoreReturnValue {}"""
             ).indented(),
             javaxCheckReturnValueSource,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
-                "src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
-                    "        method1(); // ERROR: should check\n" +
-                    "        ~~~~~~~~~\n" +
-                    "0 errors, 1 warnings"
+                """
+                src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]
+                        method1(); // ERROR: should check
+                        ~~~~~~~~~
+                0 errors, 1 warnings
+                """
             )
     }
 
@@ -186,6 +215,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                         "package test.pkg;\n" +
                         "import javax.annotation.CheckReturnValue;\n"
                 ),
+                0xad536a8e,
                 "test/pkg/package-info.class:" +
                     "H4sIAAAAAAAAAE1NvQrCMBi81J+qkw66ODprRgcnEQRBECq4p+Gzpo1JaZPi" +
                     "szn4AD6U2CqIN9zB/XDP1/0BYIl+iDBEj2FwtL6QtFWaGEa5kJlIaK7M2S5S" +
@@ -193,7 +223,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     "SsfzLOH/BwzDZsy1MAk/xClJNwEYAnwRoPXhNjq1duukC7wBEsYF4sIAAAA="
             ),
             javaxCheckReturnValueSource,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -209,7 +238,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 "src/test/java/test/pkg/UnitTest.kt",
                 """
                     package test.pkg
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
                     fun something(list: List<String>) {
                         fromNullable(list)
                     }
@@ -217,7 +246,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     fun fromNullable(a: Any?): Any? = a
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR,
             gradle(
                 """
@@ -248,7 +276,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
 
                     fun something(list: List<String>) {
                         list.map { fromNullable(it) }
@@ -257,7 +285,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     @CheckResult
                     fun fromNullable(a: Any?): Any? = a"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -273,7 +300,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
                     fun test() {
                         val list = listOf(1, 2, 3)
 
@@ -309,7 +336,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     @CheckResult
                     fun label(a: Any?): Any? = a"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -325,7 +351,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
 
                     fun testIsUnused(): Int {
                         if (3 > 2) {
@@ -376,9 +402,8 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     fun foo(): Int {
                         return 42
                     }
-"""
+                """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -404,7 +429,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
 
                 package test.pkg
 
-                import android.support.annotation.CheckResult
+                import androidx.annotation.CheckResult
 
                 fun lambda1(): () -> Single<Int> = {
                     if (true) {
@@ -431,7 +456,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -445,7 +469,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
                 package test.pkg;
 
-                import android.support.annotation.CheckResult;
+                import androidx.annotation.CheckResult;
 
                 @SuppressWarnings({"WeakerAccess", "ClassNameDiffersFromFileName"})
                 public class CheckResultTest {
@@ -468,7 +492,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -518,8 +541,8 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     // Stub
                     package io.reactivex;
 
-                    import android.support.annotation.CheckResult;
-                    import java.util.Consumer;
+                    import androidx.annotation.CheckResult;
+                    import java.util.function.Consumer;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public abstract class Observable<T> {
@@ -536,7 +559,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
 
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -655,7 +677,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
                 package test.pkg
 
-                import android.support.annotation.CheckResult
+                import androidx.annotation.CheckResult
 
                 interface Clearable {
                     @CheckResult
@@ -667,7 +689,6 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -675,7 +696,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                                         keyValueStore.clear();
                                         ~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-        """
+            """
         )
     }
 
@@ -721,6 +742,158 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             ),
             errorProneCheckReturnValueSource
         ).run().expectClean()
+    }
+
+    fun testCheckResultInLambda() {
+        // 188436943: False negative in CheckResultDetector in Kotlin lambdas
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.CheckResult
+                import kotlin.random.Random
+
+                @CheckResult
+                fun checkReturn(): String {
+                    return Random.nextInt().toString()
+                }
+
+                val unitLambda: () -> Unit = {
+                    // Should flag: we know based on the lambda's type the return value is unused
+                    checkReturn()
+                }
+
+                val valueLambda: () -> String = {
+                    // Should flag: is not the last expression in the lambda, so value is unused
+                    checkReturn()
+                    "foo"
+                }
+
+                // 188855906: @CheckResult doesn't work inside lambda expressions
+
+                @CheckResult fun x(): String = "Hello"
+
+                fun y() {
+                    x() // Correctly flagged
+
+                    val x1 = run {
+                        x() // Not flagged
+                        ""
+                    }
+
+                    val x2 = "".also {
+                        x() // Not flagged (the `also` block returns Unit)
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test.kt:11: Warning: The result of checkReturn is not used [CheckResult]
+                checkReturn()
+                ~~~~~~~~~~~~~
+            src/test.kt:16: Warning: The result of checkReturn is not used [CheckResult]
+                checkReturn()
+                ~~~~~~~~~~~~~
+            src/test.kt:25: Warning: The result of x is not used [CheckResult]
+                x() // Correctly flagged
+                ~~~
+            src/test.kt:28: Warning: The result of x is not used [CheckResult]
+                    x() // Not flagged
+                    ~~~
+            src/test.kt:33: Warning: The result of x is not used [CheckResult]
+                    x() // Not flagged (the `also` block returns Unit)
+                    ~~~
+            0 errors, 5 warnings
+            """
+        )
+    }
+
+    fun testBrackets() {
+        // Regression test for b/189970773
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress(
+                    "ConstantConditionIf", "ControlFlowWithEmptyBody",
+                    "IMPLICIT_CAST_TO_ANY", "IntroduceWhenSubject"
+                )
+
+                package test.pkg
+
+                fun test() {
+                    if (true) checkResult()     // ERROR 1
+                    if (true) { checkResult() } // ERROR 2
+                    if (true) { } else { checkResult() } // ERROR 3
+                    if (checkResult() != null) { } // OK
+
+                    try { checkResult() } catch (e: Exception) { } // ERROR 4
+                    val ok = try { checkResult() } catch (e: Exception) { } // OK
+
+                    when (checkResult()) { } // OK
+                    when (ok) { true -> checkResult() } // ERROR 5
+                    when (ok) { true -> { checkResult() } } // ERROR 6
+                    val ok2 = when (ok) { true -> checkResult(); else -> { }} // OK
+                    val ok3 = when (ok) { true -> { checkResult() }; else -> { }} // OK
+
+                    when { ok == true -> checkResult(); else -> { }} // ERROR 7
+                    val ok4 = when { ok == true -> checkResult(); else -> { }} // OK
+
+                    // b/189978180
+                    when {
+                        condition1 -> checkReturn()     // ERROR 8
+                        condition2 -> { checkReturn() } // ERROR 9
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                @file:Suppress("RedundantNullableReturnType")
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                @CheckResult
+                fun checkResult(): Number? = 42
+
+                @CheckResult
+                fun checkReturn(): Any = "test"
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:10: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) checkResult()     // ERROR 1
+                                          ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:11: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) { checkResult() } // ERROR 2
+                                            ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) { } else { checkResult() } // ERROR 3
+                                                     ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:15: Warning: The result of checkResult is not used [CheckResult]
+                                try { checkResult() } catch (e: Exception) { } // ERROR 4
+                                      ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:19: Warning: The result of checkResult is not used [CheckResult]
+                                when (ok) { true -> checkResult() } // ERROR 5
+                                                    ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:20: Warning: The result of checkResult is not used [CheckResult]
+                                when (ok) { true -> { checkResult() } } // ERROR 6
+                                                      ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:24: Warning: The result of checkResult is not used [CheckResult]
+                                when { ok == true -> checkResult(); else -> { }} // ERROR 7
+                                                     ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:29: Warning: The result of checkReturn is not used [CheckResult]
+                                    condition1 -> checkReturn()     // ERROR 8
+                                                  ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:30: Warning: The result of checkReturn is not used [CheckResult]
+                                    condition2 -> { checkReturn() } // ERROR 9
+                                                    ~~~~~~~~~~~~~
+            0 errors, 9 warnings
+            """
+        )
     }
 
     private val javaxCheckReturnValueSource = java(

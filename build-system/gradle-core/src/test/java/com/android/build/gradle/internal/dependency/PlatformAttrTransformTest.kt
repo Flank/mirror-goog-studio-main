@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.testutils.TestResources
 import com.google.common.io.Files
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
@@ -72,6 +71,45 @@ class PlatformAttrTransformTest {
         assertThat(outputFile).isNotNull()
         val lines = Files.readLines(outputFile!!, Charsets.UTF_8)
 
-        Truth.assertThat(lines).containsExactly("int attr one 0x00000001", "int attr two 0x00000002")
+        assertThat(lines).containsExactly("int attr one 0x00000001", "int attr two 0x00000002")
+    }
+
+    @Test
+    fun testNullVales() {
+        val transform = object : PlatformAttrTransform() {
+            override val primaryInput: Provider<FileSystemLocation>
+                get() = FakeGradleProvider(
+                        FakeGradleRegularFile(
+                                TestResources.getFile(
+                                        PlatformAttrTransformTest::class.java, "android.jar"
+                                )
+                        )
+                )
+
+            override fun getParameters(): GenericTransformParameters {
+                return object : GenericTransformParameters {
+                    override val projectName = FakeGradleProperty("project")
+                }
+            }
+        }
+
+        var outputFile: File? = null
+        val outputs = object: TransformOutputs {
+            override fun file(p0: Any): File {
+                if (outputFile != null) fail("unexpected multiple calls to 'file'")
+                outputFile = outputDir.newFile(p0.toString())
+                return outputFile!!
+            }
+            override fun dir(p0: Any): File {
+                fail("unexpected 'dir' method call")
+            }
+        }
+
+        transform.transform(outputs)
+
+        assertThat(outputFile).isNotNull()
+        val lines = Files.readLines(outputFile!!, Charsets.UTF_8)
+
+        assertThat(lines).contains("int attr lStar 0x00000000")
     }
 }

@@ -19,7 +19,7 @@ package com.android.tools.lint.checks
 class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
     override fun getDetector() = HighSensorSamplingRateDetector()
 
-    fun testHighSamplingRate() {
+    fun testDocumentationExample() {
         lint().files(
             manifest(
                 """
@@ -45,7 +45,7 @@ class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
                 <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-            """.trimIndent()
+            """
         )
     }
 

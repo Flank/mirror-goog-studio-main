@@ -31,6 +31,132 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         return new StringFormatDetector();
     }
 
+    public void testDocumentationExampleStringFormatMatches() {
+        // Test also extracted as a documentation example for this issue.
+        lint().files(
+                        xml(
+                                "res/values/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"score\">Score: %1$d</string>\n"
+                                        + "</resources>\n"),
+                        java(
+                                ""
+                                        + "import android.app.Activity;\n"
+                                        + "\n"
+                                        + "public class StringFormatMatches extends Activity {\n"
+                                        + "    public void test() {\n"
+                                        + "        String score = getString(R.string.score);\n"
+                                        + "        String output4 = String.format(score, true);  // wrong\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "/*HIDE-FROM-DOCUMENTATION*/public class R {\n"
+                                        + "    public static class string {\n"
+                                        + "        public static final int score = 1;\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .issues(StringFormatDetector.ARG_TYPES)
+                .run()
+                .expect(
+                        ""
+                                + "src/StringFormatMatches.java:6: Error: Wrong argument type for formatting argument '#1' in score: conversion is 'd', received boolean (argument #2 in method call) (Did you mean formatting character b?) [StringFormatMatches]\n"
+                                + "        String output4 = String.format(score, true);  // wrong\n"
+                                + "                                              ~~~~\n"
+                                + "    res/values/formatstrings.xml:2: Conflicting argument declaration here\n"
+                                + "    <string name=\"score\">Score: %1＄d</string>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testDocumentationExampleStringFormatCount() {
+        // Test also extracted as a documentation example for this issue.
+        lint().files(
+                        xml(
+                                "res/values/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"hello\">Hello %1$s, %2$s?</string>\n"
+                                        + "</resources>\n"),
+                        xml(
+                                "res/values-es/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"hello\">%3$d: %1$s, %2$s?</string>\n"
+                                        + "</resources>\n"))
+                .issues(StringFormatDetector.ARG_COUNT)
+                .run()
+                .expect(
+                        ""
+                                + "res/values-es/formatstrings.xml:2: Warning: Inconsistent number of arguments in formatting string hello; found both 3 here and 2 in values/formatstrings.xml [StringFormatCount]\n"
+                                + "    <string name=\"hello\">%3＄d: %1＄s, %2＄s?</string>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "    res/values/formatstrings.xml:2: Conflicting number of arguments (2) here\n"
+                                + "    <string name=\"hello\">Hello %1＄s, %2＄s?</string>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
+    public void testDocumentationExampleStringFormatInvalid() {
+        // Test also extracted as a documentation example for this issue.
+        lint().files(
+                        java(
+                                ""
+                                        + "public class StringFormatInvalid {\n"
+                                        + "    public static void testContext(android.content.Context context) {\n"
+                                        + "        context.getString(R.string.no_args, \"first\"); // ERROR\n"
+                                        + "    }\n"
+                                        + "}"),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "    <string name=\"no_args\">Hello</string>\n"
+                                        + "</resources>"),
+                        java(
+                                ""
+                                        + "/*HIDE-FROM-DOCUMENTATION*/public class R {\n"
+                                        + "    public static class string {\n"
+                                        + "        public static final int no_args = 0x7f0a0001;\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/StringFormatInvalid.java:3: Error: Format string 'no_args' is not a valid format string so it should not be passed to String.format [StringFormatInvalid]\n"
+                                + "        context.getString(R.string.no_args, \"first\"); // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "    res/values/strings.xml:3: This definition does not require arguments\n"
+                                + "    <string name=\"no_args\">Hello</string>\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testDocumentationExamplePluralsCandidate() {
+        // Test also extracted as a documentation example for this issue.
+        lint().files(
+                        xml(
+                                "res/values/plurals_candidates.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                                        + "    <!-- Warnings: should be plurals instead -->\n"
+                                        + "    <string name=\"lockscreen_too_many_failed_attempts_dialog_message1\">\n"
+                                        + "        You have incorrectly drawn your unlock pattern %d times.\n"
+                                        + "        \\n\\nTry again in >%d seconds.\n"
+                                        + "    </string>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expect(
+                        ""
+                                + "res/values/plurals_candidates.xml:4: Warning: Formatting %d followed by words (\"times\"): This should probably be a plural rather than a string [PluralsCandidate]\n"
+                                + "    <string name=\"lockscreen_too_many_failed_attempts_dialog_message1\">\n"
+                                + "    ^\n"
+                                + "0 errors, 1 warnings\n");
+    }
+
     public void testAll() {
         String expected =
                 ""
@@ -1623,7 +1749,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "import android.content.res.Resources;\n"
                                         + "\n"
-                                        + "public class FormatSuggestions {\n"
+                                        + "public class FormatSuggestions extends android.app.Activity {\n"
                                         + "    private void format() {\n"
                                         + "        String format = getString(R.string.invalid_format, \"format\"); // inspection error is not reported\n"
                                         + "    }\n"

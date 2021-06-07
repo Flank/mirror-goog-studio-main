@@ -1396,11 +1396,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createJavacTask(
             creationConfig: ComponentCreationConfig
     ): TaskProvider<out JavaCompile> {
-        taskFactory.register(JavaPreCompileTask.CreationAction(creationConfig))
-        val javacTask: TaskProvider<out JavaCompile> = taskFactory.register(
-                JavaCompileCreationAction(
-                        creationConfig,
-                        isKotlinKaptPluginApplied(project)))
+        val usingKapt = isKotlinKaptPluginApplied(project)
+        taskFactory.register(JavaPreCompileTask.CreationAction(creationConfig, usingKapt))
+        val javacTask: TaskProvider<out JavaCompile> =
+            taskFactory.register(JavaCompileCreationAction(creationConfig, usingKapt))
         postJavacCreation(creationConfig)
         return javacTask
     }

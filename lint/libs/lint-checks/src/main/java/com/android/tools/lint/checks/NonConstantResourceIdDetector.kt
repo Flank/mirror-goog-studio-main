@@ -111,7 +111,7 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
         @JvmField
         val NON_CONSTANT_RESOURCE_ID = Issue.create(
             id = "NonConstantResourceId",
-            briefDescription = "Checks use of resource IDs in places requiring constants.",
+            briefDescription = "Checks use of resource IDs in places requiring constants",
             explanation = """
                 Avoid the usage of resource IDs where constant expressions are required.
 

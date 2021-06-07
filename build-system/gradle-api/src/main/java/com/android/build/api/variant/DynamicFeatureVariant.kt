@@ -15,8 +15,6 @@
  */
 package com.android.build.api.variant
 
-import com.android.build.api.component.AndroidTest
-
 interface DynamicFeatureVariant : Variant, GeneratesApk {
 
     /**

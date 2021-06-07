@@ -284,38 +284,43 @@ class ToastDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    val snackbarStubs = arrayOf(
-        java(
-            """
-            package com.google.android.material.snackbar;
-            import android.view.View;
-            public abstract class BaseTransientBottomBar<B extends BaseTransientBottomBar<B>> {
-                public void show() { }
-                public B setAnchorView(View anchorView) {
-                    //noinspection unchecked
-                    return (B) this;
+    companion object {
+        val snackbarStubs = arrayOf(
+            java(
+                """
+                package com.google.android.material.snackbar;
+                import android.view.View;
+                public abstract class BaseTransientBottomBar<B extends BaseTransientBottomBar<B>> {
+                    public void show() { }
+                    public B setAnchorView(View anchorView) {
+                        //noinspection unchecked
+                        return (B) this;
+                    }
                 }
-            }
-            """
-        ).indented(),
-        java(
-            """
-            package com.google.android.material.snackbar;
-            import android.view.View;
-            public class Snackbar extends BaseTransientBottomBar<Snackbar> {
-                public void show() { }
-                public static final int LENGTH_INDEFINITE = -2;
-                public static final int LENGTH_SHORT = -1;
-                public static final int LENGTH_LONG = 0;
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.android.material.snackbar;
+                import android.view.View;
+                public class Snackbar extends BaseTransientBottomBar<Snackbar> {
+                    public void show() { }
+                    public static final int LENGTH_INDEFINITE = -2;
+                    public static final int LENGTH_SHORT = -1;
+                    public static final int LENGTH_LONG = 0;
 
-                public static Snackbar make(View view, CharSequence text, int duration) {
-                    return null;
+                    public static Snackbar make(View view, CharSequence text, int duration) {
+                        return null;
+                    }
+                    public static Snackbar make(View view, int resId, int duration) {
+                       return null;
+                    }
+                    public Snackbar setActionTextColor(int color) {
+                        return this;
+                    }
                 }
-                public static Snackbar make(View view, int resId, int duration) {
-                   return null;
-                }
-            }
-            """
+                """
+            )
         )
-    )
+    }
 }

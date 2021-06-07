@@ -16,13 +16,13 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.extension.VariantSelector
+import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.VariantSelector
 import java.util.regex.Pattern
 
 open class VariantSelectorImpl : VariantSelector {
 
-    override fun all(): VariantSelector= this
+    override fun all(): VariantSelector = this
 
     // By default the selector applies to all variants.
     internal open fun appliesTo(variant: ComponentIdentity): Boolean {

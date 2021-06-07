@@ -16,7 +16,11 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.testutils.internal.CopyOfTester;
+import groovy.util.Eval;
 import org.junit.Test;
 
 public class SigningConfigTest {
@@ -33,5 +37,17 @@ public class SigningConfigTest {
 
                     new SigningConfig("copy").initWith(original);
                 });
+    }
+
+    @Test
+    public void testGroovyInitWith() throws Exception {
+        SigningConfig original =
+                FakeObjectFactory.getFactory().newInstance(SigningConfig.class, "original");
+        original.setEnableV1Signing(false);
+        SigningConfig copy =
+                FakeObjectFactory.getFactory().newInstance(SigningConfig.class, "copy");
+        // Check that groovy can invoke initWith
+        Eval.xy(copy, original, "x.initWith(y)");
+        assertThat(copy.getEnableV1Signing()).isFalse();
     }
 }

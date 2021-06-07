@@ -515,7 +515,7 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import android.view.View;\n" +
                     "\n" +
-                    "import com.example.tnorbye.myapplication.R;\n" +
+                    "import test.pkg.myapplication.R;\n" +
                     "\n" +
                     "public class ImplicitCastTest2 extends MyActivityStub {\n" +
                     "    public void test() {\n" +

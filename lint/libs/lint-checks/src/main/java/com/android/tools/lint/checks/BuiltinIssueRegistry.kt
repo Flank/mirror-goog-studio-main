@@ -1,5 +1,5 @@
 /*
- * Copyright (C, 2011 The Android Open Source Project
+ * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License",;
  * you may not use this file except in compliance with the License.
@@ -225,6 +225,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 LintDetectorDetector.CHECK_URL,
                 LintDetectorDetector.DOLLAR_STRINGS,
                 LintDetectorDetector.ID,
+                LintDetectorDetector.MISSING_DOC_EXAMPLE,
                 LintDetectorDetector.PSI_COMPARE,
                 LintDetectorDetector.TEXT_FORMAT,
                 LintDetectorDetector.TRIM_INDENT,

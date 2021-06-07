@@ -26,6 +26,43 @@ import java.io.File
 class RestrictToDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RestrictToDetector()
 
+    fun testDocumentationExampleVisibleForTesting() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.VisibleForTesting
+
+                class ProductionCode {
+                    fun compute() {
+                        initialize() // OK
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+                    fun initialize() {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                class Code {
+                    fun test() {
+                        ProductionCode().initialize() // Not allowed; this method is intended to be private
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Code.kt:4: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                                    ProductionCode().initialize() // Not allowed; this method is intended to be private
+                                                     ~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testRestrictToSubClass() {
         val expected =
             """
@@ -43,7 +80,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.RestrictTo;
+                    import androidx.annotation.RestrictTo;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public class RestrictToSubclassTest {
@@ -73,7 +110,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -183,7 +219,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package com.example.mylibrary;
 
-                import android.support.annotation.RestrictTo;
+                import androidx.annotation.RestrictTo;
 
                 public class LibraryCode {
                     // No restriction: any access is fine.
@@ -372,8 +408,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.RestrictTo;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.RestrictTo;
+                import androidx.annotation.VisibleForTesting;
 
                 @SuppressWarnings({"InfiniteRecursion", "ClassNameDiffersFromFileName"})
                 public class ProductionCode {
@@ -412,7 +448,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -441,7 +476,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.VisibleForTesting;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class ProductionCode {
@@ -476,7 +511,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.otherpkg;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.VisibleForTesting;
                 import test.pkg.ProductionCode;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
@@ -508,7 +543,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -518,7 +552,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.VisibleForTesting;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class ProductionCode {
@@ -542,7 +576,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .incremental("test/test/pkg/UnitTest.java")
@@ -555,7 +588,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.VisibleForTesting;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class PrivTest {
@@ -573,7 +606,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -797,7 +829,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.otherpkg;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.VisibleForTesting;
                 import test.pkg.ProductionCode;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
@@ -829,6 +861,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            SUPPORT_ANNOTATIONS_JAR,
             // From Guava; also Apache licensed
             guavaVisibleForTestingAnnotation
         ).run().expect(expected)
@@ -843,7 +876,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             /*
             Compiled version of these two classes:
                 package test.pkg;
-                import android.support.annotation.RestrictTo;
+                import androidx.annotation.RestrictTo;
                 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
                 public class RestrictedParent {
                 }
@@ -913,7 +946,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                    "\n" +
                     "import com.google.android.gms.foo.bar.SubclassHiddenClass;\n" +
                     "import com.google.android.gms.foo.bar.SubclassHiddenInPackage;\n" +
                     "\n" +
@@ -1065,7 +1098,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import com.google.android.gms.common.internal.Hide;\n" +
                     "import com.google.android.gms.common.internal.ShowFirstParty;\n" +
-                    "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                    "\n" +
                     "\n" +
                     "public class HideTest {\n" +
                     "    public void test() {\n" +
@@ -1199,7 +1232,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.VisibleForTesting;\n" +
+                    "import androidx.annotation.VisibleForTesting;\n" +
                     "\n" +
                     "public class LintBugExample {\n" +
                     "    public static Object demonstrateBug() {\n" +
@@ -1211,7 +1244,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1224,7 +1256,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg\n" +
                     "\n" +
-                    "import android.support.annotation.VisibleForTesting\n" +
+                    "import androidx.annotation.VisibleForTesting\n" +
                     "\n" +
                     "fun foo() {\n" +
                     "    AndroidOSVersionChecker()\n" +
@@ -1234,7 +1266,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "internal class AndroidOSVersionChecker2 {\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1246,8 +1277,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Bundle
-                import android.app.Acativity
-                import android.support.annotation.VisibleForTesting
+                import android.app.Activity
+                import androidx.annotation.VisibleForTesting
                 import android.util.Log
 
                 class MainActivity : Activity() {
@@ -1285,7 +1316,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1324,7 +1354,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.RestrictTo
+                import androidx.annotation.RestrictTo
 
                 @RestrictTo(RestrictTo.Scope.TESTS)
                 open class RestrictedClass
@@ -1334,7 +1364,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.RestrictTo
+                import androidx.annotation.RestrictTo
 
                 @RestrictTo(RestrictTo.Scope.TESTS)
                 interface RestrictedInterface
@@ -1349,7 +1379,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1372,7 +1401,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             kotlin(
                 """
                 package test.pkg
-                import android.support.annotation.VisibleForTesting
+                import androidx.annotation.VisibleForTesting
                 @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
                 class RunnerFactoryKotlin {
                 }
@@ -1398,7 +1427,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1413,8 +1441,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RestrictTo;
-                import static android.support.annotation.RestrictTo.Scope.TESTS;
+                import androidx.annotation.RestrictTo;
+                import static androidx.annotation.RestrictTo.Scope.TESTS;
 
                 class Outer {
                     private Inner innerInstance;
@@ -1432,7 +1460,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1453,8 +1480,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.VisibleForTesting
-                import android.support.annotation.VisibleForTesting.NONE
+                import androidx.annotation.VisibleForTesting
+                import androidx.annotation.VisibleForTesting.NONE
 
                 open class Foo {
                     var hiddenProp: String = ""
@@ -1520,7 +1547,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1567,7 +1593,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.VisibleForTesting
+                import androidx.annotation.VisibleForTesting
 
                 class MyViewModel {
                     @get:VisibleForTesting
@@ -1590,7 +1616,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1609,7 +1634,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.RestrictTo
+                import androidx.annotation.RestrictTo
 
                 class Foo {
                     @RestrictTo(RestrictTo.Scope.SUBCLASSES)
@@ -1620,7 +1645,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 val foo = Foo()
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1638,8 +1662,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                import android.support.annotation.RestrictTo;
-                import android.support.annotation.RestrictTo.Scope.SUBCLASSES;
+                import androidx.annotation.RestrictTo;
+                import androidx.annotation.RestrictTo.Scope.SUBCLASSES;
 
                 class Foo
 
@@ -1649,7 +1673,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1675,7 +1698,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             java(
                 "" +
                     "package test.pkg;\n" +
-                    "import android.support.annotation.VisibleForTesting;\n" +
+                    "import androidx.annotation.VisibleForTesting;\n" +
                     "@Deprecated\n" +
                     "public class LocalSdk {\n" +
                     "    private final String mFileOp;\n" +
@@ -1686,7 +1709,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "}\n" +
                     ""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -1707,7 +1729,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 Library.java:
                     package library.pkg;
 
-                    import android.support.annotation.RestrictTo;
+                    import androidx.annotation.RestrictTo;
 
                     public class Library {
                         public static void method() {
@@ -1721,7 +1743,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 PrivateClass.java:
                     package library.pkg;
 
-                    import android.support.annotation.RestrictTo;
+                    import androidx.annotation.RestrictTo;
 
                     @RestrictTo(RestrictTo.Scope.GROUP_ID)
                     public class PrivateClass {
@@ -1733,7 +1755,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     @RestrictTo(RestrictTo.Scope.GROUP_ID)
                     package library.pkg.internal;
 
-                    import android.support.annotation.RestrictTo;
+                    import androidx.annotation.RestrictTo;
 
                 InternalClass.java:
                     package library.pkg.internal;
@@ -1888,7 +1910,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     group=test.pkg.library
                     """
             ).indented(),
-            restrictToAnnotation
+            SUPPORT_ANNOTATIONS_JAR
         ).name("lib1")
 
         // Add library3 to test case when group doesn't contain any dots.
@@ -1912,7 +1934,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     group=dotless
                     """
             ).indented(),
-            restrictToAnnotation
+            SUPPORT_ANNOTATIONS_JAR
         ).name("lib3")
 
         val library2 = project().files(
@@ -2043,30 +2065,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 PROTECTED
             }
           Visibility productionVisibility() default Visibility.PRIVATE;
-        }
-        """
-    ).indented()
-
-    private val restrictToAnnotation: TestFile = java(
-        """
-        package androidx.annotation;
-
-        import static java.lang.annotation.ElementType.*;
-        import static java.lang.annotation.RetentionPolicy.CLASS;
-        import java.lang.annotation.*;
-        @Retention(CLASS)
-        @Target({ANNOTATION_TYPE, TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE})
-        public @interface RestrictTo {
-            Scope[] value();
-            enum Scope {
-                LIBRARY,
-                LIBRARY_GROUP,
-                LIBRARY_GROUP_PREFIX,
-                @Deprecated
-                GROUP_ID,
-                TESTS,
-                SUBCLASSES,
-            }
         }
         """
     ).indented()

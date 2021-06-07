@@ -54,8 +54,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
@@ -402,10 +404,18 @@ public class TestFile {
             try (JarOutputStream jarOutputStream =
                     new JarOutputStream(
                             new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
+                Set<String> seen = new HashSet<>();
                 for (TestFile file : files) {
                     String path = this.path.get(file);
                     if (path == null) {
                         path = file.targetRelativePath;
+                    }
+                    if (seen.add(path)) {
+                        // Duplicate: OK for .kotlin_module files; we include them redundantly in
+                        // CompiledSourceFiles
+                        if (path.startsWith("META-INF/") && path.endsWith(".kotlin_module")) {
+                            continue;
+                        }
                     }
                     jarOutputStream.putNextEntry(new ZipEntry(path));
                     if (file instanceof BinaryTestFile) {

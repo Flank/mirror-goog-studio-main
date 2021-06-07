@@ -22,6 +22,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
         return MediaCapabilitiesDetector()
     }
 
+    @Suppress("LintDocExample")
     fun testCorrect() {
         lint().files(
             GRADLE_VERSION_7_0_0_ALPHA_08,
@@ -111,7 +112,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                         <property android:name="android.content.MEDIA_CAPABILITIES"/>
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-                """.trimIndent()
+                """
             )
     }
 

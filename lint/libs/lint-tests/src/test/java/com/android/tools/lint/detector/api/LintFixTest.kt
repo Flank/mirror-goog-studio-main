@@ -96,7 +96,7 @@ class LintFixTest : TestCase() {
             .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
-                "src/test/pkg/Test.java:5: Warning: Sample test message [TestIssueId]\n" +
+                "src/test/pkg/Test.java:5: Warning: Sample test message [_TestIssueId]\n" +
                     "        Log.d(\"TAG\", \"msg\");\n" +
                     "        ~~~\n" +
                     "0 errors, 1 warnings\n"
@@ -167,7 +167,7 @@ class LintFixTest : TestCase() {
 
         companion object {
             val SAMPLE_ISSUE = Issue.create(
-                "TestIssueId", "Not applicable", "Not applicable",
+                "_TestIssueId", "Not applicable", "Not applicable",
                 Category.MESSAGES, 5, Severity.WARNING,
                 Implementation(
                     SampleTestDetector::class.java,

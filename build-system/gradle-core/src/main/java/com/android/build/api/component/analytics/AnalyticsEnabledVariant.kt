@@ -161,10 +161,10 @@ abstract class AnalyticsEnabledVariant (
             return delegate.targetSdkVersion
         }
 
-    override val properties: MapProperty<String, Any>
+    override val experimentalProperties: MapProperty<String, Any>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.VARIANT_PROPERTIES_VALUE
-            return delegate.properties
+            return delegate.experimentalProperties
         }
 }

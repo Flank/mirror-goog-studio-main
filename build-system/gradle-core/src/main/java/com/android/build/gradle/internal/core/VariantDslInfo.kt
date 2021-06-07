@@ -387,5 +387,5 @@ interface VariantDslInfo {
     val renderscriptOptimLevel: Int
 
     // DO NOT USE, Use CreationConfig and subtypes methods.
-    val properties: Map<String, Any>
+    val experimentalProperties: Map<String, Any>
 }

@@ -1277,7 +1277,7 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
                             <intent-filter>
                                  <action android:name="android.intent.action.PROVIDER_CHANGED"/>
                                  <data android:scheme="content"/>
-                                 <data android:host="${"$"}{applicationId}.provider"/>
+                                 <data android:host="＄{applicationId}.provider"/>
                                  <data android:path="/beep/boop"/>
                                  <data android:mimeType="*/*"/>
                              </intent-filter>
@@ -1304,10 +1304,10 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
                         <activity>
                             <intent-filter>
                                 <!-- Following https://developer.android.com/guide/topics/providers/content-provider-basics#MIMETypeReference -->
-                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{applicationId}.item" /> <!-- OK -->
+                                <data android:mimeType="vnd.android.cursor.item/vnd.＄{applicationId}.item" /> <!-- OK -->
                             </intent-filter>
                             <intent-filter>
-                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{placeholder}.item" /> <!-- WARN -->
+                                <data android:mimeType="vnd.android.cursor.item/vnd.＄{placeholder}.item" /> <!-- WARN -->
                             </intent-filter>
                         </activity>
                     </application>
@@ -1327,7 +1327,7 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
         ).run().expect(
             """
                 src/main/AndroidManifest.xml:12: Error: Mime-type matching is case sensitive and should only use lower-case characters (without placeholders, value is vnd.android.cursor.item/vnd.ABCitem) [AppLinkUrlError]
-                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{placeholder}.item" /> <!-- WARN -->
+                                <data android:mimeType="vnd.android.cursor.item/vnd.＄{placeholder}.item" /> <!-- WARN -->
                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
@@ -1374,7 +1374,7 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
                                 <data
                                     android:scheme="http"
                                     android:host="example.com"
-                                    android:pathPrefix="${"$"}{DEEP_LINK_PREFIX}" />
+                                    android:pathPrefix="＄{DEEP_LINK_PREFIX}" />
                             </intent-filter>
                         </activity>
                     </application>

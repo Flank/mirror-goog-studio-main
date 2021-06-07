@@ -15,12 +15,42 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.AnnotationDetectorTest.Companion.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
 import com.android.tools.lint.detector.api.Detector
 
 class CallSuperDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
         return CallSuperDetector()
+    }
+
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.CallSuper
+
+                open class ParentClass {
+                    @CallSuper
+                    open fun someMethod(arg: Int) {
+                        // ...
+                    }
+                }
+
+                class MyClass : ParentClass() {
+                    override fun someMethod(arg: Int) {
+                        // Bug: required to call super.someMethod(arg)
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/ParentClass.kt:11: Error: Overriding method should call super.someMethod [MissingSuperCall]
+                override fun someMethod(arg: Int) {
+                             ~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
     }
 
     fun testCallSuper() {
@@ -51,7 +81,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.CallSuper;
+                import androidx.annotation.CallSuper;
 
                 import java.util.List;
                 import java.util.Map;
@@ -138,23 +168,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                package android.support.annotation;
-
-                import java.lang.annotation.Retention;
-                import java.lang.annotation.Target;
-
-                import static java.lang.annotation.ElementType.CONSTRUCTOR;
-                import static java.lang.annotation.ElementType.METHOD;
-                import static java.lang.annotation.RetentionPolicy.CLASS;
-
-                @Retention(CLASS)
-                @Target({METHOD,CONSTRUCTOR})
-                public @interface CallSuper {
-                }
-                """
-            ).indented()
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
 
@@ -256,7 +270,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.CallSuper;
+                import androidx.annotation.CallSuper;
 
                 import java.util.List;
                 import java.util.Map;
@@ -289,11 +303,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            classpath(SUPPORT_JAR_PATH),
-            base64gzip(
-                SUPPORT_JAR_PATH,
-                SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
-            )
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -585,23 +595,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                package androidx.annotation;
-
-                import java.lang.annotation.Retention;
-                import java.lang.annotation.Target;
-
-                import static java.lang.annotation.ElementType.CONSTRUCTOR;
-                import static java.lang.annotation.ElementType.METHOD;
-                import static java.lang.annotation.RetentionPolicy.CLASS;
-
-                @Retention(CLASS)
-                @Target({METHOD,CONSTRUCTOR})
-                public @interface CallSuper {
-                }
-                """
-            ).indented()
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 }

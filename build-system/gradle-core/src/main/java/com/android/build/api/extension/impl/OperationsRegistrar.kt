@@ -16,8 +16,8 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.extension.VariantSelector
+import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.VariantSelector
 import org.gradle.api.Action
 import java.util.concurrent.atomic.AtomicBoolean
 

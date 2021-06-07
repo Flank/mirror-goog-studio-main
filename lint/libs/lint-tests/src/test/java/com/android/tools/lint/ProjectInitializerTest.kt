@@ -23,9 +23,9 @@ import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
+import com.android.tools.lint.checks.AbstractCheckTest.SUPPORT_ANNOTATIONS_JAR
 import com.android.tools.lint.checks.AbstractCheckTest.base64gzip
 import com.android.tools.lint.checks.AbstractCheckTest.jar
-import com.android.tools.lint.checks.AnnotationDetectorTest.Companion.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest.bytes
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
@@ -952,7 +952,7 @@ class ProjectInitializerTest {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.RequiresApi;
+                    import androidx.annotation.RequiresApi;
                     import android.util.Log;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
@@ -968,7 +968,7 @@ class ProjectInitializerTest {
                     }
                     """
             ).indented(),
-            base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP),
+            SUPPORT_ANNOTATIONS_JAR,
             xml(
                 "project.xml",
                 """
@@ -1223,7 +1223,7 @@ class ProjectInitializerTest {
                 java(
                     """
                     package test.pkg;
-                    import android.support.annotation.WorkerThread;
+                    import androidx.annotation.WorkerThread;
 
                     public class Client {
                         @WorkerThread
@@ -1254,7 +1254,7 @@ class ProjectInitializerTest {
                 }
                 """
                 ).indented(),
-                base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP),
+                SUPPORT_ANNOTATIONS_JAR,
                 // zip annotations file
                 jar(
                     "annotations.zip",
@@ -1263,7 +1263,7 @@ class ProjectInitializerTest {
                         """
                     <root>
                       <item name="test.pkg1.Library1 void method1()">
-                        <annotation name="android.support.annotation.UiThread"/>
+                        <annotation name="androidx.annotation.UiThread"/>
                       </item>
                     </root>
                     """
@@ -1275,7 +1275,7 @@ class ProjectInitializerTest {
                     """
                 <root>
                   <item name="test.pkg2.Library2 void method2()">
-                    <annotation name="android.support.annotation.UiThread"/>
+                    <annotation name="androidx.annotation.UiThread"/>
                   </item>
                 </root>
                 """
@@ -1340,7 +1340,7 @@ class ProjectInitializerTest {
                 java(
                     """
                 package test.pkg;
-                import android.support.annotation.IntDef;
+                import androidx.annotation.IntDef;
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;
                 public class Java14Test {
@@ -1364,7 +1364,7 @@ class ProjectInitializerTest {
                 }
                 """
                 ).indented(),
-                base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP),
+                SUPPORT_ANNOTATIONS_JAR,
                 xml(
                     "project.xml",
                     """

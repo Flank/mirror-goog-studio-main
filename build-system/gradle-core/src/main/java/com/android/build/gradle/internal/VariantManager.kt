@@ -33,13 +33,13 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.AndroidTest
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.VariantExtensionConfig
+import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -283,7 +283,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 dslNamespaceProvider,
                 dslTestNamespace,
                 configuredNativeBuilder(),
-                (extension as CommonExtension<*, *, *, *>).properties
+                (extension as CommonExtension<*, *, *, *>).experimentalProperties
         )
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -777,10 +777,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
-
-            val userVisibleVariant =
-                    androidTest.createUserVisibleVariantObject<AndroidTest>(
-                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
             androidTest
         } else {
             // this is UNIT_TEST
@@ -798,10 +794,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
-
-            val userVisibleVariant =
-                    unitTest.createUserVisibleVariantObject<UnitTest>(
-                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
             unitTest
         }
 

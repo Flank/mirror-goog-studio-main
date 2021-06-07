@@ -409,7 +409,16 @@ fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
         if (!values.hasNext()) {
             failParseArrayLiteral(size, valuesString)
         }
-        ints.add(valueStringToInt(values.next()))
+        val value = values.next()
+        // Starting S, android attrs might be unstable and in that case instead of a value we will
+        // have a reference to the android.R here instead (e.g. android.R.attr.lStar). In that case
+        // just parse it as a zero, and then re-create when writing the R.jar (the name matches the
+        // child exactly, e.g. a child attr "android:foo" will reference android.R.attr.foo).
+        if (value.startsWith("android")) {
+            ints.add(0)
+        } else {
+            ints.add(valueStringToInt(value))
+        }
     }
     if (values.hasNext()) {
         failParseArrayLiteral(size, valuesString)

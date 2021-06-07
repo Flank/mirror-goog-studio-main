@@ -96,6 +96,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                             (v.major != 2 || (v.minor != 7 || !v.isPreview)) &&
                                     (filter == null || filter(v))
                         }
+                        .filter { allowPreview || !it.isPreview }
                         .max()
                         ?.let { return it }
                 }

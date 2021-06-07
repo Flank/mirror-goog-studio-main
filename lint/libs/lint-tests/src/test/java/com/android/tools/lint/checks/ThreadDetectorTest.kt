@@ -41,9 +41,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.MainThread;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.MainThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "public class ThreadTest {\n" +
                     "    public static AsyncTask testTask() {\n" +
@@ -104,7 +104,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -116,9 +115,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.MainThread;
-                import android.support.annotation.UiThread;
-                import android.support.annotation.WorkerThread;
+                import androidx.annotation.MainThread;
+                import androidx.annotation.UiThread;
+                import androidx.annotation.WorkerThread;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class ThreadTest2 {
@@ -136,7 +135,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -153,10 +151,10 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
-                    "import android.support.annotation.IntRange;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.IntRange;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "public class ConstructorTest {\n" +
                     "    @UiThread\n" +
@@ -173,7 +171,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -206,8 +203,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "@UiThread // it's here to prevent putting it on all 100 methods\n" +
                     "class BigClass {\n" +
@@ -225,8 +222,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "@SuppressWarnings(\"unused\")\n" +
                     "public class BigClassClient {\n" +
@@ -248,7 +245,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -262,7 +258,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "public class TestPostRunnable {\n" +
@@ -277,7 +273,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -296,9 +291,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.AnyThread;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.AnyThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "@UiThread\n" +
                     "class AnyThreadTest {\n" +
@@ -312,7 +307,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -338,9 +332,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.BinderThread;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.BinderThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "class MultiThreadTest {\n" +
                     "    @UiThread\n" +
@@ -367,7 +361,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -383,7 +376,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import android.content.Context;\n" +
                     "import android.os.AsyncTask;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "public class StaticMethods extends View {\n" +
@@ -409,7 +402,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -423,8 +415,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
 
                 import android.app.Activity;
                 import android.os.Bundle;
-                import android.support.annotation.WorkerThread;
-                import android.support.annotation.UiThread;
+                import androidx.annotation.WorkerThread;
+                import androidx.annotation.UiThread;
 
                 public class LambdaThreadTest extends Activity {
                     @WorkerThread
@@ -453,9 +445,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         doInUiThread(LambdaThreadTest::compute);
                     }
                 }
-                """.trimIndent()
-            ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -469,7 +460,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                                     doInUiThread(LambdaThreadTest::compute);
                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~
             3 errors, 0 warnings
-            """.trimIndent()
+            """
         )
     }
 
@@ -481,8 +472,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.MainThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.MainThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "import java.util.concurrent.Executor;\n" +
                     "\n" +
@@ -502,7 +493,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -513,9 +503,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
             LintDetectorTest.java(
                 "" +
                     "package test.pkg;\n" +
-                    "import android.support.annotation.MainThread;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.MainThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    public AsyncTask testTask() {\n" +
@@ -585,7 +575,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).allowCompilationErrors().run().expectInlinedMessages()
     }
@@ -606,7 +595,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import android.content.Context;\n" +
                     "import android.os.AsyncTask;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "public class X extends View {\n" +
@@ -630,7 +619,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -646,10 +634,10 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.BinderThread;\n" +
-                    "import android.support.annotation.MainThread;\n" +
-                    "import android.support.annotation.UiThread;\n" +
-                    "import android.support.annotation.WorkerThread;\n" +
+                    "import androidx.annotation.BinderThread;\n" +
+                    "import androidx.annotation.MainThread;\n" +
+                    "import androidx.annotation.UiThread;\n" +
+                    "import androidx.annotation.WorkerThread;\n" +
                     "\n" +
                     "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n" +
                     "public class X {\n" +
@@ -741,7 +729,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -757,7 +744,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public class X {
-                        @android.support.annotation.WorkerThread
+                        @androidx.annotation.WorkerThread
                         static class MyWorkerThreadCode {
                             static void method() {
                                 MyOtherWorkerThreadCode.method();
@@ -776,7 +763,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                             }
                         }
 
-                        @android.support.annotation.WorkerThread
+                        @androidx.annotation.WorkerThread
                         public static class MyOtherWorkerThreadCode2 {
                             static void method() { }
                         }
@@ -785,7 +772,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
             ).indented(),
             java(
                 """
-                    package androidx.annotation;
+                    package android.support.annotation;
 
                     import static java.lang.annotation.ElementType.METHOD;
                     import static java.lang.annotation.ElementType.CONSTRUCTOR;
@@ -803,25 +790,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     }
                 """
             ),
-            java(
-                """
-                    package android.support.annotation;
-                    import static java.lang.annotation.ElementType.METHOD;
-                    import static java.lang.annotation.ElementType.CONSTRUCTOR;
-                    import static java.lang.annotation.ElementType.TYPE;
-                    import static java.lang.annotation.ElementType.PARAMETER;
-                    import static java.lang.annotation.RetentionPolicy.CLASS;
-                    import java.lang.annotation.Documented;
-                    import java.lang.annotation.Retention;
-                    import java.lang.annotation.Target;
-                    @SuppressWarnings("ALL")
-                    @Documented
-                    @Retention(CLASS)
-                    @Target({METHOD,CONSTRUCTOR,TYPE,PARAMETER})
-                    public @interface WorkerThread {
-                    }
-                """
-            )
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -835,10 +804,10 @@ class ThreadDetectorTest : AbstractCheckTest() {
 
                 import android.os.Handler;
                 import android.os.Looper;
-                import android.support.annotation.AnyThread;
-                import android.support.annotation.MainThread;
-                import android.support.annotation.NonNull;
-                import android.support.annotation.WorkerThread;
+                import androidx.annotation.AnyThread;
+                import androidx.annotation.MainThread;
+                import androidx.annotation.NonNull;
+                import androidx.annotation.WorkerThread;
 
                 import java.util.Collection;
                 import java.util.LinkedList;
@@ -911,7 +880,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -922,8 +890,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.UiThread;
-                import android.support.annotation.WorkerThread;
+                import androidx.annotation.UiThread;
+                import androidx.annotation.WorkerThread;
 
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "Convert2Lambda", "Convert2MethodRef", "Anonymous2MethodRef"})
                 public class ThreadNesting {
@@ -965,7 +933,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -986,7 +953,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
 
                 import java.util.List;
 
-                import android.support.annotation.Nullable;
+                import androidx.annotation.Nullable;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class ThreadNesting2 extends Activity {
@@ -1014,7 +981,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1054,7 +1020,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1065,8 +1030,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.MainThread;
-                    import android.support.annotation.WorkerThread;
+                    import androidx.annotation.MainThread;
+                    import androidx.annotation.WorkerThread;
 
                     public class Test {
 
@@ -1090,7 +1055,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1111,8 +1075,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg
 
-                    import android.support.annotation.MainThread
-                    import android.support.annotation.WorkerThread
+                    import androidx.annotation.MainThread
+                    import androidx.annotation.WorkerThread
 
                     class Test {
                         fun interface Foo {
@@ -1135,7 +1099,6 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """

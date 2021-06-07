@@ -33,10 +33,14 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.process.CommandLineArgumentProvider
 import java.util.concurrent.Callable
 
 /**
@@ -82,7 +86,7 @@ class JavaCompileCreationAction(
             .on(AP_GENERATED_SOURCES)
 
         if (creationConfig.buildFeatures.dataBinding) {
-            // Register data binding artifacts as outputs. Ihere are 2 ways to do this:
+            // Register data binding artifacts as outputs. There are 2 ways to do this:
             //    (1) Register with JavaCompile when Kapt is not used, and register with Kapt when
             //        Kapt is used.
             //    (2) Always register with JavaCompile, and when Kapt is used, replace them with
@@ -118,38 +122,25 @@ class JavaCompileCreationAction(
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 
-        // Add javac option `-parameters` to store parameter names of methods in the generated
-        // class files, which Room annotation processor requires in order for it to be incremental
-        // (see bug 159501719).
-        // Note that this option is only available on JDK version 8+ and for target Java version 8+
-        // (see bug 169252018).
-        if (JavaVersion.current().isJava8Compatible
-                && creationConfig.globalScope.extension.compileOptions.targetCompatibility.isJava8Compatible
-        ) {
-            task.options.compilerArgs.add(PARAMETERS)
-        }
-
+        task.options.compilerArgumentProviders.add(
+            JavaCompileOptionsForRoom(
+                creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST),
+                creationConfig.globalScope.extension.compileOptions.targetCompatibility.isJava8Compatible
+            )
+        )
         task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
-        // When Kapt is used, it runs annotation processors declared in the `kapt` configurations.
-        // However, we currently collect annotation processors for analytics purposes only from the
-        // `annotationProcessor` configurations, not `kapt` configurations, so the data is only
-        // correct if Kapt is not used.
-        if (!usingKapt) {
-            // Record apList as input. It impacts recordAnnotationProcessors() below.
-            val apList = creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST)
-            task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
-                .withPropertyName("annotationProcessorList")
+        // Record apList as input. It impacts recordAnnotationProcessors() below.
+        val apList = creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST)
+        task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
+            .withPropertyName("annotationProcessorList")
+        task.recordAnnotationProcessors(
+            apList,
+            creationConfig.name,
+            getBuildService(creationConfig.services.buildServiceRegistry)
+        )
 
-            task.recordAnnotationProcessors(
-                apList,
-                creationConfig.name,
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-        }
-
-        // Also do that for data binding artifacts
         if (creationConfig.buildFeatures.dataBinding) {
             // Data binding artifacts are part of the annotation processing outputs of JavaCompile
             // if Kapt is not used; otherwise, they are the outputs of Kapt.
@@ -201,6 +192,33 @@ fun registerDataBindingOutputs(
     }
 }
 
+private class JavaCompileOptionsForRoom(
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    val annotationProcessorListFile: Provider<RegularFile>,
+
+    @get:Input
+    val isTargetJava8Compatible: Boolean
+) : CommandLineArgumentProvider {
+
+    override fun asArguments(): Iterable<String> {
+        val annotationProcessors =
+            readAnnotationProcessorsFromJsonFile(annotationProcessorListFile.get().asFile).keys
+        if (annotationProcessors.any { it.contains(ANDROIDX_ROOM_ROOM_COMPILER) }) {
+            // Add javac option `-parameters` to store parameter names of methods in the generated
+            // class files, which Room annotation processor requires in order for it to be
+            // incremental (see bugs 189326895, 159501719).
+            // Note that this option is only available on JDK version 8+ and for target Java version
+            // 8+ (see bug 169252018).
+            if (JavaVersion.current().isJava8Compatible && isTargetJava8Compatible) {
+                return listOf(PARAMETERS)
+            }
+        }
+        return emptyList()
+    }
+}
+
 private fun JavaCompile.recordAnnotationProcessors(
     processorListFile: Provider<RegularFile>,
     variantName: String,
@@ -235,4 +253,5 @@ private fun JavaCompile.recordAnnotationProcessors(
 }
 
 private const val AP_GENERATED_SOURCES_DIR_NAME = "out"
+private const val ANDROIDX_ROOM_ROOM_COMPILER = "androidx.room:room-compiler"
 private const val PARAMETERS = "-parameters"

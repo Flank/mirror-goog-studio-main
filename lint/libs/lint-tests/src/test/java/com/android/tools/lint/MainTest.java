@@ -774,8 +774,8 @@ public class MainTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.UiThread;\n"
-                                        + "import android.support.annotation.WorkerThread;\n"
+                                        + "import androidx.annotation.UiThread;\n"
+                                        + "import androidx.annotation.WorkerThread;\n"
                                         + "\n"
                                         + "@FunctionalInterface\n"
                                         + "public interface Runnable {\n"
@@ -802,7 +802,6 @@ public class MainTest extends AbstractCheckTest {
                                         + "    instance.uiThread();\n"
                                         + "  }\n"
                                         + "}\n"),
-                        SUPPORT_ANNOTATIONS_CLASS_PATH,
                         SUPPORT_ANNOTATIONS_JAR);
         checkDriver(
                 ""
@@ -1004,6 +1003,10 @@ public class MainTest extends AbstractCheckTest {
                     "--disable",
                     "UsesMinSdkAttributes",
                     "--exitcode",
+                    "--disable", // Test 182321297
+                    "UnknownIssueId",
+                    "--enable",
+                    "SomeUnknownId",
                     project.getPath()
                 },
                 s -> s.replace(html.getPath(), "report.html"),

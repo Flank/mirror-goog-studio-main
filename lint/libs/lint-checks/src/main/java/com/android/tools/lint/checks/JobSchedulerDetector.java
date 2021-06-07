@@ -134,7 +134,7 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
                 && !evaluator.inheritsFrom(serviceClass, CLASS_JOB_SERVICE, false)) {
             String message =
                     String.format(
-                            "Scheduled job class %1$s must extend android.app.job.JobService",
+                            "Scheduled job class %1$s must extend `android.app.job.JobService`",
                             serviceClass.getName());
             context.report(ISSUE, componentName, context.getLocation(componentName), message);
         } else {

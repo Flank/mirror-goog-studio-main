@@ -70,7 +70,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import org.gradle.api.plugins.ExtensionAware
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
-                    import com.android.build.api.extension.AndroidComponentsExtension
+                    import com.android.build.api.variant.AndroidComponentsExtension
                     import com.android.build.api.artifact.SingleArtifact
 
                     abstract class ExamplePlugin: Plugin<Project> {
@@ -233,7 +233,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import org.gradle.api.Project
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
-                    import com.android.build.api.extension.AndroidComponentsExtension
+                    import com.android.build.api.variant.AndroidComponentsExtension
 
                     abstract class ProviderPlugin: Plugin<Project> {
 
@@ -277,7 +277,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import org.gradle.api.plugins.ExtensionAware
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
-                    import com.android.build.api.extension.AndroidComponentsExtension
+                    import com.android.build.api.variant.AndroidComponentsExtension
                     import com.android.build.api.artifact.SingleArtifact
 
                     abstract class ConsumerPlugin: Plugin<Project> {
@@ -434,8 +434,8 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import org.gradle.api.Plugin
                     import org.gradle.api.Project
                     import java.io.File
-                    import com.android.build.api.extension.AndroidComponentsExtension
-                    import com.android.build.api.extension.DslExtension
+                    import com.android.build.api.variant.AndroidComponentsExtension
+                    import com.android.build.api.variant.DslExtension
 
                     abstract class ProviderPlugin: Plugin<Project> {
 
@@ -464,7 +464,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import org.gradle.api.Plugin
                     import org.gradle.api.Project
                     import java.io.File
-                    import com.android.build.api.extension.AndroidComponentsExtension
+                    import com.android.build.api.variant.AndroidComponentsExtension
 
                     abstract class ConsumerPlugin: Plugin<Project> {
 

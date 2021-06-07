@@ -36,6 +36,7 @@ import java.net.URLConnection
 import java.text.NumberFormat
 import java.util.jar.JarFile
 
+@Suppress("LintDocExample")
 class LintJarVerifierTest {
     // (Note that there are also some indirect tests of this class from CustomRuleTest)
 
@@ -97,6 +98,7 @@ class LintJarVerifierTest {
                     }
                     """
                 ).indented(),
+                0xecc2e397,
                 """
                 test/pkg/MyDetector.class:
                 H4sIAAAAAAAAAJ1UW08TQRT+ZntluZUiVxURityUhSJeKDHxnpqCpiCJ4cFM

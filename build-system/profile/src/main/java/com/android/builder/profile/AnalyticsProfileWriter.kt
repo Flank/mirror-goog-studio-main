@@ -42,6 +42,8 @@ class AnalyticsProfileWriter {
 
     private val profileFileName = DateTimeFormatter.ofPattern(
         "'profile-'yyyy-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US)
+    private val studioEventFileName = DateTimeFormatter.ofPattern(
+        "'studioEvent-'yyyy-MM-dd-HH-mm-ss-SSS'.trk'", Locale.US)
     private val scheduledExecutorService: ScheduledExecutorService
             = Executors.newScheduledThreadPool(1)
 
@@ -95,6 +97,8 @@ class AnalyticsProfileWriter {
             }
             val outputFile
                     = profileDir?.toPath()?.resolve(profileFileName.format(LocalDateTime.now()))
+            val studioMetricsFile
+                    = profileDir?.toPath()?.resolve(studioEventFileName.format(LocalDateTime.now()))
             if (outputFile != null) {
                 // Write benchmark file into build directory
                 Files.createDirectories(outputFile.parent)
@@ -104,6 +108,12 @@ class AnalyticsProfileWriter {
                 if (enableChromeTracingOutput) {
                     ChromeTracingProfileConverter.toJson(outputFile)
                 }
+            }
+            // Write AndroidStudio event metrics to the trk file.
+            if (studioMetricsFile != null) {
+                BufferedOutputStream(
+                    Files.newOutputStream(studioMetricsFile, StandardOpenOption.CREATE_NEW))
+                    .use { outputStream -> events.forEach { it.build().toByteString().writeTo(outputStream) } }
             }
 
             deInitializedAnalytics(profileDir)

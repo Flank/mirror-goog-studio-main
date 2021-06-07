@@ -21,6 +21,7 @@ import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.JavaRecursiveElementVisitor;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
@@ -31,6 +32,7 @@ import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
@@ -231,6 +233,9 @@ public class ConstantEvaluatorTest extends TestCase {
                         + "    const val MY_INT_FIELD = 5;\n"
                         + "    const val MY_BOOLEAN_FIELD = true;\n"
                         + "    const val MY_STRING_FIELD = \"test\";\n"
+                        + "    companion object {\n"
+                        + "        val someField = \"something\";\n"
+                        + "    }\n"
                         + "}\n";
 
         checkKotlinUast(expected, source, "expression");
@@ -276,6 +281,59 @@ public class ConstantEvaluatorTest extends TestCase {
                 new ConstantEvaluator.ArrayReference(String.class, 1000, 1),
                 "arrayOfNulls<String>(1000)");
         checkKotlinExpression(1000, "arrayOfNulls<String>(1000).size");
+        checkKotlinExpression("hello", "   \"\"\"    hello\"\"\".trimIndent()");
+    }
+
+    public void testUltraLightPropertyInitializer() {
+        @Language("Kt")
+        String source =
+                ""
+                        + "package test.pkg\n"
+                        + "class Test {\n"
+                        + "    fun test() {\n"
+                        + "        val x = someField\n"
+                        + "    }\n"
+                        + "    companion object {\n"
+                        + "        // effectively constant\n"
+                        + "        val someField = \"something\";\n"
+                        + "    }\n"
+                        + "}\n";
+
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseKotlin(source, new File("src/test/pkg/Test.kt"));
+
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
+        assertNotNull(context);
+        UFile uFile = context.getUastFile();
+        assertNotNull(uFile);
+
+        // Find the expression
+        final AtomicReference<UExpression> reference = new AtomicReference<>();
+        uFile.accept(
+                new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitVariable(UVariable variable) {
+                        String name = variable.getName();
+                        if (name != null && name.equals("x")) {
+                            reference.set(variable.getUastInitializer());
+                        }
+                        return super.visitVariable(variable);
+                    }
+                });
+
+        UExpression expression = reference.get();
+        Object actual = ConstantEvaluator.evaluate(context, expression);
+        assertEquals("something", actual);
+
+        // Resolve test for ultra light
+        assertTrue(expression instanceof UReferenceExpression);
+        PsiElement resolved = ((UReferenceExpression) expression).resolve();
+        assertNotNull(resolved);
+        Object psiActual = ConstantEvaluator.evaluate(context, resolved);
+        assertEquals("something", psiActual);
+        Disposer.dispose(disposable);
+        UastEnvironment.disposeApplicationEnvironment();
     }
 
     public void testBooleans() {
@@ -388,6 +446,18 @@ public class ConstantEvaluatorTest extends TestCase {
                         + "String other;\n"
                         + "other = \" world\";\n"
                         + "String finalString = initial + other;\n",
+                "finalString");
+    }
+
+    public void testStringConcatenation() {
+        checkStatements(
+                "hello",
+                ""
+                        + "String s1 = \"el\";\n"
+                        + "char c1 = 'h';\n"
+                        + "char c2 = 'l';\n"
+                        + "char s2 = \"o\";\n"
+                        + "String finalString = ((c1 + s1) + c2) + s2;",
                 "finalString");
     }
 
