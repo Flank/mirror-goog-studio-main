@@ -50,7 +50,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
     /** If false, this repository won't make network requests */
     useNetwork: Boolean = true
-) : NetworkCache(GMAVEN_BASE_URL, MAVEN_GOOGLE_CACHE_DIR_KEY, cacheDir, networkTimeoutMs, cacheExpiryHours, useNetwork) {
+) : NetworkCache(
+    GMAVEN_BASE_URL, MAVEN_GOOGLE_CACHE_DIR_KEY, cacheDir, networkTimeoutMs,
+    cacheExpiryHours, useNetwork
+) {
 
     companion object {
         /** Key used in cache directories to locate the maven.google.com network cache */
@@ -60,7 +63,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     private var packageMap: MutableMap<String, PackageInfo>? = null
 
     fun findVersion(dependency: GradleCoordinate, filter: Predicate<GradleVersion>? = null):
-            GradleVersion? = findVersion(dependency, filter, dependency.isPreview)
+        GradleVersion? = findVersion(dependency, filter, dependency.isPreview)
 
     fun findVersion(
         dependency: GradleCoordinate,
@@ -69,6 +72,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     ): GradleVersion? {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
+        val version = dependency.version
         val filter = when {
             dependency.acceptsGreaterRevisions() -> {
                 val prefix = dependency.revision.trimEnd('+')
@@ -85,25 +89,53 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 null
             }
         }
+
         // Temporary special casing for AndroidX: don't offer upgrades from 2.6 to 2.7 previews
         if (groupId == "androidx.work") {
-            val version = dependency.version
             if (version != null) {
                 if (version.major == 1 || version.major == 2 && version.minor <= 6) {
                     val artifactInfo = findArtifact(groupId, artifactId) ?: return null
+                    val snapshotFilter = getSnapshotVersionFilter(version, null)
                     artifactInfo.getGradleVersions()
                         .filter { v ->
                             (v.major != 2 || (v.minor != 7 || !v.isPreview)) &&
-                                    (filter == null || filter(v))
+                                (filter == null || filter(v))
                         }
                         .filter { allowPreview || !it.isPreview }
+                        .filter { snapshotFilter(it) }
                         .max()
                         ?.let { return it }
                 }
             }
         }
 
-        return findVersion(groupId, artifactId, filter, allowPreview)
+        val compositeFilter = getSnapshotVersionFilter(version, filter)
+        return findVersion(groupId, artifactId, compositeFilter, allowPreview)
+    }
+
+    // In addition to the optional filter, add in filtering to
+    // make sure we compare correctly with SNAPSHOT versions
+    // https://docs.gradle.org/current/userguide/single_versions.html#version_ordering
+    private fun getSnapshotVersionFilter(
+        version: GradleVersion?,
+        filter: ((GradleVersion) -> Boolean)?
+    ): (GradleVersion) -> Boolean {
+        return { candidate ->
+            val snapshot = if (candidate.isSnapshot) {
+                // Never update to snapshot
+                false
+            } else if (version != null && version.isSnapshot) {
+                // Only update from a snapshot if the version is stable or higher
+                candidate.isAtLeast(version.major, version.minor, version.micro) &&
+                    (
+                        !candidate.isPreview || candidate.major > version.major ||
+                            candidate.minor > version.minor || candidate.micro > version.micro
+                        )
+            } else {
+                true
+            }
+            snapshot && (filter == null || filter(candidate))
+        }
     }
 
     fun findVersion(
@@ -163,16 +195,16 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         private val dependencyInfo by lazy { HashMap<GradleVersion, List<GradleCoordinate>>() }
 
         fun getGradleVersions(): Sequence<GradleVersion> =
-          versions.splitToSequence(",")
-            .map { GradleVersion.tryParse(it) }
-            .filterNotNull()
+            versions.splitToSequence(",")
+                .map { GradleVersion.tryParse(it) }
+                .filterNotNull()
 
         fun findVersion(filter: ((GradleVersion) -> Boolean)?, allowPreview: Boolean = false):
-                GradleVersion? =
-          getGradleVersions()
-                .filter { filter == null || filter(it) }
-                .filter { allowPreview || !it.isPreview }
-                .max()
+            GradleVersion? =
+                getGradleVersions()
+                    .filter { filter == null || filter(it) }
+                    .filter { allowPreview || !it.isPreview }
+                    .max()
 
         fun findCompileDependencies(
             version: GradleVersion,
@@ -303,19 +335,22 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
                 when (parser.eventType) {
                     XmlPullParser.START_TAG ->
-                            when (parser.name) {
-                                "groupId" -> groupId = parser.nextText()
-                                "artifactId" -> artifactId = parser.nextText()
-                                "version" -> version = parser.nextText()
-                                "scope" -> scope = parser.nextText()
-                            }
+                        when (parser.name) {
+                            "groupId" -> groupId = parser.nextText()
+                            "artifactId" -> artifactId = parser.nextText()
+                            "version" -> version = parser.nextText()
+                            "scope" -> scope = parser.nextText()
+                        }
                     XmlPullParser.END_TAG ->
-                            if (parser.name == "dependency") {
-                                check(groupId, "groupId")
-                                check(artifactId, "artifactId")
-                                check(version, "version")
-                                return if (scope == "compile") GradleCoordinate(groupId, artifactId, version) else null
-                            }
+                        if (parser.name == "dependency") {
+                            check(groupId, "groupId")
+                            check(artifactId, "artifactId")
+                            check(version, "version")
+                            return if (scope == "compile")
+                                GradleCoordinate(groupId, artifactId, version)
+                            else
+                                null
+                        }
                 }
             }
             throw RuntimeException("Unexpected end of file")
