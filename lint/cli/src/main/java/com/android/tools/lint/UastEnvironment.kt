@@ -150,27 +150,6 @@ class UastEnvironment private constructor(
     }
 
     companion object {
-        init {
-            // We don't bundle .dll files in the Gradle plugin for native file system access;
-            // prevent warning logs on Windows when it's not found (see b.android.com/260180)
-            System.setProperty("idea.use.native.fs.for.win", "false")
-
-            // By default the Kotlin compiler will dispose the application environment when there
-            // are no projects left. However, we turn this behavior off and instead manage the
-            // application lifecycle ourselves. (It turns out that the Kotlin Gradle plugin already
-            // sets the keepalive property to true anyway, which is picked up by Lint if running in
-            // the same Gradle daemon process. So setting the property here ensures consistency.)
-            CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
-
-            // Disable the check for broken plugins, otherwise PluginManagerCore fails due to
-            // missing the brokenPlugins.txt file. See commit 256bd8d594 in the Kotlin compiler.
-            System.setProperty("idea.ignore.disabled.plugins", "true")
-
-            // Set 'idea.home.path' to avoid exceptions in PathManager.
-            // Inspired by commit 1a01ba0ae5 in the Kotlin compiler.
-            System.setProperty("idea.home.path", System.getProperty("java.io.tmpdir"))
-        }
-
         /**
          * Creates a new [UastEnvironment] suitable for analyzing both
          * Java and Kotlin code. You must still call [analyzeFiles]
@@ -343,13 +322,20 @@ private fun createKotlinCompilerEnv(
     parentDisposable: Disposable,
     config: UastEnvironment.Configuration
 ): KotlinCoreEnvironment {
-    // This is also set in UastEnvironment's companion object's init block, but we must set it here
-    // to ensure it's set properly for KotlinCoreEnvironment::createForProduction below
+    // We don't bundle .dll files in the Gradle plugin for native file system access;
+    // prevent warning logs on Windows when it's not found (see b.android.com/260180).
+    System.setProperty("idea.use.native.fs.for.win", "false")
+
+    // By default the Kotlin compiler will dispose the application environment when there
+    // are no projects left. However, that behavior is poorly tested and occasionally buggy
+    // (see KT-45289). So, instead we manage the application lifecycle manually.
     CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
+
     val env = KotlinCoreEnvironment
         .createForProduction(parentDisposable, config.kotlinCompilerConfig, JVM_CONFIG_FILES)
     appLock.withLock { configureApplicationEnvironment(env.projectEnvironment.environment) }
     configureProjectEnvironment(env.projectEnvironment.project, config)
+
     return env
 }
 
