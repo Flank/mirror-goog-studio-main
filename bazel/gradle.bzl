@@ -6,7 +6,7 @@ def _merge_repo_manifests(ctx):
     manifest_args = []
     manifest_inputs = [manifest]
 
-    for repo in ctx.attr.repo_manifests:
+    for repo in ctx.attr.repos:
         artifacts = repo[MavenRepoInfo].artifacts
         manifest_args += [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
         manifest_inputs += [artifact for artifact, _ in artifacts]
@@ -28,8 +28,6 @@ def _gradle_build_impl(ctx):
             args += ["--output", source, dest.path]
     distribution = ctx.attr.distribution.files.to_list()[0]
     args += ["--distribution", distribution.path]
-    for repo in ctx.files.repos:
-        args += ["--repo", repo.path]
     for task in ctx.attr.tasks:
         args += ["--task", task]
     if ctx.attr.max_workers > 0:
@@ -57,10 +55,7 @@ _gradle_build_rule = rule(
         "build_file": attr.label(
             allow_single_file = True,
         ),
-        "repos": attr.label_list(allow_files = True),
-        # TODO (b/148081564) repos should become the default for manifests and zip file targets should
-        # go in repo_zips once the migration to manifests is complete.
-        "repo_manifests": attr.label_list(providers = [MavenRepoInfo]),
+        "repos": attr.label_list(providers = [MavenRepoInfo]),
         "output_log": attr.output(),
         "distribution": attr.label(allow_files = True),
         "max_workers": attr.int(default = 0, doc = "Max number of workers, 0 or negative means unset (Gradle will use the default: number of CPU cores)."),
@@ -90,7 +85,6 @@ def gradle_build(
         output_file_source = None,
         output_files = {},
         repos = [],
-        repo_manifests = [],
         tasks = [],
         max_workers = 0,
         tags = []):
@@ -119,7 +113,6 @@ def gradle_build(
         output_file_destinations = output_file_destinations,
         output_log = name + ".log",
         repos = repos,
-        repo_manifests = repo_manifests,
         tags = tags,
         tasks = tasks,
         max_workers = max_workers,
