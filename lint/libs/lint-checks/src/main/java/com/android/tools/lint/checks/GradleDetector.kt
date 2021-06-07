@@ -863,7 +863,8 @@ open class GradleDetector : Detector(), GradleScanner {
                                 filterVersion.minor == version.minor &&
                                 filterVersion.micro > version.micro &&
                                 !filterVersion.isPreview &&
-                                filterVersion < newerVersion!!
+                                filterVersion < newerVersion!! &&
+                                !filterVersion.isSnapshot
                         }
                     }
                     if (newerVersion != null && newerVersion > version) {

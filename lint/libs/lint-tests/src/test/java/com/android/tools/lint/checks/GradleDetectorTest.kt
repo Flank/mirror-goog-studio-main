@@ -506,6 +506,98 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testSnapshots() {
+        // Regression test for b/183137869:
+        // Gradle special-cases the SNAPSHOT version; make sure we don't offer updates to/from it except
+        // for a few minor scenarios.
+        // https://docs.gradle.org/current/userguide/single_versions.html#version_ordering
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 30\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+
+                    // work-runtime has 2.7.0-alpha06,3.0.0-SNAPSHOT -- we don't want to offer
+                    // updates to 3.0.0-SNAPSHOT even though it's "higher"
+                    "    implementation \"androidx.test:work-runtime:2.7.0-alpha06\" // no suggestion\n" +
+                    // But we *can* update to a higher non-SNAPSHOT version
+                    "    implementation \"androidx.test:work-runtime:2.6.0-alpha06\" // update to 2.7.0-alpha06\n" +
+                    // For work-runtime-ktx has 2.5.0,2.6.0-alpha05; we don't want to update to SNAPSHOT versions
+                    "    implementation \"androidx.test:work-runtime-ktx:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    // but from old snapshot versions we can jump to a higher version
+                    "    implementation \"androidx.test:work-runtime-ktx:2.3.0-SNAPSHOT\" // Update to 2.6.0-alpha05\n" +
+                    // From a snapshot version we can jump to a stable version if it's higher
+                    "    implementation \"androidx.test:work-gcm:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    // Repeat tests for android.work, which has its own special version filtering code
+                    "    implementation \"androidx.work:work-runtime:2.7.0-alpha06\" // no suggestion\n" +
+                    "    implementation \"androidx.work:work-runtime:2.6.0-alpha06\" // update to 2.7.0-alpha06\n" +
+                    "    implementation \"androidx.work:work-runtime-ktx:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    "    implementation \"androidx.work:work-runtime-ktx:2.3.0-SNAPSHOT\" // Update to 2.6.0-alpha05\n" +
+                    "    implementation \"androidx.work:work-gcm:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <androidx.work/>
+                  <androidx.test/>
+                </metadata>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/work/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,3.0.0-SNAPSHOT"/>
+                  <work-runtime-ktx versions="2.5.0,2.6.0-alpha05"/>
+                  <work-gcm versions="2.6.0-SNAPSHOT"/>
+                  <work-rxjava2 versions="3.0.0-SNAPSHOT,3.0.0"/>
+                  <work-rxjava3 versions="3.0.0-SNAPSHOT,3.1.0-alpha01"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/test/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,3.0.0-SNAPSHOT"/>
+                  <work-runtime-ktx versions="2.5.0,2.6.0-alpha05"/>
+                  <work-gcm versions="2.6.0-SNAPSHOT"/>
+                  <work-rxjava2 versions="3.0.0-SNAPSHOT,3.0.0"/>
+                  <work-rxjava3 versions="3.0.0-SNAPSHOT,3.1.0-alpha01"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .run().expect(
+                """
+                build.gradle:9: Warning: A newer version of androidx.test:work-runtime than 2.6.0-alpha06 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.test:work-runtime:2.6.0-alpha06" // update to 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: Warning: A newer version of androidx.test:work-runtime-ktx than 2.3.0-SNAPSHOT is available: 2.6.0-alpha05 [GradleDependency]
+                    implementation "androidx.test:work-runtime-ktx:2.3.0-SNAPSHOT" // Update to 2.6.0-alpha05
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of androidx.work:work-runtime than 2.6.0-alpha06 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.6.0-alpha06" // update to 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Warning: A newer version of androidx.work:work-runtime-ktx than 2.3.0-SNAPSHOT is available: 2.6.0-alpha05 [GradleDependency]
+                    implementation "androidx.work:work-runtime-ktx:2.3.0-SNAPSHOT" // Update to 2.6.0-alpha05
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
+    }
+
     fun testGuavaVersionsAndroidVsJre() {
         lint().files(
             gradle(
