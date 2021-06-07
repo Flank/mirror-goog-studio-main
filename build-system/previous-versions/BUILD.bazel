@@ -104,7 +104,6 @@ AGP_4_2_0_ARTIFACTS = [
 maven_repo(
     name = "4.2.0",
     artifacts = AGP_4_2_0_ARTIFACTS,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -207,7 +206,6 @@ AGP_4_1_0_ARTIFACTS = [
 maven_repo(
     name = "4.1.0",
     artifacts = AGP_4_1_0_ARTIFACTS,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -306,7 +304,6 @@ AGP_4_0_0_ARTIFACTS = [
 maven_repo(
     name = "4.0.0",
     artifacts = AGP_4_0_0_ARTIFACTS,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -345,7 +342,6 @@ KOTLIN_GRADLE_PLUGIN_1_3_72_ARTIFACTS = [
 maven_repo(
     name = "kgp1.3.72",
     artifacts = KOTLIN_GRADLE_PLUGIN_1_3_72_ARTIFACTS,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -471,7 +467,6 @@ KOTLIN_GRADLE_PLUGIN_1_3_41_ARTIFACTS = [
 maven_repo(
     name = "3.5.0",
     artifacts = AGP_3_5_0_ARTIFACTS,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -479,7 +474,6 @@ maven_repo(
     name = "performance_test_repo_3.5.0",
     testonly = True,
     artifacts = AGP_3_5_0_ARTIFACTS + KOTLIN_GRADLE_PLUGIN_1_3_41_ARTIFACTS,
-    use_zip = False,
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
 
@@ -601,7 +595,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/6.0:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/6.0:jar",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -701,7 +694,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.1:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.1:jar",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -786,7 +778,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -858,7 +849,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -924,6 +914,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.3:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.3:jar",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )

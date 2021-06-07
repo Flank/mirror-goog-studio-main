@@ -905,7 +905,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.1.0:aar",
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite/2.4.0:aar",
     ],
-    use_zip = False,
     visibility = ["__subpackages__"],
 )
 
@@ -962,6 +961,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/test/rules/1.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/test/runner/1.0.1:aar",
     ],
-    use_zip = False,
     visibility = ["__subpackages__"],
 )

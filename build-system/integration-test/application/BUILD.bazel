@@ -792,6 +792,5 @@ maven_repo(
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
     ],
-    use_zip = False,
     visibility = ["__subpackages__"],
 )

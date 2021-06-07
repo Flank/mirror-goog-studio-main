@@ -71,6 +71,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.3.72:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.3.72:jar",
     ],
-    use_zip = False,
     visibility = ["__subpackages__"],
 )

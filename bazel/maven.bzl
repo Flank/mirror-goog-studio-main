@@ -446,14 +446,15 @@ _maven_repo_list = rule(
 #
 # Usage:
 # maven_repo(
-#     name = The name of the rule. The output of the rule will be ${name}.zip.
+#     name = The name of the rule. The output of the rule will be ${name}.manifest or ${name}.zip
+#            depending on the value of use_zip..
 #     artifacts = A list of all maven_java_libraries to add to the repo.
 #     include_sources = Add source jars to the repo as well (useful for tests).
 #     use_zip = If true, the entire Maven repository is packaged as a zip. Otherwise, a manifest file
 #               with details about the contents of the repository is generated, and all artifacts are
 #               included as runfiles of the rule.
 # )
-def maven_repo(artifacts = [], include_sources = False, use_zip = True, **kwargs):
+def maven_repo(artifacts = [], include_sources = False, use_zip = False, **kwargs):
     repo_rule = _maven_repo if use_zip else _maven_repo_list
     repo_rule(
         artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],

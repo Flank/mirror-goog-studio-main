@@ -327,5 +327,4 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/xpp3/xpp3_min/1.1.4c:jar",
         "//tools/base/third_party:junit_junit",
     ],
-    use_zip = False,
 )

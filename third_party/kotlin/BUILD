@@ -7,6 +7,5 @@ maven_repo(
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
     ],
-    use_zip = False,
     visibility = ["//visibility:public"],
 )

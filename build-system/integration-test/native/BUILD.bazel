@@ -452,5 +452,4 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: remove
     ],
-    use_zip = False,
 )
