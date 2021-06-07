@@ -270,6 +270,11 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         )
                     }
                 }
+            } else if (resolved is PsiMethod) {
+                checkTypeDefConstant(
+                    context, annotation, argument,
+                    errorNode ?: argument, flag, resolved, allAnnotations
+                )
             }
         } else if (argument is UCallExpression) {
             if (argument.isNewArrayWithInitializer() || argument.isArrayInitializer()) {

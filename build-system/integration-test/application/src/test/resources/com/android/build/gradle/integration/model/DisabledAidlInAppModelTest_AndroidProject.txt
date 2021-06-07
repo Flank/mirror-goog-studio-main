@@ -1,51 +1,59 @@
 > AndroidProject:
-   - defaultConfig:
+   > defaultConfig:
       - sourceProvider:
-         - aidlDirectories = (null)
+         - aidlDirectories:
+            * {PROJECT}/src/main/aidl{!}{REMOVED}
       - androidTestSourceProvider:
-         - aidlDirectories = (null)
+         - aidlDirectories:
+            * {PROJECT}/src/androidTest/aidl{!}{REMOVED}
       - unitTestSourceProvider:
-         - aidlDirectories = (null)
+         - aidlDirectories:
+            * {PROJECT}/src/test/aidl{!}{REMOVED}
       - testFixturesSourceProvider:
-         - aidlDirectories = (null)
+         - aidlDirectories:
+            * {PROJECT}/src/testFixtures/aidl{!}{REMOVED}
+   < defaultConfig
    > buildTypes:
-      - debug:
+      > debug:
          - sourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/debug/aidl{!}{REMOVED}
          - androidTestSourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/androidTestDebug/aidl{!}{REMOVED}
          - unitTestSourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/testDebug/aidl{!}{REMOVED}
          - testFixturesSourceProvider:
-            - aidlDirectories = (null)
-      - release:
+            - aidlDirectories:
+               * {PROJECT}/src/testFixturesDebug/aidl{!}{REMOVED}
+      < debug
+      > release:
          - sourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/release/aidl{!}{REMOVED}
          - androidTestSourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/androidTestRelease/aidl{!}{REMOVED}
          - unitTestSourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/testRelease/aidl{!}{REMOVED}
          - testFixturesSourceProvider:
-            - aidlDirectories = (null)
+            - aidlDirectories:
+               * {PROJECT}/src/testFixturesRelease/aidl{!}{REMOVED}
+      < release
    < buildTypes
    > variants:
-      > variant(debug):
+      - debug:
          - mainArtifact:
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/debug{!}
+               * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}{REMOVED}
          - androidTestArtifact:
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
-      < variant(debug)
-      - variant(release):
+               * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}{REMOVED}
+      - release:
          - mainArtifact:
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/release{!}
+               * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}{REMOVED}
    < variants
 < AndroidProject

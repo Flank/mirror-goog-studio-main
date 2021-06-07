@@ -136,7 +136,7 @@ class LintRestrictedApiTest(
         val reportFile = File(project.getSubproject(":lib1").projectDir, "lint-results.txt")
         PathSubject.assertThat(reportFile).exists()
         PathSubject.assertThat(reportFile).contains(
-            "Foo.java:7: Error: Bar.method1 can only be called from within the same library group (groupId=test.group.two) [RestrictedApi]"
+            "Foo.java:7: Error: Bar.method1 can only be called from within the same library group (referenced groupId=test.group.two from groupId=test.group.one) [RestrictedApi]"
         )
         PathSubject.assertThat(reportFile).doesNotContain(
             "library group prefix"

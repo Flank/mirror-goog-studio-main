@@ -2608,7 +2608,6 @@ open class GradleDetector : Detector(), GradleScanner {
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
-            .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
             .addMoreInfo("https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
 
         /** Using a deprecated library. */
@@ -2641,7 +2640,7 @@ open class GradleDetector : Detector(), GradleScanner {
             briefDescription = "Data Binding without Annotation Processing",
             moreInfo = "https://kotlinlang.org/docs/reference/kapt.html",
             explanation = """
-                Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin. \
+                Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin.
                 """,
             category = Category.CORRECTNESS,
             priority = 1,

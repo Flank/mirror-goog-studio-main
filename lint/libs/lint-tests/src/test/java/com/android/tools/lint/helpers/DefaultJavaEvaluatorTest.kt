@@ -18,6 +18,7 @@ package com.android.tools.lint.helpers
 
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -29,9 +30,11 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.asRecursiveLogString
 import org.junit.Test
 
 /**
@@ -58,6 +61,98 @@ class DefaultJavaEvaluatorTest {
             .expectClean()
     }
 
+    @Test
+    fun testCallAssignmentRanges() {
+        lint().files(
+            java(
+                """
+                package foo;
+                public class Bean {
+                    public String getFoo() { return ""; }
+                    public void setFoo(String foo) {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package foo
+                fun test(s: String) {
+                    val bean = Bean()
+                    bean.setFoo("value")
+                    bean.foo = "value"
+                    bean.foo = "valu" + 'e'
+                    bean.foo = ""${"\""}value""${"\""}
+                    bean.foo = s.toString()
+                    bean.foo = s
+                }
+                """
+            ).indented()
+        )
+            .sdkHome(TestUtils.getSdk().toFile())
+            .issues(TestAnnotationLookupDetector.ISSUE)
+            .run()
+            .expect(
+                """
+                src/foo/test.kt:4: Warning: Error with arguments but no receiver [Order]
+                    bean.setFoo("value")
+                         ~~~~~~~~~~~~~~~
+                src/foo/test.kt:4: Warning: Error with receiver and arguments [Order]
+                    bean.setFoo("value")
+                    ~~~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:4: Warning: Error with receiver and no arguments [Order]
+                    bean.setFoo("value")
+                    ~~~~~~~~~~~
+                src/foo/test.kt:5: Warning: Error with arguments but no receiver [Order]
+                    bean.foo = "value"
+                         ~~~~~~~~~~~~~
+                src/foo/test.kt:5: Warning: Error with receiver and arguments [Order]
+                    bean.foo = "value"
+                    ~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:5: Warning: Error with receiver and no arguments [Order]
+                    bean.foo = "value"
+                    ~~~~~~~~
+                src/foo/test.kt:6: Warning: Error with arguments but no receiver [Order]
+                    bean.foo = "valu" + 'e'
+                         ~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:6: Warning: Error with receiver and arguments [Order]
+                    bean.foo = "valu" + 'e'
+                    ~~~~~~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:6: Warning: Error with receiver and no arguments [Order]
+                    bean.foo = "valu" + 'e'
+                    ~~~~~~~~
+                src/foo/test.kt:7: Warning: Error with arguments but no receiver [Order]
+                    bean.foo = ""${'"'}value""${'"'}
+                         ~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:7: Warning: Error with receiver and arguments [Order]
+                    bean.foo = ""${'"'}value""${'"'}
+                    ~~~~~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:7: Warning: Error with receiver and no arguments [Order]
+                    bean.foo = ""${'"'}value""${'"'}
+                    ~~~~~~~~
+                src/foo/test.kt:8: Warning: Error with arguments but no receiver [Order]
+                    bean.foo = s.toString()
+                         ~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:8: Warning: Error with receiver and arguments [Order]
+                    bean.foo = s.toString()
+                    ~~~~~~~~~~~~~~~~~~~~~~~
+                src/foo/test.kt:8: Warning: Error with receiver and no arguments [Order]
+                    bean.foo = s.toString()
+                    ~~~~~~~~
+                src/foo/test.kt:9: Warning: Error with arguments but no receiver [Order]
+                    bean.foo = s
+                         ~~~~~~~
+                src/foo/test.kt:9: Warning: Error with receiver and arguments [Order]
+                    bean.foo = s
+                    ~~~~~~~~~~~~
+                src/foo/test.kt:9: Warning: Error with receiver and no arguments [Order]
+                    bean.foo = s
+                    ~~~~~~~~
+                0 errors, 18 warnings
+                """
+            )
+    }
+
     class TestAnnotationLookupDetector : Detector(), SourceCodeScanner {
         companion object Issues {
             val ISSUE = Issue.create(
@@ -73,8 +168,8 @@ class DefaultJavaEvaluatorTest {
             )
         }
 
-        override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-            listOf(UMethod::class.java, UVariable::class.java)
+        override fun getApplicableUastTypes(): List<Class<out UElement>> =
+            listOf(UMethod::class.java, UVariable::class.java, UCallExpression::class.java)
 
         class AnnotationOrderVisitor(private val context: JavaContext) : UElementHandler() {
             override fun visitVariable(node: UVariable) {
@@ -82,7 +177,18 @@ class DefaultJavaEvaluatorTest {
             }
 
             override fun visitMethod(node: UMethod) {
+                val x = node.asRecursiveLogString()
                 processAnnotations(node)
+            }
+
+            override fun visitCallExpression(node: UCallExpression) {
+                // Also test location ranges for assignments here
+                val methodName = node.methodName ?: node.methodIdentifier?.name
+                if (methodName == "setFoo") {
+                    context.report(ISSUE, node, context.getCallLocation(node, false, true), "Error with arguments but no receiver")
+                    context.report(ISSUE, node, context.getCallLocation(node, true, true), "Error with receiver and arguments")
+                    context.report(ISSUE, node, context.getCallLocation(node, true, false), "Error with receiver and no arguments")
+                }
             }
 
             private fun processAnnotations(modifierListOwner: PsiModifierListOwner) {

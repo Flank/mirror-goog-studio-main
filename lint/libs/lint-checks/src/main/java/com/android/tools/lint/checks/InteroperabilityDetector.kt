@@ -125,7 +125,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             explicit nullness information here with either `@NonNull` or `@Nullable`.
 
             You can set the environment variable
+            ```
                 `ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED=true`
+            ```
             if you want lint to ignore classes and members that have been annotated with
             `@Deprecated`.
             """,
@@ -145,7 +147,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             explanation = """
             For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
 
-            Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.
+            Accessor methods require a `get` prefix or for boolean-returning methods an `is` prefix can be used.
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#property-prefixes",
             category = Category.INTEROPERABILITY_KOTLIN,
@@ -403,18 +405,20 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
             if (getter == null) {
                 // Look for inherited methods
-                cls.superClass?.let { superClass ->
-                    for (inherited in superClass.findMethodsByName(getterName1, true)) {
-                        if (inherited.parameterList.parametersCount == 0) {
-                            getter = inherited
-                            break
-                        }
-                    }
-                    if (getter == null) {
-                        for (inherited in superClass.findMethodsByName(getterName2, true)) {
+                cls.uastSuperTypes.forEach {
+                    (it.type as? PsiClassType)?.resolve()?.let { superClass ->
+                        for (inherited in superClass.findMethodsByName(getterName1, true)) {
                             if (inherited.parameterList.parametersCount == 0) {
                                 getter = inherited
                                 break
+                            }
+                        }
+                        if (getter == null) {
+                            for (inherited in superClass.findMethodsByName(getterName2, true)) {
+                                if (inherited.parameterList.parametersCount == 0) {
+                                    getter = inherited
+                                    break
+                                }
                             }
                         }
                     }
@@ -487,13 +491,14 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         if (superReturnType != getterType) {
                             val message =
                                 "The getter return type (`${getterType?.presentableText}`)" +
-                                    " is not the same as the setter return type " +
+                                    " is not the same as the super return type " +
                                     "(`${superReturnType.presentableText}`); they should have " +
                                     "exactly the same type to allow " +
                                     "`${propertySuffix.usLocaleDecapitalize()}` " +
                                     "be accessed as a property from Kotlin; see " +
                                     "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                            val location = getPropertyLocation(getter, setter)
+                            val location = getPropertyLocation(getter, superMethod)
+                            location.secondary?.message = "Super method here"
                             context.report(
                                 KOTLIN_PROPERTY,
                                 location.source as? PsiElement ?: setter, location, message
@@ -744,15 +749,13 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun initializeAnnotationNames(context: JavaContext) {
             if (nonNullAnnotation == null) {
-                val library = context.project.buildVariant?.mainArtifact
-                    ?.findCompileDependency("androidx.annotation:annotation")
-                if (library != null) {
+                if (context.evaluator.findClass("android.support.annotation.NonNull") != null) {
+                    nonNullAnnotation = "@android.support.annotation.NonNull"
+                    nullableAnnotation = "@android.support.annotation.Nullable"
+                } else {
                     nonNullAnnotation = "@androidx.annotation.NonNull"
                     nullableAnnotation = "@androidx.annotation.Nullable"
-                    return
                 }
-                nonNullAnnotation = "@android.support.annotation.NonNull"
-                nullableAnnotation = "@android.support.annotation.Nullable"
             }
         }
 

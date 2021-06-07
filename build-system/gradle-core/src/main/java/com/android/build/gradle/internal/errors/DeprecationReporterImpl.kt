@@ -180,7 +180,17 @@ class DeprecationReporterImpl(
             Option.Status.STABLE -> { // No issues
             }
             is Option.Status.Deprecated -> {
-                if (option.defaultValue != value) {
+
+                // In some cases, we would like to encourage users to use OptionalBooleanOption flag
+                // to opt-in some future behavior to help them migrate smoothly. Therefore, we don't
+                // want to warn users of using this flag with recommended value even though this
+                // flag is going to be deprecated soon.
+                val useRecommendedValue =
+                    option is OptionalBooleanOption
+                            && option.recommendedValue != null
+                            && option.recommendedValue == value
+
+                if (option.defaultValue != value && !useRecommendedValue) {
                     issueReporter.reportWarning(
                         Type.UNSUPPORTED_PROJECT_OPTION_USE,
                         "The option setting '${option.propertyName}=$value' is deprecated."

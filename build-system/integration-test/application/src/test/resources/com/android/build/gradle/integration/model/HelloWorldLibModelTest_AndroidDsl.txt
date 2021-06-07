@@ -96,7 +96,7 @@
    - flavorDimensions  = []
    - productFlavors    = []
    > signingConfigs:
-      > signingConfig(debug):
+      > debug:
          - name            = "debug"
          - storeFile       = {ANDROID_PREFS}/.android/debug.keystore{!}
          - storePassword   = "android"
@@ -107,7 +107,7 @@
          - enableV3Signing = (null)
          - enableV4Signing = (null)
          - isSigningReady  = true
-      < signingConfig(debug)
+      < debug
    < signingConfigs
    - aaptOptions:
       - namespacing = DISABLED

@@ -221,7 +221,6 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
                 import android.app.Service;
                 import android.content.Intent;
                 import android.os.IBinder;
-                import androidx.annotation.Nullable;
 
                 public class ServiceTrampoline extends Service {
                     private IBinder binder;
@@ -233,7 +232,7 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
                         startActivity(intent);
                         return Service.START_STICKY;
                     }
-                    @Nullable
+
                     @Override
                     public IBinder onBind(Intent intent) {
                         return binder;
@@ -247,7 +246,7 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
             src/test/pkg/NotificationTest.java:21: Error: This intent launches a Service (ServiceTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                                     .setContentIntent(serviceIntent)
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/ServiceTrampoline.java:14: <No location-specific message>
+                src/test/pkg/ServiceTrampoline.java:13: <No location-specific message>
                     startActivity(intent);
                     ~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings

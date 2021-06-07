@@ -32,6 +32,9 @@ import java.io.Serializable
 data class AndroidProjectImpl(
     override val path: String,
     override val projectType: ProjectType,
+    override val namespace: String,
+    override val androidTestNamespace: String?,
+    override val testFixturesNamespace: String?,
     override val mainSourceSet: SourceSetContainer,
     override val buildTypeSourceSets: Collection<SourceSetContainer>,
     override val productFlavorSourceSets: Collection<SourceSetContainer>,

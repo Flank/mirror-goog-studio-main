@@ -77,54 +77,48 @@ abstract class ReferenceModelComparator(
         projectPath: String? = null,
         goldenFileSuffix: String = ""
     ) {
-        Comparator(this, result, referenceResult).compare(
-            model = result.getAndroidProject(projectPath),
-            referenceModel = referenceResult.getAndroidProject(projectPath),
+        Comparator(this, result, referenceResult).compareAndroidProject(
+            modelAction = { getAndroidProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureAndroidProjectDeltaIsEmpty(projectPath: String? = null) {
-        Comparator(this, result, referenceResult).ensureIsEmpty(
-            model = result.getAndroidProject(projectPath),
-            referenceModel = referenceResult.getAndroidProject(projectPath)
-        )
+        Comparator(this, result, referenceResult).ensureAndroidProjectIsEmpty {
+            getAndroidProject(projectPath)
+        }
     }
 
     fun compareAndroidDslWith(
         projectPath: String? = null,
         goldenFileSuffix: String = ""
     ) {
-        Comparator(this, result, referenceResult).compare(
-            model = result.getAndroidDsl(projectPath),
-            referenceModel = referenceResult.getAndroidDsl(projectPath),
+        Comparator(this, result, referenceResult).compareAndroidDsl(
+            modelAction = { getAndroidDsl(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureAndroidDslDeltaIsEmpty(projectPath: String? = null) {
-        Comparator(this, result, referenceResult).ensureIsEmpty(
-            model = result.getAndroidDsl(projectPath),
-            referenceModel = referenceResult.getAndroidDsl(projectPath)
-        )
+        Comparator(this, result, referenceResult).ensureAndroidDslIsEmpty {
+            getAndroidDsl(projectPath)
+        }
     }
 
     fun compareVariantDependenciesWith(
         projectPath: String? = null,
         goldenFileSuffix: String = ""
     ) {
-        Comparator(this, result, referenceResult).compare(
-            model = result.getVariantDependencies(projectPath),
-            referenceModel = referenceResult.getVariantDependencies(projectPath),
+        Comparator(this, result, referenceResult).compareVariantDependencies(
+            modelAction = { getVariantDependencies(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureVariantDependenciesDeltaIsEmpty(projectPath: String? = null) {
-        Comparator(this, result, referenceResult).ensureIsEmpty(
-            model = result.getVariantDependencies(projectPath),
-            referenceModel = referenceResult.getVariantDependencies(projectPath)
-        )
+        Comparator(this, result, referenceResult).ensureVariantDependenciesIsEmpty {
+            getVariantDependencies(projectPath)
+        }
     }
 
     companion object {

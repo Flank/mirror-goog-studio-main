@@ -83,6 +83,7 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.common",
+        ":tools.fixtures",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",

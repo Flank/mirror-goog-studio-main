@@ -28,7 +28,8 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.extension.impl.CURRENT_AGP_VERSION
+import com.android.build.api.variant.HasTestFixtures
+import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
@@ -84,9 +85,9 @@ import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
-import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.Versions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -242,13 +243,30 @@ class ModelBuilder<
         val instantAppResultMap = mutableMapOf<File, Boolean>()
 
         // gather variants
-        val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
+        var namespace: String? = null
+        var androidTestNamespace: String? = null
+        var testFixturesNamespace: String? = null
+        val variantList = variants.map {
+            namespace = it.namespace.get()
+            if (androidTestNamespace == null && it is HasAndroidTest) {
+                androidTestNamespace = it.androidTest?.namespace?.get()
+            }
+            if (testFixturesNamespace == null && it is HasTestFixtures) {
+                testFixturesNamespace = it.testFixtures?.namespace?.get()
+            }
+
+            createVariant(it, buildFeatures, instantAppResultMap)
+        }
 
         return AndroidProjectImpl(
             path = project.path,
             buildFolder = project.layout.buildDirectory.get().asFile,
 
             projectType = projectType,
+
+            namespace = namespace ?: "",
+            androidTestNamespace = androidTestNamespace,
+            testFixturesNamespace = testFixturesNamespace,
 
             mainSourceSet = defaultConfig,
             buildTypeSourceSets = buildTypes,

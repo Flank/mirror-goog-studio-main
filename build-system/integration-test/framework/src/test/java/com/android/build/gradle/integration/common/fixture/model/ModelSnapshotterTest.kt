@@ -30,13 +30,6 @@ class ModelSnapshotterTest {
         )
     )
 
-    private val referenceNormalizer = FakeFileNormalizer(
-        mapOf(
-            File("/reference/some/important/path") to "IMPORTANT_PATH1",
-            File("/reference/some/other/important/path") to "IMPORTANT_PATH2",
-        )
-    )
-
     private val notImportantPath = if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
         "C:\\some\\not-important\\path"
     } else {
@@ -45,165 +38,84 @@ class ModelSnapshotterTest {
 
     @Test
     fun item() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
+        val smallObject = SmallObject("a")
 
         val snapshot = snapshot(smallObject) { snapshotWithItem() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
                - property1 = "a"
-               - property2 = ["b", "c"]
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `item with empty list`() {
-        val smallObject = SmallObject("a", listOf())
-
-        val snapshot = snapshot(smallObject) { snapshotWithItem() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = "a"
-               - property2 = []
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `item with null list`() {
-        val smallObject = SmallObject("a", null)
-
-        val snapshot = snapshot(smallObject) { snapshotWithItem() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = "a"
-               - property2 = (null)
 
         """.trimIndent())
     }
 
     @Test
     fun `item with modifier`() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
+        val smallObject = SmallObject("a")
 
         val snapshot = snapshot(smallObject) {
-            item("property1", SmallObject::property1)
-            item("property2", SmallObject::property2) {
-                it?.joinToString(separator = "")
+            item("property1", SmallObject::property1) {
+                it?.toUpperCase()
             }
         }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
-               - property2 = "bc"
+               - property1 = "A"
 
         """.trimIndent())
     }
 
     @Test
-    fun `item vs reference`() {
-        val smallObject = SmallObject("a", listOf("a"))
-        val referenceObject = SmallObject("b", listOf("b"))
+    fun list() {
+        val smallObject = SmallObject(listOf("b", "c"))
 
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
+        val snapshot = snapshot(smallObject) { snapshotWithList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
-               - property2 = ["a"]
+               - property2 = ["b", "c"]
 
         """.trimIndent())
     }
 
     @Test
-    fun `item vs identical reference`() {
-        val smallObject = SmallObject("a", listOf("a"))
-        val referenceObject = SmallObject("a", listOf("a"))
+    fun `list with empty list`() {
+        val smallObject = SmallObject(listOf())
 
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
+        val snapshot = snapshot(smallObject) { snapshotWithList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
+               - property2 = []
 
         """.trimIndent())
     }
 
     @Test
-    fun `item vs reference with null properties`() {
-        val smallObject = SmallObject("a", listOf("a"))
-        val referenceObject = SmallObject(null, null)
+    fun `list with null list`() {
+        val smallObject = SmallObject()
 
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = "a"
-               - property2 = ["a"]
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `item with null properties vs reference`() {
-        val smallObject = SmallObject(null, null)
-        val referenceObject = SmallObject("a", listOf("a"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
+        val snapshot = snapshot(smallObject) { snapshotWithList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = (null)
                - property2 = (null)
 
         """.trimIndent())
     }
 
     @Test
-    fun `item vs reference with modifier`() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
-        val referenceObject = SmallObject("a", listOf("bc"))
+    fun `list with format`() {
+        val smallObject = SmallObject(listOf("b", "c"))
 
-        val snapshot = snapshot(smallObject, referenceObject) {
-            item("property1", SmallObject::property1)
-            item("property2", SmallObject::property2) {
-                it?.joinToString(separator = "")
-            }
+        val snapshot = snapshot(smallObject) {
+            list("property2", SmallObject::property2) { toUpperCase() }
         }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `item vs reference with empty list`() {
-        val smallObject = SmallObject("a", listOf("b"))
-        val referenceObject = SmallObject("a", listOf())
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property2 = ["b"]
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `item with empty list vs reference`() {
-        val smallObject = SmallObject("a", listOf())
-        val referenceObject = SmallObject("a", listOf("b"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithItem() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property2 = []
+               - property2 = ["B", "C"]
 
         """.trimIndent())
     }
@@ -246,13 +158,12 @@ class ModelSnapshotterTest {
 
     @Test
     fun valueList() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
+        val smallObject = SmallObject(listOf("b", "c"))
 
         val snapshot = snapshot(smallObject) { snapshotWithValueList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
                - property2:
                   * "b"
                   * "c"
@@ -262,13 +173,12 @@ class ModelSnapshotterTest {
 
     @Test
     fun `valueList with empty list`() {
-        val smallObject = SmallObject("a", listOf())
+        val smallObject = SmallObject(listOf())
 
         val snapshot = snapshot(smallObject) { snapshotWithValueList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
                - property2 = []
 
         """.trimIndent())
@@ -276,13 +186,12 @@ class ModelSnapshotterTest {
 
     @Test
     fun `valueList with null list`() {
-        val smallObject = SmallObject("a", null)
+        val smallObject = SmallObject()
 
         val snapshot = snapshot(smallObject) { snapshotWithValueList() }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
                - property2 = (null)
 
         """.trimIndent())
@@ -290,148 +199,17 @@ class ModelSnapshotterTest {
 
     @Test
     fun `valueList with formatter`() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
+        val smallObject = SmallObject(listOf("b", "c"))
 
         val snapshot = snapshot(smallObject) {
-            item("property1", SmallObject::property1)
             valueList("property2", SmallObject::property2, formatAction = { "item($this)" })
         }
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-               - property1 = "a"
                - property2:
                   * "item(b)"
                   * "item(c)"
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList vs reference`() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
-        val referenceObject = SmallObject("b", listOf("d"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = "a"
-               - property2:
-                  * "b"
-                  * "c"
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList vs identical reference`() {
-        val smallObject = SmallObject("a", listOf("b", "c"))
-        val referenceObject = SmallObject("a", listOf("b", "c"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList vs reference with null properties`() {
-        val smallObject = SmallObject("a", listOf("a"))
-        val referenceObject = SmallObject(null, null)
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = "a"
-               - property2:
-                  * "a"
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList with null properties vs reference`() {
-        val smallObject = SmallObject(null, null)
-        val referenceObject = SmallObject("a", listOf("a"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 = (null)
-               - property2 = (null)
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList vs reference with formatter`() {
-        val smallObject = SmallObject("a", listOf("item1"))
-        val referenceObject = SmallObject("a", listOf("item2"))
-
-        val snapshot = snapshot(smallObject, referenceObject) {
-            item("property1", SmallObject::property1)
-            valueList(
-                name = "property2",
-                propertyAction = SmallObject::property2,
-                formatAction = { substring(0, 4) })
-        }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList vs reference with empty list`() {
-        val smallObject = SmallObject("a", listOf("b"))
-        val referenceObject = SmallObject("a", listOf())
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property2:
-                  * "b"
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `valueList with empty list vs reference`() {
-        val smallObject = SmallObject("a", listOf())
-        val referenceObject = SmallObject("a", listOf("b"))
-
-        val snapshot = snapshot(smallObject, referenceObject) { snapshotWithValueList() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property2 = []
-
-        """.trimIndent())
-    }
-
-
-    // entry is mostly the same as item (just different formatting) so no need to test all the
-    // different possible scenarios
-    @Test
-    fun entry() {
-        val smallObject = SmallObject("a", null)
-
-        val snapshot = snapshot(
-            smallObject
-        ) {
-            entry("property1", SmallObject::property1)
-        }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 -> "a"
 
         """.trimIndent())
     }
@@ -498,60 +276,6 @@ class ModelSnapshotterTest {
     }
 
     @Test
-    fun `dataObject vs reference`() {
-        val mainObject = EnclosingObject(
-            property1 = SmallObject("a", listOf()),
-            property2 = LargeObject(
-                "a",
-                12,
-                File("/some/not-important/path"),
-                FakeEnum.ENUM_1,
-                1.2,
-                true,
-                listOf("string1", "string2"),
-                listOf(100, 101),
-                File("/some/important/path/with/some/leaf"),
-                listOf(File("/some/other/important/path"), File("/some/other/important/path/with/a/leaf"))
-            )
-        )
-
-        // use different paths since the normalizer for the reference object normalize different
-        // paths. These means the normalized paths should be identical
-        val referenceObject = EnclosingObject(
-            property1 = SmallObject("b", listOf()),
-            property2 = LargeObject(
-                "a",
-                13,
-                File("/some/not-important/path"),
-                FakeEnum.ENUM_2,
-                1.3,
-                false,
-                listOf("string3", "string2"),
-                listOf(100, 102),
-                File("/reference/some/important/path/with/some/leaf"),
-                listOf(File("/reference/some/other/important/path"), File("/reference/some/other/important/path/with/a/leaf"))
-            )
-        )
-
-        val snapshot = snapshot(mainObject, referenceObject) { snapshotEnclosingObject() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            > EnclosingObject:
-               - property1:
-                  - property1 = "a"
-               - property2:
-                  - property2 = 12
-                  - property4 = ENUM_1
-                  - property5 = 1.2
-                  - property6 = true
-                  - property7 = ["string1", "string2"]
-                  - property8 = [100, 101]
-            < EnclosingObject
-
-        """.trimIndent())
-    }
-
-    @Test
     fun convertedObjectList() {
         val mainObject = ObjectWithMap(mapOf(
             "1" to SmallObject("1", listOf("a")),
@@ -595,97 +319,37 @@ class ModelSnapshotterTest {
         """.trimIndent())
     }
 
-    @Test
-    fun `convertedObjectList vs identical reference`() {
-        val mainObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", listOf()),
-            "2" to SmallObject("2", listOf()),
-        ))
-
-        val referenceObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", listOf()),
-            "2" to SmallObject("2", listOf()),
-        ))
-
-        val snapshot = snapshot(mainObject, referenceObject) { snapshotObjectWithMap() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - ObjectWithMap:
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `convertedObjectList vs reference with empty list`() {
-        val mainObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", listOf("a")),
-            "2" to SmallObject("2", listOf()),
-        ))
-
-        val referenceObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", listOf()),
-            "2" to SmallObject("2", listOf("b")),
-        ))
-
-        val snapshot = snapshot(mainObject, referenceObject) { snapshotObjectWithMap() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - ObjectWithMap:
-               - map:
-                  - object(1):
-                     - property2 = ["a"]
-                  - object(2):
-                     - property2 = []
-
-        """.trimIndent())
-    }
-
-    @Test
-    fun `convertedObjectList vs reference with null list`() {
-        val mainObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", listOf("a")),
-            "2" to SmallObject("2", null),
-        ))
-
-        val referenceObject = ObjectWithMap(mapOf(
-            "1" to SmallObject("1", null),
-            "2" to SmallObject("2", listOf("b")),
-        ))
-
-        val snapshot = snapshot(mainObject, referenceObject) { snapshotObjectWithMap() }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - ObjectWithMap:
-               - map:
-                  - object(1):
-                     - property2 = ["a"]
-                  - object(2):
-                     - property2 = (null)
-
-        """.trimIndent())
-    }
-
     private fun <ModelT> snapshot(
         model: ModelT,
-        referenceModel: ModelT? = null,
         action: ModelSnapshotter<ModelT>.() -> Unit
     ): String {
-        val registrar = SnapshotItemRegistrarImpl(model!!::class.java.simpleName, mapOf())
+        val registrar =
+                SnapshotItemRegistrarImpl(
+                    model!!::class.java.simpleName,
+                    SnapshotContainer.ContentType.OBJECT_PROPERTIES
+                )
 
-        action(ModelSnapshotter(registrar, model, normalizer, referenceModel, referenceNormalizer))
+        action(ModelSnapshotter(registrar, model, normalizer, mapOf()))
 
         val writer = SnapshotItemWriter()
         return writer.write(registrar)
     }
 }
 
+private fun ModelSnapshotter<SmallObject>.snapshotSmallObject() {
+    item("property1", SmallObject::property1)
+    list("property2", SmallObject::property2)
+}
+
 private fun ModelSnapshotter<SmallObject>.snapshotWithItem() {
     item("property1", SmallObject::property1)
-    item("property2", SmallObject::property2)
+}
+
+private fun ModelSnapshotter<SmallObject>.snapshotWithList() {
+    list("property2", SmallObject::property2)
 }
 
 private fun ModelSnapshotter<SmallObject>.snapshotWithValueList() {
-    item("property1", SmallObject::property1)
     valueList("property2", SmallObject::property2)
 }
 
@@ -696,15 +360,15 @@ private fun ModelSnapshotter<LargeObject>.snapshotLargeObject() {
     item("property4", LargeObject::property4)
     item("property5", LargeObject::property5)
     item("property6", LargeObject::property6)
-    item("property7", LargeObject::property7)
-    item("property8", LargeObject::property8)
+    list("property7", LargeObject::property7)
+    list("property8", LargeObject::property8)
     item("property9", LargeObject::property9)
-    item("property10", LargeObject::property10)
+    list("property10", LargeObject::property10)
 }
 
 private fun ModelSnapshotter<EnclosingObject>.snapshotEnclosingObject() {
     dataObject("property1", EnclosingObject::property1) {
-        snapshotWithItem()
+        snapshotSmallObject()
     }
     dataObject("property2", EnclosingObject::property2) {
         snapshotLargeObject()
@@ -717,15 +381,13 @@ private fun ModelSnapshotter<ObjectWithMap>.snapshotObjectWithMap() {
         propertyAction = { map?.entries },
         nameAction = { "object(${value.property1})" },
         objectAction = { value },
-        idAction = { key },
         sortAction = { collection -> collection?.sortedBy { it.key } }
     ) {
         item("property1", SmallObject::property1)
-        item("property2", SmallObject::property2)
+        list("property2", SmallObject::property2)
     }
 }
 
 data class ObjectWithMap(
     val map: Map<String, SmallObject>?
 )
-

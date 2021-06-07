@@ -450,6 +450,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    implementation \"androidx.work:work-rxjava3:2.5.+\" // expect 2.6.0\n" +
                     // Also update to 2.6, not 2.7, from older stable releases
                     "    implementation \"androidx.work:work-runtime:2.5.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    // Don't update from a stable version
+                    "    implementation \"androidx.work:work-runtime:2.5.0\" // No suggestion\n" +
                     "}\n"
             )
         )
@@ -470,7 +472,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 <?xml version='1.0' encoding='UTF-8'?>
                 <androidx.work>
                   <work-runtime versions="2.7.0-alpha06,2.6.0-alpha06"/>
-                  <work-runtime-ktx versions="2.7.0-alpha05,2.6.0-alpha05"/>
+                  <work-runtime-ktx versions="2.5.0,2.7.0-alpha05,2.6.0-alpha05"/>
                   <work-rxjava2 versions="2.7.0,2.6.0-alpha06"/>
                   <work-rxjava3 versions="2.7.0-alpha06"/>
                   <work-gcm versions="2.7.0-alpha05"/>
@@ -2013,7 +2015,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         testImplementation 'org.robolectric:robolectric:2.0'
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     0 errors, 4 warnings
-                """.trimIndent()
+                """
             else
                 "No warnings."
 
@@ -2027,8 +2029,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                         testImplementation 'org.robolectric:robolectric:2.0'
                         testImplementation 'org.robolectric:robolectric:4.2.1'
                     }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DEPENDENCY)
             .run()
@@ -2053,7 +2055,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         -     testImplementation 'org.robolectric:robolectric:2.0'
                         @@ -7 +6
                         +     testImplementation 'org.robolectric:robolectric:4.2.1'
-                    """.trimIndent()
+                    """
                 else ""
             )
     }
@@ -3410,8 +3412,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     enabled true
                   }
                 }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
@@ -3513,7 +3515,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             @@ -10 +10
             -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
             +     debugImplementation 'androidx.appcompat:appcompat:1.0.0'
-            """.trimIndent()
+            """
 
         lint()
             .files(
@@ -3530,8 +3532,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                             compile 'androidx.appcompat:appcompat:1.0.0'
                             debugCompile 'androidx.appcompat:appcompat:1.0.0'
                         }
-                    """.trimIndent()
-                )
+                    """
+                ).indented()
             )
             .issues(DEPRECATED_CONFIGURATION)
             .run()
@@ -3553,7 +3555,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             @@ -9 +9
             -     compile 'androidx.appcompat:appcompat:1.0.0'
             +     implementation 'androidx.appcompat:appcompat:1.0.0'
-            """.trimIndent()
+            """
 
         lint()
             .files(
@@ -3569,8 +3571,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                         dependencies {
                             compile 'androidx.appcompat:appcompat:1.0.0'
                         }
-                    """.trimIndent()
-                )
+                    """
+                ).indented()
             )
             .issues(DEPRECATED_CONFIGURATION)
             .run()
@@ -3620,8 +3622,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                         testDebugCompile 'androidx.appcompat:appcompat:1.0.0'
                         androidTestDebugCompile 'androidx.appcompat:appcompat:1.0.0'
                     }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DEPRECATED_CONFIGURATION)
             .run()
@@ -3734,7 +3736,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 @@ -7 +7
                 -     implementation "androidx.core:core:1.2.0"
                 +     implementation "androidx.core:core-ktx:1.2.0"
-                """.trimIndent()
+                """
             )
     }
 
@@ -3843,7 +3845,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         Fix for build.gradle line 2: Insert sourceCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.sourceCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent()
+                    """
                 )
         }
     }
@@ -3881,7 +3883,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         Fix for build.gradle line 2: Insert targetCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.targetCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent()
+                    """
                 )
         }
     }
@@ -3898,7 +3900,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     plugins {
                        id '$plugin'
                     }
-                    """.trimIndent()
+                    """
                 ).indented()
             )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
@@ -3919,7 +3921,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                    """.trimIndent()
+                    """
                 )
         }
     }
@@ -3981,7 +3983,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         Fix for build.gradle.kts line 2: Insert sourceCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.sourceCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent()
+                    """
                 )
         }
     }
@@ -4016,7 +4018,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         Fix for build.gradle.kts line 2: Insert targetCompatibility directive for JDK8:
                         @@ -5 +5
                         + java.targetCompatibility = JavaVersion.VERSION_1_8
-                    """.trimIndent()
+                    """
                 )
         }
     }
@@ -4033,7 +4035,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     plugins {
                        id("$plugin")
                     }
-                    """.trimIndent()
+                    """
                 ).indented()
             )
                 .issues(JAVA_PLUGIN_LANGUAGE_LEVEL)
@@ -4054,7 +4056,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     +     sourceCompatibility = JavaVersion.VERSION_1_8
                     +     targetCompatibility = JavaVersion.VERSION_1_8
                     + }
-                    """.trimIndent()
+                    """
                 )
         }
     }

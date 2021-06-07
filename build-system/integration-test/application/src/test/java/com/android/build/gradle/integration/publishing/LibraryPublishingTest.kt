@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -85,7 +85,7 @@ class LibraryPublishingTest {
     fun testNoAutomaticComponentCreation() {
         addPublication(RELEASE)
         var result = library.executor()
-            .with(BooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
+            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
             .expectFailure().run("help")
         assertThat(result.failureMessage).contains("" +
                 "Could not get unknown property 'release' for SoftwareComponentInternal")
@@ -423,6 +423,26 @@ class LibraryPublishingTest {
                 "Using non-existing build type \"random\" when selecting variants to be " +
                         "published in multipleVariants publishing DSL."
             )
+        }
+    }
+
+    @Test
+    fun testDisableComponentCreationFlagWarningMessage() {
+        var result = library
+            .executor()
+            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
+            .run("help")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).doesNotContain(
+                "'android.disableAutomaticComponentCreation=true' is deprecated")
+        }
+        result = library
+            .executor()
+            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, false)
+            .run("help")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).contains(
+                "'android.disableAutomaticComponentCreation=false' is deprecated")
         }
     }
 

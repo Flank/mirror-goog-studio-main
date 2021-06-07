@@ -60,8 +60,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import kotlin.text.StringsKt;
 import org.jetbrains.kotlin.asJava.elements.KtLightPsiLiteral;
+import org.jetbrains.kotlin.psi.KtDeclaration;
 import org.jetbrains.kotlin.psi.KtExpression;
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry;
+import org.jetbrains.kotlin.psi.KtProperty;
+import org.jetbrains.kotlin.psi.KtStringTemplateEntry;
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression;
 import org.jetbrains.uast.UArrayAccessExpression;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
@@ -269,6 +275,19 @@ public class ConstantEvaluator {
                             return value;
                         }
                     }
+                    //noinspection KotlinInternalInJava
+                    if (field
+                            instanceof
+                            org.jetbrains
+                                    .kotlin
+                                    .asJava
+                                    .classes
+                                    .KtUltraLightFieldForSourceDeclaration) {
+                        Object fieldValue = evaluate(field);
+                        if (fieldValue != null) {
+                            return fieldValue;
+                        }
+                    }
                     return null;
                 }
 
@@ -350,6 +369,46 @@ public class ConstantEvaluator {
                                 if (size != -1) {
                                     return size;
                                 }
+                            }
+                        }
+                    }
+                }
+                if (receiver != null && selector instanceof UCallExpression) {
+                    UCallExpression call = (UCallExpression) selector;
+                    String methodName = call.getMethodName();
+                    if ("trimIndent".equals(methodName)) {
+                        Object s = evaluate(receiver);
+                        if (s instanceof String) {
+                            return StringsKt.trimIndent((String) s);
+                        }
+                    } else if ("trimMargin".equals(methodName)) {
+                        Object s = evaluate(receiver);
+                        if (s instanceof String) {
+                            String prefix = "|";
+                            List<UExpression> valueArguments = call.getValueArguments();
+                            if (valueArguments.size() == 1) {
+                                Object arg = evaluate(valueArguments.get(0));
+                                if (arg != null) {
+                                    prefix = arg.toString();
+                                }
+                            }
+                            return StringsKt.trimMargin((String) s, prefix);
+                        }
+                    } else if (allowUnknown && "format".equals(methodName)) {
+                        // In String#format attempt to pick out at least the formatting string.
+                        // In theory we could also evaluate all the arguments and try passing them
+                        // in but there's some risk of invalid formatting string combinations.
+                        List<UExpression> arguments = call.getValueArguments();
+                        if (arguments.size() >= 2) {
+                            UExpression first = arguments.get(0);
+                            UExpression second = arguments.get(1);
+                            PsiType expressionType = first.getExpressionType();
+                            if (expressionType != null
+                                    && "java.util.Locale"
+                                            .equals(expressionType.getCanonicalText())) {
+                                return evaluate(second);
+                            } else {
+                                return evaluate(first);
                             }
                         }
                     }
@@ -706,9 +765,11 @@ public class ConstantEvaluator {
             }
             return null;
         }
-        if (operandLeft instanceof String && operandRight instanceof String) {
+        if (operandLeft instanceof String
+                        && (operandRight instanceof String || operandRight instanceof Character)
+                || operandRight instanceof String && operandLeft instanceof Character) {
             if (operator == UastBinaryOperator.PLUS) {
-                return operandLeft.toString() + operandRight.toString();
+                return operandLeft + operandRight.toString();
             }
             return null;
         } else if (operandLeft instanceof Boolean && operandRight instanceof Boolean) {
@@ -1152,7 +1213,9 @@ public class ConstantEvaluator {
                 }
                 return null;
             }
-            if (operandLeft instanceof String && operandRight instanceof String) {
+            if (operandLeft instanceof String
+                            && (operandRight instanceof String || operandRight instanceof Character)
+                    || operandRight instanceof String && operandLeft instanceof Character) {
                 if (operator == JavaTokenType.PLUS) {
                     return operandLeft.toString() + operandRight.toString();
                 }
@@ -2388,10 +2451,88 @@ public class ConstantEvaluator {
                     return getArray(type, size, dimensions);
                 }
             }
+        } else if (node instanceof KtLiteralStringTemplateEntry) {
+            return node.getText();
+        } else if (node instanceof KtStringTemplateExpression) {
+            KtStringTemplateExpression template = (KtStringTemplateExpression) node;
+            StringBuilder sb = new StringBuilder();
+            boolean parts = false;
+            for (KtStringTemplateEntry entry : template.getEntries()) {
+                if (entry instanceof KtLiteralStringTemplateEntry) {
+                    sb.append(entry.getText());
+                    parts = true;
+                    continue;
+                }
+                KtExpression expression = entry.getExpression();
+                Object part = evaluate(expression);
+                if (part instanceof String) {
+                    sb.append(part);
+                    parts = true;
+                }
+            }
+            if (parts) {
+                return sb.toString();
+            }
+        } else {
+            // If we resolve to a "val" in Kotlin, if it's not a const val but in reality is a val
+            // (because
+            // it has a constant expression and no getters and setters (and is not a var), then
+            // compute
+            // its value anyway.
+            //noinspection KotlinInternalInJava
+            if (node
+                    instanceof
+                    org.jetbrains.kotlin.asJava.classes.KtUltraLightMethodForSourceDeclaration) {
+                //noinspection KotlinInternalInJava
+                return valueFromProperty(
+                        ((org.jetbrains
+                                                .kotlin
+                                                .asJava
+                                                .classes
+                                                .KtUltraLightMethodForSourceDeclaration)
+                                        node)
+                                .getKotlinOrigin());
+            }
+
+            //noinspection KotlinInternalInJava
+            if (node
+                    instanceof
+                    org.jetbrains.kotlin.asJava.classes.KtUltraLightFieldForSourceDeclaration) {
+                //noinspection KotlinInternalInJava
+                return valueFromProperty(
+                        ((org.jetbrains.kotlin.asJava.classes.KtUltraLightFieldForSourceDeclaration)
+                                        node)
+                                .getKotlinOrigin());
+            }
         }
 
         // TODO: Check for MethodInvocation and perform some common operations -
         // Math.* methods, String utility methods like notNullize, etc
+
+        return null;
+    }
+
+    @Nullable
+    private Object valueFromProperty(@Nullable KtDeclaration origin) {
+        if (origin instanceof KtProperty) {
+            KtProperty property = (KtProperty) origin;
+            if (allowFieldInitializers) {
+                KtExpression initializer = property.getInitializer();
+                if (initializer != null) {
+                    return evaluate(initializer);
+                }
+            } else if (!property.isVar()
+                    && property.getGetter() == null
+                    && property.getSetter() == null) {
+                // Property with no custom getter or setter? If it has an initializer
+                // it might be
+                // No setter: might be a constant not declared as such
+                KtExpression initializer = property.getInitializer();
+                if (initializer != null) {
+                    return evaluate(initializer);
+                }
+            }
+        }
 
         return null;
     }

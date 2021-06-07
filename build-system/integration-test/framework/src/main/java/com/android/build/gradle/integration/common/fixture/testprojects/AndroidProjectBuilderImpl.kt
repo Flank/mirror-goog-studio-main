@@ -30,6 +30,7 @@ internal class AndroidProjectBuilderImpl(
     override var minSdkCodename: String? = null
 
     private val buildFeatures = BuildFeaturesBuilderImpl()
+    private val testFixtures = TestFixturesBuilderImpl()
     private val main: Config? = ConfigImpl(this, "main")
     private val debug: Config? = ConfigImpl(this, "debug")
     private val release: Config? = ConfigImpl(this, "release")
@@ -39,6 +40,10 @@ internal class AndroidProjectBuilderImpl(
 
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
         action(buildFeatures)
+    }
+
+    override fun testFixtures(action: TestFixturesBuilder.() -> Unit) {
+        action(testFixtures)
     }
 
     override fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit) {
@@ -79,20 +84,26 @@ internal class AndroidProjectBuilderImpl(
 
         sb.append("  defaultConfig {\n")
         applicationId?.let {
-            sb.append("  applicationId = \"$it\"\n")
+            sb.append("    applicationId = \"$it\"\n")
         }
         sb.append("  }\n") // DEFAULT-CONFIG
 
         if (buildFeatures.hasNonDefaultValue()) {
             sb.append("  buildFeatures {\n")
-            buildFeatures.aidl?.let { sb.append("  aidl = $it\n") }
-            buildFeatures.buildConfig?.let { sb.append("  buildConfig = $it\n") }
-            buildFeatures.renderScript?.let { sb.append("  renderScript = $it\n") }
-            buildFeatures.resValues?.let { sb.append("  resValues = $it\n") }
-            buildFeatures.shaders?.let { sb.append("  shaders = $it\n") }
-            buildFeatures.androidResources?.let { sb.append("  androidResources = $it\n") }
-            buildFeatures.mlModelBinding?.let { sb.append("  mlModelBinding = $it\n") }
+            buildFeatures.aidl?.let { sb.append("    aidl = $it\n") }
+            buildFeatures.buildConfig?.let { sb.append("    buildConfig = $it\n") }
+            buildFeatures.renderScript?.let { sb.append("    renderScript = $it\n") }
+            buildFeatures.resValues?.let { sb.append("    resValues = $it\n") }
+            buildFeatures.shaders?.let { sb.append("    shaders = $it\n") }
+            buildFeatures.androidResources?.let { sb.append("    androidResources = $it\n") }
+            buildFeatures.mlModelBinding?.let { sb.append("    mlModelBinding = $it\n") }
             sb.append("  }\n") // BUILD-FEATURES
+        }
+
+        if (testFixtures.enable != null) {
+            sb.append("  testFixtures {\n")
+            testFixtures.enable?.let { sb.append("    enable = $it\n") }
+            sb.append("  }\n")
         }
 
         if (buildTypes.items.isNotEmpty()) {
@@ -159,6 +170,10 @@ internal class BuildFeaturesBuilderImpl: BuildFeaturesBuilder {
                 || androidResources != null
                 || mlModelBinding != null
     }
+}
+
+internal class TestFixturesBuilderImpl: TestFixturesBuilder {
+    override var enable: Boolean? = null
 }
 
 internal class BuildTypeContainerBuilderImpl: ContainerBuilder<BuildTypeBuilder> {

@@ -29,8 +29,8 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.TestedExtension;
-import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
+import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
@@ -729,11 +729,11 @@ public abstract class BasePlugin<
         }
         hasCreatedTasks = true;
 
-        extension.disableWrite();
-
         variantApiOperations.executeDslFinalizationBlocks(
                 (AndroidT) extension
         );
+
+        extension.disableWrite();
 
         GradleBuildProject.Builder projectBuilder =
                 configuratorService.getProjectBuilder(project.getPath());

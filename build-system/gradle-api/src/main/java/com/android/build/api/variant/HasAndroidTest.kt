@@ -16,8 +16,6 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.component.AndroidTest
-
 /**
  * Variants that optionally have instrumented tests.
  */

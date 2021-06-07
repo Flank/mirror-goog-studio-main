@@ -31,6 +31,7 @@ import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DensitySplit
 import com.android.build.api.dsl.DexPackagingOptions
 import com.android.build.api.dsl.JniLibsPackagingOptions
+import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
@@ -39,6 +40,7 @@ import com.android.build.api.dsl.Splits
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
+import com.android.build.gradle.internal.dsl.AssetPackBundleExtensionImpl
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.BundleOptionsAbi
 import com.android.build.gradle.internal.dsl.BundleOptionsDensity
@@ -46,8 +48,10 @@ import com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier
 import com.android.build.gradle.internal.dsl.BundleOptionsLanguage
 import com.android.build.gradle.internal.dsl.BundleOptionsTexture
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
+import com.android.build.gradle.internal.dsl.DexPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
+import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.ResourcesPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.SplitOptions
 import org.gradle.api.JavaVersion
@@ -67,7 +71,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(AbiSplit::class.java, AbiSplitOptions::class.java),
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),
     SupportedPropertyType.Block(ApplicationPublishing::class.java, ApplicationPublishingImpl::class.java),
-    SupportedPropertyType.Block(AssetPackBundleExtension::class.java),
+    SupportedPropertyType.Block(AssetPackBundleExtension::class.java, AssetPackBundleExtensionImpl::class.java),
     SupportedPropertyType.Block(Bundle::class.java, BundleOptions::class.java),
     SupportedPropertyType.Block(BundleAbi::class.java, BundleOptionsAbi::class.java),
     SupportedPropertyType.Block(BundleDensity::class.java, BundleOptionsDensity::class.java),
@@ -76,12 +80,13 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(BundleTexture::class.java, BundleOptionsTexture::class.java),
     SupportedPropertyType.Block(CompileOptions::class.java, com.android.build.gradle.internal.CompileOptions::class.java),
     SupportedPropertyType.Block(DensitySplit::class.java, DensitySplitOptions::class.java),
-    SupportedPropertyType.Block(DexPackagingOptions::class.java),
+    SupportedPropertyType.Block(DexPackagingOptions::class.java, DexPackagingOptionsImpl::class.java),
     SupportedPropertyType.Block(JniLibsPackagingOptions::class.java, JniLibsPackagingOptionsImpl::class.java),
     SupportedPropertyType.Block(LibraryPublishing::class.java, LibraryPublishingImpl::class.java),
+    SupportedPropertyType.Block(Lint::class.java, LintOptions::class.java),
     SupportedPropertyType.Block(PackagingOptions::class.java, com.android.build.gradle.internal.dsl.PackagingOptions::class.java),
     SupportedPropertyType.Block(ResourcesPackagingOptions::class.java, ResourcesPackagingOptionsImpl::class.java),
-    SupportedPropertyType.Block(SigningConfig::class.java),
+    SupportedPropertyType.Block(SigningConfig::class.java, com.android.build.gradle.internal.dsl.SigningConfigImpl::class.java),
     SupportedPropertyType.Block(Split::class.java, SplitOptions::class.java),
     SupportedPropertyType.Block(Splits::class.java, com.android.build.gradle.internal.dsl.Splits::class.java),
 )

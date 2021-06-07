@@ -62,6 +62,7 @@ class OverrideDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0x832a33af,
                 "pkg1/Class1.class:" +
                     "H4sIAAAAAAAAAIWQwU7CQBCG/4HSFloBEUVMPJh4QA82KMrFeCExIVE8aLy3" +
                     "sMFiaU1bfC9PJh58AB/KOLs1DYkmbTI7//z77XR3vr4/PgEMsVdDGTsGOgZ2" +
@@ -117,6 +118,7 @@ class OverrideDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0xe8c9e67b,
                 "pkg2/Class2\$Class3.class:" +
                     "H4sIAAAAAAAAAF1PTUvDQBScl8SkTbc21u+DiNJDrWCkHjwoXgqiUOpB8Z60" +
                     "S5uaJpLd+r88iODBH+CPEt9GherhvXlvZ3Zm9+Pz7R3AKbaqsLHiw0HTw6qH" +

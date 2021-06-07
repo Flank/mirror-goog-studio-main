@@ -353,6 +353,8 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     public void testNoSparseArrayOutsideAndroid() {
         //noinspection all // Sample code
         lint().files(manifest().minSdk(17), mLongSparseArray, gradle("apply plugin: 'java'\n"))
+                // source file references Android classes not available outside of Android
+                .allowCompilationErrors()
                 .run()
                 .expectClean();
     }
@@ -379,7 +381,14 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "    public void test2(Integer[] x) {\n"
                                         + "        Assert.assertTrue(Arrays.equals(x, new Integer[]{Calendar.MONDAY}));\n"
                                         + "    }\n"
-                                        + "}\n"))
+                                        + "}\n"),
+                        // junit stub:
+                        java(
+                                ""
+                                        + "package junit.framework;\n"
+                                        + "public class Assert {\n"
+                                        + "    public static void assertTrue(boolean condition) {}\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }

@@ -93,6 +93,7 @@ class UtpTestRunner @JvmOverloads constructor(
                                         utpOutputDir,
                                         utpTmpDir,
                                         retentionConfig,
+                                        coverageDir,
                                         useOrchestrator,
                                         resultListenerServerMetadata.serverPort,
                                         resultListenerServerMetadata.clientCert,

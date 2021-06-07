@@ -63,16 +63,16 @@ class LibWithLocalJarModelTest : ModelComparator() {
 
     @Test
     fun `test app dependency model`() {
-        with(result).compare(
-            model = result.getVariantDependencies(":app"),
+        with(result).compareVariantDependencies(
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "app"
         )
     }
 
     @Test
     fun `test lib dependency model`() {
-        with(result).compare(
-            model = result.getVariantDependencies(":lib"),
+        with(result).compareVariantDependencies(
+            modelAction = { getVariantDependencies(":lib") },
             goldenFile = "lib"
         )
     }

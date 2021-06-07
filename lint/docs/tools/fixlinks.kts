@@ -61,6 +61,10 @@ class FixLinks {
                 }
                 val anchorFileContents = anchorFile.readText()
                 val anchorHeadingIndex = anchorFileContents.indexOf(("\n# "))
+                if (anchorHeadingIndex == -1) {
+                    offset = start
+                    continue
+                }
                 val anchorHeading = anchorFileContents.substring(anchorHeadingIndex,
                     anchorFileContents.indexOf('\n', anchorHeadingIndex + 1))
                 val anchor = "#" + anchorHeading.filter { it.isLetter() || it == ':' }.toLowerCase(Locale.ROOT)

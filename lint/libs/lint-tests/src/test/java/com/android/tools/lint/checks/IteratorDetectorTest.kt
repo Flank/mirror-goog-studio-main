@@ -30,7 +30,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.os.Build;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
 
                 import java.util.Collection;
                 import java.util.HashMap;
@@ -79,7 +79,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Build
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
                 import java.util.*
                 import java.util.stream.StreamSupport
 
@@ -113,7 +113,8 @@ class IteratorDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            )
+            ),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/LinkedHashmapTest.java:34: Warning: LinkedHashMap#spliterator was broken in API 24 and 25. Workaround: Use java.util.Spliterators.spliterator(c2a, c2a.spliterator().characteristics()) [BrokenIterator]

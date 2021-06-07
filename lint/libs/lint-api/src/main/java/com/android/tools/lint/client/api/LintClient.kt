@@ -762,7 +762,8 @@ abstract class LintClient {
 
             val projectDir = project.dir
             val classpathFile = File(projectDir, ".classpath")
-            if (classpathFile.exists()) {
+            val haveClassPath = classpathFile.exists()
+            if (haveClassPath) {
                 val classpathXml = readFile(classpathFile)
                 val document = CharSequences.parseDocumentSilently(classpathXml, false)
                 if (document != null) {
@@ -810,7 +811,7 @@ abstract class LintClient {
                 }
             }
 
-            if (classes.isEmpty()) {
+            if (classes.isEmpty() || !haveClassPath) {
                 var folder = File(projectDir, CLASS_FOLDER)
                 if (folder.exists()) {
                     classes.add(folder)
@@ -856,7 +857,7 @@ abstract class LintClient {
             }
 
             // Fallback, in case there is no Eclipse project metadata here
-            if (sources.isEmpty()) {
+            if (sources.isEmpty() || !haveClassPath) {
                 val src = File(projectDir, SRC_FOLDER)
                 if (src.exists()) {
                     sources.add(src)

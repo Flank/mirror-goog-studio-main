@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.builder.model;
+package com.android.builder.model
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import java.io.File;
-import java.util.Map;
-import java.util.Set;
+import java.io.File
 
 /**
  * Options for lint. Example:
  *
- * <pre>
- *
+ * ```
  * android {
  *    lintOptions {
  *          // set to true to turn off analysis progress reporting by lint
@@ -107,60 +102,57 @@ import java.util.Set;
  *          checkDependencies false
  *     }
  * }
- * </pre>
+ * ```
  */
-public interface LintOptions {
+interface LintOptions {
     /**
      * Returns the set of issue id's to suppress. Callers are allowed to modify this collection.
      * To suppress a given issue, add the lint issue id to the returned set.
      */
-    @NonNull
-    Set<String> getDisable();
+    val disable: Set<String>
 
     /**
      * Returns the set of issue id's to enable. Callers are allowed to modify this collection.
      * To enable a given issue, add the lint issue id to the returned set.
      */
-    @NonNull
-    Set<String> getEnable();
+    val enable: Set<String>
 
     /**
      * Returns the exact set of issues to check, or null to run the issues that are enabled
-     * by default plus any issues enabled via {@link #getEnable} and without issues disabled
-     * via {@link #getDisable}. If non-null, callers are allowed to modify this collection.
+     * by default plus any issues enabled via [enable] and without issues disabled via [disable].
+     * If non-null, callers are allowed to modify this collection.
      */
-    @Nullable
-    Set<String> getCheck();
+    val check: Set<String>
 
     /** Whether lint should abort the build if errors are found */
-    boolean isAbortOnError();
+    val isAbortOnError: Boolean
 
     /**
      * Whether lint should display full paths in the error output. By default the paths
      * are relative to the path lint was invoked from.
      */
-    boolean isAbsolutePaths();
+    val isAbsolutePaths: Boolean
 
     /**
      * Whether lint should include the source lines in the output where errors occurred
      * (true by default)
      */
-    boolean isNoLines();
+    val isNoLines: Boolean
 
     /**
      * Returns whether lint should be quiet (for example, not write informational messages
      * such as paths to report files written)
      */
-    boolean isQuiet();
+    val isQuiet: Boolean
 
     /** Returns whether lint should check all warnings, including those off by default */
-    boolean isCheckAllWarnings();
+    val isCheckAllWarnings: Boolean
 
     /** Returns whether lint will only check for errors (ignoring warnings) */
-    boolean isIgnoreWarnings();
+    val isIgnoreWarnings: Boolean
 
     /** Returns whether lint should treat all warnings as errors */
-    boolean isWarningsAsErrors();
+    val isWarningsAsErrors: Boolean
 
     /**
      * Returns whether lint should run all checks on test sources, instead of just the
@@ -171,16 +163,16 @@ public interface LintOptions {
      * @return true to check tests, defaults to false
      * @since 2.4
      */
-    boolean isCheckTestSources();
+    val isCheckTestSources: Boolean
 
     /**
-     * Like {@link #isCheckTestSources()}, but always skips analyzing tests -- meaning that it also
+     * Like [isCheckTestSources], but always skips analyzing tests -- meaning that it also
      * ignores checks that have explicitly asked to look at test sources, such as the unused
      * resource check.
      *
      * @since 3.2.0-alpha14
      */
-    boolean isIgnoreTestSources();
+    val isIgnoreTestSources: Boolean
 
     /**
      * Returns whether lint should run checks on generated sources.
@@ -188,75 +180,70 @@ public interface LintOptions {
      * @return true to check generated sources, defaults to false
      * @since 2.4
      */
-    boolean isCheckGeneratedSources();
+    val isCheckGeneratedSources: Boolean
 
     /** Returns whether lint should include explanations for issue errors. (Note that
      * HTML and XML reports intentionally do this unconditionally, ignoring this setting.) */
-    boolean isExplainIssues();
+    val isExplainIssues: Boolean
 
     /**
      * Returns whether lint should include all output (e.g. include all alternate
      * locations, not truncating long messages, etc.)
      */
-    boolean isShowAll();
+    val isShowAll: Boolean
 
     /**
      * Returns an optional path to a lint.xml configuration file
      */
-    @Nullable
-    File getLintConfig();
+    val lintConfig: File?
 
     /** Whether we should write an text report. Default false. The location can be
-     * controlled by {@link #getTextOutput()}. */
-    boolean getTextReport();
+     * controlled by [textOutput]. */
+    val textReport: Boolean
 
     /**
      * The optional path to where a text report should be written. The special value
      * "stdout" can be used to point to standard output.
      */
-    @Nullable
-    File getTextOutput();
+    val textOutput: File?
 
     /** Whether we should write an HTML report. Default true. The location can be
-     * controlled by {@link #getHtmlOutput()}. */
-    boolean getHtmlReport();
+     * controlled by [htmlOutput]. */
+    val htmlReport: Boolean
 
     /** The optional path to where an HTML report should be written */
-    @Nullable
-    File getHtmlOutput();
+    val htmlOutput: File?
 
     /** Whether we should write an XML report. Default true. The location can be
-     * controlled by {@link #getXmlOutput()}. */
-    boolean getXmlReport();
+     * controlled by [xmlOutput]. */
+    val xmlReport: Boolean
 
     /** The optional path to where an XML report should be written */
-    @Nullable
-    File getXmlOutput();
+    val xmlOutput: File?
 
     /**
      * Whether we should write a SARIF (OASIS Static Analysis Results Interchange Format) report.
-     * Default is false. The location can be controlled by {@link #getSarifOutput()}.
+     * Default is false. The location can be controlled by [sarifOutput].
      */
-    boolean getSarifReport();
+    val sarifReport: Boolean
 
     /**
      * The optional path to where a SARIF report (OASIS Static
      * Analysis Results Interchange Format) should be written.
      */
-    @Nullable
-    File getSarifOutput();
+    val sarifOutput: File?
 
     /**
      * Returns whether lint should check for fatal errors during release builds. Default is true.
      * If issues with severity "fatal" are found, the release build is aborted.
      */
-    boolean isCheckReleaseBuilds();
+    val isCheckReleaseBuilds: Boolean
 
     /**
      * Returns whether lint should check all dependencies too as part of its analysis. Default is
      * false.
      */
-    boolean isCheckDependencies();
+    val isCheckDependencies: Boolean
 
     /**
      * Returns the baseline file to use, if any. The baseline file is
@@ -270,34 +257,34 @@ public interface LintOptions {
      *
      * @return the baseline file, if any
      */
-    @Nullable
-    File getBaselineFile();
+    val baselineFile: File?
 
     /**
      * An optional map of severity overrides. The map maps from issue id's to the corresponding
      * severity to use, which must be "fatal", "error", "warning", or "ignore".
      *
      * @return a map of severity overrides, or null. The severities are one of the constants
-     *  {@link #SEVERITY_FATAL}, {@link #SEVERITY_ERROR}, {@link #SEVERITY_WARNING},
-     *  {@link #SEVERITY_INFORMATIONAL}, {@link #SEVERITY_IGNORE}
+     *  [SEVERITY_FATAL], [SEVERITY_ERROR], [SEVERITY_WARNING], [SEVERITY_INFORMATIONAL],
+     *  [SEVERITY_IGNORE].
      */
-    @Nullable
-    Map<String, Integer> getSeverityOverrides();
+    val severityOverrides: Map<String, Int>?
 
-    /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#FATAL */
-    int SEVERITY_FATAL         = 1;
-    /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#ERROR */
-    int SEVERITY_ERROR         = 2;
-    /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#WARNING */
-    int SEVERITY_WARNING       = 3;
-    /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#INFORMATIONAL */
-    int SEVERITY_INFORMATIONAL = 4;
-    /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#IGNORE */
-    int SEVERITY_IGNORE        = 5;
-    /**
-     * A severity for lint. This severity means that the severity should be whatever the default
-     * is for this issue (this is used when the DSL just says "enable", and Gradle doesn't know
-     * what the default severity is.)
-     */
-    int SEVERITY_DEFAULT_ENABLED = 6;
+    companion object {
+        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#FATAL */
+        const val SEVERITY_FATAL         = 1
+        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#ERROR */
+        const val SEVERITY_ERROR         = 2
+        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#WARNING */
+        const val SEVERITY_WARNING       = 3
+        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#INFORMATIONAL */
+        const val SEVERITY_INFORMATIONAL = 4
+        /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#IGNORE */
+        const val SEVERITY_IGNORE        = 5
+        /**
+         * A severity for lint. This severity means that the severity should be whatever the default
+         * is for this issue (this is used when the DSL just says "enable", and Gradle doesn't know
+         * what the default severity is.)
+         */
+        const val SEVERITY_DEFAULT_ENABLED = 6
+    }
 }

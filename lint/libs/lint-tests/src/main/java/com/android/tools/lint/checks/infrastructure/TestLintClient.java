@@ -111,8 +111,6 @@ import com.google.common.collect.Sets;
 import com.intellij.openapi.util.Computable;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiErrorElement;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -133,7 +131,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import kotlin.io.FilesKt;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -161,9 +158,6 @@ public class TestLintClient extends LintCliClient {
     private boolean insideReadAction = false;
 
     private TextReporter reporter;
-
-    /** Records the first throwable reported as an error during this test */
-    @Nullable Throwable firstThrowable;
 
     public TestLintClient() {
         this(CLIENT_UNIT_TESTS);
@@ -354,6 +348,7 @@ public class TestLintClient extends LintCliClient {
                         ? analyzeAndReportProvisionally(rootDir, files, issues)
                         : analyze(rootDir, files, issues);
 
+        Throwable firstThrowable = task.runner.getFirstThrowable();
         return new TestResultState(this, rootDir, result, getDefiniteIncidents(), firstThrowable);
     }
 
@@ -541,16 +536,23 @@ public class TestLintClient extends LintCliClient {
             File serializationFile = getSerializationFile(project, type);
             if (serializationFile.exists()) {
                 String xml = FilesKt.readText(serializationFile, Charsets.UTF_8);
-                assertNotNull("Not valid XML", XmlUtils.parseDocumentSilently(xml, false));
+                if (type != XmlFileType.RESOURCE_REPOSITORY) {
+                    // Skipping RESOURCE_REPOSITORY because these are not real
+                    // XML files, but we're going to replace these soon so not
+                    // worth going to the trouble of changing the file format
+                    Document document = XmlUtils.parseDocumentSilently(xml, false);
+                    assertNotNull("Not valid XML", document);
+                }
 
                 // Make sure we don't have any absolute paths to the test root or project
-                // directories
-                // or home directories in the XML
-                assertFalse(xml.contains(absProjectPath));
-                assertFalse(xml.contains(absProjectCanonicalPath));
-                assertFalse(xml.contains(absTestRootPath));
-                assertFalse(xml.contains(absTestRootCanonicalPath));
-                assertFalse(xml.contains(absHomePrefix));
+                // directories or home directories in the XML
+                if (type.isPersistenceFile() || !getFlags().isFullPath()) {
+                    assertFalse(xml, xml.contains(absProjectPath));
+                    assertFalse(xml, xml.contains(absProjectCanonicalPath));
+                    assertFalse(xml, xml.contains(absTestRootPath));
+                    assertFalse(xml, xml.contains(absTestRootCanonicalPath));
+                    assertFalse(xml, xml.contains(absHomePrefix));
+                }
             }
         }
     }
@@ -875,27 +877,7 @@ public class TestLintClient extends LintCliClient {
                 UFile file = super.parse(context);
 
                 if (!task.allowCompilationErrors) {
-                    if (file != null) {
-                        PsiErrorElement error =
-                                PsiTreeUtil.findChildOfType(file.getPsi(), PsiErrorElement.class);
-                        if (error != null) {
-                            fail(
-                                    "Found error element "
-                                            + error
-                                            + " in "
-                                            + context.file.getName()
-                                            + " with text \""
-                                            + error.getText()
-                                            + "\" inside \""
-                                            + error.getParent().getText()
-                                            + "\"");
-                        }
-                    } else {
-                        fail(
-                                "Failure processing source "
-                                        + context.getProject().getRelativePath(context.file)
-                                        + ": No UAST AST created");
-                    }
+                    ResolveCheckerKt.checkFile(context, file, task);
                 }
 
                 return file;
@@ -1053,9 +1035,18 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
+        if (!task.allowExceptions) {
+            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
+            if (throwable != null && task.runner.getFirstThrowable() == null) {
+                task.runner.setFirstThrowable(throwable);
+            }
+        }
+
         incident = checkIncidentSerialization(incident);
 
-        checkFix(fix, incident);
+        if (fix != null) {
+            checkFix(fix, incident);
+        }
 
         super.report(context, incident, format);
 
@@ -1134,7 +1125,7 @@ public class TestLintClient extends LintCliClient {
         }
     }
 
-    private Incident checkIncidentSerialization(@NotNull Incident incident) {
+    private Incident checkIncidentSerialization(@NonNull Incident incident) {
         // Check persistence: serialize and deserialize the issue metadata and continue using the
         // deserialized version. It also catches cases where a detector modifies the incident
         // after reporting it.
@@ -1149,7 +1140,7 @@ public class TestLintClient extends LintCliClient {
             //noinspection MissingVendor
             IssueRegistry registry =
                     new IssueRegistry() {
-                        @NotNull
+                        @NonNull
                         @Override
                         public List<Issue> getIssues() {
                             return issueList;
@@ -1166,14 +1157,7 @@ public class TestLintClient extends LintCliClient {
     }
 
     /** Validity checks for the quickfix associated with the given incident */
-    private void checkFix(LintFix fix, Incident incident) {
-        if (fix != null && !task.allowExceptions) {
-            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
-            if (throwable != null && this.firstThrowable == null) {
-                this.firstThrowable = throwable;
-            }
-        }
-
+    private void checkFix(@NonNull LintFix fix, @NonNull Incident incident) {
         if (fix instanceof LintFix.ReplaceString) {
             LintFix.ReplaceString replaceFix = (LintFix.ReplaceString) fix;
             String oldPattern = replaceFix.getOldPattern();
@@ -1234,9 +1218,7 @@ public class TestLintClient extends LintCliClient {
         // Make sure any source files referenced by the quick fixes are loaded
         // for subsequent quickfix verifications (since those run after the
         // test projects have been deleted)
-        if (fix != null) {
-            readFixFiles(incident, fix);
-        }
+        readFixFiles(incident, fix);
     }
 
     private void readFixFiles(Incident incident, LintFix fix) {
@@ -1364,8 +1346,8 @@ public class TestLintClient extends LintCliClient {
     @Override
     public void log(Throwable exception, String format, @NonNull Object... args) {
         if (exception != null) {
-            if (firstThrowable == null) {
-                firstThrowable = exception;
+            if (task.runner.getFirstThrowable() == null) {
+                task.runner.setFirstThrowable(exception);
             }
             exception.printStackTrace();
         }

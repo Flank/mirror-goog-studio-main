@@ -1085,6 +1085,8 @@ public class JarContentsTest {
                 "com/android/support/",
                 "com/android/support/migrateToAndroidx/",
                 "com/android/support/migrateToAndroidx/migration.xml",
+                "com/android/testing/",
+                "com/android/testing/utils/",
                 "com/android/tools/",
                 "com/android/tools/proguard/",
                 "com/android/utils/",

@@ -194,6 +194,58 @@ class BytecodeRClassWriterTest {
     }
 
     @Test
+    fun testZeroValues() {
+        val rJar = mTemporaryFolder.newFile("R.jar")
+
+        val androidSymbols = SymbolTable.builder()
+                .tablePackage("android")
+                .add(Symbol.attributeSymbol("zero", 0))
+                .add(Symbol.attributeSymbol("unstable", 99))
+                .add(Symbol.attributeSymbol("stable", 33))
+                .build()
+
+        val appSymbols = SymbolTable.builder()
+                .tablePackage("com.example.foo.app")
+                .add(
+                        Symbol.styleableSymbol(
+                                "styles",
+                                ImmutableList.of(0, 42, 0),
+                                ImmutableList.of("android_unstable", "android.stable", "local")))
+                .build()
+
+        exportToCompiledJava(listOf(androidSymbols, appSymbols), rJar.toPath())
+
+        Zip(rJar).use {
+            assertThat(it.entries).hasSize(4)
+
+            assertThat(it.entries.map { f -> f.toString() }).containsExactly(
+                    "/android/R.class",
+                    "/android/R\$attr.class",
+                    "/com/example/foo/app/R.class",
+                    "/com/example/foo/app/R\$styleable.class")
+        }
+
+        URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { rJarClassLoader ->
+            // First of all, the bytecode should be able to load properly
+            val actualFields = loadFields(rJarClassLoader, "com.example.foo.app.R\$styleable")
+            // Find the styleable. The value of "unstable" should be loaded from the reference to
+            // android.R.unstable - even though when creating the app's SymbolTable the value of 0
+            // was specified.
+            assertThat(actualFields).containsExactly(
+                    "int[] styles = [99,42,0]",
+                    // 0 is replaced with the reference (99), loaded at runtime to the new value.
+                    // (See the corresponding value in the int array above)
+                    "int styles_android_unstable = 0",
+                    // despite being an android attr this one had non-zero value (stable) so keep
+                    // the value we already have (42) without using the reference (33).
+                    "int styles_android_stable = 1",
+                    // Check that if for whatever other reason we have a non-android attr with zero
+                    // value it doesn't get updated.
+                    "int styles_local = 2")
+        }
+    }
+
+    @Test
     fun testParseArrayLiteral() {
         assertThat(parseArrayLiteral(0, "{}").asList()).isEmpty()
         assertThat(parseArrayLiteral(1, "{0x7f04002c}").asList())

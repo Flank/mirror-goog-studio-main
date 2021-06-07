@@ -40,9 +40,13 @@ import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.USwitchClauseExpressionWithBody
+import org.jetbrains.uast.USwitchExpression
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
@@ -228,6 +232,20 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return isExpressionValueUnused(parent)
             } else if (curr is UMethod && curr.isConstructor) {
                 return true
+            } else if (curr is UIfExpression) {
+                if (curr.condition === prev) {
+                    return true
+                }
+                val parent = curr.uastParent ?: return true
+                if (parent is UMethod || parent is UClassInitializer) {
+                    return true
+                }
+                return isExpressionValueUnused(parent)
+            } else if (curr is UMethod || curr is UClassInitializer) {
+                return true
+            } else if (curr is UYieldExpression && curr.uastParent?.uastParent is USwitchClauseExpressionWithBody) {
+                val switch = curr.uastParent?.uastParent?.getParentOfType(USwitchExpression::class.java) ?: return true
+                return isExpressionValueUnused(switch)
             } else {
                 // Some other non block node type, such as assignment,
                 // method declaration etc: not unused

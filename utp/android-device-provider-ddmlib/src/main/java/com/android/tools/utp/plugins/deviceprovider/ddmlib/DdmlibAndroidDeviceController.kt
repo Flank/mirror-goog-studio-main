@@ -39,6 +39,7 @@ class DdmlibAndroidDeviceController : DeviceController {
 
     companion object {
         private const val DEFAULT_ADB_TIMEOUT_SECONDS = 120L
+        private const val SHELL_EXIT_CODE_TAG = "utp_shell_exit_code="
     }
 
     private lateinit var controlledDevice: DdmlibAndroidDevice
@@ -90,20 +91,28 @@ class DdmlibAndroidDeviceController : DeviceController {
 
             // Setting max timeout to 0 (= indefinite) because we control
             // the timeout by the receiver.isCancelled().
+            var commandExitCode: Int = 0
             val receiver = when(command) {
                 "shell" -> {
                     val receiver = object: MultiLineReceiver() {
                         override fun isCancelled(): Boolean = isCancelled
                         override fun processNewLines(lines: Array<out String>) {
-                            lines.forEach(processor)
+                            lines.forEach { line ->
+                                if (line.startsWith(SHELL_EXIT_CODE_TAG)) {
+                                    commandExitCode = line.removePrefix(SHELL_EXIT_CODE_TAG)
+                                        .trim().toIntOrNull() ?: 0
+                                } else {
+                                    processor(line)
+                                }
+                            }
                         }
                     }
                     controlledDevice.executeShellCommand(
-                            commandArgs.joinToString(" "),
-                            receiver,
-                            /*maxTimeout=*/0,
-                            /*maxTimeToOutputResponse=*/0,
-                            TimeUnit.SECONDS
+                        (commandArgs + "; echo ${SHELL_EXIT_CODE_TAG}$?").joinToString(" "),
+                        receiver,
+                        /*maxTimeout=*/0,
+                        /*maxTimeToOutputResponse=*/0,
+                        TimeUnit.SECONDS
                     )
                     receiver
                 }
@@ -136,7 +145,7 @@ class DdmlibAndroidDeviceController : DeviceController {
                     if (receiver.isCancelled) {
                         -1
                     } else {
-                        0
+                        commandExitCode
                     },
                     emptyList()
             )

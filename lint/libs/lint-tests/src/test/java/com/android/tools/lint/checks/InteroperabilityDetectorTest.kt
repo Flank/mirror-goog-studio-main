@@ -150,8 +150,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.NonNull;
-                import android.support.annotation.Nullable;
+                import androidx.annotation.NonNull;
+                import androidx.annotation.Nullable;
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class Test {
                     public void ok(int x, float y, boolean z) { }
@@ -185,9 +185,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expect(
+        ).issues(PLATFORM_NULLNESS).run().expect(
             """
             src/test/pkg/Test.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
                 public Object error1(Integer error2, int[] error3) { return null; }
@@ -317,8 +316,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 """
                 package other.pkg;
 
-                import android.support.annotation.NonNull;
-                import android.support.annotation.Nullable;
+                import androidx.annotation.NonNull;
+                import androidx.annotation.Nullable;
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class Test2 {
                     @Deprecated
@@ -330,9 +329,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expectClean()
+        ).issues(PLATFORM_NULLNESS).run().expectClean()
     }
 
     fun testNullnessWithoutDeprecatedElementsOldTestDSL() {
@@ -368,8 +366,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 java(
                     """
                     package other.pkg;
-                    import android.support.annotation.NonNull;
-                    import android.support.annotation.Nullable;
+                    import androidx.annotation.NonNull;
+                    import androidx.annotation.Nullable;
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                     public class Test2 {
                         @Deprecated
@@ -381,7 +379,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
                 SUPPORT_ANNOTATIONS_JAR
             )
         )
@@ -470,7 +467,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(InteroperabilityDetector.KOTLIN_PROPERTY).run().expect(
+        ).issues(KOTLIN_PROPERTY).run().expect(
             """
             src/test/pkg/GetterSetter.java:30: Warning: This method should be called getError1 such that error1 can be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                 public String hasError1() { return ""; }
@@ -493,12 +490,12 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             src/test/pkg/GetterSetter.java:50: Warning: This getter should not be static such that error6 can be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                 public static String getError6() { return ""; }
                        ~~~~~~
-            src/test/pkg/GetterSetter.java:70: Warning: The getter return type (Float) is not the same as the setter return type (Number); they should have exactly the same type to allow number3 be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
+            src/test/pkg/GetterSetter.java:70: Warning: The getter return type (Float) is not the same as the super return type (Number); they should have exactly the same type to allow number3 be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                     @Override public Float getNumber3() { return 0.0f; } // ERROR (even though we have corresponding setter)
                                            ~~~~~~~~~~
-                src/test/pkg/GetterSetter.java:71: Setter here
-                    public void setNumber3(Float number) { } // OK
-                                ~~~~~~~~~~
+                src/test/pkg/GetterSetter.java:63: Super method here
+                    public Number getNumber3() { return 0.0; }
+                                  ~~~~~~~~~~
             0 errors, 7 warnings
             """
         )
@@ -513,7 +510,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.app.Activity;
-                import android.support.annotation.NonNull;
+                import androidx.annotation.NonNull;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class MyActivity extends Activity {
@@ -522,7 +519,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -548,7 +544,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -568,7 +563,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -602,7 +596,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -631,7 +624,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -644,8 +636,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.ColorRes;
-                import android.support.annotation.VisibleForTesting;
+                import androidx.annotation.ColorRes;
+                import androidx.annotation.VisibleForTesting;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class PropertyAccess {
@@ -662,7 +654,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -676,7 +667,7 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.content.Context;
-                import android.support.annotation.Nullable;
+                import androidx.annotation.Nullable;
                 import android.util.AttributeSet;
                 import android.view.View;
 
@@ -699,7 +690,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -736,7 +726,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -763,7 +752,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -797,7 +785,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expectClean()
     }
@@ -822,7 +809,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
 
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(KOTLIN_PROPERTY).run().expect(
             """
@@ -854,7 +840,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run().expectClean()
     }
@@ -873,7 +858,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run().expect(
             """
@@ -891,8 +875,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.NonNull;
-                import android.support.annotation.Nullable;
+                import androidx.annotation.NonNull;
+                import androidx.annotation.Nullable;
 
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
                 public class NullnessTest {
@@ -909,7 +893,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run().expect(
             """
@@ -943,7 +926,6 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).issues(PLATFORM_NULLNESS).run()
         if (InteroperabilityDetector.IGNORE_DEPRECATED) {
@@ -976,9 +958,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 }
             """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expectClean()
+        ).issues(PLATFORM_NULLNESS).run().expectClean()
     }
 
     fun testPlatformPropagation() {
@@ -1008,14 +989,13 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 public class Bar {
-                    @android.support.annotation.NonNull
+                    @androidx.annotation.NonNull
                     public static String getString() { return "hello"; }
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expect(
+        ).issues(PLATFORM_NULLNESS).run().expect(
             """
             src/test/pkg/Foo.kt:7: Warning: Should explicitly declare type here since implicit type does not specify nullness [UnknownNullness]
                 fun takeRequest(timeout: Long, unit: TimeUnit) = requestQueue.poll(timeout, unit) // ERROR

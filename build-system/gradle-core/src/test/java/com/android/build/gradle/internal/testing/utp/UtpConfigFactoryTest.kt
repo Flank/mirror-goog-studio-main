@@ -51,6 +51,7 @@ class UtpConfigFactoryTest {
     @Mock private lateinit var mockHelperApk: File
     @Mock private lateinit var mockDevice: DeviceConnector
     @Mock private lateinit var mockOutputDir: File
+    @Mock private lateinit var mockCoverageOutputDir: File
     @Mock private lateinit var mockTmpDir: File
     @Mock private lateinit var mockSdkDir: File
     @Mock private lateinit var mockAdb: RegularFile
@@ -92,7 +93,9 @@ class UtpConfigFactoryTest {
     @Before
     fun setupMocks() {
         `when`(mockDevice.serialNumber).thenReturn("mockDeviceSerialNumber")
+        `when`(mockDevice.name).thenReturn("mockDeviceName")
         `when`(mockOutputDir.absolutePath).thenReturn("mockOutputDirPath")
+        `when`(mockCoverageOutputDir.absolutePath).thenReturn("mockCoverageOutputDir")
         `when`(mockTmpDir.absolutePath).thenReturn("mockTmpDirPath")
         `when`(mockAppApk.absolutePath).thenReturn("mockAppApkPath")
         `when`(mockTestApk.absolutePath).thenReturn("mockTestApkPath")
@@ -142,6 +145,7 @@ class UtpConfigFactoryTest {
                 mockOutputDir,
                 mockTmpDir,
                 mockRetentionConfig,
+                mockCoverageOutputDir,
                 useOrchestrator,
                 1234,
                 mockResultListenerClientCert,
@@ -309,7 +313,40 @@ class UtpConfigFactoryTest {
             testData = testData.copy(isTestCoverageEnabled = true)
         )
 
-        assertRunnerConfigProto(runnerConfigProto, isTestCoverageEnabled = true)
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            instrumentationArgs = mapOf(
+                "coverage" to "true",
+                "coverageFile" to "/data/data/com.example.application/coverage.ec",
+            ),
+            testCoverageConfig = """
+                single_coverage_file: "/data/data/com.example.application/coverage.ec"
+                run_as_package_name: "com.example.application"
+                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+            """
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithTestCoverageAndOrchestrator() {
+        val runnerConfigProto = createForLocalDevice(
+            testData = testData.copy(isTestCoverageEnabled = true),
+            useOrchestrator = true
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            useOrchestrator = true,
+            instrumentationArgs = mapOf(
+                "coverage" to "true",
+                "coverageFilePath" to "/data/data/com.example.application/coverage_data/",
+            ),
+            testCoverageConfig = """
+                multiple_coverage_files_in_directory: "/data/data/com.example.application/coverage_data/"
+                run_as_package_name: "com.example.application"
+                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+            """
+        )
     }
 
     @Test

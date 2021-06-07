@@ -108,7 +108,7 @@ class XmlReporterTest {
     @Test
     fun testFullPaths() {
         val tempDir = Files.createTempDirectory("testFullPaths")
-        val rootDirectory = tempDir.toFile()
+        val rootDirectory = tempDir.toFile().canonicalFile
 
         val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient =
             {
@@ -116,6 +116,7 @@ class XmlReporterTest {
                 client.flags.isFullPath = true
                 client.pathVariables.clear()
                 client.pathVariables.add("TEST_ROOT", rootDirectory)
+                client.pathVariables.normalize()
                 client
             }
 

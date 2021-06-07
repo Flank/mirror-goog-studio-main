@@ -37,6 +37,7 @@ class StudioIssueRegistry : IssueRegistry() {
     init {
         // Turn on some checks that are off by default but which we want run in Studio:
         LintDetectorDetector.UNEXPECTED_DOMAIN.setEnabledByDefault(true)
+        LintDetectorDetector.MISSING_DOC_EXAMPLE.setEnabledByDefault(true)
         if (isStudio) {
             LintDetectorDetector.PSI_COMPARE.setEnabledByDefault(true)
         }
@@ -71,6 +72,7 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.CHECK_URL,
         LintDetectorDetector.DOLLAR_STRINGS,
+        LintDetectorDetector.MISSING_DOC_EXAMPLE,
         // We're not including this check here;
         // a vendor is not required for built-in checks
         // LintDetectorDetector.MISSING_VENDOR,

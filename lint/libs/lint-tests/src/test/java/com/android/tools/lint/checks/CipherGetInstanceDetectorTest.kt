@@ -183,16 +183,16 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     fun testDeprecatedProvider() {
         val expected =
             """
-                src/test/pkg/BCProviderTest.java:16: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
+                src/test/pkg/BCProviderTest.java:16: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [DeprecatedProvider]
                         Cipher.getInstance("AES/CBC/PKCS7PADDING", "BC"); // Error
                                                                    ~~~~
-                src/test/pkg/BCProviderTest.java:17: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
+                src/test/pkg/BCProviderTest.java:17: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [DeprecatedProvider]
                         Cipher.getInstance("AES/CBC/PKCS7PADDING", BC_PROVIDER); // Error
                                                                    ~~~~~~~~~~~
-                src/test/pkg/BCProviderTest.java:19: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
+                src/test/pkg/BCProviderTest.java:19: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [DeprecatedProvider]
                         Cipher.getInstance("AES/CBC/PKCS7PADDING", Security.getProvider("BC")); // Error
                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/BCProviderTest.java:20: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
+                src/test/pkg/BCProviderTest.java:20: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [DeprecatedProvider]
                         Cipher.getInstance("AES/CBC/PKCS7PADDING", Security.getProvider(BC_PROVIDER)); // Error
                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 4 warnings
@@ -230,7 +230,7 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
     fun testDeprecatedProviderPorHigher() {
         val expected =
             """
-            src/test/pkg/BCProviderTest.java:8: Warning: The BC provider is deprecated and as of Android P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
+            src/test/pkg/BCProviderTest.java:8: Warning: The BC provider is deprecated and as of Android P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [DeprecatedProvider]
                     Cipher.getInstance("AES/CBC/PKCS7PADDING", "BC"); // Error
                                                                ~~~~
             0 errors, 1 warnings

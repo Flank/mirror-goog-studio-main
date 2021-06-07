@@ -250,12 +250,21 @@ public class RepoLinker {
         @Override
         public ModelSource resolveModel(String groupId, String artifactId, String version)
                 throws UnresolvableModelException {
-            return new FileModelSource(resolvedModels.get(getId(groupId, artifactId, version)));
+            try {
+                return new FileModelSource(resolvedModels.get(getId(groupId, artifactId, version)));
+            } catch (RuntimeException e) {
+                throw new UnresolvableModelException(e, groupId, artifactId, version);
+            }
         }
 
         @Override
         public ModelSource resolveModel(Parent parent) throws UnresolvableModelException {
-            return new FileModelSource(resolvedModels.get(parent.getId()));
+            try {
+                return new FileModelSource(resolvedModels.get(parent.getId()));
+            } catch (RuntimeException e) {
+                throw new UnresolvableModelException(
+                        e, parent.getGroupId(), parent.getArtifactId(), parent.getVersion());
+            }
         }
 
         // AGP tests use a version of model-builder that does not include this method, but Studio

@@ -43,6 +43,8 @@ class DdmlibAndroidDeviceControllerTest {
     companion object {
         private const val EXPECTED_DESTINATION_PATH = "expected/destination"
         private const val EXPECTED_SOURCE_PATH = "expected/source"
+        private const val EXIT_CODE_REPORT_TAG = "utp_shell_exit_code"
+        private const val EXIT_CODE_REPORT = "; echo ${EXIT_CODE_REPORT_TAG}=$?"
     }
 
     @Mock
@@ -69,13 +71,11 @@ class DdmlibAndroidDeviceControllerTest {
     @Before
     fun initializeArtifacts() {
         val destinationPathProto = PathProto.Path.newBuilder().apply {
-            path =
-                    EXPECTED_DESTINATION_PATH
+            path = EXPECTED_DESTINATION_PATH
         }.build()
 
         val sourcePathProto = PathProto.Path.newBuilder().apply {
-            path =
-                    EXPECTED_SOURCE_PATH
+            path = EXPECTED_SOURCE_PATH
         }.build()
 
         artifactNonAndroidApk = TestArtifactProto.Artifact.newBuilder().apply {
@@ -139,7 +139,24 @@ class DdmlibAndroidDeviceControllerTest {
     fun executeShellCommand() {
         val ret = controller.execute(listOf("shell", "am", "instrument"))
         assertThat(ret.statusCode).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
+        verify(mockDevice).executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
+    }
+
+    @Test
+    fun executeShellCommandAndCommandFailedRemotely() {
+        `when`(mockDevice.executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
+        ).then {
+            val outputMessage = "${EXIT_CODE_REPORT_TAG}=-2\n".toByteArray()
+            it.getArgument<MultiLineReceiver>(1).addOutput(outputMessage, 0, outputMessage.size)
+        }
+
+        val ret = controller.execute(listOf("shell", "am", "instrument"))
+
+        assertThat(ret.statusCode).isEqualTo(-2)
+        verify(mockDevice).executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
@@ -158,10 +175,8 @@ class DdmlibAndroidDeviceControllerTest {
     fun executeAsyncCancelled() {
         val handlerInitialized = CountDownLatch(1)
         lateinit var handler: CommandHandle
-        `when`(
-                mockDevice.executeShellCommand(
-                        eq("am instrument"), any(), eq(0L), eq(0L), any()
-                )
+        `when`(mockDevice.executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
         ).then {
             handlerInitialized.await(1, TimeUnit.MINUTES)
             handler.stop()
@@ -170,13 +185,14 @@ class DdmlibAndroidDeviceControllerTest {
         handlerInitialized.countDown()
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(-1)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
+        verify(mockDevice).executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
     fun executeAsyncOutputShouldBeProcessed() {
         `when`(mockDevice.executeShellCommand(
-                eq("am instrument"), any(), eq(0L), eq(0L), any())).then {
+                eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())).then {
             val outputMessage = "This is test output message.\n".toByteArray()
             it.getArgument<MultiLineReceiver>(1).addOutput(outputMessage, 0, outputMessage.size)
         }
@@ -187,7 +203,8 @@ class DdmlibAndroidDeviceControllerTest {
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(0)
         assertThat(processedOutputMessage).isEqualTo("This is test output message.")
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
+        verify(mockDevice).executeShellCommand(
+            eq("am instrument ${EXIT_CODE_REPORT}"), any(), eq(0L), eq(0L), any())
     }
 
     @Test

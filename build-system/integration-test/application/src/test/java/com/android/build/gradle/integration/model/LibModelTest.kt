@@ -43,23 +43,23 @@ class HelloWorldLibModelTest: ModelComparator() {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels(variantName = "debug")
 
-        with(result).compare(
-            model = result.container.singleVersions,
+        with(result).compareVersions(
+            modelAction = { container.singleVersions },
             goldenFile = "Versions"
         )
 
-        with(result).compare(
-            model = result.container.singleAndroidProject,
+        with(result).compareAndroidProject(
+            modelAction = { container.singleAndroidProject },
             goldenFile = "AndroidProject"
         )
 
-        with(result).compare(
-            model = result.container.singleAndroidDsl,
+        with(result).compareAndroidDsl(
+            modelAction = { container.singleAndroidDsl },
             goldenFile = "AndroidDsl"
         )
 
-        with(result).compare(
-            model = result.container.singleVariantDependencies,
+        with(result).compareVariantDependencies(
+            modelAction = { container.singleVariantDependencies },
             goldenFile = "VariantDependencies"
         )
     }
@@ -95,5 +95,33 @@ class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
     @Test
     fun `test AndroidDsl model`() {
         ensureAndroidDslDeltaIsEmpty()
+    }
+}
+
+class EnabledTestFixturesInLibModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                testFixtures {
+                    enable = true
+                }
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+    @Test
+    fun `test AndroidProject model`() {
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
 }

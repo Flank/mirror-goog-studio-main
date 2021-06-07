@@ -22,6 +22,7 @@ class WebViewClientDetectorTest : AbstractCheckTest() {
         return WebViewClientDetector()
     }
 
+    @Suppress("LintDocExample")
     fun testOnReceivedSslError_expectWarnings() {
         lint().files(
             manifest(
@@ -77,7 +78,8 @@ class WebViewClientDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/MainActivity.java:25: Warning: Permitting connections with SSL-related errors could allow eavesdroppers to intercept data sent by your app, which impacts the privacy of your users. Consider canceling the connections by invoking SslErrorHandler#cancel(). [WebViewClientOnReceivedSslError]
@@ -140,11 +142,8 @@ class WebViewClientDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented()
-        ).run().expect(
-            """
-            No warnings.
-            """
-        )
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }

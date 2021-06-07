@@ -129,7 +129,8 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/DateFormatTest.kt:16: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]

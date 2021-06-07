@@ -20,5 +20,6 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="Guava" level="project" />
     <orderEntry type="module" module-name="dynamic-layout-inspector.common" />
+    <orderEntry type="library" name="kotlinx-coroutines" level="project" />
   </component>
 </module>

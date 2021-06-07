@@ -150,8 +150,6 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         }
     }
 
-    public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
-    protected TestFile SUPPORT_ANNOTATIONS_JAR =
-            base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
-    protected TestFile SUPPORT_ANNOTATIONS_CLASS_PATH = classpath(SUPPORT_JAR_PATH);
+    public static TestFile SUPPORT_ANNOTATIONS_JAR =
+            base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
 }

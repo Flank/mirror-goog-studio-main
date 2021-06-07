@@ -96,6 +96,7 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(RetentionConfig::class.java),
+                any(File::class.java),
                 anyBoolean(),
                 anyInt(),
                 any(File::class.java),

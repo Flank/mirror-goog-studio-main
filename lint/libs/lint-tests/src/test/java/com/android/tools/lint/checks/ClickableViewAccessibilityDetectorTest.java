@@ -547,7 +547,14 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                                         + "            });\n"
                                         + "        }\n"
                                         + "    }\n"
-                                        + "\n"
+                                        + "    private static class HasPerformClick extends View {\n"
+                                        + "       public HasPerformClick(Context context) {\n"
+                                        + "            super(context);\n"
+                                        + "        }\n"
+                                        + "        public boolean performClick() {\n"
+                                        + "            return super.performClick();\n"
+                                        + "        }\n"
+                                        + "    }\n"
                                         + "}\n"))
                 .run()
                 .expectClean();
@@ -583,6 +590,15 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                                         + "            });\n"
                                         + "        }\n"
                                         + "    }\n"
+                                        + "    private static class HasPerformClick extends View {\n"
+                                        + "       public HasPerformClick(Context context) {\n"
+                                        + "            super(context);\n"
+                                        + "        }\n"
+                                        + "        public boolean performClick() {\n"
+                                        + "            return super.performClick();\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
                                         + "}\n"))
                 .run()
                 .expect(expected);
@@ -593,7 +609,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
         lint().files(
                         java(
                                 ""
-                                        + "package com.example.tnorbye.myapplication;\n"
+                                        + "package test.pkg.myapplication;\n"
                                         + "\n"
                                         + "import android.view.MotionEvent;\n"
                                         + "import android.view.View;\n"
@@ -632,16 +648,16 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "src/com/example/tnorbye/myapplication/ClickTest.java:8: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
+                                + "src/test/pkg/myapplication/ClickTest.java:8: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                                 + "    private View.OnTouchListener okListener2 = (v, event) -> v.performContextClick();\n"
                                 + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "src/com/example/tnorbye/myapplication/ClickTest.java:9: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
+                                + "src/test/pkg/myapplication/ClickTest.java:9: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                                 + "    private View.OnTouchListener wrongListener = (v, event) -> false;\n"
                                 + "                                                 ~~~~~~~~~~~~~~~~~~~\n"
-                                + "src/com/example/tnorbye/myapplication/ClickTest.java:14: Warning: onTouch should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
+                                + "src/test/pkg/myapplication/ClickTest.java:14: Warning: onTouch should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                                 + "            public boolean onTouch(View v, MotionEvent event) {\n"
                                 + "                           ~~~~~~~\n"
-                                + "src/com/example/tnorbye/myapplication/ClickTest.java:30: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
+                                + "src/test/pkg/myapplication/ClickTest.java:30: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                                 + "        view.setOnTouchListener((v, event) -> false);\n"
                                 + "                                ~~~~~~~~~~~~~~~~~~~\n"
                                 + "0 errors, 4 warnings\n");

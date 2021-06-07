@@ -298,7 +298,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val gettersToGenerate: Collection<Method>,
         val settersToGenerate: Collection<Method>,
         val blockAccessorToGenerate: Method?,
-        val settersAnnotations: Collection<Annotation>
+        val settersAnnotations: Collection<Annotation>,
     )
 
     private fun findAbstractProperties(dslClass: Class<*>): List<ManagedProperty> {
@@ -382,7 +382,10 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             ) as Class<out T>
         } catch (e: InvocationTargetException) {
             throw RuntimeException(
-                "Error happened loading classes, this is usually caused by having different " +
+                "Internal error happened generating implementation for " +
+                        originalClass +
+                        ".\n" +
+                        "This is usually caused by having different " +
                         "classloaders for different AGP jars. If you have an api dependency " +
                         "on `com.android.tools.build:gradle:gradle-api` in your buildSrc, try " +
                         "changing the dependency to be compileOnly or adding a runtime " +

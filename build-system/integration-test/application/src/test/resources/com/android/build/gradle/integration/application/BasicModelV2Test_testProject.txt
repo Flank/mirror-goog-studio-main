@@ -1,9 +1,12 @@
 > AndroidProject:
-   - projectType     = APPLICATION
-   - path            = ":"
-   - buildFolder     = {PROJECT}/build{!}
-   - resourcePrefix  = (null)
-   - dynamicFeatures = []
+   - projectType           = APPLICATION
+   - path                  = ":"
+   - buildFolder           = {PROJECT}/build{!}
+   - namespace             = "com.android.tests.basic"
+   - androidTestNamespace  = "com.android.tests.basic.test"
+   - testFixturesNamespace = (null)
+   - resourcePrefix        = (null)
+   - dynamicFeatures       = []
    - bootClasspath:
       * {ANDROID_SDK}/platforms/android-30/android.jar{F}
    > defaultConfig:
@@ -302,9 +305,9 @@
          < testFixturesSourceProvider
       < release
    < buildTypes
-   - productFlavors  = []
+   - productFlavors        = []
    > variants:
-      > variant(debug):
+      > debug:
          - name                   = "debug"
          - displayName            = "debug"
          - buildType              = "debug"
@@ -335,7 +338,9 @@
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugSources"
-            - generatedResourceFolders      = [{PROJECT}/build/generated/res/resValues/debug{!}, {PROJECT}/build/generated/res/rs/debug{!}]
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/debug{!}
+               * {PROJECT}/build/generated/res/rs/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/debug/output-metadata.json{!}
             - testInfo                      = (null)
@@ -370,7 +375,9 @@
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugAndroidTestSources"
-            - generatedResourceFolders      = [{PROJECT}/build/generated/res/resValues/androidTest/debug{!}, {PROJECT}/build/generated/res/rs/androidTest/debug{!}]
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}
+               * {PROJECT}/build/generated/res/rs/androidTest/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/androidTest/debug/output-metadata.json{!}
             - testInfo:
@@ -397,8 +404,8 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-      < variant(debug)
-      > variant(release):
+      < debug
+      > release:
          - name                   = "release"
          - displayName            = "release"
          - buildType              = "release"
@@ -429,7 +436,9 @@
             - isSigned                      = false
             - signingConfigName             = (null)
             - sourceGenTaskName             = "generateReleaseSources"
-            - generatedResourceFolders      = [{PROJECT}/build/generated/res/resValues/release{!}, {PROJECT}/build/generated/res/rs/release{!}]
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/release{!}
+               * {PROJECT}/build/generated/res/rs/release{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/release/output-metadata.json{!}
             - testInfo                      = (null)
@@ -457,9 +466,9 @@
          < unitTestArtifact
          - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
-      < variant(release)
+      < release
    < variants
-   - lintRuleJars    = []
+   - lintRuleJars          = []
    - javaCompileOptions:
       - encoding                       = "UTF-8"
       - sourceCompatibility            = "1.8"

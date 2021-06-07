@@ -129,7 +129,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             vendor.vendorName
         )
         assertEquals(
-            "https://developer.android.com/jetpack/androidx/releases/appcompat#feedback",
+            "https://issuetracker.google.com/issues/new?component=192731",
             vendor.feedbackUrl
         )
     }

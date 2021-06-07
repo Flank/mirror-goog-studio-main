@@ -186,21 +186,6 @@ internal class SnapshotItemRegistrarTest {
     }
 
     @Test
-    fun `test entry`() {
-        val smallObject = SmallObject("a", null)
-
-        val snapshot = snapshot(smallObject) {
-            entry("property1", it.property1.toValueString(normalizer))
-        }
-
-        Truth.assertThat(snapshot).isEqualTo("""
-            - SmallObject:
-               - property1 -> "a"
-
-        """.trimIndent())
-    }
-
-    @Test
     fun `test dataObject`() {
         val mainObject = EnclosingObject(
             property1 = SmallObject("a", listOf()),
@@ -330,7 +315,10 @@ internal class SnapshotItemRegistrarTest {
         model: ModelT,
         action: SnapshotItemRegistrarImpl.(ModelT) -> Unit
     ): String {
-        val registrar = SnapshotItemRegistrarImpl(model!!::class.java.simpleName, mapOf())
+        val registrar = SnapshotItemRegistrarImpl(
+            model!!::class.java.simpleName,
+            SnapshotContainer.ContentType.OBJECT_PROPERTIES
+        )
         action(registrar, model)
         val writer = SnapshotItemWriter()
         return writer.write(registrar)
@@ -355,8 +343,11 @@ class FakeFileNormalizer(private val map: Map<File, String> = mapOf()): FileNorm
 
 data class SmallObject(
     val property1: String?,
-    val property2: List<String>?
-): AndroidModel
+    val property2: List<String>? = null
+): AndroidModel {
+    constructor(values: List<String>?): this(null, values)
+    constructor(): this(null, null)
+}
 
 enum class FakeEnum {
     ENUM_1, ENUM_2;

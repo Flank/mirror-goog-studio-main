@@ -23,8 +23,8 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.extension.ApplicationAndroidComponentsExtension
-import com.android.build.api.extension.DslExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.DslExtension
 import com.android.build.api.extension.impl.AndroidComponentsExtensionImpl
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl

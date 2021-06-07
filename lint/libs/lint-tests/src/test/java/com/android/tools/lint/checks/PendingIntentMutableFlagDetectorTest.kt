@@ -49,7 +49,7 @@ class PendingIntentMutableFlagDetectorTest : AbstractCheckTest() {
                         PendingIntent.getActivities(null, 0, null, 0);
                                                                    ~
                 0 errors, 2 warnings
-            """.trimIndent()
+            """
         )
     }
 
@@ -79,7 +79,7 @@ class PendingIntentMutableFlagDetectorTest : AbstractCheckTest() {
                     PendingIntent.getActivities(null, 0, null, PendingIntent.FLAG_NO_CREATE);
                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 2 warnings
-            """.trimIndent()
+            """
         )
     }
 
@@ -109,7 +109,7 @@ class PendingIntentMutableFlagDetectorTest : AbstractCheckTest() {
                     PendingIntent.getActivities(null, 0, null, PendingIntent.FLAG_NO_CREATE)
                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 2 warnings
-            """.trimIndent()
+            """
         )
     }
 

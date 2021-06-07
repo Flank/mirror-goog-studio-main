@@ -37,6 +37,7 @@ sealed class SupportedPropertyType {
         object Boolean: Var(Type.BOOLEAN_TYPE)
         object NullableBoolean : Var(Type.getType(java.lang.Boolean::class.java))
         object Int : Var(Type.INT_TYPE)
+        object File : Var(Type.getType(java.io.File::class.java))
 
         class Enum(enumType: Class<*>): Var(Type.getType(enumType))
     }
@@ -106,7 +107,7 @@ sealed class SupportedPropertyType {
     ): SupportedPropertyType() {
         constructor(
             type: Class<*>,
-            implementationType: Class<*> = type,
+            implementationType: Class<*>,
         ) : this(Type.getType(type), Type.getType(implementationType))
     }
 

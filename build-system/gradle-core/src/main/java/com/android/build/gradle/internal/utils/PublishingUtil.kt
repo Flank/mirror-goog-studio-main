@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.dsl.MultipleVariantsImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.publishing.ComponentPublishingInfo
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.NamedDomainObjectContainer
@@ -254,6 +254,6 @@ fun publishingFeatureOptIn(
         publishing.singleVariants.isNotEmpty()
     }
     val disableComponentCreation =
-        projectOptions.get(BooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION)
+        projectOptions.get(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION) == true
     return publishingDslUsed || disableComponentCreation
 }

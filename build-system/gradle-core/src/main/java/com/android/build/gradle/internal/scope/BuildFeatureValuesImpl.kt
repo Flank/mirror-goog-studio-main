@@ -44,7 +44,17 @@ open class BuildFeatureValuesImpl constructor(
 
     override val prefab: Boolean = buildFeatures.prefab ?: false
 
-    override val renderScript: Boolean = buildFeatures.renderScript ?: projectOptions[BooleanOption.BUILD_FEATURE_RENDERSCRIPT]
+    final override val androidResources: Boolean =  when (buildFeatures) {
+        is LibraryBuildFeatures -> buildFeatures.androidResources ?: projectOptions[BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES]
+        else -> true
+    }
+
+    override val renderScript: Boolean =
+        if (androidResources) {
+            buildFeatures.renderScript ?: projectOptions[BooleanOption.BUILD_FEATURE_RENDERSCRIPT]
+        } else {
+            false
+        }
 
     override val resValues: Boolean = buildFeatures.resValues ?: projectOptions[BooleanOption.BUILD_FEATURE_RESVALUES]
 
@@ -60,11 +70,6 @@ open class BuildFeatureValuesImpl constructor(
 
     // ------------------
     // Library flags
-
-    override val androidResources: Boolean =  when (buildFeatures) {
-        is LibraryBuildFeatures -> buildFeatures.androidResources ?: projectOptions[BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES]
-        else -> true
-    }
 
     override val buildType: Boolean = true
 

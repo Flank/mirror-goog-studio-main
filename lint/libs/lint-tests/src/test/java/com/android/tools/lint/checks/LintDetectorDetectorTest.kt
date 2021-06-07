@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.LintDetectorDetector.Companion.CHECK_URL
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.DOLLAR_STRINGS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.ID
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.MISSING_DOC_EXAMPLE
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.MISSING_VENDOR
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.PSI_COMPARE
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.TEXT_FORMAT
@@ -36,6 +37,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestMode
 import org.junit.Test
 import java.io.File
 
@@ -51,10 +53,12 @@ class LintDetectorDetectorTest {
         EXISTING_LINT_CONSTANTS,
         UNEXPECTED_DOMAIN,
         DOLLAR_STRINGS,
-        MISSING_VENDOR
+        MISSING_VENDOR,
+        MISSING_DOC_EXAMPLE
     )
 
     @Test
+    @Suppress("LintImplDollarEscapes")
     fun testProblems() {
         lint()
             .files(
@@ -202,7 +206,7 @@ class LintDetectorDetectorTest {
                             val ISSUE =
                                 Issue.create(
                                     id = "badlyCapitalized id",
-                                    briefDescription = "checks MyLintDetector",
+                                    briefDescription = "checks MyLintDetector.",
                                     explanation = ""${'"'}
                                         Some description here.
                                         Here's a call: foo.bar.baz(args).
@@ -265,10 +269,10 @@ class LintDetectorDetectorTest {
                 ).indented(),
                 kotlin(
                     """
+                        // Copyright (C) 2021 The Android Open Source Project
                         package test.pkg
                         import com.android.tools.lint.checks.infrastructure.LintDetectorTest
                         import com.android.tools.lint.detector.api.Detector
-
                         class MyKotlinLintDetectorTest : LintDetectorTest() {
                             override fun getDetector(): Detector {
                                 return MyKotlinLintDetector()
@@ -326,6 +330,9 @@ class LintDetectorDetectorTest {
             .run()
             .expect(
                 """
+                src/test/pkg/MyKotlinLintDetectorTest.kt:10: Warning: Expected to also find a documentation example test (testDocumentationExample) which shows a simple, typical scenario which triggers the test, and which will be extracted into lint's per-issue documentation pages [LintDocExample]
+                    fun testBasic() {
+                    ^
                 src/test/pkg/MyJavaLintDetector.java:30: Error: Don't point to old http://b.android.com links; should be using https://issuetracker.google.com instead [LintImplBadUrl]
                                         + "https://code.google.com/p/android/issues/detail?id=65351 blah blah blah.",
                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -356,9 +363,12 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:47: Warning: "foo().bar().baz()" looks like a call; surround with backtics in string to display as symbol, e.g. `foo().bar().baz()` [LintImplTextFormat]
                                     |Instead you should call foo().bar().baz() here.
                                                              ~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:61: Warning: The issue summary should not end with a period (think of it as a headline) [LintImplTextFormat]
+                                briefDescription = "checks MyLintDetector.",
+                                                    ~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:61: Warning: The issue summary should be capitalized [LintImplTextFormat]
-                                briefDescription = "checks MyLintDetector",
-                                                    ~~~~~~~~~~~~~~~~~~~~~
+                                briefDescription = "checks MyLintDetector.",
+                                                    ~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:64: Warning: "foo.bar.baz(args)" looks like a call; surround with backtics in string to display as symbol, e.g. `foo.bar.baz(args)` [LintImplTextFormat]
                                     Here's a call: foo.bar.baz(args).
                                                    ~~~~~~~~~~~~~~~~~
@@ -434,7 +444,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                26 errors, 10 warnings
+                26 errors, 12 warnings
                 """
             )
             .expectFixDiffs(
@@ -483,7 +493,10 @@ class LintDetectorDetectorTest {
         val root = TestUtils.getWorkspaceRoot().toFile()
         val srcFiles =
             getTestSources(root, "tools/base/lint/libs/lint-checks/src/main/java") +
-                getTestSources(root, "tools/base/lint/studio-checks/src/main/java")
+                getTestSources(root, "tools/base/lint/libs/lint-tests/src/main/java") +
+                getTestSources(root, "tools/base/lint/libs/lint-tests/src/test/java") +
+                getTestSources(root, "tools/base/lint/studio-checks/src/main/java") +
+                getTestSources(root, "tools/base/lint/studio-checks/src/test/java")
         if (srcFiles.isEmpty()) {
             // This test doesn't work in Bazel; we don't ship all the source files of lint
             // as a dependency. Note however than in Bazel we actually run the lint checks
@@ -498,10 +511,14 @@ class LintDetectorDetectorTest {
             val name = file.name
             if (name.endsWith(DOT_JAR)) {
                 libs.add(file)
-            } else if (!file.path.endsWith("android.sdktools.base.lint.checks-base") &&
-                !file.path.endsWith("android.sdktools.base.lint.studio-checks")
-            ) {
-                libs.add(file)
+            } else {
+                val path = file.path
+                if (!path.endsWith("android.sdktools.base.lint.checks-base") &&
+                    !path.endsWith("android.sdktools.base.lint.studio-checks") &&
+                    !path.contains("lint-tests")
+                ) {
+                    libs.add(file)
+                }
             }
         }
 
@@ -517,7 +534,10 @@ class LintDetectorDetectorTest {
                 }.toTypedArray()
             )
             .checkUInjectionHost(false)
+            .testModes(TestMode.DEFAULT)
             .allowMissingSdk()
+            .allowCompilationErrors()
+            .allowDuplicates()
             .run()
             .expectClean()
     }

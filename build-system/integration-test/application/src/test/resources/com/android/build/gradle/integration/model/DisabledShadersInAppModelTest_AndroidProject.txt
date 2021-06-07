@@ -1,31 +1,46 @@
 > AndroidProject:
-   - defaultConfig:
+   > defaultConfig:
       - sourceProvider:
-         - shadersDirectories = (null)
+         - shadersDirectories:
+            * {PROJECT}/src/main/shaders{!}{REMOVED}
       - androidTestSourceProvider:
-         - shadersDirectories = (null)
+         - shadersDirectories:
+            * {PROJECT}/src/androidTest/shaders{!}{REMOVED}
       - unitTestSourceProvider:
-         - shadersDirectories = (null)
+         - shadersDirectories:
+            * {PROJECT}/src/test/shaders{!}{REMOVED}
       - testFixturesSourceProvider:
-         - shadersDirectories = (null)
+         - shadersDirectories:
+            * {PROJECT}/src/testFixtures/shaders{!}{REMOVED}
+   < defaultConfig
    > buildTypes:
-      - debug:
+      > debug:
          - sourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/debug/shaders{!}{REMOVED}
          - androidTestSourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/androidTestDebug/shaders{!}{REMOVED}
          - unitTestSourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/testDebug/shaders{!}{REMOVED}
          - testFixturesSourceProvider:
-            - shadersDirectories = (null)
-      - release:
+            - shadersDirectories:
+               * {PROJECT}/src/testFixturesDebug/shaders{!}{REMOVED}
+      < debug
+      > release:
          - sourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/release/shaders{!}{REMOVED}
          - androidTestSourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/androidTestRelease/shaders{!}{REMOVED}
          - unitTestSourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/testRelease/shaders{!}{REMOVED}
          - testFixturesSourceProvider:
-            - shadersDirectories = (null)
+            - shadersDirectories:
+               * {PROJECT}/src/testFixturesRelease/shaders{!}{REMOVED}
+      < release
    < buildTypes
 < AndroidProject

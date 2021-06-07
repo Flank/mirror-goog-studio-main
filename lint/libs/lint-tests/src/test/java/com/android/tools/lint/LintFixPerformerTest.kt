@@ -92,6 +92,31 @@ class LintFixPerformerTest : TestCase() {
         )
     }
 
+    fun testLineCleanup() {
+        // Regression test for b/185853711
+        val file = File("Test.java")
+        val source =
+            """
+            import android.util.Log;
+            public class Test {
+            }
+            """.trimIndent()
+
+        val startOffset = source.indexOf("public")
+        val range = Location.create(file, source, startOffset, startOffset + "public".length)
+        val fix = fix().replace().range(range).with("").autoFix().build()
+        check(
+            file, source, fix,
+            expected =
+            """
+            import android.util.Log;
+             class Test {
+            }
+            """,
+            expectedOutput = "Applied 1 edits across 1 files for this fix: Delete"
+        )
+    }
+
     fun testMultipleReplaces() {
         // Ensures we reorder edits correctly
         val file = File("bogus.txt")

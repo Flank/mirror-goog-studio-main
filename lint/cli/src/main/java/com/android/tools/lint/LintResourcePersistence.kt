@@ -41,6 +41,7 @@ import com.android.ide.common.util.PathString
 import com.android.resources.Density
 import com.android.resources.ResourceType
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.model.PathVariables
 import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
 import com.google.common.collect.ListMultimap
@@ -60,12 +61,17 @@ import kotlin.math.min
  */
 object LintResourcePersistence {
     /**
-     * Serializes the lint resource repository; can be deserialized
-     * with [deserialize]. If root is specified, relative paths will be
-     * interpreted under [root]. If [sort] is true, elements will be
-     * sorted by name; this is used in tests to ensure stable output.
+     * Serializes the lint resource repository; can be deserialized with
+     * [deserialize]. The [pathVariables] help write relative paths. If
+     * [sort] is true, elements will be sorted by name; this is used in
+     * tests to ensure stable output.
      */
-    fun serialize(repository: LintResourceRepository, root: File?, sort: Boolean = false): String {
+    fun serialize(
+        repository: LintResourceRepository,
+        pathVariables: PathVariables,
+        root: File?,
+        sort: Boolean = false
+    ): String {
         val typeToMap = repository.typeToMap
         if (typeToMap.isEmpty()) {
             return ""
@@ -97,7 +103,7 @@ object LintResourcePersistence {
         val indexToFile = fileMap.inverse()
         for (i in 0 until fileCount) {
             val source = indexToFile[i] ?: continue
-            writer.writePath(rootPath, source.rawPath)
+            writer.writePath(pathVariables, rootPath, source.rawPath)
             writer.write(',')
         }
 
@@ -262,19 +268,11 @@ object LintResourcePersistence {
          * the given (optional) [rootPath]
          */
         fun writePath(
+            pathVariables: PathVariables,
             rootPath: String?,
             path: String
         ) {
-            var stripped = path
-
-            if (rootPath != null && stripped.startsWith(rootPath)) {
-                if (stripped.startsWith(rootPath) && stripped != rootPath &&
-                    (stripped[rootPath.length] == '/' || stripped[rootPath.length] == '\\')
-                ) {
-                    stripped = stripped.substring(rootPath.length + 1)
-                }
-            }
-            escape(stripped.replace('\\', '/'))
+            escape(pathVariables.toPathString(path, rootPath, unix = true))
         }
 
         override fun toString(): String {
@@ -390,6 +388,7 @@ object LintResourcePersistence {
      */
     fun deserialize(
         s: String,
+        pathVariables: PathVariables,
         root: File? = null,
         project: Project? = null
     ): LintResourceRepository {
@@ -413,11 +412,7 @@ object LintResourcePersistence {
 
         while (!reader.eof() && reader.peek() != '+') {
             val path = reader.readString(',')
-            val relative = File(path)
-            val file = if (root == null || relative.isAbsolute)
-                relative
-            else
-                File(root, relative.path)
+            val file = pathVariables.fromPathString(path, root)
             fileList.add(file)
         }
 
@@ -522,8 +517,8 @@ object LintResourcePersistence {
     }
 
     /** Serializes a lint resource repository. */
-    fun serialize(repository: LintResourceRepository): String {
-        return serialize(repository, null)
+    fun serialize(repository: LintResourceRepository, pathVariables: PathVariables): String {
+        return serialize(repository, pathVariables, null)
     }
 
     private class LintDeserializedResourceItem(
