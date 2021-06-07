@@ -184,7 +184,7 @@ public final class ApiTester {
     }
 
     private Stream<String> getApiElements(@NonNull Class<?> klass) {
-        if (!Modifier.isPublic(klass.getModifiers()) || isKotlinMedata(klass)) {
+        if (!Modifier.isPublic(klass.getModifiers())) {
             return Stream.empty();
         }
 
@@ -280,10 +280,6 @@ public final class ApiTester {
         }
 
         return false;
-    }
-
-    public static Boolean isKotlinMedata(@NonNull Class<?> theClass) {
-        return theClass.getName().endsWith("$DefaultImpls");
     }
 
     public static String getApiElement(Invokable<?, ?> invokable) {

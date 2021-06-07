@@ -8,6 +8,7 @@ com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.A
 com.android.build.gradle.AbstractAppExtension.addVariant: void (com.android.build.gradle.api.BaseVariant)
 com.android.build.gradle.AbstractAppExtension.getApplicationVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.ApplicationVariant> ()
 com.android.build.gradle.AndroidConfig
+com.android.build.gradle.AndroidConfig$DefaultImpls
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
 com.android.build.gradle.AndroidConfig.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
 com.android.build.gradle.AndroidConfig.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
@@ -331,6 +332,7 @@ com.android.build.gradle.ReportingPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ReportingPluginKt
 com.android.build.gradle.ReportingPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.TestAndroidConfig implements com.android.build.gradle.AndroidConfig
+com.android.build.gradle.TestAndroidConfig$DefaultImpls
 com.android.build.gradle.TestAndroidConfig.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestAndroidConfig.getTargetVariant: java.lang.String ()
 com.android.build.gradle.TestExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestAndroidConfig, com.android.build.gradle.internal.dsl.InternalTestExtension
@@ -487,6 +489,7 @@ com.android.build.gradle.api.AndroidSourceFile.getName: java.lang.String ()
 com.android.build.gradle.api.AndroidSourceFile.getSrcFile: java.io.File ()
 com.android.build.gradle.api.AndroidSourceFile.srcFile: com.android.build.gradle.api.AndroidSourceFile (java.lang.Object)
 com.android.build.gradle.api.AndroidSourceSet implements com.android.build.api.dsl.AndroidSourceSet
+com.android.build.gradle.api.AndroidSourceSet$DefaultImpls
 com.android.build.gradle.api.AndroidSourceSet.aidl: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.assets: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.getAidl: com.android.build.gradle.api.AndroidSourceDirectorySet ()
@@ -653,6 +656,7 @@ com.android.build.gradle.api.VersionedVariant
 com.android.build.gradle.api.VersionedVariant.getVersionCode: int ()
 com.android.build.gradle.api.VersionedVariant.getVersionName: java.lang.String ()
 com.android.build.gradle.api.ViewBindingOptions
+com.android.build.gradle.api.ViewBindingOptions$DefaultImpls
 com.android.build.gradle.api.ViewBindingOptions.isEnabled: boolean ()
 com.android.build.gradle.api.ViewBindingOptions.setEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions implements com.android.build.api.dsl.AaptOptions, com.android.build.api.dsl.AndroidResources
