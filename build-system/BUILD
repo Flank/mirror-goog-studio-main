@@ -54,7 +54,7 @@ maven_pom(
     name = "manifest-merger.pom",
     artifact = "manifest-merger",
     group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(
