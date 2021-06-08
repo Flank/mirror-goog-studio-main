@@ -478,21 +478,26 @@ public abstract class BasePlugin<
         // As soon as project is evaluated we can clear the shared state for deprecation reporting.
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
 
-        createLintClasspathConfiguration(project);
+        createLintClasspathConfiguration(project, projectServices.getProjectOptions());
 
         createAndroidJdkImageConfiguration(project, globalScope);
     }
 
     /** Creates a lint class path Configuration for the given project */
-    public static void createLintClasspathConfiguration(@NonNull Project project) {
+    public static void createLintClasspathConfiguration(
+            @NonNull Project project, ProjectOptions projectOptions) {
         Configuration config = project.getConfigurations().create(AndroidLintTask.LINT_CLASS_PATH);
         config.setVisible(false);
         config.setTransitive(true);
         config.setCanBeConsumed(false);
         config.setDescription("The lint embedded classpath");
 
-        project.getDependencies().add(config.getName(), "com.android.tools.lint:lint-gradle:" +
-                Version.ANDROID_TOOLS_BASE_VERSION);
+        String lintVersion = projectOptions.get(StringOption.LINT_VERSION_OVERRIDE);
+        if (lintVersion == null) {
+            lintVersion = Version.ANDROID_TOOLS_BASE_VERSION;
+        }
+        project.getDependencies()
+                .add(config.getName(), "com.android.tools.lint:lint-gradle:" + lintVersion);
     }
 
     /** Creates the androidJdkImage configuration */
