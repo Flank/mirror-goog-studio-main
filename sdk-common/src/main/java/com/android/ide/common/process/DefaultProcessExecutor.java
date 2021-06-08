@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -72,6 +73,11 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 for (Map.Entry<String, Object> entry : envVariableMap.entrySet()) {
                     env.put(entry.getKey(), entry.getValue().toString());
                 }
+            }
+
+            File dir = processInfo.getWorkingDirectory();
+            if (dir != null) {
+                processBuilder.directory(dir);
             }
 
             // Start the process.
