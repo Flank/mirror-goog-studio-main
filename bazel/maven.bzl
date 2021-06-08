@@ -56,6 +56,8 @@ def _maven_pom_impl(ctx):
         parent_poms = ctx.attr.source.maven.parent.poms
         parent_jars = ctx.attr.source.maven.parent.jars
         parent_clsjars = ctx.attr.source.maven.parent.clsjars
+        jars = depset([], transitive = [ctx.attr.source.maven.jars, jars])
+        clsjars.update(ctx.attr.source.maven.clsjars)
 
     # Transitive deps through deps
     if ctx.attr.deps:
