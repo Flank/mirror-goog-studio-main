@@ -132,12 +132,14 @@ class TranslationDetectorTest : AbstractCheckTest() {
         lint().files(valuesStringsPlural, valuesFrStringsNoPlural)
             .incremental("res/values/strings.xml")
             .run()
-            .expect("""
-            res/values/strings.xml:5: Error: "my_plurals" is not translated in "fr" (French) [MissingTranslation]
-                <plurals name="my_plurals">
-                         ~~~~~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """)
+            .expect(
+                """
+                res/values/strings.xml:5: Error: "my_plurals" is not translated in "fr" (French) [MissingTranslation]
+                    <plurals name="my_plurals">
+                             ~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
     }
 
     fun testPluralTranslation() {

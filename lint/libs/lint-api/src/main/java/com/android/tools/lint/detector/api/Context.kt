@@ -678,8 +678,8 @@ open class Context(
         /**
          * Check forbidden access and report issue if necessary.
          *
-         * Warning: setting [driver] to null may lead to spurious errors when using multiple
-         * [LintDriver]s in the same process.
+         * Warning: setting [driver] to null may lead to spurious errors
+         * when using multiple [LintDriver]s in the same process.
          */
         fun checkForbidden(methodName: String, file: File, driver: LintDriver?): Boolean {
             // LintDriver.currentDrivers.firstOrNull() is not guaranteed to return the desired
