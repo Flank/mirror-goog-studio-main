@@ -157,6 +157,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         if (printStackTrace.get()) {
             arguments += "--stacktrace"
         }
+        arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
 
         return Collections.unmodifiableList(arguments)
     }
@@ -282,7 +283,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
-            project.layout.projectDirectory.dir(AndroidProject.FD_INTERMEDIATES).dir("lint-cache")
+            project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
         )
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)

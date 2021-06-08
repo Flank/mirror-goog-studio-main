@@ -172,6 +172,7 @@ public class Main {
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
     private static final String ARG_ANALYZE_ONLY = "--analyze-only";
     private static final String ARG_REPORT_ONLY = "--report-only";
+    private static final String ARG_CACHE_DIR = "--cache-dir";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -1287,6 +1288,14 @@ public class Main {
                 String path = args[++index];
                 File input = getInArgumentPath(path);
                 flags.setBaselineFile(input);
+            } else if (arg.equals(ARG_CACHE_DIR)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing cache directory");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String path = args[++index];
+                File input = getInArgumentPath(path);
+                flags.setCacheDir(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
                 if (flags.isUpdateBaseline()) {
                     System.err.printf(

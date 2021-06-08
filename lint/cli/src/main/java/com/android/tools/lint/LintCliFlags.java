@@ -82,6 +82,7 @@ public class LintCliFlags {
     private boolean includeXmlFixes;
     private boolean allowSuppress;
     private boolean printInternalErrorStackTrace;
+    private File cacheDir;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -727,5 +728,19 @@ public class LintCliFlags {
     /** Sets if internal error stacktraces should be printed to stdout */
     public void setPrintInternalErrorStackTrace(boolean printInternalErrorStackTrace) {
         this.printInternalErrorStackTrace = printInternalErrorStackTrace;
+    }
+
+    /**
+     * Returns the base cache directory used by {@link LintCliClient#getCacheDir(String, boolean)},
+     * or null if nothing has been set.
+     */
+    @Nullable
+    public File getCacheDir() {
+        return cacheDir;
+    }
+
+    /** Sets the base cache directory used by {@link LintCliClient#getCacheDir(String, boolean)} */
+    public void setCacheDir(@NonNull File cacheDir) {
+        this.cacheDir = cacheDir;
     }
 }
