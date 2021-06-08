@@ -16,6 +16,10 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.TestVariantBuilder
+
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
     replaceWith = ReplaceWith(
@@ -24,4 +28,4 @@ package com.android.build.api.extension
     level = DeprecationLevel.WARNING
 )
 interface TestAndroidComponentsExtension:
-        com.android.build.api.variant.TestAndroidComponentsExtension
+    AndroidComponentsExtension<TestExtension, TestVariantBuilder, TestVariant>

@@ -37,7 +37,8 @@ abstract class AndroidComponentsExtensionImpl<
         override val sdkComponents: SdkComponents,
         private val variantApiOperations: VariantApiOperationsRegistrar<DslExtensionT, VariantBuilderT, VariantT>,
         private val commonExtension: DslExtensionT
-): AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT> {
+): AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT>,
+    com.android.build.api.extension.AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT> {
 
     override fun finalizeDsl(callback: (DslExtensionT) -> Unit) {
         variantApiOperations.dslFinalizationOperations.add {
@@ -58,8 +59,26 @@ abstract class AndroidComponentsExtensionImpl<
         }, selector)
     }
 
+    @Deprecated(
+        message= "Use the com.android.build.api.variant.Selector version",
+        level = DeprecationLevel.WARNING
+    )
+    override fun beforeVariants(selector: com.android.build.api.extension.VariantSelector, callback: (VariantBuilderT) -> Unit) {
+        variantApiOperations.variantBuilderOperations.addOperation({
+            callback.invoke(it)
+        }, selector as VariantSelector)
+    }
+
     override fun beforeVariants(selector: VariantSelector, callback: Action<VariantBuilderT>) {
         variantApiOperations.variantBuilderOperations.addOperation(callback, selector)
+    }
+
+    @Deprecated(
+        message= "Use the com.android.build.api.variant.Selector version",
+        level = DeprecationLevel.WARNING
+    )
+    override fun beforeVariants(selector: com.android.build.api.extension.VariantSelector, callback: Action<VariantBuilderT>) {
+        variantApiOperations.variantBuilderOperations.addOperation(callback, selector as VariantSelector)
     }
 
     override fun onVariants(selector: VariantSelector, callback: (VariantT) -> Unit) {
@@ -70,6 +89,24 @@ abstract class AndroidComponentsExtensionImpl<
 
     override fun onVariants(selector: VariantSelector, callback: Action<VariantT>) {
         variantApiOperations.variantOperations.addOperation(callback, selector)
+    }
+
+    @Deprecated(
+        message= "Use the com.android.build.api.variant.Selector version",
+        level = DeprecationLevel.WARNING
+    )
+    override fun onVariants(selector: com.android.build.api.extension.VariantSelector, callback: (VariantT) -> Unit) {
+        variantApiOperations.variantOperations.addOperation({
+            callback.invoke(it)
+        }, selector as VariantSelector)
+    }
+
+    @Deprecated(
+        message= "Use the com.android.build.api.variant.Selector version",
+        level = DeprecationLevel.WARNING
+    )
+    override fun onVariants(selector: com.android.build.api.extension.VariantSelector, callback: Action<VariantT>) {
+        variantApiOperations.variantOperations.addOperation(callback, selector as VariantSelector)
     }
 
     override fun selector(): VariantSelectorImpl =

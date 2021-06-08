@@ -898,7 +898,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         )
                         androidTest?.let {
                             addTestComponent(it)
-                            (variantInfo.variant as HasAndroidTest).androidTest = it as AndroidTest
+                            (variantInfo.variant as HasAndroidTest).androidTest =
+                                it as com.android.build.api.component.AndroidTest
                         }
                     }
                     val unitTest = createTestComponents(

@@ -147,21 +147,16 @@ public class AppPlugin
     }
 
     /**
-     * Create typed sub interface and implementation for the extension objects. This has several
-     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
-     * it's written in Java, it will still compile once the deprecated extension are moved to
-     * Level.HIDDEN.
+     * Create typed sub implementation for the extension objects. This has several benefits : 1. do
+     * not pollute the user visible definitions with deprecated types. 2. because it's written in
+     * Java, it will still compile once the deprecated extension are moved to Level.HIDDEN.
      */
-    @SuppressWarnings("deprecation")
-    public interface ApplicationAndroidComponentsExtensionCompat
-            extends AndroidComponentsExtension<
-                            ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>,
-                    com.android.build.api.extension.ApplicationAndroidComponentsExtension {}
-
     @SuppressWarnings("deprecation")
     public abstract static class ApplicationAndroidComponentsExtensionImplCompat
             extends ApplicationAndroidComponentsExtensionImpl
-            implements ApplicationAndroidComponentsExtensionCompat {
+            implements AndroidComponentsExtension<
+                            ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>,
+                    com.android.build.api.extension.ApplicationAndroidComponentsExtension {
 
         public ApplicationAndroidComponentsExtensionImplCompat(
                 @NotNull DslServices dslServices,
@@ -196,16 +191,31 @@ public class AppPlugin
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath));
 
+        // register under the new interface for kotlin, groovy will find both the old and new
+        // interfaces through the implementation class.
         //noinspection deprecation
-        return project.getExtensions()
-                .create(
-                        ApplicationAndroidComponentsExtensionCompat.class,
-                        "androidComponents",
-                        ApplicationAndroidComponentsExtensionImplCompat.class,
-                        dslServices,
-                        sdkComponents,
-                        variantApiOperationsRegistrar,
-                        getExtension());
+        ApplicationAndroidComponentsExtension extension =
+                project.getExtensions()
+                        .create(
+                                ApplicationAndroidComponentsExtension.class,
+                                "androidComponents",
+                                ApplicationAndroidComponentsExtensionImplCompat.class,
+                                dslServices,
+                                sdkComponents,
+                                variantApiOperationsRegistrar,
+                                getExtension());
+
+        // register the same extension under a different name with the deprecated extension type.
+        // this will allow plugins that use getByType() API to retrieve the old interface and keep
+        // binary compatibility. This will become obsolete once old extension packages are removed.
+        project.getExtensions()
+                .add(
+                        com.android.build.api.extension.ApplicationAndroidComponentsExtension.class,
+                        "androidComponents_compat_by_type",
+                        (com.android.build.api.extension.ApplicationAndroidComponentsExtension)
+                                extension);
+
+        return extension;
     }
 
     @NonNull

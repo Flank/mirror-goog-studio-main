@@ -22,7 +22,7 @@ interface LibraryVariant : Variant, GeneratesAar {
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */
-    val androidTest: AndroidTest?
+    val androidTest: com.android.build.api.component.AndroidTest??
 
     /**
      * Variant specific settings for the renderscript compiler. This will return null when
