@@ -95,7 +95,7 @@ abstract class LintPlugin : Plugin<Project> {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
-        BasePlugin.createLintClasspathConfiguration(project)
+        BasePlugin.createLintClasspathConfiguration(project, projectServices.projectOptions)
         registerTasks(
             project,
             javaConvention,

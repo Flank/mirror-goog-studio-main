@@ -23,6 +23,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.net.URI
 import java.net.URLClassLoader
 
 @Suppress("UnstableApiUsage")
@@ -155,17 +156,20 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         private const val ERRNO_APPLIED_SUGGESTIONS = 7
 
         private var _cachedClassLoader: URLClassLoader? = null
+        private var cachedClassLoaderUris: List<URI> = listOf()
 
         @Synchronized
         private fun getClassloader(classpath: FileCollection): ClassLoader {
-            if (_cachedClassLoader == null) {
-                _cachedClassLoader = createClassLoader(classpath)
+            val uris = classpath.files.map { it.toURI() }
+            if (uris != cachedClassLoaderUris) {
+                cachedClassLoaderUris = uris
+                _cachedClassLoader = createClassLoader(uris)
             }
             return _cachedClassLoader!!
         }
 
-        private fun createClassLoader(classpath: FileCollection): URLClassLoader {
-            val classpathUrls = classpath.files.map { it.toURI().toURL() }.toTypedArray()
+        private fun createClassLoader(classpath: List<URI>): URLClassLoader {
+            val classpathUrls = classpath.map { it.toURL() }.toTypedArray()
             return URLClassLoader(classpathUrls, getPlatformClassLoader())
         }
 
