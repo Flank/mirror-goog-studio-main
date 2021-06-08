@@ -1,4 +1,4 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:maven.bzl", "maven_repo", "maven_repo_zip")
 
 maven_repo(
     name = "gmaven",
@@ -47,4 +47,19 @@ maven_repo(
     include_sources = True,
     include_transitive_deps = False,
     visibility = ["//visibility:public"],
+)
+
+# This Maven repository contains artifacts that are built by Bazel, but also needed by
+# AGP build. The AGP build uses this repo so that it does not have to rebuild the same
+# artifacts again.
+maven_repo(
+    name = "agp_artifacts",
+    artifacts = [
+        "//tools/base/common:tools.common",
+    ],
+)
+
+maven_repo_zip(
+    name = "agp_artifacts_zip",
+    repo = ":agp_artifacts",
 )
