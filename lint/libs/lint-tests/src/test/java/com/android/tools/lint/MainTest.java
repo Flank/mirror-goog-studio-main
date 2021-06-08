@@ -645,6 +645,67 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {"--check", "HardcodedText", project.getPath()});
     }
 
+    public void testIssueAliasing() throws Exception {
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(28),
+                        xml(
+                                "res/font/font1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:fontProviderQuery=\"Monserrat\">\n"
+                                        + "    <font\n"
+                                        + "        android:fontStyle=\"normal\"\n"
+                                        + "        android:fontWeight=\"400\"\n"
+                                        + "        android:font=\"@font/monserrat\" />\n"
+                                        + "</font-family>"
+                                        + "\n"));
+        String expected =
+                ""
+                        + "res/font/font1.xml:4: Warning: A downloadable font cannot have a <font> sub tag [FontValidation]\n"
+                        + "    <font\n"
+                        + "     ~~~~\n"
+                        + "0 errors, 1 warnings";
+        checkDriver(
+                expected,
+                "",
+                ERRNO_SUCCESS,
+                new String[] {
+                    "--quiet",
+                    // The FontValidationWarning id is an old alias for FontValidation; here
+                    // we're testing that reported error applied to FontValidation and changed
+                    // its severity to warning
+                    "--warning",
+                    "FontValidationWarning",
+                    "--disable",
+                    "UsesMinSdkAttributes,UnusedResources,AllowBackup",
+                    project.getPath()
+                });
+
+        File lintXml = new File(project, "lint.xml");
+        FilesKt.writeText(
+                lintXml,
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                        + "<lint>\n"
+                        + "    <issue id=\"FontValidationWarning\" severity=\"warning\"/>\n"
+                        + "    <issue id=\"FontValidation\"><ignore path=\"test\"/></issue>\n"
+                        + "</lint>",
+                Charsets.UTF_8);
+        checkDriver(
+                expected,
+                "",
+                ERRNO_SUCCESS,
+                new String[] {
+                    "--quiet",
+                    "--disable",
+                    "UsesMinSdkAttributes,UnusedResources,AllowBackup",
+                    project.getPath()
+                });
+    }
+
     public void testWall() throws Exception {
         File project = getProjectDir(null, java("class Test {\n    // STOPSHIP\n}"));
         checkDriver(

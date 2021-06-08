@@ -1510,6 +1510,11 @@ public class Main {
                     }
                 }
             } else {
+                Issue issue = registry.getIssue(id);
+                // Normalize issue names (in case it is an older alias)
+                if (issue != null) {
+                    id = issue.getId();
+                }
                 setSeverity(flags, id, targetSet, severity);
             }
         }
