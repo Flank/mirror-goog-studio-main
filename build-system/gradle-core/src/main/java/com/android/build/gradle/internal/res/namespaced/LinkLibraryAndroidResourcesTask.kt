@@ -56,15 +56,34 @@ import java.io.File
 @CacheableTask
 abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val manifestFile: RegularFileProperty
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val inputResourcesDirectories: ListProperty<Directory>
-    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val manifestFile: RegularFileProperty
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional abstract val tested: RegularFileProperty
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val inputResourcesDirectories: ListProperty<Directory>
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    private var libraryDependencies: FileCollection? = null
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    private var sharedLibraryDependencies: FileCollection? = null
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val tested: RegularFileProperty
 
     @get:Input
     abstract val namespace: Property<String>
+
+    @get:Input
+    abstract val mergeOnly: Property<Boolean>
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputFile abstract val staticLibApk: RegularFileProperty
@@ -79,8 +98,10 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
-        imports.addAll(libraryDependencies.files)
-        imports.addAll(sharedLibraryDependencies.files)
+        if (!mergeOnly.get()) {
+            imports.addAll(libraryDependencies!!.files)
+            imports.addAll(sharedLibraryDependencies!!.files)
+        }
 
         val request = AaptPackageConfig(
                 androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
@@ -93,7 +114,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 resourceOutputApk = staticLibApk.get().asFile,
                 variantType = VariantTypeImpl.LIBRARY,
                 customPackageForR = namespace.get(),
-                intermediateDir = aaptIntermediateDir)
+                intermediateDir = aaptIntermediateDir,
+                mergeOnly = mergeOnly.get())
 
         val aapt2ServiceKey = aapt2.registerAaptService()
         workerExecutor.noIsolation().submit(Aapt2LinkRunnable::class.java) {
@@ -138,16 +160,20 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             task.inputResourcesDirectories.set(
                 creationConfig.artifacts.getAll(
                     InternalMultipleArtifactType.RES_COMPILED_FLAT_FILES))
-            task.libraryDependencies =
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            task.sharedLibraryDependencies =
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
+            if (!creationConfig.debuggable) {
+                task.libraryDependencies =
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
+                task.sharedLibraryDependencies =
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
+            }
+
+            task.mergeOnly.setDisallowChanges(creationConfig.debuggable)
 
             creationConfig.onTestedConfig {
                 it.artifacts.setTaskInputToFinalProduct(
