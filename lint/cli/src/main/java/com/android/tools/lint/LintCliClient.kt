@@ -1689,6 +1689,21 @@ open class LintCliClient : LintClient {
         return flags.reporters.any { it is TextReporter && it.isWriteToConsole }
     }
 
+    override fun getCacheDir(name: String?, create: Boolean): File? {
+        val cacheDir = flags.cacheDir
+        if (cacheDir != null) {
+            val dir = if (name != null) File(cacheDir, name) else cacheDir
+            if (create && !dir.exists()) {
+                if (!dir.mkdirs()) {
+                    return null
+                }
+            }
+            return dir
+        } else {
+            return super.getCacheDir(name, create)
+        }
+    }
+
     protected open inner class LintCliUastParser(project: Project?) :
         DefaultUastParser(project, ideaProject!!) {
         override fun prepare(
