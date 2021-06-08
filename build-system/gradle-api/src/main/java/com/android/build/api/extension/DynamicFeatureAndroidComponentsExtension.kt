@@ -16,6 +16,10 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.dsl.DynamicFeatureExtension
+import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.DynamicFeatureVariantBuilder
+
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
     replaceWith = ReplaceWith(
@@ -24,4 +28,4 @@ package com.android.build.api.extension
     level = DeprecationLevel.WARNING
 )
 interface DynamicFeatureAndroidComponentsExtension:
-    com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension
+    AndroidComponentsExtension<DynamicFeatureExtension, DynamicFeatureVariantBuilder, DynamicFeatureVariant>

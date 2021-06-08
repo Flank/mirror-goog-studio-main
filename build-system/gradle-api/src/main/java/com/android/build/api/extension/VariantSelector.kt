@@ -16,6 +16,9 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.component.ComponentIdentity
+import java.util.regex.Pattern
+
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
     replaceWith = ReplaceWith(
@@ -23,4 +26,43 @@ package com.android.build.api.extension
         "com.android.build.api.variant.VariantSelector"),
     level = DeprecationLevel.WARNING
 )
-interface VariantSelector: com.android.build.api.variant.VariantSelector
+interface VariantSelector: com.android.build.api.variant.VariantSelector {
+    /**
+     * Creates a [VariantSelector] of [ComponentIdentity]that includes all the variants for the
+     * current module.
+     *
+     * @return a [VariantSelector] for all variants.
+     */
+    override fun all(): VariantSelector
+
+    /**
+     * Returns a new selector for [ComponentIdentity] objects with a given build type.
+     *
+     * @param buildType Build type to filter [ComponentIdentity] on.
+     * @return An instance of [VariantSelector] to further filter variants.
+     */
+    override fun withBuildType(buildType: String): VariantSelector
+
+    /**
+     * Returns a new selector for [ComponentIdentity] objects with a given (dimension, flavorName).
+     *
+     * @param flavorToDimension Dimension and flavor to filter [ComponentIdentity] on.
+     * @return [VariantSelector] instance to further filter instances of [ComponentIdentity]
+     */
+    override fun withFlavor(flavorToDimension: Pair<String, String>): VariantSelector
+
+    /**
+     * Returns a new selector for [ComponentIdentity]  objects with a given name pattern.
+     *
+     * @param pattern [Pattern] to apply on the [org.gradle.api.Named.getName] to filter [ComponentIdentity]
+     * instances on
+     */
+    override fun withName(pattern: Pattern): VariantSelector
+
+    /**
+     * Returns a new selector for [ComponentIdentity]  objects with a given name.
+     *
+     * @param name [String] to test against the [org.gradle.api.Named.getName] for equality.
+     */
+    override fun withName(name: String): VariantSelector
+}

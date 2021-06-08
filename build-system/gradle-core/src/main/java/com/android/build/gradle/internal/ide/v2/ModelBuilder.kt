@@ -28,8 +28,8 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.HasAndroidTest
 import com.android.build.api.variant.HasTestFixtures
-import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension

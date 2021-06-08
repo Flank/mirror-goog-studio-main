@@ -35,7 +35,7 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
     delegate, stats, objectFactory
 ), LibraryVariant {
 
-    override val androidTest: AndroidTest?
+    override val androidTest: com.android.build.api.component.AndroidTest?
         get() = delegate.androidTest
 
     private val userVisibleTestFixtures: TestFixtures? by lazy {
