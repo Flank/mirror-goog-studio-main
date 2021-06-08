@@ -131,6 +131,11 @@ public final class FakeAdbServer implements AutoCloseable {
                         });
     }
 
+    @NonNull
+    public InetAddress getInetAddress() {
+        return mServerSocket.getInetAddress();
+    }
+
     public int getPort() {
         return mServerSocket.getLocalPort();
     }
