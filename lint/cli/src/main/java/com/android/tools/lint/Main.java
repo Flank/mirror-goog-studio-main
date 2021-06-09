@@ -119,6 +119,9 @@ public class Main {
     private static final String ARG_SHOW = "--show";
     private static final String ARG_QUIET = "--quiet";
     private static final String ARG_GENERATE_DOCS = "--generate-docs";
+    private static final String ARG_CLIENT_ID = "--client-id";
+    private static final String ARG_CLIENT_NAME = "--client-name";
+    private static final String ARG_CLIENT_VERSION = "--client-version";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_FULL_PATH = "--fullpath";
@@ -216,6 +219,8 @@ public class Main {
      * mode to use etc.
      */
     static class ArgumentState {
+        @Nullable String clientVersion;
+        @Nullable String clientName;
         @Nullable LanguageLevel javaLanguageLevel = null;
         @Nullable LanguageVersionSettings kotlinLanguageLevel = null;
         @NonNull List<LintModelModule> modules = new ArrayList<>();
@@ -356,6 +361,24 @@ public class Main {
         @Override
         public boolean supportsPartialAnalysis() {
             return argumentState.mode != LintDriver.DriverMode.GLOBAL;
+        }
+
+        @NonNull
+        @Override
+        public String getClientDisplayName() {
+            String name = argumentState.clientName;
+            if (name != null) {
+                // We include the client version number in the client display name;
+                // we DON'T return it from getClientRevision() since there we want
+                // to see the version of lint that is actually running, not the version
+                // of the tool that invoked it (e.g. to make sense of baseline files)
+                String version = argumentState.clientVersion;
+                if (version != null && !name.contains(version)) {
+                    return name + " (" + version + ")";
+                }
+                return name;
+            }
+            return super.getClientDisplayName();
         }
 
         @Override
@@ -1324,6 +1347,24 @@ public class Main {
                 argumentState.mode = LintDriver.DriverMode.ANALYSIS_ONLY;
             } else if (arg.equals(ARG_REPORT_ONLY)) {
                 argumentState.mode = LintDriver.DriverMode.MERGE;
+            } else if (arg.equals(ARG_CLIENT_ID)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing client id");
+                    return ERRNO_INVALID_ARGS;
+                }
+                LintClient.setClientName(args[++index]);
+            } else if (arg.equals(ARG_CLIENT_NAME)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing client name");
+                    return ERRNO_INVALID_ARGS;
+                }
+                argumentState.clientName = args[++index];
+            } else if (arg.equals(ARG_CLIENT_VERSION)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing client version");
+                    return ERRNO_INVALID_ARGS;
+                }
+                argumentState.clientVersion = args[++index];
             } else if (arg.equals(ARG_GENERATE_DOCS)) {
                 if (index != 0) {
                     System.err.println(
@@ -2016,8 +2057,12 @@ public class Main {
                             + "Use a semi-colon separated list of name=path pairs.",
                     ARG_DESCRIBE_FIXES + " <file>",
                     "Describes all the quickfixes in an XML file expressed as document edits -- insert, replace, delete",
-                    ARG_PRINT_INTERNAL_ERROR_STACKTRACE,
-                    "Dump exceptions from detectors to the console",
+                    ARG_CLIENT_ID,
+                    "Sets the id of the client, such as \"gradle\"",
+                    ARG_CLIENT_NAME,
+                    "Sets the display name of the client, such as \"Android Gradle Plugin\"",
+                    ARG_CLIENT_VERSION,
+                    "Sets the version of the client, such as 7.1.0-alpha01",
                     "",
                     "\nExit Status:",
                     "0",

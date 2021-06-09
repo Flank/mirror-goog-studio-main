@@ -106,9 +106,9 @@ open class XmlWriter constructor(
         // Unfortunate tag name here; this is really an incident but historically
         // in the file format it was called an issue
         // Format 6: support for storing incidents, lint maps, and configured issues
-        return listOf(
+        return listOfNotNull(
             ATTR_FORMAT to "6",
-            "by" to client.getClientDisplayRevision()?.let { "lint $it" },
+            client.getClientDisplayRevision()?.let { "by" to "lint $it" },
             "type" to if (type != XmlFileType.REPORT) type.name.toLowerCase(Locale.ROOT) else null,
         )
     }

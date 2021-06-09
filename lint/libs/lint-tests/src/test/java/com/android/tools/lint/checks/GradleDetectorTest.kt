@@ -899,7 +899,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "3.0.0.0"
+                    override fun getClientRevision(): String = "3.0.0.0"
                 }
             })
             .run().expect(expected)
@@ -935,7 +935,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "3.1.0"
+                    override fun getClientRevision(): String = "3.1.0"
                 }
             })
             .run().expect(
@@ -976,7 +976,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "2.3.0.0"
+                    override fun getClientRevision(): String = "2.3.0.0"
                 }
             })
             .run().expect(
