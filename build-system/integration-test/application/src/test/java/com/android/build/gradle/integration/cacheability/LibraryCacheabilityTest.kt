@@ -82,6 +82,7 @@ class LibraryCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":lib:prepareReleaseArtProfile", /* No Bug, task is just file copy */
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
                     ":lib:mergeReleaseJavaResource", /* Bug 181142260 */
                     ":lib:prepareLintJarForPublish", /* Bug 120413672 */
