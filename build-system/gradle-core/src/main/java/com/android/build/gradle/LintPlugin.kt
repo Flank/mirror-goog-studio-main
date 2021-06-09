@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.lint.AndroidLintTask
 import com.android.build.gradle.internal.lint.LintFixBuildService
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
+import com.android.build.gradle.internal.lint.createLintClasspathConfiguration
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
 import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
@@ -96,7 +97,7 @@ abstract class LintPlugin : Plugin<Project> {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
-        BasePlugin.createLintClasspathConfiguration(project, projectServices.projectOptions)
+        createLintClasspathConfiguration(project, projectServices)
         registerTasks(
             project,
             javaConvention,

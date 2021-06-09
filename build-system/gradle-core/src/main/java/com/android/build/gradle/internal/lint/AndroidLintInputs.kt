@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("AndroidLintInputs")
 
 package com.android.build.gradle.internal.lint
 
@@ -37,6 +38,7 @@ import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuil
 import com.android.build.gradle.internal.lint.AndroidLintTask.Companion.LINT_CLASS_PATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -1257,3 +1259,101 @@ abstract class ArtifactInput {
         return modelBuilder.createModel()
     }
 }
+
+fun createLintClasspathConfiguration(
+    project: Project,
+    projectServices: ProjectServices
+): FileCollection {
+    val config = project.configurations.create(LINT_CLASS_PATH)
+    config.isVisible = false
+    config.isTransitive = true
+    config.isCanBeConsumed = false
+    config.isCanBeResolved = true
+    config.description = "The lint embedded classpath"
+    val lintVersion =
+        getLintMavenArtifactVersion(
+            projectServices.projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
+            projectServices.issueReporter
+        )
+    project.dependencies.add(
+        config.name,
+        project.dependencies.create(
+            mapOf(
+                "group" to "com.android.tools.lint",
+                "name" to "lint-gradle",
+                "version" to lintVersion,
+            )
+        )
+    )
+    return config
+}
+
+/**
+ * The lint binary uses the same version numbers as AGP (see LintCliClient#getClientRevision()
+ * which is called when you run lint --version, as well as in release notes, etc etc).
+ *
+ * However, for historical reasons, the maven artifacts for its various libraries used in AGP are
+ * using the older tools-base version numbers, which are 23 higher, so lint 7.0.0 is published
+ * at com.android.tools.lint:lint-gradle:30.0.0
+ *
+ * This function maps from the user-oriented lint version specified by the user to the maven lint
+ * library version number for the artifact to load.
+ *
+ * Returns the actual lint version to use, the given [versionOverride] if valid, otherwise the default,
+ * reporting any issues as a side effect.
+ */
+
+internal fun getLintMavenArtifactVersion(
+    versionOverride: String?,
+    reporter: IssueReporter,
+    defaultVersion: String = Version.ANDROID_TOOLS_BASE_VERSION,
+    agpVersion: String = Version.ANDROID_GRADLE_PLUGIN_VERSION
+): String {
+    if (versionOverride == null) {
+        return defaultVersion
+    }
+    // Only verify versions that parse. If it is not valid, it will fail later anyway.
+    val parsed = GradleVersion.tryParseAndroidGradlePluginVersion(versionOverride)
+    if (parsed == null) {
+        reporter.reportError(
+            IssueReporter.Type.GENERIC,
+            """
+                    Could not parse lint version override '$versionOverride'
+                    Recommendation: Remove or update the gradle property ${StringOption.LINT_VERSION_OVERRIDE.propertyName} to be at least $agpVersion
+                    """.trimIndent()
+        )
+        return defaultVersion
+    }
+
+    val default = GradleVersion.parseAndroidGradlePluginVersion(defaultVersion)
+
+    // Heuristic when given an AGP version, find the corresponding lint version (that's 23 higher)
+    val normalizedOverride: String = (parsed.major + 23).toString() + versionOverride.removePrefix(parsed.major.toString())
+    val normalizedParsed = GradleVersion.tryParseAndroidGradlePluginVersion(normalizedOverride) ?: error("Unexpected parse error")
+
+    // Only fail if the major version is outdated.
+    // e.g. if the default lint version is 31.1.0 (as will be for AGP 8.1.0), fail is specifying
+    // lint 30.2.0, but only warn if specifying lint 31.0.0
+    if (normalizedParsed.major < default.major) {
+        reporter.reportError(
+            IssueReporter.Type.GENERIC,
+            """
+                    Lint must be at least version ${agpVersion.substringBefore(".")}.0.0, and is recommended to be at least $agpVersion
+                    Recommendation: Remove or update the gradle property ${StringOption.LINT_VERSION_OVERRIDE.propertyName} to be at least $agpVersion
+                    """.trimIndent()
+        )
+        return defaultVersion
+    }
+    if (normalizedParsed < default) {
+        reporter.reportWarning(
+            IssueReporter.Type.GENERIC,
+            """
+                    The build will use lint version $versionOverride which is older than the default.
+                    Recommendation: Remove or update the gradle property ${StringOption.LINT_VERSION_OVERRIDE.propertyName} to be at least $agpVersion
+                    """.trimIndent()
+        )
+    }
+    return normalizedOverride
+}
+
+
