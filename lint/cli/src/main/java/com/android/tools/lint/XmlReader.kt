@@ -583,10 +583,9 @@ class XmlReader(
     }
 
     private fun readCondition(): Constraint {
-        //noinspection ExpensiveAssertion
-        assert(parser.attributeCount == 1)
-        val name = parser.getAttributeName(0)
-        val value = parser.getAttributeValue(0)
+        val index = if (parser.attributeCount == 2) 1 else 0 // first element is the optional id
+        val name = parser.getAttributeName(index)
+        val value = parser.getAttributeValue(index)
         return when (name) {
             ATTR_MIN_GE -> minSdkAtLeast(value.toInt())
             ATTR_MIN_LT -> minSdkLessThan(value.toInt())
@@ -655,6 +654,7 @@ class XmlReader(
                                 ATTR_NAME -> noteKey = value
                                 ATTR_INT -> noteValue = value.toInt()
                                 ATTR_BOOLEAN -> noteValue = value!!.toBoolean()
+                                ATTR_SEVERITY -> noteValue = Severity.fromName(value!!)
                                 ATTR_STRING -> noteValue = value
                                 else -> error("Unexpected note attribute: $name")
                             }
@@ -674,8 +674,9 @@ class XmlReader(
                         map[id] = location
                     }
                     TAG_CONDITION -> {
+                        val id = parser.getAttributeValue(null, ATTR_ID) ?: LintDriver.KEY_CONDITION
                         val condition = readCondition()
-                        map[LintDriver.KEY_CONDITION] = condition
+                        map[id] = condition
                     }
                     else -> {
                         error("Unexpected tag $tag")
