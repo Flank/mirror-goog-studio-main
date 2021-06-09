@@ -65,7 +65,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                                 test(UNRELATED) // ERROR - not part of the @DetailsInfoTab list
                                      ~~~~~~~~~
             2 errors, 0 warnings
-            """.trimIndent()
+            """
         )
     }
 
@@ -313,7 +313,46 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_INDEFINITE:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_INDEFINITE); /// OK within range
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_SHORT:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_SHORT); /// OK within range
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_LONG:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_LONG); /// OK within range
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_INDEFINITE:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_INDEFINITE); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_SHORT:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_SHORT); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_LONG:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_LONG); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_INDEFINITE:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_INDEFINITE); // ERROR (not matching number range)
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_SHORT:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_SHORT); // ERROR (not matching number range)
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_LONG:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_LONG); // ERROR (not matching number range)
+            """
+        )
     }
 
     fun testMultipleProjects() {
@@ -386,7 +425,14 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Fix for src/test/zpkg/SomeClassTest.java line 10: Change to SomeClass.MY_CONSTANT:
+            @@ -10 +10
+            -         SomeClass.doSomething("error");
+            +         SomeClass.doSomething(SomeClass.MY_CONSTANT);
+            """
+        )
     }
 
     /**
@@ -1501,6 +1547,25 @@ class TypedefDetectorTest : AbstractCheckTest() {
                                            ~~
             2 errors, 0 warnings
             """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 20: Change to IntDefTest.LINE:
+            @@ -20 +20
+            -         shapeType = 99;
+            +         shapeType = IntDefTest.LINE;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 20: Change to IntDefTest.CORNER:
+            @@ -20 +20
+            -         shapeType = 99;
+            +         shapeType = IntDefTest.CORNER;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 21: Change to IntDefTest.LINE:
+            @@ -21 +21
+            -         myClassObj.shapeType = 99;
+            +         myClassObj.shapeType = IntDefTest.LINE;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 21: Change to IntDefTest.CORNER:
+            @@ -21 +21
+            -         myClassObj.shapeType = 99;
+            +         myClassObj.shapeType = IntDefTest.CORNER;
+            """
         )
     }
 
@@ -1616,6 +1681,87 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     toastFragmentNameAndText(FragmentUtils.getSomeTextFromOtherClass(), FragmentNames.HOME); // ERROR
                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/com/example/android/linttest/MainActivity.java line 15: Change to FragmentNames.HOME:
+            @@ -15 +15
+            -         toastFragmentNameAndText(getSomeTextFromThisClass(), FragmentNames.HOME); // ERROR
+            +         toastFragmentNameAndText(FragmentNames.HOME, FragmentNames.HOME); // ERROR
+            """
+        )
+    }
+
+    fun testQuickfix() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.app.AlarmManager;
+                import android.app.PendingIntent;
+
+                public class ExactAlarmTest {
+                    public void test(AlarmManager alarmManager, PendingIntent operation) {
+                        alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.PendingIntent
+
+                fun test(alarmManager: android.app.AlarmManager, operation: PendingIntent?) {
+                    alarmManager.setExact(1, 0L, operation)
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/ExactAlarmTest.java:7: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
+                    alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+                                          ~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:6: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
+                alarmManager.setExact(1, 0L, operation)
+                                      ~
+            2 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.RTC_WAKEUP:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.RTC_WAKEUP, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.RTC:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.RTC, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.ELAPSED_REALTIME_WAKEUP:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.ELAPSED_REALTIME:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME, 0L, operation);
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.RTC (1):
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.RTC, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.RTC_WAKEUP:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.ELAPSED_REALTIME_WAKEUP:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.ELAPSED_REALTIME:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.ELAPSED_REALTIME, 0L, operation)
             """
         )
     }

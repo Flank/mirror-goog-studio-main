@@ -4,6 +4,21 @@ This chapter lists recent changes to lint that affect users of lint.
 For information about internal improvements and API changes affecting
 lint check authors, see the API Guide.
 
+**7.1**
+
+* New built-in lint checks:
+
+  Issue ID                         | Summary
+  ---------------------------------|-----------------------------------
+  `FileEndsWithExt`                | Flags suspicious usages of File.endsWith(extension)
+
+* Updated lint checks:
+
+  Issue ID             | Summary
+  ---------------------|--------------------------
+  `MissingTranslation` | Now checks for missing translations of plurals
+  `WrongConstant`      | Now has quickfixes to replace with constants
+
 **7.0**
 
 * New built-in lint checks:
@@ -26,12 +41,6 @@ lint check authors, see the API Guide.
   `UnspecifiedImmutableFlag`       | Missing `PendingIntent` mutability flag
   `WatchFaceEditor`                | Watch face editor must use launchMode=“standard”
   `WebViewClientOnReceivedSslError`| Proceeds with the HTTPS connection despite SSL errors
-
-* Updated lint checks:
-
-  Issue ID             | Summary
-  ---------------------|--------------------------
-  `MissingTranslation` | Now checks for missing translations of plurals
 
 * Lint checks now include information for reported incidents where the
   lint check came from, such as which library artifact provided it.

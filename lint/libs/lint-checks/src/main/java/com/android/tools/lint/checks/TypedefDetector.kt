@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.ExternalReferenceExpression
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -575,7 +576,62 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         val locationNode = errorNode ?: node
-        report(context, TYPE_DEF, locationNode, context.getLocation(locationNode), message)
+        val fix: LintFix? = createQuickFix(locationNode, allowedValues, node)
+        report(context, TYPE_DEF, locationNode, context.getLocation(locationNode), message, fix)
+    }
+
+    private fun createQuickFix(
+        node: UElement,
+        values: List<UExpression>,
+        context: UElement
+    ): LintFix? {
+        var currentValue: Any? = null
+        if (node is ULiteralExpression) {
+            currentValue = node.value
+        } else if (node is UReferenceExpression) {
+            val field = node.resolve() as? PsiField ?: return null
+            if (field.hasModifierProperty(PsiModifier.FINAL) && field.hasModifierProperty(PsiModifier.STATIC)) {
+                currentValue = field.computeConstantValue()
+            } else {
+                return null
+            }
+        }
+
+        val fixes = mutableListOf<LintFix>()
+        var foundCurrent = false
+        for (value in values) {
+            var resolved: PsiElement? = null
+            if (value is ExternalReferenceExpression) {
+                resolved = UastLintUtils.resolve(value as ExternalReferenceExpression, context)
+            } else if (value is UReferenceExpression) {
+                resolved = value.resolve()
+            }
+            if (resolved !is PsiField) continue
+            val containingClass = resolved.containingClass ?: continue
+            val containingClassName = containingClass.name ?: continue
+            val qualifiedName: String = containingClass.qualifiedName ?: continue
+            val shortName = containingClassName + "." + resolved.name
+            val fullName = qualifiedName + "." + resolved.name
+            val current = !foundCurrent && value.evaluate() == currentValue
+            val fix = fix()
+                .name("Change to $shortName${if (current) " ($currentValue)" else ""}")
+                .replace()
+                .all()
+                .with(fullName)
+                .shortenNames()
+                .build()
+            if (current) {
+                // Place the fix that matches the current value first!
+                fixes.add(0, fix)
+                foundCurrent = true
+            } else if (values.size <= 8) {
+                fixes.add(fix)
+            }
+        }
+        if (fixes.isNotEmpty()) {
+            return fix().alternatives(*fixes.toTypedArray())
+        }
+        return null
     }
 
     private fun listAllowedValues(
@@ -587,9 +643,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             var s: String? = null
             var resolved: PsiElement? = null
             if (allowedValue is ExternalReferenceExpression) {
-                resolved = UastLintUtils.resolve(
-                    allowedValue as ExternalReferenceExpression, context
-                )
+                resolved = UastLintUtils.resolve(allowedValue as ExternalReferenceExpression, context)
             } else if (allowedValue is UReferenceExpression) {
                 resolved = allowedValue.resolve()
             }
