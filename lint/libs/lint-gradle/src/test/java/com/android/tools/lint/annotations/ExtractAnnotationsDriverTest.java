@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.checks.infrastructure.KotlinClasspathKt;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
@@ -102,6 +103,7 @@ public class ExtractAnnotationsDriverTest {
                         + "}\n"
                         + "\n",
                 Files.toString(output, Charsets.UTF_8));
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
@@ -213,6 +215,7 @@ public class ExtractAnnotationsDriverTest {
                         + "\n",
                 Files.toString(proguard, Charsets.UTF_8));
 
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
@@ -273,6 +276,7 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
@@ -334,6 +338,7 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
@@ -404,6 +409,7 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
@@ -442,6 +448,7 @@ public class ExtractAnnotationsDriverTest {
                 "D test/pkg/IntDefTest$DialogFlags\nD test/pkg/IntDefTest$DialogStyle\n",
                 Files.toString(typedefFile, Charsets.UTF_8));
 
+        UastEnvironment.disposeApplicationEnvironment();
         PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
