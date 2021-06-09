@@ -135,6 +135,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ExifInterfaceDetector.ISSUE,
                 ExportedReceiverDetector.ISSUE,
                 ExtraTextDetector.ISSUE,
+                FileEndsWithDetector.ISSUE,
                 FineLocationDetector.ISSUE,
                 FirebaseAnalyticsDetector.INVALID_NAME,
                 FirebaseMessagingDetector.MISSING_TOKEN_REFRESH,

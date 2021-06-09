@@ -1950,8 +1950,8 @@ open class GradleDetector : Detector(), GradleScanner {
     /** True if the given project uses the legacy http library. */
     private fun usesLegacyHttpLibrary(project: Project): Boolean {
         val model = project.buildModule ?: return false
-        for (path in model.bootClassPath) {
-            if (path.endsWith("org.apache.http.legacy.jar")) {
+        for (file in model.bootClassPath) {
+            if (file.endsWith("org.apache.http.legacy.jar")) {
                 return true
             }
         }
