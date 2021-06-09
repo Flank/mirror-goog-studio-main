@@ -70,6 +70,8 @@ enum class Severity constructor(
         return name.toLowerCase(Locale.ROOT)
     }
 
+    override fun toString(): String = toName()
+
     companion object {
         /**
          * Looks up the severity corresponding to a given named
