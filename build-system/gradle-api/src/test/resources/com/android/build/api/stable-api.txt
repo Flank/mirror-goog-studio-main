@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-371be317c9607a1f34ab0d4a73ba29ab48b0d9059330520544f7bd5053df3f1d
+8341c1d267aef3110308d880f630c6e4800ba39e9fec58794c7c2c1ae23f3a7b
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -125,8 +125,10 @@ com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android
 com.android.build.api.dsl.BuildType$DefaultImpls
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.codeTransparency: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleCodeTransparency, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
+com.android.build.api.dsl.Bundle.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
 com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
 com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()

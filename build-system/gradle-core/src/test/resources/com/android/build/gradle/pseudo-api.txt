@@ -1069,6 +1069,7 @@ com.android.build.gradle.internal.dsl.BundleOptions.abi: void (org.gradle.api.Ac
 com.android.build.gradle.internal.dsl.BundleOptions.density: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsDensity>)
 com.android.build.gradle.internal.dsl.BundleOptions.deviceTier: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier>)
 com.android.build.gradle.internal.dsl.BundleOptions.getAbi: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
+com.android.build.gradle.internal.dsl.BundleOptions.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.gradle.internal.dsl.BundleOptions.getDensity: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptions.getDeviceTier: com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier ()
 com.android.build.gradle.internal.dsl.BundleOptions.getIntegrityConfigDir: org.gradle.api.file.DirectoryProperty ()
@@ -1078,6 +1079,8 @@ com.android.build.gradle.internal.dsl.BundleOptions.language: void (org.gradle.a
 com.android.build.gradle.internal.dsl.BundleOptions.texture: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsTexture>)
 com.android.build.gradle.internal.dsl.BundleOptionsAbi implements com.android.build.api.dsl.BundleAbi
 com.android.build.gradle.internal.dsl.BundleOptionsAbi.<init>: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
+com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency implements com.android.build.api.dsl.BundleCodeTransparency
+com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency.<init>: com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency ()
 com.android.build.gradle.internal.dsl.BundleOptionsDensity implements com.android.build.api.dsl.BundleDensity
 com.android.build.gradle.internal.dsl.BundleOptionsDensity.<init>: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier implements com.android.build.api.dsl.BundleDeviceTier

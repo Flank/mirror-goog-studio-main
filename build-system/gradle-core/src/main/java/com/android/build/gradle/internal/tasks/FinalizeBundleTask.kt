@@ -20,6 +20,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputPath
@@ -29,9 +30,12 @@ import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.AabFlinger
 import com.android.ide.common.signing.KeystoreHelper
+import com.android.tools.build.bundletool.commands.AddTransparencyCommand
+import com.android.tools.build.bundletool.model.SigningConfiguration
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import org.gradle.api.file.RegularFileProperty
@@ -50,6 +54,9 @@ import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Internal
 
 /**
  * Task that copies the bundle file (.aab) to it's final destination and do final touches like:
@@ -68,6 +75,14 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     var signingConfigData: SigningConfigDataProvider? = null
         private set
 
+    @get:Nested
+    @get:Optional
+    var codeTransparencySigningConfigData: SigningConfigData? = null
+        private set
+
+    @get:Internal
+    abstract val tmpDir: DirectoryProperty
+
     @get:Input
     val finalBundleFileName: String
         get() = finalBundleFile.get().asFile.name
@@ -83,16 +98,37 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             signingConfigData?.convertToParams()?.let { signing ->
                 it.signingConfig.set(signing)
             }
+            codeTransparencySigningConfigData?.let { signingData ->
+                it.codeTransparencySigningConfig.set(SigningConfigProviderParams(signingData, null))
+            }
+            it.tmpDir.set(tmpDir.orNull)
         }
     }
 
-    abstract class Params: ProfileAwareWorkAction.Parameters() {
+    abstract class Params : ProfileAwareWorkAction.Parameters() {
+
         abstract val intermediaryBundleFile: RegularFileProperty
         abstract val finalBundleFile: RegularFileProperty
         abstract val signingConfig: Property<SigningConfigProviderParams>
+        abstract val codeTransparencySigningConfig: Property<SigningConfigProviderParams>
+        abstract val tmpDir: DirectoryProperty
     }
 
     abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
+
+        private fun addCodeTransparencySigning(
+            inputFile: File,
+            outputFile: File,
+            codeSigning: SigningConfigData
+        ) {
+            FileUtils.mkdirs(outputFile.parentFile)
+            FileUtils.deleteIfExists(outputFile)
+            AddTransparencyCommand.builder()
+                .setBundlePath(inputFile.toPath())
+                .setOutputPath(outputFile.toPath())
+                .setSignerConfig(codeSigning)
+                .build().execute()
+        }
 
         private fun compressBundle(inputFile: File, outputFile: File) {
             ZipInputStream(inputFile.inputStream().buffered()).use { inputStream ->
@@ -111,31 +147,49 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
         override fun run() {
             FileUtils.deleteIfExists(parameters.finalBundleFile.asFile.get())
-
-            parameters.signingConfig.orNull?.resolve()?.let {
-                val certificateInfo =
-                        KeystoreHelper.getCertificateInfo(
-                                it.storeType,
-                                it.storeFile!!,
-                                it.storePassword!!,
-                                it.keyPassword!!,
-                                it.keyAlias!!
+            var inputFile = parameters.intermediaryBundleFile.get().asFile
+            var cleanup = {}
+            try {
+                parameters.codeTransparencySigningConfig.orNull?.resolve()
+                    ?.let { codeSigningConfig ->
+                        val outputFile = FileUtils.join(
+                            parameters.tmpDir.get().asFile,
+                            inputFile.name
                         )
-                AabFlinger(
+                        addCodeTransparencySigning(inputFile, outputFile, codeSigningConfig)
+                        inputFile = outputFile
+                        cleanup = { FileUtils.deleteIfExists(outputFile) }
+                    }
+
+                parameters.signingConfig.orNull?.resolve()?.let {
+                    val certificateInfo =
+                        KeystoreHelper.getCertificateInfo(
+                            it.storeType,
+                            it.storeFile!!,
+                            it.storePassword!!,
+                            it.keyPassword!!,
+                            it.keyAlias!!
+                        )
+                    AabFlinger(
                         outputFile = parameters.finalBundleFile.asFile.get(),
                         signerName = it.keyAlias.toUpperCase(Locale.US),
                         privateKey = certificateInfo.key,
                         certificates = listOf(certificateInfo.certificate),
                         minSdkVersion = 18 // So that RSA + SHA256 are used
-                ).use {
-                    it.writeZip(
-                            parameters.intermediaryBundleFile.get().asFile,
+                    ).use {
+                        it.writeZip(
+                            inputFile,
                             Deflater.DEFAULT_COMPRESSION
+                        )
+                    }
+                } ?: run {
+                    compressBundle(
+                        inputFile,
+                        parameters.finalBundleFile.asFile.get()
                     )
                 }
-            } ?: run {
-                compressBundle(parameters.intermediaryBundleFile.asFile.get(),
-                        parameters.finalBundleFile.asFile.get())
+            } finally {
+                cleanup()
             }
         }
     }
@@ -193,6 +247,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         VariantTaskCreationAction<FinalizeBundleTask, ApkCreationConfig>(
             creationConfig
         ) {
+
         override val name: String
             get() = computeTaskName("sign", "Bundle")
 
@@ -204,8 +259,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}.aab"
-            val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
+            val bundleName =
+                "${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}.aab"
+            val apkLocationOverride =
+                creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
@@ -214,10 +271,14 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             } else {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
-                    FinalizeBundleTask::finalBundleFile)
-                    .atLocation(FileUtils.join(
-                        creationConfig.services.file(apkLocationOverride),
-                        creationConfig.dirName).absolutePath)
+                    FinalizeBundleTask::finalBundleFile
+                )
+                    .atLocation(
+                        FileUtils.join(
+                            creationConfig.services.file(apkLocationOverride),
+                            creationConfig.dirName
+                        ).absolutePath
+                    )
                     .withName(bundleName)
                     .on(SingleArtifact.BUNDLE)
             }
@@ -230,13 +291,30 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
-                task.intermediaryBundleFile)
+                task.intermediaryBundleFile
+            )
 
             // Don't sign debuggable bundles.
             if (!creationConfig.debuggable) {
                 task.signingConfigData =
                     SigningConfigDataProvider.create(creationConfig)
+
+                (creationConfig.globalScope.extension as BaseAppModuleExtension)
+                    .bundle.codeTransparency.signing.let { codeSigningConfig ->
+                        if (codeSigningConfig.storeFile != null && codeSigningConfig.keyAlias != null) {
+                            task.codeTransparencySigningConfigData =
+                                SigningConfigData.fromDslSigningConfig(codeSigningConfig)
+                        }
+                    }
             }
+
+            task.tmpDir.setDisallowChanges(
+                creationConfig.paths.intermediatesDir(
+                    "tmp",
+                    "FinalizeBundle",
+                    creationConfig.dirName
+                )
+            )
         }
     }
 }

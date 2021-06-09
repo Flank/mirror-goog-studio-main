@@ -229,6 +229,9 @@ com.android.build.api.dsl.Bundle.deviceTier: void (kotlin.jvm.functions.Function
 com.android.build.api.dsl.Bundle.getDeviceTier: com.android.build.api.dsl.BundleDeviceTier ()
 com.android.build.api.dsl.BundleAbi.getEnableSplit: java.lang.Boolean ()
 com.android.build.api.dsl.BundleAbi.setEnableSplit: void (java.lang.Boolean)
+com.android.build.api.dsl.BundleCodeTransparency
+com.android.build.api.dsl.BundleCodeTransparency.getSigning: com.android.build.api.dsl.SigningConfig ()
+com.android.build.api.dsl.BundleCodeTransparency.signing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.SigningConfig, kotlin.Unit>)
 com.android.build.api.dsl.BundleDensity.getEnableSplit: java.lang.Boolean ()
 com.android.build.api.dsl.BundleDensity.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.BundleDeviceTier
