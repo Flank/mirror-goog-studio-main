@@ -110,13 +110,20 @@ private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash() : CxxAbiMode
     // Remove arguments that supersede earlier arguments and remove properties that
     // have a blank value.
     return argsRewritten.copy(
-        configurationArguments = argsRewritten.configurationArguments.map { argument ->
+        configurationArguments = argsRewritten.configurationArguments
+            // Instantiate ${...} macro values in the argument
+            .map { argument -> rewriteConfig.reifier(argument) }
+            // Parse the argument
+            .map { argument ->
                 ifCMake {
                     argument.toCmakeArgument()
                 } ?: argument.toNdkBuildArgument()
             }
+            // Get rid of arguments that are irrelevant because they were superseded
             .removeSubsumedArguments()
+            // Get rid of blank properties
             .removeBlankProperties()
+            // Convert back to string
             .map { it.sourceArgument }
     )
 }

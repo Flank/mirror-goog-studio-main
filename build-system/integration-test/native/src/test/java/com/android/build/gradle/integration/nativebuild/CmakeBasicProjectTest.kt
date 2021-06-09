@@ -208,6 +208,19 @@ class CmakeBasicProjectTest(
         assertThat(process.argsList).contains("-C$path")
     }
 
+    @Test
+    fun `ensure CMake arguments have macros expanded`() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            android.defaultConfig.externalNativeBuild.cmake.arguments.addAll("-DMY_CPU_ARCH=\${"$"}{ndk.abiAltCpuArchitecture}")
+            """.trimIndent()
+        )
+        project.execute("generateJsonModelDebug")
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+        assertThat(abi.configurationArguments).contains("-DMY_CPU_ARCH=x64")
+    }
+
     // See b/134086362
     @Test
     fun `check target rename through transitive CMakeLists add_subdirectory`() {

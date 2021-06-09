@@ -36,12 +36,14 @@ import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.altCpuArchitecture
 import com.android.build.gradle.internal.cxx.model.bitness
 import com.android.build.gradle.internal.cxx.model.cFlags
 import com.android.build.gradle.internal.cxx.model.cmakeGenerator
 import com.android.build.gradle.internal.cxx.model.cmakeSettingsFile
 import com.android.build.gradle.internal.cxx.model.configurationHash
 import com.android.build.gradle.internal.cxx.model.cppFlags
+import com.android.build.gradle.internal.cxx.model.cpuArchitecture
 import com.android.build.gradle.internal.cxx.model.is64Bits
 import com.android.build.gradle.internal.cxx.model.isDefault
 import com.android.build.gradle.internal.cxx.model.isDeprecated
@@ -165,6 +167,18 @@ enum class Macro(
         example = "x86_64",
         cmakeProperties = listOf(ANDROID_ABI, CMAKE_ANDROID_ARCH_ABI),
         bind = CxxAbiModel::tag),
+    NDK_ABI_CPU_ARCHITECTURE(
+        description = "The CPU architecture.",
+        environment = GRADLE,
+        tag = "abiCpuArchitecture",
+        example = "x86_64",
+        bind = CxxAbiModel::cpuArchitecture),
+    NDK_ABI_ALT_CPU_ARCHITECTURE(
+        description = "Alternative CPU architecture name that is compatible with vcpkg.",
+        environment = GRADLE,
+        tag = "abiAltCpuArchitecture",
+        example = "x64",
+        bind = CxxAbiModel::altCpuArchitecture),
     NDK_PROJECT_SDK_DIR(
         description = "Folder of the current Android SDK.",
         environment = GRADLE,

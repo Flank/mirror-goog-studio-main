@@ -25,10 +25,20 @@ Currently targeted ABI.
 - example: x86_64
 - environment: android-gradle
 
+## ${ndk.abiAltCpuArchitecture}
+Alternative CPU architecture name that is compatible with vcpkg.
+- example: x64
+- environment: android-gradle
+
 ## ${ndk.abiBitness}
 The bitness of the targeted ABI.
 - example: 64
 - environment: android-ndk-abi-${ndk.abi}
+
+## ${ndk.abiCpuArchitecture}
+The CPU architecture.
+- example: x86_64
+- environment: android-gradle
 
 ## ${ndk.abiIs64Bits}
 Whether the targeted ABI is 64-bits.
