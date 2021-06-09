@@ -30,7 +30,6 @@ import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintCliFlags.ERRNO_USAGE
-import com.android.tools.lint.UastEnvironment.Companion.disposeApplicationEnvironment
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.CompositeIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
@@ -1256,7 +1255,6 @@ class LintIssueDocGenerator constructor(
 
     private fun disposeUastEnvironment() {
         environment.dispose()
-        disposeApplicationEnvironment()
     }
 
     private fun analyzeSource(): Map<String, IssueData> {
