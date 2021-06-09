@@ -52,6 +52,12 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of [finalizeDsl] above.
      */
+    fun finalizeDsl(callback: Action<DslExtensionT>)
+
+    /**
+     * [Action] based version of [finalizeDsl] above.
+     */
+    @Deprecated("Replaced by finalizeDsl", replaceWith = ReplaceWith("finalizeDsl(callback)"))
     fun finalizeDSl(callback: Action<DslExtensionT>)
 
     /**

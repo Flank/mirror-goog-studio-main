@@ -46,6 +46,11 @@ abstract class AndroidComponentsExtensionImpl<
         }
     }
 
+    override fun finalizeDsl(callback: Action<DslExtensionT>) {
+        variantApiOperations.dslFinalizationOperations.add(callback)
+    }
+
+    @Suppress("OverridingDeprecatedMember")
     override fun finalizeDSl(callback: Action<DslExtensionT>) {
         variantApiOperations.dslFinalizationOperations.add(callback)
     }

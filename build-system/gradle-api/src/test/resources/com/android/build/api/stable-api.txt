@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b42b202f1e44da3ae97b8c2d1841866ce25d915afd722bb37ecad2d8403a2c0f
+cb3157cadde3d9c44ffa287f6791db066b7db5c73f119f18853cd8078acd3269
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -325,6 +325,7 @@ com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (c
 com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.variant.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.variant.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.variant.AndroidComponentsExtension.finalizeDsl: void (kotlin.jvm.functions.Function1<? super DslExtensionT, kotlin.Unit>)
+com.android.build.api.variant.AndroidComponentsExtension.finalizeDsl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.variant.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.onVariants: void (com.android.build.api.variant.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
