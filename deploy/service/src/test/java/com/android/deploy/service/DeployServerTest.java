@@ -17,7 +17,6 @@
 package com.android.deploy.service;
 
 import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,18 +29,15 @@ import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
-
 import io.grpc.stub.StreamObserver;
-
+import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 public class DeployServerTest {
-    final String packageName = "com.example.myapp";
-    final String processName = "com.example.myapp:process";
+    String myPackageName = "com.example.myapp";
+    String myProcessName = "com.example.myapp:process";
 
     @Test
     public void getDevices() {
@@ -70,8 +66,28 @@ public class DeployServerTest {
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
         assertThat(response.getResponse().getClients(0).getPid()).isEqualTo(1234);
-        assertThat(response.getResponse().getClients(0).getName()).isEqualTo(packageName);
-        assertThat(response.getResponse().getClients(0).getDescription()).isEqualTo(processName);
+        assertThat(response.getResponse().getClients(0).getName()).isEqualTo(myPackageName);
+        assertThat(response.getResponse().getClients(0).getDescription()).isEqualTo(myProcessName);
+    }
+
+    @Test
+    public void getClients_NullProcessAndPackageName() {
+        myPackageName = null;
+        myProcessName = null;
+
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployServer server = new DeployServer(bridge, null);
+        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
+        Deploy.ClientRequest request =
+                Deploy.ClientRequest.newBuilder().setDeviceId("1234").build();
+        server.getClients(request, response);
+        assertThat(response.getResponse()).isNotNull();
+        assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
+        assertThat(response.getResponse().getClients(0).getPid()).isEqualTo(1234);
+        assertThat(response.getResponse().getClients(0).getName()).isEmpty();
+        assertThat(response.getResponse().getClients(0).getDescription()).isEmpty();
     }
 
     @Test
@@ -148,7 +164,7 @@ public class DeployServerTest {
         when(device.getName()).thenReturn(serial);
         when(device.isEmulator()).thenReturn(false);
         when(device.getAbis()).thenReturn(Collections.singletonList("armeabi"));
-        Client[] clients = new Client[] {mockClient(packageName, processName)};
+        Client[] clients = new Client[] {mockClient(myPackageName, myProcessName)};
         when(device.getClients()).thenReturn(clients);
         return device;
     }
