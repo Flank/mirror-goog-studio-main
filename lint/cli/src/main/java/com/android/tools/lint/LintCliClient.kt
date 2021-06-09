@@ -1535,7 +1535,7 @@ open class LintCliClient : LintClient {
         }
     }
 
-    override fun getClientRevision(): String? {
+    override fun getClientRevision(): String {
         val plugin = Version.ANDROID_GRADLE_PLUGIN_VERSION
         return plugin ?: "unknown"
     }

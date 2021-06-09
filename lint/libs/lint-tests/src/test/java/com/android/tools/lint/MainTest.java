@@ -21,6 +21,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
@@ -425,7 +426,9 @@ public class MainTest extends AbstractCheckTest {
                         + "If not, investigate the baseline path in the lintOptions config\n"
                         + "or verify that the baseline file has been checked into version\n"
                         + "control.\n"
-                        + "\n",
+                        + "\n"
+                        + "You can run lint with -Dlint.baselines.continue=true\n"
+                        + "if you want to create many missing baselines in one go.",
 
                 // Expected exit code
                 ERRNO_CREATED_BASELINE,
@@ -440,9 +443,19 @@ public class MainTest extends AbstractCheckTest {
                     TestUtils.getSdk().toString(),
                     "--disable",
                     "LintError",
+                    "--client-id",
+                    "gradle",
+                    "--client-version",
+                    "4.2.1",
+                    "--client-name",
+                    "AGP",
                     getProjectDir(null, mAccessibility).getPath()
                 });
         assertTrue(baseline.exists());
+
+        String baselineContents = FilesKt.readText(baseline, Charsets.UTF_8);
+        assertThat(baselineContents).contains("client=\"gradle\" name=\"AGP (4.2.1)\"");
+
         //noinspection ResultOfMethodCallIgnored
         baseline.delete();
     }
