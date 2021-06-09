@@ -26,13 +26,10 @@ import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
-
 import com.google.common.annotations.VisibleForTesting;
-
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -217,11 +214,20 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
     }
 
     private static Deploy.Client ddmClientToRpcClient(Client client) {
-        return Deploy.Client.newBuilder()
-                .setPid(client.getClientData().getPid())
-                .setName(client.getClientData().getPackageName())
-                .setDescription(client.getClientData().getClientDescription())
-                .build();
+        String packageName = client.getClientData().getPackageName();
+        String description = client.getClientData().getClientDescription();
+
+        Deploy.Client.Builder builder = Deploy.Client.newBuilder();
+
+        builder.setPid(client.getClientData().getPid());
+        if (packageName != null) {
+            builder.setName(packageName);
+        }
+        if (description != null) {
+            builder.setDescription(description);
+        }
+
+        return builder.build();
     }
 
     private Deploy.Device ddmDeviceToRpcDevice(IDevice device) {
