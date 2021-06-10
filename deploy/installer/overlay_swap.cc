@@ -33,77 +33,142 @@ void OverlaySwapCommand::ParseParameters(
   }
 
   request_ = request.overlay_swap_request();
+  package_name_ = request_.package_name();
 
   std::vector<int> pids(request_.process_ids().begin(),
                         request_.process_ids().end());
-  SetSwapParameters(request_.package_name(), pids, request_.extra_agents());
+  process_ids_ = pids;
+  extra_agents_count_ = request_.extra_agents();
   ready_to_run_ = true;
+}
+
+void OverlaySwapCommand::Run(proto::InstallerResponse* response) {
+  proto::SwapResponse* swap_response = response->mutable_swap_response();
+
+  // Determine which agent we need to use.
+#if defined(__aarch64__) || defined(__x86_64__)
+  std::string agent_filename =
+      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
+#else
+  std::string agent_filename = kAgent;
+#endif
+  if (!PrepareInteraction(agent_filename)) {
+    ErrEvent("Unable to prepare interaction");
+    return;
+  }
+
+  std::unique_ptr<proto::SwapRequest> request = PrepareAndBuildRequest();
+  if (request == nullptr) {
+    swap_response->set_status(proto::SwapResponse::SETUP_FAILED);
+    ErrEvent("OverlaySwap: Unable to PrepareAndBuildRequest");
+    return;
+  }
+
+  Swap(std::move(request), swap_response);
+  ProcessResponse(swap_response);
+}
+
+bool OverlaySwapCommand::Swap(
+    const std::unique_ptr<proto::SwapRequest> swap_request,
+    proto::SwapResponse* swap_response) {
+  Phase p("Swap");
+  if (swap_response->status() != proto::SwapResponse::UNKNOWN) {
+    ErrEvent("OverlaySwap: Unable to Swap (swapResponse status is populated)");
+    return false;
+  }
+
+  // Remove process ids that we do not need to swap.
+  FilterProcessIds(&process_ids_);
+
+  if (process_ids_.empty() && extra_agents_count_ == 0) {
+    LogEvent("No PIDs needs to be swapped");
+    swap_response->set_status(proto::SwapResponse::OK);
+    return true;
+  }
+
+  // Request for the install-server to open a socket and begin listening for
+  // agents to connect. Agents connect shortly after they are attached (below).
+  auto listen_resp = ListenForAgents();
+  if (listen_resp == nullptr) {
+    swap_response->set_status(proto::SwapResponse::INSTALL_SERVER_COM_ERR);
+    return false;
+  }
+
+  if (listen_resp->status() != proto::OpenAgentSocketResponse::OK) {
+    swap_response->set_status(
+        proto::SwapResponse::READY_FOR_AGENTS_NOT_RECEIVED);
+    return false;
+  }
+
+  if (!Attach(process_ids_)) {
+    ErrEvent("Unable to Attach");
+    swap_response->set_status(proto::SwapResponse::AGENT_ATTACH_FAILED);
+    return false;
+  }
+
+  proto::SendAgentMessageRequest req;
+  req.set_agent_count(process_ids_.size() + extra_agents_count_);
+  *req.mutable_agent_request()->mutable_swap_request() = *swap_request.get();
+
+  auto resp = client_->SendAgentMessage(req);
+  if (!resp) {
+    swap_response->set_status(proto::SwapResponse::INSTALL_SERVER_COM_ERR);
+    return false;
+  }
+
+  for (const auto& agent_response : resp->agent_responses()) {
+    ConvertProtoEventsToEvents(agent_response.events());
+    if (agent_response.status() != proto::AgentResponse::OK) {
+      auto failed_agent = swap_response->add_failed_agents();
+      *failed_agent = agent_response;
+    }
+  }
+
+  if (resp->status() == proto::SendAgentMessageResponse::OK) {
+    if (swap_response->failed_agents_size() == 0) {
+      swap_response->set_status(proto::SwapResponse::OK);
+      return true;
+    } else {
+      swap_response->set_status(proto::SwapResponse::AGENT_ERROR);
+      return false;
+    }
+  }
+
+  CmdCommand cmd(workspace_);
+  std::vector<ProcessRecord> records;
+  if (cmd.GetProcessInfo(package_name_, &records)) {
+    for (auto& record : records) {
+      if (record.crashing) {
+        swap_response->set_status(proto::SwapResponse::PROCESS_CRASHING);
+        swap_response->set_extra(record.process_name);
+        return false;
+      }
+
+      if (record.not_responding) {
+        swap_response->set_status(proto::SwapResponse::PROCESS_NOT_RESPONDING);
+        swap_response->set_extra(record.process_name);
+        return false;
+      }
+    }
+  }
+
+  for (int pid : swap_request->process_ids()) {
+    const std::string pid_string = to_string(pid);
+    if (IO::access("/proc/" + pid_string, F_OK) != 0) {
+      swap_response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
+      swap_response->set_extra(pid_string);
+      return false;
+    }
+  }
+
+  swap_response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
+  return false;
 }
 
 std::unique_ptr<proto::SwapRequest>
 OverlaySwapCommand::PrepareAndBuildRequest() {
   Phase p("PreSwap");
   std::unique_ptr<proto::SwapRequest> request(new proto::SwapRequest());
-
-  std::string version = workspace_.GetVersion() + "-";
-
-  // Determine which agent we need to use.
-#if defined(__aarch64__) || defined(__x86_64__)
-  std::string agent =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#else
-  std::string agent = kAgent;
-#endif
-
-  std::string startup_path = Sites::AppStartupAgent(package_name_);
-  std::string studio_path = Sites::AppStudio(package_name_);
-  std::string agent_path = startup_path + version + agent;
-
-  std::unordered_set<std::string> missing_files;
-  if (!CheckFilesExist({startup_path, studio_path, agent_path},
-                       &missing_files)) {
-    return nullptr;
-  }
-
-  RunasExecutor run_as(package_name_);
-  std::string error;
-
-  bool missing_startup =
-      missing_files.find(startup_path) != missing_files.end();
-  bool missing_agent = missing_files.find(agent_path) != missing_files.end();
-
-  // Clean up other agents from the startup_agent directory. Because agents are
-  // versioned (agent-<version#>) we cannot simply copy our agent on top of the
-  // previous file. If the startup_agent directory exists but our agent cannot
-  // be found in it, we assume another agent is present and delete it.
-  if (!missing_startup && missing_agent) {
-    if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
-      ErrEvent("Could not remove old agents: " + error);
-      return nullptr;
-    }
-    missing_startup = true;
-  }
-
-  if (missing_startup &&
-      !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
-    ErrEvent("Could not create startup agent directory: " + error);
-    return nullptr;
-  }
-
-  if (missing_files.find(studio_path) != missing_files.end() &&
-      !run_as.Run("mkdir", {studio_path}, nullptr, &error)) {
-    ErrEvent("Could not create .studio directory: " + error);
-    return nullptr;
-  }
-
-  if (missing_agent &&
-      !run_as.Run("cp", {"-F", workspace_.GetTmpFolder() + agent, agent_path},
-                  nullptr, &error)) {
-    ErrEvent("Could not copy binaries: " + error);
-    return nullptr;
-  }
-
-  SetAgentPath(agent_path);
 
   for (auto& clazz : request_.new_classes()) {
     request->add_new_classes()->CopyFrom(clazz);
@@ -161,7 +226,15 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
 
   // Do this even if the deployment failed; it's retrieving data unrelated to
   // the current deployment. We might want to find a better time to do this.
-  GetAgentLogs(response);
+  auto logsResp = GetAgentLogs();
+  if (!logsResp) {
+    return;
+  }
+
+  for (const auto& log : logsResp->logs()) {
+    auto added = response->add_agent_logs();
+    *added = log;
+  }
 }
 
 void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {
@@ -197,24 +270,6 @@ void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {
     // If we updated overlay even on swap fail or restart fail,
     // alter the response accordingly.
     response->set_status(proto::SwapResponse::SWAP_FAILED_BUT_OVERLAY_UPDATED);
-  }
-}
-
-void OverlaySwapCommand::GetAgentLogs(proto::SwapResponse* response) {
-  Phase p("GetAgentLogs");
-  proto::GetAgentExceptionLogRequest req;
-  req.set_package_name(request_.package_name());
-
-  // If this fails, we don't really care - it's a best-effort situation; don't
-  // break the deployment because of it. Just log and move on.
-  auto resp = client_->GetAgentExceptionLog(req);
-  if (!resp) {
-    return;
-  }
-
-  for (const auto& log : resp->logs()) {
-    auto added = response->add_agent_logs();
-    *added = log;
   }
 }
 
