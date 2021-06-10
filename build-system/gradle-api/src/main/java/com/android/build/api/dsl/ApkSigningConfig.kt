@@ -17,10 +17,11 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import org.gradle.api.Named
 
 /** DSL object to configure signing configs. */
 @Incubating
-interface ApkSigningConfig: SigningConfig {
+interface ApkSigningConfig: SigningConfig, Named {
     /**
      * Whether signing using JAR Signature Scheme (aka v1 signing) is enabled.
      *

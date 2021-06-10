@@ -17,7 +17,6 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
-import org.gradle.api.Named
 import java.io.File
 
 /**
@@ -27,7 +26,7 @@ import java.io.File
  *
  */
 @Incubating
-interface SigningConfig: Named {
+interface SigningConfig {
 
     /**
      * Store file used when signing.
