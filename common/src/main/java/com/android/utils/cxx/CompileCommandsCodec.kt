@@ -456,7 +456,7 @@ data class CompileCommand(
  * format.
  */
 fun streamCompileCommandsV2(file: File, action : CompileCommand.() -> Unit) {
-    assert(readVersion(file) >= 2) {
+    assert(readCompileCommandsVersionNumber(file) >= 2) {
         "Caller is responsible for checking whether '$file' supports version 2"
     }
     streamCompileCommandsImpl(file) { command ->
@@ -537,13 +537,13 @@ private fun streamCompileCommandsImpl(file: File, action : (CompileCommand) -> U
  * version supported by the code in this class.
  */
 fun compileCommandsFileIsCurrentVersion(file: File) : Boolean {
-    return readVersion(file) == VERSION
+    return readCompileCommandsVersionNumber(file) == VERSION
 }
 
 /**
  * Read only the version number from a compile_commands.json.bin file.
  */
-private fun readVersion(file: File) : Int {
+fun readCompileCommandsVersionNumber(file: File) : Int {
     FileChannel.open(file.toPath()).use { fc ->
         val map = ByteBuffer.allocate(MAGIC.length + Int.SIZE_BYTES)
         fc.read(map)
