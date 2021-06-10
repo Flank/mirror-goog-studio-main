@@ -25,7 +25,6 @@ interface Bundle {
 
     val density: BundleDensity
 
-    @get:Incubating
     val language: BundleLanguage
 
     @get:Incubating
@@ -38,7 +37,6 @@ interface Bundle {
 
     fun density(action: BundleDensity.() -> Unit)
 
-    @Incubating
     fun language(action: BundleLanguage.() -> Unit)
 
     @Incubating
