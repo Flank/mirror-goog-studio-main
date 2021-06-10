@@ -1334,6 +1334,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
             }
 
+            if (method !is PsiCompiledElement) {
+                // We're only checking the Android SDK below, which should
+                // be provided as binary (android.jar) and if we're actually
+                // running on sources we don't want to perform this check
+                return
+            }
+
             val evaluator = context.evaluator
             val owner = evaluator.getQualifiedName(containingClass)
                 ?: return // Couldn't resolve type
