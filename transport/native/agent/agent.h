@@ -16,6 +16,7 @@
 #ifndef AGENT_AGENT_H_
 #define AGENT_AGENT_H_
 
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -237,7 +238,7 @@ class Agent {
   std::mutex profiler_mutex_;
   std::condition_variable profiler_cv_;
 
-  bool running_;
+  std::atomic_bool running_;
 };
 
 }  // end of namespace profiler
