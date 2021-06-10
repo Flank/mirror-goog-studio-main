@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
@@ -196,6 +197,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Input
     abstract val printStackTrace: Property<Boolean>
 
+    @get:Input
+    @get:Optional
+    abstract val continueAfterBaselineCreated: Property<String>
+
     override fun doTaskAction() {
         lintClassLoaderBuildService.get().shouldDispose = true
         writeLintModelFile()
@@ -326,6 +331,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             arguments += "--stacktrace"
         }
         arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
+        if (continueAfterBaselineCreated.orNull == SdkConstants.VALUE_TRUE) {
+            arguments += "--continue-after-baseline-created"
+        }
 
         return Collections.unmodifiableList(arguments)
     }
@@ -452,7 +460,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.group = JavaBasePlugin.VERIFICATION_GROUP
             task.description = description
 
-            task.initializeGlobalInputs(creationConfig.globalScope, creationConfig.services.projectInfo.getProject())
+            task.initializeGlobalInputs(
+                project = creationConfig.services.projectInfo.getProject(),
+                isAndroid = true
+            )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
             task.lintRulesJar.from(creationConfig.globalScope.localCustomLintChecks)
             task.lintRulesJar.from(
@@ -647,13 +658,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         textReportToStderr.disallowChanges()
     }
 
-    private fun initializeGlobalInputs(globalScope: GlobalScope, project: Project) {
-        initializeGlobalInputs(
-            project = project,
-            isAndroid = true
-        )
-    }
-
     private fun initializeGlobalInputs(
         project: Project,
         isAndroid: Boolean
@@ -687,6 +691,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     .map { it.equals("true", ignoreCase = true) }.orElse(false)
             )
         }
+        this.continueAfterBaselineCreated.setDisallowChanges(
+            project.providers.systemProperty("lint.baselines.continue")
+        )
     }
 
     fun configureForStandalone(
