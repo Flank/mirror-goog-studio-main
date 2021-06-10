@@ -395,7 +395,6 @@ com.android.build.api.dsl.Installation.setTimeOutInMs: void (int)
 com.android.build.api.dsl.JacocoOptions implements com.android.build.api.dsl.TestCoverage
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
-com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
 com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.JniLibsPackagingOptions
@@ -682,7 +681,6 @@ com.android.build.api.dsl.VariantDimension.addManifestPlaceholders: void (java.u
 com.android.build.api.dsl.VariantDimension.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.VariantDimension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeBuildOptions, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuildOptions ()
-com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
 com.android.build.api.dsl.VariantDimension.getManifestPlaceholders: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.api.dsl.VariantDimension.getMultiDexKeepFile: java.io.File ()
 com.android.build.api.dsl.VariantDimension.getMultiDexKeepProguard: java.io.File ()
@@ -690,7 +688,6 @@ com.android.build.api.dsl.VariantDimension.getNdk: com.android.build.api.dsl.Ndk
 com.android.build.api.dsl.VariantDimension.getProguardFiles: java.util.List<java.io.File> ()
 com.android.build.api.dsl.VariantDimension.getShaders: com.android.build.api.dsl.Shaders ()
 com.android.build.api.dsl.VariantDimension.getTestProguardFiles: java.util.List<java.io.File> ()
-com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.ndk: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Ndk, kotlin.Unit>)
 com.android.build.api.dsl.VariantDimension.proguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.VariantDimension.proguardFiles: java.lang.Object (java.lang.Object[])

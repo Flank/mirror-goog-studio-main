@@ -175,11 +175,9 @@ interface VariantDimension {
     fun setManifestPlaceholders(manifestPlaceholders: Map<String, Any>): Void?
 
     /** Options for configuring Java compilation. */
-    @get:Incubating
     val javaCompileOptions: JavaCompileOptions
 
     /** Options for configuring Java compilation. */
-    @Incubating
     fun javaCompileOptions(action: JavaCompileOptions.() -> Unit)
 
     /** Options for configuring the shader compiler.  */

@@ -19,11 +19,12 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 /** DSL object for javaCompileOptions. */
-@Incubating
 interface JavaCompileOptions {
     /** Options for configuration the annotation processor. */
+    @get:Incubating
     val annotationProcessorOptions: AnnotationProcessorOptions
 
     /** Configures annotation processor options. */
+    @Incubating
     fun annotationProcessorOptions(action: AnnotationProcessorOptions.() -> Unit)
 }

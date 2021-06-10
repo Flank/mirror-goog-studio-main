@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b456976866a8ba73d801aa0f0cfd4116a663c66c05d7bbf78a296b8fcb915cfd
+9b72d0c1cdffb6ea871226213f3a4be2a6e7ac72b986f5e125ae58f8e2e9fc3a
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -184,6 +184,7 @@ com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functio
 com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
+com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
@@ -224,6 +225,8 @@ com.android.build.api.dsl.TestProductFlavor implements com.android.build.api.dsl
 com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension$DefaultImpls
+com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
+com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
