@@ -43,10 +43,8 @@ interface ApplicationExtension :
     @Incubating
     fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
 
-    @get:Incubating
     val bundle: Bundle
 
-    @Incubating
     fun bundle(action: Bundle.() -> Unit)
 
     @get:Incubating

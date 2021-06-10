@@ -18,25 +18,36 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-@Incubating
+/** Features that apply to distribution by the bundle  */
 interface Bundle {
+
+    @get:Incubating
     val abi: BundleAbi
 
+    @get:Incubating
     val density: BundleDensity
 
+    @get:Incubating
     val language: BundleLanguage
 
+    @get:Incubating
     val texture: BundleTexture
 
+    @get:Incubating
     val deviceTier: BundleDeviceTier
 
+    @Incubating
     fun abi(action: BundleAbi.() -> Unit)
 
+    @Incubating
     fun density(action: BundleDensity.() -> Unit)
 
+    @Incubating
     fun language(action: BundleLanguage.() -> Unit)
 
+    @Incubating
     fun texture(action: BundleTexture.() -> Unit)
 
+    @Incubating
     fun deviceTier(action: BundleDeviceTier.() -> Unit)
 }
