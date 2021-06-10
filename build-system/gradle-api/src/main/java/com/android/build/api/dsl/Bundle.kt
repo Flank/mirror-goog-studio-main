@@ -21,7 +21,6 @@ import org.gradle.api.Incubating
 /** Features that apply to distribution by the bundle  */
 interface Bundle {
 
-    @get:Incubating
     val abi: BundleAbi
 
     @get:Incubating
@@ -36,7 +35,6 @@ interface Bundle {
     @get:Incubating
     val deviceTier: BundleDeviceTier
 
-    @Incubating
     fun abi(action: BundleAbi.() -> Unit)
 
     @Incubating
