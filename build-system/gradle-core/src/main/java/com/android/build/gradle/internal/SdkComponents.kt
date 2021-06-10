@@ -36,6 +36,7 @@ import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
+import com.android.tools.analytics.Environment
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -85,6 +86,17 @@ abstract class SdkComponentsBuildService @Inject constructor(
         SdkLocationSourceSet(parameters.projectRootDir.get().asFile)
     }
 
+    class Environment(providerFactory: ProviderFactory): SdkLibDataFactory.Environment() {
+        private val systemProperties = SystemProperty.values().associate {
+            it to providerFactory.systemProperty(it.key).forUseAtConfigurationTime().orNull
+        }
+        override fun getSystemProperty(property: SystemProperty): String? {
+            return systemProperties[property]
+        }
+    }
+
+    val environment = Environment(providerFactory)
+
     // Trick to not initialize the sdkHandler just to call unload() on it. Using the Delegate
     // allows to test wether or not the [SdkHandler] has been initialized.
     private val sdkHandlerDelegate = lazy {
@@ -99,7 +111,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
                     !parameters.offlineMode.get() && parameters.enableSdkDownload.get(),
                     parameters.androidSdkChannel.orNull,
                     LoggerWrapper.getLogger(SdkLibDataFactory::class.java)
-                ).getSdkLibData()
+                ).getSdkLibData(environment)
             )
         }
     }

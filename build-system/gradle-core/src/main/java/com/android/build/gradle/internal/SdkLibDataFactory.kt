@@ -30,29 +30,40 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.UnknownHostException
-import java.util.Properties
 
 class SdkLibDataFactory(
     private val enableDownload: Boolean,
     private val androidSdkChannel: Int?, // projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL)
     private val logger: ILogger) {
 
-    fun getSdkLibData(): SdkLibData {
+    abstract class Environment {
+
+        enum class SystemProperty(val key: String) {
+            HTTPS_PROXY_HOST("https.proxyHost"),
+            HTTPS_PROXY_PORT("https.proxyPort"),
+            HTTP_PROXY_HOST("http.proxyHost"),
+            HTTP_PROXY_PORT("http.proxyPort"),
+        }
+        abstract fun getSystemProperty(property: SystemProperty): String?
+    }
+
+    fun getSdkLibData(environment: Environment): SdkLibData {
         return if (enableDownload) {
-            SdkLibData.download(getDownloader(), getSettingsController())
+            val settingsController = getSettingsController(environment)
+            SdkLibData.download(getDownloader(settingsController), settingsController)
         } else {
             SdkLibData.dontDownload()
         }
     }
 
-    private fun getDownloader(): Downloader {
+    private fun getDownloader(settingsController: SettingsController): Downloader {
         return LocalFileAwareDownloader(
-            LegacyDownloader(FileOpUtils.create(), getSettingsController())
+            LegacyDownloader(FileOpUtils.create(), settingsController)
         )
     }
 
-    private fun getSettingsController(): SettingsController {
-        val proxy = createProxy(System.getProperties(), logger)
+    private fun getSettingsController(environment: Environment): SettingsController {
+        val proxy = createProxy(environment, logger)
         return object : SettingsController {
             override fun getForceHttp(): Boolean {
                 return false
@@ -81,11 +92,11 @@ class SdkLibDataFactory(
     }
 
     @VisibleForTesting
-    fun createProxy(properties: Properties, logger: ILogger): Proxy {
-        var host: String? = properties.getProperty("https.proxyHost")
+    fun createProxy(environment: Environment, logger: ILogger): Proxy {
+        var host: String? = environment.getSystemProperty(Environment.SystemProperty.HTTPS_PROXY_HOST)
         var port = 443
         if (host != null) {
-            val maybePort = properties.getProperty("https.proxyPort")
+            val maybePort = environment.getSystemProperty(Environment.SystemProperty.HTTPS_PROXY_PORT)
             if (maybePort != null) {
                 try {
                     port = Integer.parseInt(maybePort)
@@ -96,10 +107,10 @@ class SdkLibDataFactory(
                 }
             }
         } else {
-            host = properties.getProperty("http.proxyHost")
+            host = environment.getSystemProperty(Environment.SystemProperty.HTTP_PROXY_HOST)
             if (host != null) {
                 port = 80
-                val maybePort = properties.getProperty("http.proxyPort")
+                val maybePort = environment.getSystemProperty(Environment.SystemProperty.HTTP_PROXY_PORT)
                 if (maybePort != null) {
                     try {
                         port = Integer.parseInt(maybePort)
