@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9da16ef0848b06ce349a3d23d0e05c9ac2c0cc5f4a6cf7bc09897caf67661063
+c51c2d793b7816894319cca2c3ace705f2824d5a10665365e55494b1bdd87ceb
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -140,12 +140,14 @@ com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.buildTypes: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
 com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (kotlin.jvm.functions.Function1<? super DefaultConfigT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeBuild, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getAndroidResources: com.android.build.api.dsl.AndroidResources ()
+com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<? extends BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()

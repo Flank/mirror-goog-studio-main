@@ -149,7 +149,6 @@ interface CommonExtension<
      *
      * @see [BuildType
      */
-    @get:Incubating
     val buildTypes: NamedDomainObjectContainer<out BuildTypeT>
 
     /**
@@ -157,7 +156,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [BuildType]
      */
-    @Incubating
     fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit)
 
     /**
