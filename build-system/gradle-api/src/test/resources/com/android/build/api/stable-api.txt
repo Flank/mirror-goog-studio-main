@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5b82432ee2f670b9f0687d92e3f0bc757313709b0396f33795ddf1d933ca91d9
+e4b35abcaf8bf985efb9253e585c7902b07e1fc68bd1eccbe1e6d1ea8d22677f
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -134,6 +134,7 @@ com.android.build.api.dsl.BundleAbi
 com.android.build.api.dsl.BundleDensity
 com.android.build.api.dsl.BundleLanguage
 com.android.build.api.dsl.BundleTexture
+com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
@@ -173,6 +174,8 @@ com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.a
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.ExternalNativeBuild
+com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
 com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls

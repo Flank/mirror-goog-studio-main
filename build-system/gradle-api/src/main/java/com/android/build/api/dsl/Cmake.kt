@@ -30,7 +30,6 @@ import java.io.File
  *
  * If you want to instead build your native libraries using ndk-build, see [NdkBuild]
  */
-@Incubating
 interface Cmake {
     /**
      * Specifies the relative path to your `CMakeLists.txt` build script.
@@ -56,6 +55,8 @@ interface Cmake {
      *
      * @since 2.2.0
      */
+    @get:Incubating
+    @set:Incubating
     var path: File?
 
     /**
@@ -82,6 +83,7 @@ interface Cmake {
      *
      * @since 2.2.0
      */
+    @Incubating
     fun path(path: Any?)
 
     /**
@@ -117,6 +119,8 @@ interface Cmake {
      *
      * @since 3.0.0
      */
+    @get:Incubating
+    @set:Incubating
     var buildStagingDirectory: File?
 
     /**
@@ -152,6 +156,7 @@ interface Cmake {
      *
      * @since 3.0.0
      */
+    @Incubating
     fun buildStagingDirectory(buildStagingDirectory: Any?)
 
     /**
@@ -192,5 +197,7 @@ interface Cmake {
      *
      * @since 3.0.0
      */
+    @get:Incubating
+    @set:Incubating
     var version: String?
 }

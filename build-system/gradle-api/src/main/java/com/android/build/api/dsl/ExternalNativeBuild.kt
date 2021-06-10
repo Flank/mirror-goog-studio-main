@@ -68,7 +68,6 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
-    @get:Incubating
     val cmake: Cmake
 
     /**
@@ -77,7 +76,6 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
-    @Incubating
     fun cmake(action: Cmake.() -> Unit)
 
 }
