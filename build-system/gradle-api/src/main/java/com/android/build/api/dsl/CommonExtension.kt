@@ -353,7 +353,6 @@ interface CommonExtension<
      *
      * @see [ProductFlavor]
      */
-    @get:Incubating
     val productFlavors: NamedDomainObjectContainer<out ProductFlavorT>
 
     /**
@@ -362,7 +361,6 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block,
      * see [ProductFlavor]
      */
-    @Incubating
     fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit)
 
 
