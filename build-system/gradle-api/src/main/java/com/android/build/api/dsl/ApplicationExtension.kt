@@ -36,11 +36,9 @@ interface ApplicationExtension :
     // TODO(b/140406102)
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
-    @get:Incubating
     val dependenciesInfo: DependenciesInfo
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
-    @Incubating
     fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
 
     val bundle: Bundle

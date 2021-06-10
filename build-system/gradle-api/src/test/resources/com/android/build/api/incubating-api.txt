@@ -114,9 +114,7 @@ com.android.build.api.dsl.ApplicationBuildType.setCrunchPngs: void (java.lang.Bo
 com.android.build.api.dsl.ApplicationBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setEmbedMicroApp: void (boolean)
-com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ApplicationExtension.getPublishing: com.android.build.api.dsl.ApplicationPublishing ()
 com.android.build.api.dsl.ApplicationExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
@@ -329,7 +327,6 @@ com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
-com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.dsl.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
