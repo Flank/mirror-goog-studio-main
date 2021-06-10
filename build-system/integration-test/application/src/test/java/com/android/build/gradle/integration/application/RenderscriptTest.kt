@@ -31,4 +31,10 @@ class RenderscriptTest {
     fun build() {
         project.execute("clean", "assembleDebug")
     }
+
+    @Test
+    fun testApiLevelDoesNotTriggerError() {
+        project.buildFile.appendText("android.defaultConfig.minSdkVersion 30")
+        project.execute("clean", "assembleDebug")
+    }
 }
