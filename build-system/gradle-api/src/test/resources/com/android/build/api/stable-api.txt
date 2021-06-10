@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-6853c9423b417b153265d882091257ecfe03e8962df2559bed676e61ca6c207f
+89ce9a77f7be16b67c793542738b4986cb61d48a5e0c4f90b788ae71f68f3377
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -101,6 +101,7 @@ com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
+com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
 com.android.build.api.dsl.ApkSigningConfig$DefaultImpls
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
@@ -179,6 +180,7 @@ com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.and
 com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
+com.android.build.api.dsl.SigningConfig
 com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.SingleVariant.getVariantName: java.lang.String ()
 com.android.build.api.dsl.Split

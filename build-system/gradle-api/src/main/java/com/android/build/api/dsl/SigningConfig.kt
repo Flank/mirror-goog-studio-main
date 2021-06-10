@@ -25,7 +25,6 @@ import java.io.File
  * [ApkSigningConfig] extends this with options relating to just APKs
  *
  */
-@Incubating
 interface SigningConfig {
 
     /**
@@ -33,6 +32,8 @@ interface SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storeFile: File?
 
     /**
@@ -40,6 +41,8 @@ interface SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storePassword: String?
 
     /**
@@ -47,6 +50,8 @@ interface SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var keyAlias: String?
 
     /**
@@ -54,6 +59,8 @@ interface SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var keyPassword: String?
 
     /**
@@ -61,10 +68,13 @@ interface SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storeType: String?
 
     /**
      * Copies all properties from the given signing config.
      */
+    @Incubating
     fun initWith(that: SigningConfig)
 }
