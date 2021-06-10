@@ -74,11 +74,19 @@ class LocaleValue {
         }
 
         if (script.isNotEmpty()) {
-            script.toByteArray().copyInto(config.localeScript, 0, 0, 4)
+            if (script.length > config.localeScript.size) {
+                throw IllegalStateException(
+                    "Locale script '$script' exceeds ${config.localeScript.size} characters.")
+            }
+            script.toByteArray().copyInto(config.localeScript, 0, 0, script.length)
         }
 
         if (variant.isNotEmpty()) {
-            variant.toByteArray().copyInto(config.localeVariant, 0, 0, 8)
+            if (variant.length > config.localeVariant.size) {
+                throw IllegalStateException(
+                    "Locale variant '$variant' exceeds ${config.localeVariant.size} characters.")
+            }
+            variant.toByteArray().copyInto(config.localeVariant, 0, 0, variant.length)
         }
     }
 
