@@ -346,7 +346,11 @@ open class LintCliClient : LintClient {
                 reporter.setBaselineAttributes(this, baselineVariantName)
                 reporter.write(stats, definiteIncidents)
                 System.err.println(getBaselineCreationMessage(baselineFile))
-                return ERRNO_CREATED_BASELINE
+                return if (flags.isContinueAfterBaselineCreated) {
+                    ERRNO_SUCCESS
+                } else {
+                    ERRNO_CREATED_BASELINE
+                }
             }
         } else if (baseline != null &&
             baseline.writeOnClose &&
@@ -651,7 +655,7 @@ open class LintCliClient : LintClient {
     private fun getBaselineCreationMessage(baselineFile: File): String {
         val summary = "Created baseline file $baselineFile"
 
-        if (continueAfterBaseLineCreated()) {
+        if (continueAfterBaselineCreated()) {
             return summary
         }
 
@@ -1730,19 +1734,17 @@ open class LintCliClient : LintClient {
         }
     }
 
+    /** Whether lint should continue running after a baseline has been created. */
+    private fun continueAfterBaselineCreated(): Boolean {
+        return System.getProperty("lint.baselines.continue") == VALUE_TRUE
+                || flags.isContinueAfterBaselineCreated
+    }
+
     companion object {
         // Environment variable, system property and internal system property used to tell lint to
         // override the configuration
         private const val LINT_OVERRIDE_CONFIGURATION_ENV_VAR = "LINT_OVERRIDE_CONFIGURATION"
         private const val LINT_CONFIGURATION_OVERRIDE_PROP = "lint.configuration.override"
-
-        /**
-         * Whether lint should continue running after a baseline has
-         * been created.
-         */
-        fun continueAfterBaseLineCreated(): Boolean {
-            return System.getProperty("lint.baselines.continue") == VALUE_TRUE
-        }
 
         protected fun getTargetName(baselineVariantName: String): String {
             if (isGradle) {

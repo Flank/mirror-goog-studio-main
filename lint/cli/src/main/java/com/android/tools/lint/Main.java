@@ -170,6 +170,8 @@ public class Main {
     private static final String ARG_BASELINE = "--baseline";
     private static final String ARG_REMOVE_FIXED = "--remove-fixed";
     private static final String ARG_UPDATE_BASELINE = "--update-baseline";
+    private static final String ARG_CONTINUE_AFTER_BASELINE_CREATED =
+            "--continue-after-baseline-created";
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
@@ -1337,6 +1339,8 @@ public class Main {
                             ARG_REMOVE_FIXED);
                 }
                 flags.setUpdateBaseline(true);
+            } else if (arg.equals(ARG_CONTINUE_AFTER_BASELINE_CREATED)) {
+                flags.setContinueAfterBaselineCreated(true);
             } else if (arg.equals(ARG_ALLOW_SUPPRESS)) {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
