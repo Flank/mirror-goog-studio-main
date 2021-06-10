@@ -438,7 +438,6 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
-    @get:Incubating
     val externalNativeBuild: ExternalNativeBuild
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
@@ -458,7 +457,6 @@ interface CommonExtension<
      *
      * @since 2.2.0
      */
-    @Incubating
     fun externalNativeBuild(action: ExternalNativeBuild.()->Unit)
 
     /**

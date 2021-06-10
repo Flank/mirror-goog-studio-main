@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-393e67ab78edb429fd790da87fef463af7edfcef2b293ae094bfc211564fdfc3
+5b82432ee2f670b9f0687d92e3f0bc757313709b0396f33795ddf1d933ca91d9
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -141,12 +141,14 @@ com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.funct
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
 com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (kotlin.jvm.functions.Function1<? super DefaultConfigT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeBuild, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getAndroidResources: com.android.build.api.dsl.AndroidResources ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
+com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.api.dsl.CommonExtension.getInstallation: com.android.build.api.dsl.Installation ()
 com.android.build.api.dsl.CommonExtension.getLint: com.android.build.api.dsl.Lint ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
@@ -170,6 +172,7 @@ com.android.build.api.dsl.DynamicFeatureDefaultConfig implements com.android.bui
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls

@@ -41,7 +41,6 @@ import org.gradle.api.Incubating
  * To learn more about including external native builds to your Android Studio projects, read
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  */
-@Incubating
 interface ExternalNativeBuild {
 
     /**
@@ -51,6 +50,7 @@ interface ExternalNativeBuild {
      * For more information about the properties you can configure in this block, see
      * [NdkBuild]
      */
+    @get:Incubating
     val ndkBuild: NdkBuild
 
     /**
@@ -59,6 +59,7 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [NdkBuild]
      */
+    @Incubating
     fun ndkBuild(action: NdkBuild.() -> Unit)
 
     /**
@@ -67,6 +68,7 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
+    @get:Incubating
     val cmake: Cmake
 
     /**
@@ -75,6 +77,7 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [Cmake]
      */
+    @Incubating
     fun cmake(action: Cmake.() -> Unit)
 
 }
