@@ -40,7 +40,7 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
                 element,
                 context.getNameLocation(element),
                 "When using ${
-                    if (intentFilter != null) "intent filters" else "navigation graphs"
+                if (intentFilter != null) "intent filters" else "navigation graphs"
                 }, please specify `android:exported` as well",
                 fix
             )

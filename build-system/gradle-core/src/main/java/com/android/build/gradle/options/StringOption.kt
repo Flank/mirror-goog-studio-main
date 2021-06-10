@@ -98,6 +98,9 @@ enum class StringOption(
     // Lint: Allow customization of the heap size of the process started to run lint
     LINT_HEAP_SIZE("android.experimental.lint.heapSize", ApiStage.Experimental),
 
+    // Lint: Allow override of the version
+    LINT_VERSION_OVERRIDE("android.experimental.lint.version", ApiStage.Experimental),
+
     /* ---------------
      * DEPRECATED APIs
      */

@@ -133,23 +133,18 @@ public class TestPlugin
     }
 
     /**
-     * Create typed sub interface and implementation for the extension objects. This has several
-     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
-     * it's written in Java, it will still compile once the deprecated extension are moved to
-     * Level.HIDDEN.
+     * Create typed sub implementation for the extension objects. This has several benefits : 1. do
+     * not pollute the user visible definitions with deprecated types. 2. because it's written in
+     * Java, it will still compile once the deprecated extension are moved to Level.HIDDEN.
      */
-    @SuppressWarnings("deprecation")
-    public interface TestAndroidComponentsExtensionCompat
-            extends AndroidComponentsExtension<
-                            com.android.build.api.dsl.TestExtension,
-                            TestVariantBuilder,
-                            TestVariant>,
-                    com.android.build.api.extension.TestAndroidComponentsExtension {}
-
     @SuppressWarnings("deprecation")
     public abstract static class TestAndroidComponentsExtensionImplCompat
             extends TestAndroidComponentsExtensionImpl
-            implements TestAndroidComponentsExtensionCompat {
+            implements AndroidComponentsExtension<
+                            com.android.build.api.dsl.TestExtension,
+                            TestVariantBuilder,
+                            TestVariant>,
+                    com.android.build.api.extension.TestAndroidComponentsExtension {
 
         public TestAndroidComponentsExtensionImplCompat(
                 @NonNull DslServices dslServices,
@@ -183,15 +178,29 @@ public class TestPlugin
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath));
 
-        return project.getExtensions()
-                .create(
-                        TestAndroidComponentsExtensionCompat.class,
-                        "androidComponents",
-                        TestAndroidComponentsExtensionImplCompat.class,
-                        dslServices,
-                        sdkComponents,
-                        variantApiOperationsRegistrar,
-                        getExtension());
+        // register the same extension under a different name with the deprecated extension type.
+        // this will allow plugins that use getByType() API to retrieve the old interface and keep
+        // binary compatibility. This will become obsolete once old extension packages are removed.
+        TestAndroidComponentsExtension extension =
+                project.getExtensions()
+                        .create(
+                                TestAndroidComponentsExtension.class,
+                                "androidComponents",
+                                TestAndroidComponentsExtensionImplCompat.class,
+                                dslServices,
+                                sdkComponents,
+                                variantApiOperationsRegistrar,
+                                getExtension());
+
+        // register under the new interface for kotlin, groovy will find both the old and new
+        // interfaces through the implementation class.
+        project.getExtensions()
+                .add(
+                        com.android.build.api.extension.TestAndroidComponentsExtension.class,
+                        "androidComponents_compat_by_type",
+                        (com.android.build.api.extension.TestAndroidComponentsExtension) extension);
+
+        return extension;
     }
 
     @NonNull

@@ -248,6 +248,5 @@ maven_repo(
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: decouple
         "//tools/base/third_party:junit_junit",
     ],
-    use_zip = False,
     visibility = ["__subpackages__"],
 )

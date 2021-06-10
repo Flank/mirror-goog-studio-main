@@ -65,7 +65,7 @@ public class PayloadInputStream extends InputStream {
         long available = boundaries.last - position + 1;
         available = Math.min(available, Integer.MAX_VALUE);
 
-        int toRead = Math.min(Math.toIntExact(available), b.length);
+        int toRead = Math.min(Math.toIntExact(available), len);
         ByteBuffer buffer = ByteBuffer.wrap(b, off, toRead);
         int read = channel.read(buffer, position);
         position += read;

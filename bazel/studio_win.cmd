@@ -2,132 +2,172 @@
 @rem Windows Android Studio Remote Bazel Execution Script.
 setlocal enabledelayedexpansion
 set PATH=c:\tools\msys64\usr\bin;%PATH%
-@rem Expected arguments:
-set OUTDIR=%1
-set DISTDIR=%2
-set BUILDNUMBER=%3
-@rem DETECT_FLAKES is an optional argument adding extra bazel arguments.
-set DETECT_FLAKES=%4
-
-@REM It is a post-submit build if the build number does not start with "P"
-IF "%BUILDNUMBER:~0,1%"=="P" (
-  SET /A IS_POST_SUBMIT=0
-) ELSE (
-  SET /A IS_POST_SUBMIT=1
-)
-
-@REM Run tests multiple times to aid flake detection.
-IF "%DETECT_FLAKES%"=="--detect_flakes" (
-  SET ATTEMPTS=--flaky_test_attempts=3
-  set NOCACHE=--nocache_test_results
-  set CONDITIONAL_FLAGS=!ATTEMPTS! !NOCACHE!
-) ELSE IF %IS_POST_SUBMIT% EQU 1 (
-  SET NOCACHE=--nocache_test_results
-  SET FLAKY_ATTEMPTS=--flaky_test_attempts=2
-  SET CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
-)
-
-set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate
 
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0
-CALL :NORMALIZE_PATH "%SCRIPTDIR%..\..\.."
-set BASEDIR=%RETVAL%
+call :normalize_path "%SCRIPTDIR%..\..\.." BASEDIR
 
-@rem Generate a UUID for use as the Bazel invocation ID
-FOR /F "tokens=*" %%F IN ('uuidgen') DO (
-  SET INVOCATIONID=%%F
+@rem Read commandline arguments with a loop
+set /a _pos_arg=1
+:read_args
+  if -%1-==-- goto end_read_args
+  @rem Extract flags in the loop
+  if %1==--detect_flakes (
+    set /a DETECT_FLAKES=1
+  ) else (
+    @rem Assign to variables with predefined name "_arg#"
+    set /a _pos_arg+=1
+    set _arg%_pos_arg%=%1
+  )
+  shift
+  goto read_args
+:end_read_args
+
+@rem Positional arguments:
+set OUTDIR=%_arg1%
+set DISTDIR=%_arg2%
+set BUILDNUMBER=%_arg3%
+
+if not defined DISTDIR (
+  set DISTDIR=%TEMP%
 )
 
-echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBER=%BUILDNUMBER%, SCRIPTDIR=%SCRIPTDIR%, BASEDIR=%BASEDIR%"
+if not defined BUILDNUMBER (
+  set BUILD_TYPE=LOCAL
+) else if "%BUILDNUMBER:~0,1%"=="P" (
+  @rem It is a presubmit build if the build number starts with "P"
+  set BUILD_TYPE=PRESUBMIT
+) else (
+  set BUILD_TYPE=POSTSUBMIT
+)
 
-set TARGETS=
-for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
+@echo "Called with: OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBER=%BUILDNUMBER%, SCRIPTDIR=%SCRIPTDIR%, BASEDIR=%BASEDIR%"
+@echo "Build type: %BUILD_TYPE%"
+
+:run_bazel_test
+setlocal
+  @rem Run tests multiple times to aid flake detection.
+  if "%DETECT_FLAKES%"=="1" (
+    set ATTEMPTS=--flaky_test_attempts=3
+    set NOCACHE=--nocache_test_results
+    set CONDITIONAL_FLAGS=!ATTEMPTS! !NOCACHE!
+  ) else if %BUILD_TYPE%==POSTSUBMIT (
+    set NOCACHE=--nocache_test_results
+    set FLAKY_ATTEMPTS=--flaky_test_attempts=2
+    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
+  )
+
+  set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate
+
+  @rem Generate a UUID for use as the Bazel invocation ID
+  for /f "tokens=*" %%f in ('uuidgen') do (
+    set INVOCATIONID=%%f
+  )
+  if exist %DISTDIR%\ (
+    echo "<meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
+  )
+
+  set TARGETS=
+  for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
+
+  @rem For presubmit builds, try download bazelrc to deflake builds
+  if %BUILD_TYPE%==PRESUBMIT (
+    call :download_flake_retry_rc auto-retry.bazelrc %DISTDIR%\flake-retry BAZELRC
+    if defined BAZELRC set BAZELRC_FLAGS=--bazelrc=!BAZELRC!
+  )
+
+  @echo studio_win.cmd time: %time%
+  @rem Run Bazel
+  call %SCRIPTDIR%bazel.cmd ^
+  --max_idle_secs=60 ^
+  %BAZELRC_FLAGS% ^
+  test ^
+  --keep_going ^
+  --config=dynamic ^
+  --build_tag_filters=-no_windows ^
+  --invocation_id=%INVOCATIONID% ^
+  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+  --test_tag_filters=%TESTTAGFILTERS% ^
+  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
+  %CONDITIONAL_FLAGS% ^
+  -- ^
+  //tools/base/profiler/native/trace_processor_daemon ^
+  %TARGETS%
+endlocal & set /a EXITCODE=%ERRORLEVEL%
 
 @echo studio_win.cmd time: %time%
-@rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd ^
- --max_idle_secs=60 ^
- test ^
- --keep_going ^
- --config=dynamic ^
- --build_tag_filters=-no_windows ^
- --invocation_id=%INVOCATIONID% ^
- --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
- --test_tag_filters=%TESTTAGFILTERS% ^
- --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
- %CONDITIONAL_FLAGS% ^
- -- ^
- //tools/base/profiler/native/trace_processor_daemon ^
- %TARGETS%
 
-SET EXITCODE=%errorlevel%
-@echo studio_win.cmd time: %time%
+if not exist %DISTDIR%\ goto endscript
 
-IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
-
-echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_test_results.html
 @echo studio_win.cmd time: %time%
 
 @rem copy skia parser artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skia\skiaparser.zip %DISTDIR%
-
 @rem copy trace processor daemon artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace_processor_daemon.exe %DISTDIR%
 
 @echo studio_win.cmd time: %time%
 
-IF %IS_POST_SUBMIT% EQU 1 (
-  SET PERFGATE_ARG=-perfzip %DISTDIR%\perfgate_data.zip
-) ELSE (
-  SET PERFGATE_ARG=
-)
-
-
-CALL %SCRIPTDIR%bazel.cmd ^
- --max_idle_secs=60 ^
- run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
- --config=dynamic ^
- -- ^
- -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
- -testlogs %DISTDIR%\logs\junit ^
- %PERFGATE_ARG%
-
-IF ERRORLEVEL 1 (
-  @echo Bazel logs-collector failed
-  IF %IS_POST_SUBMIT% EQU 1 (
-    SET EXITCODE=1
+:collect_logs
+setlocal
+  if %BUILD_TYPE%==POSTSUBMIT (
+    set PERFGATE_ARG=-perfzip %DISTDIR%\perfgate_data.zip
   )
-  GOTO ENDSCRIPT
+
+  call %SCRIPTDIR%bazel.cmd ^
+  --max_idle_secs=60 ^
+  run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
+  --config=dynamic ^
+  -- ^
+  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+  -testlogs %DISTDIR%\logs\junit ^
+  %PERFGATE_ARG%
+endlocal
+
+if errorlevel 1 (
+  @echo Bazel logs-collector failed
+  if %BUILD_TYPE%==POSTSUBMIT (
+    set /a EXITCODE=1
+  )
+  goto endscript
 )
 
 @echo studio_win.cmd time: %time%
 
-@rem Extra debugging for b/162585987
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
-
-:ENDSCRIPT
+:endscript
 @rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
 @echo studio_win.cmd time: %time%
-CALL %SCRIPTDIR%bazel.cmd shutdown
+call %SCRIPTDIR%bazel.cmd shutdown
 @echo studio_win.cmd time: %time%
 @rem We also must call the kill-processes.py python script and kill all processes still open
 @rem within the src directory.  This is due to the fact go/ab builds must be removable after
 @rem execution, and any open processes will prevent this removal on windows.
-CALL %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
+call %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
 @echo studio_win.cmd time: %time%
 
-SET /A BAZEL_EXITCODE_TEST_FAILURES=3
+set /a BAZEL_EXITCODE_TEST_FAILURES=3
 
-IF %IS_POST_SUBMIT% EQU 1 (
-  IF %EXITCODE% EQU %BAZEL_EXITCODE_TEST_FAILURES% (
-    EXIT /B 0
+if %BUILD_TYPE%==POSTSUBMIT (
+  if %EXITCODE% equ %BAZEL_EXITCODE_TEST_FAILURES% (
+    exit /b 0
   )
 )
-EXIT /B %EXITCODE%
+exit /b %EXITCODE%
 
-@rem HELPER FUNCTIONS
-:NORMALIZE_PATH
-  SET RETVAL=%~dpfn1
-  EXIT /B
+@rem Normalizes a path from Arg 1 and store the result into Arg 2.
+:normalize_path
+  set %2=%~dpfn1
+  exit /b
+
+@rem Downloads a file (Arg 1) from the known-flakes directory on GCS, store it to a directory (Arg 2)
+@rem and save the full path to a variable (Arg 3) if successful.
+:download_flake_retry_rc
+  setlocal
+  set GCS_PATH=gs://adt-byob/known-flakes/studio-win/%1
+  mkdir %2
+  call gsutil cp %GCS_PATH% %2\%1
+  if %ERRORLEVEL% neq 0 (
+    endlocal & exit /b
+  )
+  endlocal & set %3=%2\%1
+  exit /b

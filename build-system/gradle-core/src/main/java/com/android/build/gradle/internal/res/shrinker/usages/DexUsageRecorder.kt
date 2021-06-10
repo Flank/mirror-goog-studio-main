@@ -21,9 +21,11 @@ import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerModel
 import com.android.build.gradle.internal.res.shrinker.obfuscation.ClassAndMethod
 import com.android.build.gradle.internal.res.shrinker.usages.AppCompat.isAppCompatClass
 import com.android.builder.dexing.AnalysisCallback
+import com.android.builder.dexing.MethodVisitingStatus
 import com.android.builder.dexing.runResourceShrinkerAnalysis
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.ResourceType
+import com.android.tools.r8.references.MethodReference
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -49,17 +51,17 @@ class DexUsageRecorder(val root: Path) : ResourceUsageRecorder {
             .filter { it.toString().endsWith(DOT_DEX, ignoreCase = true) }
             .forEach { path ->
                 runResourceShrinkerAnalysis(
-                    Files.readAllBytes(path),
-                    path,
-                    DexFileAnalysisCallback(path, model)
+                        Files.readAllBytes(path),
+                        path,
+                        DexFileAnalysisCallback(path, model)
                 )
             }
     }
 }
 
 private class DexFileAnalysisCallback(
-    private val path: Path,
-    private val model: ResourceShrinkerModel
+        private val path: Path,
+        private val model: ResourceShrinkerModel
 ) : AnalysisCallback {
     companion object {
         const val ANDROID_RES = "android_res/"
@@ -69,8 +71,19 @@ private class DexFileAnalysisCallback(
         }
     }
 
-    override fun shouldProcess(internalName: String): Boolean =
-        !isResourceClass(internalName)
+    // R class methods should only be processed for reachable resource IDs. R class fields that are
+    // not referenced should not be considered since there is no usage in the program.
+    // If the fields have been inlined, the values at the callsite will be recorded when visited.
+    var isRClass: Boolean = false
+
+    // In cases where a value from a method is inlined into a constant, we should still mark the
+    // resource as used.
+    val visitingMethod = MethodVisitingStatus()
+
+    override fun shouldProcess(internalName: String): Boolean {
+        isRClass = isResourceClass(internalName)
+        return true
+    }
 
     /** Returns whether the given class file name points to an aapt-generated compiled R class. */
     fun isResourceClass(internalName: String): Boolean {
@@ -85,6 +98,10 @@ private class DexFileAnalysisCallback(
     }
 
     override fun referencedInt(value: Int) {
+        // Avoid marking R class fields as reachable.
+        if (shouldIgnoreField()) {
+            return
+        }
         val resource = model.resourceStore.getResource(value)
         if (ResourceUsageModel.markReachable(resource)) {
             model.debugReporter.debug {
@@ -94,8 +111,12 @@ private class DexFileAnalysisCallback(
     }
 
     override fun referencedStaticField(internalName: String, fieldName: String) {
+        // Avoid marking R class fields as reachable.
+        if (shouldIgnoreField()) {
+            return
+        }
         val realMethod = model.obfuscatedClasses.resolveOriginalMethod(
-            ClassAndMethod(internalName.toSourceClassName(), fieldName)
+                ClassAndMethod(internalName.toSourceClassName(), fieldName)
         )
 
         if (isValidResourceType(realMethod.className)) {
@@ -108,6 +129,10 @@ private class DexFileAnalysisCallback(
     }
 
     override fun referencedString(value: String) {
+        // Avoid marking R class fields as reachable.
+        if (shouldIgnoreField()) {
+                return
+        }
         // See if the string is at all eligible; ignore strings that aren't identifiers (has java
         // identifier chars and nothing but .:/), or are empty or too long.
         // We also allow "%", used for formatting strings.
@@ -124,10 +149,13 @@ private class DexFileAnalysisCallback(
     }
 
     override fun referencedMethod(
-        internalName: String,
-        methodName: String,
-        methodDescriptor: String
+            internalName: String,
+            methodName: String,
+            methodDescriptor: String
     ) {
+        if (isRClass && visitingMethod.isVisiting && visitingMethod.methodName == "<clinit>") {
+            return
+        }
         if (internalName == "android/content/res/Resources" &&
             methodName == "getIdentifier" &&
             methodDescriptor == "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I"
@@ -145,6 +173,24 @@ private class DexFileAnalysisCallback(
         if (internalName == "android/webkit/WebView" && methodName.startsWith("load")) {
             model.isFoundWebContent = true
         }
+    }
+
+    override fun startMethodVisit(methodReference: MethodReference) {
+        visitingMethod.isVisiting = true
+        visitingMethod.methodName = methodReference.methodName
+    }
+
+    override fun endMethodVisit(methodReference: MethodReference) {
+        visitingMethod.isVisiting = false
+        visitingMethod.methodName = null
+    }
+
+    private fun shouldIgnoreField(): Boolean {
+        val visitingFromStaticInitRClass = (isRClass
+                && visitingMethod.isVisiting
+                && (visitingMethod.methodName == "<clinit>"))
+        return visitingFromStaticInitRClass ||
+                isRClass && !visitingMethod.isVisiting
     }
 
     private fun isValidResourceType(className: String): Boolean =

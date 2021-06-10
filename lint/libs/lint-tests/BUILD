@@ -104,5 +104,5 @@ maven_pom(
     name = "pom",
     artifact = "lint-tests",
     group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:build_version",
+    source = "//tools/buildSrc/base:base_version",
 )

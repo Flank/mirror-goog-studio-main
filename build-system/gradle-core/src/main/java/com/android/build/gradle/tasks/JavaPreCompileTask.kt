@@ -18,14 +18,19 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.findKaptConfigurationsForVariant
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.ArtifactView
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -39,13 +44,11 @@ import org.gradle.api.tasks.TaskProvider
 @CacheableTask
 abstract class JavaPreCompileTask : NonIncrementalTask() {
 
-    private lateinit var projectAnnotationProcessorArtifacts: ArtifactCollection
-    private lateinit var externalAnnotationProcessorArtifacts: ArtifactCollection
+    private lateinit var annotationProcessorArtifacts: ArtifactCollection
 
     @get:Classpath
     val annotationProcessorArtifactFiles: FileCollection
-        get() = projectAnnotationProcessorArtifacts.artifactFiles +
-                        externalAnnotationProcessorArtifacts.artifactFiles
+        get() = annotationProcessorArtifacts.artifactFiles
 
     @get:Input
     abstract val annotationProcessorClassNames: ListProperty<String>
@@ -55,9 +58,7 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         val annotationProcessorArtifacts =
-                (projectAnnotationProcessorArtifacts.artifacts
-                        + projectAnnotationProcessorArtifacts.artifacts)
-                        .map { SerializableArtifact(it) }
+            annotationProcessorArtifacts.artifacts.map { SerializableArtifact(it) }
 
         workerExecutor.noIsolation().submit(JavaPreCompileWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -67,7 +68,7 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: ComponentCreationConfig) :
+    class CreationAction(creationConfig: ComponentCreationConfig, private val usingKapt: Boolean) :
         VariantTaskCreationAction<JavaPreCompileTask, ComponentCreationConfig>(creationConfig) {
 
         override val name: String
@@ -76,45 +77,60 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
         override val type: Class<JavaPreCompileTask>
             get() = JavaPreCompileTask::class.java
 
+        // Create the configuration early to avoid issues with composite builds (e.g., bug 183952598)
+        private val kaptClasspath: Configuration? = if (usingKapt) {
+            val project = creationConfig.services.projectInfo.getProject()
+            val kaptConfigurations = findKaptConfigurationsForVariant(project, this.creationConfig)
+            // This is a private detail, so we want to use a detached configuration, but it's not
+            // possible because of https://github.com/gradle/gradle/issues/6881.
+            project.configurations
+                .create("_agp_internal_${name}_kaptClasspath")
+                .setExtendsFrom(kaptConfigurations)
+                .apply {
+                    isVisible = false
+                    isCanBeResolved = true
+                    isCanBeConsumed = false
+                }
+        } else null
+
         override fun handleProvider(taskProvider: TaskProvider<JavaPreCompileTask>) {
             super.handleProvider(taskProvider)
 
             creationConfig
                 .artifacts
                 .setInitialProvider(taskProvider) { it.annotationProcessorListFile }
-                .withName("annotationProcessors.json")
+                .withName(ANNOTATION_PROCESSOR_LIST_FILE_NAME)
                 .on(InternalArtifactType.ANNOTATION_PROCESSOR_LIST)
         }
 
         override fun configure(task: JavaPreCompileTask) {
             super.configure(task)
 
-            // Optimization: For project jars, query for JAR instead of PROCESSED_JAR as project
-            // jars are currently considered already processed (unlike external jars).
-            task.projectAnnotationProcessorArtifacts = creationConfig.variantDependencies
+            // Query for JAR instead of PROCESSED_JAR as this task only cares about the original
+            // jars.
+            if (usingKapt) {
+                task.annotationProcessorArtifacts = kaptClasspath!!.incoming
+                    .artifactView { config: ArtifactView.ViewConfiguration ->
+                        config.attributes { it.attribute(ARTIFACT_TYPE, ArtifactType.JAR.type) }
+                    }
+                    .artifacts
+            } else {
+                task.annotationProcessorArtifacts = creationConfig.variantDependencies
                     .getArtifactCollection(
-                            ConsumedConfigType.ANNOTATION_PROCESSOR,
-                            ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.JAR
+                        ConsumedConfigType.ANNOTATION_PROCESSOR,
+                        ArtifactScope.ALL,
+                        ArtifactType.JAR
                     )
-            task.externalAnnotationProcessorArtifacts = creationConfig.variantDependencies
-                    .getArtifactCollection(
-                            ConsumedConfigType.ANNOTATION_PROCESSOR,
-                            ArtifactScope.EXTERNAL,
-                            AndroidArtifacts.ArtifactType.PROCESSED_JAR
-                    )
+            }
             task.annotationProcessorClassNames.setDisallowChanges(
-                creationConfig
-                    .variantDslInfo
-                    .javaCompileOptions
-                    .annotationProcessorOptions
-                    .classNames
+                creationConfig.variantDslInfo.javaCompileOptions.annotationProcessorOptions.classNames
             )
         }
     }
 }
 
 abstract class JavaPreCompileParameters : ProfileAwareWorkAction.Parameters() {
+
     abstract val annotationProcessorArtifacts: ListProperty<SerializableArtifact>
     abstract val annotationProcessorClassNames: ListProperty<String>
     abstract val annotationProcessorListFile: RegularFileProperty
@@ -133,3 +149,6 @@ abstract class JavaPreCompileWorkAction : ProfileAwareWorkAction<JavaPreCompileP
         )
     }
 }
+
+@VisibleForTesting
+const val ANNOTATION_PROCESSOR_LIST_FILE_NAME = "annotationProcessors.json"

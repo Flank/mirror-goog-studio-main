@@ -24,11 +24,10 @@ gradle_integration_test(
     name = "GradleVersionCheckTest",
     srcs = ["GradleVersionCheckTest.java"],
     data = TEST_DATA,
-    maven_repo_manifests = [
+    maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
-    maven_repos = [],
     tags = ["no_test_windows"],  # b/77288863
     deps = TEST_DEPS,
 )

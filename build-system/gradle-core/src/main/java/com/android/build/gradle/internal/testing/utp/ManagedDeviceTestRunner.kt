@@ -54,6 +54,7 @@ class ManagedDeviceTestRunner(
     fun runTests(
         managedDevice: UtpManagedDevice,
         outputDirectory: File,
+        coverageOutputDirectory: File,
         projectName: String,
         variantName: String,
         testData: StaticTestData,
@@ -99,6 +100,7 @@ class ManagedDeviceTestRunner(
                             utpOutputDir,
                             utpTmpDir,
                             retentionConfig,
+                            coverageOutputDirectory,
                             useOrchestrator,
                             resultListenerServerRunner.metadata).writeTo(writer)
                 }

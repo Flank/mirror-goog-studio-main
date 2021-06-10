@@ -80,6 +80,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "validateSigning", "", listOf("Debug")),
             TaskInfo(FROM_CACHE, "write", "AppMetadata", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "write", "SigningConfigVersions", listOf("Debug", "Release")),
+            TaskInfo(FROM_CACHE, "compile", "ArtProfile", listOf("Release")),
 
             /*
              * The following tasks are either not yet cacheable, or not intended to be cacheable
@@ -98,6 +99,7 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "merge", "Resources", listOf("Debug", "Release")),
             /* Bug 74595859 */
             TaskInfo(DID_WORK, "package", "", listOf("Debug", "Release")),
+            TaskInfo(DID_WORK, "merge", "ArtProfile", listOf("Release")),
             TaskInfo(DID_WORK, "sdk", "DependencyData", listOf("Release")),
 
             TaskInfo(UP_TO_DATE, "clean", ""),

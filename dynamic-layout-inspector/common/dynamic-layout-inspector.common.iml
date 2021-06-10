@@ -10,7 +10,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="studio-sdk" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
-    <orderEntry type="library" name="layoutinspector-skia-proto" level="project" />
+    <orderEntry type="library" name="layoutinspector-proto" level="project" />
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>

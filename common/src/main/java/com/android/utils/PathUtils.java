@@ -22,6 +22,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -83,7 +84,24 @@ public final class PathUtils {
          * see bug 131623810.
          */
         try {
-            Files.deleteIfExists(path);
+            try {
+                Files.deleteIfExists(path);
+            } catch (AccessDeniedException exception) {
+                /*
+                 * NOTE (http://issuetracker.google.com/173689862):
+                 *
+                 * On Windows filesystem, a file marked read-only can not be deleted
+                 * by the Files.deleteIfExists(...) call above. On Linux and Darwin,
+                 * the same file can be deleted.
+                 *
+                 * Set the file to writable to make it work the same on Windows as
+                 * the others.
+                 *
+                 * See referenced bug for user scenario that triggered the issue.
+                 */
+                path.toFile().setWritable(true);
+                Files.deleteIfExists(path);
+            }
         } catch (DirectoryNotEmptyException exception) {
             // Keep deleting the directory until it succeeds or hits a reasonable limit.
             int failedAttempts = 1; // Count failed attempts, including the initial failure above

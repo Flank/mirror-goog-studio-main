@@ -3,7 +3,7 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_import")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
-load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library")
+load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 def _impl(ctx):
@@ -39,12 +39,20 @@ _unpack_app_inspection_proto = rule(
 
 # rule that unpack and compile proto from a prebuilt artifact provided by androidx
 def app_inspection_proto(name, jar, proto_file_name, visibility = None):
-    unpack_name = "_unpack_proto_" + name
+    unpack_name = name + "-proto"
     _unpack_app_inspection_proto(
         name = unpack_name,
         proto_file_name = proto_file_name,
         jar = jar,
         out = proto_file_name,
+        visibility = visibility,
+    )
+    java_proto_library(
+        name = name + "-nojarjar",
+        srcs = [":" + unpack_name],
+        grpc_support = 1,
+        protoc_grpc_version = "1.21.1",
+        visibility = visibility,
     )
     android_java_proto_library(
         name = name,

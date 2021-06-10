@@ -35,6 +35,7 @@ import com.android.tools.profgen.ObfuscationMap
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -48,6 +49,7 @@ import java.lang.RuntimeException
  * Task that transforms a human readable art profile into a binary form version that can be shipped
  * inside an APK or a Bundle.
  */
+@CacheableTask
 abstract class CompileArtProfileTask: NonIncrementalTask() {
 
     @get: [InputFiles Optional PathSensitive(PathSensitivity.RELATIVE)]

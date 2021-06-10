@@ -17,7 +17,8 @@ syntax = "proto3";
 package layoutinspector.view.inspection;
 option java_package = "layoutinspector.view.inspection";
 option java_outer_classname = "LayoutInspectorViewProtocol";
-option optimize_for = LITE_RUNTIME;
+// TODO: actually use lite runtime
+// option optimize_for = LITE_RUNTIME;
 
 // ======= MESSAGES =======
 

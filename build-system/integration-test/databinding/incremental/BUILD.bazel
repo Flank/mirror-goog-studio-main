@@ -14,14 +14,14 @@ gradle_integration_test(
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
     ],
-    maven_repo_manifests = [
+    maven_repo_zips = [
+        "//tools/data-binding:data_binding_runtime",
+    ],
+    maven_repos = [
         "//tools/base/build-system:gradle_plugin_repo",
         "//tools/base/build-system/integration-test/databinding/incremental:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
-    ],
-    maven_repos = [
-        "//tools/data-binding:data_binding_runtime",
     ],
     shard_count = 2,
     deps = [
@@ -113,5 +113,4 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.4.1:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.4.1:jar",
     ],
-    use_zip = False,
 )

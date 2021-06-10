@@ -128,22 +128,16 @@ public class AppWithRuntimeDependencyTest {
         // Verify that app doesn't have JavaLibrary dependency.
         assertThat(deps.getJavaLibraries()).named("app java dependency count").isEmpty();
 
-        // Verify that app has runtime only dependencies on :library2, guava and the aar.
+        // Verify that app has runtime only dependencies on guava and the aar.
         List<String> runtimeOnlyClasses =
                 deps.getRuntimeOnlyClasses()
                         .stream()
                         .map(file -> PathUtils.toSystemIndependentPath(file.toPath()))
                         .collect(Collectors.toList());
 
-        assertThat(runtimeOnlyClasses).hasSize(3);
-        String expectedOutputJar =
-                PathUtils.toSystemIndependentPath(
-                        project.getSubproject(":library2")
-                                .file("build/intermediates/full_jar/debug/full.jar")
-                                .toPath());
+        assertThat(runtimeOnlyClasses).hasSize(2);
         // Verify the order of the artifacts too.
-        assertThat(runtimeOnlyClasses.get(0)).isEqualTo(expectedOutputJar);
-        assertThat(runtimeOnlyClasses.get(1)).endsWith("/guava-19.0.jar");
-        assertThat(runtimeOnlyClasses.get(2)).endsWith("/aar-1/jars/classes.jar");
+        assertThat(runtimeOnlyClasses.get(0)).endsWith("/guava-19.0.jar");
+        assertThat(runtimeOnlyClasses.get(1)).endsWith("/aar-1/jars/classes.jar");
     }
 }

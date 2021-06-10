@@ -51,7 +51,7 @@ private fun getSignature(method: Method): String {
 }
 
 fun getApiElements(klass: Class<*>, dslInterfaces: List<Class<*>>): List<String> {
-    if (!Modifier.isPublic(klass.modifiers) || ApiTester.isKotlinMedata(klass)) {
+    if (!Modifier.isPublic(klass.modifiers)) {
         return emptyList()
     }
 

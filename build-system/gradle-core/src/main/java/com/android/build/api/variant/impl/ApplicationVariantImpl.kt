@@ -21,6 +21,7 @@ import com.android.build.api.variant.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
+import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
@@ -140,7 +141,7 @@ open class ApplicationVariantImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
-    override var androidTest: AndroidTest? = null
+    override var androidTest: com.android.build.api.component.AndroidTest? = null
 
     override var testFixtures: TestFixtures? = null
 

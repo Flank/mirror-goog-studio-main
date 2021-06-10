@@ -54,7 +54,7 @@ maven_pom(
     name = "manifest-merger.pom",
     artifact = "manifest-merger",
     group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(
@@ -208,7 +208,6 @@ maven_repo(
     name = "gradle_plugin_no_databinding_repo",
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
     include_sources = True,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -222,7 +221,6 @@ maven_repo(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )
 
@@ -292,7 +290,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core-common/1.3.6:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.3.6:jar",
     ],
-    use_zip = False,
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
 
@@ -301,6 +298,5 @@ maven_repo(
     name = "studio_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
-    use_zip = False,
     visibility = ["//visibility:public"],
 )

@@ -105,7 +105,7 @@ open class  LibraryVariantImpl @Inject constructor(
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
     }
 
-    override var androidTest: AndroidTest? = null
+    override var androidTest: com.android.build.api.component.AndroidTest? = null
 
     override var testFixtures: TestFixtures? = null
 

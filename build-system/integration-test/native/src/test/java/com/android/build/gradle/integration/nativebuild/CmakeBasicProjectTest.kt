@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -46,15 +45,19 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
+import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
+import com.android.utils.cxx.streamCompileCommands
+import com.android.utils.cxx.streamCompileCommandsV2
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Before
@@ -180,6 +183,31 @@ class CmakeBasicProjectTest(
             .contains("-v")
     }
 
+    // See b/159434435
+    @Test
+    fun `bug 159434435 -C flag passed to CMake via arguments`() {
+        val properties = project.buildFile.resolveSibling("Properties.cmake")
+        properties.writeText("")
+        val path = properties.absolutePath.replace("\\", "/")
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            android.defaultConfig.externalNativeBuild.cmake.arguments.addAll("-C$path")
+            """.trimIndent()
+        )
+
+        // Skip extra validations on 3.10.2 since CMake server doesn't use
+        // CreateProcess to invoke CMake.
+        if (cmakeVersionInDsl == "3.10.2") return
+
+        // For the others, validate that the cmake.exe process had our flag
+        enableCxxStructuredLogging(project)
+        project.execute("generateJsonModelDebug")
+        println(project.readStructuredLogs(::decodeExecuteProcess))
+        val process = project.readStructuredLogs(::decodeExecuteProcess).first()
+        assertThat(process.argsList).contains("-C$path")
+    }
+
     // See b/134086362
     @Test
     fun `check target rename through transitive CMakeLists add_subdirectory`() {
@@ -240,6 +268,32 @@ class CmakeBasicProjectTest(
         project.projectDir.resolve(".cxx").deleteRecursively()
         assertThat(abi.soFolder.resolve("libfoo.so")).isFile()
         project.execute("assembleDebug")
+    }
+
+
+    @Test
+    fun `bug 187134648 OBJECT-library`() {
+        // https://issuetracker.google.com/158317988
+        // runtimeFiles doesn't work pre-3.7 because there's no CMake server.
+        if (cmakeVersionInDsl == "3.6.0") return
+        if (cmakeVersionInDsl == "3.10.2") return
+        project.buildFile.resolveSibling("object_src1.cpp").writeText("void foo() {}")
+        project.buildFile.resolveSibling("object_src2.cpp").writeText("void bar() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+
+            add_library(object_dependency OBJECT)
+            target_sources(object_dependency PRIVATE object_src1.cpp object_src2.cpp)
+
+            add_library(native_lib SHARED)
+            target_link_libraries(native_lib PRIVATE object_dependency)
+            """.trimIndent())
+
+        project.execute("generateJsonModelDebug")
+
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
     }
 
     @Test
@@ -634,6 +688,33 @@ apply plugin: 'com.android.application'
         assertThat(stateModificationTime).isNotEqualTo(0)
         assertThat(generationRecord).exists()
         assertThat(generationRecord.lastModified()).isGreaterThan(stateModificationTime)
+    }
+
+    // https://issuetracker.google.com/187448826
+    @Test
+    fun `bug 187448826 precompiled header works`() {
+        // Precompiled header support was added in CMake 3.16
+        if (cmakeVersionInDsl == "3.6.0") return // Unknown CMake command "target_precompile_headers".
+        if (cmakeVersionInDsl == "3.10.2") return // Unknown CMake command "target_precompile_headers".
+        project.buildFile.resolveSibling("stdheader.h").writeText("")
+        project.buildFile.resolveSibling("src1.cpp").writeText("void foo() {}")
+        val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
+        assertThat(cmakeLists).isFile()
+        cmakeLists.writeText("""
+            cmake_minimum_required(VERSION 3.4.1)
+            add_library(foo SHARED src1.cpp)
+            find_library(log-lib log)
+            target_precompile_headers(foo PUBLIC stdheader.h)
+            target_link_libraries(foo ${'$'}{log-lib})
+            """.trimIndent())
+        project.execute("assembleDebug")
+
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.ARMEABI_V7A }
+        val outputFiles = mutableListOf<String>()
+        streamCompileCommandsV2(abi.compileCommandsJsonBinFile) {
+            outputFiles.add(outputFile.name)
+        }
+        assertThat(outputFiles).contains("cmake_pch.hxx.pch")
     }
 
     @Test

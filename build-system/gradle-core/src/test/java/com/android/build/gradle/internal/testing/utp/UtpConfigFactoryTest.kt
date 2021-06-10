@@ -155,6 +155,7 @@ class UtpConfigFactoryTest {
     }
 
     private fun createForManagedDevice(
+            testData: StaticTestData = this.testData,
             useOrchestrator: Boolean = false
     ): RunnerConfigProto.RunnerConfig {
         val managedDevice = UtpManagedDevice(
@@ -177,6 +178,7 @@ class UtpConfigFactoryTest {
                 mockOutputDir,
                 mockTmpDir,
                 mockRetentionConfig,
+                mockCoverageOutputDir,
                 useOrchestrator,
                 testResultListenerServerMetadata
         )
@@ -345,6 +347,28 @@ class UtpConfigFactoryTest {
                 multiple_coverage_files_in_directory: "/data/data/com.example.application/coverage_data/"
                 run_as_package_name: "com.example.application"
                 output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+            """
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceWithTestCoverage() {
+        val runnerConfigProto = createForManagedDevice(
+            testData = testData.copy(isTestCoverageEnabled = true)
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            deviceId = ":app:deviceNameDebugAndroidTest",
+            useGradleManagedDeviceProvider = true,
+            instrumentationArgs = mapOf(
+                "coverage" to "true",
+                "coverageFile" to "/data/data/com.example.application/coverage.ec",
+            ),
+            testCoverageConfig = """
+                single_coverage_file: "/data/data/com.example.application/coverage.ec"
+                run_as_package_name: "com.example.application"
+                output_directory_on_host: "mockCoverageOutputDir/deviceName/"
             """
         )
     }

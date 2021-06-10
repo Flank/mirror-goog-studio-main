@@ -47,6 +47,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat;
 import com.android.build.gradle.internal.res.shrinker.ResourceShrinker;
 import com.android.builder.dexing.AnalysisCallback;
+import com.android.builder.dexing.MethodVisitingStatus;
 import com.android.builder.dexing.R8ResourceShrinker;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
@@ -57,6 +58,7 @@ import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.tools.r8.references.MethodReference;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -97,6 +99,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -1449,24 +1452,40 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             assert name.endsWith(DOT_DEX);
             AnalysisCallback callback =
                     new AnalysisCallback() {
+
+                        Boolean isRClass = null;
+                        final MethodVisitingStatus visitingMethod = new MethodVisitingStatus();
+
                         @Override
                         public boolean shouldProcess(@NonNull String internalName) {
-                            return !isResourceClass(internalName + DOT_CLASS);
+                            isRClass = isResourceClass(internalName);
+                            return true;
                         }
 
                         @Override
                         public void referencedInt(int value) {
+                            if (shouldIgnoreField()) {
+                                return;
+                            }
                             ResourceUsageAnalyzer.this.referencedInt("dex", value, file, name);
                         }
 
                         @Override
                         public void referencedString(@NonNull String value) {
+                            // Avoid marking R class fields as reachable.
+                            if (shouldIgnoreField()) {
+                                return;
+                            }
                             ResourceUsageAnalyzer.this.referencedString(value);
                         }
 
                         @Override
                         public void referencedStaticField(
                                 @NonNull String internalName, @NonNull String fieldName) {
+                            // Avoid marking R class fields as reachable.
+                            if (shouldIgnoreField()) {
+                                return;
+                            }
                             Resource resource = getResourceFromCode(internalName, fieldName);
                             if (resource != null) {
                                 ResourceUsageModel.markReachable(resource);
@@ -1478,11 +1497,37 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
                                 @NonNull String internalName,
                                 @NonNull String methodName,
                                 @NonNull String methodDescriptor) {
+                            if (isRClass
+                                    && visitingMethod.isVisiting()
+                                    && visitingMethod.getMethodName().equals("<clinit>")) {
+                                return;
+                            }
                             ResourceUsageAnalyzer.this.referencedMethodInvocation(
                                     internalName,
                                     methodName,
                                     methodDescriptor,
                                     internalName + DOT_CLASS);
+                        }
+
+                        @Override
+                        public void startMethodVisit(@NotNull MethodReference methodReference) {
+                            visitingMethod.setVisiting(true);
+                            visitingMethod.setMethodName(methodReference.getMethodName());
+                        }
+
+                        @Override
+                        public void endMethodVisit(@NotNull MethodReference methodReference) {
+                            visitingMethod.setVisiting(false);
+                            visitingMethod.setMethodName(null);
+                        }
+
+                        private boolean shouldIgnoreField() {
+                            boolean visitingFromStaticInitRClass =
+                                    isRClass
+                                            && visitingMethod.isVisiting()
+                                            && visitingMethod.getMethodName().equals("<clinit>");
+                            return visitingFromStaticInitRClass
+                                    || isRClass && !visitingMethod.isVisiting();
                         }
                     };
             R8ResourceShrinker.runResourceShrinkerAnalysis(bytes, file, callback);

@@ -43,6 +43,7 @@ import com.android.resources.ResourceType.ARRAY
 import com.android.resources.ResourceType.DRAWABLE
 import com.android.resources.ResourceType.ID
 import com.android.resources.ResourceType.MIPMAP
+import com.android.resources.ResourceType.PLURALS
 import com.android.resources.ResourceType.PUBLIC
 import com.android.resources.ResourceType.STRING
 import com.android.resources.ResourceType.STYLE
@@ -399,7 +400,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val hasDefault = items.filter { isDefaultFolder(it.configuration, null) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)
-        } else if (type == STRING &&
+        } else if ((type == STRING || type == PLURALS) &&
             !folderName.contains('-') &&
             element != null &&
             context is XmlContext
@@ -465,7 +466,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                     set
                 }
                 names.add(name)
-            } else if (element != null && type == STRING && context is XmlContext) {
+            } else if (element != null && (type == STRING || type == PLURALS) && context is XmlContext) {
                 // Second pass: that means we're reporting already determined
                 // missing translations
                 val missingFrom = missingMap?.get(name)
@@ -474,7 +475,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 }
             }
 
-            if (type == STRING && element != null && context is XmlContext) {
+            if ((type == STRING || type == PLURALS) && element != null && context is XmlContext) {
                 if (defaultLocale != null) {
                     val language = getLanguageTagFromQualifiers(defaultLocale)
                     if (language != null) {
@@ -987,7 +988,7 @@ fun ResourceRepository.getStringLocales(): SortedSet<LocaleQualifier> {
         }
 
         override fun shouldVisitResourceType(resourceType: ResourceType): Boolean {
-            return resourceType == STRING
+            return resourceType == STRING || resourceType == PLURALS
         }
     }
 

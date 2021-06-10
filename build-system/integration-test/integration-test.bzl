@@ -11,9 +11,9 @@ load("//tools/base/bazel/validations:timeout.bzl", "APPROVED_ETERNAL_TESTS")
 #     deps = test classes output
 #     data = test data: SDK parts and test projects.
 #     maven_repos = Absolute targets for maven repos containing the plugin(s) under test.
-#                   The targets supplied here must produce zip files (use_zip = True or
-#                   omitted for maven_repo targets).
-#     maven_repo_manifests = Absolute targets for maven_repo targets that set use_zip = False.
+#                   The targets supplied here must be in the manifest format (use_zip =
+#                   False or omitted for maven_repo targets).
+#     maven_repo_zips = Absolute targets for maven_repo targets that set use_zip = True.
 #     shard_count = 8)
 def gradle_integration_test(
         name,
@@ -21,7 +21,7 @@ def gradle_integration_test(
         deps,
         data,
         maven_repos = [],
-        maven_repo_manifests = [],
+        maven_repo_zips = [],
         resources = [],
         runtime_deps = [],
         tags = [],
@@ -38,26 +38,18 @@ def gradle_integration_test(
         lint_is_test_sources = True,
     )
 
-    # Stringy conversion of repo to its target and file name
-    # //tools/base/build-system/integration-test/application:gradle_plugin
-    # to
-    # //tools/base/build-system/integration-test/application:gradle_plugin_repo.zip
-    # tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,
-    if not all([maven_repo.startswith("//") for maven_repo in maven_repos]):
+    if not all([maven_repo.startswith("//") for maven_repo in maven_repos + maven_repo_zips]):
         fail("All maven repos should be absolute targets.")
 
     # Generate the file names for all maven_repos. These will be passed to the
     # test suite in a Java property.
-    # TODO (b/148081564) maven_repos should become the default for manifests and
-    # zip file targets should go in maven_repo_zips once the migration to
-    # manifests is complete.
-    zip_file_targets = [maven_repo + ".zip" for maven_repo in maven_repos]
-    manifest_file_targets = [manifest + ".manifest" for manifest in maven_repo_manifests]
-    repo_file_names = ",".join([target[2:].replace(":", "/") for target in zip_file_targets + manifest_file_targets])
+    manifest_file_targets = [manifest + ".manifest" for manifest in maven_repos]
+    zip_file_targets = [maven_repo + ".zip" for maven_repo in maven_repo_zips]
+    repo_file_names = ",".join([target[2:].replace(":", "/") for target in manifest_file_targets + zip_file_targets])
 
     # Depend on the manifest targets in addition to the manifest file targets so
     # that runfiles are included.
-    maven_repo_dependencies = zip_file_targets + manifest_file_targets + maven_repo_manifests
+    maven_repo_dependencies = maven_repos + manifest_file_targets + zip_file_targets
 
     coverage_java_test(
         name = name,

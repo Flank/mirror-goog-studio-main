@@ -8,6 +8,7 @@ com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.A
 com.android.build.gradle.AbstractAppExtension.addVariant: void (com.android.build.gradle.api.BaseVariant)
 com.android.build.gradle.AbstractAppExtension.getApplicationVariants: org.gradle.api.DomainObjectSet<com.android.build.gradle.api.ApplicationVariant> ()
 com.android.build.gradle.AndroidConfig
+com.android.build.gradle.AndroidConfig$DefaultImpls
 com.android.build.gradle.AndroidConfig.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
 com.android.build.gradle.AndroidConfig.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
 com.android.build.gradle.AndroidConfig.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
@@ -331,6 +332,7 @@ com.android.build.gradle.ReportingPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ReportingPluginKt
 com.android.build.gradle.ReportingPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.TestAndroidConfig implements com.android.build.gradle.AndroidConfig
+com.android.build.gradle.TestAndroidConfig$DefaultImpls
 com.android.build.gradle.TestAndroidConfig.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestAndroidConfig.getTargetVariant: java.lang.String ()
 com.android.build.gradle.TestExtension extends com.android.build.gradle.BaseExtension implements com.android.build.gradle.TestAndroidConfig, com.android.build.gradle.internal.dsl.InternalTestExtension
@@ -487,6 +489,7 @@ com.android.build.gradle.api.AndroidSourceFile.getName: java.lang.String ()
 com.android.build.gradle.api.AndroidSourceFile.getSrcFile: java.io.File ()
 com.android.build.gradle.api.AndroidSourceFile.srcFile: com.android.build.gradle.api.AndroidSourceFile (java.lang.Object)
 com.android.build.gradle.api.AndroidSourceSet implements com.android.build.api.dsl.AndroidSourceSet
+com.android.build.gradle.api.AndroidSourceSet$DefaultImpls
 com.android.build.gradle.api.AndroidSourceSet.aidl: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.assets: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.getAidl: com.android.build.gradle.api.AndroidSourceDirectorySet ()
@@ -653,6 +656,7 @@ com.android.build.gradle.api.VersionedVariant
 com.android.build.gradle.api.VersionedVariant.getVersionCode: int ()
 com.android.build.gradle.api.VersionedVariant.getVersionName: java.lang.String ()
 com.android.build.gradle.api.ViewBindingOptions
+com.android.build.gradle.api.ViewBindingOptions$DefaultImpls
 com.android.build.gradle.api.ViewBindingOptions.isEnabled: boolean ()
 com.android.build.gradle.api.ViewBindingOptions.setEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions implements com.android.build.api.dsl.AaptOptions, com.android.build.api.dsl.AndroidResources
@@ -917,8 +921,10 @@ com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdk: void (java.lang.Inte
 com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdkPreview: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdkVersion: void (java.lang.String)
+com.android.build.gradle.internal.dsl.BaseFlavor.setProguardFiles: java.lang.Object (java.lang.Iterable)
 com.android.build.gradle.internal.dsl.BaseFlavor.setProguardFiles: void (java.lang.Iterable<?>)
 com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
+com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.gradle.internal.dsl.InternalSigningConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.setTargetSdk: void (java.lang.Integer)
 com.android.build.gradle.internal.dsl.BaseFlavor.setTargetSdkPreview: void (java.lang.String)
@@ -979,6 +985,7 @@ com.android.build.gradle.internal.dsl.BuildType.getNdk: com.android.build.api.ds
 com.android.build.gradle.internal.dsl.BuildType.getNdkConfig: com.android.build.gradle.internal.dsl.CoreNdkOptions ()
 com.android.build.gradle.internal.dsl.BuildType.getNdkConfig: com.android.build.gradle.internal.dsl.NdkOptions ()
 com.android.build.gradle.internal.dsl.BuildType.getPostProcessingConfiguration: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration ()
+com.android.build.gradle.internal.dsl.BuildType.getPostprocessing: com.android.build.api.dsl.PostProcessing ()
 com.android.build.gradle.internal.dsl.BuildType.getPostprocessing: com.android.build.gradle.internal.dsl.PostProcessingBlock ()
 com.android.build.gradle.internal.dsl.BuildType.getProguardFiles: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BuildType.getProguardFiles: java.util.List<java.io.File> ()
@@ -1012,6 +1019,7 @@ com.android.build.gradle.internal.dsl.BuildType.isZipAlignEnabled: boolean ()
 com.android.build.gradle.internal.dsl.BuildType.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.ndk: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Ndk, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.ndk: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.NdkOptions>)
+com.android.build.gradle.internal.dsl.BuildType.postprocessing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PostProcessing, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.postprocessing: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.PostProcessingBlock>)
 com.android.build.gradle.internal.dsl.BuildType.proguardFile: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.proguardFile: java.lang.Object (java.lang.Object)
@@ -1031,6 +1039,7 @@ com.android.build.gradle.internal.dsl.BuildType.setMatchingFallbacks: void (java
 com.android.build.gradle.internal.dsl.BuildType.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.BuildType.setMinifyEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Iterable<?>)
+com.android.build.gradle.internal.dsl.BuildType.setProguardFiles: java.lang.Object (java.lang.Iterable)
 com.android.build.gradle.internal.dsl.BuildType.setProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.gradle.internal.dsl.BuildType.setPseudoLocalesEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setRenderscriptDebuggable: void (boolean)
@@ -1038,6 +1047,7 @@ com.android.build.gradle.internal.dsl.BuildType.setRenderscriptOptimLevel: void 
 com.android.build.gradle.internal.dsl.BuildType.setShrinkResources: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: com.android.builder.model.BuildType (com.android.builder.model.SigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
+com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.gradle.internal.dsl.InternalSigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.setTestCoverageEnabled: void (boolean)
@@ -1381,6 +1391,7 @@ com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.an
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryPublishing>)
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
+com.android.build.gradle.internal.dsl.InternalSigningConfig implements com.android.build.api.dsl.SigningConfig, com.android.build.api.dsl.ApkSigningConfig, org.gradle.api.Named, com.android.builder.model.SigningConfig
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalTestedExtension implements com.android.build.api.dsl.TestedExtension
 com.android.build.gradle.internal.dsl.InternalTestedExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
@@ -1510,13 +1521,14 @@ com.android.build.gradle.internal.dsl.PackagingOptions.setDoNotStrip: void (java
 com.android.build.gradle.internal.dsl.PackagingOptions.setExcludes: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
-com.android.build.gradle.internal.dsl.PostProcessingBlock implements com.android.build.gradle.internal.ProguardFilesProvider
+com.android.build.gradle.internal.dsl.PostProcessingBlock implements com.android.build.gradle.internal.ProguardFilesProvider, com.android.build.api.dsl.PostProcessing
 com.android.build.gradle.internal.dsl.PostProcessingBlock.<init>: com.android.build.gradle.internal.dsl.PostProcessingBlock (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PostProcessingBlock.getCodeShrinker: java.lang.String ()
 com.android.build.gradle.internal.dsl.PostProcessingBlock.getCodeShrinkerEnum: com.android.builder.model.CodeShrinker ()
 com.android.build.gradle.internal.dsl.PostProcessingBlock.getProguardFiles: java.util.Collection<java.io.File> (com.android.build.gradle.internal.ProguardFileType)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.initWith: void (com.android.build.api.dsl.PostProcessing)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.initWith: void (com.android.build.gradle.internal.dsl.PostProcessingBlock)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.isObfuscate: boolean ()
 com.android.build.gradle.internal.dsl.PostProcessingBlock.isOptimizeCode: boolean ()
@@ -1525,13 +1537,13 @@ com.android.build.gradle.internal.dsl.PostProcessingBlock.isRemoveUnusedResource
 com.android.build.gradle.internal.dsl.PostProcessingBlock.proguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.proguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setCodeShrinker: void (java.lang.String)
-com.android.build.gradle.internal.dsl.PostProcessingBlock.setConsumerProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.setConsumerProguardFiles: void (java.util.List<?>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setObfuscate: void (boolean)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setOptimizeCode: void (boolean)
-com.android.build.gradle.internal.dsl.PostProcessingBlock.setProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.setProguardFiles: void (java.util.List<?>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setRemoveUnusedCode: void (boolean)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.setRemoveUnusedResources: void (boolean)
-com.android.build.gradle.internal.dsl.PostProcessingBlock.setTestProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.setTestProguardFiles: void (java.util.List<?>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.testProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PrefabModuleFactory implements org.gradle.api.NamedDomainObjectFactory
@@ -1570,9 +1582,11 @@ com.android.build.gradle.internal.dsl.ShaderOptions.getGlslcArgs: java.util.List
 com.android.build.gradle.internal.dsl.ShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcArgs: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcScopedArgs: void (java.lang.String, java.lang.String[])
-com.android.build.gradle.internal.dsl.SigningConfig extends com.android.builder.signing.DefaultSigningConfig implements java.io.Serializable, org.gradle.api.Named, com.android.build.api.dsl.ApkSigningConfig
+com.android.build.gradle.internal.dsl.SigningConfig extends com.android.builder.signing.DefaultSigningConfig implements java.io.Serializable, org.gradle.api.Named, com.android.build.api.dsl.ApkSigningConfig, com.android.build.gradle.internal.dsl.InternalSigningConfig
 com.android.build.gradle.internal.dsl.SigningConfig.<init>: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
+com.android.build.gradle.internal.dsl.SigningConfig.initWith: com.android.build.gradle.internal.dsl.SigningConfig (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.SigningConfig.initWith: com.android.build.gradle.internal.dsl.SigningConfig (com.android.builder.signing.DefaultSigningConfig)
+com.android.build.gradle.internal.dsl.SigningConfig.initWith: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.SigningConfig.keyAlias: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.keyPassword: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.storeFile: void (java.io.File)

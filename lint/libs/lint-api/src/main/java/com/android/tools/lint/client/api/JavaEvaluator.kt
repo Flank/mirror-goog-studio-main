@@ -119,8 +119,8 @@ class JavaEvaluator {
         if (member == null) {
             return false
         }
-        val containingClass = member.containingClass
-        return containingClass != null && className == containingClass.qualifiedName
+        val containingClass = member.containingClass?.qualifiedName
+        return className == containingClass
     }
 
     open fun getParameterCount(method: PsiMethod): Int {

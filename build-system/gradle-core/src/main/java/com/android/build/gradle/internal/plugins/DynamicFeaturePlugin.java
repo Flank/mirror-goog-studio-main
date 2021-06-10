@@ -149,23 +149,18 @@ public class DynamicFeaturePlugin
     }
 
     /**
-     * Create typed sub interface and implementation for the extension objects. This has several
-     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
-     * it's written in Java, it will still compile once the deprecated extension are moved to
-     * Level.HIDDEN.
+     * Create typed sub implementation for the extension objects. This has several benefits : 1. do
+     * not pollute the user visible definitions with deprecated types. 2. because it's written in
+     * Java, it will still compile once the deprecated extension are moved to Level.HIDDEN.
      */
-    @SuppressWarnings("deprecation")
-    public interface DynamicFeatureAndroidComponentsExtensionCompat
-            extends AndroidComponentsExtension<
-                            com.android.build.api.dsl.DynamicFeatureExtension,
-                            DynamicFeatureVariantBuilder,
-                            DynamicFeatureVariant>,
-                    com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension {}
-
     @SuppressWarnings("deprecation")
     public abstract static class DynamicFeatureAndroidComponentsExtensionImplCompat
             extends DynamicFeatureAndroidComponentsExtensionImpl
-            implements DynamicFeatureAndroidComponentsExtensionCompat {
+            implements AndroidComponentsExtension<
+                            com.android.build.api.dsl.DynamicFeatureExtension,
+                            DynamicFeatureVariantBuilder,
+                            DynamicFeatureVariant>,
+                    com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension {
 
         public DynamicFeatureAndroidComponentsExtensionImplCompat(
                 @NotNull DslServices dslServices,
@@ -200,15 +195,31 @@ public class DynamicFeaturePlugin
                         project.provider(getExtension()::getNdkVersion),
                         project.provider(getExtension()::getNdkPath));
 
-        return project.getExtensions()
-                .create(
-                        DynamicFeatureAndroidComponentsExtensionCompat.class,
-                        "androidComponents",
-                        DynamicFeatureAndroidComponentsExtensionImplCompat.class,
-                        dslServices,
-                        sdkComponents,
-                        variantApiOperationsRegistrar,
-                        getExtension());
+        // register under the new interface for kotlin, groovy will find both the old and new
+        // interfaces through the implementation class.
+        DynamicFeatureAndroidComponentsExtension extension =
+                project.getExtensions()
+                        .create(
+                                DynamicFeatureAndroidComponentsExtension.class,
+                                "androidComponents",
+                                DynamicFeatureAndroidComponentsExtensionImplCompat.class,
+                                dslServices,
+                                sdkComponents,
+                                variantApiOperationsRegistrar,
+                                getExtension());
+
+        // register the same extension under a different name with the deprecated extension type.
+        // this will allow plugins that use getByType() API to retrieve the old interface and keep
+        // binary compatibility. This will become obsolete once old extension packages are removed.
+        project.getExtensions()
+                .add(
+                        com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension
+                                .class,
+                        "androidComponents_compat_by_type",
+                        (com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension)
+                                extension);
+
+        return extension;
     }
 
     @NonNull

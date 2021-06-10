@@ -17,7 +17,8 @@
 package com.android.ide.common.process;
 
 import com.android.annotations.NonNull;
-
+import com.android.annotations.Nullable;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -49,4 +50,8 @@ public interface ProcessInfo {
     /** Description of this process. */
     @NonNull
     String getDescription();
+
+    /** The working directory to set in the process, if any */
+    @Nullable
+    File getWorkingDirectory();
 }

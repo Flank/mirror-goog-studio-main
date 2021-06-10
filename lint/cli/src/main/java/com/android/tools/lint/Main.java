@@ -87,6 +87,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import kotlin.io.FilesKt;
+import kotlin.text.StringsKt;
 import org.jetbrains.kotlin.config.ApiVersion;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -171,6 +172,7 @@ public class Main {
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
     private static final String ARG_ANALYZE_ONLY = "--analyze-only";
     private static final String ARG_REPORT_ONLY = "--report-only";
+    private static final String ARG_CACHE_DIR = "--cache-dir";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -1286,6 +1288,14 @@ public class Main {
                 String path = args[++index];
                 File input = getInArgumentPath(path);
                 flags.setBaselineFile(input);
+            } else if (arg.equals(ARG_CACHE_DIR)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing cache directory");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String path = args[++index];
+                File input = getInArgumentPath(path);
+                flags.setCacheDir(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
                 if (flags.isUpdateBaseline()) {
                     System.err.printf(
@@ -1509,6 +1519,11 @@ public class Main {
                     }
                 }
             } else {
+                Issue issue = registry.getIssue(id);
+                // Normalize issue names (in case it is an older alias)
+                if (issue != null) {
+                    id = issue.getId();
+                }
                 setSeverity(flags, id, targetSet, severity);
             }
         }
@@ -1838,7 +1853,6 @@ public class Main {
     }
 
     private static void printUsage(PrintStream out) {
-        // TODO: Look up launcher script name!
         String command = "lint";
 
         out.println("Usage: " + command + " [flags] <project directories>\n");
@@ -2022,6 +2036,9 @@ public class Main {
     }
 
     static void printUsage(PrintStream out, String[] args) {
+        // Used to emit Markdeep usage docs to update lint/docs/usage/flags.md.html
+        boolean md = false;
+
         int argWidth = 0;
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
@@ -2038,6 +2055,32 @@ public class Main {
         for (int i = 0; i < args.length; i += 2) {
             String arg = args[i];
             String description = args[i + 1];
+            //noinspection ConstantConditions
+            if (md) {
+                if (arg.isEmpty()) {
+                    out.print("## ");
+                    out.println(StringsKt.removeSuffix(description.trim(), ":"));
+                    out.println();
+                } else {
+                    out.print("`");
+                    int index = arg.indexOf(' ');
+                    if (index != -1) {
+                        out.print(arg.substring(0, index));
+                        out.print("` ");
+                        String remainder = arg.substring(index + 1);
+                        // Switch from say <list> to *list*
+                        remainder = remainder.replace('<', '*').replace('>', '*');
+                        out.print(remainder);
+                    } else {
+                        out.print(arg);
+                        out.print('`');
+                    }
+                    out.println();
+                    out.print(wrap(": " + description, 70, "  "));
+                    out.println("");
+                }
+                continue;
+            }
             if (arg.isEmpty()) {
                 out.println(description);
             } else {

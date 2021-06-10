@@ -171,16 +171,10 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
-        // coverageOutputDir: File,  // TODO(b/188836495): setup coverage output dir in task.
+        coverageOutputDir: File,
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
     ): RunnerConfigProto.RunnerConfig {
-        // TODO(b/188836495): Remove this check.
-        val coverageOutputDir = File("")
-        if (testData.isTestCoverageEnabled) {
-            logger.error("Test coverage is not supported in managed device yet.")
-        }
-
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createGradleManagedDevice(device, utpDependencies))
             addTestFixture(

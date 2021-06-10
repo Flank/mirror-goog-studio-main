@@ -24,6 +24,7 @@ import com.android.build.gradle.external.cmake.server.Server
 import com.android.build.gradle.external.cmake.server.ServerFactory
 import com.android.build.gradle.external.cmake.server.ServerUtils
 import com.android.build.gradle.external.cmake.server.Target
+import com.android.build.gradle.external.cmake.server.findRuntimeFiles
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
@@ -454,69 +455,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
             return cmakeServer.compute()
         }
 
-        private fun findRuntimeFiles(target: Target): List<File>? {
-            if (target.linkLibraries == null || target.type == "OBJECT_LIBRARY") {
-                return null
-            }
-
-            val sysroot = Paths.get(target.sysroot)
-            val runtimeFiles = mutableListOf<File>()
-            for (library in parseLinkLibraries(target.linkLibraries)) {
-                // Each element here is just an argument to the linker. It might be a full path to a
-                // library to be linked or a trivial -l flag. If it's a full path that exists within
-                // the prefab directory, it's a library that's needed at runtime.
-                if (library.startsWith("-")) {
-                    continue
-                }
-
-                // We don't actually care about the normalization here except that it makes it
-                // possible to write a test for https://issuetracker.google.com/158317988. Without
-                // it, the runtimeFile is sometimes a path that includes .. that resolves to the
-                // same place as the destination, but sometimes isn't (within bazel's sandbox it is,
-                // outside it isn't, could be related to the path lengths since CMake tries to keep
-                // those short when possible). If the paths passed to Files.copy are equal the
-                // operation will throw IllegalArgumentException, but only if they are exactly equal
-                // (without normalization). Users were encountering this but it was being hidden
-                // from tests because of the lack of normalization.
-                val libraryPath = Paths.get(library).let {
-                    if (!it.isAbsolute) {
-                        Paths.get(target.buildDirectory).resolve(it)
-                    } else {
-                        it
-                    }
-                }.normalize()
-
-                // Note: This used to contain a check for libraryPath.exists() to defend against any
-                // items in the linkLibraries that were neither files nor - prefixed arguments. This
-                // hasn't been observed and I'm not sure there are any valid inputs to
-                // target_link_libraries that would have that problem.
-                //
-                // Ignoring files that didn't exist was causing different results depending on
-                // whether this function was being run before or after a build. If run before a
-                // build, any libraries the user is building will not be present yet and would not
-                // be added to runtimeFiles. After a build they would. We no longer skip non-present
-                // files for the sake of consistency.
-
-                // Anything under the sysroot shouldn't be included in the APK. This isn't strictly
-                // true since the STLs live here, but those are handled separately by
-                // ExternalNativeBuildTask::buildImpl.
-                if (libraryPath.startsWith(sysroot)) {
-                    continue
-                }
-
-                // We could alternatively filter for .so files rather than filtering out .a files,
-                // but it's possible that the user has things like libfoo.so.1. It's not common for
-                // Android, but possible.
-                val pathMatcher = libraryPath.fileSystem.getPathMatcher("glob:*.a")
-                if (pathMatcher.matches(libraryPath.fileName)) {
-                    continue
-                }
-
-                runtimeFiles.add(libraryPath.toFile())
-            }
-            return runtimeFiles
-        }
-
         @VisibleForTesting
         fun getNativeLibraryValue(
           cmakeExecutable: File,
@@ -539,7 +477,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 // We'll have only one output, so get the first one.
                 nativeLibraryValue.output = File(target.artifacts[0])
             }
-            nativeLibraryValue.runtimeFiles = findRuntimeFiles(target)
+            nativeLibraryValue.runtimeFiles = target.findRuntimeFiles()
 
             val sourceDirectory = File(target.sourceDirectory)
             for (fileGroup in target.fileGroups.orEmpty()) {

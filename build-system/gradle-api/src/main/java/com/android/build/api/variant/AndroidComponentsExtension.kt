@@ -17,7 +17,6 @@
 package com.android.build.api.variant
 
 import com.android.build.api.AndroidPluginVersion
-import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import org.gradle.api.Action
@@ -53,6 +52,12 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of [finalizeDsl] above.
      */
+    fun finalizeDsl(callback: Action<DslExtensionT>)
+
+    /**
+     * [Action] based version of [finalizeDsl] above.
+     */
+    @Deprecated("Replaced by finalizeDsl", replaceWith = ReplaceWith("finalizeDsl(callback)"))
     fun finalizeDSl(callback: Action<DslExtensionT>)
 
     /**
@@ -82,7 +87,7 @@ interface AndroidComponentsExtension<
      * instance has been created but before any [com.android.build.api.artifact.Artifact] has been
      * determined, therefore the build flow can still be changed when the [callback] is invoked.
      *
-     * At this stage, access to the DSL objects is disallowed, use [afterDsl] method to
+     * At this stage, access to the DSL objects is disallowed, use [finalizeDsl] method to
      * programmatically access the DSL objects before the [VariantBuilderT] object is built.
      *
      * Example without selection:

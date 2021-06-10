@@ -19,12 +19,12 @@ package com.android.ide.common.process;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +41,7 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
     private String mMain;
     private final List<String> mArgs = Lists.newArrayList();
     private final List<String> mJvmArgs = Lists.newArrayList();
+    private File mDirectory;
 
     public ProcessInfoBuilder() {
     }
@@ -56,7 +57,8 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         return new ProcessInfoImpl(
                 mExecutable,
                 ImmutableList.copyOf(mArgs),
-                ImmutableMap.copyOf(mEnvironment));
+                ImmutableMap.copyOf(mEnvironment),
+                mDirectory);
     }
 
     /**
@@ -73,7 +75,8 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
                 mMain,
                 ImmutableList.copyOf(mArgs),
                 ImmutableMap.copyOf(mEnvironment),
-                ImmutableList.copyOf(mJvmArgs));
+                ImmutableList.copyOf(mJvmArgs),
+                mDirectory);
     }
 
     /**
@@ -279,12 +282,26 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         return this;
     }
 
+    /**
+     * Sets the working directory.
+     *
+     * @param directory the working directory
+     * @return this
+     */
+    public ProcessInfoBuilder setDirectory(@Nullable File directory) {
+        mDirectory = directory;
+        return this;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Executable : ").append(mExecutable).append("\n");
         sb.append("arguments : \n").append(Joiner.on("\n").join(mArgs)).append("\n");
         sb.append("jvmArgs : \n").append(Joiner.on(",").join(mJvmArgs)).append("\n");
+        if (mDirectory != null) {
+            sb.append("directory : ").append(mDirectory).append("\n");
+        }
         return sb.toString();
     }
 
@@ -293,15 +310,18 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         public ProcessInfoImpl(
                 @NonNull String executable,
                 @NonNull List<String> args,
-                @NonNull Map<String, Object> environment) {
+                @NonNull Map<String, Object> environment,
+                @Nullable File directory) {
             mExecutable = executable;
             mArgs = args;
             mEnvironment = environment;
+            mDirectory = directory;
         }
 
         private final String mExecutable;
         private final List<String> mArgs;
         private final Map<String, Object> mEnvironment;
+        private final File mDirectory;
 
         @NonNull
         @Override
@@ -321,6 +341,12 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
             return mEnvironment;
         }
 
+        @Nullable
+        @Override
+        public File getWorkingDirectory() {
+            return mDirectory;
+        }
+
         @NonNull
         @Override
         public String getDescription() {
@@ -335,12 +361,14 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
                 @NonNull String main,
                 @NonNull List<String> args,
                 @NonNull Map<String, Object> environment,
-                @NonNull List<String> jvmArgs) {
+                @NonNull List<String> jvmArgs,
+                @Nullable File directory) {
             mClasspath = classpath;
             mMain = main;
             mArgs = args;
             mEnvironment = environment;
             mJvmArgs = jvmArgs;
+            mDirectory = directory;
         }
 
         private final String mClasspath;
@@ -348,6 +376,7 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         private final List<String> mArgs;
         private final Map<String, Object> mEnvironment;
         private final List<String> mJvmArgs;
+        private final File mDirectory;
 
         @NonNull
         @Override
@@ -383,6 +412,12 @@ public class ProcessInfoBuilder extends ProcessEnvBuilder<ProcessInfoBuilder> {
         @Override
         public List<String> getJvmArgs() {
             return mJvmArgs;
+        }
+
+        @Nullable
+        @Override
+        public File getWorkingDirectory() {
+            return mDirectory;
         }
 
         @NonNull

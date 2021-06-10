@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -104,5 +105,38 @@ public class PathUtilsTest {
         PathUtils.deleteRecursivelyIfExists(symbolicLinkFile.toPath());
         assertThat(java.nio.file.Files.exists(symbolicLinkFile.toPath())).isFalse();
         assertThat(java.nio.file.Files.exists(linkedToPath)).isTrue();
+    }
+
+    @Test
+    public void deleteFolderWithReadonlyFile() throws IOException {
+        Path root = temporaryFolder.getRoot().toPath();
+        Path folder = root.resolve("subfolder");
+        Path file = folder.resolve("test.txt");
+        java.nio.file.Files.createDirectories(folder);
+        java.nio.file.Files.write(file, ImmutableList.of("content"));
+        // From the JavaDoc for [setReadOnly]:
+        // "Whether or not a read-only file or directory may be deleted
+        //  depends upon the underlying system."
+        file.toFile().setReadOnly();
+
+        // Check that the file can't be modified.
+        Boolean wrote = false;
+        try {
+            java.nio.file.Files.write(file, ImmutableList.of("content"));
+            wrote = true;
+        } catch (AccessDeniedException e) {
+            // Expected
+            wrote = false;
+        }
+
+        // Expect that the file was not writable due to 'setReadOnly' call.
+        assertThat(wrote).isFalse();
+
+        // Try to delete the folder
+        PathUtils.deleteRecursivelyIfExists(folder);
+
+        // Make sure the file and folder were deleted.
+        assertThat(file.toFile().exists()).isFalse();
+        assertThat(folder.toFile().exists()).isFalse();
     }
 }

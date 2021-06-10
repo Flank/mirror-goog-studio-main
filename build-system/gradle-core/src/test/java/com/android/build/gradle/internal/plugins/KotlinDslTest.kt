@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.PostProcessingBlock
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.packaging.defaultExcludes
@@ -473,5 +475,33 @@ class KotlinDslTest {
         android.defaultConfig.apply {
             missingDimensionStrategy("minApi", "minApi18", "minApi23")
         }
+    }
+
+    @Test
+    fun `compatibility for postprocessing block`() {
+        android.apply {
+            buildTypes {
+                release {
+                    postprocessing {
+                        isRemoveUnusedCode = true
+                        isRemoveUnusedResources = true
+                        isObfuscate = true
+                        isOptimizeCode = true
+                        setProguardFiles(listOf("1"))
+                        setTestProguardFiles(listOf("1", "2"))
+                        setConsumerProguardFiles(listOf("1", "2", "3"))
+                    }
+                }
+            }
+        }
+        val postprocessing = android.buildTypes.getByName("release").postprocessing
+        assertThat(postprocessing.isRemoveUnusedCode).isTrue()
+        assertThat(postprocessing.isRemoveUnusedResources).isTrue()
+        assertThat(postprocessing.isObfuscate).isTrue()
+        assertThat(postprocessing.isOptimizeCode).isTrue()
+        val postProcessingBlock = postprocessing as PostProcessingBlock
+        assertThat(postProcessingBlock.getProguardFiles(ProguardFileType.EXPLICIT)).hasSize(1)
+        assertThat(postProcessingBlock.getProguardFiles(ProguardFileType.TEST)).hasSize(2)
+        assertThat(postProcessingBlock.getProguardFiles(ProguardFileType.CONSUMER)).hasSize(3)
     }
 }

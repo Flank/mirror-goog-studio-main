@@ -128,6 +128,27 @@ class TranslationDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testMissingPluralTranslation() {
+        lint().files(valuesStringsPlural, valuesFrStringsNoPlural)
+            .incremental("res/values/strings.xml")
+            .run()
+            .expect(
+                """
+                res/values/strings.xml:5: Error: "my_plurals" is not translated in "fr" (French) [MissingTranslation]
+                    <plurals name="my_plurals">
+                             ~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    fun testPluralTranslation() {
+        lint().files(valuesStringsPlural, valuesFrStringsPlural)
+            .incremental("res/values/strings.xml")
+            .run()
+            .expectClean()
+    }
+
     fun testCaseHandlingInRepositories() {
         // Regression test for https://issuetracker.google.com/120747416
         lint().files(
@@ -404,6 +425,41 @@ class TranslationDetectorTest : AbstractCheckTest() {
             "    <skip />\n" +
             "    <string name=\"wallpaper_instructions\">\"Klepnutím na obrázek nastavíte tapetu portrétu\"</string>\n" +
             "</resources>\n"
+    )
+
+    private val valuesStringsPlural = xml(
+        "res/values/strings.xml",
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <resources xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+            <string name="my_string">My string</string>
+            <plurals name="my_plurals">
+            </plurals>
+        </resources>
+        """.trimIndent()
+    )
+
+    private val valuesFrStringsNoPlural = xml(
+        "res/values-fr/strings.xml",
+        """
+        <resources xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+            <string name="my_string">Ma chaîne</string>
+        </resources>
+        """.trimIndent()
+    )
+
+    private val valuesFrStringsPlural = xml(
+        "res/values-fr/strings.xml",
+        """
+        <resources xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+            <string name="my_string">Ma chaîne</string>
+            <plurals name="my_plurals">
+            </plurals>
+        </resources>
+        """.trimIndent()
     )
 
     fun testBcp47() {

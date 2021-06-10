@@ -22,6 +22,7 @@ import com.android.tools.r8.ProgramResource
 import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.ResourceShrinker
 import com.android.tools.r8.origin.PathOrigin
+import com.android.tools.r8.references.MethodReference
 import java.io.File
 import java.nio.file.Path
 
@@ -52,6 +53,12 @@ class AnalysisAdapter(val impl: AnalysisCallback) : ResourceShrinker.ReferenceCh
     override fun referencedMethod(
         internalName: String, methodName: String, methodDescriptor: String
     ) = impl.referencedMethod(internalName, methodName, methodDescriptor)
+
+    override fun startMethodVisit(methodReference: MethodReference
+    ) = impl.startMethodVisit(methodReference)
+
+    override fun endMethodVisit(methodReference: MethodReference
+    ) = impl.endMethodVisit(methodReference)
 }
 
 interface AnalysisCallback {
@@ -65,4 +72,10 @@ interface AnalysisCallback {
     fun referencedStaticField(internalName: String, fieldName: String)
 
     fun referencedMethod(internalName: String, methodName: String, methodDescriptor: String)
+
+    fun startMethodVisit(methodReference: MethodReference)
+
+    fun endMethodVisit(methodReference: MethodReference)
 }
+
+class MethodVisitingStatus(var isVisiting: Boolean = false, var methodName: String? = null)

@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -49,11 +50,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.util.Collections
-import javax.inject.Inject
 
 /** Task to invoke lint with the --analyze-only flag, producing partial results. */
 abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
@@ -103,43 +100,20 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     @get:Input
     abstract val printStackTrace: Property<Boolean>
 
+    @get:Internal
+    abstract val lintClassLoaderBuildService: Property<LintClassLoaderBuildService>
+
     override fun doTaskAction() {
+        lintClassLoaderBuildService.get().shouldDispose = true
         writeLintModelFile()
-        workerExecutor.noIsolation().submit(AndroidLintAnalysisWorkAction::class.java) {
-            it.arguments.set(generateCommandLineArguments())
-            it.lintTool.set(lintTool)
-            it.android.set(android)
-            it.fatalOnly.set(fatalOnly)
-        }
-    }
-
-    /**
-     * Non-isolated work action to launch lint in a process-isolated work action
-     */
-    abstract class AndroidLintAnalysisWorkAction:
-        WorkAction<AndroidLintAnalysisWorkAction.LauncherParameters>
-    {
-        abstract class LauncherParameters: WorkParameters {
-            @get:Nested
-            abstract val lintTool: Property<LintTool>
-            abstract val arguments: ListProperty<String>
-            abstract val android: Property<Boolean>
-            abstract val fatalOnly: Property<Boolean>
-        }
-
-        @get:Inject
-        abstract val workerExecutor: WorkerExecutor
-
-        override fun execute() {
-            parameters.lintTool.get().submit(
-                mainClass = "com.android.tools.lint.Main",
-                workerExecutor = workerExecutor,
-                arguments = parameters.arguments.get(),
-                android = parameters.android.get(),
-                fatalOnly = parameters.fatalOnly.get(),
-                await = false
-            )
-        }
+        lintTool.submit(
+            mainClass = "com.android.tools.lint.Main",
+            workerExecutor = workerExecutor,
+            arguments = generateCommandLineArguments(),
+            android = android.get(),
+            fatalOnly = fatalOnly.get(),
+            await = false
+        )
     }
 
     private fun writeLintModelFile() {
@@ -183,6 +157,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         if (printStackTrace.get()) {
             arguments += "--stacktrace"
         }
+        arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
 
         return Collections.unmodifiableList(arguments)
     }
@@ -282,6 +257,9 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     creationConfig.services.projectInfo.getProject(),
                     creationConfig.services.projectOptions
                 )
+            task.lintClassLoaderBuildService.setDisallowChanges(
+                getBuildService(creationConfig.services.buildServiceRegistry)
+            )
         }
     }
 
@@ -305,7 +283,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
-            project.layout.projectDirectory.dir(AndroidProject.FD_INTERMEDIATES).dir("lint-cache")
+            project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
         )
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)
@@ -347,6 +325,9 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             .setDisallowChanges(
                 project.layout.buildDirectory.dir("intermediates/android-lint-model")
             )
+        this.lintClassLoaderBuildService.setDisallowChanges(
+            getBuildService(project.gradle.sharedServices)
+        )
     }
 
     companion object {

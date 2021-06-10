@@ -159,11 +159,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                         .map(ResolvedArtifact::getComponentIdentifier)
                         .collect(Collectors.toSet());
 
-        // Done separately to avoid querying jetified jars on project classes as for java libraries
-        // the artifact might not exist yet.
-        ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> projectRuntime =
-                ArtifactUtils.asMultiMap(runtimeArtifactCollections.getRuntimeProjectJars());
-
+        // only include external dependencies as projects are not needed IDE-side
         ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> externalRuntime =
                 ArtifactUtils.asMultiMap(runtimeArtifactCollections.getRuntimeExternalJars());
 
@@ -171,10 +167,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
         for (ComponentIdentifier runtimeIdentifier : runtimeIdentifiers) {
             if (compileIdentifiers.contains(runtimeIdentifier)) {
                 continue;
-            }
-            for (ResolvedArtifactResult resolvedArtifactResult :
-                    projectRuntime.get(runtimeIdentifier)) {
-                runtimeOnlyClasspathBuilder.add(resolvedArtifactResult.getFile());
             }
             for (ResolvedArtifactResult resolvedArtifactResult :
                     externalRuntime.get(runtimeIdentifier)) {

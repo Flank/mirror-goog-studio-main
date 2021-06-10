@@ -211,6 +211,7 @@ def android_java_proto_library(
         grpc_support = False,
         protoc_grpc_version = None,
         java_deps = [],
+        proto_deps = [],
         visibility = None):
     """Compiles protobuf into a .jar file in Android Studio compatible runtime version.
 
@@ -229,11 +230,12 @@ def android_java_proto_library(
       srcs:  A list of file names of the protobuf definition to compile.
       grpc_support: True if the proto library requires grpc protoc plugin.
       protoc_grpc_version: A version of the grpc protoc plugin to use.
-      java_deps: An additional java libraries to be packaged into the library.
+      java_deps: Any additional java libraries to be packaged into the library.
+      proto_deps: Any protos depended upon by the protos in this library (via `import`)
       visibility: Visibility of the rule.
     """
     internal_name = "_" + name + "_internal"
-    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps)
+    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps, proto_deps = proto_deps)
     java_jarjar(
         name = name,
         srcs = [":" + internal_name],

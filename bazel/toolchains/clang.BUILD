@@ -230,7 +230,7 @@ cc_toolchain_config(
         "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\um",
         "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\shared",
         "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\winrt",
-        "C:\\botcode\\w",
+        "C:\\botcode",
     ],
     cxx_flags = ["/std:c++17"],
     link_flags = ["/MACHINE:X64"],

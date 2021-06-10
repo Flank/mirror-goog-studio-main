@@ -103,7 +103,8 @@ class BooleanOptionTest {
                 BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS,
                 BooleanOption.MINIMAL_KEEP_RULES,
                 BooleanOption.EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES,
-                BooleanOption.ENABLE_DESUGAR
+                BooleanOption.ENABLE_DESUGAR,
+                BooleanOption.RUN_LINT_IN_PROCESS
         )
 
         val violatingOptions = BooleanOption.values().filter {

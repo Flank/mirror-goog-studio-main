@@ -27,6 +27,7 @@ import com.android.ide.common.process.ProcessResult;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
@@ -126,6 +127,10 @@ public class GradleProcessExecutor implements ProcessExecutor {
             execSpec.environment(processInfo.getEnvironment());
             execSpec.setStandardOutput(processOutput.getStandardOutput());
             execSpec.setErrorOutput(processOutput.getErrorOutput());
+            File directory = processInfo.getWorkingDirectory();
+            if (directory != null) {
+                execSpec.setWorkingDir(directory);
+            }
 
             // we want the caller to be able to do its own thing.
             execSpec.setIgnoreExitValue(true);

@@ -201,6 +201,8 @@ dependencies {
     }
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_metadata
+
+    provided(files('../../../../prebuilts/r8/r8.jar'))
 }
 
 protobuf {

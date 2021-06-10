@@ -131,7 +131,7 @@ def dex_library(name, jars = [], output = None, visibility = None, tags = [], fl
 ANDROID_COPTS = select_android(
     [
         "-fPIC",
-        "-std=c++14",
+        "-std=c++17",
     ],
     [],
 ) + select_target_android_host_unx(

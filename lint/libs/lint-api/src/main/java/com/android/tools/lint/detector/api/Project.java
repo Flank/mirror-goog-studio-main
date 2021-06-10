@@ -324,7 +324,8 @@ public class Project {
             // Don't provide the merged manifest if doing partial analysis on a library
             // project; accessing this here means the detector is not correctly handling
             // libraries
-            if (Context.Companion.checkForbidden("project.getMergedManifest()", dir, null)) {
+            if (LintClient.isUnitTest()
+                    && Context.Companion.checkForbidden("project.getMergedManifest()", dir, null)) {
                 return null;
             }
             mergedManifest = client.getMergedManifest(this);

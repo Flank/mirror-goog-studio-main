@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.cxx.process
 
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.logStructured
+import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.ide.common.process.BuildCommandException
@@ -92,11 +94,33 @@ class ProcessOutputJunction(
         Files.deleteIfExists(stderrFile.toPath())
         Files.deleteIfExists(stdoutFile.toPath())
         try {
-            val proc =
-                if (isJavaProcess) process.createJavaProcess() else process.createProcess()
-            execute(proc, processHandler, execOperations)
-                .rethrowFailure()
-                .assertNormalExitValue()
+            time("execute-process") {
+                val proc =
+                    if (isJavaProcess) process.createJavaProcess() else process.createProcess()
+                val result = execute(proc, processHandler, execOperations)
+
+                logStructured { encoder ->
+                    val info = EncodedExecuteProcess.newBuilder()
+                    info.executableId = encoder.encode(proc.executable)
+                    info.descriptionId = encoder.encode(proc.description)
+                    info.argsId = encoder.encodeList(proc.args)
+                    info.environmentKeysId =
+                        encoder.encodeList(proc.environment.map { it.key }.toList())
+                    info.environmentValuesId =
+                        encoder.encodeList(proc.environment.map { "${it.value}" }.toList())
+                    info.exitCode = result.exitValue
+                    if (proc is JavaProcessInfo) {
+                        info.jvmClassPathId = encoder.encode(proc.classpath)
+                        info.jvmMainClassId = encoder.encode(proc.mainClass)
+                        info.jvmArgsId = encoder.encodeList(proc.jvmArgs)
+                    }
+                    info.build()
+                }
+
+                result
+                    .rethrowFailure()
+                    .assertNormalExitValue()
+            }
         } catch (e: ProcessException) {
             throw BuildCommandException(
                 """

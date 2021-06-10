@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.utils.cxx.CxxDiagnosticCode.EXTRA_OUTPUT
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
@@ -140,6 +141,7 @@ fun readCmakeFileApiReply(
     var compileGroups : List<TargetCompileGroupData>? = null
     var sourceGroups : List<String>? = null
     var paths : Paths? = null
+    var type : Type? = null
     val targetIdToNativeLibraryValue = mutableMapOf<String, NativeLibraryValue>()
     val languageToExtensionMap = mutableMapOf<String, MutableSet<String>>()
     val codeModel = index.getIndexObject("codemodel", replyFolder, CmakeFileApiCodeModelDataV2::class.java)!!
@@ -174,6 +176,7 @@ fun readCmakeFileApiReply(
                         is SourceGroups -> sourceGroups = item.sourceGroups
                         is Link -> targetIdToLink[item.targetId] = item
                         is Paths -> paths = item
+                        is Type -> type = item
                         is Source -> {
                             // This relies on "compileGroups" arriving before "sources". Without this
                             // assumption we'd need to scan source files twice, first to find compileGroups
@@ -210,15 +213,17 @@ fun readCmakeFileApiReply(
         }
 
     // Populate NativeLibraryValues#output
-    targetIdToOutputs.forEach { (id, outputs) ->
-        if (outputs.size > 1) {
-            errorln(
-                EXTRA_OUTPUT, "Target $id produces multiple outputs ${outputs.joinToString(", ")}"
-            )
+    if (type?.type != "OBJECT_LIBRARY") {
+        targetIdToOutputs.forEach { (id, outputs) ->
+            if (outputs.size > 1) {
+                errorln(
+                    EXTRA_OUTPUT, "Target $id produces multiple outputs ${outputs.joinToString(", ")}"
+                )
+            }
+            targetIdToNativeLibraryValue
+                    .computeIfAbsent(id) { NativeLibraryValue() }
+                        .output = outputs.map(::File).firstOrNull()
         }
-        targetIdToNativeLibraryValue
-                .computeIfAbsent(id) { NativeLibraryValue() }
-                    .output = outputs.map(::File).firstOrNull()
     }
 
     // Populate NativeLibraryValues#runtimeFiles
@@ -528,6 +533,7 @@ fun parseCmakeFileApiReply(
         )
     } catch (e : Exception) {
         // Give the user a way to open a constructive bug
-        throw RuntimeException("Please open a bug with zip of ${compileCommandsJsonFile.parentFile.absoluteFile}", e)
+        warnln("There was an error parsing CMake File API result. Please open a bug with zip of ${compileCommandsJsonFile.parentFile.absoluteFile}", e)
+        throw e
     }
 }

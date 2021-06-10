@@ -159,16 +159,14 @@ enum class BooleanOption(
     RELATIVE_COMPILE_LIB_RESOURCES("android.experimental.cacheCompileLibResources", false, FeatureStage.Experimental),
     ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION("android.experimental.enableJacocoTransformInstrumentation", false, FeatureStage.Experimental),
 
-    /** Whether lint should be run in process; the default is a separate process. Primarily useful for debugging lint issues related to AGP. */
-    RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", false, FeatureStage.Experimental),
+    /** Whether lint should be run in process; the default is true. */
+    RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", true, FeatureStage.Experimental),
 
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
 
     ENABLE_TEST_FIXTURES("android.experimental.enableTestFixtures", false, FeatureStage.Experimental),
-
-    ENABLE_ART_PROFILES("android.experimental.enableArtProfiles", false, FeatureStage.Experimental),
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
@@ -192,6 +190,8 @@ enum class BooleanOption(
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
 
     INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    ENABLE_ART_PROFILES("android.enableArtProfiles", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     /* -------------------
      * DEPRECATED FEATURES

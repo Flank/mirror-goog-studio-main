@@ -111,4 +111,21 @@ public class RepoTest extends AbstractZipflingerTest {
             Assert.assertEquals("ZipRepo read() compliance", 255, in.read());
         }
     }
+
+    @Test
+    public void testInputStreamOverflow() throws IOException {
+        Path f = getTestPath("testInputStreamOverflow.zip");
+        final int fakeContentSize = 10;
+        try (ZipArchive archive = new ZipArchive(f)) {
+            byte[] bytes = new byte[fakeContentSize];
+            BytesSource s = new BytesSource(bytes, "foo", Deflater.NO_COMPRESSION);
+            archive.add(s);
+        }
+
+        try (ZipRepo repo = new ZipRepo(f)) {
+            InputStream in = repo.getInputStream("foo");
+            byte[] buffer = new byte[fakeContentSize];
+            in.read(buffer, buffer.length - 1, 1);
+        }
+    }
 }

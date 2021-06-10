@@ -142,14 +142,13 @@ class WakeLockHandler(
             val releaseParams = releaseWakeLockData.get()
             val eventId =
                 eventIdMap.getOrPut(releaseParams.wakeLock) { BackgroundTaskUtil.nextId() }
-            val wakeLockReleased = WakeLockReleased.newBuilder().apply {
-                if (releaseParams.flag and RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY != 0) {
-                    addFlags(WakeLockReleased.ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
-                }
-                isHeld = releaseParams.wakeLock.isHeld
-            }
             connection.sendBackgroundTaskEvent(eventId) {
-                it.setWakeLockReleased(wakeLockReleased)
+                wakeLockReleasedBuilder.apply {
+                    if (releaseParams.flag and RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY != 0) {
+                        addFlags(WakeLockReleased.ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
+                    }
+                    isHeld = releaseParams.wakeLock.isHeld
+                }
             }
             res
         }
@@ -185,26 +184,26 @@ class WakeLockHandler(
                 Log.e("Failed to retrieve wake lock parameters: ", e.localizedMessage)
             }
         }
-        val wakeLockAcquired = WakeLockAcquired.newBuilder().apply {
-            level = when (creationParams.levelAndFlags and WAKE_LOCK_LEVEL_MASK) {
-                PARTIAL_WAKE_LOCK -> WakeLockAcquired.Level.PARTIAL_WAKE_LOCK
-                SCREEN_DIM_WAKE_LOCK -> WakeLockAcquired.Level.SCREEN_DIM_WAKE_LOCK
-                SCREEN_BRIGHT_WAKE_LOCK -> WakeLockAcquired.Level.SCREEN_BRIGHT_WAKE_LOCK
-                FULL_WAKE_LOCK -> WakeLockAcquired.Level.FULL_WAKE_LOCK
-                PROXIMITY_SCREEN_OFF_WAKE_LOCK -> WakeLockAcquired.Level.PROXIMITY_SCREEN_OFF_WAKE_LOCK
-                else -> WakeLockAcquired.Level.UNDEFINED_WAKE_LOCK_LEVEL
-            }
-            if (creationParams.levelAndFlags and ACQUIRE_CAUSES_WAKEUP != 0) {
-                addFlags(WakeLockAcquired.CreationFlag.ACQUIRE_CAUSES_WAKEUP)
-            }
-            if (creationParams.levelAndFlags and ON_AFTER_RELEASE != 0) {
-                addFlags(WakeLockAcquired.CreationFlag.ON_AFTER_RELEASE)
-            }
-            tag = creationParams.tag
-            this.timeout = timeout
-        }.build()
         connection.sendBackgroundTaskEvent(eventId) {
-            it.setWakeLockAcquired(wakeLockAcquired)
+            wakeLockAcquiredBuilder.apply {
+                level = when (creationParams.levelAndFlags and WAKE_LOCK_LEVEL_MASK) {
+                    PARTIAL_WAKE_LOCK -> WakeLockAcquired.Level.PARTIAL_WAKE_LOCK
+                    SCREEN_DIM_WAKE_LOCK -> WakeLockAcquired.Level.SCREEN_DIM_WAKE_LOCK
+                    SCREEN_BRIGHT_WAKE_LOCK -> WakeLockAcquired.Level.SCREEN_BRIGHT_WAKE_LOCK
+                    FULL_WAKE_LOCK -> WakeLockAcquired.Level.FULL_WAKE_LOCK
+                    PROXIMITY_SCREEN_OFF_WAKE_LOCK ->
+                        WakeLockAcquired.Level.PROXIMITY_SCREEN_OFF_WAKE_LOCK
+                    else -> WakeLockAcquired.Level.UNDEFINED_WAKE_LOCK_LEVEL
+                }
+                if (creationParams.levelAndFlags and ACQUIRE_CAUSES_WAKEUP != 0) {
+                    addFlags(WakeLockAcquired.CreationFlag.ACQUIRE_CAUSES_WAKEUP)
+                }
+                if (creationParams.levelAndFlags and ON_AFTER_RELEASE != 0) {
+                    addFlags(WakeLockAcquired.CreationFlag.ON_AFTER_RELEASE)
+                }
+                tag = creationParams.tag
+                this.timeout = timeout
+            }
         }
     }
 }

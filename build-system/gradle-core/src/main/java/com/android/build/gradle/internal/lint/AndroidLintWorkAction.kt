@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal.lint
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.net.URI
 import java.net.URLClassLoader
 
 @Suppress("UnstableApiUsage")
@@ -33,18 +35,20 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val classpath: ConfigurableFileCollection
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
-        abstract val cacheClassLoader: Property<Boolean>
+        abstract val runInProcess: Property<Boolean>
     }
 
     override fun execute() {
         val logger = Logging.getLogger(this.javaClass)
         val arguments = parameters.arguments.get()
         logger.debug("Running lint " + arguments.joinToString(" "))
-        logger.info(
-            "Max memory for Android Lint: {}m\n(can be configured by {}=2G in gradle.properties)",
-            Runtime.getRuntime().maxMemory() / 1024 / 1024,
-            com.android.build.gradle.options.StringOption.LINT_HEAP_SIZE.propertyName
-        )
+        if (!parameters.runInProcess.get()) {
+            logger.info(
+                "Max memory for Android Lint: {}m\n(can be configured by {}=2G in gradle.properties)",
+                Runtime.getRuntime().maxMemory() / 1024 / 1024,
+                com.android.build.gradle.options.StringOption.LINT_HEAP_SIZE.propertyName
+            )
+        }
         val execResult = runLint(arguments)
         logger.debug("Lint returned $execResult")
         if (execResult == ERRNO_SUCCESS) {
@@ -97,9 +101,18 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             }
         }
 
-        throw when (execResult) {
-            ERRNO_ERRORS -> RuntimeException(message)
-            ERRNO_USAGE -> IllegalStateException("Internal Error: Unexpected lint usage")
+        when (execResult) {
+            ERRNO_ERRORS -> {
+                logger.error(message)
+                throw RuntimeException(
+                    if (parameters.android.get() && parameters.fatalOnly.get()) {
+                        "Lint found fatal errors while assembling a release target."
+                    } else {
+                        "Lint found errors in the project; aborting build."
+                    }
+                )
+            }
+            ERRNO_USAGE -> throw IllegalStateException("Internal Error: Unexpected lint usage")
             ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
             ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
             ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
@@ -110,21 +123,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
     }
 
     private fun runLint(arguments: List<String>): Int {
-        if (parameters.cacheClassLoader.get()) {
-            if (cachedClassLoader == null) {
-                cachedClassLoader = createClassLoader()
-            }
-            return invokeLintMainRunMethod(cachedClassLoader!!, arguments)
-        } else {
-            createClassLoader().use {
-                return invokeLintMainRunMethod(it, arguments)
-            }
-        }
-    }
-
-    private fun createClassLoader(): URLClassLoader {
-        val classpathUrls = parameters.classpath.files.map { it.toURI().toURL() }.toTypedArray()
-        return URLClassLoader(classpathUrls, getPlatformClassLoader())
+        val classLoader = getClassloader(parameters.classpath)
+        return invokeLintMainRunMethod(classLoader, arguments)
     }
 
     private fun invokeLintMainRunMethod(classLoader: ClassLoader, arguments: List<String>): Int {
@@ -134,18 +134,15 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         val lintMain = cls.getDeclaredConstructor().newInstance()
         val returnValue = method.invoke(lintMain, arguments.toTypedArray()) as Int
 
-        // UastEnvironment.disposeApplicationEnvironment()
-        val uastEnvironment = classLoader.loadClass("com.android.tools.lint.UastEnvironment")
-        val disposeMethod = uastEnvironment.getDeclaredMethod("disposeApplicationEnvironment")
-        disposeMethod.invoke(null)
+        // If running lint in process, we call dispose() via LintClassLoaderBuildService.close()
+        // after all lint invocations; otherwise, we call dispose() here.
+        if (!parameters.runInProcess.get()) {
+            dispose()
+        }
 
         return returnValue
     }
 
-    private fun getPlatformClassLoader(): ClassLoader {
-        // AGP is currently compiled against java 8 APIs, so do this by reflection (b/160392650)
-        return ClassLoader::class.java.getMethod("getPlatformClassLoader").invoke(null) as ClassLoader
-    }
 
     companion object {
 
@@ -158,6 +155,34 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         private const val ERRNO_CREATED_BASELINE = 6
         private const val ERRNO_APPLIED_SUGGESTIONS = 7
 
-        private var cachedClassLoader: URLClassLoader? = null
+        private var _cachedClassLoader: URLClassLoader? = null
+        private var cachedClassLoaderUris: List<URI> = listOf()
+
+        @Synchronized
+        private fun getClassloader(classpath: FileCollection): ClassLoader {
+            val uris = classpath.files.map { it.toURI() }
+            if (uris != cachedClassLoaderUris) {
+                cachedClassLoaderUris = uris
+                _cachedClassLoader = createClassLoader(uris)
+            }
+            return _cachedClassLoader!!
+        }
+
+        private fun createClassLoader(classpath: List<URI>): URLClassLoader {
+            val classpathUrls = classpath.map { it.toURL() }.toTypedArray()
+            return URLClassLoader(classpathUrls, getPlatformClassLoader())
+        }
+
+        private fun getPlatformClassLoader(): ClassLoader {
+            // AGP is currently compiled against java 8 APIs, so do this by reflection (b/160392650)
+            return ClassLoader::class.java.getMethod("getPlatformClassLoader").invoke(null) as ClassLoader
+        }
+
+        @Synchronized
+        fun dispose() {
+            _cachedClassLoader?.loadClass("com.android.tools.lint.UastEnvironment")
+                ?.getDeclaredMethod("disposeApplicationEnvironment")
+                ?.invoke(null)
+        }
     }
 }

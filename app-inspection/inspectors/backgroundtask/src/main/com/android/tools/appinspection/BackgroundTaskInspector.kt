@@ -16,6 +16,11 @@
 
 package com.android.tools.appinspection
 
+import android.app.JobSchedulerImpl
+import android.app.job.JobInfo
+import android.app.job.JobParameters
+import android.app.job.JobService
+import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
@@ -46,6 +51,9 @@ class BackgroundTaskInspector(
     private lateinit var pendingIntentHandler: PendingIntentHandler
     private lateinit var wakeLockHandler: WakeLockHandler
 
+    @VisibleForTesting
+    lateinit var jobHandler: JobHandler
+
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
         when (command.specializedCase) {
@@ -70,5 +78,54 @@ class BackgroundTaskInspector(
         alarmHandler = AlarmHandler(connection, environment)
         pendingIntentHandler = PendingIntentHandler(environment, alarmHandler)
         wakeLockHandler = WakeLockHandler(connection, environment)
+        registerJobHooks()
+    }
+
+    private fun registerJobHooks() {
+        jobHandler = JobHandlerImpl(connection)
+        environment.artTooling().registerEntryHook(
+            JobSchedulerImpl::class.java,
+            "schedule(Landroid/app/job/JobInfo;)I"
+        ) { _, args ->
+            jobHandler.onScheduleJobEntry(job = args[0] as JobInfo)
+        }
+
+        environment.artTooling().registerExitHook<Int>(
+            JobSchedulerImpl::class.java,
+            "schedule(Landroid/app/job/JobInfo;)I"
+        ) { scheduleResult ->
+            jobHandler.onScheduleJobExit(scheduleResult)
+        }
+
+        val jobHandlerClass = Class.forName("android.app.job.JobServiceEngine\$JobHandler")
+        environment.artTooling().registerEntryHook(
+            jobHandlerClass,
+            "ackStartMessage(Landroid/app/job/JobParameters;Z)V"
+        ) { _, args ->
+            jobHandler.wrapOnStartJob(
+                params = args[0] as JobParameters,
+                workOngoing = args[1] as Boolean
+            )
+        }
+
+        environment.artTooling().registerEntryHook(
+            jobHandlerClass,
+            "ackStopMessage(Landroid/app/job/JobParameters;Z)V"
+        ) { _, args ->
+            jobHandler.wrapOnStopJob(
+                params = args[0] as JobParameters,
+                reschedule = args[1] as Boolean
+            )
+        }
+
+        environment.artTooling().registerEntryHook(
+            JobService::class.java,
+            "jobFinished(Landroid/app/job/JobParameters;Z)V"
+        ) { _, args ->
+            jobHandler.wrapJobFinished(
+                params = args[0] as JobParameters,
+                wantsReschedule = args[1] as Boolean
+            )
+        }
     }
 }

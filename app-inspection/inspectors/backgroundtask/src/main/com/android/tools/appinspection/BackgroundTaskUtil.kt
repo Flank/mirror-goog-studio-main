@@ -16,6 +16,7 @@
 
 package com.android.tools.appinspection
 
+import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.BackgroundTaskEvent
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.Event
@@ -23,22 +24,29 @@ import java.util.concurrent.atomic.AtomicLong
 
 object BackgroundTaskUtil {
 
-    private val atomicLong: AtomicLong = AtomicLong()
+    @VisibleForTesting
+    val atomicLong: AtomicLong = AtomicLong()
 
     /** Generates a unique energy event ID.  */
     fun nextId(): Long {
         return atomicLong.incrementAndGet()
     }
 
+    /**
+     * Send a background task event from connection.
+     *
+     * @param taskId a unique id across different background events.
+     * @param setMetaData a unit function that adds information to the event builder.
+     */
     fun Connection.sendBackgroundTaskEvent(
         taskId: Long,
-        eventCompleter: (BackgroundTaskEvent.Builder) -> BackgroundTaskEvent.Builder
+        setMetaData: BackgroundTaskEvent.Builder.() -> Unit
     ) {
-        val initialBackgroundTaskEventBuilder = BackgroundTaskEvent.newBuilder()
-            .setTaskId(taskId)
-        val backgroundTaskEvent = eventCompleter(initialBackgroundTaskEventBuilder).build()
         val eventBuilder = Event.newBuilder().apply {
-            this.backgroundTaskEvent = backgroundTaskEvent
+            this.backgroundTaskEventBuilder.apply {
+                this.taskId = taskId
+                setMetaData()
+            }
             timestamp = System.nanoTime()
         }
         sendEvent(eventBuilder.build().toByteArray())
