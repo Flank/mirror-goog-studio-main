@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-cb3157cadde3d9c44ffa287f6791db066b7db5c73f119f18853cd8078acd3269
+6853c9423b417b153265d882091257ecfe03e8962df2559bed676e61ca6c207f
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -131,9 +131,11 @@ com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
+com.android.build.api.dsl.CommonExtension.getInstallation: com.android.build.api.dsl.Installation ()
 com.android.build.api.dsl.CommonExtension.getLint: com.android.build.api.dsl.Lint ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.api.dsl.CommonExtension.installation: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Installation, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
@@ -153,6 +155,7 @@ com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.a
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.FailureRetention$DefaultImpls
+com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures

@@ -93,7 +93,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    @get:Incubating
     val installation: Installation
 
     /**
@@ -103,7 +102,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    @Incubating
     fun installation(action: Installation.() -> Unit)
 
     /**
