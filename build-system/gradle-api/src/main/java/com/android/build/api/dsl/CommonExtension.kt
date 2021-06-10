@@ -172,7 +172,6 @@ interface CommonExtension<
      * }
      * ```
      */
-    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit)
     /**
      * Shortcut extension method to allow easy access to the predefined `release` [BuildType]
@@ -188,7 +187,6 @@ interface CommonExtension<
      * }
      * ```
      */
-    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.release(action: BuildTypeT.() -> Unit)
 
     /**
