@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4f8b3d9bf4007d87d3f185f6be9a3808596d2d91b0f7c494b6efae60908937bd
+868059df8640c0980bc55c56059569dc04aac22b611f825c9845789aba0e9b5b
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -123,8 +123,11 @@ com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android
 com.android.build.api.dsl.BuildType$DefaultImpls
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
+com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
 com.android.build.api.dsl.BundleAbi
+com.android.build.api.dsl.BundleDensity
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)

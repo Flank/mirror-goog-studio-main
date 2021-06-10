@@ -23,7 +23,6 @@ interface Bundle {
 
     val abi: BundleAbi
 
-    @get:Incubating
     val density: BundleDensity
 
     @get:Incubating
@@ -37,7 +36,6 @@ interface Bundle {
 
     fun abi(action: BundleAbi.() -> Unit)
 
-    @Incubating
     fun density(action: BundleDensity.() -> Unit)
 
     @Incubating
