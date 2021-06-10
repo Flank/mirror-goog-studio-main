@@ -92,8 +92,7 @@ message OverlayInstallResponse {
     START_SERVER_FAILED = 3;
     OVERLAY_ID_MISMATCH = 4;
     OVERLAY_UPDATE_FAILED = 5;
-    START_SERVER_FAILED_USERDEBUG = 6;
-    INSTALL_SERVER_COM_ERR = 7;
+    INSTALL_SERVER_COM_ERR = 6;
   }
 
   Status status = 1;
@@ -181,15 +180,14 @@ message LiveLiteralUpdateResponse {
     OK = 1;
     SETUP_FAILED = 2;
     START_SERVER_FAILED = 3;
-    START_SERVER_FAILED_USERDEBUG = 4;
-    READY_FOR_AGENTS_NOT_RECEIVED = 5;
-    AGENT_ATTACH_FAILED = 6;
-    AGENT_ERROR = 7;                      // One or more of the agents reported failure
-    PROCESS_CRASHING = 8;                // One of the processes is crashing
-    PROCESS_NOT_RESPONDING = 9;          // One of the processes is not responding
-    PROCESS_TERMINATED = 10;              // One of the processes terminated during swap
-    MISSING_AGENT_RESPONSES = 11;         // Not all agents responded
-    INSTALL_SERVER_COM_ERR = 12;           // InstallServer internal or pipe rw error
+    READY_FOR_AGENTS_NOT_RECEIVED = 4;
+    AGENT_ATTACH_FAILED = 5;
+    AGENT_ERROR = 6;                   // One or more of the agents reported failure
+    PROCESS_CRASHING = 7;              // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 8;        // One of the processes is not responding
+    PROCESS_TERMINATED = 9;            // One of the processes terminated during swap
+    MISSING_AGENT_RESPONSES = 10;      // Not all agents responded
+    INSTALL_SERVER_COM_ERR = 11;       // InstallServer internal or pipe rw error
   }
   Status status = 1;
 
@@ -342,9 +340,8 @@ message SwapResponse {
     OVERLAY_ID_MISMATCH = 14;             // The expected overlay was not present
     OVERLAY_UPDATE_FAILED = 15;           // The overlay update failed to complete
     SWAP_FAILED_BUT_OVERLAY_UPDATED = 16; // Swap failed, but overlay was updated
-    START_SERVER_FAILED_USERDEBUG = 17;   // Could not start the server
-    READY_FOR_AGENTS_NOT_RECEIVED = 18;   // Did not receive the OK to attach agents
-    INSTALL_SERVER_COM_ERR = 19;          // InstallServer internal or pipe rw error
+    READY_FOR_AGENTS_NOT_RECEIVED = 17;   // Did not receive the OK to attach agents
+    INSTALL_SERVER_COM_ERR = 18;          // InstallServer internal or pipe rw error
   }
 
   Status status = 1;
