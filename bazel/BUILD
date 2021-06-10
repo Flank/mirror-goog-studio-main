@@ -185,19 +185,30 @@ java_binary(
     ],
 )
 
-java_binary(
-    name = "repo_builder",
-    srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
-    main_class = "com.android.tools.binaries.RepoBuilder",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
-    ],
+java_library(
+    name = "repo_zipper_lib",
+    srcs = ["src/com/android/tools/binaries/RepoZipper.java"],
     deps = [
-        ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/bazel/repolinker:repo_linker",
+    ],
+)
+
+java_binary(
+    name = "repo_zipper",
+    main_class = "com.android.tools.binaries.RepoZipper",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":repo_zipper_lib"],
+)
+
+java_test(
+    name = "repo_zipper_test",
+    srcs = ["testSrc/com/android/tools/binaries/RepoZipperTest.java"],
+    test_class = "com.android.tools.binaries.RepoZipperTest",
+    deps = [
+        ":repo_zipper_lib",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 

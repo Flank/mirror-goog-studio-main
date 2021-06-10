@@ -103,7 +103,7 @@ public class RepoLinker {
      * @param artifacts A list of artifacts that should be linked.
      * @return A Map of absolute source paths to relative Maven paths.
      */
-    private Map<Path, Path> resolve(List<String> artifacts) throws Exception {
+    public Map<Path, Path> resolve(List<String> artifacts) throws Exception {
         Map<Path, Path> resolved = Maps.newHashMap();
         Model model = null;
 

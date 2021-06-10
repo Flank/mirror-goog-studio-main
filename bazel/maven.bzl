@@ -368,47 +368,10 @@ def _collect_artifacts(artifacts, include_sources):
 
     return collected
 
-# TODO: (b/148081564) Remove the zip artifact once migration to RepoLinker is complete.
 def _maven_repo_impl(ctx):
     artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
-    inputs = [artifact for artifact, _ in artifacts]
-    args = [artifact.path + ":" + classifier if classifier else artifact.path for artifact, classifier in artifacts]
-
-    # Execute the command
-    option_file = create_option_file(
-        ctx,
-        ctx.outputs.repo.path + ".lst",
-        "\n".join(args),
-    )
-    ctx.actions.run(
-        inputs = inputs + [option_file],
-        outputs = [ctx.outputs.repo],
-        mnemonic = "mavenrepo",
-        executable = ctx.executable._repo,
-        arguments = [ctx.outputs.repo.path, "@" + option_file.path],
-    )
-
-_maven_repo = rule(
-    attrs = {
-        "artifacts": attr.label_list(),
-        "include_sources": attr.bool(),
-        "_repo": attr.label(
-            executable = True,
-            cfg = "host",
-            default = Label("//tools/base/bazel:repo_builder"),
-            allow_files = True,
-        ),
-    },
-    outputs = {
-        "repo": "%{name}.zip",
-    },
-    implementation = _maven_repo_impl,
-)
-
-def _maven_repo_list_impl(ctx):
-    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
-    inputs = [artifact for artifact, _ in artifacts]
     args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
+    inputs = [artifact for artifact, _ in artifacts]
 
     # Generate unpacked artifact list.
     # This artifact list contains every artifact in the repository, separated by newlines. The order
@@ -426,7 +389,7 @@ def _maven_repo_list_impl(ctx):
         MavenRepoInfo(artifacts = artifacts),
     ]
 
-_maven_repo_list = rule(
+_maven_repo = rule(
     attrs = {
         "artifacts": attr.label_list(),
         "include_sources": attr.bool(),
@@ -434,32 +397,68 @@ _maven_repo_list = rule(
     outputs = {
         "manifest": "%{name}.manifest",
     },
-    implementation = _maven_repo_list_impl,
+    implementation = _maven_repo_impl,
 )
 
-# Creates a maven repo with the given artifacts and all their transitive
-# dependencies.
+# Creates a maven repo with the given artifacts and all their transitive dependencies.
 #
-# When use_zip = False, the rule exposes a MavenRepoInfo provider and outputs a manifest file. The
-# manifest file contains relative runfile paths, when are available only during bazel run/test
-# (see https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
+# The rule exposes a MavenRepoInfo provider and outputs a manifest file. The manifest file contains
+# relative runfile paths, which are available only during bazel run/test (see
+# https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
 # If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
 # full paths to each of the artifacts.
 #
 # Usage:
 # maven_repo(
-#     name = The name of the rule. The output of the rule will be ${name}.manifest or ${name}.zip
-#            depending on the value of use_zip..
+#     name = The name of the rule. The output of the rule will be ${name}.manifest.
 #     artifacts = A list of all maven_java_libraries to add to the repo.
 #     include_sources = Add source jars to the repo as well (useful for tests).
-#     use_zip = If true, the entire Maven repository is packaged as a zip. Otherwise, a manifest file
-#               with details about the contents of the repository is generated, and all artifacts are
-#               included as runfiles of the rule.
 # )
-def maven_repo(artifacts = [], include_sources = False, use_zip = False, **kwargs):
-    repo_rule = _maven_repo if use_zip else _maven_repo_list
-    repo_rule(
+def maven_repo(artifacts = [], include_sources = False, **kwargs):
+    _maven_repo(
         artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
         include_sources = include_sources,
         **kwargs
     )
+
+def _maven_repo_zip_impl(ctx):
+    # Generate the manifest.
+    manifest = ctx.actions.declare_file(ctx.label.name + ".repo.manifest")
+    artifacts = ctx.attr.repo[MavenRepoInfo].artifacts
+    manifest_args = [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
+    manifest_inputs = [artifact for artifact, _ in artifacts]
+    ctx.actions.write(manifest, "\n".join(manifest_args))
+
+    # Run RepoZipper.
+    ctx.actions.run(
+        inputs = [manifest] + manifest_inputs,
+        outputs = [ctx.outputs.zip],
+        mnemonic = "mavenrepozip",
+        arguments = [ctx.outputs.zip.path, manifest.path],
+        executable = ctx.executable._repo_zipper,
+    )
+
+# Creates a zip file containing the artifacts from a maven_repo rule.
+#
+# The output zip file is structured as a Maven repository.
+#
+# Usage:
+# maven_repo_zip(
+#     name = The name of the rule. The output of the rule will be ${name}.zip.
+#     repo = The maven_repo instance to convert to a zip.
+# )
+maven_repo_zip = rule(
+    attrs = {
+        "repo": attr.label(providers = [MavenRepoInfo]),
+        "_repo_zipper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//tools/base/bazel:repo_zipper"),
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "zip": "%{name}.zip",
+    },
+    implementation = _maven_repo_zip_impl,
+)
