@@ -27,7 +27,6 @@ interface Bundle {
 
     val language: BundleLanguage
 
-    @get:Incubating
     val texture: BundleTexture
 
     @get:Incubating
@@ -39,7 +38,6 @@ interface Bundle {
 
     fun language(action: BundleLanguage.() -> Unit)
 
-    @Incubating
     fun texture(action: BundleTexture.() -> Unit)
 
     @Incubating

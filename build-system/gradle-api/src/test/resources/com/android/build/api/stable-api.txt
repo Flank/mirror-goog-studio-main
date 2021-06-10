@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-370b0a5624f81cf60f459f93ac32f62a80cdfa411ba9e5c055c4e5bfdce274c6
+393e67ab78edb429fd790da87fef463af7edfcef2b293ae094bfc211564fdfc3
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -127,10 +127,13 @@ com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<?
 com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
 com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
 com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
+com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()
 com.android.build.api.dsl.Bundle.language: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.texture: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture, kotlin.Unit>)
 com.android.build.api.dsl.BundleAbi
 com.android.build.api.dsl.BundleDensity
 com.android.build.api.dsl.BundleLanguage
+com.android.build.api.dsl.BundleTexture
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
