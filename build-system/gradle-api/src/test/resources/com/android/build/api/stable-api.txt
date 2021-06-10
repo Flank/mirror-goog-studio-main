@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e4b35abcaf8bf985efb9253e585c7902b07e1fc68bd1eccbe1e6d1ea8d22677f
+38a1d3941f42fb689d7deb44116e25eeee23e964c38f6047d0271a5914f8f7a1
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -176,6 +176,8 @@ com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
+com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuild ()
+com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.NdkBuild, kotlin.Unit>)
 com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
@@ -195,6 +197,7 @@ com.android.build.api.dsl.MultipleVariants
 com.android.build.api.dsl.MultipleVariants.allVariants: void ()
 com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
 com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void (java.lang.String, java.lang.String[])
+com.android.build.api.dsl.NdkBuild
 com.android.build.api.dsl.PackagingOptions$DefaultImpls
 com.android.build.api.dsl.PostProcessing$DefaultImpls
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware

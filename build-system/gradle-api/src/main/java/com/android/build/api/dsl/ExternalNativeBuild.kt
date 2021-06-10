@@ -50,7 +50,6 @@ interface ExternalNativeBuild {
      * For more information about the properties you can configure in this block, see
      * [NdkBuild]
      */
-    @get:Incubating
     val ndkBuild: NdkBuild
 
     /**
@@ -59,7 +58,6 @@ interface ExternalNativeBuild {
      *
      * For more information about the properties you can configure in this block, see [NdkBuild]
      */
-    @Incubating
     fun ndkBuild(action: NdkBuild.() -> Unit)
 
     /**
