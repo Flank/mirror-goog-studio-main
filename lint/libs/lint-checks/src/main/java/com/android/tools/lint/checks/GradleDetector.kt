@@ -2157,7 +2157,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return repository.findVersion(dependency, filter, dependency.isPreview)
     }
 
-    private fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
+    fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
         return googleMavenRepository ?: run {
             val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
             val repository = object : GoogleMavenRepository(cacheDir?.toPath()) {

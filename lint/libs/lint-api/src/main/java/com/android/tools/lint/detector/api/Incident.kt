@@ -466,5 +466,6 @@ fun Incident(context: Context, issue: Issue): Incident {
     val incident = Incident()
     incident.issue = issue
     incident.context = context
+    incident.severity = issue.defaultSeverity
     return incident
 }
