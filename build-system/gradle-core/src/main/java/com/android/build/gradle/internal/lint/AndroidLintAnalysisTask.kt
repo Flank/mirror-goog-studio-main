@@ -104,6 +104,12 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     @get:Internal
     abstract val lintClassLoaderBuildService: Property<LintClassLoaderBuildService>
 
+    @get:Nested
+    abstract val systemPropertyInputs: SystemPropertyInputs
+
+    @get:Nested
+    abstract val environmentVariableInputs: EnvironmentVariableInputs
+
     override fun doTaskAction() {
         lintClassLoaderBuildService.get().shouldDispose = true
         writeLintModelFile()
@@ -308,6 +314,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     .orElse(false)
             )
         }
+        systemPropertyInputs.initializeForAnalysis(project.providers)
+        environmentVariableInputs.initialize(project.providers)
     }
 
     fun configureForStandalone(

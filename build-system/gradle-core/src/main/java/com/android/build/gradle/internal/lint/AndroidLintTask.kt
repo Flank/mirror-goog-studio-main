@@ -18,8 +18,8 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -206,12 +206,20 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Input
     abstract val printStackTrace: Property<Boolean>
 
-    @get:Input
-    @get:Optional
-    abstract val continueAfterBaselineCreated: Property<String>
+    @get:Nested
+    abstract val systemPropertyInputs: SystemPropertyInputs
+
+    @get:Nested
+    abstract val environmentVariableInputs: EnvironmentVariableInputs
 
     override fun doTaskAction() {
         lintClassLoaderBuildService.get().shouldDispose = true
+        if (systemPropertyInputs.lintAutofix.orNull == VALUE_TRUE) {
+            logger.warn(
+                "Running lint with -Dlint.autofix=true is not supported by the Android Gradle "
+                        + "Plugin. Please try running the lintFix task instead."
+            )
+        }
         writeLintModelFile()
         workerExecutor.noIsolation().submit(AndroidLintLauncherWorkAction::class.java) { parameters ->
             parameters.arguments.set(generateCommandLineArguments())
@@ -343,7 +351,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             arguments += "--stacktrace"
         }
         arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
-        if (continueAfterBaselineCreated.orNull == SdkConstants.VALUE_TRUE) {
+        if (systemPropertyInputs.lintBaselinesContinue.orNull == VALUE_TRUE) {
             arguments += "--continue-after-baseline-created"
         }
 
@@ -718,9 +726,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     .map { it.equals("true", ignoreCase = true) }.orElse(false)
             )
         }
-        this.continueAfterBaselineCreated.setDisallowChanges(
-            project.providers.systemProperty("lint.baselines.continue")
-        )
+        systemPropertyInputs.initialize(project.providers)
+        environmentVariableInputs.initialize(project.providers)
     }
 
     fun configureForStandalone(
