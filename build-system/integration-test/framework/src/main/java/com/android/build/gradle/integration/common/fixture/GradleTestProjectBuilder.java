@@ -77,7 +77,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String kotlinVersion;
     @Nullable private String buildFileName = null;
 
-    private Boolean withDeviceProvider = null;
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
     private boolean withKotlinGradlePlugin = false;
@@ -141,10 +140,6 @@ public final class GradleTestProjectBuilder {
             kotlinVersion = TestUtils.KOTLIN_VERSION_FOR_TESTS;
         }
 
-        if (withDeviceProvider == null) {
-            withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
-        }
-
         MemoryRequirement memoryRequirement = MemoryRequirement.use(heapSize, metaspace);
 
         return new GradleTestProject(
@@ -161,7 +156,7 @@ public final class GradleTestProjectBuilder {
                 cmakeVersion,
                 withCmakeDirInLocalProp,
                 ndkSymlinkPath,
-                withDeviceProvider,
+                GradleTestProject.APPLY_DEVICEPOOL_PLUGIN,
                 withSdk,
                 withAndroidGradlePlugin,
                 withKotlinGradlePlugin,
@@ -265,11 +260,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withPluginManagementBlock(boolean withPluginManagementBlock) {
         this.withPluginManagementBlock = withPluginManagementBlock;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withDeviceProvider(boolean withDeviceProvider) {
-        this.withDeviceProvider = withDeviceProvider;
         return this;
     }
 
