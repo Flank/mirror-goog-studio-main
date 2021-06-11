@@ -22,6 +22,7 @@ import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.BundleConfig
 import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResourcesPackaging
@@ -204,5 +205,21 @@ class AnalyticsEnabledApplicationVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).testFixtures
+    }
+
+    @Test
+    fun testBundleConfig() {
+        val bundleConfig = Mockito.mock(BundleConfig::class.java)
+        Mockito.`when`(delegate.bundleConfig).thenReturn(bundleConfig)
+
+        Truth.assertThat((proxy.bundleConfig as AnalyticsEnabledBundleConfig).delegate)
+            .isEqualTo(bundleConfig)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.GET_BUNDLE_CONFIG_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .bundleConfig
     }
 }

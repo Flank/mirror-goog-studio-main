@@ -727,6 +727,11 @@ com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enu
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.ApplicationVariant.getBundleConfig: com.android.build.api.variant.BundleConfig ()
+com.android.build.api.variant.BundleConfig
+com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
+com.android.build.api.variant.CodeTransparency
+com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
 com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)

@@ -256,4 +256,10 @@ open class ApplicationVariantImpl @Inject constructor(
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
+    override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
+        CodeTransparencyImpl(
+            (globalScope.extension as BaseAppModuleExtension)
+                .bundle.codeTransparency.signing
+        )
+    )
 }

@@ -20,7 +20,6 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputPath
@@ -35,7 +34,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.AabFlinger
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.tools.build.bundletool.commands.AddTransparencyCommand
-import com.android.tools.build.bundletool.model.SigningConfiguration
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import org.gradle.api.file.RegularFileProperty
@@ -54,7 +52,6 @@ import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
 
@@ -83,6 +80,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     @get:Internal
     abstract val tmpDir: DirectoryProperty
 
+    @Suppress("unused")
     @get:Input
     val finalBundleFileName: String
         get() = finalBundleFile.get().asFile.name
@@ -176,8 +174,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         privateKey = certificateInfo.key,
                         certificates = listOf(certificateInfo.certificate),
                         minSdkVersion = 18 // So that RSA + SHA256 are used
-                    ).use {
-                        it.writeZip(
+                    ).use { aabFlinger ->
+                        aabFlinger.writeZip(
                             inputFile,
                             Deflater.DEFAULT_COMPRESSION
                         )
@@ -299,13 +297,12 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.signingConfigData =
                     SigningConfigDataProvider.create(creationConfig)
 
-                (creationConfig.globalScope.extension as BaseAppModuleExtension)
-                    .bundle.codeTransparency.signing.let { codeSigningConfig ->
-                        if (codeSigningConfig.storeFile != null && codeSigningConfig.keyAlias != null) {
-                            task.codeTransparencySigningConfigData =
-                                SigningConfigData.fromDslSigningConfig(codeSigningConfig)
-                        }
+                creationConfig.bundleConfig?.codeTransparency?.signingConfiguration?.let { codeSigning ->
+                    if (codeSigning.storeFile != null && codeSigning.keyAlias != null) {
+                        task.codeTransparencySigningConfigData =
+                            SigningConfigData.fromDslSigningConfig(codeSigning)
                     }
+                }
             }
 
             task.tmpDir.setDisallowChanges(

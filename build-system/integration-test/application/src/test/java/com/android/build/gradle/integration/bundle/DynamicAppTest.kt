@@ -1037,7 +1037,44 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test bundleRelease is signed correctly with Code Transparency`() {
+    fun `test bundleRelease is signed correctly with Code Transparency via DSL`() {
+        testBundleReleaseIsSignedCorrectlyWithCodeTransparency {
+                keyAlias, keyPass, keyStoreFile, storePass ->
+            """
+                android.bundle.codeTransparency.signing {
+                    keyAlias '${StringEscapeUtils.escapeJava(keyAlias)}'
+                    keyPassword '${StringEscapeUtils.escapeJava(keyPass)}'
+                    storeFile file('${StringEscapeUtils.escapeJava(keyStoreFile.absolutePath)}')
+                    storePassword '${StringEscapeUtils.escapeJava(storePass)}'
+                }"""
+        }
+    }
+
+    @Test
+    fun `test bundleRelease is signed correctly with Code Transparency via Variant API`() {
+        testBundleReleaseIsSignedCorrectlyWithCodeTransparency {
+                keyAlias, keyPass, keyStoreFile, storePass ->
+            """
+                android.signingConfigs {
+                    forBundle {
+                        keyAlias '${StringEscapeUtils.escapeJava(keyAlias)}'
+                        keyPassword '${StringEscapeUtils.escapeJava(keyPass)}'
+                        storeFile file('${StringEscapeUtils.escapeJava(keyStoreFile.absolutePath)}')
+                        storePassword '${StringEscapeUtils.escapeJava(storePass)}'
+                    }
+                }
+                androidComponents {
+                    onVariants(selector().withBuildType("release")) { variant ->
+                        variant.bundleConfig.codeTransparency.setSigningConfig(android.signingConfigs.getByName("forBundle"))
+                    }
+                }
+            """.trimIndent()
+        }
+    }
+
+    private fun testBundleReleaseIsSignedCorrectlyWithCodeTransparency(
+        buildFileCustomizer : (keyAlias: String, keyPass: String, keyStoreFile: File, storePass: String) -> String) {
+
         val storePass = "abc"
         val keyPass = "abc"
         val keyAlias = "key0"
@@ -1055,14 +1092,7 @@ class DynamicAppTest {
         val appProject = project.getSubproject(":app")
         TestFileUtils.appendToFile(
             appProject.buildFile,
-            """
-                android.bundle.codeTransparency.signing {
-                    keyAlias '${StringEscapeUtils.escapeJava(keyAlias)}'
-                    keyPassword '${StringEscapeUtils.escapeJava(keyPass)}'
-                    storeFile file('${StringEscapeUtils.escapeJava(keyStoreFile.absolutePath)}')
-                    storePassword '${StringEscapeUtils.escapeJava(storePass)}'
-                }
-            """.trimIndent()
+            buildFileCustomizer(keyAlias, keyPass, keyStoreFile, storePass)
         )
 
         val bundleTaskName = getBundleTaskName("release")
