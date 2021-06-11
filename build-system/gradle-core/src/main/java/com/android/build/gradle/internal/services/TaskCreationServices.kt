@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.lint.LintFromMaven
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -40,4 +41,5 @@ interface TaskCreationServices: BaseServices {
     fun initializeAapt2Input(aapt2Input: Aapt2Input)
     fun <T> provider(callable: () -> T): Provider<T>
     val variantPropertiesApiServices: VariantPropertiesApiServices
+    val lintFromMaven: LintFromMaven
 }

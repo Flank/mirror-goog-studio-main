@@ -35,10 +35,9 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheB
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
-import com.android.build.gradle.internal.lint.AndroidLintTask.Companion.LINT_CLASS_PATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -116,15 +115,14 @@ abstract class LintTool {
     @get:Optional
     abstract val workerHeapSize: Property<String>
 
-    fun initialize(project: Project, projectOptions: ProjectOptions) {
-        // TODO(b/160392650) Clean this up to use a detached configuration
-        classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
+    fun initialize(taskCreationServices: TaskCreationServices) {
+        classpath.fromDisallowChanges(taskCreationServices.lintFromMaven.files)
+        val projectOptions = taskCreationServices.projectOptions
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
-    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>
-    ) {
+    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
         submit(
             workerExecutor,
             mainClass,
@@ -1588,33 +1586,36 @@ abstract class ArtifactInput {
     }
 }
 
-fun createLintClasspathConfiguration(
-    project: Project,
-    projectServices: ProjectServices
-): FileCollection {
-    val config = project.configurations.create(LINT_CLASS_PATH)
-    config.isVisible = false
-    config.isTransitive = true
-    config.isCanBeConsumed = false
-    config.isCanBeResolved = true
-    config.description = "The lint embedded classpath"
-    val lintVersion =
-        getLintMavenArtifactVersion(
-            projectServices.projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
-            projectServices.issueReporter
-        )
-    project.dependencies.add(
-        config.name,
-        project.dependencies.create(
-            mapOf(
-                "group" to "com.android.tools.lint",
-                "name" to "lint-gradle",
-                "version" to lintVersion,
+class LintFromMaven(val files: FileCollection, val version: String) {
+
+    companion object {
+        @JvmStatic
+        fun from(
+            project: Project,
+            projectOptions: ProjectOptions,
+            issueReporter: IssueReporter,
+        ): LintFromMaven {
+            val lintVersion =
+                getLintMavenArtifactVersion(
+                    projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
+                    issueReporter
+                )
+            val config =  project.configurations.detachedConfiguration(
+                project.dependencies.create(
+                    mapOf(
+                        "group" to "com.android.tools.lint",
+                        "name" to "lint-gradle",
+                        "version" to lintVersion,
+                    )
+                )
             )
-        )
-    )
-    return config
+            config.isTransitive = true
+            config.isCanBeResolved = true
+            return LintFromMaven(config, lintVersion)
+        }
+    }
 }
+
 
 /**
  * The lint binary uses the same version numbers as AGP (see LintCliClient#getClientRevision()

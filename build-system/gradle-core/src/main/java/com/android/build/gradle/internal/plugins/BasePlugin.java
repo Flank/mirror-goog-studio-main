@@ -63,7 +63,6 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension;
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension;
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl;
-import com.android.build.gradle.internal.dsl.Lockable;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -76,8 +75,8 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
 import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
-import com.android.build.gradle.internal.lint.AndroidLintInputs;
 import com.android.build.gradle.internal.lint.LintFixBuildService;
+import com.android.build.gradle.internal.lint.LintFromMaven;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
@@ -473,8 +472,6 @@ public abstract class BasePlugin<
 
         // As soon as project is evaluated we can clear the shared state for deprecation reporting.
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
-
-        AndroidLintInputs.createLintClasspathConfiguration(project, projectServices);
 
         createAndroidJdkImageConfiguration(project, globalScope);
     }
@@ -958,6 +955,8 @@ public abstract class BasePlugin<
                 new DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath);
 
         Aapt2FromMaven aapt2FromMaven = Aapt2FromMaven.create(project, projectOptions);
+        LintFromMaven lintFromMaven =
+                LintFromMaven.from(project, projectOptions, syncIssueReporter);
 
         projectServices =
                 new ProjectServices(
@@ -969,6 +968,7 @@ public abstract class BasePlugin<
                         project.getLayout(),
                         projectOptions,
                         project.getGradle().getSharedServices(),
+                        lintFromMaven,
                         aapt2FromMaven,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
                         new ProjectInfo(project),

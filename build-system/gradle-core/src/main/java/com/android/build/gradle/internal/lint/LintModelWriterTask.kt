@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -83,15 +84,16 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     internal fun configureForStandalone(
-        project: Project,
-        projectOptions: ProjectOptions,
+        taskCreationServices: TaskCreationServices,
         javaConvention: JavaPluginConvention,
         lintOptions: LintOptions,
         partialResultsDir: File
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
-        this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        this.analyticsService.setDisallowChanges(
+            getBuildService(taskCreationServices.buildServiceRegistry)
+        )
         this.projectInputs
             .initializeForStandalone(
                 project,
@@ -104,7 +106,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             .initializeForStandalone(
                 project,
                 javaConvention,
-                projectOptions,
+                taskCreationServices.projectOptions,
                 checkDependencies = true,
                 isForAnalysis = false
             )

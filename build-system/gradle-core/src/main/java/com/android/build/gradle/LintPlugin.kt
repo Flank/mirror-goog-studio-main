@@ -35,9 +35,9 @@ import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
 import com.android.build.gradle.internal.lint.AndroidLintTask
 import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask
 import com.android.build.gradle.internal.lint.LintFixBuildService
+import com.android.build.gradle.internal.lint.LintFromMaven
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
-import com.android.build.gradle.internal.lint.createLintClasspathConfiguration
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -52,6 +52,9 @@ import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl
+import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -102,7 +105,6 @@ abstract class LintPlugin : Plugin<Project> {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
-        createLintClasspathConfiguration(project, projectServices)
         registerTasks(
             project,
             javaConvention,
@@ -117,6 +119,9 @@ abstract class LintPlugin : Plugin<Project> {
     ) {
         registerBuildServices(project)
         val artifacts = ArtifactsImpl(project, "global")
+        val taskCreationServices: TaskCreationServices = TaskCreationServicesImpl(
+            VariantPropertiesApiServicesImpl(projectServices), projectServices
+        )
         // Create the 'lint' task before afterEvaluate to avoid breaking existing build scripts that
         // expect it to be present during evaluation
         val lintTask = project.tasks.register("lint", AndroidLintTextOutputTask::class.java)
@@ -132,8 +137,7 @@ abstract class LintPlugin : Plugin<Project> {
             project.tasks.register("lintReport", AndroidLintTask::class.java) { task ->
                 task.description = "Generates the lint report for project `${project.name}`"
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     customLintChecks,
                     lintOptions!!,
@@ -160,8 +164,7 @@ abstract class LintPlugin : Plugin<Project> {
                 task.description =
                     "Generates the lint report for just the fatal issues for project  `${project.name}`"
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     customLintChecks,
                     lintOptions!!,
@@ -180,8 +183,7 @@ abstract class LintPlugin : Plugin<Project> {
             project.tasks.register("lintFix", AndroidLintTask::class.java) { task ->
                 task.description = "Generates the lint report for project `${project.name}` and applies any safe suggestions to the source code."
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     customLintChecks,
                     lintOptions!!,
@@ -193,8 +195,7 @@ abstract class LintPlugin : Plugin<Project> {
             val lintAnalysisTask = project.tasks.register("lintAnalyze", AndroidLintAnalysisTask::class.java) { task ->
                 task.description = "Runs lint analysis for project `${project.name}`"
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     customLintChecks,
                     lintOptions!!
@@ -209,8 +210,7 @@ abstract class LintPlugin : Plugin<Project> {
                 task.description =
                     "Runs lint analysis on just the fatal issues for project `${project.name}`"
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     customLintChecks,
                     lintOptions!!,
@@ -224,8 +224,7 @@ abstract class LintPlugin : Plugin<Project> {
             )
             val lintModelWriterTask = project.tasks.register("generateLintModel", LintModelWriterTask::class.java) { task ->
                 task.configureForStandalone(
-                    project,
-                    projectServices.projectOptions,
+                    taskCreationServices,
                     javaConvention,
                     lintOptions!!,
                     artifacts.getOutputPath(
@@ -341,9 +340,11 @@ abstract class LintPlugin : Plugin<Project> {
         val deprecationReporter =
             DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)
         val projectInfo = ProjectInfo(project)
+        val lintFromMaven = LintFromMaven.from(project, projectOptions, syncIssueReporter)
         projectServices = ProjectServices(
             syncIssueReporter, deprecationReporter, objectFactory, project.logger,
             project.providers, project.layout, projectOptions, project.gradle.sharedServices,
+            lintFromMaven,
             maxWorkerCount = project.gradle.startParameter.maxWorkerCount, projectInfo = projectInfo
         ) { o: Any -> project.file(o) }
         projectOptions

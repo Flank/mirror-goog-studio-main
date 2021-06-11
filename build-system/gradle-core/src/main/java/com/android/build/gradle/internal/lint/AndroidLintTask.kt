@@ -30,13 +30,13 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption.USE_LINT_PARTIAL_ANALYSIS
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
 import com.google.common.annotations.VisibleForTesting
@@ -655,10 +655,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.androidTestDependencyLintModels.disallowChanges()
             task.unitTestDependencyLintModels.disallowChanges()
             task.dependencyPartialResults.disallowChanges()
-            task.lintTool.initialize(
-                creationConfig.services.projectInfo.getProject(),
-                creationConfig.services.projectOptions
-            )
+            task.lintTool.initialize(creationConfig.services)
             task.lintModelWriterTaskOutputPath.setDisallowChanges(
                 creationConfig.artifacts.getOutputPath(InternalArtifactType.LINT_MODEL).absolutePath
             )
@@ -780,8 +777,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
     fun configureForStandalone(
-        project: Project,
-        projectOptions: ProjectOptions,
+        taskCreationServices: TaskCreationServices,
         javaPluginConvention: JavaPluginConvention,
         customLintChecksConfig: FileCollection,
         lintOptions: LintOptions,
@@ -790,25 +786,28 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
+        val project = taskCreationServices.projectInfo.getProject()
         initializeGlobalInputs(
             project = project,
             isAndroid = false)
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
-        this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        this.analyticsService.setDisallowChanges(
+            getBuildService(taskCreationServices.buildServiceRegistry)
+        )
         this.fatalOnly.setDisallowChanges(fatalOnly)
         this.autoFix.setDisallowChanges(autoFix)
         if (autoFix) {
-            this.lintFixBuildService.set(getBuildService(project.gradle.sharedServices))
+            this.lintFixBuildService.set(getBuildService(taskCreationServices.buildServiceRegistry))
         }
         this.lintFixBuildService.disallowChanges()
         this.lintClassLoaderBuildService.setDisallowChanges(
-            getBuildService(project.gradle.sharedServices)
+            getBuildService(taskCreationServices.buildServiceRegistry)
         )
         this.checkDependencies.setDisallowChanges(false)
         this.reportOnly.setDisallowChanges(true)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
-        this.lintTool.initialize(project, projectOptions)
+        this.lintTool.initialize(taskCreationServices)
         this.projectInputs
             .initializeForStandalone(
                 project,
@@ -826,7 +825,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             .initializeForStandalone(
                 project,
                 javaPluginConvention,
-                projectOptions,
+                taskCreationServices.projectOptions,
                 checkDependencies = false,
                 isForAnalysis = false
             )
@@ -869,6 +868,5 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
         private const val ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE = "ANDROID_LINT_JARS"
-        const val LINT_CLASS_PATH = "lintClassPath"
     }
 }
