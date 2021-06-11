@@ -86,6 +86,7 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -407,6 +408,59 @@ abstract class LintOptionsInput {
     }
 }
 
+/**
+ * System properties which can affect lint's behavior.
+ */
+abstract class SystemPropertyInputs {
+
+    @get:Input
+    @get:Optional
+    abstract val lintAutofix: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintBaselinesContinue: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintConfigurationOverride: Property<String>
+
+    fun initializeForAnalysis(providerFactory: ProviderFactory) {
+        lintAutofix.disallowChanges()
+        lintBaselinesContinue.disallowChanges()
+        lintConfigurationOverride.setDisallowChanges(
+            providerFactory.systemProperty("lint.configuration.override")
+        )
+    }
+
+    fun initialize(providerFactory: ProviderFactory) {
+        lintAutofix.setDisallowChanges(
+            providerFactory.systemProperty("lint.autofix")
+        )
+        lintBaselinesContinue.setDisallowChanges(
+            providerFactory.systemProperty("lint.baselines.continue")
+        )
+        lintConfigurationOverride.setDisallowChanges(
+            providerFactory.systemProperty("lint.configuration.override")
+        )
+    }
+}
+
+/**
+ * Environment variables which can affect lint's behavior.
+ */
+abstract class EnvironmentVariableInputs {
+
+    @get:Input
+    @get:Optional
+    abstract val lintOverrideConfiguration: Property<String>
+
+    fun initialize(providerFactory: ProviderFactory) {
+        lintOverrideConfiguration.setDisallowChanges(
+            providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
+        )
+    }
+}
 
 /**
  * Inputs for the variant.
