@@ -26,6 +26,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestName
@@ -384,6 +385,12 @@ ${
          */
         internal val tasksToInvoke = mutableListOf<String>()
 
+        internal var failureExpected = false
+
+        fun expectFailure() {
+            failureExpected = true
+        }
+
         private fun modulesPath(): List<String> = modules.filter { it.first != "buildSrc" }.map { it.first }
 
         /**
@@ -543,7 +550,7 @@ zipStorePath=wrapper/dists
                     File("$srcDir/tools/gradle/wrapper/$relativePathDistribution").toURI())
             }
         }
-        return gradleRunner.build()
+        return if (given.failureExpected) gradleRunner.buildAndFail() else gradleRunner.build()
     }
 
     override fun instantiateGiven(): GivenBuilder = GivenBuilder(scriptingLanguage, testName)

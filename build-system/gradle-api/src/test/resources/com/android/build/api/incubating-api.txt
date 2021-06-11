@@ -744,6 +744,7 @@ com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
+com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
 com.android.build.api.variant.VariantExtensionConfig
 com.android.build.api.variant.VariantExtensionConfig.buildTypeExtension: T (java.lang.Class<T>)

@@ -29,6 +29,12 @@ open class AnalyticsEnabledSigningConfig@Inject constructor(
     val stats: GradleBuildVariant.Builder
 ): SigningConfig {
 
+    override fun setConfig(signingConfig: com.android.build.api.dsl.SigningConfig) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.SIGNING_CONFIG_SET_CONFIG_VALUE
+        delegate.setConfig(signingConfig)
+    }
+
     override val enableV1Signing: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

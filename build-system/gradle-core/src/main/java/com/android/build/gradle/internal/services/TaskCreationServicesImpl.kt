@@ -20,6 +20,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 class TaskCreationServicesImpl(

@@ -24,22 +24,31 @@ import java.io.File
 import java.util.concurrent.Callable
 
 class SigningConfigImpl(
-    dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?,
+    signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     minSdk: Int,
     targetApi: Int?
 ) : SigningConfig {
 
-    val name: String? = dslSigningConfig?.name
+    private var dslSigningConfig = signingConfig
+
+    val name: String?
+        get() = dslSigningConfig?.name
+
+    override fun setConfig(signingConfig: com.android.build.api.dsl.SigningConfig) {
+        dslSigningConfig = signingConfig as com.android.build.gradle.internal.dsl.SigningConfig
+    }
 
     override val enableV4Signing =
         variantPropertiesApiServices.propertyOf(
             Boolean::class.java,
-            when {
-                // Don't sign with v4 if we're installing on a device that doesn't support it.
-                targetApi != null && targetApi < SigningConfigVersions.MIN_V4_SDK -> false
-                // Otherwise, sign with v4 if it's enabled explicitly.
-                else -> dslSigningConfig?.enableV4Signing ?: false
+            Callable {
+                when {
+                    // Don't sign with v4 if we're installing on a device that doesn't support it.
+                    targetApi != null && targetApi < SigningConfigVersions.MIN_V4_SDK -> false
+                    // Otherwise, sign with v4 if it's enabled explicitly.
+                    else -> dslSigningConfig?.enableV4Signing ?: false
+                }
             },
             "enableV4Signing"
         )
@@ -47,11 +56,13 @@ class SigningConfigImpl(
     override val enableV3Signing =
         variantPropertiesApiServices.propertyOf(
             Boolean::class.java,
-            when {
-                // Don't sign with v3 if we're installing on a device that doesn't support it.
-                targetApi != null && targetApi < SigningConfigVersions.MIN_V3_SDK -> false
-                // Otherwise, sign with v3 if it's enabled explicitly.
-                else -> dslSigningConfig?.enableV3Signing ?: false
+            Callable {
+                when {
+                    // Don't sign with v3 if we're installing on a device that doesn't support it.
+                    targetApi != null && targetApi < SigningConfigVersions.MIN_V3_SDK -> false
+                    // Otherwise, sign with v3 if it's enabled explicitly.
+                    else -> dslSigningConfig?.enableV3Signing ?: false
+                }
             },
             "enableV3Signing"
         )
