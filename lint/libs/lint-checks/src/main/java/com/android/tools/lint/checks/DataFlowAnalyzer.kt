@@ -51,6 +51,7 @@ import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UThisExpression
+import org.jetbrains.uast.UTryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
@@ -573,6 +574,25 @@ abstract class DataFlowAnalyzer(
         }
 
         super.afterVisitIfExpression(node)
+    }
+
+    override fun afterVisitTryExpression(node: UTryExpression) {
+        val tryBlock = node.tryClause as? UBlockExpression ?: return
+        tryBlock.expressions.lastOrNull()?.let { lastExpression ->
+            if (instances.contains(lastExpression)) {
+                instances.add(node)
+            }
+        }
+        for (clause in node.catchClauses) {
+            val clauseBody = clause.body as? UBlockExpression ?: continue
+            clauseBody.expressions.lastOrNull()?.let { lastExpression ->
+                if (instances.contains(lastExpression)) {
+                    instances.add(node)
+                }
+            }
+        }
+
+        super.afterVisitTryExpression(node)
     }
 
     override fun afterVisitBinaryExpression(node: UBinaryExpression) {

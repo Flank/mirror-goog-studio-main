@@ -1872,6 +1872,20 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         val cursorUsed = resolver.query(null, null, null, null, null) // OK
                         cursorUsed.use {  }
                         resolver.query(null, null, null, null, null).use { } // OK
+
+                        val cursorUsed2 = try {
+                            resolver.query(null, null, null, null, null) // OK
+                        } catch (e: Exception) {
+                            null
+                        }
+
+                        cursorUsed2?.use { }
+
+                        val cursorUsed3 = try {
+                            resolver.query(null, null, null, null, null) // ERROR
+                        } catch (e: Exception) {
+                            null
+                        }
                     }
                 }
             """
@@ -1881,7 +1895,10 @@ class CleanupDetectorTest : AbstractCheckTest() {
             src/test/pkg/MyTest.kt:6: Warning: This Cursor should be freed up after use with #close() [Recycle]
                     val cursorOpened = resolver.query(null, null, null, null, null) // ERROR
                                                 ~~~~~
-            0 errors, 1 warnings
+            src/test/pkg/MyTest.kt:22: Warning: This Cursor should be freed up after use with #close() [Recycle]
+                        resolver.query(null, null, null, null, null) // ERROR
+                                 ~~~~~
+            0 errors, 2 warnings
         """
         )
     }
