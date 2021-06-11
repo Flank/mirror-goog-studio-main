@@ -373,6 +373,12 @@ class DependencyConfigurator(
                 AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR,
                 jacocoTransformParametersConfig
             )
+            registerTransform(
+                JacocoTransform::class.java,
+                AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
+                AndroidArtifacts.ArtifactType.JACOCO_ASM_INSTRUMENTED_JARS,
+                jacocoTransformParametersConfig
+            )
         }
         if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             registerTransform(

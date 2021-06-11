@@ -49,6 +49,7 @@ public class AndroidArtifacts {
 
     private static final String TYPE_INSTRUMENTED_CLASSES = "jacoco-instrumented-classes";
     private static final String TYPE_JACOCO_CLASSES_JAR = "jacoco-classes-jar";
+    private static final String TYPE_JACOCO_ASM_INSTRUMENTED_JARS = "jacoco-asm-instrumented-jars";
 
     private static final String TYPE_MAYBE_NOT_NAMESPACED_AAR = "non-namespaced-aar";
     private static final String TYPE_PREPROCESSED_AAR_FOR_AUTO_NAMESPACE =
@@ -297,6 +298,7 @@ public class AndroidArtifacts {
         /** Jacoco instrumented versions of CLASSES and CLASSES_JAR produced by JacocoTransform. */
         JACOCO_CLASSES(TYPE_INSTRUMENTED_CLASSES),
         JACOCO_CLASSES_JAR(TYPE_JACOCO_CLASSES_JAR),
+        JACOCO_ASM_INSTRUMENTED_JARS(TYPE_JACOCO_ASM_INSTRUMENTED_JARS),
 
         /**
          * Processed jar.
