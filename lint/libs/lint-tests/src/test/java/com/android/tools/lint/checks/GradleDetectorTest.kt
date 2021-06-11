@@ -1308,7 +1308,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:8: Error: Use an integer rather than a string here (replace \"16\" with just 16) [StringShouldBeInt]\n" +
             "        targetSdkVersion \"16\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~\n" +
-            "3 errors, 0 warnings\n"
+            "build.gradle:10: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n" +
+            "    compileSdk '19'\n" +
+            "    ~~~~~~~~~~~~~~~\n" +
+            "4 errors, 0 warnings\n"
 
         lint().files(
             gradle(
@@ -1322,6 +1325,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        minSdkVersion '8'\n" +
                     "        targetSdkVersion \"16\"\n" +
                     "    }\n" +
+                    "    compileSdk '19'\n" +
                     "}\n"
             )
         ).issues(STRING_INTEGER).run().expect(expected).expectFixDiffs(
@@ -1337,7 +1341,41 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "Fix for build.gradle line 8: Replace with integer:\n" +
                 "@@ -8 +8\n" +
                 "-         targetSdkVersion \"16\"\n" +
-                "+         targetSdkVersion 16\n"
+                "+         targetSdkVersion 16\n" +
+                "Fix for build.gradle line 10: Replace with integer:\n" +
+                "@@ -10 +10\n" +
+                "-     compileSdk '19'\n" +
+                "+     compileSdk 19"
+        )
+    }
+
+    fun testCompileSdkString() {
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 19 // OK\n" +
+                    "    compileSdkPreview 'android-S' // OK\n" +
+                    "    compileSdk 19 // OK\n" +
+                    "    compileSdk 'android-S' // ERROR\n" +
+                    "}\n"
+            )
+        ).issues(STRING_INTEGER).run().expect(
+            """
+            build.gradle:7: Error: compileSdk does not support strings; did you mean compileSdkPreview ? [StringShouldBeInt]
+                compileSdk 'android-S' // ERROR
+                ~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for build.gradle line 7: Replace with compileSdkPreview:
+            @@ -7 +7
+            -     compileSdk 'android-S' // ERROR
+            +     compileSdkPreview 'android-S' // ERROR
+            """
         )
     }
 

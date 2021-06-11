@@ -978,7 +978,9 @@ class GradleModelMocker @JvmOverloads constructor(
             line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.") -> {
                 updateBuildTypeFromContext(context) { it.copy(isMinifyEnabled = SdkConstants.VALUE_TRUE == getUnquotedValue(line)) }
             }
-            key.startsWith("android.compileSdkVersion ") -> {
+            key.startsWith("android.compileSdkVersion ") ||
+                key.startsWith("android.compileSdk ") ||
+                key.startsWith("Android.compileSdkPreview ") -> {
                 val value = getUnquotedValue(key)
                 updateModule { it.copy(compileTarget = if (Character.isDigit(value[0])) "android-$value" else value) }
             }
