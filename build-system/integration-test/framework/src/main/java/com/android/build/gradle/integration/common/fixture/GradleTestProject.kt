@@ -1212,22 +1212,6 @@ allprojects { proj ->
     }
 
     /**
-     * Runs gradle on the project, and returns the model of the specified type. Throws exception on
-     * failure.
-     *
-     * @param modelClass Class of the model to return
-     * @param tasks Variadic list of tasks to execute.
-     * @return the model for the project with the specified type.
-     */
-    fun <T> executeAndReturnModel(
-        modelClass: Class<T>,
-        vararg tasks: String
-    ): T {
-        _buildResult = executor().run(*tasks)
-        return model().fetch(modelClass)
-    }
-
-    /**
      * Runs gradle on the project, and returns the (minimal) output model. Throws exception on
      * failure.
      *
@@ -1280,24 +1264,6 @@ allprojects { proj ->
         _buildResult = executor().run(*tasks)
         return model().fetchAndroidProjects()
     }
-
-    /**
-     * Runs gradle on the project, and returns the model of the specified type for each sub-project.
-     * Throws exception on failure.
-     *
-     * @param modelClass Class of the model to return
-     * @param tasks Variadic list of tasks to execute.
-     * @return map of project names to output models
-     */
-    fun <T> executeAndReturnMultiModel(
-        modelClass: Class<T>,
-        vararg tasks: String?
-    ): Map<String, T> {
-        _buildResult = executor().run(*tasks)
-        return model().fetchMulti(modelClass)
-    }
-
-    internal class ProjectOutputModel(val buildInformationByVariantName: Map<String, VariantBuildInformation>)
 
     fun setLastBuildResult(lastBuildResult: GradleBuildResult) {
         _buildResult = lastBuildResult
