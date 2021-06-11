@@ -96,11 +96,6 @@ abstract class UImplicitCallExpression(
     override val psi: PsiElement?
         get() = expression.psi
 
-    @Suppress("OverridingDeprecatedMember", "DEPRECATION")
-    override val annotations: List<UAnnotation>
-        @Suppress("ExternalAnnotations")
-        get() = expression.annotations
-
     override val classReference: UReferenceExpression? = null
     override val kind: UastCallKind get() = UastCallKind.METHOD_CALL
     override val methodIdentifier: UIdentifier? = null
