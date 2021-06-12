@@ -55,6 +55,9 @@ public class LintFixTest {
 
     @Test
     public void checkFindNestedResult() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "\nandroid.lintOptions.checkDependencies=false\n");
         GradleBuildResult result = project.executor().expectFailure().run(":app:lintFix");
         assertThat(result.getStderr())
                 .contains(
@@ -80,9 +83,6 @@ public class LintFixTest {
 
     @Test
     public void checkFixesAppliedInDependentModule() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "\nandroid.lintOptions.checkDependencies=true\n");
         TestFileUtils.appendToFile(
                 project.getSubproject(":library").getBuildFile(),
                 "\nandroid.lintOptions { error 'SyntheticAccessor' }\n");

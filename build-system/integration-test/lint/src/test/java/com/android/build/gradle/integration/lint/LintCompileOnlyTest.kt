@@ -139,7 +139,17 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
 
     // Regression test for b/185232013
     @Test
-    fun testLintWithCompileOnlyDependencies() {
+    fun testLintWithCompileOnlyDependencies_checkDependenciesFalse() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+                    android {
+                        lintOptions {
+                            checkDependencies false
+                        }
+                    }
+                    """.trimIndent()
+        )
         // Run twice to catch issues with configuration caching
         getExecutor().run("clean", ":app:lint")
         getExecutor().run("clean", ":app:lint")
@@ -147,13 +157,12 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
     }
 
     @Test
-    fun testLintCheckDependenciesWithCompileOnlyDependencies() {
+    fun testLintWithCompileOnlyDependencies_checkDependenciesTrue() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
             """
                     android {
                         lintOptions {
-                            checkDependencies true
                             abortOnError false
                         }
                     }

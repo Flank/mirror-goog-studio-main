@@ -71,7 +71,6 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                             abortOnError false
                             enable 'StopShip'
                             textOutput file("lint-results.txt")
-                            checkDependencies true
                         }
                     }
                 """.trimIndent()

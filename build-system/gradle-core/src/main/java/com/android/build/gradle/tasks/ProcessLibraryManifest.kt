@@ -308,7 +308,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             artifacts.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::mergeBlameFile
-            ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
+            ).withName("manifest-merger-blame-" + creationConfig.name + "-report.txt")
                 .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
 
             artifacts.setInitialProvider(
@@ -319,7 +319,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     FileUtils.join(creationConfig.services.projectInfo.getOutputsDir(), "logs")
                         .absolutePath
                 )
-                .withName("manifest-merger-" + creationConfig.baseName + "-report.txt")
+                .withName("manifest-merger-" + creationConfig.name + "-report.txt")
                 .on(MANIFEST_MERGE_REPORT)
         }
 

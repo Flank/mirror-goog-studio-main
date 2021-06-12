@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.GradleTaskSubject.asser
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -48,6 +49,24 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
 
     @get:Rule
     val temporaryFolder: TemporaryFolder = TemporaryFolder()
+
+    @Before
+    fun before() {
+        // need checkDependencies false if not using partial analysis because the lint task is never
+        // up-to-date when checkDependencies is true when not using partial analysis.
+        if (!usePartialAnalysis) {
+            project.buildFile
+                .appendText(
+                    """
+                        android {
+                            lintOptions {
+                                checkDependencies false
+                            }
+                        }
+                    """.trimIndent()
+                )
+        }
+    }
 
     @Test
     fun `Jars in prefs directory affect up-to-date checking`() {
