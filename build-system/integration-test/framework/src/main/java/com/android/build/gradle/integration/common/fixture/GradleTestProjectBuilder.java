@@ -68,7 +68,6 @@ public final class GradleTestProjectBuilder {
     // The resulting symlink path is always in the form */ndk/
     private String ndkSymlinkPath = ".";
     @Nullable String cmakeVersion;
-    @Nullable private List<Path> repoDirectories;
     @Nullable private File androidSdkDir;
     @Nullable private File androidNdkDir;
     @Nullable private String sideBySideNdkVersion = null;
@@ -163,7 +162,6 @@ public final class GradleTestProjectBuilder {
                 withPluginManagementBlock,
                 withIncludedBuilds,
                 null,
-                repoDirectories,
                 additionalMavenRepo,
                 androidSdkDir,
                 androidNdkDir,
@@ -265,11 +263,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withSdk(boolean withSdk) {
         this.withSdk = withSdk;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withRepoDirectories(List<Path> repoDirectories) {
-        this.repoDirectories = repoDirectories;
         return this;
     }
 

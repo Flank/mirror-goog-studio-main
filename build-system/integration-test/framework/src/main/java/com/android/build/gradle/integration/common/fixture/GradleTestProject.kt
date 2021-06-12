@@ -110,7 +110,6 @@ class GradleTestProject @JvmOverloads internal constructor(
     private val withPluginManagementBlock: Boolean,
     private val withIncludedBuilds: List<String>,
     private var mutableProjectLocation: ProjectLocation? = null,
-    private val repoDirectories: List<Path>?,
     private val additionalMavenRepo: MavenRepoGenerator?,
     val androidSdkDir: File?,
     val androidNdkDir: File,
@@ -424,7 +423,6 @@ class GradleTestProject @JvmOverloads internal constructor(
             withPluginManagementBlock = rootProject.withPluginManagementBlock,
             withIncludedBuilds = ImmutableList.of(),
             mutableProjectLocation = rootProject.location.createSubProjectLocation(subProject),
-            repoDirectories = rootProject.repoDirectories,
             additionalMavenRepo = rootProject.additionalMavenRepo,
             androidSdkDir = rootProject.androidSdkDir,
             androidNdkDir = rootProject.androidNdkDir,
@@ -539,18 +537,14 @@ class GradleTestProject @JvmOverloads internal constructor(
     }
 
     private fun getRepoDirectories(): List<Path> {
-        return if (repoDirectories != null) {
-            repoDirectories
-        } else {
-            val builder =
+        val builder =
                 ImmutableList.builder<Path>()
-            builder.addAll(localRepositories)
-            val additionalMavenRepo = getAdditionalMavenRepo()
-            if (additionalMavenRepo != null) {
-                builder.add(additionalMavenRepo)
-            }
-            builder.build()
+        builder.addAll(localRepositories)
+        val additionalMavenRepo = getAdditionalMavenRepo()
+        if (additionalMavenRepo != null) {
+            builder.add(additionalMavenRepo)
         }
+        return builder.build()
     }
 
     // Not enabled in tests
