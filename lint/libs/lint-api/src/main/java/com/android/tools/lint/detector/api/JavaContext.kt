@@ -217,6 +217,8 @@ open class JavaContext(
     fun getLocation(element: UElement): Location {
         if (element is UCallExpression) {
             return uastParser.getCallLocation(this, element, true, true)
+        } else if (element is UMethod) {
+            return uastParser.getNameLocation(this, element as UElement)
         }
         return uastParser.getLocation(this, element)
     }

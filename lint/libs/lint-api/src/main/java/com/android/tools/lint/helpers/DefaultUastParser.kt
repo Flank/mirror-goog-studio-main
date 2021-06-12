@@ -341,7 +341,7 @@ open class DefaultUastParser(
         if (element is UElementWithLocation) {
             val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
-            val text = file.psi.text
+            val text = file.sourcePsi.text
             val location = Location.create(
                 ioFile, text, element.startOffset,
                 element.endOffset
@@ -349,7 +349,7 @@ open class DefaultUastParser(
             location.setSource(element)
             return location
         } else {
-            val psiElement = element.psi
+            val psiElement = element.sourcePsi
             if (psiElement != null) {
                 return createLocation(psiElement).withSource(element)
             }
@@ -400,7 +400,7 @@ open class DefaultUastParser(
         if (element is UElementWithLocation) {
             return TextRange(element.startOffset, element.endOffset)
         } else {
-            val psiElement = element.psi
+            val psiElement = element.sourcePsi
             if (psiElement != null) {
                 return psiElement.textRange
             }
@@ -458,7 +458,7 @@ open class DefaultUastParser(
     private fun findPsi(element: UElement?): PsiElement? {
         var currentElement = element
         while (currentElement != null) {
-            val psi = currentElement.psi
+            val psi = currentElement.sourcePsi
             if (psi != null) {
                 return psi
             }

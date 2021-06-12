@@ -2527,7 +2527,7 @@ class LintDriver(
                     if (!allowSuppress && issue.suppressNames != null) {
                         flagInvalidSuppress(
                             context, issue, Location.create(baseline.file),
-                            issue.suppressNames
+                            null, issue.suppressNames
                         )
                     } else {
                         return true
@@ -3119,7 +3119,7 @@ class LintDriver(
                     if (customSuppressNames != null && context != null) {
                         flagInvalidSuppress(
                             context, issue, context.getLocation(currentScope),
-                            issue.suppressNames
+                            currentScope, issue.suppressNames
                         )
                         return false
                     }
@@ -3139,7 +3139,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3199,7 +3199,7 @@ class LintDriver(
                     if (customSuppressNames != null && context != null) {
                         flagInvalidSuppress(
                             context, issue, context.getLocation(currentScope),
-                            issue.suppressNames
+                            currentScope, issue.suppressNames
                         )
                         return false
                     }
@@ -3217,7 +3217,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3255,7 +3255,7 @@ class LintDriver(
                 if (customSuppressNames != null && context != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3272,7 +3272,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3289,6 +3289,7 @@ class LintDriver(
         context: Context,
         issue: Issue,
         location: Location,
+        scope: Any?,
         names: Collection<String>?
     ) {
         var message = "Issue `${issue.id}` is not allowed to be suppressed"
@@ -3302,6 +3303,24 @@ class LintDriver(
             })"
         }
 
+        // Try to flag the warning on the suppression annotation instead
+        if (scope is UAnnotated) {
+            //noinspection ExternalAnnotations
+            scope.uAnnotations.forEach() {
+                if (it.qualifiedName?.contains("Suppress") == true) {
+                    context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
+                    return
+                }
+            }
+        } else if (scope is PsiModifierListOwner) {
+            //noinspection ExternalAnnotations
+            scope.annotations.forEach() {
+                if (it.qualifiedName?.contains("Suppress") == true) {
+                    context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
+                    return
+                }
+            }
+        }
         context.report(IssueRegistry.LINT_ERROR, location, message)
     }
 
