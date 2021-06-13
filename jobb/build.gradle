@@ -18,7 +18,7 @@ task jobbStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start jobb'
-    mainClassName = 'com.android.jobb.Main'
+    mainClass.set('com.android.jobb.Main')
     applicationName = 'jobb'
 }
 

@@ -20,7 +20,7 @@ task formatJava(type: Exec) {
 task formatKotlin(type: JavaExec, group: "verification") {
     description = "Format lint Kotlin files"
     classpath = configurations.ktlint
-    main = "com.pinterest.ktlint.Main"
+    mainClass.set("com.pinterest.ktlint.Main")
     args "-F", "**/*.kt"
 }
 
