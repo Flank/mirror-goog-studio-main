@@ -17,13 +17,16 @@
 package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.testutils.truth.DexSubject;
+import com.android.utils.FileUtils;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +42,8 @@ public class DataBindingWithDaggerTest {
     @Rule
     public GradleTestProject project;
 
+    private final boolean specifyProcessor;
+
     @Parameterized.Parameters(name = "specify_processor_class_{0}")
     public static List<Object[]> parameters() {
         return Arrays.asList(
@@ -48,18 +53,19 @@ public class DataBindingWithDaggerTest {
     }
 
     public DataBindingWithDaggerTest(boolean specifyProcessor) {
-        String buildSuffix;
-        if (specifyProcessor) {
-            buildSuffix = ".specifyprocessor.gradle";
-        } else {
-            buildSuffix = ".gradle";
-        }
+        this.specifyProcessor = specifyProcessor;
+        this.project = GradleTestProject.builder().fromTestProject("databindingAndDagger").create();
+    }
 
-        project =
-                GradleTestProject.builder()
-                        .fromTestProject("databindingAndDagger")
-                        .withBuildFileName("build" + buildSuffix)
-                        .create();
+    @Before
+    public void setUp() throws IOException {
+        if (specifyProcessor) {
+            FileUtils.copyFile(
+                    new File(
+                            project.getBuildFile().getParentFile(),
+                            "build.specifyprocessor.gradle"),
+                    project.getBuildFile());
+        }
     }
 
     @Test

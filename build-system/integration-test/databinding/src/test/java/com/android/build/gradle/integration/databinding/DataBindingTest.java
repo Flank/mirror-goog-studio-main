@@ -16,23 +16,25 @@
 
 package com.android.build.gradle.integration.databinding;
 
-import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.truth.Truth8;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,32 +60,37 @@ public class DataBindingTest {
         myLibrary = library;
         myDbPkg = useAndroidX ? "Landroidx/databinding/" : "Landroid/databinding/";
 
-        List<String> options = new ArrayList<>();
-        if (library) {
-            options.add("library");
-        }
-        if (withoutAdapters) {
-            options.add("withoutadapters");
-        }
-        String androidX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
-
-        String buildFile =
-                options.isEmpty() ? null : "build." + Joiner.on('-').join(options) + ".gradle";
-
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databinding")
-                        .withBuildFileName(buildFile)
-                        .addGradleProperties(androidX)
+                        .addGradleProperties(
+                                BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
                         .create();
     }
 
     @Rule
     public final GradleTestProject project;
 
+    @Before
+    public void setUp() throws IOException {
+        List<String> options = new ArrayList<>();
+        if (myLibrary) {
+            options.add("library");
+        }
+        if (myWithoutAdapters) {
+            options.add("withoutadapters");
+        }
+        if (!options.isEmpty()) {
+            String customBuildFile = "build." + Joiner.on('-').join(options) + ".gradle";
+            FileUtils.copyFile(
+                    new File(project.getBuildFile().getParentFile(), customBuildFile),
+                    project.getBuildFile());
+        }
+    }
+
     @Test
     public void checkApkContainsDataBindingClasses() throws Exception {
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         String bindingClass = "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
         // only in v2
