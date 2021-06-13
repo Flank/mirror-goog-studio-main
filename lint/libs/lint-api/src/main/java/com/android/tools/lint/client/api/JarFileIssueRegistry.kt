@@ -366,6 +366,12 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                         }
                     }
                 } catch (e: Throwable) {
+                    // Some older AndroidX libraries still in use don't have this defined, but we've
+                    // check that they do work
+                    if (className.startsWith("androidx.") || className.startsWith("android.")) {
+                        return registry
+                    }
+
                     var message = "Lint found an issue registry (`$className`)\n" +
                         "which did not specify the Lint API version it was compiled with.\n" +
                         "\n" +
