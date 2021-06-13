@@ -1059,7 +1059,7 @@ public class MainTest extends AbstractCheckTest {
                         + "Scanning MainTest_testPrintFirstError: ......\n"
                         + "Scanning MainTest_testPrintFirstError (Phase 2): ...\n"
                         + "Wrote HTML report to file://report.html\n"
-                        + "Lint found 2 errors and 5 warnings. First failure:\n"
+                        + "Lint found 2 errors and 4 warnings. First failure:\n"
                         + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
                         + "    <Button android:id='@+id/duplicated'/>\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"

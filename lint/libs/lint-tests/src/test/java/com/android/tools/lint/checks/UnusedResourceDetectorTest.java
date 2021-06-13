@@ -310,7 +310,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources>\n"
                                         + "\n"
-                                        + "    <string name=\"app_name\">LibraryProject</string>\n"
                                         + "    <string name=\"string1\">String 1</string>\n"
                                         + "    <string name=\"string2\">String 2</string>\n"
                                         + "    <string name=\"string3\">String 3</string>\n"
@@ -319,7 +318,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "../LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                                + "../LibraryProject/res/values/strings.xml:6: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
                                 + "    <string name=\"string3\">String 3</string>\n"
                                 + "            ~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");
