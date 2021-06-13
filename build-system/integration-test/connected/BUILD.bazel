@@ -534,15 +534,6 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
-    name = "ParentLibsConnectedTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
-    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
-    flaky = True,  # b/148626301 flaky emulator connectivity
-    maven_repos = TEST_MAVEN_REPOS,
-    deps = TEST_DEPS,
-)
-
-gradle_connected_test(
     name = "PkgOverrideConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/pkgOverride"],

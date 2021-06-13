@@ -1,3 +1,0 @@
-include 'application'
-include 'lib1'
-project(':lib1').projectDir = file('../lib1')
