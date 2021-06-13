@@ -358,6 +358,7 @@ public class TestFiles {
         return new CompiledSourceFile(into, type, source, checksum, encoded);
     }
 
+    @Deprecated // Use the method with the checksum instead
     public static CompiledSourceFile bytecode(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         CompiledSourceFile.Type type =
@@ -366,6 +367,19 @@ public class TestFiles {
                         ? CompiledSourceFile.Type.BYTECODE_ONLY
                         : CompiledSourceFile.Type.RESOURCE;
         return new CompiledSourceFile(into, type, source, null, encoded);
+    }
+
+    public static CompiledSourceFile bytecode(
+            @NonNull String into,
+            @NonNull TestFile source,
+            long checksum,
+            @NonNull String... encoded) {
+        CompiledSourceFile.Type type =
+                source.targetRelativePath.endsWith(DOT_JAVA)
+                                || source.targetRelativePath.endsWith(DOT_KT)
+                        ? CompiledSourceFile.Type.BYTECODE_ONLY
+                        : CompiledSourceFile.Type.RESOURCE;
+        return new CompiledSourceFile(into, type, source, checksum, encoded);
     }
 
     @NonNull
