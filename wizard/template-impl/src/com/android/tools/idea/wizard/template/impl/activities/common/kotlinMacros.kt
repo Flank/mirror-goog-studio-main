@@ -23,7 +23,7 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
   if (!data.isNewModule && projectData.language == Language.Kotlin) {
-    applyPlugin("kotlin-android")
+    applyPlugin("org.jetbrains.kotlin.android", projectData.kotlinVersion)
     addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:${projectData.kotlinVersion}")
   }
 }

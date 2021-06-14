@@ -29,7 +29,7 @@ fun buildGradle(
   return """
 plugins {
     id 'com.android.library'
-    ${renderIf(generateKotlin) {"    id 'kotlin-android'"}}
+    ${renderIf(generateKotlin) {"    id 'org.jetbrains.kotlin.android'"}}
 }
 android {
     compileSdkVersion ${buildApiString?.toIntOrNull() ?: "\"$buildApiString\""}
