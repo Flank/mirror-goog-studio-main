@@ -1778,10 +1778,13 @@ open class LintCliClient : LintClient {
         }
     }
 
-    /** Whether lint should continue running after a baseline has been created. */
+    /**
+     * Whether lint should continue running after a baseline has been
+     * created.
+     */
     private fun continueAfterBaselineCreated(): Boolean {
-        return System.getProperty("lint.baselines.continue") == VALUE_TRUE
-                || flags.isContinueAfterBaselineCreated
+        return System.getProperty("lint.baselines.continue") == VALUE_TRUE ||
+            flags.isContinueAfterBaselineCreated
     }
 
     companion object {
