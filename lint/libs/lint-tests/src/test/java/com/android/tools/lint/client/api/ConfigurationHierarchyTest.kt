@@ -460,7 +460,6 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
             "", // Expected exit code
             LintCliFlags.ERRNO_SUCCESS,
             arrayOf<String>(
-                "--quiet",
                 "--disable",
                 "LintError",
                 "--disable",
@@ -522,7 +521,6 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
             "", // Expected exit code
             LintCliFlags.ERRNO_SUCCESS,
             arrayOf<String>(
-                "--quiet",
                 "--disable",
                 "LintError",
                 "--disable",

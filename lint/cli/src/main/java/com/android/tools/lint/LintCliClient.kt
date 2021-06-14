@@ -281,7 +281,6 @@ open class LintCliClient : LintClient {
         }
         driver = createDriver(registry, lintRequest)
         driver.analysisStartTime = startTime
-        addProgressPrinter()
         addCancellationChecker()
         validateIssueIds()
 
@@ -802,12 +801,6 @@ open class LintCliClient : LintClient {
         return driver
     }
 
-    protected open fun addProgressPrinter() {
-        if (!flags.isQuiet) {
-            driver.addLintListener(ProgressPrinter())
-        }
-    }
-
     protected open fun addCancellationChecker() {
         driver.addLintListener(object : LintListener {
             override fun update(
@@ -835,11 +828,6 @@ open class LintCliClient : LintClient {
 
     override fun log(severity: Severity, exception: Throwable?, format: String?, vararg args: Any) {
         System.out.flush()
-        if (!flags.isQuiet) {
-            // Place the error message on a line of its own since we're printing '.' etc
-            // with newlines during analysis
-            System.err.println()
-        }
         if (format != null) {
             System.err.println(String.format(format, *args))
         }
@@ -1172,38 +1160,6 @@ open class LintCliClient : LintClient {
             )
         } else {
             log(Severity.WARNING, null, "Lint: %1\$s", message)
-        }
-    }
-
-    private class ProgressPrinter : LintListener {
-        override fun update(
-            driver: LintDriver,
-            type: LintListener.EventType,
-            project: Project?,
-            context: Context?
-        ) {
-            when (type) {
-                LintListener.EventType.SCANNING_PROJECT -> {
-                    val name = context?.project?.name ?: "?"
-                    if (driver.phase > 1) {
-                        print("\nScanning $name (Phase ${driver.phase}): ")
-                    } else {
-                        print("\nScanning $name: ")
-                    }
-                }
-                LintListener.EventType.SCANNING_LIBRARY_PROJECT -> {
-                    val name = context?.project?.name ?: "?"
-                    print("\n         - $name: ")
-                }
-                LintListener.EventType.SCANNING_FILE -> print('.')
-                LintListener.EventType.NEW_PHASE -> {
-                }
-                LintListener.EventType.COMPLETED -> println()
-                LintListener.EventType.REGISTERED_PROJECT, LintListener.EventType.STARTING -> {
-                }
-                LintListener.EventType.MERGING -> {
-                }
-            }
         }
     }
 
