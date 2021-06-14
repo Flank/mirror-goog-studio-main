@@ -42,6 +42,7 @@ import com.android.build.gradle.options.BooleanOption.USE_LINT_PARTIAL_ANALYSIS
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -253,7 +254,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         )
     }
 
-    private fun generateCommandLineArguments(): List<String> {
+    @VisibleForTesting
+    internal fun generateCommandLineArguments(): List<String> {
 
         val arguments = mutableListOf<String>()
         // Some Global flags
@@ -326,6 +328,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             arguments += "--stacktrace"
         }
         arguments += listOf("--cache-dir", lintCacheDirectory.get().asFile.absolutePath)
+
+        // Pass information to lint using the --client-id, --client-name, and --client-version flags
+        // so that lint can apply gradle-specific and version-specific behaviors.
+        arguments.add("--client-id", "gradle")
+        arguments.add("--client-name", "AGP")
+        arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
         return Collections.unmodifiableList(arguments)
     }
