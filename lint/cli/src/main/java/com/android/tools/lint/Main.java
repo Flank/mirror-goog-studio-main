@@ -2145,11 +2145,6 @@ public class Main {
     public void log(
             @Nullable Throwable exception, @Nullable String format, @Nullable Object... args) {
         System.out.flush();
-        if (!flags.isQuiet()) {
-            // Place the error message on a line of its own since we're printing '.' etc
-            // with newlines during analysis
-            System.err.println();
-        }
         if (format != null) {
             //noinspection RedundantStringFormatCall
             System.err.println(String.format(format, args));
