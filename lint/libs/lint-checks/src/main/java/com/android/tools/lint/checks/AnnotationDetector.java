@@ -30,6 +30,7 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
 import static com.android.tools.lint.detector.api.Lint.getAutoBoxedType;
+import static com.android.tools.lint.detector.api.Lint.isKotlin;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
@@ -822,20 +823,23 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             if (!mWarnedFlags.add(resolved)) {
                                 return;
                             }
+                            String operator = isKotlin(resolved) ? "shl" : "<<";
                             String message =
                                     String.format(
                                             Locale.US,
-                                            "Consider declaring this constant using 1 << %1$d instead",
+                                            "Consider declaring this constant using 1 %s %d instead",
+                                            operator,
                                             shift);
                             String replace =
                                     String.format(
                                             Locale.ROOT,
-                                            "1%s << %d",
+                                            "1%s %s %d",
                                             o instanceof Long ? "L" : "",
+                                            operator,
                                             shift);
                             LintFix fix =
                                     fix().replace()
-                                            .sharedName("Change declaration to <<")
+                                            .sharedName("Change declaration to " + operator)
                                             .with(replace)
                                             .autoFix()
                                             .build();
