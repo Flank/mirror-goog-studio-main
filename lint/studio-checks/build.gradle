@@ -1,0 +1,44 @@
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.kotlin'
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    implementation project(':base:lint-api')
+    implementation project(':base:lint-checks')
+    implementation project(':base:lint-tests')
+    implementation project(':base:uast')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:common')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:intellij-core')
+    implementation project(':base:manifest-merger')
+    implementation project(':base:layoutlib-api')
+    implementation project(':analytics-library:shared')
+    implementation project(':analytics-library:protos')
+    implementation project(':analytics-library:tracker')
+
+    implementation libs.guava
+    implementation libs.kotlin_reflect
+    implementation libs.kotlin_stdlib
+    implementation libs.kxml
+
+    testImplementation project(':base:testutils')
+    testImplementation project(':analytics-library:shared')
+    testImplementation project(':analytics-library:protos')
+    testImplementation project(':analytics-library:tracker')
+    testImplementation project(':analytics-library:testing')
+    testImplementation project(':base:apkparser:binary-resources')
+    testImplementation project(':base:apkparser:apkanalyzer')
+    testImplementation libs.gson
+    testImplementation libs.truth
+    testImplementation libs.kxml
+    testImplementation files(toolsJarForJava8)
+    testImplementation testFixtures(project(":base:repository"))
+    testImplementation testFixtures(project(":base:common"))
+}
