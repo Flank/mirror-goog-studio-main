@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.BufferedOutputStream;
@@ -30,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
@@ -39,6 +41,7 @@ import org.gradle.tooling.events.OperationType;
 public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
 
     private boolean isExpectingFailure = false;
+    private ImmutableMap<String, String> env;
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
@@ -60,6 +63,15 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
      */
     public GradleTaskExecutor expectFailure() {
         isExpectingFailure = true;
+        return this;
+    }
+
+    public GradleTaskExecutor withEnvironmentVariables(Map<String, String> env) {
+        this.env = ImmutableMap.copyOf(env);
+        this.env.forEach(
+                (String key, String value) -> {
+                    assertThat(value).isNotEmpty();
+                });
         return this;
     }
 
@@ -95,6 +107,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         launcher.addProgressListener(progressListener, OperationType.TASK);
 
         launcher.withArguments(Iterables.toArray(args, String.class));
+
+        launcher.setEnvironmentVariables(env);
 
         GradleConnectionException failure = null;
         try (OutputStream stdout = new BufferedOutputStream(new FileOutputStream(tmpStdOut));

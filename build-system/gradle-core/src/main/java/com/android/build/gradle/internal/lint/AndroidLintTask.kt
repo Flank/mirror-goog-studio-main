@@ -702,8 +702,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 it.prefsLocation.resolve("lint")
             }).also { it.include("*$DOT_JAR") }
         this.globalRuleJars.from(globalLintJarsInPrefsDir)
-
+        // Also include Lint jars set via the environment variable ANDROID_LINT_JARS
+        val globalLintJarsFromEnvVariable: Provider<List<String>> =
+                project.providers.environmentVariable(ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE)
+                        .orElse("")
+                        .map { it.split(File.pathSeparator).filter(String::isNotEmpty) }
+        this.globalRuleJars.from(globalLintJarsFromEnvVariable)
         this.globalRuleJars.disallowChanges()
+
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)
         } else {
@@ -793,6 +799,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
+        private const val ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE = "ANDROID_LINT_JARS"
         const val LINT_CLASS_PATH = "lintClassPath"
     }
 }
