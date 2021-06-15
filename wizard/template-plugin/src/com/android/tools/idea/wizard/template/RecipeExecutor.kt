@@ -138,17 +138,12 @@ interface RecipeExecutor {
   /**
    * Sets Compose Options field values
    */
-  fun setComposeOptions(kotlinCompilerExtensionVersion: String?, kotlinCompilerVersion: String?)
+  fun setComposeOptions(kotlinCompilerExtensionVersion: String?)
 
   /**
    * Sets Cpp Options field values
    */
   fun setCppOptions(cppFlags: String, cppPath: String, cppVersion: String)
-
-  /**
-   * Enables the use of the Kotlin IR compiler.
-   */
-  fun setUseKotlinIrCompiler()
 
   /**
    * Sets sourceCompatibility and targetCompatibility in compileOptions and (if needed) jvmTarget in kotlinOptions.

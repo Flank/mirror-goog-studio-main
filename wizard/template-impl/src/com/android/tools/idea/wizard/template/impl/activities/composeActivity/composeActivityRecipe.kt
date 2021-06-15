@@ -41,7 +41,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addMaterialDependency(true) // useAndroidX should be always true for Compose
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "1.0.0-beta07")
+  setExtVar(composeVersionVarName, "1.0.0-beta08")
 
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
@@ -64,9 +64,8 @@ fun RecipeExecutor.composeActivityRecipe(
 
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)
-  setUseKotlinIrCompiler()
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName", kotlinCompilerVersion = "1.4.32")
+  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName")
 
   open(srcOut.resolve("${activityClass}.kt"))
 }
