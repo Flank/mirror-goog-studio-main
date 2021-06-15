@@ -69,6 +69,7 @@ class AndroidLintTaskTest {
         task.textReportToStdOut.set(false)
         task.textReportToStderr.set(false)
         task.lintModelDirectory.set(temporaryFolder.newFolder())
+        task.lintModelWriterTaskOutputPath.set("lintModelWriterTaskOutputPath")
         task.checkDependencies.set(true)
         task.printStackTrace.set(false)
         task.lintCacheDirectory.set(temporaryFolder.newFolder())

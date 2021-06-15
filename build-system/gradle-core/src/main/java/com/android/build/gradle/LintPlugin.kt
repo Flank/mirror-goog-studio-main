@@ -127,7 +127,8 @@ abstract class LintPlugin : Plugin<Project> {
                     javaConvention,
                     customLintChecks,
                     lintOptions!!,
-                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
+                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                    artifacts.getOutputPath(InternalArtifactType.LINT_MODEL)
                 )
             }
 
@@ -141,6 +142,7 @@ abstract class LintPlugin : Plugin<Project> {
                     customLintChecks,
                     lintOptions!!,
                     artifacts.get(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS),
+                    artifacts.getOutputPath(InternalArtifactType.LINT_MODEL),
                     fatalOnly = true
                 )
             }
@@ -153,6 +155,7 @@ abstract class LintPlugin : Plugin<Project> {
                     customLintChecks,
                     lintOptions!!,
                     artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                    artifacts.getOutputPath(InternalArtifactType.LINT_MODEL),
                     autoFix = true
                 )
             }
