@@ -84,6 +84,15 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val lintModelDirectory: DirectoryProperty
 
+    /**
+     * This task needs the location of the lint model directory produced by [LintModelWriterTask]
+     * in order to ensure that that directory is not passed to lint via --lint-model, which would
+     * be problematic because [lintModelDirectory] is already being passed to lint via --lint-model.
+     * See b/190855628.
+     */
+    @get:Input
+    abstract val lintModelWriterTaskOutputPath: Property<String>
+
     @get:Input
     abstract val textReportEnabled: Property<Boolean>
 
@@ -310,6 +319,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         for (model in unitTestDependencyLintModels.files) {
             models.add(model.absolutePath)
         }
+
+        models.remove(lintModelWriterTaskOutputPath.get())
 
         check(checkDependencies.get()
                 || models.size == 1 + dynamicFeatureLintModels.files.size) {
@@ -621,6 +632,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 creationConfig.services.projectInfo.getProject(),
                 creationConfig.services.projectOptions
             )
+            task.lintModelWriterTaskOutputPath.setDisallowChanges(
+                creationConfig.artifacts.getOutputPath(InternalArtifactType.LINT_MODEL).absolutePath
+            )
             if (checkDependencies && !reportOnly) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
@@ -710,6 +724,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         customLintChecksConfig: FileCollection,
         lintOptions: LintOptions,
         partialResults: Provider<Directory>,
+        lintModelWriterTaskOutputDir: File,
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
@@ -738,6 +753,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
         this.partialResults.setDisallowChanges(partialResults)
+        this.lintModelWriterTaskOutputPath.setDisallowChanges(
+            lintModelWriterTaskOutputDir.absolutePath
+        )
         this.initializeOutputTypesConvention()
         when {
             fatalOnly -> {
