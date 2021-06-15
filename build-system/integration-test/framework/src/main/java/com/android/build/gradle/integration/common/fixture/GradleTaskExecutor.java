@@ -24,6 +24,7 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.BufferedOutputStream;
@@ -32,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.BuildLauncher;
@@ -47,6 +49,7 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
     private boolean isExpectingFailure = false;
     private boolean queryOutputModel = false;
+    private ImmutableMap<String, String> env;
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
@@ -88,6 +91,11 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     @Deprecated
     public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
         return run("deviceCheck");
+    }
+
+    public GradleTaskExecutor withEnvironmentVariables(Map<String, String> env) {
+        this.env = ImmutableMap.copyOf(env);
+        return this;
     }
 
     /** Execute the specified tasks */
@@ -145,6 +153,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         launcher.addProgressListener(progressListener, OperationType.TASK);
 
         launcher.withArguments(Iterables.toArray(args, String.class));
+
+        launcher.setEnvironmentVariables(env);
 
         GradleConnectionException failure = null;
         ModelContainer<ProjectBuildOutput> outputModelContainer = null;
