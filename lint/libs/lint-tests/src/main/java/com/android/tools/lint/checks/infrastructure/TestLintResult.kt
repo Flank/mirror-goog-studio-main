@@ -106,7 +106,7 @@ class TestLintResult internal constructor(
     @JvmOverloads
     fun expect(
         expectedText: String,
-        expectedException: Class<out Exception>? = null,
+        expectedException: Class<out Throwable>? = null,
         transformer: TestResultTransformer = TestResultTransformer { it },
         testMode: TestMode = defaultMode
     ): TestLintResult {
@@ -185,7 +185,7 @@ class TestLintResult internal constructor(
         testMode: TestMode = defaultMode
     ): String {
         val state = states[testMode]!!
-        return formatOutput(state.output, state.firstThrowable, expectedException)
+        return formatOutput(state.output, state.firstThrowable, expectedException, state.rootDir)
     }
 
     /**
@@ -197,7 +197,8 @@ class TestLintResult internal constructor(
     private fun formatOutput(
         originalOutput: String,
         throwable: Throwable?,
-        expectedThrowable: Class<out Throwable>?
+        expectedThrowable: Class<out Throwable>?,
+        rootDir: File
     ): String {
         var output = originalOutput
         if (maxLineLength > TRUNCATION_MARKER.length) {
@@ -223,14 +224,14 @@ class TestLintResult internal constructor(
             if (expectedThrowable != null && expectedThrowable.isInstance(throwable)) {
                 val throwableMessage = throwable.message
                 if (throwableMessage != null && !output.contains(throwableMessage)) {
-                    writer.write("$throwableMessage\n")
+                    writer.write("${task.stripRoot(rootDir, throwableMessage)}\n")
                 }
             } else {
                 throwable.printStackTrace(PrintWriter(writer))
             }
 
             if (output.isNotEmpty()) {
-                writer.write(normalizeOutput(output))
+                writer.write(task.stripRoot(rootDir, normalizeOutput(output)))
             }
 
             writer.toString()

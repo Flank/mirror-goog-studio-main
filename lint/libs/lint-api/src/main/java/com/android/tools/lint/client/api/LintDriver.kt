@@ -3423,6 +3423,12 @@ class LintDriver(
                     // Silently abort the analysis.
                     throw ProcessCanceledException(throwable)
                 }
+                throwable is AssertionError &&
+                    throwable.stackTrace.isNotEmpty() &&
+                    throwable.stackTrace[0].methodName == "fail" -> {
+                    // org.junit.Assert.fail() from test suite
+                    throw throwable
+                }
             }
 
             if (crashCount++ > MAX_REPORTED_CRASHES) {

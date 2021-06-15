@@ -127,6 +127,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import kotlin.Pair;
@@ -546,7 +547,8 @@ public class TestLintClient extends LintCliClient {
 
                 // Make sure we don't have any absolute paths to the test root or project
                 // directories or home directories in the XML
-                if (type.isPersistenceFile() || !getFlags().isFullPath()) {
+                if ((type.isPersistenceFile() || !getFlags().isFullPath())
+                        && !task.allowAbsolutePathsInMessages) {
                     assertFalse(xml, xml.contains(absProjectPath));
                     assertFalse(xml, xml.contains(absProjectCanonicalPath));
                     assertFalse(xml, xml.contains(absTestRootPath));
@@ -994,23 +996,7 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        if (task.messageChecker != null
-                // Don't run this if there's an internal failure instead; this is just going
-                // to be confusing and we want to reach the final report comparison instead which
-                // will show the lint error
-                && !(!task.allowExceptions
-                        && issue == IssueRegistry.LINT_ERROR
-                        && fix instanceof LintFix.DataMap
-                        && ((LintFix.DataMap) fix).getThrowable(LintDriver.KEY_THROWABLE)
-                                != null)) {
-            task.messageChecker.checkReportedError(
-                    context,
-                    incident.getIssue(),
-                    incident.getSeverity(),
-                    incident.getLocation(),
-                    format.convertTo(incident.getMessage(), TextFormat.TEXT),
-                    fix);
-        }
+        checkMessage(context, incident, format, fix, issue);
 
         if (incident.getSeverity() == Severity.FATAL) {
             // Treat fatal errors like errors in the golden files.
@@ -1124,6 +1110,67 @@ public class TestLintClient extends LintCliClient {
             }
         }
     }
+
+    private void checkMessage(
+            @NonNull Context context,
+            @NonNull Incident incident,
+            @NonNull TextFormat format,
+            LintFix fix,
+            Issue issue) {
+        String message = incident.getMessage();
+        if (task.messageChecker != null
+                // Don't run this if there's an internal failure instead; this is just going
+                // to be confusing, and we want to reach the final report comparison instead which
+                // will show the lint error
+                && !(!task.allowExceptions
+                        && issue == IssueRegistry.LINT_ERROR
+                        && fix instanceof LintFix.DataMap
+                        && ((LintFix.DataMap) fix).getThrowable(LintDriver.KEY_THROWABLE)
+                                != null)) {
+            task.messageChecker.checkReportedError(
+                    context,
+                    incident.getIssue(),
+                    incident.getSeverity(),
+                    incident.getLocation(),
+                    format.convertTo(message, TextFormat.TEXT),
+                    fix);
+        }
+
+        // Look for absolute paths in error messages
+        if (!task.allowAbsolutePathsInMessages) {
+            Matcher matcher = PATH_PATTERN.matcher(message);
+            int offset = 0;
+            while (matcher.find(offset)) {
+                String path = matcher.group(2);
+                File file = new File(path);
+                if (file.exists()) {
+                    fail(
+                            ""
+                                    + "Found absolute path\n"
+                                    + "    "
+                                    + path
+                                    + "\n"
+                                    + "in a reported error message; this is discouraged because absolute\n"
+                                    + "paths do not play well with baselines, shared HTML reports, remote\n"
+                                    + "caching, etc.");
+                }
+                offset = matcher.end();
+            }
+        }
+    }
+
+    // Pattern for recognizing a message containing an embedded absolute
+    // path (well, for Unix; this pattern won't match paths on Windows where
+    // it's a bit harder to find an absolute path prefix, but it should be
+    // enough to catch this while running tests on other platforms). Also
+    // assumes that there are no spaces in // the absolute paths (which is
+    // usually the case when tests are running with the unit testing
+    // infrastructure). This pattern requires the path to have at least 3 components to
+    // avoid phrases like /italics/.
+
+    private static final Pattern PATH_PATTERN =
+            Pattern.compile(
+                    "(\\s|^)(/\\S+/[\\S/]+)\\b"); // require 3 components so 1/2 etc isn't a path
 
     private Incident checkIncidentSerialization(@NonNull Incident incident) {
         // Check persistence: serialize and deserialize the issue metadata and continue using the

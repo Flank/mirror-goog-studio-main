@@ -16,15 +16,19 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.CURRENT_PLATFORM
+import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LayoutDetector
+import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -257,6 +261,64 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 +       android:fillColor="#FFE000"
                 """
             )
+    }
+
+    fun testAbsolutePaths() {
+        if (CURRENT_PLATFORM == PLATFORM_WINDOWS) {
+            // This check does not run on Windows
+            return
+        }
+
+        lint()
+            .files(
+                xml(
+                    "res/drawable/drawable.xml",
+                    "<test/>"
+                ).indented()
+            )
+            .issues(AbsPathTestDetector.ABS_PATH_ISSUE)
+            .run()
+            .expect(
+                """
+                Found absolute path
+                    TESTROOT/default/app/res/drawable/drawable.xml
+                in a reported error message; this is discouraged because absolute
+                paths do not play well with baselines, shared HTML reports, remote
+                caching, etc.
+                """,
+                java.lang.AssertionError::class.java
+            )
+
+        // Allowing absolute paths
+        lint()
+            .files(
+                xml(
+                    "res/drawable/drawable.xml",
+                    "<test/>"
+                ).indented()
+            )
+            .issues(AbsPathTestDetector.ABS_PATH_ISSUE)
+            .allowAbsolutePathsInMessages(true)
+            .run()
+            .expectCount(1, Severity.WARNING)
+    }
+
+    // Invalid detector which includes absolute paths in error messages which should not be done
+    class AbsPathTestDetector : ResourceXmlDetector() {
+        override fun appliesTo(folderType: ResourceFolderType) = true
+        override fun afterCheckFile(context: Context) {
+            context.report(ABS_PATH_ISSUE, Location.create(context.file), "found error in " + context.file + "!")
+        }
+
+        companion object {
+            val ABS_PATH_ISSUE = Issue.create(
+                "_AbsPath",
+                "Sample",
+                "Sample",
+                Category.CORRECTNESS, 5, Severity.WARNING,
+                Implementation(AbsPathTestDetector::class.java, Scope.RESOURCE_FILE_SCOPE)
+            )
+        }
     }
 
     class ColorCasingDetector : ResourceXmlDetector() {
