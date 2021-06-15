@@ -62,7 +62,7 @@ public class PluralsDatabaseTest extends TestCase {
 
         relevant = db.getRelevant("cs");
         assertNotNull(relevant);
-        assertEquals(EnumSet.of(Quantity.few, Quantity.one), relevant);
+        assertEquals(EnumSet.of(few, one, many), relevant);
     }
 
     public void testFindExamples() {
@@ -457,52 +457,6 @@ public class PluralsDatabaseTest extends TestCase {
 
                     if (s.startsWith("other{", offset)) {
                         // Not included
-                        continue;
-                    }
-
-                    // Make sure the rule references applies to integers:
-                    // Rule definition mentions n or i or @integer
-                    //
-                    //    n  absolute value of the source number (integer and decimals).
-                    //    i  integer digits of n.
-                    //    v  number of visible fraction digits in n, with trailing zeros.
-                    //    w  number of visible fraction digits in n, without trailing zeros.
-                    //    f  visible fractional digits in n, with trailing zeros.
-                    //    t  visible fractional digits in n, without trailing zeros.
-                    boolean appliesToIntegers = false;
-                    boolean inQuotes = false;
-                    for (int i = begin + 1; i < end - 1; i++) {
-                        char c = s.charAt(i);
-                        if (c == '"') {
-                            inQuotes = !inQuotes;
-                        } else if (inQuotes) {
-                            if (c == '@') {
-                                if (s.startsWith("@integer", i)) {
-                                    appliesToIntegers = true;
-                                    break;
-                                } else {
-                                    // @decimal always comes after @integer
-                                    break;
-                                }
-                            } else if ((c == 'i' || c == 'n')
-                                    && Character.isWhitespace(s.charAt(i + 1))) {
-                                appliesToIntegers = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!appliesToIntegers) {
-                        if (DEBUG) {
-                            System.out.println(
-                                    "Skipping quantity "
-                                            + s.substring(offset, begin)
-                                            + " in set for locale "
-                                            + language
-                                            + " ("
-                                            + getSetName(language)
-                                            + ")");
-                        }
                         continue;
                     }
 

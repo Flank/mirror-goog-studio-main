@@ -42,7 +42,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     public void test2() {
         String expected =
                 ""
-                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few [MissingQuantity]\n"
+                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few, many [MissingQuantity]\n"
                         + "  <plurals name=\"draft\">\n"
                         + "  ^\n"
                         + "res/values-zh-rCN/plurals3.xml:3: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
@@ -144,6 +144,21 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "    <item quantity=\"many\">\u0447\u0435\u0440\u0435\u0437 %d \u043c\u0438\u043d\u0443\u0442</item>\n"
                                         + "</plurals>\n"))
                 .issues(PluralsDetector.MISSING, PluralsDetector.EXTRA)
+                .run()
+                .expectClean();
+    }
+
+    public void testCzech() {
+        lint().files(
+                        xml(
+                                "res/values-cs/plurals.xml",
+                                ""
+                                        + "<plurals name=\"product_type_ch_adult_general_abonnement\">\n"
+                                        + "  <item quantity=\"few\">%d dospělí (karta GA)</item>\n"
+                                        + "  <item quantity=\"many\">%d dospělých (karta GA)</item>\n"
+                                        + "  <item quantity=\"one\">%d Dospělý (GA travelcard)</item>\n"
+                                        + "  <item quantity=\"other\">%d Dospělí/dospělých (GA travelcard)</item>\n"
+                                        + "</plurals>"))
                 .run()
                 .expectClean();
     }
