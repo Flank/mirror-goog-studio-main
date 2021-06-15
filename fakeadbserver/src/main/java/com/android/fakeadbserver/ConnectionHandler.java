@@ -42,7 +42,7 @@ final class ConnectionHandler implements Runnable {
             .unmodifiableSet(new HashSet<>(Arrays.asList(
                     "version", "kill", "devices", "devices-l", "track-devices", "emulator",
                     "transport", "transport-usb", "transport-local", "transport-any",
-                    "host-features", "mdns"
+                    "host-features"
             )));
 
     @NonNull

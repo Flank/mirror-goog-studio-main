@@ -20,7 +20,6 @@ import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.testingutils.TestingAdbLibHost
 import com.android.fakeadbserver.DeviceState
-import com.android.fakeadbserver.MdnsService
 import com.android.fakeadbserver.hostcommandhandlers.FaultyVersionCommandHandler
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -28,7 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 import java.io.IOException
-import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 
 class AdbHostServicesTest {
@@ -178,84 +176,5 @@ class AdbHostServicesTest {
             Assert.assertEquals("model", device.device)
             Assert.assertEquals(fakeDevice.transportId.toString(), device.transportId)
         }
-    }
-
-    @Test
-    fun testKillServer() {
-        // Prepare
-        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
-        val host = registerCloseable(TestingAdbLibHost())
-        val channelProvider = fakeAdb.createChannelProvider(host)
-        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
-
-        // Act
-        runBlocking { hostServices.kill() }
-        exceptionRule.expect(IOException::class.java)
-        runBlocking { hostServices.version() }
-
-        // Assert (should not reach this point)
-        Assert.fail()
-    }
-
-    @Test
-    fun testMdnsCheck() {
-        // Prepare
-        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
-        val host = registerCloseable(TestingAdbLibHost())
-        val channelProvider = fakeAdb.createChannelProvider(host)
-        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
-
-        // Act
-        val result = runBlocking { hostServices.mdnsCheck() }
-
-        // Assert
-        Assert.assertEquals(MdnsStatus.Enabled, result.status)
-        Assert.assertTrue(result.rawText.contains("mdns daemon"))
-    }
-
-    @Test
-    fun testMdnsServices() {
-        // Prepare
-        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
-        val host = registerCloseable(TestingAdbLibHost())
-        val channelProvider = fakeAdb.createChannelProvider(host)
-        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
-
-        // Act
-        fakeAdb.addMdnsService(
-            MdnsService(
-                "foo-bar",
-                "service",
-                InetAddress.getByName("192.168.1.1"),
-                10
-            )
-        )
-        fakeAdb.addMdnsService(
-            MdnsService(
-                "foo-bar2",
-                "service",
-                InetAddress.getByName("192.168.1.1"),
-                10
-            )
-        )
-        val result = runBlocking { hostServices.mdnsServices() }
-
-        // Assert
-        Assert.assertEquals(2, result.services.size)
-        result.services[0].let { service ->
-            Assert.assertEquals("foo-bar", service.instanceName)
-            Assert.assertEquals("service", service.serviceName)
-            Assert.assertEquals("192.168.1.1", service.ipAddress.hostAddress)
-            Assert.assertEquals(10, service.port)
-
-        }
-        result.services[1].let { service ->
-            Assert.assertEquals("foo-bar2", service.instanceName)
-            Assert.assertEquals("service", service.serviceName)
-            Assert.assertEquals("192.168.1.1", service.ipAddress.hostAddress)
-            Assert.assertEquals(10, service.port)
-
-        }
-        Assert.assertEquals(0, result.errors.size)
     }
 }

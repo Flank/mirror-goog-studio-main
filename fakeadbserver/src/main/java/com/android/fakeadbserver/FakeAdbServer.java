@@ -29,7 +29,6 @@ import com.android.fakeadbserver.hostcommandhandlers.KillCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.KillForwardAllCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.KillForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ListDevicesCommandHandler;
-import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.VersionCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.CmdCommandHandler;
@@ -43,7 +42,6 @@ import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
 import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -51,14 +49,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -83,8 +78,6 @@ public final class FakeAdbServer implements AutoCloseable {
     private final List<DeviceCommandHandler> mHandlers = new ArrayList<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
-
-    private final Set<MdnsService> mMdnsServices = new HashSet<>();
 
     private final DeviceStateChangeHub mDeviceChangeHub = new DeviceStateChangeHub();
 
@@ -129,8 +122,7 @@ public final class FakeAdbServer implements AutoCloseable {
                                     Socket socket = mServerSocket.accept();
                                     ConnectionHandler handler = new ConnectionHandler(this, socket);
                                     mThreadPoolExecutor.execute(handler);
-                                }
-                                catch (IOException ignored) {
+                                } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
                                     // exception if closed here.
                                 }
@@ -149,7 +141,7 @@ public final class FakeAdbServer implements AutoCloseable {
 
     public boolean awaitServerTermination(long time, TimeUnit unit) throws InterruptedException {
         return mMainServerThreadExecutor.awaitTermination(time, unit)
-               && mThreadPoolExecutor.awaitTermination(time, unit);
+                && mThreadPoolExecutor.awaitTermination(time, unit);
     }
 
     /**
@@ -171,8 +163,7 @@ public final class FakeAdbServer implements AutoCloseable {
                     mConnectionHandlerTask.cancel(true);
                     try {
                         mServerSocket.close();
-                    }
-                    catch (IOException ignored) {
+                    } catch (IOException ignored) {
                     }
 
                     // Note: Use "shutdownNow()" to ensure threads of long running tasks are interrupted, as opposed
@@ -188,12 +179,8 @@ public final class FakeAdbServer implements AutoCloseable {
     public void close() throws Exception {
         try {
             stop().get();
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
             // Catch InterruptedException as specified by JavaDoc.
-        }
-        catch (RejectedExecutionException ignored) {
-            // The server has already been closed once
         }
     }
 
@@ -243,8 +230,7 @@ public final class FakeAdbServer implements AutoCloseable {
             assert !mDevices.containsKey(deviceId);
             mDevices.put(deviceId, device);
             return Futures.immediateFuture(device);
-        }
-        else {
+        } else {
             return mMainServerThreadExecutor.submit(
                     () -> {
                         assert !mDevices.containsKey(deviceId);
@@ -254,33 +240,6 @@ public final class FakeAdbServer implements AutoCloseable {
                     });
         }
     }
-
-    public Future<?> addMdnsService(@NonNull MdnsService service) {
-        return mMainServerThreadExecutor.submit(
-                () -> {
-                    assert !mMdnsServices.contains(service);
-                    mMdnsServices.add(service);
-                    return null;
-                });
-    }
-
-    @NonNull
-    public Future<?> removeMdnsService(@NonNull MdnsService service) {
-        return mMainServerThreadExecutor.submit(
-                () -> {
-                    mMdnsServices.remove(service);
-                    return null;
-                });
-    }
-
-    /**
-     * Thread-safely gets a copy of the mDNS service list. This is useful for asynchronous handlers.
-     */
-    @NonNull
-    public Future<List<MdnsService>> getMdnsServicesCopy() {
-        return mMainServerThreadExecutor.submit(() -> new ArrayList<>(mMdnsServices));
-    }
-
 
     private int newTransportId() {
         return mLastTransportId.incrementAndGet();
@@ -364,20 +323,18 @@ public final class FakeAdbServer implements AutoCloseable {
             setHostCommandHandler(
                     ListDevicesCommandHandler.COMMAND, ListDevicesCommandHandler::new);
             setHostCommandHandler(
-                    ListDevicesCommandHandler.LONG_COMMAND,
-                    () -> new ListDevicesCommandHandler(true));
+                    ListDevicesCommandHandler.LONG_COMMAND, () -> new ListDevicesCommandHandler(true));
             setHostCommandHandler(
                     TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
             setHostCommandHandler(ForwardCommandHandler.COMMAND, ForwardCommandHandler::new);
             setHostCommandHandler(KillForwardCommandHandler.COMMAND,
-                                  KillForwardCommandHandler::new);
+                    KillForwardCommandHandler::new);
             setHostCommandHandler(
                     KillForwardAllCommandHandler.COMMAND, KillForwardAllCommandHandler::new);
             setHostCommandHandler(FeaturesCommandHandler.COMMAND, FeaturesCommandHandler::new);
             setHostCommandHandler(FeaturesCommandHandler.HOST_COMMAND, FeaturesCommandHandler::new);
             setHostCommandHandler(VersionCommandHandler.COMMAND, VersionCommandHandler::new);
             setHostCommandHandler(AbbCommandHandler.COMMAND, AbbCommandHandler::new);
-            setHostCommandHandler(MdnsCommandHandler.COMMAND, MdnsCommandHandler::new);
 
             addDeviceHandler(new TrackJdwpCommandHandler());
             addDeviceHandler(new ExecCommandHandler());
