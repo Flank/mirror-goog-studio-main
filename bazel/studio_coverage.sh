@@ -12,6 +12,22 @@ fi
 
 readonly script_dir="$(dirname "$0")"
 
+####################################
+# Download a flake retry bazelrc file from GCS.
+# Arguments:
+#   Destination directory
+# Outputs:
+#   If successful, the local path; Otherwise, nothing
+####################################
+function download_flake_retry_rc() {
+  local -r gcs_path="gs://adt-byob/known-flakes/studio-coverage/auto-retry.bazelrc"
+  mkdir -p $1
+  gsutil cp $gcs_path "${1}/auto-retry.bazelrc"
+  if [[ $? -eq 0 ]]; then
+    echo "${1}/auto-retry.bazelrc"
+  fi
+}
+
 collect_and_exit() {
   local -r exit_code=$1
 
@@ -48,6 +64,13 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
+declare -a bazelrc_flags
+# For presubmit builds, try download bazelrc to deflake builds
+if [[ -z "$postsubmit" && -d "${dist_dir}" ]]; then
+  bazelrc=$(download_flake_retry_rc "${dist_dir}/flake-retry")
+  if [[ $bazelrc ]]; then bazelrc_flags+=("--bazelrc=${bazelrc}"); fi
+fi
+
 # Generate baseline coverage file lists
 "${script_dir}/bazel" \
   build \
@@ -59,6 +82,7 @@ fi
 
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
+  "${bazelrc_flags[@]}" \
   test \
   --keep_going \
   --config=dynamic \
