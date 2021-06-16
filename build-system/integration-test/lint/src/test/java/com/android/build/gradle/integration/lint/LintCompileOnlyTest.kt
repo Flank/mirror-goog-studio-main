@@ -53,8 +53,8 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
                 """.trimIndent()
             )
 
-    private val lib =
-        MinimalSubProject.lib("com.example.lib")
+    private val lib1 =
+        MinimalSubProject.lib("com.example.one")
             .appendToBuild(
                 """
                     android {
@@ -64,15 +64,17 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
                     }
                 """.trimIndent()
             ).withFile(
-                "src/main/java/com/example/lib/Foo.java",
+                "src/main/java/com/example/one/Foo.java",
                 """
-                    package com.example.lib;
+                    package com.example.one;
 
                     public class Foo {
                         // STOPSHIP
                     }
                 """.trimIndent()
             )
+
+    private val lib2 = MinimalSubProject.lib("com.example.two")
 
     private val javaLib =
         MinimalSubProject.javaLibrary()
@@ -95,16 +97,42 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
                     """.trimIndent()
             )
 
+    private val indirectLib =
+        MinimalSubProject.lib("com.example.indirect")
+            .appendToBuild(
+                """
+                    android {
+                        lintOptions {
+                            error 'StopShip'
+                        }
+                    }
+                """.trimIndent()
+            ).withFile(
+                "src/main/java/com/example/indirect/Baz.java",
+                """
+                    package com.example.indirect;
+
+                    public class Baz {
+                        // STOPSHIP
+                    }
+                """.trimIndent()
+            )
+
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder()
+            .withName("project")
             .fromTestApp(
                 MultiModuleTestProject.builder()
                     .subproject(":app", app)
-                    .subproject(":lib", lib)
+                    .subproject(":lib1", lib1)
+                    .subproject(":lib2", lib2)
                     .subproject(":javaLib", javaLib)
-                    .dependency("compileOnly", app, lib)
+                    .subproject(":indirectLib", indirectLib)
+                    .dependency("compileOnly", app, lib1)
+                    .dependency("implementation", app, lib2)
                     .dependency("compileOnly", app, javaLib)
+                    .dependency("compileOnly", lib2, indirectLib)
                     .build()
             )
             .create()
@@ -140,6 +168,11 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
         PathSubject.assertThat(reportFile).containsAllOf(
             "Foo.java:4: Error: STOPSHIP comment found",
             "Bar.java:4: Error: STOPSHIP comment found"
+        )
+        // We don't expect issues from the indirect compileOnly dependency, but we include it in the
+        // project as a regression test for b/191296077
+        PathSubject.assertThat(reportFile).doesNotContain(
+            "Baz.java:4: Error: STOPSHIP comment found"
         )
     }
 
