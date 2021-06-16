@@ -37,13 +37,8 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.toUElement
-import java.io.BufferedWriter
-import java.io.FileWriter
-import java.io.PrintWriter
+import java.io.File
 import java.util.ArrayDeque
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
 
 sealed class CallTarget {
     abstract val element: UElement
@@ -105,7 +100,7 @@ interface CallGraph {
 
     @Suppress("UNUSED")
     fun outputToDotFile(file: String, filter: (Edge) -> Boolean = { true }) {
-        PrintWriter(BufferedWriter(FileWriter(file))).use { writer ->
+        File(file).printWriter().use { writer ->
             writer.println("digraph {")
             for (node in nodes) {
                 for ((callee) in node.likelyEdges) {

@@ -73,6 +73,7 @@ import javax.annotation.CheckReturnValue;
 
 @SuppressWarnings({"SameParameterValue", "ComplexBooleanConstant"})
 public class TestLintTask {
+
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
     /** Map from project directory to corresponding Gradle model mocker */

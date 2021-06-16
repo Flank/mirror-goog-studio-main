@@ -28,7 +28,6 @@ import com.google.common.base.Joiner
 import org.junit.Assert
 import org.junit.Assert.fail
 import java.io.File
-import java.io.FileWriter
 import java.io.IOException
 import java.util.ArrayList
 
@@ -421,18 +420,16 @@ class ProjectDescription : Comparable<ProjectDescription> {
                     val ok = parentFile.mkdirs()
                     Assert.assertTrue("Couldn't create directory $parentFile", ok)
                 }
-                FileWriter(manifest).use { fw ->
-                    fw.write(
-                        """
-                        <?xml version="1.0" encoding="utf-8"?>
-                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                            package="lint.test.pkg"
-                            android:versionCode="1"
-                            android:versionName="1.0" >
-                        </manifest>
-                        """.trimIndent()
-                    )
-                }
+                manifest.writeText(
+                    """
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        package="lint.test.pkg"
+                        android:versionCode="1"
+                        android:versionName="1.0" >
+                    </manifest>
+                    """.trimIndent()
+                )
             }
         }
     }

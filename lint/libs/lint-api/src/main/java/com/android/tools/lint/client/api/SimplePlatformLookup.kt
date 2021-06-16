@@ -35,7 +35,6 @@ import java.io.File
 import java.io.File.separator
 import java.io.File.separatorChar
 import java.io.FileInputStream
-import java.io.FileReader
 import java.io.IOException
 import java.nio.file.Path
 import java.util.Properties
@@ -163,9 +162,9 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             var revision = 1
 
             try {
-                FileReader(packageXml).use {
+                packageXml.bufferedReader().use { reader ->
                     val parser = KXmlParser()
-                    parser.setInput(it)
+                    parser.setInput(reader)
                     while (parser.next() != XmlPullParser.END_DOCUMENT) {
                         val eventType = parser.eventType
                         if (eventType != XmlPullParser.START_TAG) continue

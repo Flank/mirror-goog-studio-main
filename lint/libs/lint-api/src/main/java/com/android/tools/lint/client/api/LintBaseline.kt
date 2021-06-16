@@ -39,13 +39,9 @@ import com.google.common.collect.Maps
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
-import java.io.InputStreamReader
 import java.io.Writer
-import java.nio.charset.StandardCharsets
 
 /**
  * A lint baseline is a collection of warnings for a project that have
@@ -395,11 +391,7 @@ class LintBaseline(
         }
 
         try {
-            BufferedReader(
-                InputStreamReader(
-                    FileInputStream(file), StandardCharsets.UTF_8
-                )
-            ).use { reader ->
+            file.bufferedReader().use { reader ->
                 val parser = KXmlParser()
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
                 parser.setInput(reader)

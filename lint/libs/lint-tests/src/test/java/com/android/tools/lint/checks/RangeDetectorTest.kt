@@ -16,8 +16,15 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
+import com.android.tools.lint.MainTest
+import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.client.api.LintBaselineTest
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.TextFormat
+import java.io.File
+import java.lang.reflect.Field
+import java.nio.charset.Charset
 
 class RangeDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RangeDetector()
@@ -875,7 +882,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "}"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(
+        ).testModes(TestMode.DEFAULT).run().expect(
             "" +
                 "src/test/pkg/test.kt:15: Error: Value must be ≤ 25 (was 100) [Range]\n" +
                 "    check(100) // ERROR\n" +
@@ -1233,5 +1240,118 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
             2 errors, 0 warnings
             """
         )
+    }
+
+    fun testEncoding() {
+        val project = getProjectDir(
+            null,
+            manifest().minSdk(28),
+            java(
+                "src/test/pkg/FloatRangeTest.java",
+                """
+                package test.pkg;
+
+                import androidx.annotation.FloatRange;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                public class FloatRangeTest {
+                    public void test() {
+                        call(-150.0); // ERROR
+                        call(-45.0); // OK
+                    }
+
+                    private void call(@FloatRange(from=-90.0, to=-5.0) double arg) {
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR,
+            xml(
+                "baseline.xml",
+                """
+                <issues format="6" by="lint 7.0.0-dev" type="baseline" client="cli" name="cli" variant="all" version="7.0.0-dev">
+
+                </issues>
+                """
+            )
+        )
+
+        val baselineFile = File(project, "baseline.xml")
+        val xmlReport = File(project, "xml-report.xml")
+        val textReport = File(project, "text-report.xml")
+        val htmlReport = File(project, "html-report.xml")
+        val sarifReport = File(project, "sarif-report.sarif.json")
+
+        var defaultCharset: Charset? = null
+        var defaultCharsetField: Field? = null
+        val prevEncoding = System.getProperty("file.encoding")
+        try {
+            System.setProperty("file.encoding", "ISO-8859-15")
+            defaultCharsetField = Charset::class.java.getDeclaredField("defaultCharset")
+            defaultCharsetField.isAccessible = true
+            defaultCharset = defaultCharsetField.get(null) as Charset?
+            defaultCharsetField.set(null, null)
+
+            MainTest.checkDriver(
+                "" +
+                    "src/test/pkg/FloatRangeTest.java:8: Error: Value must be ≥ -90.0 (was -150.0) [Range]\n" +
+                    "        call(-150.0); // ERROR\n" +
+                    "             ~~~~~~\n" +
+                    "1 errors, 0 warnings",
+                "", // Expected exit code
+                ERRNO_SUCCESS,
+                arrayOf(
+                    "-q",
+                    "--check",
+                    "Range",
+                    "--baseline",
+                    baselineFile.path,
+                    "--update-baseline",
+                    "--write-reference-baseline",
+                    baselineFile.path,
+                    "--text",
+                    textReport.path,
+                    "--text",
+                    "stdout",
+                    "--sarif",
+                    sarifReport.path,
+                    "--html",
+                    htmlReport.path,
+                    "--xml",
+                    xmlReport.path,
+                    "--disable",
+                    "LintError",
+                    project.path
+                ),
+                null,
+                null
+            )
+
+            assertEquals(
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <issues>
+
+                    <issue
+                        id="Range"
+                        message="Value must be ≥ -90.0 (was -150.0)">
+                        <location
+                            file="src/test/pkg/FloatRangeTest.java"
+                            line="8"/>
+                    </issue>
+
+                </issues>
+                """.trimIndent().trim(),
+                LintBaselineTest.readBaseline(baselineFile).trim()
+            )
+
+            assertTrue(textReport.readText().contains("Value must be ≥ -90.0 (was -150.0)"))
+            assertTrue(xmlReport.readText().contains("Value must be ≥ -90.0 (was -150.0)"))
+            assertTrue(sarifReport.readText().contains("\"Value must be ≥ -90.0 (was -150.0)\""))
+            assertTrue(htmlReport.readText().contains("Value must be &#8805; -90.0 (was -150.0)"))
+        } finally {
+            System.setProperty("file.encoding", prevEncoding)
+            defaultCharsetField?.set(null, defaultCharset)
+        }
     }
 }

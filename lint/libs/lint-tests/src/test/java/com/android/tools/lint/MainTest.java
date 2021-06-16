@@ -106,7 +106,7 @@ public class MainTest extends AbstractCheckTest {
 
             int exitCode = main.run(args);
 
-            String stderr = error.toString();
+            String stderr = new String(error.toByteArray(), Charsets.UTF_8);
             if (cleanup != null) {
                 stderr = cleanup.cleanup(stderr);
             }
@@ -114,7 +114,7 @@ public class MainTest extends AbstractCheckTest {
                 assertEquals(expectedError, stderr); // instead of fail: get difference in output
             }
             if (expectedOutput != null) {
-                String stdout = output.toString();
+                String stdout = new String(output.toByteArray(), Charsets.UTF_8);
                 expectedOutput = StringsKt.trimIndent(expectedOutput);
                 stdout = StringsKt.trimIndent(stdout);
                 if (cleanup != null) {

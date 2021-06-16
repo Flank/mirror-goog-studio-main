@@ -43,9 +43,7 @@ import com.google.common.base.Splitter
 import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Path
@@ -1363,7 +1361,7 @@ open class LintXmlConfiguration protected constructor(
             // Write the contents to a new file first such that we don't clobber the
             // existing file if some I/O error occurs.
             val file = File(configFile.parentFile, configFile.name + ".new")
-            val writer: Writer = BufferedWriter(FileWriter(file))
+            val writer: Writer = file.bufferedWriter()
             writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<")
             writer.write(TAG_LINT)
             fileClients?.let {

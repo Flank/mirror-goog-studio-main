@@ -97,6 +97,8 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.URL
 import kotlin.math.max
@@ -124,7 +126,7 @@ open class LintCliClient : LintClient {
         flags = LintCliFlags()
         @Suppress("LeakingThis")
         val reporter =
-            TextReporter(this, flags, PrintWriter(System.out, true), false)
+            TextReporter(this, flags, System.out.printWriter(), false)
         flags.reporters.add(reporter)
         initialize()
     }
@@ -377,7 +379,7 @@ open class LintCliClient : LintClient {
         // If failing the build on exit: print at least one error to the
         // console to help pinpoint the problem.
         if (hasErrors && !reportingToConsole() && flags.isSetExitCode && !flags.isQuiet) {
-            val writer = PrintWriter(System.out, true)
+            val writer = System.out.printWriter()
             val count = describeCounts(stats.errorCount, stats.warningCount, comma = false, capitalize = false)
             println("Lint found $count. First failure:")
             val reporter = Reporter.createTextReporter(this, LintCliFlags(), null, writer, false)
@@ -1828,6 +1830,14 @@ open class LintCliClient : LintClient {
                 }
             }
             return baselineVariantName
+        }
+
+        /** Creates a print writer for UTF-8 output */
+        @JvmStatic
+        fun OutputStream.printWriter(): PrintWriter {
+            // When we switch to Java 11 this can be
+            // return PrintWriter(this, true, Charsets.UTF_8)
+            return PrintWriter(OutputStreamWriter(this, Charsets.UTF_8).buffered(), true)
         }
 
         /**

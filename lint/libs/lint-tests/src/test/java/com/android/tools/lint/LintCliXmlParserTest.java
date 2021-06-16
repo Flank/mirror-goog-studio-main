@@ -31,12 +31,11 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.io.BufferedWriter;
+import com.google.common.base.Charsets;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.Writer;
 import java.util.Collections;
 import junit.framework.TestCase;
+import kotlin.io.FilesKt;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -67,10 +66,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "</LinearLayout>\n";
         LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
         File file = File.createTempFile("parsertest", ".xml");
-        //noinspection IOResourceOpenedButNotSafelyClosed
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         LintClient client = new TestClient();
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
@@ -178,10 +174,7 @@ public class LintCliXmlParserTest extends TestCase {
                         + "</LinearLayout>\r\n";
         LintCliXmlParser parser = new LintCliXmlParser(new LintCliClient(CLIENT_UNIT_TESTS));
         File file = File.createTempFile("parsertest2", ".xml");
-        //noinspection IOResourceOpenedButNotSafelyClosed
-        Writer fw = new BufferedWriter(new FileWriter(file));
-        fw.write(xml);
-        fw.close();
+        FilesKt.writeText(file, xml, Charsets.UTF_8);
         LintClient client = new TestClient();
         LintRequest request = new LintRequest(client, Collections.emptyList());
         LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);

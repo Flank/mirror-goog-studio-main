@@ -25,10 +25,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.File.pathSeparator
-import java.io.PrintStream
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class LintIssueDocGeneratorTest {
     @get:Rule
@@ -591,10 +591,9 @@ class LintIssueDocGeneratorTest {
 
     @Test
     fun testUsage() {
-        val bytes = ByteArrayOutputStream()
-        val printStream = PrintStream(bytes)
-        LintIssueDocGenerator.printUsage(false, printStream)
-        val usage = String(bytes.toByteArray(), Charsets.UTF_8).trim().replace("\r\n", "\n")
+        val writer = StringWriter()
+        LintIssueDocGenerator.printUsage(false, PrintWriter(writer))
+        val usage = writer.toString().trim().replace("\r\n", "\n")
         assertEquals(
             """
             Usage: lint-issue-docs-generator [flags] --output <directory or file>]
@@ -636,8 +635,8 @@ class LintIssueDocGeneratorTest {
             --no-severity                     Do not include the red, orange or green
                                               informational boxes showing the severity of
                                               each issue
-            """.trimIndent(),
-            usage
+            """.trimIndent().trim(),
+            usage.trim()
         )
     }
 
@@ -1027,9 +1026,9 @@ class LintIssueDocGeneratorTest {
         val fileContents = flags.readText()
         val start = fileContents.indexOf("## ")
         val end = fileContents.lastIndexOf("<!-- Markdeep")
-        val outputStream = ByteArrayOutputStream()
-        Main.printUsage(PrintStream(outputStream), true)
-        val usage = String(outputStream.toByteArray(), Charsets.UTF_8)
+        val writer = StringWriter()
+        Main.printUsage(PrintWriter(writer), true)
+        val usage = writer.toString()
         val newContents = fileContents.substring(0, start) + usage.substring(usage.indexOf("## ")) + fileContents.substring(end)
         if (fileContents != newContents && findSourceTree() != null) {
             flags.writeText(newContents)

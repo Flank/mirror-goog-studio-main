@@ -1063,19 +1063,21 @@ class LintBaselineTest {
         }
     }
 
-    /**
-     * Read the given [baseline] file and strip out the version details
-     * in the root tag which can change over time to make the golden
-     * files stable.
-     */
-    private fun readBaseline(baseline: File): String {
-        val newBaseline = baseline.readText().trim().let {
-            // Filter out header attributes which would make the test file change over
-            // time, like "<issues format="5" by="lint 7.1.0-dev">"
-            val start = it.indexOf("<issues ") + 7
-            val end = it.indexOf('>', start)
-            it.substring(0, start) + it.substring(end)
+    companion object {
+        /**
+         * Read the given [baseline] file and strip out the version
+         * details in the root tag which can change over time to make
+         * the golden files stable.
+         */
+        fun readBaseline(baseline: File): String {
+            val newBaseline = baseline.readText().trim().let {
+                // Filter out header attributes which would make the test file change over
+                // time, like "<issues format="5" by="lint 7.1.0-dev">"
+                val start = it.indexOf("<issues ") + 7
+                val end = it.indexOf('>', start)
+                it.substring(0, start) + it.substring(end)
+            }
+            return newBaseline
         }
-        return newBaseline
     }
 }

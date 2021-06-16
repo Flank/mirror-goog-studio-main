@@ -28,6 +28,7 @@ import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
+import com.android.tools.lint.LintCliClient.Companion.printWriter
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.AnnotateFix
@@ -194,7 +195,7 @@ open class LintFixPerformer constructor(
         }
 
         if (printStatistics && editedFileCount > 0) {
-            printStatistics(PrintWriter(System.out), editMap, appliedEditCount, editedFileCount)
+            printStatistics(System.out.printWriter(), editMap, appliedEditCount, editedFileCount)
         }
 
         return editedFileCount > 0

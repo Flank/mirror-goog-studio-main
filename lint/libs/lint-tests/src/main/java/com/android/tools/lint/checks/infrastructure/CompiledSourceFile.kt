@@ -37,7 +37,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FilenameFilter
 import java.io.IOException
-import java.io.InputStreamReader
 import java.nio.file.Files
 import java.util.Arrays
 
@@ -527,10 +526,12 @@ internal class CompiledSourceFile(
         }
 
         private fun executeProcess(args: List<String>) {
+            var input: BufferedReader? = null
+            var error: BufferedReader? = null
             try {
                 val process = Runtime.getRuntime().exec(args.toTypedArray())
-                val input = BufferedReader(InputStreamReader(process.inputStream))
-                val error = BufferedReader(InputStreamReader(process.errorStream))
+                input = process.inputStream.bufferedReader()
+                error = process.errorStream.bufferedReader()
                 val exitVal = process.waitFor()
                 if (exitVal != 0) {
                     val sb = StringBuilder()
@@ -548,8 +549,6 @@ internal class CompiledSourceFile(
                     while (error.readLine().also { line = it } != null) {
                         sb.append(line).append("\n")
                     }
-                    input.close()
-                    error.close()
                     fail(sb.toString())
                 }
             } catch (t: Throwable) {
@@ -559,6 +558,9 @@ internal class CompiledSourceFile(
                 }
                 t.printStackTrace()
                 fail("Could not run test compilation:\n$sb")
+            } finally {
+                input?.close()
+                error?.close()
             }
         }
 

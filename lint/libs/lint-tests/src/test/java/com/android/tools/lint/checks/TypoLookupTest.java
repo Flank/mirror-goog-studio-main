@@ -26,9 +26,10 @@ import com.google.common.base.Splitter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -436,7 +437,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     private static List<String> readFile(String filename) {
         InputStream typoStream = TypoLookup.class.getResourceAsStream(filename);
         List<String> lines =
-                new BufferedReader(new InputStreamReader(typoStream))
+                new BufferedReader(new InputStreamReader(typoStream, Charsets.UTF_8))
                         .lines()
                         .collect(Collectors.toList());
         return lines;
@@ -565,7 +566,9 @@ public class TypoLookupTest extends AbstractCheckTest {
             }
         }
 
-        Writer writer = new BufferedWriter(new FileWriter(fixed));
+        Writer writer =
+                new BufferedWriter(
+                        new OutputStreamWriter(new FileOutputStream(fixed), Charsets.UTF_8));
         for (String line : output) {
             writer.write(line);
             writer.write('\n');
