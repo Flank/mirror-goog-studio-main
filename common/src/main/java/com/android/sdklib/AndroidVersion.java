@@ -122,6 +122,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** First version to support pixel 4a */
     public static final int MIN_PIXEL_4A_DEVICE_API = 30;
 
+    /** First version to support TV 4K display */
+    public static final int MIN_4K_TV_API = 31;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */

@@ -124,13 +124,21 @@ public class HardwareConfigHelperTest extends TestCase {
         assertEquals("Android TV (1080p) (55.0\", 1920 \u00d7 1080, xhdpi)", getNexusLabel(tv1080p));
         assertEquals("1080p, 1920 \u00d7 1080, xhdpi (TV)", getNexusMenuLabel(tv1080p));
 
-        Device tv720p = deviceManager.getDevice("tv_1080p", "Google");
+        Device tv720p = deviceManager.getDevice("tv_720p", "Google");
         assertNotNull(tv720p);
         assertFalse(isWear(tv720p));
         assertTrue(isTv(tv720p));
         assertFalse(isMobile(tv720p));
         assertFalse(isAutomotive(tv720p));
         assertFalse(tv720p.isScreenRound());
+
+        Device tv4k = deviceManager.getDevice("tv_4k", "Google");
+        assertNotNull(tv4k);
+        assertFalse(isWear(tv4k));
+        assertTrue(isTv(tv4k));
+        assertFalse(isMobile(tv4k));
+        assertFalse(isAutomotive(tv4k));
+        assertFalse(tv4k.isScreenRound());
     }
 
     public void testNexusRank() {
