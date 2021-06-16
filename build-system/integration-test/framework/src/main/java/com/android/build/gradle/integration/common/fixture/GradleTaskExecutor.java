@@ -68,10 +68,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
     public GradleTaskExecutor withEnvironmentVariables(Map<String, String> env) {
         this.env = ImmutableMap.copyOf(env);
-        this.env.forEach(
-                (String key, String value) -> {
-                    assertThat(value).isNotEmpty();
-                });
         return this;
     }
 

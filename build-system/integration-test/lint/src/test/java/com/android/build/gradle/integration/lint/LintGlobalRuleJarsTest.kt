@@ -42,12 +42,12 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
 
     @get:Rule
     val project: GradleTestProject =
-        GradleTestProject.builder()
-            .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-            .create()
+            GradleTestProject.builder()
+                    .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+                    .create()
 
     @get:Rule
-    val idk: TemporaryFolder = TemporaryFolder()
+    val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
     @Test
     fun `Jars in prefs directory affect up-to-date checking`() {
@@ -70,14 +70,15 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         }
     }
 
-
     @Test
     fun `Jars set via environment variable affect up-to-date checking`() {
-        val lintJar = idk.newFolder().resolve("abcdefg.jar")
+        val lintJar = temporaryFolder.newFolder().resolve("abcdefg.jar")
 
         val absolutePath = lintJar.absolutePath
         assertThat(absolutePath).isNotEmpty()
-        val executor = project.getExecutor().withEnvironmentVariables(mapOf("ANDROID_LINT_JARS" to absolutePath))
+        val executor =
+                project.getExecutor()
+                        .withEnvironmentVariables(mapOf("ANDROID_LINT_JARS" to absolutePath))
 
         val lintDebugTaskName = ":lintDebug"
         executor.run(lintDebugTaskName)
@@ -91,6 +92,7 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
             assertThat(result.getTask(lintDebugTaskName)).didWork()
         }
     }
+
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+            this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
