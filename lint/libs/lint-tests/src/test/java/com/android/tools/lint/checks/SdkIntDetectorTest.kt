@@ -351,7 +351,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 +     @ChecksSdkIntAtLeast(api=N)
                 Fix for src/test/pkg/JavaVersionChecks.java line 19: Annotate with @ChecksSdkIntAtLeast:
                 @@ -19 +19
-                +     @ChecksSdkIntAtLeast(api=Build.VERSION_CODES.N_MR1)
+                +     @ChecksSdkIntAtLeast(api=N_MR1)
                 Fix for src/test/pkg/JavaVersionChecks.java line 22: Annotate with @ChecksSdkIntAtLeast:
                 @@ -22 +22
                 +     @ChecksSdkIntAtLeast(parameter=0)

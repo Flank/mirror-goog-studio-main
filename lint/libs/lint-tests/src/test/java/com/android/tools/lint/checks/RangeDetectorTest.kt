@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.MainTest
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.checks.infrastructure.dos2unix
 import com.android.tools.lint.client.api.LintBaselineTest
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.TextFormat
@@ -1342,7 +1343,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
 
                 </issues>
                 """.trimIndent().trim(),
-                LintBaselineTest.readBaseline(baselineFile).trim()
+                LintBaselineTest.readBaseline(baselineFile).trim().dos2unix() // b/209433064
             )
 
             assertTrue(textReport.readText().contains("Value must be ≥ -90.0 (was -150.0)"))

@@ -116,7 +116,7 @@ class TestLintRunner(private val task: TestLintTask) {
                     project.type = ProjectDescription.Type.JAVA
                 }
             }
-            projects.expandProjects()
+            projects.expandProjects(defaultType)
             projects.addProject(reportFrom)
             val projectMap: MutableMap<String, List<File>> = HashMap()
             val results: MutableMap<TestMode, TestResultState> = LinkedHashMap()
@@ -541,7 +541,7 @@ class TestLintRunner(private val task: TestLintTask) {
             dirToProjectDescription.clear()
             projectMocks.clear()
             projects.assignProjectNames()
-            projects.expandProjects()
+            projects.expandProjects(defaultType)
 
             if (task.reportFrom == null) {
                 projects.implicitReportFrom?.let { task.reportFrom(it) }

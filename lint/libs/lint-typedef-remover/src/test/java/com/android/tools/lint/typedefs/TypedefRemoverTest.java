@@ -168,7 +168,11 @@ public class TypedefRemoverTest {
         byte[] outerClass = OUTER_CLASS;
 
         checkRewriter(remover, OUTER_CLASS, "test/pkg/OuterClass.class", REWRITTEN_OUTER_CLASS);
-        checkRewriter(remover, OUTER_CLASS_TARGET_11, "test/pkg/OuterClass.class", REWRITTEN_OUTER_CLASS_TARGET_11);
+        checkRewriter(
+                remover,
+                OUTER_CLASS_TARGET_11,
+                "test/pkg/OuterClass.class",
+                REWRITTEN_OUTER_CLASS_TARGET_11);
     }
 
     @Test

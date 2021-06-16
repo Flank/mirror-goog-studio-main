@@ -44,9 +44,6 @@ internal class ProjectDescriptionList(
      */
     var reportFrom: ProjectDescription? = null
 ) : Iterable<ProjectDescription> {
-    /** Original number of projects in the list. */
-    val originalSize = projects.size
-
     /**
      * If the project set was constructed implicitly (via
      * ../module/path) file names, this property will point to the
@@ -98,7 +95,7 @@ internal class ProjectDescriptionList(
      * ../lib-something then the assumption is that the created project
      * is a library and is depended upon by the current project.
      */
-    fun expandProjects() {
+    fun expandProjects(defaultType: ProjectDescription.Type) {
         val allProjects: MutableList<ProjectDescription> = ArrayList(projects)
         val nameMap: MutableMap<String, ProjectDescription> = HashMap()
         for (project in allProjects) {
@@ -157,6 +154,11 @@ internal class ProjectDescriptionList(
         }
         allProjects.addAll(added)
         projects = allProjects
+        for (project in projects) {
+            if (!project.haveSetType) {
+                project.type = defaultType
+            }
+        }
         // Dependencies are sometimes just recorded by name instead of project
         // reference; resolve these now
         addNamedDependencies()
@@ -167,7 +169,7 @@ internal class ProjectDescriptionList(
      * the projects explicitly listed in the project list, so if not
      * intended, call [expandProjects] first.
      */
-    fun getProjectNames(): Set<String> {
+    private fun getProjectNames(): Set<String> {
         val names: MutableSet<String> = HashSet()
         for (project in projects) {
             val projectName = project.name
@@ -203,18 +205,6 @@ internal class ProjectDescriptionList(
                 usedNames.add(name)
                 project.name = name
             }
-        }
-    }
-
-    /**
-     * Assigns a unique name to the given project if it has not already
-     * been named.
-     */
-    fun assignProjectName(project: ProjectDescription) {
-        val usedNames: Set<String> = HashSet(getProjectNames())
-        if (project.name.isEmpty()) {
-            val name = pickUniqueName(usedNames, project)
-            project.name = name
         }
     }
 

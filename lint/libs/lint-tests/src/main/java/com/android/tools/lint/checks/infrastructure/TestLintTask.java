@@ -73,7 +73,6 @@ import javax.annotation.CheckReturnValue;
 
 @SuppressWarnings({"SameParameterValue", "ComplexBooleanConstant"})
 public class TestLintTask {
-
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
     /** Map from project directory to corresponding Gradle model mocker */
@@ -1154,6 +1153,27 @@ public class TestLintTask {
         }
 
         return checkedIssues;
+    }
+
+    @NonNull
+    ProjectDescription.Type getDefaultType() {
+        // If we only have JDK platform issues, returns Type.JAVA, else Type.APP
+        ProjectDescription.Type defaultType = ProjectDescription.Type.APP;
+        boolean prevAllowDelayedIssueRegistration = allowDelayedIssueRegistration;
+        try {
+            allowDelayedIssueRegistration = true;
+            for (Issue issue : getCheckedIssues()) {
+                EnumSet<Platform> platforms = issue.getPlatforms();
+                if (platforms.contains(Platform.JDK) && !platforms.contains(Platform.ANDROID)) {
+                    defaultType = ProjectDescription.Type.JAVA;
+                } else if (platforms.contains(Platform.ANDROID)) {
+                    return ProjectDescription.Type.APP;
+                }
+            }
+        } finally {
+            allowDelayedIssueRegistration = prevAllowDelayedIssueRegistration;
+        }
+        return defaultType;
     }
 
     /** Adds issue fields found in the given class */

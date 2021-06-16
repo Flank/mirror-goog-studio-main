@@ -39,6 +39,11 @@ class ProjectDescription : Comparable<ProjectDescription> {
     var dependencyGraph: String? = null
     var name: String = ""
     var type = Type.APP
+        set(value) {
+            field = value
+            haveSetType = true
+        }
+    var haveSetType = false
     var report: Boolean = true
     var primary: Boolean = true
     var under: ProjectDescription? = null

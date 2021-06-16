@@ -125,6 +125,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DataBindingDetector.ESCAPE_XML,
                 DateFormatDetector.DATE_FORMAT,
                 DateFormatDetector.WEEK_YEAR,
+                DefaultEncodingDetector.ISSUE,
                 DeletedProviderDetector.ISSUE,
                 DeprecationDetector.ISSUE,
                 DiffUtilDetector.ISSUE,
@@ -529,7 +530,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 scope.contains(Scope.ALL_RESOURCE_FILES) -> initialSize += 12
             }
             when {
-                scope.contains(Scope.JAVA_FILE) -> initialSize += 151
+                scope.contains(Scope.JAVA_FILE) -> initialSize += 180
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
                 scope.contains(Scope.MANIFEST) -> initialSize += 70
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 24

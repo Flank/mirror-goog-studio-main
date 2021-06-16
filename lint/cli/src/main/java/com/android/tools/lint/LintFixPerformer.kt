@@ -713,7 +713,8 @@ open class LintFixPerformer constructor(
             // unit testing lint fixes, not for actually operating on code; for that we're using
             // IntelliJ's built in import cleanup when running in the IDE.
             val imported: MutableSet<String> = HashSet()
-            for (line in contents.split("\n").toTypedArray()) {
+            for (fullLine in contents.split("\n")) {
+                val line = fullLine.trim()
                 if (line.startsWith("package ")) {
                     var to = line.indexOf(';')
                     if (to == -1) {
@@ -722,8 +723,8 @@ open class LintFixPerformer constructor(
                     imported.add(line.substring("package ".length, to).trim { it <= ' ' } + ".")
                 } else if (line.startsWith("import ")) {
                     var from = "import ".length
-                    if (line.startsWith("static ")) {
-                        from += " static ".length
+                    if (line.startsWith("static ", from)) {
+                        from += "static ".length
                     }
                     var to = line.indexOf(';')
                     if (to == -1) {
