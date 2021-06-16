@@ -16,23 +16,17 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import org.gradle.api.Action
 
 /**
  * Holder of various [OperationsRegistrar] for all the variant API related operations to a plugin.
  */
-class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant> {
+class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant>
+    : DslLifecycleComponentsOperationsRegistrar<CommonExtensionT>() {
+
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()
     internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()
-    internal val dslFinalizationOperations = mutableListOf<Action<CommonExtensionT>>()
-
-    fun executeDslFinalizationBlocks(extension: CommonExtensionT) {
-        dslFinalizationOperations.forEach { it.execute(extension) }
-    }
 }

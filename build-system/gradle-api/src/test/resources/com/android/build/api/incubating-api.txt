@@ -745,11 +745,15 @@ com.android.build.api.variant.DslExtension.getBuildTypeExtensionType: java.lang.
 com.android.build.api.variant.DslExtension.getDslName: java.lang.String ()
 com.android.build.api.variant.DslExtension.getProductFlavorExtensionType: java.lang.Class<?> ()
 com.android.build.api.variant.DslExtension.getProjectExtensionType: java.lang.Class<?> ()
+com.android.build.api.variant.DslLifecycle
+com.android.build.api.variant.DslLifecycle.finalizeDsl: void (kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
+com.android.build.api.variant.DslLifecycle.finalizeDsl: void (org.gradle.api.Action<T>)
 com.android.build.api.variant.HasTestFixtures
 com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build.api.component.TestFixtures ()
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
+com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
 com.android.build.api.variant.VariantExtensionConfig

@@ -305,8 +305,13 @@ com.android.build.gradle.LibraryPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LibraryPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.LibraryPluginKt
 com.android.build.gradle.LibraryPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.LintLifecycleExtensionImpl implements com.android.build.api.variant.LintLifecycleExtension
+com.android.build.gradle.LintLifecycleExtensionImpl.<init>: com.android.build.gradle.LintLifecycleExtensionImpl (com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar<com.android.build.api.dsl.Lint>)
+com.android.build.gradle.LintLifecycleExtensionImpl.finalizeDsl: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
+com.android.build.gradle.LintLifecycleExtensionImpl.finalizeDsl: void (org.gradle.api.Action<com.android.build.api.dsl.Lint>)
 com.android.build.gradle.LintPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin ()
+com.android.build.gradle.LintPlugin.access$getDslOperationsRegistrar$p: com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$getProjectServices$p: com.android.build.gradle.internal.services.ProjectServices (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$registerTasks: void (com.android.build.gradle.LintPlugin, org.gradle.api.Project)

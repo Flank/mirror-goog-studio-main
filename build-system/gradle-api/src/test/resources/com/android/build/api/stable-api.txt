@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5cee96cd648c62bce88c8e12c7d279035f8d5313f7a62ed170ab4ed9dc7747ff
+4050a30acfe3481b83a6830a6feac6d170a1a7c0501a5b3dcbaa4347159c5cd1
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -237,7 +237,7 @@ com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension$DefaultImpls
 com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
 com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension
+com.android.build.api.extension.AndroidComponentsExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.onVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
@@ -360,7 +360,7 @@ com.android.build.api.transform.TransformOutputProvider.deleteAll: void () throw
 com.android.build.api.transform.TransformOutputProvider.getContentLocation: java.io.File (java.lang.String, java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType>, java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope>, com.android.build.api.transform.Format)
 com.android.build.api.variant.AarMetadata
 com.android.build.api.variant.AarMetadata.getMinCompileSdk: org.gradle.api.provider.Property<java.lang.Integer> ()
-com.android.build.api.variant.AndroidComponentsExtension
+com.android.build.api.variant.AndroidComponentsExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.AndroidComponentsExtension$DefaultImpls
 com.android.build.api.variant.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.variant.AndroidComponentsExtension, com.android.build.api.variant.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)
 com.android.build.api.variant.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.variant.AndroidComponentsExtension, com.android.build.api.variant.VariantSelector, org.gradle.api.Action, int, java.lang.Object)
@@ -369,8 +369,6 @@ com.android.build.api.variant.AndroidComponentsExtension$DefaultImpls.onVariants
 com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.variant.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
 com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.variant.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.variant.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
-com.android.build.api.variant.AndroidComponentsExtension.finalizeDsl: void (kotlin.jvm.functions.Function1<? super DslExtensionT, kotlin.Unit>)
-com.android.build.api.variant.AndroidComponentsExtension.finalizeDsl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.variant.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.onVariants: void (com.android.build.api.variant.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)

@@ -17,6 +17,7 @@ package com.android.build.gradle
 
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -75,6 +76,7 @@ abstract class LintPlugin : Plugin<Project> {
     private lateinit var projectServices: ProjectServices
     private var dslServices: DslServicesImpl? = null
     private var lintOptions: LintOptions? = null
+    private val dslOperationsRegistrar = DslLifecycleComponentsOperationsRegistrar<LintOptions>()
 
     @get:Inject
     abstract val listenerRegistry: BuildEventsListenerRegistry
@@ -119,6 +121,8 @@ abstract class LintPlugin : Plugin<Project> {
 
         // Avoid reading the lintOptions DSL and build directory before the build author can customize them
         project.afterEvaluate {
+            dslOperationsRegistrar.executeDslFinalizationBlocks(lintOptions!!)
+
             lintTask.configure { task ->
                 task.configureForStandalone(artifacts, lintOptions!!)
             }
@@ -283,6 +287,11 @@ abstract class LintPlugin : Plugin<Project> {
             androidPluginDslDecorator.decorate(LintOptions::class.java)
         lintOptions =
             project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices)
+        project.extensions.create(
+            "lintLifecycle",
+            LintLifecycleExtensionImpl::class.java,
+            dslOperationsRegistrar
+        )
     }
 
     private fun withJavaPlugin(project: Project, action: Action<Plugin<*>>) {
