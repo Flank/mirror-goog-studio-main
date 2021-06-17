@@ -63,6 +63,114 @@ public class MethodBodyEvaluatorTest {
         Assert.assertEquals(owner.returnSeventeen(), intResult.intValue());
     }
 
+    @org.junit.Test
+    public void testBooleanArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnBooleanFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Boolean b = (Boolean) result;
+        Assert.assertEquals(owner.returnBooleanFromArray(), b.booleanValue());
+    }
+
+    @org.junit.Test
+    public void testCharArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnCharFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Character charResult = (Character) result;
+        Assert.assertEquals(owner.returnCharFromArray(), charResult.charValue());
+    }
+
+    @org.junit.Test
+    public void testByteArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnByteFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Byte byteResult = (Byte) result;
+        Assert.assertEquals(owner.returnByteFromArray(), byteResult.byteValue());
+    }
+
+    @org.junit.Test
+    public void testShortArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnShortFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Short shortResult = (Short) result;
+        Assert.assertEquals(owner.returnShortFromArray(), shortResult.shortValue());
+    }
+
+    @org.junit.Test
+    public void testObjectArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnObjectFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Object objectResult = result;
+        Assert.assertEquals(owner.returnObjectFromArray(), objectResult);
+    }
+
+    @org.junit.Test
+    public void testIntArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnIntFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Integer r = (Integer) result;
+        Assert.assertEquals(owner.returnIntFromArray(), r.intValue());
+    }
+
+    @org.junit.Test
+    public void testLongArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnLongFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Long r = (Long) result;
+        Assert.assertEquals(owner.returnLongFromArray(), r.longValue());
+    }
+
+    @org.junit.Test
+    public void testFloatArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnFloatFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Float r = (Float) result;
+        Assert.assertTrue(owner.returnFloatFromArray() == r.floatValue());
+    }
+
+    @org.junit.Test
+    public void testDoubleArray() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "returnDoubleFromArray")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Double r = (Double) result;
+        Assert.assertTrue(owner.returnDoubleFromArray() == r.doubleValue());
+    }
+
     /**
      * Extract the bytecode data from a class file from a class. If this is run from intellij, it
      * searches for .class file in the idea out director. If this is run from a jar file, it

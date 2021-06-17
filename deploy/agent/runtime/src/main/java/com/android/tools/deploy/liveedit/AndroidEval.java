@@ -37,44 +37,47 @@ class AndroidEval implements Eval {
     public Value getArrayElement(Value array, Value index) {
         try {
             Type elementType = array.getAsmType().getElementType();
-            Class element = typeToClass(elementType);
-            if (element.isPrimitive()) {
-                if (elementType == Type.BOOLEAN_TYPE) {
-                    return new IntValue(
-                            Array.getBoolean(valueToObject(array), ValuesKt.getInt(index)) ? 1 : 0,
-                            Type.BOOLEAN_TYPE);
-                } else if (elementType == Type.CHAR_TYPE) {
+            switch (elementType.getSort()) {
+                case Type.BOOLEAN:
+                    boolean b = Array.getBoolean(valueToObject(array), ValuesKt.getInt(index));
+                    return new IntValue(b ? 1 : 0, Type.BOOLEAN_TYPE);
+                case Type.CHAR:
                     return new IntValue(
                             Array.getChar(valueToObject(array), ValuesKt.getInt(index)),
                             Type.CHAR_TYPE);
-                } else if (elementType == Type.BYTE_TYPE) {
+                case Type.BYTE:
                     return new IntValue(
                             Array.getByte(valueToObject(array), ValuesKt.getInt(index)),
                             Type.BYTE_TYPE);
-                } else if (elementType == Type.SHORT_TYPE) {
+                case Type.SHORT:
                     return new IntValue(
                             Array.getShort(valueToObject(array), ValuesKt.getInt(index)),
                             Type.SHORT_TYPE);
-                } else if (elementType == Type.INT_TYPE) {
+                case Type.INT:
                     return new IntValue(
                             Array.getInt(valueToObject(array), ValuesKt.getInt(index)),
                             Type.INT_TYPE);
-                } else if (elementType == Type.FLOAT_TYPE) {
+                case Type.FLOAT:
                     return new FloatValue(
                             Array.getFloat(valueToObject(array), ValuesKt.getInt(index)));
-                } else if (elementType == Type.LONG_TYPE) {
-                    return new FloatValue(
+                case Type.LONG:
+                    return new LongValue(
                             Array.getLong(valueToObject(array), ValuesKt.getInt(index)));
-                } else if (elementType == Type.DOUBLE_TYPE) {
+                case Type.DOUBLE:
                     return new DoubleValue(
                             Array.getDouble(valueToObject(array), ValuesKt.getInt(index)));
-                } else {
+                case Type.OBJECT:
                     return new ObjectValue(
                             Array.get(valueToObject(array), ValuesKt.getInt(index)), elementType);
-                }
+                default:
+                    String msg =
+                            String.format(
+                                    "getArrayElement undefined for type '%s' ",
+                                    elementType.getClassName());
+                    throw new ClassNotFoundException(msg);
             }
         } catch (ClassNotFoundException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -97,7 +100,7 @@ class AndroidEval implements Eval {
             field.setAccessible(accessible);
             return result;
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -115,7 +118,7 @@ class AndroidEval implements Eval {
             field.setAccessible(accessible);
             return result;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -124,7 +127,7 @@ class AndroidEval implements Eval {
     public Value invokeMethod(
             Value target,
             MethodDescription description,
-            List<? extends Value> list,
+            List<? extends Value> args,
             boolean invokeSpecial) {
         String owner = description.getOwnerInternalName();
         String methodName = description.getName();
@@ -136,17 +139,21 @@ class AndroidEval implements Eval {
                 parameterClass[i] =
                         Class.forName(parameterType[i].getClassName().replace('/', '.'));
             }
+            Object result;
+
             Method method =
                     Class.forName(owner.replace('/', '.'))
                             .getDeclaredMethod(methodName, parameterClass);
             method.setAccessible(true);
-            Object result =
+            // TODO Method introspection is slower than using MethodHandles.
+            result =
                     method.invoke(
                             valueToObject(target),
-                            list.stream().map(AndroidEval::valueToObject).toArray());
+                            args.stream().map(AndroidEval::valueToObject).toArray());
             return objectToValueWithUnboxing(result, Type.getReturnType(method));
-        } catch (Exception e) {
-            handleException(e);
+
+        } catch (Throwable throwable) {
+            handleThrowable(throwable);
         }
         throw new IllegalStateException();
     }
@@ -160,8 +167,7 @@ class AndroidEval implements Eval {
         Class<?>[] parameterClass = new Class[parameterType.length];
         try {
             for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] =
-                        Class.forName(parameterType[i].getClassName().replace('/', '.'));
+                parameterClass[i] = typeToClass(parameterType[i]);
             }
             Method method =
                     Class.forName(owner.replace('/', '.'))
@@ -171,7 +177,7 @@ class AndroidEval implements Eval {
                     method.invoke(null, list.stream().map(AndroidEval::valueToObject).toArray());
             return objectToValueWithUnboxing(result, Type.getReturnType(method));
         } catch (Exception e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -182,7 +188,7 @@ class AndroidEval implements Eval {
             Class<?> c = typeToClass(type);
             c.isInstance(valueToObject(target));
         } catch (ClassNotFoundException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -194,7 +200,7 @@ class AndroidEval implements Eval {
             return new ObjectValue(c, Type.getObjectType("java/lang/Class"));
         } catch (ClassNotFoundException e) {
             // TODO: This needs to surface to the user.
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -240,16 +246,45 @@ class AndroidEval implements Eval {
     public void setArrayElement(Value array, Value index, Value newValue) {
         try {
             Type elementType = array.getAsmType().getElementType();
-            Class<?> element = typeToClass(elementType);
-            if (element.isPrimitive()) {
-                if (elementType == Type.INT_TYPE) {
-                    Array.setInt(
-                            valueToObject(array),
-                            ValuesKt.getInt(index),
-                            ValuesKt.getInt(newValue));
-                    return;
-                }
+            Object arrayObject = valueToObject(array);
+            int arrayIndex = ValuesKt.getInt(index);
+
+            switch (elementType.getSort()) {
+                case Type.INT:
+                    Array.setInt(arrayObject, arrayIndex, ValuesKt.getInt(newValue));
+                    break;
+                case Type.BYTE:
+                    Array.setByte(arrayObject, arrayIndex, (byte) ValuesKt.getInt(newValue));
+                    break;
+                case Type.OBJECT:
+                    Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
+                    break;
+                case Type.SHORT:
+                    Array.setShort(arrayObject, arrayIndex, (short) ValuesKt.getInt(newValue));
+                    break;
+                case Type.CHAR:
+                    Array.setChar(arrayObject, arrayIndex, (char) ValuesKt.getInt(newValue));
+                    break;
+                case Type.BOOLEAN:
+                    Array.setBoolean(arrayObject, arrayIndex, ValuesKt.getBoolean(newValue));
+                    break;
+                case Type.LONG:
+                    Array.setLong(arrayObject, arrayIndex, ValuesKt.getLong(newValue));
+                    break;
+                case Type.FLOAT:
+                    Array.setFloat(arrayObject, arrayIndex, ValuesKt.getFloat(newValue));
+                    break;
+                case Type.DOUBLE:
+                    Array.setDouble(arrayObject, arrayIndex, ValuesKt.getDouble(newValue));
+                    break;
+                default:
+                    String msg =
+                            String.format(
+                                    "setArrayElement undefined for type '%s' ",
+                                    newValue.getAsmType());
+                    throw new ClassNotFoundException(msg);
             }
+            return;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -288,7 +323,7 @@ class AndroidEval implements Eval {
             field.setAccessible(accessible);
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -324,7 +359,7 @@ class AndroidEval implements Eval {
             field.setAccessible(accessible);
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
-            handleException(e);
+            handleThrowable(e);
         }
         throw new IllegalStateException();
     }
@@ -344,6 +379,22 @@ class AndroidEval implements Eval {
     public static Class<?> typeToClass(Type type) throws ClassNotFoundException {
         if (type == Type.INT_TYPE) {
             return int.class;
+        } else if (type == Type.BOOLEAN_TYPE) {
+            return boolean.class;
+        } else if (type == Type.BYTE_TYPE) {
+            return byte.class;
+        } else if (type == Type.SHORT_TYPE) {
+            return short.class;
+        } else if (type == Type.CHAR_TYPE) {
+            return char.class;
+        } else if (type == Type.LONG_TYPE) {
+            return long.class;
+        } else if (type == Type.FLOAT_TYPE) {
+            return float.class;
+        } else if (type == Type.DOUBLE_TYPE) {
+            return double.class;
+        } else if (type == Type.VOID_TYPE) {
+            return void.class;
         } else {
             return Class.forName(type.getClassName().replace('/', '.'));
         }
@@ -355,7 +406,7 @@ class AndroidEval implements Eval {
      * <p>Before shipping an MVP, this method should be removed and all exceptions be properly
      * handled by either logging or displaying to the user.
      */
-    private static void handleException(Exception e) {
-        throw new RuntimeException(e);
+    private static void handleThrowable(Throwable t) {
+        throw new RuntimeException(t);
     }
 }

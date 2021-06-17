@@ -59,4 +59,58 @@ class TestTarget {
     public int returnPlusOne(int input) {
         return input + 1;
     }
+
+    public byte returnByteFromArray() {
+        byte[] array = new byte[2];
+        array[1] = 0xA;
+        return array[1];
+    }
+
+    public Object returnObjectFromArray() {
+        Integer[] array = new Integer[2];
+        array[1] = Integer.valueOf(666);
+        return array[1];
+    }
+
+    public short returnShortFromArray() {
+        short[] array = new short[2];
+        array[1] = (short) 555;
+        return array[1];
+    }
+
+    public char returnCharFromArray() {
+        char[] array = new char[2];
+        array[1] = (char) 555;
+        return array[1];
+    }
+
+    public boolean returnBooleanFromArray() {
+        boolean[] array = new boolean[2];
+        array[1] = true;
+        return array[1];
+    }
+
+    public int returnIntFromArray() {
+        int[] array = new int[2];
+        array[1] = 1234;
+        return array[1];
+    }
+
+    public long returnLongFromArray() {
+        long[] array = new long[2];
+        array[1] = Integer.MAX_VALUE + 1L;
+        return array[1];
+    }
+
+    public float returnFloatFromArray() {
+        float[] array = new float[2];
+        array[1] = 1.0f;
+        return array[1];
+    }
+
+    public double returnDoubleFromArray() {
+        double[] array = new double[2];
+        array[1] = 1.0;
+        return array[1];
+    }
 }
