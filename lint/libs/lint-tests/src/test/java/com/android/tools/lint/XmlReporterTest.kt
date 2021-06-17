@@ -40,7 +40,7 @@ class XmlReporterTest {
     private val sampleManifest = manifest(
         """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="test.pkg">
+                package="test.pkg" android:versionName="1.0">
                 <uses-sdk android:minSdkVersion="10" />
             </manifest>
             """
@@ -107,6 +107,110 @@ class XmlReporterTest {
 
     @Test
     fun testFullPaths() {
+        checkFullPaths(
+            describeSuggestions = false,
+            expected =
+            """
+            <issues format="6" by="lint unittest">
+
+                <issue
+                    id="MissingVersion"
+                    severity="Warning"
+                    message="Should set `android:versionCode` to specify the application version"
+                    category="Correctness"
+                    priority="2"
+                    summary="Missing application name/version"
+                    explanation="You should define the version information for your application.&#xA;&#xA;`android:versionCode`: An integer value that represents the version of the application code, relative to other versions.&#xA;&#xA;`android:versionName`: A string value that represents the release version of the application code, as it should be shown to users."
+                    url="https://developer.android.com/studio/publish/versioning#appversioning"
+                    urls="https://developer.android.com/studio/publish/versioning#appversioning"
+                    errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+                    errorLine2=" ~~~~~~~~">
+                    <location
+                        file="TESTROOT/app/AndroidManifest.xml"
+                        line="1"
+                        column="2"/>
+                </issue>
+
+                <issue
+                    id="HardcodedText"
+                    severity="Warning"
+                    message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource"
+                    category="Internationalization"
+                    priority="5"
+                    summary="Hardcoded text"
+                    explanation="Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup."
+                    errorLine1="        android:text=&quot;Fooo&quot; />"
+                    errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+                    <location
+                        file="TESTROOT/app/res/layout/main.xml"
+                        line="3"
+                        column="9"/>
+                </issue>
+
+            </issues>
+            """
+        )
+    }
+
+    @Test
+    fun testFullPathsWithDescriptions() {
+        checkFullPaths(
+            describeSuggestions = true,
+            expected =
+            """
+            <issues format="6" by="lint unittest" type="report_with_fixes">
+
+                <issue
+                    id="MissingVersion"
+                    severity="Warning"
+                    message="Should set `android:versionCode` to specify the application version"
+                    category="Correctness"
+                    priority="2"
+                    summary="Missing application name/version"
+                    explanation="You should define the version information for your application.&#xA;&#xA;`android:versionCode`: An integer value that represents the version of the application code, relative to other versions.&#xA;&#xA;`android:versionName`: A string value that represents the release version of the application code, as it should be shown to users."
+                    url="https://developer.android.com/studio/publish/versioning#appversioning"
+                    urls="https://developer.android.com/studio/publish/versioning#appversioning"
+                    errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+                    errorLine2=" ~~~~~~~~"
+                    quickfix="studio">
+                    <fix
+                        description="Set versionCode"
+                        auto="false">
+                        <edit
+                            file="TESTROOT/app/AndroidManifest.xml"
+                            offset="92"
+                            after="=&quot;test.pkg&quot; "
+                            before="android:vers"
+                            insert="android:versionCode=&quot;TODO&quot; "/>
+                    </fix>
+                    <location
+                        file="TESTROOT/app/AndroidManifest.xml"
+                        line="1"
+                        column="2"/>
+                </issue>
+
+                <issue
+                    id="HardcodedText"
+                    severity="Warning"
+                    message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource"
+                    category="Internationalization"
+                    priority="5"
+                    summary="Hardcoded text"
+                    explanation="Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup."
+                    errorLine1="        android:text=&quot;Fooo&quot; />"
+                    errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+                    <location
+                        file="TESTROOT/app/res/layout/main.xml"
+                        line="3"
+                        column="9"/>
+                </issue>
+
+            </issues>
+            """
+        )
+    }
+
+    private fun checkFullPaths(describeSuggestions: Boolean, @Language("XML") expected: String) {
         val tempDir = Files.createTempDirectory("testFullPaths")
         val rootDirectory = tempDir.toFile().canonicalFile
 
@@ -117,61 +221,22 @@ class XmlReporterTest {
                 client.pathVariables.clear()
                 client.pathVariables.add("TEST_ROOT", rootDirectory)
                 client.pathVariables.normalize()
+                client.flags.isIncludeXmlFixes = describeSuggestions
                 client
             }
 
         lint().files(sampleManifest, sampleLayout)
-            .issues(ManifestDetector.USES_SDK, HardcodedValuesDetector.ISSUE)
+            .issues(HardcodedValuesDetector.ISSUE, ManifestDetector.SET_VERSION)
             .clientFactory(factory)
             .testModes(TestMode.PARTIAL)
             .rootDirectory(rootDirectory)
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    @Language("XML")
-                    val expected =
-                        """
-                        <issues format="6" by="lint unittest">
-
-                            <issue
-                                id="UsesMinSdkAttributes"
-                                severity="Warning"
-                                message="`&lt;uses-sdk>` tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with `android:targetSdkVersion=&quot;?&quot;`"
-                                category="Correctness"
-                                priority="9"
-                                summary="Minimum SDK and target SDK attributes not defined"
-                                explanation="The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for)."
-                                url="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-                                urls="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-                                errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;10&quot; />"
-                                errorLine2="     ~~~~~~~~">
-                                <location
-                                    file="TESTROOT/app/AndroidManifest.xml"
-                                    line="3"
-                                    column="6"/>
-                            </issue>
-
-                            <issue
-                                id="HardcodedText"
-                                severity="Warning"
-                                message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource"
-                                category="Internationalization"
-                                priority="5"
-                                summary="Hardcoded text"
-                                explanation="Hardcoding text attributes directly in layout files is bad for several reasons:&#xA;&#xA;* When creating configuration variations (for example for landscape or portrait) you have to repeat the actual text (and keep it up to date when making changes)&#xA;&#xA;* The application cannot be translated to other languages by just adding new translations for existing string resources.&#xA;&#xA;There are quickfixes to automatically extract this hardcoded string into a resource lookup."
-                                errorLine1="        android:text=&quot;Fooo&quot; />"
-                                errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-                                <location
-                                    file="TESTROOT/app/res/layout/main.xml"
-                                    line="3"
-                                    column="9"/>
-                            </issue>
-
-                        </issues>
-                    """
                     assertEquals(xmlPrologue + expected.trimIndent() + "\n", xml)
                 },
-                fullPaths = true
+                fullPaths = true,
+                reportType = if (describeSuggestions) XmlFileType.REPORT_WITH_FIXES else XmlFileType.REPORT
             )
 
         PathUtils.deleteRecursivelyIfExists(tempDir)
