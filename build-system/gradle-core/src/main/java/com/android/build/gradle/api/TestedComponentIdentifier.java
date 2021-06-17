@@ -24,6 +24,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
  * <p>This can be used with {@link BaseVariant#getCompileClasspathArtifacts(Object)} to disambiguate
  * the dependencies vs the tested artifact(s).
  */
+@Deprecated
 public interface TestedComponentIdentifier extends ComponentIdentifier {
 
     /**

@@ -21,6 +21,7 @@ package com.android.build.gradle.api;
  *
  * @see BaseVariant#getSourceFolders(SourceKind)
  */
+@Deprecated
 public enum SourceKind {
     JAVA,
 }

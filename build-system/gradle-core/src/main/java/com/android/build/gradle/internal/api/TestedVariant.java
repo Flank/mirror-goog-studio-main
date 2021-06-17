@@ -21,9 +21,8 @@ import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 
-/**
- * API for tested variant api object.
- */
+/** API for tested variant api object. */
+@Deprecated
 public interface TestedVariant {
 
     void setTestVariant(@Nullable TestVariant testVariant);
