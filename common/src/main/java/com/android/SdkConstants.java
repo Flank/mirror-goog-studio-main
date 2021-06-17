@@ -1400,6 +1400,7 @@ public final class SdkConstants {
 
     // Attributes: View Binding
     public static final String ATTR_VIEW_BINDING_IGNORE = "viewBindingIgnore";
+    public static final String ATTR_VIEW_BINDING_TYPE = "viewBindingType";
 
     // Attributes: Layout
     public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_";
