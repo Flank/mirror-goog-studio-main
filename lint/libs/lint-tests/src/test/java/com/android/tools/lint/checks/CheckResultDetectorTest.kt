@@ -50,6 +50,65 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test191378558() {
+        // Regression test for https://issuetracker.google.com/191378558
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                fun test() {
+                    if (checkBoolean()) {
+                        println()
+                    }
+                }
+
+                @CheckResult
+                fun checkBoolean(): Boolean = true
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.CheckResult;
+
+                public class CheckResultTest {
+                    @CheckResult
+                    private boolean checkBoolean() {
+                        return true;
+                    }
+
+                    public void test() {
+                        if (checkBoolean()) {
+                            System.out.println();
+                        }
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.Manifest
+                import android.content.Context
+                import android.os.Build
+
+                fun test(context: Context) {
+                    if (context.packageManager.isPermissionRevokedByPolicy(
+                            Manifest.permission.ACCESS_FINE_LOCATION, context.packageName)) {
+                        println()
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun testCheckResult() {
         val expected =
             """
