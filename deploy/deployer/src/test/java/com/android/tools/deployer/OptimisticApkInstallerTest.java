@@ -145,7 +145,7 @@ public class OptimisticApkInstallerTest {
                                 "file2", "1",
                                 "file4", "2"));
         nextId = apkInstaller.install(TEST_PACKAGE, ImmutableList.of(nextApk));
-        assertOverlay(nextId, "base/file1", "base/file2", "base/file4");
+        assertOverlay(nextId, "base/file4");
     }
 
     @Test

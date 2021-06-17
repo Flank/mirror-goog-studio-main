@@ -24,6 +24,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Class that performs a configurable overlay diff between a newly built set of APKs and the current
@@ -63,15 +64,17 @@ class OverlayDiffer {
      * @throws DeployerException if a change cannot be supported by overlay update
      */
     public Result diff(List<Apk> newApks, OverlayId overlayId) throws DeployerException {
-        return new Result(
+        List<ApkEntry> filesToAdd =
                 getFilesToAdd(
-                        newApks, overlayId.getInstalledApks(), overlayId.getOverlayContents()),
-                getFilesToRemove(newApks, overlayId.getOverlayContents()));
+                        newApks, overlayId.getInstalledApks(), overlayId.getOverlayContents());
+        Set<String> filesToRemove =
+                getFilesToRemove(newApks, filesToAdd, overlayId.getOverlayContents());
+        return new Result(filesToAdd, filesToRemove);
     }
 
     // Any files in the new APKs that aren't in the base APKs and are not already in the overlay
     // must be added to the overlay.
-    private Collection<ApkEntry> getFilesToAdd(
+    private List<ApkEntry> getFilesToAdd(
             List<Apk> newApks, List<Apk> installedApks, OverlayId.Contents overlayContents)
             throws DeployerException {
         ArrayList<ApkEntry> files = new ArrayList<>();
@@ -97,13 +100,23 @@ class OverlayDiffer {
 
     // Any files in the overlay that are NOT in the new APK must be deleted from the overlay. This
     // handles removing any "extra" files, such as the ones added by IWI swap.
-    private static Collection<String> getFilesToRemove(
-            List<Apk> newApks, OverlayId.Contents overlayContents) {
-        Set<String> files = new HashSet<>(overlayContents.allFiles());
+    private static Set<String> getFilesToRemove(
+            List<Apk> newApks, List<ApkEntry> filesToAdd, OverlayId.Contents overlayContents) {
+        Set<String> filesToDelete = new HashSet<>(overlayContents.allFiles());
+
+        // Don't delete files if the APK and overlay match.
+        Predicate<ApkEntry> matchesOverlay =
+                entry ->
+                        entry.getChecksum()
+                                == overlayContents.getFileChecksum(entry.getQualifiedPath());
+
         newApks.stream()
                 .flatMap(apk -> apk.apkEntries.values().stream())
-                .map(ApkEntry::getQualifiedPath)
-                .forEach(files::remove);
-        return files;
+                .filter(matchesOverlay)
+                .forEach(entry -> filesToDelete.remove(entry.getQualifiedPath()));
+
+        // If we're already overwriting the file, there's no need to flag it for deletion.
+        filesToAdd.stream().map(ApkEntry::getQualifiedPath).forEach(filesToDelete::remove);
+        return filesToDelete;
     }
 }
