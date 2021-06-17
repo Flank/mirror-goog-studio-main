@@ -37,6 +37,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Basic Callable to run tests on a given {@link DeviceConnector} using {@link
@@ -109,6 +112,37 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         this.additionalTestOutputEnabled = params.additionalTestOutputEnabled;
     }
 
+    @NonNull
+    protected String getUserId()
+            throws ShellCommandUnresponsiveException, AdbCommandRejectedException, IOException,
+                    TimeoutException {
+        final List<String> output = new ArrayList<>();
+        executeShellCommand(
+                "am get-current-user",
+                new MultiLineReceiver() {
+                    @Override
+                    public void processNewLines(@NotNull String[] lines) {
+                        output.addAll(
+                                Arrays.stream(lines)
+                                        .filter(it -> !it.isEmpty())
+                                        .collect(Collectors.toList()));
+                    }
+
+                    @Override
+                    public boolean isCancelled() {
+                        return false;
+                    }
+                });
+
+        if (output.size() != 1) {
+            throw new IOException(
+                    "Unexpected output of command get-current-user, "
+                            + "expected a user id found the following output:\n> "
+                            + String.join("\n> ", output));
+        }
+        return output.get(0);
+    }
+
     @Override
     public void run() {
         String deviceName = device.getName();
@@ -121,17 +155,25 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         long time = System.currentTimeMillis();
         boolean success = false;
 
-        String coverageFile = getCoverageFile();
         boolean useTestStorageService = Boolean.parseBoolean(
                 testData.getInstrumentationRunnerArguments()
                         .getOrDefault("useTestStorageService", "false"));
-        String prefixedCoverageFilePath = (useTestStorageService ?
-                TEST_STORAGE_SERVICE_OUTPUT_DIR : "") + coverageFile;
+        String prefixedCoverageFilePath = null;
+        String userId = null;
 
         String additionalTestOutputDir = null;
 
         try {
             device.connect(timeoutInMs, logger);
+            userId = getUserId();
+            Collection<String> installOptions =
+                    new ImmutableList.Builder<String>()
+                            .addAll(this.installOptions)
+                            .add("--user " + userId)
+                            .build();
+            String coverageFile = getCoverageFile(userId);
+            prefixedCoverageFilePath =
+                    (useTestStorageService ? TEST_STORAGE_SERVICE_OUTPUT_DIR : "") + coverageFile;
 
             if (!testedApks.isEmpty()) {
                 logger.verbose(
@@ -201,14 +243,14 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 String mkdirp = "mkdir -p " + additionalTestOutputDir;
                 executeShellCommand(mkdirp, receiver);
 
-                setUpDirectories(additionalTestOutputDir);
+                setUpDirectories(additionalTestOutputDir, userId);
                 runner.setAdditionalTestOutputLocation(additionalTestOutputDir);
             }
 
             if (testData.isTestCoverageEnabled()) {
                 runner.addInstrumentationArg("coverage", "true");
                 if (runner.getCoverageOutputType() == CoverageOutput.DIR) {
-                    setUpDirectories(prefixedCoverageFilePath);
+                    setUpDirectories(prefixedCoverageFilePath, userId);
                 }
 
                 // Don't use prefixedCoverageFilePath here because the runner will
@@ -216,9 +258,10 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 runner.setCoverageReportLocation(coverageFile);
             }
 
-            if (testData.getAnimationsDisabled()) {
-                runner.setRunOptions("--no_window_animation");
-            }
+            runner.setRunOptions(
+                    testData.getAnimationsDisabled()
+                            ? "--no_window_animation "
+                            : "" + "--user " + userId);
 
             runner.setRunName(deviceName);
             runner.setMaxtimeToOutputResponse(timeoutInMs);
@@ -288,8 +331,12 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 // Get the coverage if needed.
                 if (success && testData.isTestCoverageEnabled()) {
                     try {
-                        pullCoverageData(deviceName, prefixedCoverageFilePath,
-                                runner.getCoverageOutputType(), useTestStorageService);
+                        pullCoverageData(
+                                deviceName,
+                                prefixedCoverageFilePath,
+                                runner.getCoverageOutputType(),
+                                useTestStorageService,
+                                userId);
                     } catch (Throwable e) {
                         throw new RuntimeException(e);
                     }
@@ -389,7 +436,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         return result[0] + "/data/" + testData.getTestedApplicationId() + "/files/test_data";
     }
 
-    private void setUpDirectories(@NonNull String userCoverageDir)
+    private void setUpDirectories(@NonNull String userCoverageDir, @NonNull String userId)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
 
@@ -398,11 +445,14 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         executeShellCommand(cleanUpTmp, receiver);
 
         String cleanUpUser = cleanUpDir(userCoverageDir);
-        execAsScript(cleanUpUser, "tmpScript.sh", true);
+        execAsScript(cleanUpUser, "tmpScript.sh", userId, true);
     }
 
     private void execAsScript(
-            @NonNull String command, @NonNull String scriptName, boolean withRunAs)
+            @NonNull String command,
+            @NonNull String scriptName,
+            @NonNull String userId,
+            boolean withRunAs)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         String scriptPath = getCoverageTmp() + "/" + scriptName;
@@ -411,24 +461,24 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
         String finalCommand = "sh " + scriptPath;
         if (withRunAs) {
-            finalCommand = asTestedApplication(finalCommand);
+            finalCommand = asTestedApplication(userId, finalCommand);
         }
         executeShellCommand(finalCommand, receiver);
     }
 
     @VisibleForTesting
-    String getCoverageFile() {
+    String getCoverageFile(@NonNull String userId) {
         final Supplier<String> defaultDir =
                 () -> {
                     switch (runner.getCoverageOutputType()) {
                         case DIR:
-                            return "/data/data/"
-                                    + testData.getTestedApplicationId()
-                                    + "/coverage_data/";
+                            return String.format(
+                                    "/data/user/%s/%s/coverage_data/",
+                                    userId, testData.getTestedApplicationId());
                         case FILE:
                             return String.format(
-                                    "/data/data/%s/%s",
-                                    testData.getTestedApplicationId(), FILE_COVERAGE_EC);
+                                    "/data/user/%s/%s/%s",
+                                    userId, testData.getTestedApplicationId(), FILE_COVERAGE_EC);
                         default:
                             throw new AssertionError("Unknown coverage type.");
                     }
@@ -439,10 +489,14 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     }
 
     @NonNull
-    private String asTestedApplication(@NonNull String... command) {
+    private String asTestedApplication(@NonNull String userId, @NonNull String... command) {
         Iterator<String> iterator =
                 Arrays.stream(command)
-                        .map(s -> "run-as " + testData.getTestedApplicationId() + " " + s)
+                        .map(
+                                s ->
+                                        String.format(
+                                                "run-as %s --user %s %s",
+                                                testData.getTestedApplicationId(), userId, s))
                         .iterator();
         return Joiner.on(" && ").join(iterator);
     }
@@ -495,23 +549,27 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     }
 
     private void pullCoverageData(
-            String deviceName, String coverageFile, CoverageOutput coverageOutput,
-            boolean useTestStorageService)
+            String deviceName,
+            String coverageFile,
+            CoverageOutput coverageOutput,
+            boolean useTestStorageService,
+            @NonNull String userId)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         switch (coverageOutput) {
             case DIR:
-                pullCoverageFromDir(deviceName, coverageFile, useTestStorageService);
+                pullCoverageFromDir(deviceName, coverageFile, useTestStorageService, userId);
                 break;
             case FILE:
-                pullSingleCoverageFile(deviceName, coverageFile);
+                pullSingleCoverageFile(deviceName, coverageFile, userId);
                 break;
             default:
                 throw new AssertionError("Unknown coverage type.");
         }
     }
 
-    private void pullSingleCoverageFile(String deviceName, String coverageFile)
+    private void pullSingleCoverageFile(
+            String deviceName, String coverageFile, @NonNull String userId)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         String temporaryCoverageCopy =
@@ -522,7 +580,9 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         logger.verbose(
                 "DeviceConnector '%s': fetching coverage data from %s", deviceName, coverageFile);
         executeShellCommand(
-                asTestedApplication(" cat " + coverageFile) + " | cat > " + temporaryCoverageCopy,
+                asTestedApplication(userId, " cat " + coverageFile)
+                        + " | cat > "
+                        + temporaryCoverageCopy,
                 outputReceiver);
         device.pullFile(
                 temporaryCoverageCopy,
@@ -531,7 +591,10 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     }
 
     private void pullCoverageFromDir(
-            String deviceName, String coverageDir, Boolean useTestStorageService)
+            String deviceName,
+            String coverageDir,
+            Boolean useTestStorageService,
+            @NonNull String userId)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         String coverageTmp = getCoverageTmp();
@@ -547,13 +610,13 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         if (useTestStorageService) {
             listFiles = "ls " + coverageDir;
         } else {
-            listFiles = asTestedApplication("ls " + coverageDir);
+            listFiles = asTestedApplication(userId, "ls " + coverageDir);
         }
         String copyScript =
                 String.format(
                         "for i in $(%s); do run-as %s cat %s$i > %s/$i; done",
                         listFiles, testData.getTestedApplicationId(), coverageDir, coverageTmp);
-        execAsScript(copyScript, "copyFromUser.sh", false);
+        execAsScript(copyScript, "copyFromUser.sh", userId, false);
 
         String coveragePaths = coverageTmp + "/paths.txt";
         executeShellCommand("ls " + coverageTmp + " > " + coveragePaths, outputReceiver);
