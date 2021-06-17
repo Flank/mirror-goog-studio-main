@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_DEX
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -34,15 +35,18 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIV
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
@@ -94,7 +98,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val assetsFiles: DirectoryProperty
+    abstract val assetsFilesDirectories: ListProperty<Directory>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -138,12 +142,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             }
 
         jarCreator.use {
-            it.addDirectory(
-                assetsFiles.get().asFile.toPath(),
-                null,
-                null,
-                Relocator(FD_ASSETS)
-            )
+            assetsFilesDirectories.get().forEach { assetFilesDirectory ->
+                it.addDirectory(
+                    assetFilesDirectory.asFile.toPath(),
+                    null,
+                    null,
+                    Relocator(FD_ASSETS)
+                )
+            }
 
             it.addJar(resFiles.get().asFile.toPath(), excludeJarManifest, ResRelocator())
 
@@ -233,8 +239,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             }
             task.fileName.disallowChanges()
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                 InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
+            task.assetsFilesDirectories.setDisallowChanges(
+                creationConfig.artifacts.getAll(MultipleArtifact.ASSETS)
+            )
 
             val legacyShrinkerEnabled = creationConfig.useResourceShrinker() &&
                 !creationConfig.services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]

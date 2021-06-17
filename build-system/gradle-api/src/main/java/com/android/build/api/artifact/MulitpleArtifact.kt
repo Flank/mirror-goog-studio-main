@@ -67,4 +67,23 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
             Appendable,
             Transformable,
             Replaceable
+
+    /**
+     * Assets that will be packaged in the resulting APK or Bundle.
+     *
+     * When used as an input, the content will be the merged assets.
+     * For the APK, the assets will be compressed before packaging.
+     *
+     * When using [OutOperationRequest.toAppendTo] method is used to append assets for packaging,
+     * no handling is provided in case of conflicts. In other words, you cannot have conflicts when
+     * adding to the assets. If there can be conflicts,
+     * [InAndOutDirectoryOperationRequest.toTransformMany] should be used to process all inputs and
+     * handle the conflicts before writing out the transformed assets.
+     */
+    @Incubating
+    object ASSETS:
+        MultipleArtifact<Directory>(DIRECTORY),
+        Appendable,
+        Transformable,
+        Replaceable
 }

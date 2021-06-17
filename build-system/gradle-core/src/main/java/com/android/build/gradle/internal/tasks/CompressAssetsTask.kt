@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -25,7 +26,9 @@ import com.android.builder.packaging.PackagingUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileType
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -62,11 +65,17 @@ import javax.inject.Inject
  * corresponding asset's relative path in the input directory + ".jar".
  */
 @CacheableTask
-abstract class CompressAssetsTask : NewIncrementalTask() {
+abstract class CompressAssetsTask: NewIncrementalTask() {
+
+    /**
+     * although this is wired to a ListProperty<Directory>, we cannot use that as an input when
+     * that input is incremental. The [InputChanges] APIs do not work well with ListProperty<>, so
+     * instead, we use a [FileCollection] which has full support for incremental task input.
+     */
     @get:Incremental
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputDir: DirectoryProperty
+    abstract val inputDirs: ConfigurableFileCollection
 
     @get:Input
     abstract val noCompress: ListProperty<String>
@@ -80,11 +89,10 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
     override fun doTaskAction(inputChanges: InputChanges) {
         CompressAssetsDelegate(
             workerExecutor.noIsolation(),
-            inputDir.get().asFile,
             outputDir.get().asFile,
             PackagingUtils.getNoCompressPredicateForJavaRes(noCompress.get()),
             compressionLevel.get(),
-            inputChanges.getFileChanges(inputDir)
+            inputChanges.getFileChanges(inputDirs)
         ).run()
     }
 
@@ -116,10 +124,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_ASSETS,
-                task.inputDir
-            )
+            task.inputDirs.from(creationConfig.artifacts.getAll(MultipleArtifact.ASSETS))
             task.noCompress.setDisallowChanges(creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress)
             task.compressionLevel.setDisallowChanges(
                 if (creationConfig.debuggable) {
@@ -138,7 +143,6 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
 @VisibleForTesting
 class CompressAssetsDelegate(
     private val workQueue: WorkQueue,
-    val inputDir: File,
     val outputDir: File,
     private val noCompressPredicate: Predicate<String>,
     private val compressionLevel: Int,

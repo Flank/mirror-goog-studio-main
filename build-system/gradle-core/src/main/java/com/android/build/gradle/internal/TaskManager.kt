@@ -83,7 +83,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTR
 import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_JARS
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -130,6 +129,7 @@ import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
+import com.android.build.gradle.internal.tasks.MergeAssetsForUnitTest
 import com.android.build.gradle.internal.tasks.MergeClassesTask
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
@@ -1444,6 +1444,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // process java resources
         createProcessJavaResTask(unitTestCreationConfig)
         if (includeAndroidResources) {
+            // merging task for assets in unit tests.
+            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig))
+            
             if (testedVariant.variantType.isAar) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(unitTestCreationConfig)
@@ -1468,7 +1471,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .copy(PROCESSED_RES, testedVariant.artifacts)
                 unitTestCreationConfig
                         .artifacts
-                        .copy(MERGED_ASSETS, testedVariant.artifacts)
+                        .copy(MultipleArtifact.ASSETS, testedVariant.artifacts)
                 taskFactory.register(PackageForUnitTest.CreationAction(unitTestCreationConfig))
             } else {
                 throw IllegalStateException(
@@ -1478,8 +1481,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 + project.path
                                 + " must be a library or an application to have unit tests.")
             }
+            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig.testedConfig))
             val generateTestConfig = taskFactory.register(
-                    GenerateTestConfig.CreationAction(unitTestCreationConfig))
+                    GenerateTestConfig.
+                    CreationAction(unitTestCreationConfig))
             val compileTask = taskContainer.compileTask
             compileTask.dependsOn(generateTestConfig)
             // The GenerateTestConfig task has 2 types of inputs: direct inputs and indirect inputs.

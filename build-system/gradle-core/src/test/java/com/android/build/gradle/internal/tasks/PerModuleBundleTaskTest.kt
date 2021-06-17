@@ -46,7 +46,9 @@ class PerModuleBundleTaskTest {
         val project = ProjectBuilder.builder().withProjectDir(testFolder.newFolder()).build()
 
         task = project.tasks.create("test", PerModuleBundleTask::class.java) {
-            task -> task.assetsFiles.set(testFolder.newFolder("assets"))
+            task -> task.assetsFilesDirectories.add(
+                project.layout.buildDirectory.dir(
+                    testFolder.newFolder("assets").absolutePath))
         }
 
         val resFile = testFolder.newFile("res").also {

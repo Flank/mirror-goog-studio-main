@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -43,7 +44,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
@@ -328,7 +328,6 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
     open class MergeAssetBaseCreationAction(
         creationConfig: ComponentCreationConfig,
-        private val outputArtifactType: InternalArtifactType<Directory>,
         private val includeDependencies: Boolean
     ) : CreationAction(creationConfig) {
 
@@ -339,11 +338,6 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts.setInitialProvider(
-                taskProvider,
-                MergeSourceSetFolders::outputDir
-            ).withName("out").on(outputArtifactType)
             creationConfig.taskContainer.mergeAssetsTask = taskProvider
         }
 
@@ -398,23 +392,42 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     class MergeAppAssetCreationAction(creationConfig: ComponentCreationConfig) :
         MergeAssetBaseCreationAction(
             creationConfig,
-            InternalArtifactType.MERGED_ASSETS,
             true
         ) {
 
         override val name: String
             get() = computeTaskName("merge", "Assets")
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<MergeSourceSetFolders>
+        ) {
+            super.handleProvider(taskProvider)
+
+            creationConfig.artifacts.use(taskProvider)
+                .wiredWith { it.outputDir }
+                .toAppendTo(MultipleArtifact.ASSETS)
+        }
     }
 
     class LibraryAssetCreationAction(creationConfig: ComponentCreationConfig) :
         MergeAssetBaseCreationAction(
             creationConfig,
-            InternalArtifactType.LIBRARY_ASSETS,
             false
         ) {
 
         override val name: String
             get() = computeTaskName("package", "Assets")
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<MergeSourceSetFolders>
+        ) {
+            super.handleProvider(taskProvider)
+
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                MergeSourceSetFolders::outputDir
+            ).withName("out").on(InternalArtifactType.LIBRARY_ASSETS)
+        }
     }
 
     class MergeJniLibFoldersCreationAction(creationConfig: VariantCreationConfig) :
