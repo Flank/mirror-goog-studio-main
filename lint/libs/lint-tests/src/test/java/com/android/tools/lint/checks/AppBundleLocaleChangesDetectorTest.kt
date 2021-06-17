@@ -40,12 +40,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test/pkg/Example.java:8: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                         configuration.locale = locale;
                                       ~~~~~~
                 0 errors, 1 warnings
-            """)
+              """
+            )
     }
 
     fun testJava2() {
@@ -66,12 +68,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test/pkg/Example.java:8: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                         configuration.setLocale(locale);
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-            """)
+                """
+            )
     }
 
     fun testJava3() {
@@ -92,12 +96,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test/pkg/Example.java:8: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                         configuration.setLocales(locales);
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-            """)
+               """
+            )
     }
 
     fun testKotlin1() {
@@ -114,12 +120,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test.kt:5: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                     configuration.locale = locale
                                   ~~~~~~
                 0 errors, 1 warnings
-            """)
+                """
+            )
     }
 
     fun testKotlin2() {
@@ -136,12 +144,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test.kt:5: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                     configuration.setLocale(locale)
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-            """)
+                """
+            )
     }
 
     fun testKotlin3() {
@@ -158,12 +168,14 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .run()
-            .expect("""
+            .expect(
+                """
                 src/test.kt:5: Warning: Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the bundle configuration [AppBundleLocaleChanges]
                     configuration.setLocales(locales)
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-            """)
+                """
+            )
     }
 
     fun testJavaPlayCoreUsage() {
