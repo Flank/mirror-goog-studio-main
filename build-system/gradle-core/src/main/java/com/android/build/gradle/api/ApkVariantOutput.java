@@ -21,9 +21,8 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import org.gradle.api.Task;
 
-/**
- * A variant output for apk-generating variants.
- */
+/** A variant output for apk-generating variants. */
+@Deprecated
 public interface ApkVariantOutput extends BaseVariantOutput {
 
     /**

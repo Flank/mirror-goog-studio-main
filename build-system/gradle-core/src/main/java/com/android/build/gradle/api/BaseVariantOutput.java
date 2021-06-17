@@ -29,6 +29,7 @@ import org.gradle.model.Managed;
  * A Build variant output and all its public data. This is the base class for items common to apps,
  * test apps, and libraries
  */
+@Deprecated
 @Managed
 public interface BaseVariantOutput extends OutputFile {
 

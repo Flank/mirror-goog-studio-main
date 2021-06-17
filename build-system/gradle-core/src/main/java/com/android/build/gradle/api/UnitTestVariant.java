@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.core.InternalBaseVariant;
 
 /** A variant that contains all unit test code. */
+@Deprecated
 public interface UnitTestVariant extends BaseVariant, InternalBaseVariant {
     /**
      * Returns the build variant that is tested by this variant.

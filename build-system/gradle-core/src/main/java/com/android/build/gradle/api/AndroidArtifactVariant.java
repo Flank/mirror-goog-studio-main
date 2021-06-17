@@ -21,9 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
 
-/**
- * A Build variant for a generic android artifact.
- */
+/** A Build variant for a generic android artifact. */
+@Deprecated
 public interface AndroidArtifactVariant extends VersionedVariant {
 
     /**
