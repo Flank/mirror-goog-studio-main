@@ -727,8 +727,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     .map { it.equals("true", ignoreCase = true) }.orElse(false)
             )
         }
-        systemPropertyInputs.initialize(project.providers)
-        environmentVariableInputs.initialize(project.providers)
+        systemPropertyInputs.initialize(project.providers, isForAnalysis = false)
+        environmentVariableInputs.initialize(project.providers, isForAnalysis = false)
     }
 
     fun configureForStandalone(

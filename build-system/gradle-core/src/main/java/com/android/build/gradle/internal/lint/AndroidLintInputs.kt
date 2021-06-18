@@ -415,6 +415,22 @@ abstract class SystemPropertyInputs {
 
     @get:Input
     @get:Optional
+    abstract val androidLintLogJarProblems: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val gradleUserHome: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val javaHome: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintApiDatabase: Property<String>
+
+    @get:Input
+    @get:Optional
     abstract val lintAutofix: Property<String>
 
     @get:Input
@@ -423,26 +439,73 @@ abstract class SystemPropertyInputs {
 
     @get:Input
     @get:Optional
+    abstract val lintBinDir: Property<String>
+
+    @get:Input
+    @get:Optional
     abstract val lintConfigurationOverride: Property<String>
 
-    fun initializeForAnalysis(providerFactory: ProviderFactory) {
-        lintAutofix.disallowChanges()
-        lintBaselinesContinue.disallowChanges()
-        lintConfigurationOverride.setDisallowChanges(
-            providerFactory.systemProperty("lint.configuration.override")
-        )
-    }
+    @get:Input
+    @get:Optional
+    abstract val lintHtmlPrefs: Property<String>
 
-    fun initialize(providerFactory: ProviderFactory) {
-        lintAutofix.setDisallowChanges(
-            providerFactory.systemProperty("lint.autofix")
+    @get:Input
+    @get:Optional
+    abstract val lintNullnessIgnoreDeprecated: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintUnusedResourcesExcludeTests: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintUnusedResourcesIncludeTests: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintWorkDir: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val userHome: Property<String>
+
+    fun initialize(providerFactory: ProviderFactory, isForAnalysis: Boolean) {
+        if (isForAnalysis) {
+            lintAutofix.disallowChanges()
+            lintBaselinesContinue.disallowChanges()
+            lintHtmlPrefs.disallowChanges()
+        } else {
+            lintAutofix.setDisallowChanges(providerFactory.systemProperty("lint.autofix"))
+            lintBaselinesContinue.setDisallowChanges(
+                providerFactory.systemProperty("lint.baselines.continue")
+            )
+            lintHtmlPrefs.setDisallowChanges(providerFactory.systemProperty("lint.html.prefs"))
+        }
+        androidLintLogJarProblems.setDisallowChanges(
+            providerFactory.systemProperty("android.lint.log-jar-problems")
         )
-        lintBaselinesContinue.setDisallowChanges(
-            providerFactory.systemProperty("lint.baselines.continue")
+        gradleUserHome.setDisallowChanges(providerFactory.systemProperty("gradle.user.home"))
+        javaHome.setDisallowChanges(providerFactory.systemProperty("java.home"))
+        lintApiDatabase.setDisallowChanges(providerFactory.systemProperty("LINT_API_DATABASE"))
+        lintBinDir.setDisallowChanges(
+            providerFactory.systemProperty("com.android.tools.lint.bindir")
         )
         lintConfigurationOverride.setDisallowChanges(
             providerFactory.systemProperty("lint.configuration.override")
         )
+        lintNullnessIgnoreDeprecated.setDisallowChanges(
+            providerFactory.systemProperty("lint.nullness.ignore-deprecated")
+        )
+        lintUnusedResourcesExcludeTests.setDisallowChanges(
+            providerFactory.systemProperty("lint.unused-resources.exclude-tests")
+        )
+        lintUnusedResourcesIncludeTests.setDisallowChanges(
+            providerFactory.systemProperty("lint.unused-resources.include-tests")
+        )
+        lintWorkDir.setDisallowChanges(
+            providerFactory.systemProperty("com.android.tools.lint.workdir")
+        )
+        userHome.setDisallowChanges(providerFactory.systemProperty("user.home"))
     }
 }
 
@@ -453,9 +516,71 @@ abstract class EnvironmentVariableInputs {
 
     @get:Input
     @get:Optional
+    abstract val androidHome: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val androidLintIncludeLdpi: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val androidLintMaxDepth: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val androidLintMaxViewCount: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val androidLintNullnessIgnoreDeprecated: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val androidSdkRoot: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val javaHome: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintApiDatabase: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintHtmlPrefs: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintXmlRoot: Property<String>
+
+    @get:Input
+    @get:Optional
     abstract val lintOverrideConfiguration: Property<String>
 
-    fun initialize(providerFactory: ProviderFactory) {
+    fun initialize(providerFactory: ProviderFactory, isForAnalysis: Boolean) {
+        if (isForAnalysis) {
+            lintHtmlPrefs.disallowChanges()
+        } else {
+            lintHtmlPrefs.setDisallowChanges(providerFactory.environmentVariable("LINT_HTML_PREFS"))
+        }
+        androidHome.setDisallowChanges(providerFactory.environmentVariable("ANDROID_HOME"))
+        androidLintIncludeLdpi.setDisallowChanges(
+            providerFactory.environmentVariable("ANDROID_LINT_INCLUDE_LDPI")
+        )
+        androidLintMaxDepth.setDisallowChanges(
+            providerFactory.environmentVariable("ANDROID_LINT_MAX_DEPTH")
+        )
+        androidLintMaxViewCount.setDisallowChanges(
+            providerFactory.environmentVariable("ANDROID_LINT_MAX_VIEW_COUNT")
+        )
+        androidLintNullnessIgnoreDeprecated.setDisallowChanges(
+            providerFactory.environmentVariable("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED")
+        )
+        androidSdkRoot.setDisallowChanges(providerFactory.environmentVariable("ANDROID_SDK_ROOT"))
+        javaHome.setDisallowChanges(providerFactory.environmentVariable("JAVA_HOME"))
+        lintApiDatabase.setDisallowChanges(providerFactory.environmentVariable("LINT_API_DATABASE"))
+        lintXmlRoot.setDisallowChanges(providerFactory.environmentVariable("LINT_XML_ROOT"))
         lintOverrideConfiguration.setDisallowChanges(
             providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
         )
