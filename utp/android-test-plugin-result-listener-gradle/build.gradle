@@ -27,7 +27,11 @@ dependencies {
     implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')
     implementation libs.kotlin_stdlib
     implementation libs.kotlin_coroutines_core
-    implementation libs.grpc
+    implementation libs.gson
+    implementation libs.grpc_core
+    implementation libs.grpc_protobuf
+    implementation libs.grpc_stub
+    implementation libs.grpc_netty
     implementation libs.protobuf
     implementation libs.guava
     implementation libs.unified_test_platform_device_provider
