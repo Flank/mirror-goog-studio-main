@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.assertionsEnabled
 import com.android.tools.lint.model.LintModelLintOptions
 import java.io.File
 import java.util.HashSet
+import java.util.Locale
 
 /**
  * Manages configurations, included nested configurations. This is
@@ -49,7 +50,7 @@ open class ConfigurationHierarchy(
 
     /**
      * The fallback configuration to use (specified via --config or
-     * lintConfig); not implicitly parented from its directory location)
+     * lintConfig); not implicitly parented from its directory location
      */
     var fallback: Configuration? = null
 
@@ -85,9 +86,9 @@ open class ConfigurationHierarchy(
         val configuration = create(dir, default)
             ?: ProjectPlaceholderConfiguration(this, dir)
         projectToConfiguration[project] = configuration
-        if (dirToConfiguration[dir] == null) dirToConfiguration[dir] = configuration
+        if (dirToConfiguration[dir] == null) assignConfiguration(dir, configuration)
         if (default != null) {
-            dirToConfiguration[file] = default
+            assignConfiguration(file, default)
         }
         configuration.fileLevel = false
         return configuration
@@ -111,12 +112,12 @@ open class ConfigurationHierarchy(
         if (dir != null && dirToConfiguration[dir] == null) {
             // looking up the configuration for a folder *containing* a lint.xml should also
             // return this instance
-            dirToConfiguration[dir] = configuration
+            assignConfiguration(dir, configuration)
         }
 
         // Set cache here *after* possibly initializing the lint.xml file in the same
         // directory since we're keying the configuration by the default file path
-        dirToConfiguration[xmlFile] = configuration
+        assignConfiguration(xmlFile, configuration)
 
         return configuration
     }
@@ -149,7 +150,7 @@ open class ConfigurationHierarchy(
             else
                 default
                     ?: fallback
-        dirToConfiguration[dir] = parent ?: NONE
+        assignConfiguration(dir, parent ?: NONE)
         return parent
     }
 
@@ -206,7 +207,7 @@ open class ConfigurationHierarchy(
         checkForCycle(child)
     }
 
-    fun checkForCycle(child: Configuration) {
+    private fun checkForCycle(child: Configuration) {
         // Cycle check
         if (assertionsEnabled()) {
             var current: Configuration? = child
@@ -259,7 +260,7 @@ open class ConfigurationHierarchy(
      * of the parent directory.
      *
      * Note that only one of the three is required (the flag
-     * configuration); the others area optional, and in that case, they
+     * configuration); the others are optional, and in that case, they
      * are skipped in the parenting chain.
      */
     fun createLintOptionsConfiguration(
@@ -279,18 +280,17 @@ open class ConfigurationHierarchy(
         return createChainedConfigurations(
             project,
             default,
-            configFactory,
-            {
-                val lintConfigXml = lintOptions.lintConfig
-                if (lintConfigXml != null && lintConfigXml.isFile) {
-                    LintXmlConfiguration.create(this, lintConfigXml).apply {
-                        fileLevel = false
-                    }
-                } else {
-                    null
+            configFactory
+        ) {
+            val lintConfigXml = lintOptions.lintConfig
+            if (lintConfigXml != null && lintConfigXml.isFile) {
+                LintXmlConfiguration.create(this, lintConfigXml).apply {
+                    fileLevel = false
                 }
+            } else {
+                null
             }
-        )
+        }
     }
 
     /**
@@ -366,9 +366,12 @@ open class ConfigurationHierarchy(
         }
 
         checkForCycle(primary)
-
-        dirToConfiguration[dir] = primary
+        assignConfiguration(dir, primary)
         return primary
+    }
+
+    private fun assignConfiguration(dir: File, configuration: Configuration) {
+        dirToConfiguration[dir] = configuration
     }
 
     /**
@@ -543,6 +546,64 @@ open class ConfigurationHierarchy(
     }
 
     /**
+     * Dumps the state of the configuration hierarchy as a dot graph
+     * (https://en.wikipedia.org/wiki/DOT_(graph_description_language)
+     * which you can render with something like this:
+     * `dot -Tpng -o/tmp/graph.png toString.dot`
+     */
+    override fun toString(): String {
+        // make sure parent references are initialized since this is lazy
+        val configs = this.dirToConfiguration.values.toMutableSet()
+        overrides?.let { configs.add(it) }
+        fallback?.let { configs.add(it) }
+        configs.forEach { getParentConfiguration(it) }
+        // any configurations not in the directory map:
+        parentOf.forEach { (child, parent) -> configs.add(child); configs.add(parent) }
+        val sb = StringBuilder()
+        sb.append("digraph Configurations {\n")
+        val keys = mutableMapOf<Configuration, String>()
+        var key = 0xA
+        for (configuration in configs) {
+            val id = Integer.toHexString(key++).toUpperCase(Locale.ROOT)
+            keys[configuration] = id
+            sb.append("  ").append(id).append(" [label=\"")
+            val vars = client.pathVariables
+            val description = when (configuration) {
+                NONE -> "NONE"
+                is LintXmlConfiguration -> vars.toPathString(configuration.configFile)
+                is ProjectPlaceholderConfiguration -> "Placeholder: ${vars.toPathString(configuration.dir?.path ?: "")}"
+                else -> configuration.javaClass.simpleName
+            }
+            if (configuration == overrides) {
+                sb.append("Override: ")
+            }
+            sb.append(description)
+            sb.append("\"")
+            when (configuration) {
+                NONE -> sb.append(",shape=plain")
+                is LintXmlConfiguration -> sb.append(",shape=ellipse")
+                is ProjectPlaceholderConfiguration -> sb.append(",shape=box")
+                else -> sb.append(",shape=parallelogram") // cli configurations, test configurations, etc
+            }
+            sb.append("]\n")
+        }
+        sb.append("\n")
+
+        for ((child, parent) in parentOf) {
+            val childKey = keys[child]!!
+            val parentKey = keys[parent]!!
+            sb.append("  ").append(childKey).append(" -> ").append(parentKey)
+            if (parent == fallback) {
+                sb.append(" [label=\"fallback\"]")
+            }
+
+            sb.append("\n")
+        }
+        sb.append("}")
+        return sb.toString()
+    }
+
+    /**
      * This [ProjectPlaceholderConfiguration] corresponds to a project
      * root which does not have a lint.xml configuration. If we didn't
      * have these, we'd run into trouble if for example the user invokes
@@ -577,8 +638,8 @@ open class ConfigurationHierarchy(
         dir: File
     ) : Configuration(configurations) {
         init {
-            fallback?.let { setParent(it) }
             this.dir = dir
+            fallback?.let { setParent(it) }
         }
 
         override fun isEnabled(issue: Issue): Boolean {
@@ -675,6 +736,10 @@ open class ConfigurationHierarchy(
         override fun setSeverity(issue: Issue, severity: Severity?) {
             ensureParentIsLocalLintXml()
             parent?.setSeverity(issue, severity)
+        }
+
+        override fun toString(): String {
+            return "${this.javaClass.simpleName}:$dir"
         }
     }
 }
