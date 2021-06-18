@@ -5,8 +5,8 @@ java_library(
     name = "test-inspector-sources_undexed",
     srcs = glob(["src/**/*.java"]),
     deps = [
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "//prebuilts/tools/common/m2:androidx.inspection.inspection.1.0.0",
         "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
         "//tools/base/fakeandroid:android-mock",
     ],
@@ -28,8 +28,7 @@ dex_library(
 java_library(
     name = "test-inspector-resources",
     resource_strip_prefix = "tools/base/app-inspection/tests/test-inspector",
-    resources = glob(["META-INF/**"]) +
-                ## this need only to run tests on the linux host
+    resources = glob(["META-INF/**"]) +  ## this need only to run tests on the linux host
                 select({
                     "//tools/base/bazel:windows": [],
                     "//conditions:default": [":hostlib"],

@@ -404,12 +404,12 @@ maven_repo(
     name = "prebuilts",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/livedata/1.1.1:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/constraint/constraint-layout-solver/1.0.2:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/constraint/constraint-layout/1.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
+        "//prebuilts/tools/common/m2:android.arch.lifecycle.livedata.1.1.1_aar",
+        "//prebuilts/tools/common/m2:com.android.support.constraint.constraint-layout.1.0.2_aar",
+        "//prebuilts/tools/common/m2:com.android.support.constraint.constraint-layout-solver.1.0.2",
+        "//prebuilts/tools/common/m2:com.android.support.multidex.1.0.2_aar",
+        "//prebuilts/tools/common/m2:com.android.support.multidex-instrumentation.1.0.2_aar",
+        "//prebuilts/tools/common/m2:com.google.guava.guava.19.0",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: remove
     ],
 )

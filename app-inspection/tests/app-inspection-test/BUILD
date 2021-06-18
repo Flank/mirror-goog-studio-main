@@ -14,8 +14,8 @@ transport_test(
     ],
     shard_count = 3,
     deps = [
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
         "//tools/base/app-inspection/tests/test-framework",
         "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
     ],

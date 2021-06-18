@@ -15,7 +15,6 @@ kotlin_library(
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",
         "//tools/base/utp/android-device-provider-gradle-proto",
-
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "//tools/base/third_party:com.google.testing.platform_android-device-provider-local",
@@ -43,8 +42,7 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha04:jar",
-
+        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha04",
         # Test dependencies.
         ":android-device-provider-gradle",
         "//tools/base/common:tools.common",

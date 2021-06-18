@@ -64,7 +64,7 @@ kotlin_test(
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
-        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
+        "//prebuilts/tools/common/m2:org.mockito.mockito-all.1.9.5",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/testing:tools.analytics-testing",

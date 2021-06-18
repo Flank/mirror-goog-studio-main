@@ -9,9 +9,9 @@ kotlin_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
-        "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
+        "//prebuilts/tools/common/m2:junit.junit.4.12",
         "//tools/base/bazel:studio-grpc",
         "//tools/base/bazel:studio-proto",
         "//tools/base/fakeandroid",

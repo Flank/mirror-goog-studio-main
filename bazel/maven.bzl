@@ -276,6 +276,7 @@ def maven_java_import(
         classifiers = [],
         visibility = None,
         jars = [],
+        repo_path = "",
         classified_only = False,
         **kwargs):
     if not classified_only:
@@ -289,7 +290,7 @@ def maven_java_import(
             name = name,
             visibility = visibility,
             dep = name + "_import",
-            notice = "NOTICE",
+            notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
             tags = ["require_license"],
         )
 
