@@ -77,9 +77,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiType;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,6 +94,7 @@ import java.util.Set;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UCallableReferenceExpression;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UField;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -717,9 +720,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
         return Arrays.asList(
-                USimpleNameReferenceExpression.class,
                 UCallableReferenceExpression.class,
-                UCallExpression.class);
+                UCallExpression.class,
+                UField.class,
+                USimpleNameReferenceExpression.class);
     }
 
     @Nullable
@@ -776,6 +780,23 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     PsiClass psiClass = ((PsiMember) resolved).getContainingClass();
                     if (psiClass != null) {
                         String resourceName = bindingClasses.get(psiClass.getName());
+                        if (resourceName != null
+                                && isBindingClass(context.getEvaluator(), psiClass)) {
+                            ResourceUsageModel.markReachable(
+                                    model.getResource(ResourceType.LAYOUT, resourceName));
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void visitField(@NonNull UField node) {
+                PsiType nodeType = node.getType();
+                if (nodeType instanceof PsiClassType) {
+                    PsiClassType classType = (PsiClassType) node.getType();
+                    PsiClass psiClass = classType.resolve();
+                    if (psiClass != null) {
+                        String resourceName = bindingClasses.get(classType.getClassName());
                         if (resourceName != null
                                 && isBindingClass(context.getEvaluator(), psiClass)) {
                             ResourceUsageModel.markReachable(
