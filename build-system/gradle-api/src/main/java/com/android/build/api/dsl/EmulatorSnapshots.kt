@@ -30,13 +30,13 @@ interface EmulatorSnapshots {
 
     /**
      * Call this function to take unlimited number of test failure snapshots (will ignore
-     * maxSnapshots setting)
+     * maxSnapshotsForTestFailures setting)
      */
     fun retainAll()
 
     /**
      *  Maximum number of failures that would be snapshotted. Any failures after the first
-     *  $maxSnapshots will not have snapshots. Default to 2. Must be >0
+     *  $maxSnapshotsForTestFailures will not have snapshots. Default to 2. Must be >0
      */
     var maxSnapshotsForTestFailures: Int
 
