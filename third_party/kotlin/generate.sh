@@ -11,7 +11,7 @@ ARTIFACTS=(
     "org.jetbrains.kotlin:kotlin-reflect:$VERSION"
     "org.jetbrains.kotlin:kotlin-script-runtime:$VERSION"
     "org.jetbrains.kotlin:kotlin-android-extensions-runtime:$VERSION"
-    "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:$VERSION"
+    "org.jetbrains.kotlin:kotlin-gradle-plugin:$VERSION"
 )
 
 mkdir -p "$DIR"
