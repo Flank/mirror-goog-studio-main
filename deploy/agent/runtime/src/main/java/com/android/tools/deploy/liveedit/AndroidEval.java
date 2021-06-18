@@ -207,10 +207,10 @@ class AndroidEval implements Eval {
     }
 
     @Override
-    public Value newArray(Type type, int i) {
+    public Value newArray(Type type, int length) {
         try {
             Class<?> elementClass = typeToClass(type.getElementType());
-            return objectToValueWithUnboxing(Array.newInstance(elementClass, i), type);
+            return objectToValueWithUnboxing(Array.newInstance(elementClass, length), type);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

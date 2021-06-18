@@ -42,13 +42,13 @@ public class MethodBodyEvaluatorTest {
                 new MethodBodyEvaluator(classInput, "returnHappiness")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         String stringResult = (String) result;
-        Assert.assertEquals(owner.returnHappiness(), stringResult.toString());
+        Assert.assertEquals(owner.returnHappiness(), stringResult);
 
         result =
                 new MethodBodyEvaluator(classInput, "returnField")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         stringResult = (String) result;
-        Assert.assertEquals(owner.returnField(), stringResult.toString());
+        Assert.assertEquals(owner.returnField(), stringResult);
 
         result =
                 new MethodBodyEvaluator(classInput, "returnPlusOne")
