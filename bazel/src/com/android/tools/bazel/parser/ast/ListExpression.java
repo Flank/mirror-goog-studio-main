@@ -17,6 +17,8 @@
 package com.android.tools.bazel.parser.ast;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -98,11 +100,20 @@ public class ListExpression extends Expression {
         nodes.add(this);
     }
 
+    public static ListExpression build(String value) {
+        return ListExpression.build(Arrays.asList(value), true);
+    }
+
     public static ListExpression build(List<String> sources) {
+        return build(sources, false);
+    }
+
+    public static ListExpression build(List<String> sources, boolean singleLine) {
         ListExpression list = new ListExpression();
         for (String source : sources) {
             list.add(LiteralExpression.string(source));
         }
+        list.setSingleLine(singleLine);
         return list;
     }
 

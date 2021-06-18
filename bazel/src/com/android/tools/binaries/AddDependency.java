@@ -18,6 +18,7 @@ package com.android.tools.binaries;
 
 import static java.util.Collections.emptyList;
 
+import com.android.tools.bazel.model.Workspace;
 import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
@@ -66,18 +67,20 @@ public class AddDependency {
         if (!Files.isDirectory(repoDirectory)) {
             usage();
         }
-
-        new AddDependency(repoDirectory).run(args);
+        Path workspace = WorkspaceUtils.findWorkspace();
+        new AddDependency(repoDirectory, workspace).run(args);
     }
 
     private final MavenRepository mRepo;
+    private final Workspace mWorkspace;
 
-    private AddDependency(Path localRepo) {
+    private AddDependency(Path localRepo, Path workspace) {
         mRepo = new MavenRepository(localRepo);
+        mWorkspace = new Workspace(workspace.toFile());
     }
 
     private void run(List<String> args) throws DependencyResolutionException, IOException {
-        JavaImportGenerator imports = new JavaImportGenerator(mRepo);
+        JavaImportGenerator imports = new JavaImportGenerator(mRepo, mWorkspace);
         List<RemoteRepository> repositories = Lists.newArrayList(AetherUtils.REPOSITORIES);
 
         boolean ignoreDeps = false;
@@ -135,6 +138,7 @@ public class AddDependency {
             imports.generateImportRules(artifactResult.getArtifact());
             copyNotice(artifactResult.getArtifact());
         }
+        imports.save();
     }
 
     private void copyNotice(Artifact artifact) {

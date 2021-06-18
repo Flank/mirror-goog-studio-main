@@ -147,6 +147,10 @@ public class CallExpression extends Expression {
             Expression expression = null;
             if (entry.getValue() instanceof String) {
                 expression = new LiteralExpression(Token.string((String) entry.getValue()));
+            } else if (entry.getValue() instanceof Expression) {
+                expression = (Expression) entry.getValue();
+            } else {
+                throw new IllegalStateException("Unsupported argument type");
             }
             list.add(new Argument(Token.ident(entry.getKey()), expression));
         }

@@ -222,6 +222,7 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -243,6 +244,7 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -264,6 +266,7 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -539,6 +542,7 @@ coverage_java_test(
     ],
     test_class = "com.android.tools.binaries.ThirdPartyBuildConsistencyTest",
     deps = [
+        ":bazel_generator",
         ":maven",
         ":third_party_build_generator",
         ":utils",
