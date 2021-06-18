@@ -18,14 +18,12 @@ package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
 import org.junit.Rule
@@ -34,25 +32,13 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-/**
- * Test to check that AGP produces deterministic APKs, except when building debuggable variants from
- * the IDE.
- */
 @RunWith(FilterableParameterized::class)
-class DeterministicApkTest(
-        private val debuggable: Boolean,
-        private val fromIde: Boolean,
-) {
+class DeterministicApkTest(private val apkCreatorType: ApkCreatorType) {
 
     companion object {
-        @Parameterized.Parameters(name = "debuggable_{0}_fromIde_{1}")
+        @Parameterized.Parameters(name = "apkCreatorType_{0}")
         @JvmStatic
-        fun params() = listOf(
-                arrayOf(true, true),
-                arrayOf(true, false),
-                arrayOf(false, true),
-                arrayOf(false, false)
-        )
+        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
     }
 
     @get:Rule
@@ -64,67 +50,41 @@ class DeterministicApkTest(
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
             // http://b/149978740
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .addFile(TestSourceFile("src/main/resources/foo.txt", "foo${System.lineSeparator()}"))
+            .setApkCreatorType(apkCreatorType)
             .create()
 
     @Test
-    fun cleanBuildDeterministicApkTest() {
-        // clean debuggable builds from the IDE aren't deterministic, and we can't test that the
-        // bytes don't match because they might match sometimes, so we skip this case.
-        Assume.assumeFalse(debuggable && fromIde)
-
-        // First we build the APK as-is
-        project.executor()
-                .with(BooleanOption.IDE_INVOKED_FROM_IDE, fromIde)
-                .run(getAssembleTask())
-        val apk1 = project.getApk(getApkType())
+    fun cleanReleaseBuildDeterministicTest() {
+        // First we build the release APK as-is
+        project.execute(":assembleRelease")
+        val apk1 = project.getApk(GradleTestProject.ApkType.RELEASE)
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
 
-        // Then clean, build again, and assert that the APK is the same as the original
-        project.executor()
-                .with(BooleanOption.IDE_INVOKED_FROM_IDE, fromIde)
-                .run("clean", getAssembleTask())
-        val apk2 = project.getApk(getApkType())
+        // Then clean, build again, and assert that APK is the same as the original
+        project.execute("clean", ":assembleRelease")
+        val apk2 = project.getApk(GradleTestProject.ApkType.RELEASE)
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
         assertThat(byteArray2).isEqualTo(byteArray1)
     }
 
     @Test
-    fun incrementalBuildDeterministicApkTest() {
-        // First we build the APK as-is
-        project.executor()
-                .with(BooleanOption.IDE_INVOKED_FROM_IDE, fromIde)
-                .run(getAssembleTask())
-        val apk1 = project.getApk(getApkType())
+    fun cleanDebugBuildDeterministicTest() {
+        // Deterministic builds for debug APKs supported only with zipflinger
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER)
+
+        // First we build the debug APK as-is
+        project.execute(":assembleDebug")
+        val apk1 = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
 
-        // Do an intermediate build in which we make foo.txt bigger, creating a larger APK.
-        TestFileUtils.replaceLine(project.file("src/main/resources/foo.txt"), 1, "foo bar")
-        project.executor()
-                .with(BooleanOption.IDE_INVOKED_FROM_IDE, fromIde)
-                .run(getAssembleTask())
-
-        // Then revert the change to foo.txt, build again, and assert that the APK is the same as
-        // the original, unless it's debuggable and from the IDE, in which case it's expected to be
-        // different because it will have a virtual entry.
-        TestFileUtils.replaceLine(project.file("src/main/resources/foo.txt"), 1, "foo")
-        project.executor()
-                .with(BooleanOption.IDE_INVOKED_FROM_IDE, fromIde)
-                .run(getAssembleTask())
-        val apk2 = project.getApk(getApkType())
+        // Then clean, build again, and assert that APK is the same as the original
+        project.execute("clean", ":assembleDebug")
+        val apk2 = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
-        if (debuggable && fromIde) {
-            assertThat(byteArray2).isNotEqualTo(byteArray1)
-        } else {
-            assertThat(byteArray2).isEqualTo(byteArray1)
-        }
+        assertThat(byteArray2).isEqualTo(byteArray1)
     }
-
-    private fun getAssembleTask() = if (debuggable) "assembleDebug" else "assembleRelease"
-
-    private fun getApkType() = if (debuggable) DEBUG else RELEASE
 }

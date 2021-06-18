@@ -291,42 +291,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     public abstract Property<Boolean> getDebugBuild();
 
     @Input
-    public abstract Property<Boolean> getIsDeterministic();
-
-    /**
-     * FileCollection of all other RELATIVE file inputs if getIsDeterministic() is true, or an empty
-     * FileCollection if getIsDeterministic() is false.
-     *
-     * <p>The reason for this input is so that any change to an input file will cause the output APK
-     * to be built from scratch, which is necessary to create a deterministic APK.
-     */
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract ConfigurableFileCollection getAllInputFilesWithRelativePathSensitivity();
-
-    /**
-     * FileCollection of all other NAME_ONLY file inputs if getIsDeterministic() is true, or an
-     * empty FileCollection if getIsDeterministic() is false.
-     *
-     * <p>The reason for this input is so that any change to an input file will cause the output APK
-     * to be built from scratch, which is necessary to create a deterministic APK.
-     */
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    @Optional
-    public abstract ConfigurableFileCollection getAllInputFilesWithNameOnlyPathSensitivity();
-
-    /**
-     * FileCollection of all other @Classpath file inputs if getIsDeterministic() is true, or an
-     * empty FileCollection if getIsDeterministic() is false.
-     *
-     * <p>The reason for this input is so that any change to an input file will cause the output APK
-     * to be built from scratch, which is necessary to create a deterministic APK.
-     */
-    @Classpath
-    @Optional
-    public abstract ConfigurableFileCollection getAllClasspathInputFiles();
+    public abstract Property<Boolean> getIsInvokedFromIde();
 
     @Nested
     public SigningConfigDataProvider getSigningConfigData() {
@@ -562,7 +527,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter.getMinSdkVersion().set(getMinSdkVersion().get());
 
             parameter.getIsDebuggableBuild().set(getDebugBuild().get());
-            parameter.getIsDeterministic().set(getIsDeterministic().get());
+            parameter.getIsInvokedFromIde().set(getIsInvokedFromIde().get());
             parameter.getIsJniDebuggableBuild().set(getJniDebugBuild());
             parameter.getDependencyDataFile().set(getDependencyDataFile());
             parameter
@@ -695,7 +660,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         public abstract Property<Boolean> getIsDebuggableBuild();
 
         @NonNull
-        public abstract Property<Boolean> getIsDeterministic();
+        public abstract Property<Boolean> getIsInvokedFromIde();
 
         @NonNull
         public abstract Property<Boolean> getIsJniDebuggableBuild();
@@ -870,7 +835,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         dexPackagingMode))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withDebuggableBuild(params.getIsDebuggableBuild().get())
-                        .withDeterministicEntryOrder(params.getIsDeterministic().get())
+                        .withDeterministicEntryOrder(!params.getIsInvokedFromIde().get())
                         .withAcceptedAbis(getAcceptedAbis(params))
                         .withJniDebuggableBuild(params.getIsJniDebuggableBuild().get())
                         .withApkCreatorType(params.getApkCreatorType().get())
@@ -1210,35 +1175,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
             packageAndroidArtifact.getFeatureJavaResourceFiles().disallowChanges();
 
-            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
-
-            packageAndroidArtifact.getIsDeterministic().set(isDeterministic(creationConfig));
-            packageAndroidArtifact.getIsDeterministic().disallowChanges();
-
             if (creationConfig instanceof ApplicationCreationConfig) {
                 creationConfig.getArtifacts().setTaskInputToFinalProduct(
                         InternalArtifactType.APP_METADATA.INSTANCE,
                         packageAndroidArtifact.getAppMetadata());
-                if (isDeterministic(creationConfig)) {
-                    packageAndroidArtifact
-                            .getAllInputFilesWithNameOnlyPathSensitivity()
-                            .from(packageAndroidArtifact.getAppMetadata());
-                }
-
-                if (projectOptions.get(BooleanOption.ENABLE_ART_PROFILES)
-                        && !creationConfig.getDebuggable()) {
-                    creationConfig
-                            .getArtifacts()
-                            .setTaskInputToFinalProduct(
-                                    InternalArtifactType.BINARY_ART_PROFILE.INSTANCE,
-                                    packageAndroidArtifact.getMergedArtProfile());
-                    if (isDeterministic(creationConfig)) {
-                        packageAndroidArtifact
-                                .getAllInputFilesWithRelativePathSensitivity()
-                                .from(packageAndroidArtifact.getMergedArtProfile());
-                    }
-                }
             }
+
+            creationConfig
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.BINARY_ART_PROFILE.INSTANCE,
+                            packageAndroidArtifact.getMergedArtProfile());
 
             packageAndroidArtifact
                     .getAssets()
@@ -1246,6 +1193,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
+
+            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
+            packageAndroidArtifact
+                    .getIsInvokedFromIde()
+                    .set(projectOptions.getProvider(BooleanOption.IDE_INVOKED_FROM_IDE));
+            packageAndroidArtifact.getIsInvokedFromIde().disallowChanges();
 
             packageAndroidArtifact.projectBaseName =
                     creationConfig.getServices().getProjectInfo().getProjectBaseName();
@@ -1333,29 +1286,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.getSigningConfigVersions().disallowChanges();
 
             finalConfigure(packageAndroidArtifact);
-
-            // To produce a deterministic APK, we must force the task to run non-incrementally by
-            // adding all of the incremental file inputs again as non-incremental inputs. This is a
-            // workaround for https://github.com/gradle/gradle/issues/16976.
-            if (isDeterministic(creationConfig)) {
-                packageAndroidArtifact
-                        .getAllInputFilesWithRelativePathSensitivity()
-                        .from(
-                                packageAndroidArtifact.getAssets(),
-                                packageAndroidArtifact.getDexFolders(),
-                                packageAndroidArtifact.getFeatureDexFolder(),
-                                packageAndroidArtifact.getManifests(),
-                                packageAndroidArtifact.getResourceFiles());
-                packageAndroidArtifact
-                        .getAllClasspathInputFiles()
-                        .from(
-                                packageAndroidArtifact.getFeatureJavaResourceFiles(),
-                                packageAndroidArtifact.getJavaResourceFiles(),
-                                packageAndroidArtifact.getJniFolders());
-            }
-            packageAndroidArtifact.getAllInputFilesWithRelativePathSensitivity().disallowChanges();
-            packageAndroidArtifact.getAllInputFilesWithNameOnlyPathSensitivity().disallowChanges();
-            packageAndroidArtifact.getAllClasspathInputFiles().disallowChanges();
         }
 
         protected void finalConfigure(TaskT task) {
@@ -1456,14 +1386,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             creationConfig
                                     .getArtifacts()
                                     .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
-        }
-
-        // We want to produce a deterministic APK if it's not debuggable or if the build was not
-        // invoked from the IDE.
-        private static boolean isDeterministic(ApkCreationConfig creationConfig) {
-            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
-            return !creationConfig.getDebuggable()
-                    || !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE);
         }
     }
 }
