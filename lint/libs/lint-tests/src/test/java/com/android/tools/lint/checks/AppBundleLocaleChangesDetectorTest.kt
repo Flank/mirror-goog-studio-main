@@ -106,7 +106,7 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             )
     }
 
-    fun testKotlin1() {
+    fun testDocumentationExample() {
         lint().files(
             kotlin(
                 """

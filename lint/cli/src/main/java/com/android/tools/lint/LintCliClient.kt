@@ -71,7 +71,6 @@ import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
-import com.android.tools.lint.model.PathVariables
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
 import com.google.common.annotations.Beta
@@ -146,9 +145,6 @@ open class LintCliClient : LintClient {
 
     /** Flags configuring the lint runs. */
     val flags: LintCliFlags
-
-    /** Path variables to use when reading and writing paths */
-    val pathVariables = PathVariables()
 
     protected var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
