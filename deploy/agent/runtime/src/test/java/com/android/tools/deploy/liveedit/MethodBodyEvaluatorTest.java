@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.jetbrains.eval4j.ObjectValue;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -61,6 +62,64 @@ public class MethodBodyEvaluatorTest {
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         intResult = (Integer) result;
         Assert.assertEquals(owner.returnSeventeen(), intResult.intValue());
+    }
+
+    @org.junit.Test
+    public void testInvokeSpecialForPrivateMethod() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getPrivateField")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+
+        Integer integer = (Integer) result;
+        Assert.assertEquals(owner.getPrivateField(), integer.intValue());
+    }
+
+    @org.junit.Test
+    public void testConstructor() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+        Object result =
+                new MethodBodyEvaluator(classInput, "newParent")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+
+        Parent actual = (Parent) ((ObjectValue) result).getValue();
+        Parent expected = owner.newParent();
+        Assert.assertEquals(actual.getId(), expected.getId());
+    }
+
+    // Test constructor with inheritance
+
+    @org.junit.Test
+    public void testConstructorWithParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+        Object result =
+                new MethodBodyEvaluator(classInput, "newParentWithParameter")
+                        .eval(
+                                owner,
+                                TestTarget.class.getTypeName(),
+                                new Object[] {Integer.valueOf(4)});
+
+        Parent actual = (Parent) ((ObjectValue) result).getValue();
+        Parent expected = owner.newParentWithParameter(4);
+        Assert.assertEquals(expected.getId(), actual.getId());
+    }
+
+    @org.junit.Test
+    public void testSuperMethod() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        int a = 1;
+        Child c = new Child(1);
+        Object result =
+                new MethodBodyEvaluator(classInput, "callSuperMethod")
+                        .eval(c, Parent.class.getTypeName(), new Object[] {a});
+
+        int actual = (Integer) result;
+        int expected = c.callSuperMethod(a);
+        Assert.assertEquals(expected, actual);
     }
 
     @org.junit.Test

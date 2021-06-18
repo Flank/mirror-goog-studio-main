@@ -17,17 +17,21 @@ package com.android.tools.deploy.liveedit;
 
 class TestTarget {
 
-    private static int getStaticTwo() {
+    private static int getPrivateStaticInt() {
         return 2;
     }
 
-    public static int getInstanceNine() {
+    public static int getPublicStaticInt() {
         return 9;
     }
 
     private String field = "A_FIEID";
 
     private int six = 6;
+
+    private int getSix() {
+        return six;
+    }
 
     private static int ten = 10;
 
@@ -45,7 +49,7 @@ class TestTarget {
         x[0] = ten;
         staticInt = memberInt = six + x.length + x[0] + staticInt;
         staticInt += this.hashCode();
-        return memberInt + getStaticTwo() + getInstanceNine() + memberInt + staticInt;
+        return memberInt + getPrivateStaticInt() + getPublicStaticInt() + memberInt + staticInt;
     }
 
     public String returnHappiness() {
@@ -115,8 +119,19 @@ class TestTarget {
     }
 
     Object instanceOfObject = new Object();
-
     public boolean isInstanceOf() {
         return instanceOfObject instanceof Object;
+    }
+
+    public int getPrivateField() {
+        return getSix();
+    }
+
+    public Parent newParent() {
+        return new Parent();
+    }
+
+    public Parent newParentWithParameter(int i) {
+        return new Parent(i);
     }
 }

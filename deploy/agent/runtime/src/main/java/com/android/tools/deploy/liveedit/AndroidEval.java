@@ -16,9 +16,11 @@
 package com.android.tools.deploy.liveedit;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import org.jetbrains.eval4j.AbstractValue;
 import org.jetbrains.eval4j.DoubleValue;
 import org.jetbrains.eval4j.Eval;
 import org.jetbrains.eval4j.FieldDescription;
@@ -119,37 +121,61 @@ class AndroidEval implements Eval {
         throw new IllegalStateException();
     }
 
+    // Temporary HACK since eval4j's AbstractValue field "value" is private.
+    // Either patch eval4j, or use our own interpreter.
+    private void setObjectValue(ObjectValue target, Object value)
+            throws NoSuchFieldException, IllegalAccessException {
+        Field f = AbstractValue.class.getDeclaredField("value");
+        f.setAccessible(true);
+        f.set(target, value);
+    }
+
     @Override
     public Value invokeMethod(
             Value target,
-            MethodDescription description,
+            MethodDescription methodDesc,
             List<? extends Value> args,
             boolean invokeSpecial) {
-        String owner = description.getOwnerInternalName();
-        String methodName = description.getName();
-        String signature = description.getDesc();
-        Type[] parameterType = Type.getArgumentTypes(signature);
+        String owner = methodDesc.getOwnerInternalName();
+        String name = methodDesc.getName();
+        String description = methodDesc.getDesc();
+        Type[] parameterType = Type.getArgumentTypes(description);
         Class<?>[] parameterClass = new Class[parameterType.length];
         try {
             for (int i = 0; i < parameterClass.length; i++) {
-                parameterClass[i] =
-                        Class.forName(parameterType[i].getClassName().replace('/', '.'));
+                parameterClass[i] = typeToClass(parameterType[i]);
             }
-            Object result;
 
+            // This is a constructor call.
+            if (invokeSpecial && "<init>".equals(name)) {
+                ObjectValue objTarget = (ObjectValue) target;
+                if (objTarget.getValue() != null) {
+                    // This is a call to super.<init> which we currently not handle.
+                    throw new IllegalStateException("Unable to do super.<init>");
+                }
+                Class klass = typeToClass(objTarget.getAsmType());
+                Constructor constructor = klass.getConstructor(parameterClass);
+                constructor.setAccessible(true);
+                Object obj =
+                        constructor.newInstance(
+                                args.stream().map(AndroidEval::valueToObject).toArray());
+                Value result = new ObjectValue(obj, objTarget.getAsmType());
+                setObjectValue(objTarget, result);
+                return result;
+            }
+
+            // We use invokevirtual for everything else which is inaccurate for private methods
+            // and super methods invocations.
             Method method =
-                    Class.forName(owner.replace('/', '.'))
-                            .getDeclaredMethod(methodName, parameterClass);
+                    Class.forName(owner.replace('/', '.')).getDeclaredMethod(name, parameterClass);
             method.setAccessible(true);
-            // TODO Method introspection is slower than using MethodHandles.
-            result =
+            Object result =
                     method.invoke(
                             valueToObject(target),
                             args.stream().map(AndroidEval::valueToObject).toArray());
             return objectToValueWithUnboxing(result, Type.getReturnType(method));
-
-        } catch (Throwable throwable) {
-            handleThrowable(throwable);
+        } catch (Throwable t) {
+            handleThrowable(t);
         }
         throw new IllegalStateException();
     }
@@ -218,12 +244,7 @@ class AndroidEval implements Eval {
 
     @Override
     public Value newInstance(Type type) {
-        String owner = type.getClassName().replace('/', '.');
-        try {
-            return objectToValueWithUnboxing(Class.forName(owner).newInstance(), type);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return new ObjectValue(null, type);
     }
 
     @Override
