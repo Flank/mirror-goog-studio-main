@@ -164,6 +164,7 @@ function run_bazel_test() {
     //tools/adt/idea/updater-ui:sdk-patcher.zip \
     //tools/adt/idea/native/installer:android-studio-bundle-data \
     //tools/base/profiler/native/trace_processor_daemon \
+    //tools/base/deploy/deployer:deployer.runner_deploy.jar \
     //tools/adt/idea/studio:test_studio \
     //tools/vendor/google/game-tools/packaging:packaging-linux \
     //tools/vendor/google/game-tools/packaging:packaging-win \
