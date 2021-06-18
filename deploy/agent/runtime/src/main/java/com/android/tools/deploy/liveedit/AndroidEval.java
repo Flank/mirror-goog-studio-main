@@ -94,10 +94,8 @@ class AndroidEval implements Eval {
         String type = description.getDesc();
         try {
             Field field = owner.getClass().getDeclaredField(name);
-            boolean accessible = field.isAccessible();
             field.setAccessible(true);
             Value result = objectToValueWithUnboxing(field.get(owner), Type.getType(type));
-            field.setAccessible(accessible);
             return result;
         } catch (NoSuchFieldException | IllegalAccessException e) {
             handleThrowable(e);
@@ -112,10 +110,8 @@ class AndroidEval implements Eval {
         String type = description.getDesc();
         try {
             Field field = Class.forName(owner).getDeclaredField(name);
-            boolean accessible = field.isAccessible();
             field.setAccessible(true);
             Value result = objectToValueWithUnboxing(field.get(owner), Type.getType(type));
-            field.setAccessible(accessible);
             return result;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
@@ -297,7 +293,6 @@ class AndroidEval implements Eval {
         String name = description.getName();
         try {
             Field field = Class.forName(ownerClass).getDeclaredField(name);
-            boolean accessible = field.isAccessible();
             field.setAccessible(true);
             if (description.getDesc().equals("I")) {
                 field.setInt(valueToObject(owner), ((IntValue) value).getValue());
@@ -320,7 +315,6 @@ class AndroidEval implements Eval {
             } else {
                 field.set(valueToObject(owner), valueToObject(value));
             }
-            field.setAccessible(accessible);
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
@@ -335,7 +329,6 @@ class AndroidEval implements Eval {
         try {
             Class<?> ownerClass = Class.forName(ownerClassName);
             Field field = ownerClass.getDeclaredField(name);
-            boolean accessible = field.isAccessible();
             field.setAccessible(true);
             if (description.getDesc().equals("I")) {
                 field.setInt(ownerClass, ((IntValue) value).getValue());
@@ -356,7 +349,6 @@ class AndroidEval implements Eval {
             } else {
                 field.set(ownerClass, valueToObject(value));
             }
-            field.setAccessible(accessible);
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
