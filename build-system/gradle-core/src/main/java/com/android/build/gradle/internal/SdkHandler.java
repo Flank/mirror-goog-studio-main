@@ -44,6 +44,7 @@ import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -291,6 +292,19 @@ public class SdkHandler {
                     imageHash);
         }
         return null;
+    }
+
+    /** Retrieves all repository ids that start with the given prefix. */
+    @Nullable
+    public ImmutableList<String> remoteRepoIdsWithPrefix(String prefix) {
+        SdkLoader loader = getSdkLoader();
+        if (loader == null) {
+            // If the loader is null it means we couldn't set-up one based on a local SDK.
+            // So we can't even try to installPackage something. This set up error will be
+            // reported during SdkHandler set-up.
+            return null;
+        }
+        return loader.retrieveRepoIdsWithPrefix(sdkLibData, prefix);
     }
 
     /** Installs the NDK. */

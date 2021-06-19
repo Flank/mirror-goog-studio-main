@@ -80,6 +80,18 @@ public interface SdkLoader {
             throws LicenceNotAcceptedException, InstallFailedException;
 
     /**
+     * Retrieves the hash ids for available remote repositories that start with the given prefix.
+     *
+     * @param sdkLibData contains all the components for downloading.
+     * @param prefix the prefix for repo hash ids to be retrieved
+     * @return a list of hash ids for all remote reps available or null if we are unable to reach
+     *     the remote server (such as being offline).
+     */
+    @Nullable
+    public ImmutableList<String> retrieveRepoIdsWithPrefix(
+            @NonNull SdkLibData sdkLibData, @NonNull String prefix);
+
+    /**
      * Retrieves the local emulator repository if it exists.
      *
      * <p>If the emulator is missing, null is returned. No effort is made to update or install the

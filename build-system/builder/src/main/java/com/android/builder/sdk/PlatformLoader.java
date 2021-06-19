@@ -130,6 +130,17 @@ public class PlatformLoader implements SdkLoader {
         return null;
     }
 
+    @Override
+    @Nullable
+    public ImmutableList<String> retrieveRepoIdsWithPrefix(
+            @NonNull SdkLibData sdkLibData, @NonNull String prefix) {
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        progress.logWarning(
+                "Retrieving remote repositories is not supported when building"
+                        + " using an SDK from platform prebuilds.");
+        return null;
+    }
+
     @Nullable
     @Override
     public File getLocalEmulator(@NonNull ILogger logger) {

@@ -472,6 +472,31 @@ public class DefaultSdkLoader implements SdkLoader {
 
     @Override
     @Nullable
+    public ImmutableList<String> retrieveRepoIdsWithPrefix(
+            @NonNull SdkLibData sdkLibData, @NonNull String prefix) {
+        if (!sdkLibData.useSdkDownload()) {
+            // If we are offline, we can't retrieve all the repo ids.
+            return null;
+        }
+        ProgressIndicator progress =
+                new LoggerProgressIndicatorWrapper(new StdLogger(StdLogger.Level.WARNING));
+        RepoManager repoManager = mSdkHandler.getSdkManager(progress);
+
+        checkNeedsCacheReset(repoManager, sdkLibData);
+        repoManager.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                progress,
+                sdkLibData.getDownloader(),
+                sdkLibData.getSettings());
+
+        return ImmutableList.copyOf(
+                repoManager.getPackages().getRemotePackagesForPrefix(prefix).stream()
+                        .map(repo -> repo.getPath())
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    @Nullable
     public File getLocalEmulator(@NonNull ILogger logger) {
         init(logger);
         ProgressIndicator progress =

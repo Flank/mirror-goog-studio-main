@@ -33,6 +33,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
+import com.android.sdklib.AndroidTargetHash.SYSTEM_IMAGE_PREFIX
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
@@ -237,6 +238,13 @@ abstract class SdkComponentsBuildService @Inject constructor(
             objectFactory.directoryProperty().fileProvider(providerFactory.provider {
                 sdkLoadStrategy.getSystemImageLibFolder(imageHash)
             })
+
+        fun allSystemImageHashes(): List<String>? {
+            return sdkHandler.remoteRepoIdsWithPrefix(SYSTEM_IMAGE_PREFIX)
+        }
+
+        val offlineMode: Boolean
+            get() = parameters.offlineMode.get()
 
         val emulatorDirectoryProvider: Provider<Directory> =
             objectFactory.directoryProperty().fileProvider(providerFactory.provider {
