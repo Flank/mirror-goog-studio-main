@@ -68,8 +68,7 @@ class MethodBodyEvaluator {
 
         Type[] argTypes = Type.getArgumentTypes(target.desc);
         for (int i = 0, len = argTypes.length; i < len; i++) {
-            init.setLocal(
-                    localIndex++, AndroidEval.objectToValueWithUnboxing(arguments[i], argTypes[i]));
+            init.setLocal(localIndex++, AndroidEval.makeValue(arguments[i], argTypes[i]));
         }
 
         InterpreterResult result =

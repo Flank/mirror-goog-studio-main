@@ -97,7 +97,7 @@ class AndroidEval implements Eval {
         try {
             Field field = owner.getClass().getDeclaredField(name);
             field.setAccessible(true);
-            Value result = objectToValueWithUnboxing(field.get(owner), Type.getType(type));
+            Value result = makeValue(field.get(owner), Type.getType(type));
             return result;
         } catch (NoSuchFieldException | IllegalAccessException e) {
             handleThrowable(e);
@@ -113,7 +113,7 @@ class AndroidEval implements Eval {
         try {
             Field field = Class.forName(owner).getDeclaredField(name);
             field.setAccessible(true);
-            Value result = objectToValueWithUnboxing(field.get(owner), Type.getType(type));
+            Value result = makeValue(field.get(owner), Type.getType(type));
             return result;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
@@ -173,7 +173,7 @@ class AndroidEval implements Eval {
                     method.invoke(
                             valueToObject(target),
                             args.stream().map(AndroidEval::valueToObject).toArray());
-            return objectToValueWithUnboxing(result, Type.getReturnType(method));
+            return makeValue(result, Type.getReturnType(method));
         } catch (Throwable t) {
             handleThrowable(t);
         }
@@ -197,7 +197,7 @@ class AndroidEval implements Eval {
             method.setAccessible(true);
             Object result =
                     method.invoke(null, list.stream().map(AndroidEval::valueToObject).toArray());
-            return objectToValueWithUnboxing(result, Type.getReturnType(method));
+            return makeValue(result, Type.getReturnType(method));
         } catch (Exception e) {
             handleThrowable(e);
         }
@@ -236,7 +236,7 @@ class AndroidEval implements Eval {
     public Value newArray(Type type, int length) {
         try {
             Class<?> elementClass = typeToClass(type.getElementType());
-            return objectToValueWithUnboxing(Array.newInstance(elementClass, length), type);
+            return makeValue(Array.newInstance(elementClass, length), type);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -251,7 +251,7 @@ class AndroidEval implements Eval {
     public Value newMultiDimensionalArray(Type type, List<Integer> dimensions) {
         try {
             Class<?> elementClass = typeToClass(type.getElementType());
-            return objectToValueWithUnboxing(
+            return makeValue(
                     Array.newInstance(elementClass, dimensions.stream().mapToInt(e -> e).toArray()),
                     type);
         } catch (ClassNotFoundException e) {
@@ -381,11 +381,28 @@ class AndroidEval implements Eval {
         return (ValuesKt.obj(v, v.getAsmType()));
     }
 
-    public static Value objectToValueWithUnboxing(Object v, Type type) {
-        if (type == Type.INT_TYPE) {
-            return new IntValue((Integer) v, Type.INT_TYPE);
-        } else {
-            return new ObjectValue(v, type);
+    public static Value makeValue(Object v, Type type) {
+        switch (type.getSort()) {
+            case Type.INT:
+                return new IntValue((Integer) v, type);
+            case Type.BOOLEAN:
+                return new IntValue((Boolean) v ? 1 : 0, type);
+            case Type.BYTE:
+                return new IntValue(((Byte) v).intValue(), type);
+            case Type.SHORT:
+                return new IntValue(((Short) v).intValue(), type);
+            case Type.CHAR:
+                return new IntValue((Character) v, type);
+            case Type.LONG:
+                return new LongValue((Long) v);
+            case Type.FLOAT:
+                return new FloatValue((Float) v);
+            case Type.DOUBLE:
+                return new DoubleValue((Double) v);
+            case Type.VOID:
+                return new IntValue(0, type);
+            default:
+                return new ObjectValue(v, type);
         }
     }
 

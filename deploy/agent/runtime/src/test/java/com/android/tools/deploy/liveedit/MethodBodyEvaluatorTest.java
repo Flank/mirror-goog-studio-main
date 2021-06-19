@@ -123,6 +123,101 @@ public class MethodBodyEvaluatorTest {
     }
 
     @org.junit.Test
+    public void testLongValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+        Object result =
+                new MethodBodyEvaluator(classInput, "getLongFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Long l = (Long) result;
+        Assert.assertEquals(owner.getLongFields(), l.longValue());
+    }
+
+    @org.junit.Test
+    public void testFloatValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getFloatFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Float f = (Float) result;
+        Assert.assertTrue(owner.getFloatFields() == f.floatValue());
+    }
+
+    @org.junit.Test
+    public void testDoubleValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getDoubleFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Double d = (Double) result;
+        Assert.assertTrue(owner.getDoubleFields() == d.doubleValue());
+    }
+
+    @org.junit.Test
+    public void testBooleanValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getBooleanFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Boolean z = (Boolean) result;
+        Assert.assertEquals(owner.getBooleanFields(), z);
+    }
+
+    @org.junit.Test
+    public void testByteValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getByteFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Byte b = (Byte) result;
+        Assert.assertEquals(owner.getByteFields(), b.byteValue());
+    }
+
+    @org.junit.Test
+    public void testShortValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getShortFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Short s = (Short) result;
+        Assert.assertEquals(owner.getShortFields(), s.byteValue());
+    }
+
+    @org.junit.Test
+    public void testCharValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getCharacterFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Character c = (Character) result;
+        Assert.assertEquals(owner.getCharacterFields(), c.charValue());
+    }
+
+    @org.junit.Test
+    public void testIntValue() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "getIntegerFields")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Integer i = (Integer) result;
+        Assert.assertEquals(owner.getIntegerFields(), i.intValue());
+    }
+
+    @org.junit.Test
     public void testBooleanArray() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         TestTarget owner = new TestTarget();
