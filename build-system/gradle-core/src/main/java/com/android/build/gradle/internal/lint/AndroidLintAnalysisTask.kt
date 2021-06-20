@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -24,6 +25,7 @@ import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -37,6 +39,7 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -45,12 +48,14 @@ import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.Collections
 
 /** Task to invoke lint with the --analyze-only flag, producing partial results. */
@@ -91,6 +96,9 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:Classpath
     abstract val lintRulesJar: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val globalRuleJars: ConfigurableFileCollection
 
     @get:Nested
     abstract val projectInputs: ProjectInputs
@@ -304,6 +312,24 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.lintCacheDirectory.setDisallowChanges(
             project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
         )
+
+        val locationBuildService =
+                getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
+
+        val globalLintJarsInPrefsDir: ConfigurableFileTree =
+                project.fileTree(locationBuildService.map {
+                    it.prefsLocation.resolve("lint")
+                }).also { it.include("*${SdkConstants.DOT_JAR}") }
+        this.globalRuleJars.from(globalLintJarsInPrefsDir)
+        // Also include Lint jars set via the environment variable ANDROID_LINT_JARS
+        val globalLintJarsFromEnvVariable: Provider<List<String>> =
+                project.providers.environmentVariable(ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE)
+                        .orElse("")
+                        .map { it.split(File.pathSeparator).filter(String::isNotEmpty) }
+        this.globalRuleJars.from(globalLintJarsFromEnvVariable)
+        this.globalRuleJars.disallowChanges()
+
+
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)
         } else {
@@ -353,6 +379,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
+        private const val ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE = "ANDROID_LINT_JARS"
         const val PARTIAL_RESULTS_DIR_NAME = "out"
 
         fun registerOutputArtifacts(

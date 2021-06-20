@@ -58,15 +58,19 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         val prefsLintDir = FileUtils.join(executor.preferencesRootDir, ".android", "lint")
         FileUtils.cleanOutputDir(prefsLintDir)
 
-        val lintDebugTaskName = ":lintDebug"
-        executor.run(lintDebugTaskName)
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName)).wasUpToDate()
+        val lintTaskName = ":lintDebug"
+        val lintAnalyzeTaskName = ":lintAnalyzeDebug"
+        executor.run(lintTaskName)
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
         FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName)).didWork()
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).didWork()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+
         }
     }
 
@@ -79,16 +83,18 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         assertThat(absolutePath).isNotEmpty()
         val executor = project.getExecutor().withEnvironmentVariables(mapOf("ANDROID_LINT_JARS" to absolutePath))
 
-        val lintDebugTaskName = ":lintDebug"
-        executor.run(lintDebugTaskName)
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName))
-                    .wasUpToDate()
+        val lintTaskName = ":lintDebug"
+        val lintAnalyzeTaskName = ":lintAnalyzeDebug"
+        executor.run(lintTaskName)
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
         FileUtils.createFile(lintJar, "FOO_BAR")
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName)).didWork()
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).didWork()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
         }
     }
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
