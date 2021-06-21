@@ -779,7 +779,7 @@ class TestLintResult internal constructor(
                 it.project?.client as? TestLintClient
             }
                 ?: object : TestLintClient() {
-                    override fun getClientRevision(): String? {
+                    override fun getClientRevision(): String {
                         // HACK
                         if (registry == null) {
                             registry = BuiltinIssueRegistry()

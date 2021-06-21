@@ -32,7 +32,7 @@ interface ApplicationVariant : GeneratesApk, Variant {
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */
-    val androidTest: AndroidTest?
+    val androidTest: com.android.build.api.component.AndroidTest?
 
     /**
      * Returns the final list of variant outputs.

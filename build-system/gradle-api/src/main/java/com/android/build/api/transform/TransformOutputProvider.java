@@ -27,6 +27,7 @@ import java.util.Set;
  * There is no direct access to a location to write. Instead, Transforms can ask to get the
  * location for given scopes, content-types and a format.
  */
+@Deprecated
 public interface TransformOutputProvider {
 
     /**

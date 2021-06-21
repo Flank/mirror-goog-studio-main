@@ -29,4 +29,4 @@ import com.android.build.api.variant.ApplicationVariantBuilder
     level = DeprecationLevel.WARNING
 )
 interface ApplicationAndroidComponentsExtension:
-    com.android.build.api.variant.ApplicationAndroidComponentsExtension
+    AndroidComponentsExtension<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>

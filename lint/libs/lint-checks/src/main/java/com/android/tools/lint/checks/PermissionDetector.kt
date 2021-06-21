@@ -37,9 +37,11 @@ import com.android.tools.lint.checks.PermissionFinder.Operation.READ
 import com.android.tools.lint.checks.PermissionFinder.Operation.WRITE
 import com.android.tools.lint.checks.PermissionRequirement.ATTR_PROTECTION_LEVEL
 import com.android.tools.lint.checks.PermissionRequirement.VALUE_DANGEROUS
+import com.android.tools.lint.client.api.LintDriver.Companion.KEY_CONDITION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -49,6 +51,7 @@ import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.utils.XmlUtils
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiClassType
@@ -132,6 +135,38 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
     }
 
+    /**
+     * A "conditional" requirement means that there are some conditions
+     * for whether the permission requirement applies, which isn't
+     * encoded in the annotation. However, we know of a couple of
+     * cases which we can check here. This method looks up the given
+     * permission requirement found for the given called method and
+     * checks whether the condition it's listing is met.
+     *
+     * We should audit all the conditional permissions and consider
+     * adding some extra metadata annotations, such as requiring a
+     * targetSdkVersion, right into the API to avoid hardcoding here.
+     */
+    private fun conditionMet(context: JavaContext, requirement: PermissionRequirement, method: PsiMethod?): Boolean {
+        method ?: return false
+
+        if (isExactAlarmRequirement(requirement, context, method)) {
+            return true
+        }
+
+        // Not a known case: leave uncertain
+        return false
+    }
+
+    private fun isExactAlarmRequirement(
+        requirement: PermissionRequirement,
+        context: JavaContext,
+        method: PsiMethod?
+    ): Boolean {
+        return requirement.isSingle && requirement.toString() == "android.permission.SCHEDULE_EXACT_ALARM" &&
+            context.evaluator.isMemberInClass(method, "android.app.AlarmManager")
+    }
+
     private fun checkPermission(
         context: JavaContext,
         node: UElement,
@@ -139,7 +174,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         result: PermissionFinder.Result?,
         requirement: PermissionRequirement
     ) {
-        if (requirement.isConditional) {
+        if (requirement.isConditional && !conditionMet(context, requirement, method)) {
             return
         }
         var permissions = getPermissions(context)
@@ -186,6 +221,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 val missingPermissions = requirement.getMissingPermissions(permissions)
+                var constraint: Constraint? = null
 
                 if (method?.name == "getAllCellInfo" &&
                     missingPermissions.size == 1 &&
@@ -200,7 +236,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return
                 }
 
-                val messageFormat = "Missing permissions required ${operation.prefix()} $name: %1\$s"
+                var messageFormat = "Missing permissions required ${operation.prefix()} $name: %1\$s"
                 val incident = Incident(
                     MISSING_PERMISSION, node, location, "",
                     // Pass data to IDE quickfix: names to add, and max applicable API version
@@ -213,13 +249,29 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         requirement.lastApplicableApi
                     )
                 )
+
+                if (isExactAlarmRequirement(requirement, context, method)) {
+                    constraint = targetSdkAtLeast(31)
+                    incident.overrideSeverity(Severity.WARNING)
+                    val where = method?.name?.let { " with `$it`" } ?: ""
+                    messageFormat = "Setting Exact alarms$where requires the `SCHEDULE_EXACT_ALARM` permission or " +
+                        "power exemption from user; it is intended for applications where the user knowingly " +
+                        "schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. " +
+                        "Check out the javadoc on this permission to make sure your use case is valid."
+                }
+
                 if (context.isGlobalAnalysis()) {
+                    if (constraint?.accept(context, incident) == false) {
+                        return
+                    }
+
                     incident.message = getMissingMessage(messageFormat, requirement, permissions)
                     context.report(incident)
                 } else {
                     val map = map()
                     map.put(KEY_REQUIREMENT, requirement.serialize())
                     map.put(KEY_MESSAGE, messageFormat)
+                    constraint?.let { map.put(KEY_CONDITION, it) }
 
                     // Store local permissions too
                     if (localPermissionRequirements.isNotEmpty()) {
@@ -323,6 +375,10 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (requirement.isSatisfied(permissions)) {
                 return false
             }
+        }
+
+        if (map.getConstraint(KEY_CONDITION)?.accept(context, incident) == false) {
+            return false
         }
 
         val messageFormat = map.getString(KEY_MESSAGE, "")!!

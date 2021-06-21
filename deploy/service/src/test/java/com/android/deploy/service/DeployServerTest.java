@@ -36,6 +36,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 public class DeployServerTest {
+    String myPackageName = "com.example.myapp";
+    String myProcessName = "com.example.myapp:process";
+
     @Test
     public void getDevices() {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
@@ -63,6 +66,28 @@ public class DeployServerTest {
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
         assertThat(response.getResponse().getClients(0).getPid()).isEqualTo(1234);
+        assertThat(response.getResponse().getClients(0).getName()).isEqualTo(myPackageName);
+        assertThat(response.getResponse().getClients(0).getDescription()).isEqualTo(myProcessName);
+    }
+
+    @Test
+    public void getClients_NullProcessAndPackageName() {
+        myPackageName = null;
+        myProcessName = null;
+
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployServer server = new DeployServer(bridge, null);
+        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
+        Deploy.ClientRequest request =
+                Deploy.ClientRequest.newBuilder().setDeviceId("1234").build();
+        server.getClients(request, response);
+        assertThat(response.getResponse()).isNotNull();
+        assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
+        assertThat(response.getResponse().getClients(0).getPid()).isEqualTo(1234);
+        assertThat(response.getResponse().getClients(0).getName()).isEmpty();
+        assertThat(response.getResponse().getClients(0).getDescription()).isEmpty();
     }
 
     @Test
@@ -139,17 +164,18 @@ public class DeployServerTest {
         when(device.getName()).thenReturn(serial);
         when(device.isEmulator()).thenReturn(false);
         when(device.getAbis()).thenReturn(Collections.singletonList("armeabi"));
-        Client[] clients = new Client[] {mockClient("Client1")};
+        Client[] clients = new Client[] {mockClient(myPackageName, myProcessName)};
         when(device.getClients()).thenReturn(clients);
         return device;
     }
 
-    private Client mockClient(@NonNull String clientName) {
+    private Client mockClient(@NonNull String clientName, @NonNull String clientDescription) {
         Client client = mock(Client.class);
         ClientData clientData = mock(ClientData.class);
         when(client.getClientData()).thenReturn(clientData);
         when(clientData.getPid()).thenReturn(1234);
         when(clientData.getPackageName()).thenReturn(clientName);
+        when(clientData.getClientDescription()).thenReturn(clientDescription);
         when(client.getDebuggerListenPort()).thenReturn(4321);
         return client;
     }

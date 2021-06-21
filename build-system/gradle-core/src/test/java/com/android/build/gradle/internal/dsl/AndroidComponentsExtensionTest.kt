@@ -31,6 +31,7 @@ import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExten
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.DynamicFeatureVariant
@@ -215,7 +216,7 @@ class AndroidComponentsExtensionTest {
             Mockito.mock(SdkComponents::class.java),
             variantApiOperationsRegistrar,
             Mockito.mock(ApplicationExtension::class.java)
-        )
+        ) as ApplicationAndroidComponentsExtension
         val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
         appExtension.beforeVariants {
                     it.minSdk = 23
@@ -493,7 +494,7 @@ class AndroidComponentsExtensionTest {
     }
 
     private fun <DslExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant> testNoSelection(
-            extension: AndroidComponentsExtensionImpl<DslExtensionT, VariantBuilderT, VariantT>,
+            extension: AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT>,
             operationsRegistrar: VariantApiOperationsRegistrar<DslExtensionT, VariantBuilderT, VariantT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()

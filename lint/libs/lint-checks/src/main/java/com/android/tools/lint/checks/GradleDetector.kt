@@ -355,12 +355,18 @@ open class GradleDetector : Detector(), GradleScanner {
                     report(context, statementCookie, HIGH_APP_VERSION_CODE, message)
                 }
             }
-        } else if (property == "compileSdkVersion" && parent == "android") {
+        } else if ((property == "compileSdkVersion" || property == "compileSdk") && parent == "android") {
             var version = -1
             if (isStringLiteral(value)) {
                 // Try to resolve values like "android-O"
                 val hash = getStringLiteralValue(value)
                 if (hash != null && !isNumberString(hash)) {
+                    if (property == "compileSdk") {
+                        val message = "`compileSdk` does not support strings; did you mean `compileSdkPreview` ?"
+                        val fix = fix().replace().text("compileSdk").with("compileSdkPreview").build()
+                        report(context, statementCookie, STRING_INTEGER, message, fix)
+                    }
+
                     val platformVersion = AndroidTargetHash.getPlatformVersion(hash)
                     if (platformVersion != null) {
                         version = platformVersion.featureLevel
@@ -863,7 +869,8 @@ open class GradleDetector : Detector(), GradleScanner {
                                 filterVersion.minor == version.minor &&
                                 filterVersion.micro > version.micro &&
                                 !filterVersion.isPreview &&
-                                filterVersion < newerVersion!!
+                                filterVersion < newerVersion!! &&
+                                !filterVersion.isSnapshot
                         }
                     }
                     if (newerVersion != null && newerVersion > version) {

@@ -218,6 +218,31 @@ open class LintXmlConfiguration protected constructor(
         override fun toString(): String {
             return "IssueData(severity=$severity, paths=$paths, patterns=$patterns, options=$options)"
         }
+
+        operator fun plusAssign(other: IssueData) {
+            other.severity?.let { this.severity = it }
+            other.paths?.let {
+                val paths = this.paths
+                if (paths == null)
+                    this.paths = other.paths
+                else
+                    paths.addAll(it)
+            }
+            other.patterns?.let {
+                val patterns = this.patterns
+                if (patterns == null)
+                    this.patterns = other.patterns
+                else
+                    patterns.addAll(it)
+            }
+            other.options?.let {
+                val options = this.options
+                if (options == null)
+                    this.options = other.options
+                else
+                    options.putAll(it)
+            }
+        }
     }
 
     /**
@@ -1488,28 +1513,42 @@ open class LintXmlConfiguration protected constructor(
         }
         validated = true
         for (map in getIssueMaps()) {
-            validateIssueIds(client, driver, project, registry, map.keys)
+            if (map.isNotEmpty()) {
+                map as? MutableMap<String, IssueData> ?: continue
+                validateIssueIds(client, driver, project, registry, map)
+            }
         }
     }
 
-    protected fun validateIssueIds(
+    private fun validateIssueIds(
         client: LintClient,
         driver: LintDriver,
         project: Project?,
         registry: IssueRegistry,
-        ids: Collection<String>
+        map: MutableMap<String, IssueData>
     ) {
-        for (id in ids) {
+        for (id in map.keys.toList()) {
             if (id == SUPPRESS_ALL) {
                 // builtin special "id" which means all id's
                 continue
             }
-            if (registry.getIssue(id) == null) {
+            val issue = registry.getIssue(id)
+            if (issue == null) {
                 // You can also configure issues by categories; don't flag these
                 if (registry.isCategoryName(id)) {
                     continue
                 }
                 reportNonExistingIssueId(client, driver, registry, project, id)
+            } else if (issue.id != id) {
+                // We're using an alias here in the configuration; map it over
+                val data = map[id] ?: continue
+                val merge = map[issue.id]
+                if (merge == null) {
+                    map[issue.id] = data
+                    map.remove(id)
+                } else {
+                    merge += data
+                }
             }
         }
         parent?.validateIssueIds(client, driver, project, registry)

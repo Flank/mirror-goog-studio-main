@@ -24,6 +24,7 @@ import java.util.Collection;
  * <p>
  * It is mostly composed of a list of {@link JarInput} and a list of {@link DirectoryInput}.
  */
+@Deprecated
 public interface TransformInput {
 
     /**

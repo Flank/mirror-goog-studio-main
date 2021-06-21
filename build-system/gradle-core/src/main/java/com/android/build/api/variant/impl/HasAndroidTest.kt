@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.AndroidTest
+import com.android.build.api.component.AndroidTest
 
 /**
  * Internal marker interface for [VariantImpl] that potentially has associated android tests.

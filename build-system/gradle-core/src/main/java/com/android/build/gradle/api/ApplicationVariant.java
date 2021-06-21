@@ -18,7 +18,6 @@ package com.android.build.gradle.api;
 
 import com.android.build.gradle.internal.api.TestedVariant;
 
-/**
- * A Build variant and all its public data.
- */
+/** A Build variant and all its public data. */
+@Deprecated
 public interface ApplicationVariant extends ApkVariant, TestedVariant {}

@@ -17,9 +17,5 @@ package com.android.build.api.variant
 
 interface DynamicFeatureVariant : Variant, GeneratesApk {
 
-    /**
-     * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
-     * variant.
-     */
-    val androidTest: AndroidTest?
+    val androidTest: com.android.build.api.component.AndroidTest?
 }

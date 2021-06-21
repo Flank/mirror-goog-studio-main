@@ -23,6 +23,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 
 /** A Build variant and all its public data. */
+@Deprecated
 public interface LibraryVariant extends BaseVariant, TestedVariant, InternalBaseVariant {
 
     /**

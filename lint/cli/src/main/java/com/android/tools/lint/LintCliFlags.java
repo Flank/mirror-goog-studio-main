@@ -77,11 +77,13 @@ public class LintCliFlags {
     private boolean removedFixedBaselineIssues;
     private boolean writeBaselineIfMissing = true;
     private boolean updateBaseline;
+    private boolean continueAfterBaselineCreated;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
     private boolean abortOnAutoFix;
     private boolean includeXmlFixes;
     private boolean allowSuppress;
     private boolean printInternalErrorStackTrace;
+    private File cacheDir;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -727,5 +729,29 @@ public class LintCliFlags {
     /** Sets if internal error stacktraces should be printed to stdout */
     public void setPrintInternalErrorStackTrace(boolean printInternalErrorStackTrace) {
         this.printInternalErrorStackTrace = printInternalErrorStackTrace;
+    }
+
+    /**
+     * Returns the base cache directory used by {@link LintCliClient#getCacheDir(String, boolean)},
+     * or null if nothing has been set.
+     */
+    @Nullable
+    public File getCacheDir() {
+        return cacheDir;
+    }
+
+    /** Sets the base cache directory used by {@link LintCliClient#getCacheDir(String, boolean)} */
+    public void setCacheDir(@NonNull File cacheDir) {
+        this.cacheDir = cacheDir;
+    }
+
+    /** If true, continue normally even after a baseline file has been created. */
+    public boolean isContinueAfterBaselineCreated() {
+        return continueAfterBaselineCreated;
+    }
+
+    /** If true, continue normally even after a baseline file has been created. */
+    public void setContinueAfterBaselineCreated(boolean continueAfterBaselineCreated) {
+        this.continueAfterBaselineCreated = continueAfterBaselineCreated;
     }
 }

@@ -354,7 +354,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "UniquePermission,DuplicateDefinition,SdCardPath",
                 "--config",
@@ -425,7 +424,6 @@ class ProjectInitializerTest {
             ERRNO_SUCCESS,
 
             arrayOf(
-                "--quiet",
                 "--project",
                 projectXml.path
             ),
@@ -470,7 +468,6 @@ class ProjectInitializerTest {
             ERRNO_SUCCESS,
 
             arrayOf(
-                "--quiet",
                 "--project",
                 projectXml.path
             ),
@@ -573,7 +570,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--project",
                 descriptorFile.path
             ),
@@ -626,7 +622,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "RequiredSize",
                 "--project",
@@ -714,7 +709,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "ByteOrderMark",
                 "--project",
@@ -835,7 +829,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "MissingApplicationIcon,PrivateResource",
                 "--project",
@@ -930,7 +923,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "ParcelCreator",
                 "--project",
@@ -1000,7 +992,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "NewApi",
                 "--project",
@@ -1079,7 +1070,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "SdCardPath",
                 "--project",
@@ -1120,9 +1110,7 @@ class ProjectInitializerTest {
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
         MainTest.checkDriver(
-            """
-            No issues found.
-            """,
+            "No issues found.",
             "",
 
             // Expected exit code
@@ -1130,7 +1118,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--project",
                 descriptorFile.path
             ),
@@ -1202,7 +1189,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "NewApi",
                 "--project",
@@ -1318,7 +1304,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "WrongThread",
                 "--project",
@@ -1397,7 +1382,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "SwitchIntDef",
                 "--project",
@@ -1456,7 +1440,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--project",
                 descriptorFile.path
             ),
@@ -1480,7 +1463,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--project",
                 root.path
             ),
@@ -1598,7 +1580,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "UniquePermission",
                 "--config",
@@ -1635,7 +1616,6 @@ class ProjectInitializerTest {
 
             // Args
             arrayOf(
-                "--quiet",
                 "--check",
                 "UniquePermission",
                 "--config",

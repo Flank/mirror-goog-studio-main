@@ -281,7 +281,6 @@ open class LintCliClient : LintClient {
         }
         driver = createDriver(registry, lintRequest)
         driver.analysisStartTime = startTime
-        addProgressPrinter()
         addCancellationChecker()
         validateIssueIds()
 
@@ -347,7 +346,11 @@ open class LintCliClient : LintClient {
                 reporter.setBaselineAttributes(this, baselineVariantName)
                 reporter.write(stats, definiteIncidents)
                 System.err.println(getBaselineCreationMessage(baselineFile))
-                return ERRNO_CREATED_BASELINE
+                return if (flags.isContinueAfterBaselineCreated) {
+                    ERRNO_SUCCESS
+                } else {
+                    ERRNO_CREATED_BASELINE
+                }
             }
         } else if (baseline != null &&
             baseline.writeOnClose &&
@@ -652,7 +655,7 @@ open class LintCliClient : LintClient {
     private fun getBaselineCreationMessage(baselineFile: File): String {
         val summary = "Created baseline file $baselineFile"
 
-        if (continueAfterBaseLineCreated()) {
+        if (continueAfterBaselineCreated()) {
             return summary
         }
 
@@ -802,12 +805,6 @@ open class LintCliClient : LintClient {
         return driver
     }
 
-    protected open fun addProgressPrinter() {
-        if (!flags.isQuiet) {
-            driver.addLintListener(ProgressPrinter())
-        }
-    }
-
     protected open fun addCancellationChecker() {
         driver.addLintListener(object : LintListener {
             override fun update(
@@ -835,11 +832,6 @@ open class LintCliClient : LintClient {
 
     override fun log(severity: Severity, exception: Throwable?, format: String?, vararg args: Any) {
         System.out.flush()
-        if (!flags.isQuiet) {
-            // Place the error message on a line of its own since we're printing '.' etc
-            // with newlines during analysis
-            System.err.println()
-        }
         if (format != null) {
             System.err.println(String.format(format, *args))
         }
@@ -1175,38 +1167,6 @@ open class LintCliClient : LintClient {
         }
     }
 
-    private class ProgressPrinter : LintListener {
-        override fun update(
-            driver: LintDriver,
-            type: LintListener.EventType,
-            project: Project?,
-            context: Context?
-        ) {
-            when (type) {
-                LintListener.EventType.SCANNING_PROJECT -> {
-                    val name = context?.project?.name ?: "?"
-                    if (driver.phase > 1) {
-                        print("\nScanning $name (Phase ${driver.phase}): ")
-                    } else {
-                        print("\nScanning $name: ")
-                    }
-                }
-                LintListener.EventType.SCANNING_LIBRARY_PROJECT -> {
-                    val name = context?.project?.name ?: "?"
-                    print("\n         - $name: ")
-                }
-                LintListener.EventType.SCANNING_FILE -> print('.')
-                LintListener.EventType.NEW_PHASE -> {
-                }
-                LintListener.EventType.COMPLETED -> println()
-                LintListener.EventType.REGISTERED_PROJECT, LintListener.EventType.STARTING -> {
-                }
-                LintListener.EventType.MERGING -> {
-                }
-            }
-        }
-    }
-
     override fun getDisplayPath(file: File, project: Project?, format: TextFormat): String {
         return if (project != null) {
             val path = getDisplayPath(project, file)
@@ -1535,7 +1495,7 @@ open class LintCliClient : LintClient {
         }
     }
 
-    override fun getClientRevision(): String? {
+    override fun getClientRevision(): String {
         val plugin = Version.ANDROID_GRADLE_PLUGIN_VERSION
         return plugin ?: "unknown"
     }
@@ -1689,6 +1649,21 @@ open class LintCliClient : LintClient {
         return flags.reporters.any { it is TextReporter && it.isWriteToConsole }
     }
 
+    override fun getCacheDir(name: String?, create: Boolean): File? {
+        val cacheDir = flags.cacheDir
+        if (cacheDir != null) {
+            val dir = if (name != null) File(cacheDir, name) else cacheDir
+            if (create && !dir.exists()) {
+                if (!dir.mkdirs()) {
+                    return null
+                }
+            }
+            return dir
+        } else {
+            return super.getCacheDir(name, create)
+        }
+    }
+
     protected open inner class LintCliUastParser(project: Project?) :
         DefaultUastParser(project, ideaProject!!) {
         override fun prepare(
@@ -1759,19 +1734,17 @@ open class LintCliClient : LintClient {
         }
     }
 
+    /** Whether lint should continue running after a baseline has been created. */
+    private fun continueAfterBaselineCreated(): Boolean {
+        return System.getProperty("lint.baselines.continue") == VALUE_TRUE
+                || flags.isContinueAfterBaselineCreated
+    }
+
     companion object {
         // Environment variable, system property and internal system property used to tell lint to
         // override the configuration
         private const val LINT_OVERRIDE_CONFIGURATION_ENV_VAR = "LINT_OVERRIDE_CONFIGURATION"
         private const val LINT_CONFIGURATION_OVERRIDE_PROP = "lint.configuration.override"
-
-        /**
-         * Whether lint should continue running after a baseline has
-         * been created.
-         */
-        fun continueAfterBaseLineCreated(): Boolean {
-            return System.getProperty("lint.baselines.continue") == VALUE_TRUE
-        }
 
         protected fun getTargetName(baselineVariantName: String): String {
             if (isGradle) {

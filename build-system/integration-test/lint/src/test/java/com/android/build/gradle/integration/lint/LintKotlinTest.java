@@ -25,6 +25,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,12 +36,22 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class LintKotlinTest {
 
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}, runLintInProcess = {1}")
+    public static List<Object[]> getParameters() {
+        return Arrays.asList(
+                new Object[][] {
+                    {true, true},
+                    {true, false},
+                    {false, true},
+                    {false, false}
+                });
     }
 
-    @Parameterized.Parameter public boolean usePartialAnalysis;
+    @Parameterized.Parameter(0)
+    public boolean usePartialAnalysis;
+
+    @Parameterized.Parameter(1)
+    public boolean runLintInProcess;
 
     @Rule
     public final GradleTestProject project =
@@ -72,6 +84,8 @@ public class LintKotlinTest {
     }
 
     private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
+        return project.executor()
+                .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+                .with(BooleanOption.RUN_LINT_IN_PROCESS, runLintInProcess);
     }
 }

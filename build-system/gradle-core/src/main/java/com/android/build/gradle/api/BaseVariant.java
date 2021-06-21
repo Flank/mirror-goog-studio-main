@@ -45,9 +45,10 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
- * A Build variant and all its public data. This is the base class for items common to apps,
- * test apps, and libraries
+ * A Build variant and all its public data. This is the base class for items common to apps, test
+ * apps, and libraries
  */
+@Deprecated
 public interface BaseVariant {
 
     /**

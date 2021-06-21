@@ -214,10 +214,20 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
     }
 
     private static Deploy.Client ddmClientToRpcClient(Client client) {
-        return Deploy.Client.newBuilder()
-                .setPid(client.getClientData().getPid())
-                .setName(client.getClientData().getPackageName())
-                .build();
+        String packageName = client.getClientData().getPackageName();
+        String description = client.getClientData().getClientDescription();
+
+        Deploy.Client.Builder builder = Deploy.Client.newBuilder();
+
+        builder.setPid(client.getClientData().getPid());
+        if (packageName != null) {
+            builder.setName(packageName);
+        }
+        if (description != null) {
+            builder.setDescription(description);
+        }
+
+        return builder.build();
     }
 
     private Deploy.Device ddmDeviceToRpcDevice(IDevice device) {

@@ -23,8 +23,10 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
@@ -44,6 +46,9 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
             .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
             .create()
 
+    @get:Rule
+    val temporaryFolder: TemporaryFolder = TemporaryFolder()
+
     @Test
     fun `Jars in prefs directory affect up-to-date checking`() {
         val executor = project.getExecutor().withPerTestPrefsRoot().apply {
@@ -53,18 +58,45 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         val prefsLintDir = FileUtils.join(executor.preferencesRootDir, ".android", "lint")
         FileUtils.cleanOutputDir(prefsLintDir)
 
-        val lintDebugTaskName = ":lintDebug"
-        executor.run(lintDebugTaskName)
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName)).wasUpToDate()
+        val lintTaskName = ":lintDebug"
+        val lintAnalyzeTaskName = ":lintAnalyzeDebug"
+        executor.run(lintTaskName)
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
         FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
-        executor.run(lintDebugTaskName).also { result ->
-            assertThat(result.getTask(lintDebugTaskName)).didWork()
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).didWork()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+
         }
     }
 
+
+    @Test
+    fun `Jars set via environment variable affect up-to-date checking`() {
+        val lintJar = temporaryFolder.newFolder().resolve("abcdefg.jar")
+
+        val absolutePath = lintJar.absolutePath
+        assertThat(absolutePath).isNotEmpty()
+        val executor = project.getExecutor().withEnvironmentVariables(mapOf("ANDROID_LINT_JARS" to absolutePath))
+
+        val lintTaskName = ":lintDebug"
+        val lintAnalyzeTaskName = ":lintAnalyzeDebug"
+        executor.run(lintTaskName)
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
+        }
+
+        FileUtils.createFile(lintJar, "FOO_BAR")
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintTaskName)).didWork()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+        }
+    }
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
         this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

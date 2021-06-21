@@ -675,8 +675,16 @@ open class Context(
 
         private var detectorsWarned: MutableSet<String>? = null
 
-        /** Check forbidden access and report issue if necessary. */
-        fun checkForbidden(methodName: String, file: File, driver: LintDriver? = null): Boolean {
+        /**
+         * Check forbidden access and report issue if necessary.
+         *
+         * Warning: setting [driver] to null may lead to spurious errors when using multiple
+         * [LintDriver]s in the same process.
+         */
+        fun checkForbidden(methodName: String, file: File, driver: LintDriver?): Boolean {
+            // LintDriver.currentDrivers.firstOrNull() is not guaranteed to return the desired
+            // driver when there are multiple drivers. When driver is null, this method can produce
+            // a false positive LintError (or a false negative).
             val currentDriver = driver ?: LintDriver.currentDrivers.firstOrNull() ?: return true
             if (currentDriver.mode == DriverMode.ANALYSIS_ONLY) {
                 val (detector, issues) = findCallingDetector(currentDriver) ?: return false

@@ -477,7 +477,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
             }
 
-            if (getMergedArtProfile().isPresent()) {
+            if (getMergedArtProfile().isPresent()
+                    && getMergedArtProfile().get().getAsFile().exists()) {
                 parameter
                         .getMergedArtProfile()
                         .set(

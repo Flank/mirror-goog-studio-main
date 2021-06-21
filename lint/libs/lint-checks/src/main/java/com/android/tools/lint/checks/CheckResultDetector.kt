@@ -234,7 +234,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return true
             } else if (curr is UIfExpression) {
                 if (curr.condition === prev) {
-                    return true
+                    return false
                 }
                 val parent = curr.uastParent ?: return true
                 if (parent is UMethod || parent is UClassInitializer) {

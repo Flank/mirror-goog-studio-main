@@ -506,6 +506,98 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testSnapshots() {
+        // Regression test for b/183137869:
+        // Gradle special-cases the SNAPSHOT version; make sure we don't offer updates to/from it except
+        // for a few minor scenarios.
+        // https://docs.gradle.org/current/userguide/single_versions.html#version_ordering
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 30\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+
+                    // work-runtime has 2.7.0-alpha06,3.0.0-SNAPSHOT -- we don't want to offer
+                    // updates to 3.0.0-SNAPSHOT even though it's "higher"
+                    "    implementation \"androidx.test:work-runtime:2.7.0-alpha06\" // no suggestion\n" +
+                    // But we *can* update to a higher non-SNAPSHOT version
+                    "    implementation \"androidx.test:work-runtime:2.6.0-alpha06\" // update to 2.7.0-alpha06\n" +
+                    // For work-runtime-ktx has 2.5.0,2.6.0-alpha05; we don't want to update to SNAPSHOT versions
+                    "    implementation \"androidx.test:work-runtime-ktx:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    // but from old snapshot versions we can jump to a higher version
+                    "    implementation \"androidx.test:work-runtime-ktx:2.3.0-SNAPSHOT\" // Update to 2.6.0-alpha05\n" +
+                    // From a snapshot version we can jump to a stable version if it's higher
+                    "    implementation \"androidx.test:work-gcm:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    // Repeat tests for android.work, which has its own special version filtering code
+                    "    implementation \"androidx.work:work-runtime:2.7.0-alpha06\" // no suggestion\n" +
+                    "    implementation \"androidx.work:work-runtime:2.6.0-alpha06\" // update to 2.7.0-alpha06\n" +
+                    "    implementation \"androidx.work:work-runtime-ktx:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    "    implementation \"androidx.work:work-runtime-ktx:2.3.0-SNAPSHOT\" // Update to 2.6.0-alpha05\n" +
+                    "    implementation \"androidx.work:work-gcm:2.6.0-SNAPSHOT\" // No suggestion\n" +
+                    "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <androidx.work/>
+                  <androidx.test/>
+                </metadata>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/work/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,3.0.0-SNAPSHOT"/>
+                  <work-runtime-ktx versions="2.5.0,2.6.0-alpha05"/>
+                  <work-gcm versions="2.6.0-SNAPSHOT"/>
+                  <work-rxjava2 versions="3.0.0-SNAPSHOT,3.0.0"/>
+                  <work-rxjava3 versions="3.0.0-SNAPSHOT,3.1.0-alpha01"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/test/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,3.0.0-SNAPSHOT"/>
+                  <work-runtime-ktx versions="2.5.0,2.6.0-alpha05"/>
+                  <work-gcm versions="2.6.0-SNAPSHOT"/>
+                  <work-rxjava2 versions="3.0.0-SNAPSHOT,3.0.0"/>
+                  <work-rxjava3 versions="3.0.0-SNAPSHOT,3.1.0-alpha01"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .run().expect(
+                """
+                build.gradle:9: Warning: A newer version of androidx.test:work-runtime than 2.6.0-alpha06 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.test:work-runtime:2.6.0-alpha06" // update to 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: Warning: A newer version of androidx.test:work-runtime-ktx than 2.3.0-SNAPSHOT is available: 2.6.0-alpha05 [GradleDependency]
+                    implementation "androidx.test:work-runtime-ktx:2.3.0-SNAPSHOT" // Update to 2.6.0-alpha05
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of androidx.work:work-runtime than 2.6.0-alpha06 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.6.0-alpha06" // update to 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Warning: A newer version of androidx.work:work-runtime-ktx than 2.3.0-SNAPSHOT is available: 2.6.0-alpha05 [GradleDependency]
+                    implementation "androidx.work:work-runtime-ktx:2.3.0-SNAPSHOT" // Update to 2.6.0-alpha05
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
+    }
+
     fun testGuavaVersionsAndroidVsJre() {
         lint().files(
             gradle(
@@ -807,7 +899,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "3.0.0.0"
+                    override fun getClientRevision(): String = "3.0.0.0"
                 }
             })
             .run().expect(expected)
@@ -843,7 +935,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "3.1.0"
+                    override fun getClientRevision(): String = "3.1.0"
                 }
             })
             .run().expect(
@@ -884,7 +976,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
-                    override fun getClientRevision(): String? = "2.3.0.0"
+                    override fun getClientRevision(): String = "2.3.0.0"
                 }
             })
             .run().expect(
@@ -1216,7 +1308,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:8: Error: Use an integer rather than a string here (replace \"16\" with just 16) [StringShouldBeInt]\n" +
             "        targetSdkVersion \"16\"\n" +
             "        ~~~~~~~~~~~~~~~~~~~~~\n" +
-            "3 errors, 0 warnings\n"
+            "build.gradle:10: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n" +
+            "    compileSdk '19'\n" +
+            "    ~~~~~~~~~~~~~~~\n" +
+            "4 errors, 0 warnings\n"
 
         lint().files(
             gradle(
@@ -1230,6 +1325,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "        minSdkVersion '8'\n" +
                     "        targetSdkVersion \"16\"\n" +
                     "    }\n" +
+                    "    compileSdk '19'\n" +
                     "}\n"
             )
         ).issues(STRING_INTEGER).run().expect(expected).expectFixDiffs(
@@ -1245,7 +1341,41 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "Fix for build.gradle line 8: Replace with integer:\n" +
                 "@@ -8 +8\n" +
                 "-         targetSdkVersion \"16\"\n" +
-                "+         targetSdkVersion 16\n"
+                "+         targetSdkVersion 16\n" +
+                "Fix for build.gradle line 10: Replace with integer:\n" +
+                "@@ -10 +10\n" +
+                "-     compileSdk '19'\n" +
+                "+     compileSdk 19"
+        )
+    }
+
+    fun testCompileSdkString() {
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 19 // OK\n" +
+                    "    compileSdkPreview 'android-S' // OK\n" +
+                    "    compileSdk 19 // OK\n" +
+                    "    compileSdk 'android-S' // ERROR\n" +
+                    "}\n"
+            )
+        ).issues(STRING_INTEGER).run().expect(
+            """
+            build.gradle:7: Error: compileSdk does not support strings; did you mean compileSdkPreview ? [StringShouldBeInt]
+                compileSdk 'android-S' // ERROR
+                ~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for build.gradle line 7: Replace with compileSdkPreview:
+            @@ -7 +7
+            -     compileSdk 'android-S' // ERROR
+            +     compileSdkPreview 'android-S' // ERROR
+            """
         )
     }
 

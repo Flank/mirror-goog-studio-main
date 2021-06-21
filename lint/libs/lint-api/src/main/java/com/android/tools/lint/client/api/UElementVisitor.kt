@@ -90,6 +90,8 @@ import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
 import org.jetbrains.uast.UYieldExpression
+import org.jetbrains.uast.kotlin.KotlinUImportStatement
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -131,6 +133,7 @@ internal class UElementVisitor constructor(
     private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>(40)
     private val annotationHandler: AnnotationHandler?
     private val callGraphDetectors = ArrayList<SourceCodeScanner>()
+    private var importedResources = false
 
     init {
         allDetectors = ArrayList(detectors.size)
@@ -1022,6 +1025,14 @@ internal class UElementVisitor constructor(
         private val mVisitMethods: Boolean = !methodDetectors.isEmpty()
         private val mVisitConstructors: Boolean = !constructorDetectors.isEmpty()
         private val mVisitReferences: Boolean = !referenceDetectors.isEmpty()
+        private var aliasedImports = false
+
+        override fun visitImportStatement(node: UImportStatement): Boolean {
+            (node as? KotlinUImportStatement)?.sourcePsi?.alias?.name?.let {
+                aliasedImports = true
+            }
+            return super.visitImportStatement(node)
+        }
 
         override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
             if (mVisitReferences || mVisitResources) {
@@ -1053,6 +1064,32 @@ internal class UElementVisitor constructor(
                             reference.name,
                             reference.`package` == ANDROID_PKG
                         )
+                    }
+                } else if (aliasedImports && node.resolve() == null) {
+                    val identifier = node.identifier
+                    // Resolving a reference failed, but we're in a compilation unit that has
+                    // aliased imports; as a workaround check the import statements
+                    for (import in mContext.uastFile?.imports ?: emptyList()) {
+                        if (import is KotlinUImportStatement) {
+                            val ktImport = import.sourcePsi
+                            if (identifier == ktImport.alias?.name) {
+                                val resource = ktImport.importedReference
+                                    ?.let { it.toUElement() }
+                                    ?.let { ResourceReference.get(it) }
+                                    ?: continue
+                                for (v in resourceFieldDetectors) {
+                                    val uastScanner = v.uastScanner
+                                    uastScanner.visitResourceReference(
+                                        mContext,
+                                        resource.node,
+                                        resource.type,
+                                        resource.name,
+                                        resource.`package` == ANDROID_PKG
+                                    )
+                                }
+                                break
+                            }
+                        }
                     }
                 }
             }

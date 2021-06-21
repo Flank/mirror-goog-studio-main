@@ -579,10 +579,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             start = lineStart
         }
 
-        var endOffset = 0
+        var endOffset = lineEnd.offset
         var endLine = lineEnd.line
         var endColumn = lineEnd.column
-        var offset = lineEnd.offset
+        var offset = endOffset
         while (offset < fileText.length) {
             if (fileText[offset++] == '\n') {
                 endLine++
@@ -698,14 +698,9 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
      * given [source]
      */
     private fun getColumn(source: String, offset: Int): Int {
-        var column = 1
-        for (i in offset downTo -1) {
-            if (source[i] == '\n') {
-                break
-            }
-            column++
-        }
-        return column
+        assert(offset in source.indices)
+        val prevNewline = source.subSequence(0, offset).lastIndexOf('\n')
+        return offset - prevNewline
     }
 
     private fun writeArtifactChange(
@@ -734,7 +729,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 if (endOffset > startOffset) {
                     writer.write(",\n")
                     val endLine = getLineNumber(source, endOffset, startOffset, startLine)
-                    val endColumn = getColumn(source, endOffset)
+                    val endColumn = getColumn(source, endOffset - 1) + 1
                     writer.indent(indent).write("\"endLine\": $endLine,\n")
                     writer.indent(indent).write("\"endColumn\": $endColumn,\n")
                     writer.indent(indent).write("\"charLength\": ${endOffset - startOffset}\n")

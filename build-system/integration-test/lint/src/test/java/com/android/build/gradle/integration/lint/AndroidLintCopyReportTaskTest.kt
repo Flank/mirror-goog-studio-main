@@ -21,18 +21,19 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 /**
- * Integration test testing lint verbosity.
+ * Integration test for [AndroidLintCopyReportTask]
  */
 @RunWith(FilterableParameterized::class)
-class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
+class AndroidLintCopyReportTaskTest(private val usePartialAnalysis: Boolean) {
 
     companion object {
         @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
@@ -49,46 +50,26 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
                         """
                             android {
                                 lintOptions {
-                                    abortOnError false
-                                    quiet false
-                                    error 'AllowBackup'
+                                    textOutput file("lint-results.txt")
                                 }
                             }
                         """.trimIndent()
                     )
             ).create()
 
+    // Regression test for b/189877657
     @Test
-    fun testQuiet() {
-        // first check that we see "Scanning" in stdout if running with --info and quiet=false
-        project.getExecutor().withArgument("--info").run("lintDebug")
-        ScannerSubject.assertThat(project.buildResult.stdout).contains("Wrote HTML report to ")
-        // then set quiet to true and check that stdout doesn't contain "Scanning".
-        TestFileUtils.searchAndReplace(project.buildFile, "quiet false", "quiet true")
-        project.getExecutor().withArgument("--info").run("lintDebug")
-        ScannerSubject.assertThat(project.buildResult.stdout).doesNotContain("Wrote HTML report to ")
+    fun testRunningTaskDirectly() {
+        project.getExecutor().run("clean", "copyDebugAndroidLintReports")
+        ScannerSubject.assertThat(project.buildResult.stdout).contains("BUILD SUCCESSFUL")
+        ScannerSubject.assertThat(project.buildResult.stdout)
+            .contains("Unable to copy the lint text report")
     }
 
-    // Regression test for b/187329866
     @Test
-    fun testErrorMessage() {
-        TestFileUtils.searchAndReplace(project.buildFile, "abortOnError false", "abortOnError true")
-        project.getExecutor().expectFailure().run("lintDebug")
-        ScannerSubject.assertThat(project.buildResult.stderr).contains(
-            """
-                Lint found errors in the project; aborting build.
-
-                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                ...
-                android {
-                    lintOptions {
-                        abortOnError false
-                    }
-                }
-                ...
-
-            """.trimIndent()
-        )
+    fun testReportCopiedAfterLint() {
+        project.getExecutor().run("clean", "lintDebug")
+        assertThat(project.file("lint-results.txt")).exists()
     }
 
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =

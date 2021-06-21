@@ -98,6 +98,12 @@ class LintMap : Iterable<String> {
         return this
     }
 
+    /** Like [put] but for a [Severity]. */
+    fun put(key: String, severity: Severity): LintMap {
+        map[key] = severity
+        return this
+    }
+
     /** Returns the keys of the items in this map. */
     fun keys(): Sequence<String> {
         return map.keys.asSequence()
@@ -162,6 +168,11 @@ class LintMap : Iterable<String> {
     fun getConstraint(key: String): Constraint? {
         @Suppress("UNCHECKED_CAST")
         return map[key] as? Constraint
+    }
+
+    /** Returns a severity previously stored by [put] */
+    fun getSeverity(key: String, default: Severity? = null): Severity? {
+        return map[key] as? Severity ?: default
     }
 
     /** Removes the given key's value from the map, if any. */

@@ -86,6 +86,7 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -120,7 +121,8 @@ abstract class LintTool {
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
-    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
+    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>
+    ) {
         submit(
             workerExecutor,
             mainClass,
@@ -138,7 +140,6 @@ abstract class LintTool {
         android: Boolean,
         fatalOnly: Boolean,
         await: Boolean) {
-        // Respect the android.experimental.runLintInProcess flag (useful for debugging)
         val workQueue = if (runInProcess.get()) {
             workerExecutor.noIsolation()
         } else {
@@ -150,13 +151,13 @@ abstract class LintTool {
                     workerHeapSize.orNull ?: "${Runtime.getRuntime().maxMemory() / 1024 / 1024}m"
             }
         }
-        workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
-            isolatedParameters.mainClass.set(mainClass)
-            isolatedParameters.arguments.set(arguments)
-            isolatedParameters.classpath.from(classpath)
-            isolatedParameters.android.set(android)
-            isolatedParameters.fatalOnly.set(fatalOnly)
-            isolatedParameters.cacheClassLoader.set(!runInProcess.get())
+        workQueue.submit(AndroidLintWorkAction::class.java) { parameters ->
+            parameters.mainClass.set(mainClass)
+            parameters.arguments.set(arguments)
+            parameters.classpath.from(classpath)
+            parameters.android.set(android)
+            parameters.fatalOnly.set(fatalOnly)
+            parameters.runInProcess.set(runInProcess.get())
         }
         if (await) {
             workQueue.await()
@@ -407,6 +408,59 @@ abstract class LintOptionsInput {
     }
 }
 
+/**
+ * System properties which can affect lint's behavior.
+ */
+abstract class SystemPropertyInputs {
+
+    @get:Input
+    @get:Optional
+    abstract val lintAutofix: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintBaselinesContinue: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val lintConfigurationOverride: Property<String>
+
+    fun initializeForAnalysis(providerFactory: ProviderFactory) {
+        lintAutofix.disallowChanges()
+        lintBaselinesContinue.disallowChanges()
+        lintConfigurationOverride.setDisallowChanges(
+            providerFactory.systemProperty("lint.configuration.override")
+        )
+    }
+
+    fun initialize(providerFactory: ProviderFactory) {
+        lintAutofix.setDisallowChanges(
+            providerFactory.systemProperty("lint.autofix")
+        )
+        lintBaselinesContinue.setDisallowChanges(
+            providerFactory.systemProperty("lint.baselines.continue")
+        )
+        lintConfigurationOverride.setDisallowChanges(
+            providerFactory.systemProperty("lint.configuration.override")
+        )
+    }
+}
+
+/**
+ * Environment variables which can affect lint's behavior.
+ */
+abstract class EnvironmentVariableInputs {
+
+    @get:Input
+    @get:Optional
+    abstract val lintOverrideConfiguration: Property<String>
+
+    fun initialize(providerFactory: ProviderFactory) {
+        lintOverrideConfiguration.setDisallowChanges(
+            providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
+        )
+    }
+}
 
 /**
  * Inputs for the variant.

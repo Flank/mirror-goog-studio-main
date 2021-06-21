@@ -2187,6 +2187,32 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testImportAliases() throws Exception {
+        // Regression test for workaround for https://issuetracker.google.com/188871862
+        lint().files(
+                        manifest().minSdk(21),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"lib2\">String from lib2</string>\n"
+                                        + "</resources>"),
+                        kotlin(
+                                ""
+                                        + "package com.android.tools.test.lib1\n"
+                                        + "import com.android.tools.test.lib2.R.string.lib2 as String_lib2\n"
+                                        + "\n"
+                                        + "class Lib1 {\n"
+                                        + "    fun test() {\n"
+                                        + "        println(String_lib2)\n"
+                                        + "    }\n"
+                                        + "}"))
+                // Deliberately missing imported symbol; this test is checking our fallback handling
+                .allowCompilationErrors()
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility =
             xml(

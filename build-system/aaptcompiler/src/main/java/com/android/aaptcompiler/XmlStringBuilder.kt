@@ -1,6 +1,7 @@
 package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.parseHex
+import java.util.PrimitiveIterator
 import kotlin.math.max
 import kotlin.math.min
 
@@ -58,6 +59,7 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     private set
   var lastCodepointWasSpace = false
     private set
+  private var lastCodepointWasBackslash = false
   private var firstQuote = -1
   private var lastQuote = -1
   private var firstChar = -1
@@ -80,6 +82,7 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
   fun clear() {
     inQuote = preserveSpaces
     lastCodepointWasSpace = false
+    lastCodepointWasBackslash = false
     firstQuote = -1
     lastQuote = -1
     firstChar = -1
@@ -94,6 +97,30 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
     inUntranslatable = false
 
     error = ""
+  }
+
+  /** Transform escaped codepoint into expected codepoint. */
+  fun handleEscape(
+      codePoint: Int,
+      textBuilder: StringBuilder,
+      codePoints: PrimitiveIterator.OfInt,
+      str: String
+  ): Boolean {
+    when (codePoint) {
+      't'.toInt() -> textBuilder.append('\t')
+      'n'.toInt() -> textBuilder.append('\n')
+      '#'.toInt(), '@'.toInt(), '?'.toInt(), '"'.toInt(), '\''.toInt(), '\\'.toInt() ->
+          textBuilder.appendCodePoint(codePoint)
+      'u'.toInt() -> {
+          if (!appendUnicodeEscapeSequence(codePoints, textBuilder)) {
+              error = "Invalid unicode escape sequence in string\n\"$str\""
+              return false
+          }
+      }
+      // Can ignore the escape character and just include the code point.
+      else -> textBuilder.appendCodePoint(codePoint)
+    }
+    return true
   }
 
   /** Appends a chunk of text to the xml string. */
@@ -114,6 +141,7 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
           // emit a space if it is the first
           textBuilder.append(' ')
           lastCodepointWasSpace = true
+          lastCodepointWasBackslash = false
         }
 
         continue
@@ -125,26 +153,23 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
 
       lastCodepointWasSpace = false
       when {
-        codePoint == '\\'.toInt() -> {
-          // if we encounter a single "\" at the end of the string, just ignore it.
-          if (codePoints.hasNext()) {
-              codePoint = codePoints.nextInt()
-              when (codePoint) {
-                  't'.toInt() -> textBuilder.append('\t')
-                  'n'.toInt() -> textBuilder.append('\n')
-                  '#'.toInt(), '@'.toInt(), '?'.toInt(), '"'.toInt(), '\''.toInt(), '\\'.toInt() ->
-                      textBuilder.appendCodePoint(codePoint)
-                  'u'.toInt() -> {
-                      if (!appendUnicodeEscapeSequence(codePoints, textBuilder)) {
-                          error = "Invalid unicode escape sequence in string\n\"$str\""
-                          return this
-                      }
-                  }
-                  // can ignore the escape character and just include the code point
-                  else -> textBuilder.appendCodePoint(codePoint)
-              }
-              lastChar = textBuilder.length
+        lastCodepointWasBackslash -> {
+          if (!handleEscape(codePoint, textBuilder, codePoints, str)) {
+            return this
           }
+          lastChar = textBuilder.length
+          lastCodepointWasBackslash = false
+        }
+        codePoint == '\\'.toInt() -> {
+            if (codePoints.hasNext()) {
+                codePoint = codePoints.nextInt()
+                if (!handleEscape(codePoint, textBuilder, codePoints, str)) {
+                    return this
+                }
+                lastChar = textBuilder.length
+            } else {
+                lastCodepointWasBackslash = true
+            }
         }
         codePoint == '\"'.toInt() && !preserveSpaces -> {
           // only toggle quote when we are not preserving spaces.
@@ -340,6 +365,7 @@ class XmlStringBuilder(private val preserveSpaces: Boolean = false) {
   private fun resetTextState() {
     inQuote = preserveSpaces
     lastCodepointWasSpace = false
+    lastCodepointWasBackslash = false
   }
 
 }

@@ -353,7 +353,6 @@ public class ExtractAnnotationsDriver {
         }
 
         env.dispose();
-        UastEnvironment.disposeApplicationEnvironment();
         return 0;
     }
 
