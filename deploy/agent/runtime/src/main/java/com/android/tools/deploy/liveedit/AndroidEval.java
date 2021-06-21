@@ -369,26 +369,27 @@ class AndroidEval implements Eval {
     }
 
     public static Class<?> typeToClass(Type type) throws ClassNotFoundException {
-        if (type == Type.INT_TYPE) {
-            return int.class;
-        } else if (type == Type.BOOLEAN_TYPE) {
-            return boolean.class;
-        } else if (type == Type.BYTE_TYPE) {
-            return byte.class;
-        } else if (type == Type.SHORT_TYPE) {
-            return short.class;
-        } else if (type == Type.CHAR_TYPE) {
-            return char.class;
-        } else if (type == Type.LONG_TYPE) {
-            return long.class;
-        } else if (type == Type.FLOAT_TYPE) {
-            return float.class;
-        } else if (type == Type.DOUBLE_TYPE) {
-            return double.class;
-        } else if (type == Type.VOID_TYPE) {
-            return void.class;
-        } else {
-            return Class.forName(type.getClassName().replace('/', '.'));
+        switch (type.getSort()) {
+            case Type.INT:
+                return int.class;
+            case Type.BOOLEAN:
+                return boolean.class;
+            case Type.BYTE:
+                return byte.class;
+            case Type.SHORT:
+                return short.class;
+            case Type.CHAR:
+                return char.class;
+            case Type.LONG:
+                return long.class;
+            case Type.FLOAT:
+                return float.class;
+            case Type.DOUBLE:
+                return double.class;
+            case Type.VOID:
+                return void.class;
+            default:
+                return Class.forName(type.getClassName().replace('/', '.'));
         }
     }
 
