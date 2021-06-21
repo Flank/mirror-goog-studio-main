@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Artifact
+import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
@@ -24,8 +25,6 @@ import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import java.io.File
 import java.io.Serializable
-import java.nio.file.FileSystems
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -69,6 +68,22 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
                 "${files.joinToString(",") { it.name }} are $plural"
             else "${files.first().name} is a $singular"
         }
+    }
+
+    fun addElement(element: BuiltArtifactImpl): BuiltArtifactsImpl {
+        val elementsCopy = elements.toMutableList()
+        elements.find {
+            it.variantOutputConfiguration == element.variantOutputConfiguration
+        }?.also { previous: BuiltArtifact -> elementsCopy.remove(previous) }
+        elementsCopy.add(element)
+        return BuiltArtifactsImpl(
+            version,
+            artifactType,
+            applicationId,
+            variantName,
+            elementsCopy.toList(),
+            elementType
+        )
     }
 
     override fun save(out: Directory) {

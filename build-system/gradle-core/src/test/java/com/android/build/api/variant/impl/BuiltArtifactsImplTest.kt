@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.VariantOutput
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
@@ -501,6 +502,75 @@ class BuiltArtifactsImplTest {
             return
         }
         fail("exception not thrown")
+    }
+
+    @Test
+    fun testIncrementalBuildWithFilters() {
+        val artifacts = createBuiltArtifacts(
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root,
+                fileName = "file1", versionCode = 123, densityValue = "xhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file2",
+                versionCode = 123, densityValue = "xxhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file3",
+                versionCode = 123, densityValue = "xxxhdpi"
+            )
+        )
+
+        val updatedArtifacts = artifacts.addElement(createBuiltArtifact(
+            outputFolder = tmpFolder.root, fileName = "file2b",
+            versionCode = 123, densityValue = "xxhdpi"
+        ))
+
+        Truth.assertThat(updatedArtifacts.elements).hasSize(3)
+        val updatedArtifact = updatedArtifacts.getBuiltArtifact(VariantOutputConfigurationImpl(
+            isUniversal = false,
+            filters = listOf(
+                FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
+            )),
+        )
+        Truth.assertThat(updatedArtifact?.outputFile).endsWith("file2b.apk")
+    }
+
+    @Test
+    fun testIncrementalBuildWithoutFilters() {
+        val artifacts = createBuiltArtifacts(
+            BuiltArtifactImpl.make(
+                outputFile = createOutputFile(tmpFolder.root, "main.apk").absolutePath,
+                versionCode = 123,
+                versionName = "123",
+                variantOutputConfiguration = VariantOutputConfigurationImpl(
+                    isUniversal = true,
+                    filters = listOf()),
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file2",
+                versionCode = 123, densityValue = "xxhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file3",
+                versionCode = 123, densityValue = "xxxhdpi"
+            )
+        )
+
+        val updatedArtifacts = artifacts.addElement(BuiltArtifactImpl.make(
+            outputFile = createOutputFile(tmpFolder.root, "main2b.apk").absolutePath,
+            versionCode = 123,
+            versionName = "123",
+            variantOutputConfiguration = VariantOutputConfigurationImpl(
+                isUniversal = true,
+                filters = listOf()),
+        ))
+
+        Truth.assertThat(updatedArtifacts.elements).hasSize(3)
+        val updatedArtifact = updatedArtifacts.getBuiltArtifact(VariantOutputConfigurationImpl(
+            isUniversal = true),
+        )
+        Truth.assertThat(updatedArtifact?.outputFile).endsWith("main2b.apk")
     }
 
     private fun createBuiltArtifact(
