@@ -197,7 +197,7 @@ public class Deployer {
             runner.create(Tasks.CACHE, splitter::cache, apkList);
             runner.runAsync(canceller);
 
-            App app = new App(packageName, apkList.get(), adb.getDevice());
+            App app = new App(packageName, apkList.get(), adb.getDevice(), logger);
             final boolean coroutineDebuggerInstalled;
             if (installCoroutineDebugger != null) {
                 coroutineDebuggerInstalled = installCoroutineDebugger.get();
@@ -291,7 +291,7 @@ public class Deployer {
 
         runner.runAsync(canceller);
 
-        App app = new App(pkgName, apks.get(), adb.getDevice());
+        App app = new App(pkgName, apks.get(), adb.getDevice(), logger);
 
         final boolean coroutineDebuggerInstalled;
         if (installCoroutineDebugger != null) {
@@ -418,7 +418,7 @@ public class Deployer {
             throw result.getException();
         }
 
-        App app = new App(packageName.get(), newFiles.get(), adb.getDevice());
+        App app = new App(packageName.get(), newFiles.get(), adb.getDevice(), logger);
 
         boolean skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
         return new Result(skippedInstall, false, false, app);
@@ -524,7 +524,7 @@ public class Deployer {
         // Wait only for swap to finish
         runner.runAsync(canceller);
 
-        App app = new App(packageName.get(), newFiles.get(), adb.getDevice());
+        App app = new App(packageName.get(), newFiles.get(), adb.getDevice(), logger);
 
         // TODO: May be notify user we IWI'ed.
         // deployResult.didIwi = true;
