@@ -28,22 +28,26 @@ import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManag
 import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
 import com.android.build.gradle.internal.instrumentation.loadClassData
 import com.android.build.gradle.internal.instrumentation.saveClassData
+import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
+import com.android.build.gradle.internal.tasks.JarsIdentityMapping
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.files.SerializableFileChanges
 import com.android.builder.utils.isValidZipEntryName
+import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -68,7 +72,6 @@ import java.util.zip.ZipInputStream
 /**
  * A task that instruments the project classes with the asm visitors registered via the DSL.
  */
-// TODO: Add parallelism
 @CacheableTask
 abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
@@ -128,199 +131,319 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         private set
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val classesHierarchyResolver = classesHierarchyBuildService.get()
-            .getClassesHierarchyResolverBuilder()
-            .addProjectSources(inputClassesDir.files)
-            .addProjectSources(inputJarsWithIdentity.inputJars.files)
-            .addDependenciesSources(runtimeClasspath.files)
-            .addDependenciesSources(bootClasspath.files)
-            .build()
         if (inputChanges.isIncremental) {
-            doIncrementalTaskAction(inputChanges, classesHierarchyResolver)
+            doIncrementalTaskAction(inputChanges)
         } else {
-            doFullTaskAction(inputChanges, classesHierarchyResolver)
+            doFullTaskAction(inputChanges)
         }
     }
 
-    private fun doFullTaskAction(
-        inputChanges: InputChanges,
-        classesHierarchyResolver: ClassesHierarchyResolver
-    ) {
+    private fun configureParams(params: BaseWorkerParams, inputChanges: InputChanges) {
+        params.initializeFromAndroidVariantTask(this)
+
+        params.visitorsList.set(visitorsList)
+        params.asmApiVersion.set(asmApiVersion)
+        params.framesComputationMode.set(framesComputationMode)
+        params.shouldPackageProfilerDependencies.set(
+            shouldPackageProfilerDependencies.getOrElse(false)
+        )
+        params.profilingTransforms.set(profilingTransforms.getOrElse(emptyList()))
+        params.projectSources.from(inputClassesDir).from(inputJarsWithIdentity.inputJars)
+        params.dependenciesSources.from(runtimeClasspath).from(bootClasspath)
+        params.mappingState.set(inputJarsWithIdentity.getMappingState(inputChanges))
+        params.jarsOutputDir.set(jarsOutputDir)
+        params.classesHierarchyBuildService.set(classesHierarchyBuildService)
+        params.classesOutputDir.set(classesOutputDir)
+        params.incrementalFolder.set(incrementalFolder)
+    }
+
+    private fun doFullTaskAction(inputChanges: InputChanges) {
         incrementalFolder.mkdirs()
         FileUtils.deleteDirectoryContents(classesOutputDir.get().asFile)
         FileUtils.deleteDirectoryContents(incrementalFolder)
 
-        getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
-            inputClassesDir.files.filter(File::exists).forEach {
-                instrumentationManager.instrumentClassesFromDirectoryToDirectory(
-                    it,
-                    classesOutputDir.get().asFile
-                )
-            }
-
-            processJars(instrumentationManager, inputChanges, false)
+        workerExecutor.noIsolation().submit(TransformClassesFullAction::class.java) {
+            configureParams(it, inputChanges)
+            it.inputClassesDir.from(inputClassesDir)
+            it.inputJarsDir.set(inputJarsDir)
         }
-
-        updateIncrementalState(emptySet(), classesHierarchyResolver)
     }
 
-    private fun doIncrementalTaskAction(
-        inputChanges: InputChanges,
-        classesHierarchyResolver: ClassesHierarchyResolver
-    ) {
+    private fun doIncrementalTaskAction(inputChanges: InputChanges) {
         val previouslyQueriedClasses = incrementalFolder.listFiles()!!.map {
             it.name.removeSuffix(DOT_JSON)
         }.toSet()
 
-        inputChanges.getFileChanges(inputClassesDir).filter { it.changeType == ChangeType.MODIFIED}
-            .forEach {
+        inputChanges.getFileChanges(inputClassesDir).filter { it.changeType == ChangeType.MODIFIED }
+            .filter {
                 val className = it.normalizedPath.removeSuffix(DOT_CLASS)
                     .replace('/', '.')
                 // check if this class that changed was queried in a previous build
-                if (previouslyQueriedClasses.contains(className)) {
-                    val classDataFromLastBuild =
-                        loadClassData(File(incrementalFolder, className + DOT_JSON))!!
-                    val currentClassData =
-                        classesHierarchyResolver.maybeLoadClassDataForClass(className)
+                previouslyQueriedClasses.contains(className)
+            }
+            .let { changes ->
+                if (changes.isNotEmpty()) {
+                    val classesHierarchyResolver = classesHierarchyBuildService.get()
+                        .getClassesHierarchyResolverBuilder()
+                        .addProjectSources(inputClassesDir.files)
+                        .addProjectSources(inputJarsWithIdentity.inputJars.files)
+                        .addDependenciesSources(runtimeClasspath.files)
+                        .addDependenciesSources(bootClasspath.files)
+                        .build()
 
-                    // the class data changed so we need to run the full task action
-                    if (classDataFromLastBuild != currentClassData) {
-                        doFullTaskAction(inputChanges, classesHierarchyResolver)
-                        return
+                    changes.forEach {
+                        val className = it.normalizedPath.removeSuffix(DOT_CLASS)
+                            .replace('/', '.')
+                        val classDataFromLastBuild =
+                            loadClassData(File(incrementalFolder, className + DOT_JSON))!!
+                        val currentClassData =
+                            classesHierarchyResolver.maybeLoadClassDataForClass(className)
+
+                        // the class data changed so we need to run the full task action
+                        if (classDataFromLastBuild != currentClassData) {
+                            doFullTaskAction(inputChanges)
+                            return
+                        }
                     }
                 }
-        }
-
-        getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
-            val classesChanges = inputChanges.getFileChanges(inputClassesDir).toSerializable()
-
-            classesChanges.removedFiles.plus(classesChanges.modifiedFiles).forEach {
-                val outputFile = classesOutputDir.get().asFile.resolve(it.normalizedPath)
-                FileUtils.deleteIfExists(outputFile)
             }
 
-            classesChanges.addedFiles.plus(classesChanges.modifiedFiles).forEach {
-                val outputFile = classesOutputDir.get().asFile.resolve(it.normalizedPath)
-                instrumentationManager.instrumentModifiedFile(
-                        inputFile = it.file,
-                        outputFile = outputFile,
-                        packageName = it.normalizedPath.removeSuffix("/${it.file.name}")
-                                .replace('/', '.')
-                )
-            }
-
-            processJars(instrumentationManager, inputChanges, true)
-        }
-
-        updateIncrementalState(previouslyQueriedClasses, classesHierarchyResolver)
-    }
-
-    private fun updateIncrementalState(
-        previouslyQueriedClasses: Set<String>,
-        classesHierarchyResolver: ClassesHierarchyResolver
-    ) {
-        classesHierarchyResolver.queriedProjectClasses.forEach { classData ->
-            // we know that the data of the classes in previouslyQueriedClasses didn't change so
-            // just save the classes that weren't queried before
-            if (!previouslyQueriedClasses.contains(classData.className)) {
-                saveClassData(
-                    File(incrementalFolder, classData.className + DOT_JSON),
-                    classData
-                )
+        workerExecutor.noIsolation().submit(TransformClassesIncrementalAction::class.java) {
+            configureParams(it, inputChanges)
+            it.inputClassesDirChanges.set(
+                inputChanges.getFileChanges(inputClassesDir).toSerializable()
+            )
+            if (inputJarsDir.isPresent) {
+                it.inputJarsChanges.set(inputChanges.getFileChanges(inputJarsDir).toSerializable())
             }
         }
     }
 
-    private fun processJars(
-            instrumentationManager: AsmInstrumentationManager,
-            inputChanges: InputChanges,
-            isIncremental: Boolean
-    ) {
-        if (inputJarsDir.isPresent) {
-            if (isIncremental) {
-                inputChanges.getFileChanges(inputJarsDir).forEach { inputJar ->
-                    val instrumentedJar = File(jarsOutputDir.get().asFile, inputJar.file.name)
-                    FileUtils.deleteIfExists(instrumentedJar)
-                    if (inputJar.changeType == ChangeType.ADDED ||
-                            inputJar.changeType == ChangeType.MODIFIED) {
-                        instrumentationManager.instrumentClassesFromJarToJar(inputJar.file,
-                                instrumentedJar)
-                    }
-                }
-            } else {
-                FileUtils.deleteDirectoryContents(jarsOutputDir.get().asFile)
-                extractProfilerDependencyJars()
-                inputJarsDir.get().asFile.listFiles()?.forEach { inputJar ->
-                    val instrumentedJar = File(jarsOutputDir.get().asFile, inputJar.name)
-                    instrumentationManager.instrumentClassesFromJarToJar(inputJar, instrumentedJar)
-                }
-            }
-        } else {
-            val mappingState = inputJarsWithIdentity.getMappingState(inputChanges)
-            if (mappingState.reprocessAll) {
-                FileUtils.deleteDirectoryContents(jarsOutputDir.get().asFile)
-                extractProfilerDependencyJars()
-            }
-            mappingState.jarsInfo.forEach { (file, info) ->
-                if (info.hasChanged) {
-                    val instrumentedJar = File(jarsOutputDir.get().asFile, info.identity + DOT_JAR)
-                    FileUtils.deleteIfExists(instrumentedJar)
-                    instrumentationManager.instrumentClassesFromJarToJar(file, instrumentedJar)
-                }
-            }
-        }
+    abstract class BaseWorkerParams: ProfileAwareWorkAction.Parameters() {
+        @get:Nested
+        abstract val visitorsList: ListProperty<AsmClassVisitorFactory<*>>
+        abstract val asmApiVersion: Property<Int>
+        abstract val framesComputationMode: Property<FramesComputationMode>
+        abstract val shouldPackageProfilerDependencies: Property<Boolean>
+        abstract val profilingTransforms: ListProperty<String>
+        abstract val projectSources: ConfigurableFileCollection
+        abstract val dependenciesSources: ConfigurableFileCollection
+        abstract val mappingState: Property<JarsIdentityMapping>
+        abstract val jarsOutputDir: DirectoryProperty
+        @get:Internal
+        abstract val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+        abstract val classesOutputDir: DirectoryProperty
+        abstract val incrementalFolder: RegularFileProperty
     }
 
-    /**
-     * Extract profiler dependency jars and add them to the project jars as they need to be packaged
-     * with the rest of the classes.
-     */
-    private fun extractProfilerDependencyJars() {
-        if (shouldPackageProfilerDependencies.getOrElse(false)) {
-            profilingTransforms.get().forEach { path ->
-                val profilingTransformFile = File(path)
-                extractDependencyJars(profilingTransformFile) { name: String ->
-                    FileUtils.join(
-                            jarsOutputDir.get().asFile,
-                            "profiler-deps",
-                            profilingTransformFile.nameWithoutExtension,
-                            name + DOT_JAR
+    abstract class TransformClassesWorkerAction<T: BaseWorkerParams>: ProfileAwareWorkAction<T>() {
+
+        protected fun updateIncrementalState(
+            previouslyQueriedClasses: Set<String>,
+            classesHierarchyResolver: ClassesHierarchyResolver
+        ) {
+            classesHierarchyResolver.queriedProjectClasses.forEach { classData ->
+                // we know that the data of the classes in previouslyQueriedClasses didn't change so
+                // just save the classes that weren't queried before
+                if (!previouslyQueriedClasses.contains(classData.className)) {
+                    saveClassData(
+                        File(
+                            parameters.incrementalFolder.get().asFile,
+                            classData.className + DOT_JSON
+                        ),
+                        classData
                     )
                 }
             }
         }
-    }
 
-    private fun extractDependencyJars(inputJar: File, outputLocation: (String) -> File) {
-        // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
-        // we extract the resources directly as a zip file.
-        ZipInputStream(FileInputStream(inputJar)).use { zis ->
-            val pattern = Pattern.compile("dependencies/(.*)\\.jar")
-            var entry: ZipEntry? = zis.nextEntry
-            while (entry != null && isValidZipEntryName(entry)) {
-                val matcher = pattern.matcher(entry.name)
-                if (matcher.matches()) {
-                    val name = matcher.group(1)
-                    val outputJar: File = outputLocation.invoke(name)
-                    Files.createParentDirs(outputJar)
-                    FileOutputStream(outputJar).use { fos -> ByteStreams.copy(zis, fos) }
+        /**
+         * Extract profiler dependency jars and add them to the project jars as they need to be
+         * packaged with the rest of the classes.
+         */
+        protected fun extractProfilerDependencyJars() {
+            if (parameters.shouldPackageProfilerDependencies.getOrElse(false)) {
+                parameters.profilingTransforms.get().forEach { path ->
+                    val profilingTransformFile = File(path)
+                    extractDependencyJars(profilingTransformFile) { name: String ->
+                        FileUtils.join(
+                            parameters.jarsOutputDir.get().asFile,
+                            "profiler-deps",
+                            profilingTransformFile.nameWithoutExtension,
+                            name + DOT_JAR
+                        )
+                    }
                 }
-                zis.closeEntry()
-                entry = zis.nextEntry
             }
+        }
+
+        private fun extractDependencyJars(inputJar: File, outputLocation: (String) -> File) {
+            // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
+            // we extract the resources directly as a zip file.
+            ZipInputStream(FileInputStream(inputJar)).use { zis ->
+                val pattern = Pattern.compile("dependencies/(.*)\\.jar")
+                var entry: ZipEntry? = zis.nextEntry
+                while (entry != null && isValidZipEntryName(entry)) {
+                    val matcher = pattern.matcher(entry.name)
+                    if (matcher.matches()) {
+                        val name = matcher.group(1)
+                        val outputJar: File = outputLocation.invoke(name)
+                        Files.createParentDirs(outputJar)
+                        FileOutputStream(outputJar).use { fos -> ByteStreams.copy(zis, fos) }
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+            }
+        }
+
+        abstract fun maybeProcessJacocoInstrumentedJars(
+            instrumentationManager: AsmInstrumentationManager
+        ): Boolean
+
+        fun processJars(instrumentationManager: AsmInstrumentationManager) {
+             if (!maybeProcessJacocoInstrumentedJars(instrumentationManager)) {
+                val mappingState = parameters.mappingState.get()
+                if (mappingState.reprocessAll) {
+                    FileUtils.deleteDirectoryContents(parameters.jarsOutputDir.get().asFile)
+                    extractProfilerDependencyJars()
+                }
+                mappingState.jarsInfo.forEach { (file, info) ->
+                    if (info.hasChanged) {
+                        val instrumentedJar =
+                            File(parameters.jarsOutputDir.get().asFile, info.identity + DOT_JAR)
+                        FileUtils.deleteIfExists(instrumentedJar)
+                        instrumentationManager.instrumentClassesFromJarToJar(file, instrumentedJar)
+                    }
+                }
+            }
+        }
+
+        protected fun getInstrumentationManager(
+            classesHierarchyResolver: ClassesHierarchyResolver
+        ): AsmInstrumentationManager {
+            return AsmInstrumentationManager(
+                visitors = parameters.visitorsList.get(),
+                apiVersion = parameters.asmApiVersion.get(),
+                classesHierarchyResolver = classesHierarchyResolver,
+                framesComputationMode = parameters.framesComputationMode.get(),
+                profilingTransforms = parameters.profilingTransforms.getOrElse(emptyList())
+            )
+        }
+
+        protected fun getClassesHierarchyResolver(): ClassesHierarchyResolver {
+            return parameters.classesHierarchyBuildService.get()
+                .getClassesHierarchyResolverBuilder()
+                .addProjectSources(parameters.projectSources.files)
+                .addDependenciesSources(parameters.dependenciesSources.files)
+                .build()
         }
     }
 
-    private fun getInstrumentationManager(
-        classesHierarchyResolver: ClassesHierarchyResolver
-    ): AsmInstrumentationManager {
-        return AsmInstrumentationManager(
-                visitors = visitorsList.get(),
-                apiVersion = asmApiVersion.get(),
-                classesHierarchyResolver = classesHierarchyResolver,
-                framesComputationMode = framesComputationMode.get(),
-                profilingTransforms = profilingTransforms.getOrElse(emptyList())
-        )
+    abstract class IncrementalWorkerParams: BaseWorkerParams() {
+        abstract val inputClassesDirChanges: Property<SerializableFileChanges>
+        abstract val inputJarsChanges: Property<SerializableFileChanges>
+    }
+
+    abstract class TransformClassesIncrementalAction:
+        TransformClassesWorkerAction<IncrementalWorkerParams>() {
+
+        override fun run() {
+            val classesHierarchyResolver = getClassesHierarchyResolver()
+
+            getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
+                val classesChanges = parameters.inputClassesDirChanges.get()
+
+                classesChanges.removedFiles.plus(classesChanges.modifiedFiles).forEach {
+                    val outputFile =
+                        parameters.classesOutputDir.get().asFile.resolve(it.normalizedPath)
+                    FileUtils.deleteIfExists(outputFile)
+                }
+
+                classesChanges.addedFiles.plus(classesChanges.modifiedFiles).forEach {
+                    val outputFile =
+                        parameters.classesOutputDir.get().asFile.resolve(it.normalizedPath)
+                    instrumentationManager.instrumentModifiedFile(
+                        inputFile = it.file,
+                        outputFile = outputFile,
+                        packageName = it.normalizedPath.removeSuffix("/${it.file.name}")
+                            .replace('/', '.')
+                    )
+                }
+
+                processJars(instrumentationManager)
+            }
+
+            updateIncrementalState(
+                previouslyQueriedClasses = parameters.incrementalFolder.get().asFile
+                    .listFiles()!!.map {
+                    it.name.removeSuffix(DOT_JSON)
+                }.toSet(),
+                classesHierarchyResolver = classesHierarchyResolver
+            )
+        }
+
+        override fun maybeProcessJacocoInstrumentedJars(
+            instrumentationManager: AsmInstrumentationManager
+        ): Boolean {
+            if (!parameters.inputJarsChanges.isPresent) {
+                return false
+            }
+            parameters.inputJarsChanges.get().fileChanges.forEach { inputJar ->
+                val instrumentedJar =
+                    File(parameters.jarsOutputDir.get().asFile, inputJar.file.name)
+                FileUtils.deleteIfExists(instrumentedJar)
+                if (inputJar.fileStatus == FileStatus.NEW ||
+                    inputJar.fileStatus == FileStatus.CHANGED
+                ) {
+                    instrumentationManager.instrumentClassesFromJarToJar(
+                        inputJar.file,
+                        instrumentedJar
+                    )
+                }
+            }
+            return true
+        }
+    }
+
+    abstract class FullActionWorkerParams: BaseWorkerParams() {
+        abstract val inputClassesDir: ConfigurableFileCollection
+        abstract val inputJarsDir: DirectoryProperty
+    }
+
+    abstract class TransformClassesFullAction:
+        TransformClassesWorkerAction<FullActionWorkerParams>() {
+
+        override fun run() {
+            val classesHierarchyResolver = getClassesHierarchyResolver()
+            getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
+                parameters.inputClassesDir.files.filter(File::exists).forEach {
+                    instrumentationManager.instrumentClassesFromDirectoryToDirectory(
+                        it,
+                        parameters.classesOutputDir.get().asFile
+                    )
+                }
+
+                processJars(instrumentationManager)
+            }
+
+            updateIncrementalState(emptySet(), classesHierarchyResolver)
+        }
+
+        override fun maybeProcessJacocoInstrumentedJars(
+            instrumentationManager: AsmInstrumentationManager
+        ): Boolean {
+            if (!parameters.inputJarsDir.isPresent) {
+                return false
+            }
+            FileUtils.deleteDirectoryContents(parameters.jarsOutputDir.get().asFile)
+            extractProfilerDependencyJars()
+            parameters.inputJarsDir.get().asFile.listFiles()?.forEach { inputJar ->
+                val instrumentedJar = File(parameters.jarsOutputDir.get().asFile, inputJar.name)
+                instrumentationManager.instrumentClassesFromJarToJar(inputJar, instrumentedJar)
+            }
+            return true
+        }
     }
 
     class CreationAction(
