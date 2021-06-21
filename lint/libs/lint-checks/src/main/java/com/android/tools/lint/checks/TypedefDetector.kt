@@ -35,7 +35,6 @@ import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationBooleanValue
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationValue
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.isMinusOne
-import com.google.common.collect.Lists
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
@@ -47,6 +46,7 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
@@ -63,11 +63,14 @@ import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.UastBinaryOperator.Companion.IDENTITY_NOT_EQUALS
+import org.jetbrains.uast.UastBinaryOperator.Companion.NOT_EQUALS
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.toUElement
+import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
@@ -249,7 +252,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return
                 }
 
-                // If it's a constant (static/final) check that it's one of the allowed ones
+                // If it's a static or final constant, check that it's one of the allowed ones
                 if (resolved.hasModifierProperty(PsiModifier.STATIC) && resolved.hasModifierProperty(
                         PsiModifier.FINAL
                     )
@@ -315,7 +318,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val rangeAnnotation = RangeDetector.findIntRange(allAnnotations)
         if (rangeAnnotation != null && value !is PsiField) {
             // Allow @IntRange on this number, but only if it's a literal, not if it's some
-            // other (unrelated) constant)
+            // other (unrelated) constant
             if (RangeDetector.getIntRangeError(context, rangeAnnotation, argument) == null) {
                 return
             }
@@ -332,6 +335,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 is UCallExpression -> argument.resolve()
                 else -> null
             }
+
+            var unmatched: List<Any>? = null
             if (resolvedArgument is PsiModifierListOwner) {
                 val evaluator = context.evaluator
                 val annotations = evaluator.getAllAnnotations(resolvedArgument, true)
@@ -350,10 +355,40 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             }
 
                             // Superset?
-                            val param = getResolvedValues(paramValues, argument)
-                            val all = getResolvedValues(allowed, argument)
-                            if (all.containsAll(param)) {
+                            val provided = getResolvedValues(paramValues, argument)
+                            val allowedValues = getResolvedValues(allowed, argument)
+                            provided.removeAll(allowedValues)
+                            if (provided.isEmpty()) {
                                 return
+                            } else if (allowedValues.size > provided.size) {
+                                // Some overlap: list the unexpected constants
+                                unmatched = provided
+                                if (provided.size == 1) {
+                                    // If there's just a difference of one constant, check to see if we have
+                                    // a trivial scenario where we've made sure the constant isn't exactly that
+                                    // value. (This is just checking the most basic scenario; there are a bunch
+                                    // of ways this comparison be done, by value comparisons, by early returns, by
+                                    // earlier switch cases etc.)
+                                    val condition =
+                                        argument.getParentOfType<UIfExpression>()?.condition as? UBinaryExpression
+                                    if ((
+                                        condition?.operator == IDENTITY_NOT_EQUALS ||
+                                            condition?.operator == NOT_EQUALS
+                                        ) &&
+                                        provided[0] == getResolvedValue(condition.rightOperand, argument)
+                                    ) {
+                                        if (condition.leftOperand.asSourceString() == argument.asSourceString()) {
+                                            return
+                                        }
+                                        if (condition.leftOperand.sourcePsi?.text == argument.sourcePsi?.text) {
+                                            return
+                                        }
+                                        //noinspection LintImplPsiEquals
+                                        if (condition.leftOperand.tryResolve() == value) {
+                                            return
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -444,7 +479,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             // Check field initializers provided it's not a class field, in which case
-            // we'd be reading out literal values which we don't want to do)
+            // we'd be reading out literal values which we don't want to do
             if (value is PsiField && rangeAnnotation == null) {
                 val initializer = UastFacade.getInitializerBody(value)
                 if (initializer != null && initializer !is ULiteralExpression && initializer.sourcePsi !is PsiLiteralExpression) {
@@ -462,42 +497,29 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            reportTypeDef(
-                context, argument, errorNode, flag,
-                initializers, allAnnotations, annotation
-            )
+            reportTypeDef(context, argument, errorNode, flag, initializers, allAnnotations, annotation, unmatched)
         }
     }
 
-    private fun getResolvedValues(allowed: UExpression, context: UElement): List<Any> {
-        val result = Lists.newArrayList<Any>()
+    /** Returns PsiFields or constant values (ints or Strings) */
+    private fun getResolvedValues(allowed: UExpression, context: UElement): MutableList<Any> {
         if (allowed.isArrayInitializer()) {
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
-            for (expression in initializers) {
-                if (expression is ULiteralExpression) {
-                    val value = expression.value
-                    if (value != null) {
-                        result.add(value)
-                    }
-                } else if (expression is ExternalReferenceExpression) {
-                    val resolved = UastLintUtils.resolve(
-                        expression as ExternalReferenceExpression, context
-                    )
-                    if (resolved != null) {
-                        result.add(resolved)
-                    }
-                } else if (expression is UReferenceExpression) {
-                    val resolved = expression.resolve()
-                    if (resolved != null) {
-                        result.add(resolved)
-                    }
-                }
-            }
+            return initializers.mapNotNull { getResolvedValue(it, context) }.toMutableList()
         }
         // TODO -- worry about other types?
 
-        return result
+        return mutableListOf()
+    }
+
+    private fun getResolvedValue(expression: UExpression, context: UElement): Any? {
+        return when (expression) {
+            is ULiteralExpression -> expression.value
+            is ExternalReferenceExpression -> UastLintUtils.resolve(expression as ExternalReferenceExpression, context)
+            is UReferenceExpression -> expression.resolve()
+            else -> null
+        }
     }
 
     private fun reportTypeDef(
@@ -518,7 +540,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 false,
                 initializers,
                 allAnnotations,
-                annotation
+                annotation,
+                null
             )
         }
     }
@@ -530,11 +553,12 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         flag: Boolean,
         allowedValues: List<UExpression>,
         allAnnotations: List<UAnnotation>,
-        annotation: UAnnotation
+        annotation: UAnnotation,
+        unmatched: List<Any>?
     ) {
         // Allow "0" as initial value in variable expressions
         if (UastLintUtils.isZero(node)) {
-            val declaration = node.getParentOfType<UVariable>(UVariable::class.java, true)
+            val declaration = node.getParentOfType(UVariable::class.java, true)
             if (declaration != null && node == declaration.uastInitializer) {
                 return
             }
@@ -570,9 +594,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (rangeAnnotation != null) {
             // Allow @IntRange on this number
             val rangeError = RangeDetector.getIntRangeError(context, rangeAnnotation, node)
-            if (rangeError != null && !rangeError.isEmpty()) {
+            if (rangeError != null && rangeError.isNotEmpty()) {
                 message += " or " + Character.toLowerCase(rangeError[0]) + rangeError.substring(1)
             }
+        }
+
+        if (unmatched != null && unmatched.isNotEmpty()) {
+            message += ", but could be " + listAllowedValues(node, unmatched)
         }
 
         val locationNode = errorNode ?: node
@@ -636,24 +664,27 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun listAllowedValues(
         context: UElement,
-        allowedValues: List<UExpression>
+        allowedValues: List<Any>
     ): String {
         val sb = StringBuilder()
         for (allowedValue in allowedValues) {
             var s: String? = null
             var resolved: PsiElement? = null
-            if (allowedValue is ExternalReferenceExpression) {
-                resolved = UastLintUtils.resolve(allowedValue as ExternalReferenceExpression, context)
-            } else if (allowedValue is UReferenceExpression) {
-                resolved = allowedValue.resolve()
+            when (allowedValue) {
+                is UReferenceExpression -> resolved = allowedValue.resolve()
+                is PsiField -> resolved = allowedValue
+                is ExternalReferenceExpression -> resolved = UastLintUtils.resolve(allowedValue, context)
             }
-
             if (resolved is PsiField) {
                 val containingClassName = resolved.containingClass?.name ?: continue
                 s = containingClassName + "." + resolved.name
             }
             if (s == null) {
-                s = allowedValue.asSourceString()
+                s = when (allowedValue) {
+                    is UElement -> allowedValue.asSourceString()
+                    is String -> '"' + allowedValue + '"'
+                    else -> allowedValue.toString()
+                }
             }
             if (sb.isNotEmpty()) {
                 sb.append(", ")

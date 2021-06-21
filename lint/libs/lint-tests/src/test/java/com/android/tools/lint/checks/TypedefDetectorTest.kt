@@ -1765,4 +1765,96 @@ class TypedefDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testListDifference() {
+        // See b//174571734#comment9 for repro: this is extracted from a failure found in AndroidX
+        // running :camera:integration-tests:camera-testapp-extensions:lintDebug
+        lint().files(
+            java(
+                """
+                package androidx.camera.view;
+
+                import androidx.annotation.IntDef;
+                import androidx.camera.core.AspectRatio;
+                import androidx.camera.core.impl.ImageOutputConfig;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings({"unused", "FieldCanBeLocal", "FieldMayBeFinal"})
+                public class CameraController {
+                    private void setTargetOutputSize(ImageOutputConfig.Builder<?> builder,
+                                                     OutputSize outputSize) {
+                        builder.setTargetAspectRatio(outputSize.getAspectRatio()); // ERROR
+                        if (outputSize.getAspectRatio() != OutputSize.UNASSIGNED_ASPECT_RATIO) {
+                            builder.setTargetAspectRatio(outputSize.getAspectRatio()); // OK
+                        }
+                    }
+
+                    public static class OutputSize {
+                        public static final int UNASSIGNED_ASPECT_RATIO = -1;
+
+                        @Retention(RetentionPolicy.SOURCE)
+                        @IntDef(value = {UNASSIGNED_ASPECT_RATIO, AspectRatio.RATIO_4_3, AspectRatio.RATIO_16_9})
+                        public @interface OutputAspectRatio {
+                        }
+
+                        @OutputAspectRatio
+                        private int mAspectRatio = UNASSIGNED_ASPECT_RATIO;
+
+                        @OutputAspectRatio
+                        public int getAspectRatio() {
+                            return mAspectRatio;
+                        }
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package androidx.camera.core;
+
+                import androidx.annotation.IntDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                public class AspectRatio {
+                    public static final int RATIO_4_3 = 0;
+                    public static final int RATIO_16_9 = 1;
+
+                    private AspectRatio() {
+                    }
+
+                    @IntDef({RATIO_4_3, RATIO_16_9})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface Ratio {
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package androidx.camera.core.impl;
+
+                import androidx.camera.core.AspectRatio;
+
+                @SuppressWarnings("UnusedReturnValue")
+                public interface ImageOutputConfig {
+                    interface Builder<B> {
+                        B setTargetAspectRatio(@AspectRatio.Ratio int aspectRatio);
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            // , but could be X, Y or Z
+            // and add baseline matching
+            """
+            src/androidx/camera/view/CameraController.java:14: Error: Must be one of: AspectRatio.RATIO_4_3, AspectRatio.RATIO_16_9, but could be OutputSize.UNASSIGNED_ASPECT_RATIO [WrongConstant]
+                                    builder.setTargetAspectRatio(outputSize.getAspectRatio()); // ERROR
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }
