@@ -303,6 +303,7 @@ class PrefabPublishingTest(
                 }
 
                 buildFeatures {
+                    version "1.0.0-rc01"
                     prefabPublishing true
                 }
 
@@ -349,6 +350,17 @@ class PrefabPublishingTest(
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
         verifyModule(packageDir, gradleModuleName, true, "libfoo_static")
+        val packageMetadata = packageDir.resolve("prefab.json").readText()
+        Truth.assertThat(packageMetadata).isEqualTo(
+                """
+            {
+              "name": "$gradleModuleName",
+              "schema_version": 1,
+              "dependencies": [],
+              "version": "1.0.0"
+            }
+            """.trimIndent()
+        )
     }
 
     @Test
