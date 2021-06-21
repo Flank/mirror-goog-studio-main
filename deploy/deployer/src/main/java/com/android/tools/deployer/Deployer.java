@@ -16,10 +16,12 @@
 
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.App;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.Canceller;
 import com.android.tools.deployer.tasks.Task;
@@ -29,6 +31,7 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -113,9 +116,22 @@ public class Deployer {
      * by {@link DeployerException} thus this object is created only on successful deployments.
      */
     public static class Result {
-        public boolean skippedInstall = false;
-        public boolean needsRestart = false;
-        public boolean coroutineDebuggerInstalled = false;
+
+        public final boolean skippedInstall;
+        public final boolean needsRestart;
+        public final boolean coroutineDebuggerInstalled;
+        public final @NonNull App app;
+
+        public Result(boolean skippedInstall,
+                boolean needsRestart,
+                boolean coroutineDebuggerInstalled,
+                @NonNull App app) {
+
+            this.skippedInstall = skippedInstall;
+            this.needsRestart = needsRestart;
+            this.coroutineDebuggerInstalled = coroutineDebuggerInstalled;
+            this.app = app;
+        }
     }
 
     /**
@@ -161,8 +177,7 @@ public class Deployer {
             Task<List<Apk>> apkList =
                     runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
-            Result result = new Result();
-            result.skippedInstall =
+            boolean skippedInstall =
                     !apkInstaller.install(
                             packageName, apks, options, installMode, metrics.getDeployMetrics());
 
@@ -182,10 +197,14 @@ public class Deployer {
             runner.create(Tasks.CACHE, splitter::cache, apkList);
             runner.runAsync(canceller);
 
+            App app = new App(packageName, apkList.get(), adb.getDevice());
+            final boolean coroutineDebuggerInstalled;
             if (installCoroutineDebugger != null) {
-                installCoroutineDebugger.get();
+                coroutineDebuggerInstalled = installCoroutineDebugger.get();
+            } else {
+                coroutineDebuggerInstalled = false;
             }
-            return result;
+            return new Result(skippedInstall, false, coroutineDebuggerInstalled, app);
         }
     }
 
@@ -244,10 +263,10 @@ public class Deployer {
         CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
         runner.create(Tasks.CACHE, splitter::cache, apks);
 
-        Result deployResult = new Result();
+        boolean skippedInstall = false;
         if (!installSuccess) {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
-            deployResult.skippedInstall =
+            skippedInstall =
                     !apkInstaller.install(
                             pkgName,
                             paths,
@@ -272,11 +291,16 @@ public class Deployer {
 
         runner.runAsync(canceller);
 
+        App app = new App(pkgName, apks.get(), adb.getDevice());
+
+        final boolean coroutineDebuggerInstalled;
         if (installCoroutineDebugger != null) {
-            deployResult.coroutineDebuggerInstalled = installCoroutineDebugger.get();
+            coroutineDebuggerInstalled = installCoroutineDebugger.get();
+        } else {
+            coroutineDebuggerInstalled = false;
         }
 
-        return deployResult;
+        return new Result(skippedInstall, false, coroutineDebuggerInstalled, app);
     }
 
     public Result codeSwap(
@@ -379,7 +403,8 @@ public class Deployer {
 
         TaskResult result = runner.run(canceller);
         result.getMetrics().forEach(metrics::add);
-
+        Task<String> packageName =
+                runner.create(Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, newFiles);
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
@@ -393,9 +418,10 @@ public class Deployer {
             throw result.getException();
         }
 
-        Result deployResult = new Result();
-        deployResult.skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
-        return deployResult;
+        App app = new App(packageName.get(), newFiles.get(), adb.getDevice());
+
+        boolean skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
+        return new Result(skippedInstall, false, false, app);
     }
 
     private Result optimisticSwap(
@@ -498,13 +524,12 @@ public class Deployer {
         // Wait only for swap to finish
         runner.runAsync(canceller);
 
-        Result deployResult = new Result();
+        App app = new App(packageName.get(), newFiles.get(), adb.getDevice());
+
         // TODO: May be notify user we IWI'ed.
         // deployResult.didIwi = true;
-        if (options.fastRestartOnSwapFail && !swapResultTask.get().hotswapSucceeded) {
-            deployResult.needsRestart = true;
-        }
-        return deployResult;
+        boolean needsRestart = options.fastRestartOnSwapFail && !swapResultTask.get().hotswapSucceeded;
+        return new Result(false, needsRestart, false, app);
     }
 
     private DeploymentCacheDatabase.Entry dumpWithCache(

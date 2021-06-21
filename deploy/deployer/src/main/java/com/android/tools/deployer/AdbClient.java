@@ -31,6 +31,7 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -334,5 +335,9 @@ public class AdbClient {
 
     public String getSkipVerificationOption(String packageName) {
         return ApkVerifierTracker.getSkipVerificationInstallationFlag(device, packageName);
+    }
+
+    public IDevice getDevice() {
+        return device;
     }
 }
