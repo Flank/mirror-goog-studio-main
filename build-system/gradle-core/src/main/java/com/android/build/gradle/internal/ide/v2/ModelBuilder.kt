@@ -27,12 +27,14 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension
@@ -239,7 +241,20 @@ class ModelBuilder<
         val instantAppResultMap = mutableMapOf<File, Boolean>()
 
         // gather variants
-        val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
+        var namespace: String? = null
+        var androidTestNamespace: String? = null
+        val variantList = variants.map {
+            namespace = it.namespace.get()
+            if (androidTestNamespace == null && it is HasAndroidTest) {
+                (it.androidTest as? TestComponentCreationConfig)?.let { androidTest ->
+                    // TODO(b/176931684) Use AndroidTest.namespace instead after we stop
+                    //  supporting using applicationId to namespace the test component R class.
+                    androidTestNamespace = androidTest.namespaceForR.get()
+                }
+            }
+
+            createVariant(it, buildFeatures, instantAppResultMap)
+        }
 
         return AndroidProjectImpl(
             path = project.path,

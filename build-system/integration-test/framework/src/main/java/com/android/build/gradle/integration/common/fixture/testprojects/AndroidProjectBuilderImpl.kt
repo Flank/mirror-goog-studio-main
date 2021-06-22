@@ -26,6 +26,7 @@ internal class AndroidProjectBuilderImpl(
 ): AndroidProjectBuilder {
 
     override var applicationId: String? = null
+    override var namespace: String? = null
     override var minSdk: Int? = null
     override var minSdkCodename: String? = null
 
@@ -76,6 +77,10 @@ internal class AndroidProjectBuilderImpl(
         sb.append("android {\n")
         sb.append("  defaultConfig.minSdkVersion $minSdkVersion\n")
         sb.append("  compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n")
+
+        namespace?.let {
+            sb.append("    namespace = \"$it\"\n")
+        }
 
         sb.append("  defaultConfig {\n")
         applicationId?.let {
