@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
 import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.SdkConstants.STRING_DEF_ANNOTATION
@@ -357,7 +358,31 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             // Superset?
                             val provided = getResolvedValues(paramValues, argument)
                             val allowedValues = getResolvedValues(allowed, argument)
-                            provided.removeAll(allowedValues)
+
+                            // Here we just want to use "provided.removeAll(allowedValues).
+                            // However, we want to treat some fields as
+                            // equivalent: Class.NAME and ClassCompat.NAME,
+                            // because AndroidX has duplicated a bunch of platform
+                            // constants for backwards compatibility purposes
+                            // and generally placed them in a Compat class.
+
+                            for (allowedValue in allowedValues) {
+                                if (!provided.remove(allowedValue) && allowedValue is PsiField) {
+                                    val containingClass = allowedValue.containingClass?.name ?: continue
+                                    val equivalentName = if (containingClass.endsWith(COMPAT_SUFFIX)) {
+                                        containingClass.removeSuffix(COMPAT_SUFFIX)
+                                    } else {
+                                        containingClass + COMPAT_SUFFIX
+                                    }
+                                    val fieldName = allowedValue.name
+                                    provided.removeIf {
+                                        it is PsiField && it.name == fieldName &&
+                                            it.containingClass?.name == equivalentName &&
+                                            it.containingClass?.qualifiedName?.startsWith(ANDROIDX_PKG_PREFIX) !=
+                                            allowedValue.containingClass?.qualifiedName?.startsWith(ANDROIDX_PKG_PREFIX)
+                                    }
+                                }
+                            }
                             if (provided.isEmpty()) {
                                 return
                             } else if (allowedValues.size > provided.size) {
@@ -699,6 +724,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             TypedefDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
+
+        // Compat classes in AndroidX are named with this suffix
+        private const val COMPAT_SUFFIX = "Compat"
 
         const val ATTR_OPEN = "open"
 

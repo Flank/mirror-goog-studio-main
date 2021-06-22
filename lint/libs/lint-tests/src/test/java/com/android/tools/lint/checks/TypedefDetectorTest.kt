@@ -1857,4 +1857,70 @@ class TypedefDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun test() {
+        lint().files(
+            java(
+                """
+                package androidx.camera.camera2.internal.compat.params;
+
+                import android.hardware.camera2.params.SessionConfiguration;
+                import android.os.Build;
+
+                import androidx.annotation.IntDef;
+                import androidx.annotation.RequiresApi;
+                import androidx.camera.camera2.internal.compat.CameraDeviceCompat;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings("unused")
+                @RequiresApi(api = Build.VERSION_CODES.P)
+                public class SessionConfigurationCompat {
+                    public static final int SESSION_REGULAR = CameraDeviceCompat.SESSION_OPERATION_MODE_NORMAL;
+                    public static final int SESSION_HIGH_SPEED =
+                            CameraDeviceCompat.SESSION_OPERATION_MODE_CONSTRAINED_HIGH_SPEED;
+
+                    private static final class SessionConfigurationCompatApi28Impl implements
+                            SessionConfigurationCompatImpl {
+
+                        private final SessionConfiguration mObject;
+
+                        private SessionConfigurationCompatApi28Impl(SessionConfiguration mObject) {
+                            this.mObject = mObject;
+                        }
+
+                        @Override
+                        public int getSessionType() {
+                            return mObject.getSessionType();
+                        }
+                    }
+
+                    @Retention(RetentionPolicy.SOURCE)
+                    @IntDef(value = {SESSION_REGULAR, SESSION_HIGH_SPEED})
+                    public @interface SessionMode {
+                    }
+
+                    private interface SessionConfigurationCompatImpl {
+                        @SessionMode
+                        int getSessionType();
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.camera.camera2.internal.compat;
+
+                public class CameraDeviceCompat {
+                    public static final int SESSION_OPERATION_MODE_NORMAL =
+                            0; // ICameraDeviceUser.NORMAL_MODE;
+                    public static final int SESSION_OPERATION_MODE_CONSTRAINED_HIGH_SPEED =
+                            1; // ICameraDeviceUser.CONSTRAINED_HIGH_SPEED_MODE;
+
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
