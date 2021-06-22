@@ -26,6 +26,7 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/highlander.h"
+#include "tools/base/deploy/installer/network_test.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -260,4 +261,40 @@ TEST_F(InstallerTest, TestHighlander) {
   EXPECT_TRUE(WIFSIGNALED(status));
   // Make sure the Child 1 was SIGKILLed.
   EXPECT_TRUE(WTERMSIG(status) == SIGKILL);
+}
+
+TEST_F(InstallerTest, TestNetworkTest_Bandwidth) {
+  int generated_data_size = 1024;
+  proto::InstallerRequest request;
+  auto network_request = request.mutable_network_test_request();
+  network_request->set_response_data_size(generated_data_size);
+
+  proto::InstallerResponse response;
+  Workspace workspace("");
+  NetworkTestCommand network_command(workspace);
+  network_command.ParseParameters(request);
+  network_command.Run(&response);
+
+  ASSERT_TRUE(response.has_network_test_response());
+  auto network_response = response.network_test_response();
+  ASSERT_GT(network_response.current_time_ns(), 0);
+  ASSERT_GT(network_response.processing_duration_ns(), 0);
+  ASSERT_EQ(network_response.data().size(), generated_data_size);
+}
+
+TEST_F(InstallerTest, TestNetworkTest_Ping) {
+  proto::InstallerRequest request;
+  auto network_request = request.mutable_network_test_request();
+
+  proto::InstallerResponse response;
+  Workspace workspace("");
+  NetworkTestCommand network_command(workspace);
+  network_command.ParseParameters(request);
+  network_command.Run(&response);
+
+  ASSERT_TRUE(response.has_network_test_response());
+  auto network_response = response.network_test_response();
+  ASSERT_GT(network_response.current_time_ns(), 0);
+  ASSERT_GT(network_response.processing_duration_ns(), 0);
+  ASSERT_EQ(network_response.data().size(), 0);
 }
