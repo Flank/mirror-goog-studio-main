@@ -748,6 +748,63 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun test165824329() {
+        lint().files(
+            xml(
+                "res/layout/activity_main.xml",
+                """
+                <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/navigation_host_fragment"
+                        android:name="androidx.navigation.fragment.NavHostFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:tag="tagNavHostFragment"
+                        app:defaultNavHost="true"
+                        app:navGraph="@navigation/nav_graph" />
+
+
+                </FrameLayout>
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.Fragment
+                import android.app.FragmentManager
+                import androidx.navigation.fragment.NavHostFragment
+
+                class Test {
+                    fun test(manager: FragmentManager) {
+                        val navController =
+                            (manager.findFragmentByTag("tagNavHostFragment") as NavHostFragment).navController
+                        val c = (manager.findFragmentById(R.id.navigation_host_fragment) as NavHostFragment).navController
+                    }
+                }
+            """
+            ),
+            kotlin(
+                """
+                package androidx.navigation.fragment
+
+                class NavHostFragment
+            """
+            ),
+            kotlin(
+                """
+                package androidx.fragment.app
+
+                class FragmentContainerView
+            """
+            )
+        ).run().expectClean()
+    }
+
     fun testFindFragmentByIdBatch() {
 
         lint().files(
