@@ -782,24 +782,12 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public void removeForward(int localPort, int remotePort)
+    public void removeForward(int localPort)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         AdbHelper.removeForward(
                 AndroidDebugBridge.getSocketAddress(),
                 this,
-                String.format("tcp:%d", localPort), //$NON-NLS-1$
-                String.format("tcp:%d", remotePort)); //$NON-NLS-1$
-    }
-
-    @Override
-    public void removeForward(
-            int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
-            throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.removeForward(
-                AndroidDebugBridge.getSocketAddress(),
-                this,
-                String.format("tcp:%d", localPort), //$NON-NLS-1$
-                String.format("%s:%s", namespace.getType(), remoteSocketName)); //$NON-NLS-1$
+                String.format("tcp:%d", localPort)); // $NON-NLS-1$
     }
 
     // @VisibleForTesting

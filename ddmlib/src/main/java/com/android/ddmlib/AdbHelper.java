@@ -970,20 +970,13 @@ public final class AdbHelper {
      * @param device the device on which to remove the port forwarding
      * @param localPortSpec specification of the local port that was forwarded, should be of format
      *     tcp:<port number>
-     * @param remotePortSpec specification of the remote port forwarded to, one of: tcp:<port>
-     *     localabstract:<unix domain socket name> localreserved:<unix domain socket name>
-     *     localfilesystem:<unix domain socket name> dev:<character device name> jdwp:<process pid>
-     *     (remote only)
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
     @Slow
     public static void removeForward(
-            InetSocketAddress adbSockAddr,
-            IDevice device,
-            String localPortSpec,
-            String remotePortSpec)
+            InetSocketAddress adbSockAddr, IDevice device, String localPortSpec)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
         SocketChannel adbChan = null;
@@ -1001,7 +994,7 @@ public final class AdbHelper {
 
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.okay) {
-                Log.w("remove-forward", "Error creating forward: " + resp.message);
+                Log.w("remove-forward", "Error removing forward: " + resp.message);
                 throw new AdbCommandRejectedException(resp.message);
             }
         } finally {

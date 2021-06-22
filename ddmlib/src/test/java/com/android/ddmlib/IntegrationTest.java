@@ -320,7 +320,7 @@ public class IntegrationTest {
                 assertTrue(serverResult.get());
 
                 // Test removeForward.
-                devices[0].removeForward(serverSocket.getLocalPort(), 0);
+                devices[0].removeForward(serverSocket.getLocalPort());
                 assertEquals(0, deviceState.getAllPortForwarders().size());
             }
         } finally {
