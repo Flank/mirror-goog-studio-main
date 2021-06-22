@@ -24,22 +24,29 @@ import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.DeployServiceGrpc;
 import com.android.deploy.service.proto.Service;
+import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.AdbClient;
+import com.android.tools.deployer.AdbInstaller;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
+import com.android.tools.deployer.Installer;
+import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
-
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
+    public static final int MAX_BUFFER_SIZE = 1024 * 1024;
     private static final int GET_DEBUG_PORT_RETRY_LIMIT = 10;
     private AndroidDebugBridge myActiveBridge;
     private Server myServer;
@@ -193,6 +200,112 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
                         .addAllMetric(convertToMetricsProto(myDeployRunner.getMetrics()))
                         .build());
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void runNetworkTest(
+            Service.NetworkTestRequest request,
+            StreamObserver<Service.NetworkTestResponse> responseObserver) {
+        IDevice device = getDeviceBySerial(request.getDeviceId());
+        DeployLogger logger = new DeployLogger(DeployLogger.Level.ERROR);
+        AdbClient adb = new AdbClient(device, logger);
+        List<DeployMetric> metrics = new ArrayList<>();
+        Installer installer =
+                new AdbInstaller(null, adb, metrics, logger, AdbInstaller.Mode.DAEMON);
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        switch (request.getTest().getType()) {
+            case BANDWIDTH:
+                response = doBandwidthTest(installer, request.getTest());
+                break;
+            case PING:
+                response = doPingTest(installer, request.getTest());
+                break;
+            case UNKNOWN:
+            case UNRECOGNIZED:
+                break;
+        }
+
+        responseObserver.onNext(response.setTest(request.getTest()).build());
+        responseObserver.onCompleted();
+    }
+
+    @VisibleForTesting
+    public Service.NetworkTestResponse.Builder doBandwidthTest(
+            Installer installer, Service.NetworkTest testParams) {
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        try {
+            int testSizeInBytes = testParams.getNumberOfBytes();
+            int bufferSize = Math.min(MAX_BUFFER_SIZE, testSizeInBytes);
+            int bytesSent = 0;
+            int bytesReceived = 0;
+            if (testParams.getHostToDevice()) {
+                // Fill the buffer with random data making it harder to compress if compression is
+                // enabled in grpc.
+                ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+                Random random = new Random();
+                random.nextBytes(buffer.array());
+                ByteString data = ByteString.copyFrom(buffer);
+                long startTime = System.nanoTime();
+                while (bytesSent < testSizeInBytes) {
+                    Deploy.NetworkTestRequest testRequest =
+                            Deploy.NetworkTestRequest.newBuilder()
+                                    .setData(data)
+                                    .setCurrentTimeNs(System.nanoTime())
+                                    .build();
+                    Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                    bytesSent += testRequest.getSerializedSize();
+                    bytesReceived += testResponse.getSerializedSize();
+                }
+                response.setDurationNs(System.nanoTime() - startTime);
+            } else {
+                long startTime = System.nanoTime();
+                while (bytesReceived < testSizeInBytes) {
+                    Deploy.NetworkTestRequest testRequest =
+                            Deploy.NetworkTestRequest.newBuilder()
+                                    .setResponseDataSize(bufferSize)
+                                    .setCurrentTimeNs(System.nanoTime())
+                                    .build();
+                    Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                    startTime += testResponse.getProcessingDurationNs();
+                    bytesSent += testRequest.getSerializedSize();
+                    bytesReceived += testResponse.getSerializedSize();
+                }
+                response.setDurationNs(System.nanoTime() - startTime);
+            }
+            response.setSentBytes(bytesSent);
+            response.setReceivedBytes(bytesReceived);
+        } catch (IOException ex) {
+            response.setError(ex.getMessage());
+        }
+        return response;
+    }
+
+    @VisibleForTesting
+    public Service.NetworkTestResponse.Builder doPingTest(
+            Installer installer, Service.NetworkTest testParams) {
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        try {
+            if (testParams.getHostToDevice()) {
+                Deploy.NetworkTestRequest testRequest =
+                        Deploy.NetworkTestRequest.newBuilder().build();
+                long startTime = System.nanoTime();
+                Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                startTime += testResponse.getProcessingDurationNs();
+                response.setDurationNs(System.nanoTime() - startTime);
+            } else {
+                Deploy.NetworkTestRequest testRequest =
+                        Deploy.NetworkTestRequest.getDefaultInstance();
+                Deploy.NetworkTestResponse startPingResponse = installer.networkTest(testRequest);
+                Deploy.NetworkTestResponse endPingResponse = installer.networkTest(testRequest);
+                long startTime =
+                        startPingResponse.getProcessingDurationNs()
+                                + startPingResponse.getCurrentTimeNs();
+                response.setDurationNs(endPingResponse.getCurrentTimeNs() - startTime);
+            }
+        } catch (IOException ex) {
+            response.setError(ex.getMessage());
+        }
+        return response;
     }
 
     private List<Service.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {

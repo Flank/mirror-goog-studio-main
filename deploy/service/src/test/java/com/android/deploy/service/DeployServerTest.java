@@ -16,6 +16,7 @@
 
 package com.android.deploy.service;
 
+import static com.android.deploy.service.DeployServer.MAX_BUFFER_SIZE;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -27,11 +28,13 @@ import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Service;
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
 import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -184,6 +187,53 @@ public class DeployServerTest {
         assertThat(actualMetric.getName()).isEqualTo(metrics.get(0).getName());
         assertThat(actualMetric.getStartNs()).isEqualTo(metrics.get(0).getStartTimeNs());
         assertThat(actualMetric.getEndNs()).isEqualTo(metrics.get(0).getEndTimeNs());
+    }
+
+    @Test
+    public void testBandwidthTestToDevice() {
+        int bytesToSend = MAX_BUFFER_SIZE * 5;
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployerRunner runner = mock(DeployerRunner.class);
+        DeployServer server = new DeployServer(bridge, runner);
+        Service.NetworkTest request =
+                Service.NetworkTest.newBuilder()
+                        .setType(Service.NetworkTest.Type.BANDWIDTH)
+                        .setHostToDevice(true)
+                        .setNumberOfBytes(bytesToSend)
+                        .build();
+        FakeInstaller installer = new FakeInstaller();
+        Service.NetworkTestResponse response = server.doBandwidthTest(installer, request).build();
+        List<Deploy.NetworkTestRequest> requestList = installer.getCapturedNetworkRequest();
+        assertThat(requestList).hasSize(5);
+        assertThat(requestList.get(0).getData()).hasSize(MAX_BUFFER_SIZE);
+        assertThat(requestList.get(0).getCurrentTimeNs()).isGreaterThan(0L);
+        assertThat(response.getSentBytes()).isGreaterThan((long) bytesToSend);
+        assertThat(response.getDurationNs()).isGreaterThan(0L);
+    }
+
+    @Test
+    public void testBandwidthTestToHost() {
+        int bytesToReceive = 10;
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployerRunner runner = mock(DeployerRunner.class);
+        DeployServer server = new DeployServer(bridge, runner);
+        Service.NetworkTest request =
+                Service.NetworkTest.newBuilder()
+                        .setType(Service.NetworkTest.Type.BANDWIDTH)
+                        .setHostToDevice(false)
+                        .setNumberOfBytes(bytesToReceive)
+                        .build();
+        FakeInstaller installer = new FakeInstaller();
+        Service.NetworkTestResponse response = server.doBandwidthTest(installer, request).build();
+        List<Deploy.NetworkTestRequest> requestList = installer.getCapturedNetworkRequest();
+        assertThat(requestList).hasSize(5);
+        assertThat(requestList.get(0).getCurrentTimeNs()).isGreaterThan(0L);
+        assertThat(response.getReceivedBytes()).isAtLeast((long) bytesToReceive);
+        assertThat(response.getDurationNs()).isGreaterThan(0L);
     }
 
     private IDevice mockDevice(@NonNull String serial, @NonNull IDevice.DeviceState state) {

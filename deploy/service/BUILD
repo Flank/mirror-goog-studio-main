@@ -27,6 +27,7 @@ java_binary(
         "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/deployer:tools.deployer",
+        "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
     ],

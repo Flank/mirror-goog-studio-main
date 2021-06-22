@@ -58,6 +58,67 @@ service DeployService {
    */
   rpc InstallApk(InstallApkRequest) returns (InstallApkResponse) {
   }
+
+  /*
+   * This RPC allows for different types of network test to be established between the host and
+   * device. A bandwidth test that sends data to the installer daemon running on device. As well as
+   * a ping test that uses the installer daemon to calculate the round trip time (RTT) of data.
+   * The bandwidth test is used as a proxy for how fast data can be sent to or from the device. The
+   * test works by calling the installer daemon and sending it random data, or having the daemon
+   * send random data back. Data on both ends should not be stored in memory or on disk. The data is
+   * sent in chucks to reduce the overall memory footprint required. This adds some overhead via the
+   * gRPC protocol but if the amount of data is large enough it should not be significant.
+   * The ping test is used as a proxy for how long it takes to send a small payload to the device
+   * and for that payload to be returned. This API allows for capturing the RTT to the device, as
+   * well as RTT from the device.
+   */
+  rpc RunNetworkTest(NetworkTestRequest) returns (NetworkTestResponse) {
+  }
+}
+
+
+/*
+ * Settings to configure the network test.
+ */
+message NetworkTestRequest {
+    NetworkTest test = 1;
+    // The serial/device id to run the test on.
+    string device_id = 4;
+}
+
+/*
+ * Timing information as well as which test was run returned by the network test.
+ */
+message NetworkTestResponse {
+    NetworkTest test = 1;
+    uint64 duration_ns = 2;
+    uint64 sent_bytes = 3;
+    uint64 received_bytes = 4;
+    string error = 5;
+}
+
+/*
+ * What network test to run
+ */
+message NetworkTest {
+    /*
+     * The different types of network tests.
+     */
+    enum Type {
+        // Not set, no tests will be run.
+        UNKNOWN = 0;
+        // Runs the bandwidth test.
+        BANDWIDTH = 1;
+        // Runs the ping test.
+        PING = 2;
+    }
+    // What test type to run.
+    Type type = 1;
+    // True if the test captures timing information from the host to the device. False if the test
+    // should capture timing from device to host.
+    bool host_to_device = 2;
+    // Used only with type [BANDWIDTH]
+    uint32 number_of_bytes = 3;
 }
 
 /*
