@@ -47,7 +47,9 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:+", minRev = "2.3.0-alpha06")
-  addDependency(mavenCoordinate = "androidx.activity:activity-compose:+", minRev = "1.3.0-alpha02")
+  // activity-compose beta02 and higher requires Kotlin 1.5.0 and Compose 1.0.0-beta09.
+  // Pinning the version to alpha08 as supported version for beta07 of Compose.
+  addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.0-alpha08")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeVersionVarName}", configuration="androidTestImplementation")
   generateManifest(
     moduleData, activityClass, packageName, isLauncher, true,
