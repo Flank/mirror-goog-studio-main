@@ -90,7 +90,7 @@ class ApplicationIdInAppModelTest: ReferenceModelComparator(
 ) {
     @Test
     fun `test AndroidProject model`() {
-        ensureAndroidProjectDeltaIsEmpty()
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
 
     @Test
@@ -425,5 +425,74 @@ class AarApiJarModelTest : ReferenceModelComparator(
     @Test
     fun `test dependencies model`() {
         compareVariantDependenciesWith(goldenFileSuffix = "WithAar")
+    }
+}
+
+class AndroidTestNamespaceWithCustomAppIdTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                applicationId = "com.custom.appid"
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+
+    @Test
+    fun `test AndroidProject model`() {
+        // TODO(b/176931684) Once we stop using applicationId for the androidTestNamespace then
+        //  this will need to be changed as the namespace will be not be impacted by the
+        //  DSL-set appId
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
+    }
+}
+
+class AndroidTestNamespaceWithCustomNamespaceTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                namespace = "com.custom.namespace"
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+
+    @Test
+    fun `test AndroidProject model`() {
+        // TODO(b/176931684) Once we stop using applicationId for the androidTestNamespace then
+        //  this will need to be changed as the namespace will be impacted by the DSL-set ns
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }

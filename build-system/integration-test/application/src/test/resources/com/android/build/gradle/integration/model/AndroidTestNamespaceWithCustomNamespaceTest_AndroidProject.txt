@@ -1,0 +1,3 @@
+- AndroidProject:
+   - namespace            = "com.custom.namespace"
+   - androidTestNamespace = "com.custom.namespace.test"
