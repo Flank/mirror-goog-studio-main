@@ -182,7 +182,7 @@ class AndroidEval implements Eval {
     public boolean isInstanceOf(Value target, Type type) {
         try {
             Class<?> c = typeToClass(type);
-            c.isInstance(valueToObject(target));
+            return c.isInstance(valueToObject(target));
         } catch (ClassNotFoundException e) {
             handleThrowable(e);
         }

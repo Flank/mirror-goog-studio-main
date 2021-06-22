@@ -113,4 +113,10 @@ class TestTarget {
         array[1] = 1.0;
         return array[1];
     }
+
+    Object instanceOfObject = new Object();
+
+    public boolean isInstanceOf() {
+        return instanceOfObject instanceof Object;
+    }
 }

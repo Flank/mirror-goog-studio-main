@@ -171,6 +171,18 @@ public class MethodBodyEvaluatorTest {
         Assert.assertTrue(owner.returnDoubleFromArray() == r.doubleValue());
     }
 
+    @org.junit.Test
+    public void testInstanceOf() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "isInstanceOf")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Boolean z = (Boolean) result;
+        Assert.assertEquals(owner.isInstanceOf(), z.booleanValue());
+    }
+
     /**
      * Extract the bytecode data from a class file from a class. If this is run from intellij, it
      * searches for .class file in the idea out director. If this is run from a jar file, it
