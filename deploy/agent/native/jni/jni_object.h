@@ -27,17 +27,26 @@ namespace deploy {
 class JniObject {
  public:
   JniObject(JNIEnv* jni, jobject object) : jni_(jni), object_(object) {
-    // TODO - handle case where object is null.
-    class_ = jni_->GetObjectClass(object);
+    if (object) {
+      class_ = jni_->GetObjectClass(object);
+    } else {
+      class_ = nullptr;
+    }
   }
 
-  ~JniObject() { jni_->DeleteLocalRef(class_); }
+  ~JniObject() {
+    if (class_) {
+      jni_->DeleteLocalRef(class_);
+    }
+  }
 
   JniObject(JniObject&&) = default;
   JniObject& operator=(JniObject&&) = default;
 
   std::string ToString();
   jclass GetClass() { return class_; }
+
+  bool IsNull() { return object_ == nullptr; }
 
   jboolean CallBooleanMethod(const char* name, const char* signature, ...);
   jbyte CallByteMethod(const char* name, const char* signature, ...);

@@ -25,6 +25,7 @@
 
 #include <string>
 
+#include "tools/base/deploy/agent/native/class_finder.h"
 #include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
@@ -232,9 +233,10 @@ bool Instrumenter::ApplyCachedTransforms(
 
 bool Instrumenter::ApplyTransforms(
     const std::vector<const Transform*>& transforms) const {
+  ClassFinder finder(jvmti_, jni_);
   std::vector<jclass> classes;
   for (const auto& transform : transforms) {
-    jclass klass = jni_->FindClass(transform->GetClassName().c_str());
+    jclass klass = finder.FindClass(transform->GetClassName().c_str());
     if (klass == nullptr) {
       ErrEvent("Could not find class for instrumentation: " +
                transform->GetClassName());

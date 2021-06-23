@@ -31,17 +31,27 @@ jobject ClassFinder::GetThreadClassLoader() const {
 
 jobject ClassFinder::GetApplicationClassLoader() const {
   JniClass activity_thread(jni_, "android/app/ActivityThread");
-  return activity_thread
-      .CallStaticJniObjectMethod("currentApplication",
-                                 "()Landroid/app/Application;")
-      .GetJniObjectField("mLoadedApk", "Landroid/app/LoadedApk;")
-      .CallObjectMethod("getClassLoader", "()Ljava/lang/ClassLoader;");
+  JniObject current_app = activity_thread.CallStaticJniObjectMethod(
+      "currentApplication", "()Landroid/app/Application;");
+  if (current_app.IsNull()) {
+    // No error message, as this is expected when we instrument before the app
+    // is loaded, such as in IWI.
+    return nullptr;
+  }
+  JniObject loaded_apk =
+      current_app.GetJniObjectField("mLoadedApk", "Landroid/app/LoadedApk;");
+  if (loaded_apk.IsNull()) {
+    Log::E(
+        "ActivityThread.currentApplication().mLoadedApk was unexpectedly null");
+    return nullptr;
+  }
+  return loaded_apk.CallObjectMethod("getClassLoader",
+                                     "()Ljava/lang/ClassLoader;");
 }
 
 jclass ClassFinder::FindInClassLoader(jobject class_loader,
                                       const std::string& name) const {
   if (class_loader == nullptr) {
-    Log::E("Class loader was null.");
     return nullptr;
   }
 
@@ -51,6 +61,11 @@ jclass ClassFinder::FindInClassLoader(jobject class_loader,
           .CallObjectMethod(
               "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", java_name));
   jni_->DeleteLocalRef(java_name);
+
+  if (klass == nullptr) {
+      jni_->ExceptionClear();
+  }
+
   return klass;
 }
 
@@ -93,43 +108,26 @@ jclass ClassFinder::FindInLoadedClasses(const std::string& name) const {
 }
 
 jclass ClassFinder::FindClass(const std::string& name) const {
-  Log::V("Searching for class '%s' in the thread context classloader.",
-         name.c_str());
-
   jclass klass = FindInClassLoader(GetThreadClassLoader(), name);
   if (klass != nullptr) {
     return klass;
   }
-
-  jni_->ExceptionDescribe();
-  jni_->ExceptionClear();
-
-  Log::V("Searching for class '%s' in the application classloader.",
-         name.c_str());
 
   klass = FindInClassLoader(GetApplicationClassLoader(), name);
   if (klass != nullptr) {
     return klass;
   }
 
-  jni_->ExceptionDescribe();
-  jni_->ExceptionClear();
-
-  Log::V("Searching for class '%s' in the system classloader.", name.c_str());
-
   klass = jni_->FindClass(name.c_str());
   if (klass != nullptr) {
     return klass;
   }
 
-  jni_->ExceptionDescribe();
   jni_->ExceptionClear();
 
   // Note that this search is for all *loaded* classes; it will not find a class
   // that has not yet been loaded by the VM. Classes are typically loaded when
   // they are first used by the application.
-  Log::V("Searching for class '%s' in all loaded classes.", name.c_str());
-
   klass = FindInLoadedClasses(name);
   return klass;
 }
