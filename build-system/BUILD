@@ -361,6 +361,8 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle-proto:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-additional-test-output:agp_gradle_build_files",
+    "//tools/base/utp/android-test-plugin-host-additional-test-output-proto:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-host-coverage:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-host-coverage-proto:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-host-device-info:agp_gradle_build_files",

@@ -92,6 +92,7 @@ class UtpConfigFactoryTest {
 
     @Before
     fun setupMocks() {
+        `when`(mockDevice.apiLevel).thenReturn(30)
         `when`(mockDevice.serialNumber).thenReturn("mockDeviceSerialNumber")
         `when`(mockDevice.name).thenReturn("mockDeviceName")
         `when`(mockOutputDir.absolutePath).thenReturn("mockOutputDirPath")
@@ -132,7 +133,8 @@ class UtpConfigFactoryTest {
 
     private fun createForLocalDevice(
             testData: StaticTestData = this.testData,
-            useOrchestrator: Boolean = false
+            useOrchestrator: Boolean = false,
+            additionalTestOutputDir: File? = null,
     ): RunnerConfigProto.RunnerConfig {
         return UtpConfigFactory().createRunnerConfigProtoForLocalDevice(
                 mockDevice,
@@ -147,6 +149,7 @@ class UtpConfigFactoryTest {
                 mockRetentionConfig,
                 mockCoverageOutputDir,
                 useOrchestrator,
+                additionalTestOutputDir,
                 1234,
                 mockResultListenerClientCert,
                 mockResultListenerClientPrivateKey,
@@ -369,6 +372,25 @@ class UtpConfigFactoryTest {
                 single_coverage_file: "/data/data/com.example.application/coverage.ec"
                 run_as_package_name: "com.example.application"
                 output_directory_on_host: "mockCoverageOutputDir/deviceName/"
+            """
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithAdditionalTestOutput() {
+        val runnerConfigProto = createForLocalDevice(
+            additionalTestOutputDir = mockFile("additionalTestOutputDir")
+        )
+
+        val onDeviceDir = "/sdcard/Android/media/com.example.application/additional_test_output"
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            instrumentationArgs = mapOf(
+                "additionalTestOutputDir" to onDeviceDir,
+            ),
+            additionalTestOutputConfig = """
+               additional_output_directory_on_device: "${onDeviceDir}"
+               additional_output_directory_on_host: "additionalTestOutputDir"
             """
         )
     }

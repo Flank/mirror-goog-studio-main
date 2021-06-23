@@ -43,6 +43,7 @@ import org.mockito.Answers
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyIterable
+import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -98,6 +99,7 @@ class UtpTestRunnerTest {
                 any(RetentionConfig::class.java),
                 any(File::class.java),
                 anyBoolean(),
+                nullable(File::class.java),
                 anyInt(),
                 any(File::class.java),
                 any(File::class.java),

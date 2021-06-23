@@ -100,6 +100,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/base/utp/android-device-provider-gradle-proto",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
         "//tools/base/utp/android-test-plugin-host-coverage-proto",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
