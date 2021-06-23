@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PROFILEABLE_REPORTER_DETECTOR_H_
-#define PROFILEABLE_REPORTER_DETECTOR_H_
+#ifndef PROFILEABLE_PROFILEABLE_DETECTOR_H_
+#define PROFILEABLE_PROFILEABLE_DETECTOR_H_
 
 #include <memory>
-#include <ostream>
 #include <string>
 #include <unordered_map>
 
-#include "transport/native/utils/fs/file_system.h"
-#include "transport/native/utils/procfs_files.h"
+#include "daemon/daemon.h"
+#include "daemon/event_buffer.h"
+#include "utils/clock.h"
+#include "utils/fs/file_system.h"
+#include "utils/procfs_files.h"
 
-namespace ddmlib {
+namespace profiler {
 
 struct ProcessInfo {
   int32_t pid;
@@ -65,41 +67,41 @@ class ProfileableChecker {
 };
 
 // Detector for profileable apps.
-class Detector {
+class ProfileableDetector {
  public:
-  // The format of the output std::ostream produced by Detector.
-  enum class LogFormat {
-    kBinary,  // Can be programmatically understood (by ddmlib's host code).
-    kHuman,   // Can be easily read by human beings.
-    kDebug,   // Similar to kHuman plus info to debug this program itself, e.g.,
-              // each profileable app's start time and timing stats.
-  };
+  // The entry point that's designed to be called in production.
+  static ProfileableDetector& Instance(Clock* clock, EventBuffer* buffer) {
+    static auto* instance = new ProfileableDetector(clock, buffer);
+    return *instance;
+  }
 
-  Detector(LogFormat log_format, std::unique_ptr<profiler::FileSystem> fs,
-           std::unique_ptr<ProfileableChecker> checker)
-      : log_format_(log_format),
+  ProfileableDetector(Clock* clock, EventBuffer* buffer,
+                      std::unique_ptr<profiler::FileSystem> fs,
+                      std::unique_ptr<ProfileableChecker> checker)
+      : clock_(clock),
+        buffer_(buffer),
         fs_(std::move(fs)),
         profileable_checker_(std::move(checker)),
+        running_(false),
         zygote_pid_(-1),
         zygote64_pid_(-1),
         first_snapshot_done_(false) {}
 
-  Detector(LogFormat log_format);
+  ProfileableDetector(Clock* clock, EventBuffer* buffer);
 
-  Detector(const Detector&) = delete;
-  Detector& operator=(const Detector&) = delete;
+  ~ProfileableDetector();
+
+  ProfileableDetector(const ProfileableDetector&) = delete;
+  ProfileableDetector& operator=(const ProfileableDetector&) = delete;
 
   // Detects profileable apps and writes the output to stdout.
   // This function is blocking and never returns.
-  void Detect();
+  void Start();
 
   // The following methods are marked public for testing.
 
-  // Collects a snapshot of running apps in the system. Prints to the given
-  // |stream| the list of profileable apps if they are different from the
-  // previous snapshot.
-  void Refresh(std::ostream& stream);
-  void SetLogFormat(LogFormat format) { log_format_ = format; }
+  // Collects a snapshot of running apps in the system.
+  void Refresh();
   profiler::FileSystem* file_system() { return fs_.get(); }
   ProfileableChecker* profileable_checker() {
     return profileable_checker_.get();
@@ -118,9 +120,10 @@ class Detector {
                                                   int32_t* ppid,
                                                   int64_t* start_time);
 
-  void PrintProfileables(
-      const std::unordered_map<int32_t, ProcessInfo>& profileables,
-      std::ostream& output) const;
+  void DetectChanges(const std::unordered_map<int32_t, ProcessInfo>& previous,
+                     const std::unordered_map<int32_t, ProcessInfo>& current);
+
+  void GenerateProcessEvent(const ProcessInfo& process, bool is_ended);
 
   bool GetPpidAndStartTime(int32_t pid, int32_t* ppid,
                            int64_t* start_time) const;
@@ -134,12 +137,16 @@ class Detector {
   bool isExaminedBefore(int32_t pid, int64_t start_time,
                         const std::string& package_name) const;
 
-  LogFormat log_format_;
-  // FileSystem
+  Clock* clock_;
+  EventBuffer* buffer_;
+  // Files that are used to detect the change of processes and to obtain process
+  // info. Configurable for testing.
   std::unique_ptr<profiler::FileSystem> fs_;
+  // Checks whether a process is profileable. Configurable for testing.
   std::unique_ptr<ProfileableChecker> profileable_checker_;
-  // Files that are used to obtain process info. Configurable for testing.
   const profiler::ProcfsFiles proc_files_;
+  std::atomic_bool running_;
+  std::thread detector_thread_;
   // Pids of zygote processes if known; -1 if not discovered yet.
   int32_t zygote_pid_;
   int32_t zygote64_pid_;
@@ -147,6 +154,6 @@ class Detector {
   bool first_snapshot_done_;  // True if the first snapshot has completed.
 };
 
-}  // namespace ddmlib
+}  // namespace profiler
 
-#endif  // PROFILEABLE_REPORTER_DETECTOR_H_
+#endif  // PROFILEABLE_PROFILEABLE_DETECTOR_H_

@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ddmlib/src/main/native/profileable_reporter/detector.h"
+#include "perfd/profileable/profileable_detector.h"
 
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -26,19 +30,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "transport/native/utils/bash_command.h"
-#include "transport/native/utils/clock.h"
-#include "transport/native/utils/file_reader.h"
-#include "transport/native/utils/fs/disk_file_system.h"
-#include "transport/native/utils/log.h"
-#include "transport/native/utils/nonblocking_command_runner.h"
-#include "transport/native/utils/procfs_files.h"
-#include "transport/native/utils/stopwatch.h"
-#include "transport/native/utils/tokenizer.h"
-#include "transport/native/utils/trace.h"
+#include "utils/bash_command.h"
+#include "utils/clock.h"
+#include "utils/file_reader.h"
+#include "utils/fs/disk_file_system.h"
+#include "utils/log.h"
+#include "utils/nonblocking_command_runner.h"
+#include "utils/procfs_files.h"
+#include "utils/thread_name.h"
+#include "utils/tokenizer.h"
+#include "utils/trace.h"
 
 using profiler::BashCommandRunner;
 using profiler::DiskFileSystem;
@@ -48,21 +49,33 @@ using profiler::NonBlockingCommandRunner;
 using profiler::PathStat;
 using profiler::Tokenizer;
 using profiler::Trace;
+using profiler::proto::Event;
+using profiler::proto::Process;
+using std::set;
 using std::string;
 using std::unordered_map;
 using std::vector;
 
-namespace ddmlib {
+namespace profiler {
 
 namespace {
 const int kProfileStopTryTimesLimit = 6;
+
+template <typename K, typename V>
+set<K> GetKeys(const unordered_map<K, V> map) {
+  set<int32_t> keys;
+  std::for_each(map.begin(), map.end(),
+                [&keys](const std::pair<K, V>& p) { keys.insert(p.first); });
+  return keys;
+}
+
 }  // namespace
 
 bool ProfileableChecker::Check(int32_t pid, const string& package_name) const {
   BashCommandRunner tester{"/system/bin/cmd", true};
   std::ostringstream oss;
   oss << "activity profile start --sampling 1 " << package_name
-      << " /data/local/tmp/profileable_reporter.tmp";
+      << " /data/local/tmp/profileable_reporter.tmp 2>/dev/null";
   bool start_succeeded = tester.Run(oss.str(), nullptr);
 
   if (!start_succeeded) return false;
@@ -82,48 +95,54 @@ bool ProfileableChecker::Check(int32_t pid, const string& package_name) const {
     try_count++;
   } while (!stop_succeeded && try_count < kProfileStopTryTimesLimit);
   if (!stop_succeeded) {
-    Log::V(Log::Tag::DDMLIB, "Failed to stop method sampling for %s",
+    Log::V(Log::Tag::PROFILER, "Failed to stop method sampling for %s",
            package_name.c_str());
   }
   // The app is profileable regardless of whether the stop succeeded.
   return true;
 }
 
-Detector::Detector(LogFormat log_format)
-    : Detector(log_format, std::unique_ptr<FileSystem>(new DiskFileSystem()),
-               std::unique_ptr<ProfileableChecker>(new ProfileableChecker())) {}
+ProfileableDetector::ProfileableDetector(Clock* clock, EventBuffer* buffer)
+    : ProfileableDetector(
+          clock, buffer, std::unique_ptr<FileSystem>(new DiskFileSystem()),
+          std::unique_ptr<ProfileableChecker>(new ProfileableChecker())) {}
 
-void Detector::Detect() {
-  while (true) {
-    Refresh(std::cout);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+ProfileableDetector::~ProfileableDetector() {
+  if (running_.exchange(false)) {
+    if (detector_thread_.joinable()) {
+      detector_thread_.join();
+    }
   }
 }
 
-void Detector::Refresh(std::ostream& output) {
-  profiler::Stopwatch stopwatch;
+void ProfileableDetector::Start() {
+  Log::V(Log::Tag::PROFILER, "Start detecting profileable processes");
+  running_ = true;
+  detector_thread_ = std::thread([this]() {
+    SetThreadName("DetectPable");
+    while (running_.load()) {
+      Refresh();
+      // Always sleep regardless of how long the last refresh takes, so it's
+      // not taking a whole CPU core on a lower end device.
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    };
+  });
+}
 
+void ProfileableDetector::Refresh() {
   SystemSnapshot current = CollectProcessSnapshot();
+  const auto& previous_profileables = snapshot_.GetProfileables();
   const auto& current_profileables = current.GetProfileables();
   // Print snapshot on first request or when the profileable apps change.
-  if (!first_snapshot_done_ ||
-      current_profileables != snapshot_.GetProfileables()) {
-    PrintProfileables(current_profileables, output);
+  if (!first_snapshot_done_ || previous_profileables != current_profileables) {
+    DetectChanges(previous_profileables, current_profileables);
   }
   first_snapshot_done_ = true;
   snapshot_ = current;
-
-  if (log_format_ == LogFormat::kDebug) {
-    output << "    Query takes "
-           << profiler::Clock::ns_to_ms(stopwatch.GetElapsed()) << " ms ("
-           << current.all_process_count << " processes, " << current.apps.size()
-           << " apps)" << std::endl;
-  }
-  output.flush();
 }
 
-SystemSnapshot Detector::CollectProcessSnapshot() {
-  Trace trace("Detector::CollectProcessSnapshot");
+SystemSnapshot ProfileableDetector::CollectProcessSnapshot() {
+  Trace trace("ProfileableDetector::CollectProcessSnapshot");
   SystemSnapshot result;
 
   // List /proc/ and retrieve app process info.
@@ -187,10 +206,8 @@ SystemSnapshot Detector::CollectProcessSnapshot() {
 //    (2) comm  %s      -- Used to map fields to tokens.
 //
 // See more details at http://man7.org/linux/man-pages/man5/proc.5.html.
-bool Detector::ParseProcPidStatForPpidAndStartTime(int32_t pid,
-                                                   const string& content,
-                                                   int32_t* ppid,
-                                                   int64_t* start_time) {
+bool ProfileableDetector::ParseProcPidStatForPpidAndStartTime(
+    int32_t pid, const string& content, int32_t* ppid, int64_t* start_time) {
   // Find the start and end positions of the second field.
   // The number of words in the file is variable. The second field is the
   // file name of the executable, in parentheses. The file name could include
@@ -221,33 +238,60 @@ bool Detector::ParseProcPidStatForPpidAndStartTime(int32_t pid,
   return false;
 }
 
-// TODO: Support binary format so it can be programmatically understood by
-// ddmlib's host code.
-void Detector::PrintProfileables(
-    const unordered_map<int32_t, ProcessInfo>& profileables,
-    std::ostream& output) const {
-  output << profileables.size() << " profileable processes" << std::endl;
-
-  for (const auto& i : profileables) {
-    const ProcessInfo& p = i.second;
-    assert(p.profileable);
-    output << p.pid << " " << p.package_name.c_str();
-    if (log_format_ == LogFormat::kDebug) {
-      output << " start_time: " << p.start_time;
-    }
-    output << std::endl;
+void ProfileableDetector::DetectChanges(
+    const unordered_map<int32_t, ProcessInfo>& previous,
+    const unordered_map<int32_t, ProcessInfo>& current) {
+  set<int32_t> previous_pids = GetKeys(previous);
+  set<int32_t> current_pids = GetKeys(current);
+  set<int32_t> added_pids;
+  std::set_difference(current_pids.begin(), current_pids.end(),
+                      previous_pids.begin(), previous_pids.end(),
+                      std::inserter(added_pids, added_pids.begin()));
+  set<int32_t> deleted_pids;
+  std::set_difference(previous_pids.begin(), previous_pids.end(),
+                      current_pids.begin(), current_pids.end(),
+                      std::inserter(deleted_pids, deleted_pids.begin()));
+  for (int32_t pid : deleted_pids) {
+    GenerateProcessEvent(previous.at(pid), true);
+  }
+  for (int32_t pid : added_pids) {
+    GenerateProcessEvent(current.at(pid), false);
   }
 }
 
-bool Detector::GetPpidAndStartTime(int32_t pid, int32_t* ppid,
-                                   int64_t* start_time) const {
+void ProfileableDetector::GenerateProcessEvent(const ProcessInfo& process,
+                                               bool is_ended) {
+  assert(process.profileable);
+
+  Event event;
+  event.set_pid(process.pid);
+  event.set_group_id(process.pid);
+  event.set_kind(Event::PROCESS);
+  event.set_is_ended(is_ended);
+
+  if (!is_ended) {
+    auto* data =
+        event.mutable_process()->mutable_process_started()->mutable_process();
+    data->set_name(process.package_name);
+    data->set_pid(process.pid);
+    // No need to set |device_id|. Host knowns which stream an event comes from.
+    data->set_state(proto::Process::ALIVE);
+    data->set_start_timestamp_ns(clock_->GetCurrentTime());
+    // No need to set abi_cpu_arch for profileable processes.
+    data->set_exposure_level(Process::PROFILEABLE);
+  }
+  buffer_->Add(event);
+}
+
+bool ProfileableDetector::GetPpidAndStartTime(int32_t pid, int32_t* ppid,
+                                              int64_t* start_time) const {
   string stat_path = proc_files_.GetProcessStatFilePath(pid);
   string content = fs_->GetFileContents(stat_path);
   if (content.empty()) return false;
   return ParseProcPidStatForPpidAndStartTime(pid, content, ppid, start_time);
 }
 
-string Detector::GetPackageName(int32_t pid) const {
+string ProfileableDetector::GetPackageName(int32_t pid) const {
   string cmdline_path = proc_files_.GetProcessCmdlineFilePath(pid);
   string cmdline = fs_->GetFileContents(cmdline_path);
   // cmdline contains a sequence of null terminated string. We want
@@ -256,7 +300,7 @@ string Detector::GetPackageName(int32_t pid) const {
 }
 
 // Returns true if the given pid's cmdline is zygote64 or zygote.
-bool Detector::isZygote64OrZygote(int32_t pid) {
+bool ProfileableDetector::isZygote64OrZygote(int32_t pid) {
   if (zygote64_pid_ != -1 && zygote64_pid_ == pid) return true;
   if (zygote_pid_ != -1 && zygote_pid_ == pid) return true;
   string name = GetPackageName(pid);
@@ -270,12 +314,12 @@ bool Detector::isZygote64OrZygote(int32_t pid) {
   return false;
 }
 
-bool Detector::isExaminedBefore(int32_t pid, int64_t start_time,
-                                const string& package_name) const {
+bool ProfileableDetector::isExaminedBefore(int32_t pid, int64_t start_time,
+                                           const string& package_name) const {
   auto found = snapshot_.apps.find(pid);
   if (found == snapshot_.apps.end()) return false;
   return found->second.start_time == start_time &&
          found->second.package_name == package_name;
 }
 
-}  // namespace ddmlib
+}  // namespace profiler

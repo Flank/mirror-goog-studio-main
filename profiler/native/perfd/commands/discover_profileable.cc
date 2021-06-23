@@ -15,14 +15,14 @@
  */
 #include "perfd/commands/discover_profileable.h"
 
-#include "utils/log.h"
+#include "perfd/profileable/profileable_detector.h"
 
 using grpc::Status;
 
 namespace profiler {
 
 Status DiscoverProfileable::ExecuteOn(Daemon* daemon) {
-  Log::V(Log::Tag::PROFILER, "Execute command DiscoverProfileable");
+  ProfileableDetector::Instance(daemon->clock(), daemon->buffer()).Start();
   return Status::OK;
 }
 
