@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.PxUsageDetector
@@ -326,6 +327,26 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 ScopedStorageDetector.ISSUE,
                 "The Google Play store has a policy that limits usage of MANAGE_EXTERNAL_STORAGE",
                 "Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateApiDetectorMessageChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                ApiDetector.UNSUPPORTED,
+                "Call requires API level R (current min is 29): `setZOrderedOnTop`",
+                "Call requires API level 30 (current min is 29): `setZOrderedOnTop`"
+            )
+        )
+
+        assertFalse(
+            baseline.sameMessage(
+                ApiDetector.UNSUPPORTED,
+                "Call requires API level R (current min is 29): `setZOrderedOnTop`",
+                "Call requires API level 30 (current min is 29): `setZOrdered`"
             )
         )
     }
