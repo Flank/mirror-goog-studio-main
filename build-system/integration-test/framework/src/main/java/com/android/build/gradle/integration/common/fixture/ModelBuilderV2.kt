@@ -160,6 +160,7 @@ class ModelBuilderV2 internal constructor(
             androidPrefsDir = preferencesRootDir,
             androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
             localRepos = GradleTestProject.localRepositories,
+            additionalMavenRepo = project?.getAdditionalMavenRepo(),
             defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
     }
@@ -285,6 +286,7 @@ class FileNormalizerImpl(
     androidPrefsDir: File?,
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
+    additionalMavenRepo: Path?,
     defaultNdkSideBySideVersion: String
 ) : FileNormalizer {
 
@@ -329,6 +331,10 @@ class FileNormalizerImpl(
 
         localRepos.asSequence().map { it.toFile() }.forEach {
             mutableList.add(RootData(it, "LOCAL_REPO"))
+        }
+
+        additionalMavenRepo?.let {
+            mutableList.add(RootData(it.toFile(), "ADDITIONAL_MAVEN_REPO"))
         }
 
         rootDataList = mutableList.toList()

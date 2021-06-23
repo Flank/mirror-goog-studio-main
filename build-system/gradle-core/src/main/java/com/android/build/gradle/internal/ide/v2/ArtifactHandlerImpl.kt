@@ -60,6 +60,7 @@ class ArtifactHandlerImpl(
         return LibraryImpl(
             type = LibraryType.ANDROID_LIBRARY,
             artifactAddress = addressSupplier(),
+            artifact = aarFile,
             manifest = File(folder, FN_ANDROID_MANIFEST_XML),
             compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
             runtimeJarFiles = runtimeJarFiles,
@@ -76,7 +77,6 @@ class ArtifactHandlerImpl(
             symbolFile = File(folder, FN_RESOURCE_TEXT),
 
             // not needed for this dependency type
-            artifact = null,
             buildId = null,
             projectPath = null,
             variant = null

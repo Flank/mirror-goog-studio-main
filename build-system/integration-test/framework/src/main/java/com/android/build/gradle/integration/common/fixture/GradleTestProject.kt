@@ -569,7 +569,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         return generateRepoScript(getRepoDirectories())
     }
 
-    private fun getAdditionalMavenRepo(): Path? {
+    internal fun getAdditionalMavenRepo(): Path? {
         if (additionalMavenRepo == null) {
             return null
         }

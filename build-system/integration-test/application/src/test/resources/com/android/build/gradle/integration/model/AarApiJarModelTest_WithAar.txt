@@ -35,7 +35,7 @@
       > com.example:myaar:1@aar{ADDED}:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.example:myaar:1@aar
-         - artifact            = (null)
+         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)

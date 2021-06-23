@@ -37,6 +37,7 @@ class FileNormalizerTest {
         androidPrefsDir = File("/path/to/Home"),
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
+        additionalMavenRepo = null,
         defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
     )
 
@@ -141,6 +142,7 @@ class FileNormalizerTest {
                 Paths.get("C:\\path\\to\\localRepo1"),
                 Paths.get("C:\\path\\to\\localRepo2")
             ),
+            additionalMavenRepo = null,
             defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
 
