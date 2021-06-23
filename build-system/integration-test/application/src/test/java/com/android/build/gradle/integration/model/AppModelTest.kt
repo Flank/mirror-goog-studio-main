@@ -496,3 +496,32 @@ class AndroidTestNamespaceWithCustomNamespaceTest: ReferenceModelComparator(
         compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
+
+class LintChecksInAppModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            dependencies {
+                lintChecks(localJar {
+                    name = "lint-checks.jar"
+                    addClass("com/example/MainClass")
+                })
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+    @Test
+    fun `test AndroidProject model`() {
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+}

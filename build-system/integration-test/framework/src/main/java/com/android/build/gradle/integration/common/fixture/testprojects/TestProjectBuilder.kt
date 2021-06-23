@@ -174,6 +174,20 @@ interface DependenciesBuilder {
     fun implementation(dependency: Any)
 
     /**
+     * adds a dependency in the lintPublish scope.
+     *
+     * See [implementation] for details
+     */
+    fun lintPublish(dependency: Any)
+
+    /**
+     * adds a dependency in the lintCheck scope.
+     *
+     * See [implementation] for details
+     */
+    fun lintChecks(dependency: Any)
+
+    /**
      * Creates a [LocalJarBuilder] to be passed to [implementation] (or any other scope)
      */
     fun localJar(action: LocalJarBuilder.() -> Unit) : LocalJarBuilder
