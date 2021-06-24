@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 import org.intellij.lang.annotations.Language
 
@@ -27,48 +28,17 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
     fun testSrcCompat() {
         val expected =
             """
-            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]
+            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-app/build.gradle [VectorDrawableCompat]
                 <ImageView app:srcCompat="@drawable/foo" />
                            ~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         lint().files(
             xml("src/main/res/drawable/foo.xml", vector),
+            image("src/main/res/drawable-hdpi/bitmap.png", 10, 10).fill(0),
             xml("src/main/res/layout/main_activity.xml", layoutSrcCompat),
-            gradle(
-                """
-                buildscript {
-                    dependencies {
-                        classpath 'com.android.tools.build:gradle:2.0.0'
-                    }
-                }
-                android.defaultConfig.vectorDrawables.useSupportLibrary = false
-                """
-            ).indented()
-        ).run().expect(expected)
-    }
-
-    fun testSrcCompatWithRepository() {
-        val expected =
-            """
-            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]
-                <ImageView app:srcCompat="@drawable/foo" />
-                           ~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
-        lint().files(
-            xml("src/main/res/drawable/foo.xml", vector),
-            xml("src/main/res/layout/main_activity.xml", layoutSrcCompat),
-            gradle(
-                """
-                buildscript {
-                    dependencies {
-                        classpath 'com.android.tools.build:gradle:2.0.0'
-                    }
-                }
-                android.defaultConfig.vectorDrawables.useSupportLibrary = false
-                """
-            ).indented()
+            xml("src/main/res/layout/main_activity_src.xml", layoutSrc), // OK
+            getGradleTestFile("2.0.0", false)
         ).run().expect(expected)
     }
 
@@ -83,40 +53,8 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
         lint().files(
             xml("src/main/res/drawable/foo.xml", vector),
             xml("src/main/res/layout/main_activity.xml", layoutSrc),
-            gradle(
-                """
-                buildscript {
-                    dependencies {
-                        classpath 'com.android.tools.build:gradle:2.0.0'
-                    }
-                }
-                android.defaultConfig.vectorDrawables.useSupportLibrary = true
-                """
-            ).indented()
-        ).run().expect(expected)
-    }
-
-    fun testSrcWithResources() {
-        val expected =
-            """
-            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
-                <ImageView android:src="@drawable/foo" />
-                           ~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
-        lint().files(
-            xml("src/main/res/drawable/foo.xml", vector),
-            xml("src/main/res/layout/main_activity.xml", layoutSrc),
-            gradle(
-                """
-                buildscript {
-                    dependencies {
-                        classpath 'com.android.tools.build:gradle:2.0.0'
-                    }
-                }
-                android.defaultConfig.vectorDrawables.useSupportLibrary = true
-                """
-            ).indented()
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat), // OK
+            getGradleTestFile("2.0.0", true)
         ).run().expect(expected)
     }
 
@@ -146,16 +84,7 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
                 </animated-vector>
                 """
             ).indented(),
-            gradle(
-                """
-                buildscript {
-                    dependencies {
-                        classpath 'com.android.tools.build:gradle:3.2.0'
-                    }
-                }
-                android.defaultConfig.vectorDrawables.useSupportLibrary = true
-                """
-            ).indented()
+            getGradleTestFile("3.2.0", true)
         ).run().expect(
             """
             src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
@@ -164,6 +93,120 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
             1 errors, 0 warnings
             """
         )
+    }
+
+    fun testMinSdkGreaterThan21() {
+        val library = project().files(
+            xml("src/main/res/drawable/foo.xml", vector),
+            xml("src/main/res/layout/lib_activity.xml", layoutSrc),
+            xml("src/main/res/layout/lib_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", false)
+        )
+
+        val app = project().files(
+            manifest().minSdk(21),
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", false)
+        ).dependsOn(library)
+
+        lint().projects(app, library).run().expectClean()
+    }
+
+    fun testMultiProjectNotUsingLibrary() {
+        // Regression test for https://issuetracker.google.com/187341964
+        val expected =
+            """
+            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib/build.gradle [VectorDrawableCompat]
+                <ImageView app:srcCompat="@drawable/foo" />
+                           ~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+
+        val library = project().files(
+            xml("src/main/res/drawable/foo.xml", vector),
+            getGradleTestFile("7.0.0", false)
+        )
+
+        val app = project().files(
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", false)
+        ).dependsOn(library)
+
+        lint().projects(app, library).run().expect(expected)
+    }
+
+    fun testMultiProjectUsingLibrary() {
+        // Regression test for https://issuetracker.google.com/187341964
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
+                <ImageView android:src="@drawable/foo" />
+                           ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+
+        val library = project().files(
+            xml("src/main/res/drawable/foo.xml", vector),
+            getGradleTestFile("7.0.0", true)
+        )
+
+        val app = project().files(
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", true)
+        ).dependsOn(library)
+
+        lint().projects(app, library).run().expect(expected)
+    }
+
+    fun testVectorSettingRightProject() {
+        // The support vector flag should be set in the same library as the icon, not the usage
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
+                <ImageView android:src="@drawable/foo" />
+                           ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+
+        val library = project().files(
+            xml("src/main/res/drawable/foo.xml", vector),
+            getGradleTestFile("7.0.0", true)
+        )
+
+        val app = project().files(
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", false)
+        ).dependsOn(library)
+
+        lint().projects(app, library).run().expect(expected)
+    }
+
+    fun testVectorSettingWrongProject() {
+        // The support vector flag should be set in the same library as the icon, not the usage
+        val expected =
+            """
+            src/main/res/layout/main_activity_compat.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project-lib/build.gradle [VectorDrawableCompat]
+                <ImageView app:srcCompat="@drawable/foo" />
+                           ~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+
+        val library = project().files(
+            xml("src/main/res/drawable/foo.xml", vector),
+            getGradleTestFile("7.0.0", false)
+        )
+
+        val app = project().files(
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml("src/main/res/layout/main_activity_compat.xml", layoutSrcCompat),
+            getGradleTestFile("7.0.0", true)
+        ).dependsOn(library)
+
+        lint().projects(app, library).run().expect(expected)
     }
 
     @Language("XML")
@@ -185,11 +228,24 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
         </vector>
         """.trimIndent()
 
+    private fun getGradleTestFile(agpVersion: String, usingVectors: Boolean): TestFile {
+        return gradle(
+            """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:$agpVersion'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = $usingVectors
+                """
+        ).indented()
+    }
+
     @Language("XML")
     private val layoutSrc =
         """
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android">
-
+            <ImageView android:src="@drawable/bitmap" />
             <ImageView android:src="@drawable/foo" />
         </RelativeLayout>
         """.trimIndent()
@@ -200,6 +256,7 @@ class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
         <RelativeLayout
                         xmlns:app="http://schemas.android.com/apk/res-auto">
             <ImageView app:srcCompat="@drawable/foo" />
+            <ImageView app:srcCompat="@drawable/bitmap" />
         </RelativeLayout>
         """.trimIndent()
 }

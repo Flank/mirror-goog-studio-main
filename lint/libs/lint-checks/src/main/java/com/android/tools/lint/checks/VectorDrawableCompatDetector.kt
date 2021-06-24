@@ -19,26 +19,28 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_SRC
 import com.android.SdkConstants.ATTR_SRC_COMPAT
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.TAG_ANIMATED_VECTOR
 import com.android.SdkConstants.TAG_VECTOR
-import com.android.ide.common.rendering.api.ResourceNamespace
-import com.android.ide.common.resources.ResourceRepository
+import com.android.ide.common.resources.fileNameToResourceName
 import com.android.resources.ResourceFolderType
-import com.android.resources.ResourceType
+import com.android.resources.ResourceFolderType.DRAWABLE
+import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceUrl
-import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.PartialResult
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
-import com.android.utils.XmlUtils
+import com.android.tools.lint.detector.api.minSdkLessThan
 import org.w3c.dom.Attr
+import org.w3c.dom.Element
 import java.io.File
 
 /**
@@ -78,32 +80,33 @@ class VectorDrawableCompatDetector : ResourceXmlDetector() {
     /** Whether to skip the checks altogether. */
     private var skipChecks = false
 
-    /** Whether the project uses AppCompat for vectors. */
-    private var useSupportLibrary = false
-
     override fun beforeCheckRootProject(context: Context) {
-        val variant = context.project.buildVariant
-        if (variant == null) {
-            skipChecks = true
-            return
-        }
-        if (context.project.minSdk >= 21) {
-            skipChecks = true
-            return
-        }
-        val version = context.project.gradleModelVersion
-        if (version == null || version.major < 2) {
-            skipChecks = true
-            return
-        }
-        useSupportLibrary = variant.useSupportLibraryVectorDrawables
+        skipChecks = context.project.minSdk >= 21
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return if (skipChecks)
-            false
-        else
-            folderType == ResourceFolderType.DRAWABLE || folderType == ResourceFolderType.LAYOUT
+        return !skipChecks && (folderType == DRAWABLE || folderType == LAYOUT)
+    }
+
+    override fun getApplicableElements(): Collection<String> {
+        return listOf(TAG_VECTOR, TAG_ANIMATED_VECTOR)
+    }
+
+    override fun visitElement(context: XmlContext, element: Element) {
+        // Found a vector or animated vector resource file
+
+        if (context.project.minSdk >= 21 || context.resourceFolderType != DRAWABLE) {
+            return
+        }
+        val usingLibraryVectors = context.project.buildVariant?.useSupportLibraryVectorDrawables
+            ?: return
+
+        val name = fileNameToResourceName(context.file.name)
+
+        // We store an explicit true or false in the map instead of
+        // just storing true because we're communicating a third thing:
+        // presence in the map implies it's a vector icon
+        context.getPartialResults(ISSUE).map().put(name, usingLibraryVectors)
     }
 
     override fun getApplicableAttributes(): Collection<String>? {
@@ -111,14 +114,9 @@ class VectorDrawableCompatDetector : ResourceXmlDetector() {
     }
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
-        if (skipChecks) {
+        if (context.resourceFolderType != LAYOUT) {
             return
         }
-        val client = context.client
-        val full = context.isGlobalAnalysis()
-        val project = if (full) context.mainProject else context.project
-        val resources = client.getResources(project, ResourceRepositoryScope.LOCAL_DEPENDENCIES)
-        fun isVector(name: String) = checkResourceRepository(resources, name)
         val name = attribute.localName
         val namespace = attribute.namespaceURI
         if (ATTR_SRC == name && ANDROID_URI != namespace || ATTR_SRC_COMPAT == name && AUTO_URI != namespace) {
@@ -126,36 +124,48 @@ class VectorDrawableCompatDetector : ResourceXmlDetector() {
             return
         }
         val resourceUrl = ResourceUrl.parse(attribute.value) ?: return
-        if (useSupportLibrary && ATTR_SRC == name && isVector(resourceUrl.name)) {
+
+        // Is this a vector icon? If so the boolean value will be true if we're using
+        // support library vectors and false otherwise (bitmaps) ?
+        // (This works for vectors declared in the same project as well because lint guarantees
+        // it will visit the drawable folders before it visits the layout folders)
+        val partialResults = context.getPartialResults(ISSUE)
+        val drawableName = resourceUrl.name
+        val useSupportLibrary = partialResults.map().getBoolean(drawableName) ?: return
+        if (useSupportLibrary && ATTR_SRC == name) {
             val location = context.getNameLocation(attribute)
             val message = "When using VectorDrawableCompat, you need to use `app:srcCompat`"
-            context.report(ISSUE, attribute, location, message)
-        } else if (!useSupportLibrary && ATTR_SRC_COMPAT == name && isVector(resourceUrl.name)) {
+            val incident = Incident(ISSUE, attribute, location, message)
+            // Report with minSdk<21 constraint since consuming modules could have a higher
+            // minSdkVersion
+            context.report(incident, minSdkLessThan(21))
+        } else if (!useSupportLibrary && ATTR_SRC_COMPAT == name) {
             val location = context.getNameLocation(attribute)
+
+            // Find the project that defines the icon
+            var iconProject: Project = context.project
+            if (partialResults.mapFor(iconProject).getBoolean(drawableName) == null) {
+                for (project in partialResults.projects()) {
+                    val projectMap = partialResults.mapFor(project)
+                    if (projectMap.getBoolean(drawableName) != null) {
+                        iconProject = project
+                        break
+                    }
+                }
+            }
             var path = FN_BUILD_GRADLE
-            val model = context.project.buildModule
+            val model = iconProject.buildModule
             if (model != null) {
                 path = model.modulePath + File.separator + path
             }
             val message = "To use VectorDrawableCompat, you need to set " +
-                    "`android.defaultConfig.vectorDrawables.useSupportLibrary = true` in `$path`"
-            context.report(ISSUE, attribute, location, message)
+                "`android.defaultConfig.vectorDrawables.useSupportLibrary = true` in `$path`"
+            val incident = Incident(ISSUE, attribute, location, message)
+            context.report(incident, minSdkLessThan(21))
         }
     }
 
-    private fun checkResourceRepository(resources: ResourceRepository, name: String): Boolean {
-        val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.DRAWABLE, name)
-
-        // Check if at least one drawable with this name is a vector.
-        for (item in items) {
-            val source = item.source ?: return false
-            val file = source.toFile() ?: return false
-            if (!source.fileName.endsWith(DOT_XML)) {
-                continue
-            }
-            val rootTagName = XmlUtils.getRootTagName(file)
-            return TAG_VECTOR == rootTagName || TAG_ANIMATED_VECTOR == rootTagName
-        }
-        return false
+    override fun checkPartialResults(context: Context, partialResults: PartialResult) {
+        // We've already used the partial results map
     }
 }
