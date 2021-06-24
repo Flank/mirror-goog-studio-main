@@ -18,12 +18,14 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.api.dsl.BuildType
+import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.TestedExtension
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
-import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
@@ -35,7 +37,6 @@ import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Provider
 
 /** Builder for [VariantDslInfo].
  *
@@ -55,9 +56,8 @@ class VariantDslInfoBuilder private constructor(
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
-    private val dslNamespaceProvider: Provider<String>?,
-    private val dslTestNamespace: String?,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val extension: BaseExtension,
     private val experimentalProperties: Map<String, Any>,
 ) {
 
@@ -77,9 +77,8 @@ class VariantDslInfoBuilder private constructor(
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
-            dslNamespaceProvider: Provider<String>? = null,
-            dslTestNamespace: String? = null,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
+            extension: BaseExtension,
             experimentalProperties: Map<String, Any> = mapOf(),
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
@@ -93,9 +92,8 @@ class VariantDslInfoBuilder private constructor(
                 manifestDataProvider,
                 dslServices,
                 variantPropertiesApiServices,
-                dslNamespaceProvider,
-                dslTestNamespace,
                 nativeBuildSystem,
+                extension,
                 experimentalProperties,
             )
         }
@@ -243,6 +241,17 @@ class VariantDslInfoBuilder private constructor(
             }
             return sb.toString()
         }
+
+        @JvmStatic
+        private fun BaseExtension.getDslNamespace(variantType: VariantType): String? {
+            return if (variantType.isTestComponent) {
+                (this as TestedExtension).testNamespace
+            } else if (variantType.isTestFixturesComponent) {
+                null
+            } else {
+                namespace
+            }
+        }
     }
 
     private lateinit var variantName: String
@@ -270,7 +279,7 @@ class VariantDslInfoBuilder private constructor(
 
     var variantSourceProvider: DefaultAndroidSourceSet? = null
     var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
-    var testedVariant: VariantDslInfoImpl? = null
+    var parentVariant: VariantDslInfoImpl? = null
 
     fun addProductFlavor(
         productFlavor: ProductFlavor,
@@ -299,18 +308,16 @@ class VariantDslInfoBuilder private constructor(
             // this could be removed once the product flavor is internal only.
             flavorList.toImmutableList(),
             signingConfigOverride,
-            testedVariant,
+            parentVariant,
             manifestDataProvider,
             dslServices,
             variantPropertiesApiServices,
             buildDirectory,
-            dslNamespaceProvider,
-            dslTestNamespace,
+            extension.getDslNamespace(variantType),
             nativeBuildSystem,
             experimentalProperties,
         )
     }
-
 
     fun createVariantSources(): VariantSources {
         return VariantSources(

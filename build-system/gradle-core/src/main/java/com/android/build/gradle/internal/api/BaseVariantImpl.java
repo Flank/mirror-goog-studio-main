@@ -150,14 +150,17 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
                 (VariantDslInfoImpl) component.getVariantDslInfo();
-        return readOnlyObjectProvider.getBuildType(variantDslInfo.getBuildTypeObj());
+        return readOnlyObjectProvider.getBuildType((BuildType) variantDslInfo.getBuildTypeObj());
     }
 
     @Override
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
-        return new ImmutableFlavorList(
-                component.getVariantDslInfo().getProductFlavorList(), readOnlyObjectProvider);
+        List<ProductFlavor> flavors =
+                component.getVariantDslInfo().getProductFlavorList().stream()
+                        .map(it -> (ProductFlavor) it)
+                        .collect(Collectors.toList());
+        return new ImmutableFlavorList(flavors, readOnlyObjectProvider);
     }
 
     @Override

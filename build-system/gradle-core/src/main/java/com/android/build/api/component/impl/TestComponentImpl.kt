@@ -28,9 +28,9 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
@@ -77,9 +77,7 @@ abstract class TestComponentImpl @Inject constructor(
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled && testedVariant.variantType.isAar
 
-    override val namespaceForR: Provider<String> =
-        variantDslInfo.testedVariant?.testNamespace?.let { internalServices.provider { it } }
-            ?: internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
+    override val namespaceForR: Provider<String> = variantDslInfo.namespaceForR
 
     override val pseudoLocalesEnabled: Property<Boolean> =
             internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)

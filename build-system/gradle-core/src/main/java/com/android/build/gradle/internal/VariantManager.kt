@@ -15,51 +15,43 @@
  */
 package com.android.build.gradle.internal
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.internal.manifest.LazyManifestParser
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.builder.core.AbstractProductFlavor.DimensionRequest
-import com.android.build.gradle.TestedAndroidConfig
-import java.lang.RuntimeException
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
-import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.variant.AndroidTest
+import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.variant.impl.HasAndroidTest
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.crash.ExternalApiUsageException
-import com.android.builder.errors.IssueReporter
-import java.util.Locale
-import com.android.build.gradle.internal.profile.AnalyticsUtil
-import com.android.builder.core.VariantTypeImpl
+import com.android.build.gradle.TestedAndroidConfig
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.crash.ExternalApiUsageException
+import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.manifest.LazyManifestParser
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
+import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -72,7 +64,6 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantApiServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -84,9 +75,13 @@ import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SigningOptions
+import com.android.builder.core.AbstractProductFlavor.DimensionRequest
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.isLegacyMultiDexMode
+import com.android.builder.errors.IssueReporter
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.ApiVersion
@@ -94,8 +89,8 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.internal.GeneratedSubclass
-import org.gradle.api.provider.Provider
 import java.io.File
+import java.util.Locale
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 
@@ -159,12 +154,10 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
      */
     fun createVariants(
         buildFeatureValues: BuildFeatureValues,
-        dslNamespace: String?,
-        dslTestNamespace: String?
     ) {
         variantFactory.validateModel(variantInputModel)
         variantFactory.preVariantWork(project)
-        computeVariants(buildFeatureValues, dslNamespace, dslTestNamespace)
+        computeVariants(buildFeatureValues)
     }
 
     private fun getFlavorSelection(
@@ -188,13 +181,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
      * Create all variants.
      *
      * @param buildFeatureValues the build feature value instance
-     * @param dslNamespace the namespace from the android extension DSL
-     * @param dslTestNamespace the testNamespace from the android extension DSL
      */
     private fun computeVariants(
         buildFeatureValues: BuildFeatureValues,
-        dslNamespace: String?,
-        dslTestNamespace: String?
     ) {
         val flavorDimensionList: List<String> = extension.flavorDimensionList
         val computer = DimensionCombinator(
@@ -206,20 +195,12 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         // get some info related to testing
         val testBuildTypeData = testBuildTypeData
 
-        val dslNamespaceProvider = dslNamespace?.let {
-            variantPropertiesApiServices.provider {
-                it
-            }
-        }
-
         // loop on all the new variant objects to create the legacy ones.
         for (variant in variants) {
             createVariantsFromCombination(
                     variant,
                     testBuildTypeData,
                     buildFeatureValues,
-                    dslNamespaceProvider,
-                    dslTestNamespace
             )
         }
 
@@ -258,8 +239,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
             variantType: VariantType,
             buildFeatureValues: BuildFeatureValues,
-            dslNamespaceProvider: Provider<String>?,
-            dslTestNamespace: String?
     ): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
@@ -280,9 +259,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
                 variantPropertiesApiServices,
-                dslNamespaceProvider,
-                dslTestNamespace,
                 configuredNativeBuilder(),
+                extension,
                 (extension as CommonExtension<*, *, *, *>).experimentalProperties
         )
 
@@ -466,11 +444,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 testFixturesVariantType.requiresManifest) { canParseManifest() },
             dslServices,
             variantPropertiesApiServices,
-            variantPropertiesApiServices.provider {
-                mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
-                        testFixturesFeatureName
-            }
+            extension = extension,
         )
+
+        variantDslInfoBuilder.parentVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
+
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
@@ -642,8 +620,10 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         testSourceSet.manifestFile,
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
-                variantPropertiesApiServices)
-        variantDslInfoBuilder.testedVariant =
+                variantPropertiesApiServices,
+                extension = extension,
+        )
+        variantDslInfoBuilder.parentVariant =
                 testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
 
@@ -814,8 +794,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             dimensionCombination: DimensionCombination,
             testBuildTypeData: BuildTypeData<BuildType>?,
             buildFeatureValues: BuildFeatureValues,
-            dslNamespaceProvider: Provider<String>?,
-            dslTestNamespace: String?
     ) {
         val variantType = variantFactory.variantType
 
@@ -850,9 +828,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     buildTypeData,
                     productFlavorDataList,
                     variantType,
-                    buildFeatureValues,
-                    dslNamespaceProvider,
-                    dslTestNamespace)?.let { variantInfo ->
+                    buildFeatureValues
+            )?.let { variantInfo ->
                 addVariant(variantInfo)
                 val variant = variantInfo.variant
                 val variantDslInfo = variant.variantDslInfo

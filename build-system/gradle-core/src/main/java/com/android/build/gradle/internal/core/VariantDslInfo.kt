@@ -17,13 +17,13 @@ package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
@@ -161,10 +161,14 @@ interface VariantDslInfo {
     val namespace: Provider<String>
 
     /**
-     * The testNamespace DSL value or the namespace DSL value + ".test" if either of those DSL
-     * elements are specified; otherwise, this value is null.
+     * The namespace for the R class for AndroidTest.
+     *
+     * This is a special case due to legacy reasons.
+     *
+     *  TODO(b/176931684) Remove and use [namespace] after we stop supporting using applicationId
+     *   to namespace the test component R class.
      */
-    val testNamespace: String?
+    val namespaceForR: Provider<String>
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could
