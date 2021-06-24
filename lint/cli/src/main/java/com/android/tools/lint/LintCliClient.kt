@@ -1509,7 +1509,7 @@ open class LintCliClient : LintClient {
             // succeeding. So here we'll use the IntelliJ platform's UrlClassLoader
             // instead which does not lock files. See
             // JarFileIssueRegistry#loadAndCloseURLClassLoader for more details.
-            UrlClassLoader.build().parent(parent).urls(*urls).get()
+            UrlClassLoader.build().parent(parent).urls(urls.toList()).get()
         } else {
             super.createUrlClassLoader(urls, parent)
         }

@@ -450,12 +450,6 @@ open class JavaContext(
         @JvmStatic
         fun findNameElement(element: PsiElement): PsiElement? {
             when (element) {
-                is KtLightFieldForSourceDeclarationSupport -> {
-                    // Workaround for https://youtrack.jetbrains.com/issue/KT-45629.
-                    @Suppress("SENSELESS_COMPARISON")
-                    assert(element.nameIdentifier == null) { "It appears this workaround can be removed" }
-                    return (element.kotlinOrigin as? PsiNameIdentifierOwner)?.nameIdentifier
-                }
                 is PsiNameIdentifierOwner -> return element.nameIdentifier
                 is PsiClass -> {
                     if (element is PsiAnonymousClass) {

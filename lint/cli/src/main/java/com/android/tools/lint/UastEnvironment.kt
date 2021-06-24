@@ -36,6 +36,8 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiNameHelper
+import com.intellij.psi.impl.PsiNameHelperImpl
 import com.intellij.util.io.URLUtil.JAR_SEPARATOR
 import org.jetbrains.kotlin.asJava.classes.FacadeCache
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
@@ -351,6 +353,9 @@ private fun configureProjectEnvironment(
         KotlinUastResolveProviderService::class.java,
         CliKotlinUastResolveProviderService::class.java
     )
+
+    // PsiNameHelper is used by Kotlin UAST.
+    project.registerService(PsiNameHelper::class.java, PsiNameHelperImpl::class.java)
 
     // Annotation support.
     project.registerService(
