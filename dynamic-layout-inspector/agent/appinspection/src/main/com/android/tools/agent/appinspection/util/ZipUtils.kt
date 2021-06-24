@@ -34,6 +34,7 @@ fun ByteArray.compress(): ByteArray {
 
         baos.write(buffer, 0, count)
     }
+    deflater.end()
     baos.flush()
     return baos.toByteArray()
 }
