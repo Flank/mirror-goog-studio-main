@@ -125,6 +125,20 @@ public class SdkAutoDownloadTest {
                         + " = "
                         + mSdkHome.getAbsolutePath().replace("\\", "\\\\"));
 
+        // Work round that build tools depends on 'tools' by creating an empty 'tools' install.
+        Path toolsDirectory = mSdkHome.toPath().resolve("tools");
+        Files.createDirectory(toolsDirectory);
+        Path toolsSourceProperties = toolsDirectory.resolve("source.properties");
+        Files.write(
+                toolsSourceProperties,
+                ("Pkg.UserSrc=false\n"
+                                + "Pkg.Revision=26.1.1\n"
+                                + "Platform.MinPlatformToolsRev=20\n"
+                                + "Pkg.Dependencies=emulator\n"
+                                + "Pkg.Path=tools\n"
+                                + "Pkg.Desc=Android SDK Tools\n")
+                        .getBytes(StandardCharsets.UTF_8));
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 30");
     }
@@ -163,7 +177,7 @@ public class SdkAutoDownloadTest {
 
     /** Tests that the compile SDK target and build tools are automatically downloaded. */
     @Test
-    public void sanityTest() throws Exception {
+    public void checkCompileSdkAndBuildToolsDownloading() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -584,10 +598,7 @@ public class SdkAutoDownloadTest {
         assertThat(Splitter.on(' ').split(data))
                 .containsExactly(
                         "platforms;android-" + PLATFORM_VERSION,
-                        "build-tools;" + BUILD_TOOLS_VERSION,
-                        "platform-tools",
-                        "tools",
-                        "patcher;v4");
+                        "build-tools;" + BUILD_TOOLS_VERSION);
     }
 
     @Ignore("b/144346671")

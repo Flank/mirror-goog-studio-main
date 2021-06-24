@@ -655,7 +655,7 @@ class SdkDirectLoadingStrategyTest {
             )
         }
 
-        val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.2")
+        val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.3")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
             ToolsRevisionUtils.MIN_BUILD_TOOLS_REV)
         assertThat(sdkDirectLoadingStrategy.getAidlExecutable()).isEqualTo(
