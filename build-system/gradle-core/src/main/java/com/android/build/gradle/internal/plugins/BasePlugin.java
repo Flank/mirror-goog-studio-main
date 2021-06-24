@@ -747,12 +747,7 @@ public abstract class BasePlugin<
                 variantFactory.createBuildFeatureValues(
                         extension.getBuildFeatures(), projectServices.getProjectOptions());
 
-        @Nullable String testNamespace = null;
-        if (extension instanceof TestedExtension) {
-            testNamespace = ((TestedExtension) extension).getTestNamespace();
-        }
-
-        variantManager.createVariants(buildFeatureValues, extension.getNamespace(), testNamespace);
+        variantManager.createVariants(buildFeatureValues);
 
         List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();
