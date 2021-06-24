@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -717,6 +718,88 @@ class VariantDslInfoTest2 :
         }
     }
 
+    @Test
+    fun `namespaceForR with several appId`() {
+        given {
+            // no specific manifest info
+            manifestData {
+                packageName = "com.example.fromManifest"
+            }
+
+            variantType = VariantTypeImpl.ANDROID_TEST
+            parentVariant {
+            }
+
+            productFlavors {
+                create("flavor1") {
+                    applicationId = "com.example.flavor1"
+                }
+                create("flavor2") {
+                    applicationId = "com.example.flavor2"
+                }
+            }
+        }
+
+        expect {
+            namespace = "com.example.fromManifest.test"
+            namespaceForR = "com.example.fromManifest.test"
+        }
+    }
+
+    @Test
+    fun `namespaceForR with mixed appId`() {
+        given {
+            // no specific manifest info
+            manifestData {
+                packageName = "com.example.fromManifest"
+            }
+
+            variantType = VariantTypeImpl.ANDROID_TEST
+            parentVariant {
+            }
+
+            productFlavors {
+                create("flavor1") {
+                    applicationId = "com.example.flavor1"
+                }
+                create("flavor2") {
+                }
+            }
+        }
+
+        expect {
+            namespace = "com.example.fromManifest.test"
+            namespaceForR = "com.example.fromManifest.test"
+        }
+    }
+
+    @Test
+    fun `namespaceForR with appIdSuffix`() {
+        given {
+            // no specific manifest info
+            manifestData {
+                packageName = "com.example.fromManifest"
+            }
+
+            variantType = VariantTypeImpl.ANDROID_TEST
+            parentVariant {
+            }
+
+            productFlavors {
+                create("flavor1") {
+                    applicationIdSuffix = "flavor1"
+                }
+                create("flavor2") {
+                }
+            }
+        }
+
+        expect {
+            namespace = "com.example.fromManifest.test"
+            namespaceForR = "com.example.fromManifest.test"
+        }
+    }
+
 
     // ---------------------------------------------------------------------------------------------
 
@@ -735,6 +818,13 @@ class VariantDslInfoTest2 :
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
         val dslExtension = Mockito.mock(CommonExtension::class.java)
+
+        // this does not quite test what VariantManager does because this only checks
+        // for the product flavors of that one variant, while VariantManager looks
+        // at all of them, but this is good enough to simulate and check the result.
+        val inconsistentTestAppId = VariantManager.checkInconsistentTestAppId(
+            given.flavors
+        )
 
         val parentVariant = if (given.variantType.isTestComponent && given.parentVariantGivenData != null) {
             val parentData = given.parentVariantGivenData!!
@@ -757,6 +847,7 @@ class VariantDslInfoTest2 :
                 publishingInfo = null,
                 experimentalProperties = mapOf(),
                 enableTestFixtures = false,
+                inconsistentTestAppId = false
             )
         } else { null }
 
@@ -778,6 +869,7 @@ class VariantDslInfoTest2 :
             publishingInfo = null,
             experimentalProperties = mapOf(),
             enableTestFixtures = false,
+            inconsistentTestAppId = inconsistentTestAppId,
         )
 
         return instantiateResult().also {

@@ -92,7 +92,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.internal.GeneratedSubclass
-import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.Locale
 import java.util.function.BooleanSupplier
@@ -193,7 +192,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
     private fun computeVariants(
         buildFeatureValues: BuildFeatureValues,
     ) {
-        val flavorDimensionList: List<String> = extension.flavorDimensionList
+        val flavorDimensionList: List<String> = dslExtension.flavorDimensions
         val computer = DimensionCombinator(
                 variantInputModel,
                 projectServices.issueReporter,
@@ -203,12 +202,18 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
         // get some info related to testing
         val testBuildTypeData = testBuildTypeData
 
+        // figure out whether there are inconsistency in the appId of the flavors
+        val inconsistentTestAppId = checkInconsistentTestAppId(
+            variantInputModel.productFlavors.values.map { it.productFlavor }
+        )
+
         // loop on all the new variant objects to create the legacy ones.
         for (variant in variants) {
             createVariantsFromCombination(
                     variant,
                     testBuildTypeData,
                     buildFeatureValues,
+                    inconsistentTestAppId
             )
         }
 
@@ -607,12 +612,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
 
     /** Create a TestVariantData for the specified testedVariantData.  */
     fun createTestComponents(
-            dimensionCombination: DimensionCombination,
-            buildTypeData: BuildTypeData<BuildType>,
-            productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-            testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
-            variantType: VariantType,
-            testFixturesEnabled: Boolean
+        dimensionCombination: DimensionCombination,
+        buildTypeData: BuildTypeData<BuildType>,
+        productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
+        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
+        variantType: VariantType,
+        testFixturesEnabled: Boolean,
+        inconsistentTestAppId: Boolean
     ): TestComponentImpl? {
 
         // handle test variant
@@ -639,6 +645,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 hasDynamicFeatures = globalScope.hasDynamicFeatures())
         variantDslInfoBuilder.parentVariant =
                 testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+        variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
+
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
@@ -805,9 +813,10 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
      * This will create both the prod and the androidTest/unitTest variants.
      */
     private fun createVariantsFromCombination(
-            dimensionCombination: DimensionCombination,
-            testBuildTypeData: BuildTypeData<BuildType>?,
-            buildFeatureValues: BuildFeatureValues,
+        dimensionCombination: DimensionCombination,
+        testBuildTypeData: BuildTypeData<BuildType>?,
+        buildFeatureValues: BuildFeatureValues,
+        inconsistentTestAppId: Boolean,
     ) {
         val variantType = variantFactory.variantType
 
@@ -888,7 +897,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                                 productFlavorDataList,
                                 variantInfo,
                                 VariantTypeImpl.ANDROID_TEST,
-                                testFixturesEnabledForVariant
+                                testFixturesEnabledForVariant,
+                                inconsistentTestAppId
                         )
                         androidTest?.let {
                             addTestComponent(it)
@@ -897,12 +907,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         }
                     }
                     val unitTest = createTestComponents(
-                            dimensionCombination,
-                            buildTypeData,
-                            productFlavorDataList,
-                            variantInfo,
-                            VariantTypeImpl.UNIT_TEST,
-                            testFixturesEnabledForVariant
+                        dimensionCombination,
+                        buildTypeData,
+                        productFlavorDataList,
+                        variantInfo,
+                        VariantTypeImpl.UNIT_TEST,
+                        testFixturesEnabledForVariant,
+                        false
                     )
                     unitTest?.let {
                         addTestComponent(it)
@@ -1058,6 +1069,26 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
          */
         fun getModifiedName(name: String): String {
             return "____$name"
+        }
+
+        internal fun checkInconsistentTestAppId(
+            flavors: List<ProductFlavor>
+        ): Boolean {
+            if (flavors.isEmpty()) {
+                return false
+            }
+
+            // as soon as one flavor declares an ID or a suffix, we bail.
+            // There are possible corner cases where a project could have 2 flavors setting the same
+            // appId in which case it would be safe to keep the current behavior but this is
+            // unlikely to be a common case.
+            for (flavor in flavors) {
+                if (flavor.applicationId != null || flavor.applicationIdSuffix != null) {
+                    return true
+                }
+            }
+
+            return false
         }
     }
 

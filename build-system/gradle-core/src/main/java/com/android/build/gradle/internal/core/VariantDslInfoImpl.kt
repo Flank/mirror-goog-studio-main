@@ -90,7 +90,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     /**
      * Public because this is needed by the old Variant API. Nothing else should touch this.
      */
-     val buildTypeObj: BuildType,
+    val buildTypeObj: BuildType,
     /** The list of product flavors. Items earlier in the list override later items.  */
     override val productFlavorList: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
@@ -113,6 +113,11 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     private val publishingInfo: VariantPublishingInfo?,
     override val experimentalProperties: Map<String, Any>,
     override val enableTestFixtures: Boolean,
+    /**
+     *  Whether there are inconsistent applicationId in the test.
+     *  This trigger a mode where the namespaceForR just returns the same as namespace.
+     */
+    private val inconsistentTestAppId: Boolean,
 ): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 
     private val dslNamespaceProvider: Provider<String>? = dslNamespace?.let { services.provider { dslNamespace } }
@@ -366,18 +371,24 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     }
 
     override val namespaceForR: Provider<String> by lazy {
-        if (!variantType.isTestComponent) {
-            throw RuntimeException("namespaceForR should only be used by test variants")
+        if (inconsistentTestAppId) {
+            namespace
+        } else {
+            if (!variantType.isTestComponent) {
+                throw RuntimeException("namespaceForR should only be used by test variants")
+            }
+
+            val testedVariant = parentVariant!!
+
+            // For legacy reason, this code does the following:
+            // - If testNamespace is set, use it.
+            // - If android.namespace is set, use it with .test added
+            // - else, use the variant applicationId.
+            // TODO(b/176931684) Remove this and use [namespace] directly everywhere.
+            dslNamespaceProvider
+                    ?: (testedVariant.dslNamespaceProvider?.let { it.map { "$it.test" } }
+                            ?: applicationId)
         }
-
-        val testedVariant = parentVariant!!
-
-        // For legacy reason, this code does the following:
-        // - If testNamespace is set, use it.
-        // - If android.namespace is set, use it with .test added
-        // - else, use the variant applicationId.
-        // TODO(b/176931684) Remove this and use [namespace] directly everywhere.
-        dslNamespaceProvider ?: (testedVariant.dslNamespaceProvider?.let { it.map { "$it.test" }} ?: applicationId)
     }
 
     // The namespace as specified by the user, either via the DSL or the `package` attribute of the

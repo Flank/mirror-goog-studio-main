@@ -295,6 +295,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     var variantSourceProvider: DefaultAndroidSourceSet? = null
     var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
     var parentVariant: VariantDslInfoImpl<*>? = null
+    var inconsistentTestAppId: Boolean = false
 
     fun addProductFlavor(
         productFlavor: ProductFlavor,
@@ -355,7 +356,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             nativeBuildSystem,
             publishingInfo,
             experimentalProperties,
-            enableTestFixtures
+            enableTestFixtures,
+            inconsistentTestAppId
         )
     }
 
