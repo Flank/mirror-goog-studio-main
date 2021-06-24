@@ -36,6 +36,7 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -610,28 +611,37 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         tag: String,
         context: JavaContext
     ): PsiClass? {
-        var cls: PsiClass? = null
-        if (tag.indexOf('.') == -1) {
-            for (
-                prefix in arrayOf(
-                    // See framework's PhoneLayoutInflater: these are the prefixes
-                    // that don't need fully qualified names in layouts
-                    ANDROID_WIDGET_PREFIX, ANDROID_VIEW_PKG, ANDROID_WEBKIT_PKG
-                )
-            ) {
-                cls = context.evaluator.findClass(prefix + tag)
-
-                if (cls != null) {
-                    break
-                }
-            }
-        } else {
-            cls = context.evaluator.findClass(tag)
-        }
-        return cls
+        return findViewForTag(tag, context.evaluator)
     }
 
     companion object {
+        // See framework's PhoneLayoutInflater: these are the prefixes
+        // that don't need fully qualified names in layouts
+        private val viewPackages = arrayOf(ANDROID_WIDGET_PREFIX, ANDROID_VIEW_PKG, ANDROID_WEBKIT_PKG)
+
+        /**
+         * Maps from a layout xml [tag] to the corresponding view class
+         * if possible
+         */
+        fun findViewForTag(
+            tag: String,
+            evaluator: JavaEvaluator
+        ): PsiClass? {
+            var cls: PsiClass? = null
+            if (tag.indexOf('.') == -1) {
+                for (prefix in viewPackages) {
+                    cls = evaluator.findClass(prefix + tag)
+
+                    if (cls != null) {
+                        break
+                    }
+                }
+            } else {
+                cls = evaluator.findClass(tag)
+            }
+            return cls
+        }
+
         /** Mismatched view types. */
         @JvmField
         val WRONG_VIEW_CAST = Issue.create(
