@@ -13,179 +13,193 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
+import org.intellij.lang.annotations.Language
 
-import com.android.tools.lint.detector.api.Detector;
-import org.intellij.lang.annotations.Language;
-
-/** Tests for {@link VectorDrawableCompatDetector}. */
-public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
-
-    @Language("XML")
-    private static final String VECTOR =
-            "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                    + "        android:height=\"256dp\"\n"
-                    + "        android:width=\"256dp\"\n"
-                    + "        android:viewportWidth=\"32\"\n"
-                    + "        android:viewportHeight=\"32\">\n"
-                    + "    <path android:fillColor=\"#8fff\"\n"
-                    + "          android:pathData=\"M20.5,9.5\n"
-                    + "                        c-1.955,0,-3.83,1.268,-4.5,3\n"
-                    + "                        c-0.67,-1.732,-2.547,-3,-4.5,-3\n"
-                    + "                        C8.957,9.5,7,11.432,7,14\n"
-                    + "                        c0,3.53,3.793,6.257,9,11.5\n"
-                    + "                        c5.207,-5.242,9,-7.97,9,-11.5\n"
-                    + "                        C25,11.432,23.043,9.5,20.5,9.5z\" />\n"
-                    + "</vector>\n";
-
-    @Language("XML")
-    private static final String LAYOUT_SRC =
-            "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                    + "                xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
-                    + "    <ImageView android:src=\"@drawable/foo\" />\n"
-                    + "</RelativeLayout>\n";
-
-    @Language("XML")
-    private static final String LAYOUT_SRC_COMPAT =
-            "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                    + "                xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
-                    + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
-                    + "</RelativeLayout>\n";
-
-    @Override
-    protected Detector getDetector() {
-        return new VectorDrawableCompatDetector();
+/** Tests for [VectorDrawableCompatDetector] */
+class VectorDrawableCompatDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return VectorDrawableCompatDetector()
     }
 
-    public void testSrcCompat() {
-        String expected =
-                ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]\n"
-                        + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
-                        + "               ~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-
+    fun testSrcCompat() {
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]
+                <ImageView app:srcCompat="@drawable/foo" />
+                           ~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml("src/main/res/drawable/foo.xml", VECTOR),
-                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC_COMPAT),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = false\n"))
-                .run()
-                .expect(expected);
+            xml("src/main/res/drawable/foo.xml", vector),
+            xml("src/main/res/layout/main_activity.xml", layoutSrcCompat),
+            gradle(
+                """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:2.0.0'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = false
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testSrcCompatWithRepository() {
-        String expected =
-                ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]\n"
-                        + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
-                        + "               ~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun testSrcCompatWithRepository() {
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]
+                <ImageView app:srcCompat="@drawable/foo" />
+                           ~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml("src/main/res/drawable/foo.xml", VECTOR),
-                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC_COMPAT),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = false\n"))
-                .run()
-                .expect(expected);
+            xml("src/main/res/drawable/foo.xml", vector),
+            xml("src/main/res/layout/main_activity.xml", layoutSrcCompat),
+            gradle(
+                """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:2.0.0'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = false
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testSrc() {
-        String expected =
-                ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
-                        + "    <ImageView android:src=\"@drawable/foo\" />\n"
-                        + "               ~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun testSrc() {
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
+                <ImageView android:src="@drawable/foo" />
+                           ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml("src/main/res/drawable/foo.xml", VECTOR),
-                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
-                .run()
-                .expect(expected);
+            xml("src/main/res/drawable/foo.xml", vector),
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            gradle(
+                """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:2.0.0'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = true
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testSrcWithResources() {
-        String expected =
-                ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
-                        + "    <ImageView android:src=\"@drawable/foo\" />\n"
-                        + "               ~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-
+    fun testSrcWithResources() {
+        val expected =
+            """
+            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
+                <ImageView android:src="@drawable/foo" />
+                           ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml("src/main/res/drawable/foo.xml", VECTOR),
-                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
-                .run()
-                .expect(expected);
+            xml("src/main/res/drawable/foo.xml", vector),
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            gradle(
+                """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:2.0.0'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = true
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testAnimatedVector() {
+    fun testAnimatedVector() {
         // Regression test for
         //  79950951: Android Studio should display lint warning when referencing an
         //   AnimatedVectorDrawable using `android:src` instead of `app:srcCompat`
         lint().files(
-                        xml("src/main/res/layout/main_activity.xml", LAYOUT_SRC),
-                        xml(
-                                "src/main/res/drawable/foo.xml",
-                                ""
-                                        + "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
-                                        + "    android:drawable=\"@drawable/vd_sample\">\n"
-                                        + "\n"
-                                        + "    <target android:name=\"vector\">\n"
-                                        + "        <aapt:attr name=\"android:animation\">\n"
-                                        + "            <objectAnimator\n"
-                                        + "                android:duration=\"3000\"\n"
-                                        + "                android:propertyName=\"alpha\"\n"
-                                        + "                android:valueFrom=\"1\"\n"
-                                        + "                android:valueTo=\"0\" />\n"
-                                        + "        </aapt:attr>\n"
-                                        + "    </target>\n"
-                                        + "\n"
-                                        + "</animated-vector>\n"),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:3.2.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
-                .run()
-                .expect(
-                        ""
-                                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
-                                + "    <ImageView android:src=\"@drawable/foo\" />\n"
-                                + "               ~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings");
+            xml("src/main/res/layout/main_activity.xml", layoutSrc),
+            xml(
+                "src/main/res/drawable/foo.xml",
+                """
+                <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:aapt="http://schemas.android.com/aapt"
+                    android:drawable="@drawable/vd_sample">
+
+                    <target android:name="vector">
+                        <aapt:attr name="android:animation">
+                            <objectAnimator
+                                android:duration="3000"
+                                android:propertyName="alpha"
+                                android:valueFrom="1"
+                                android:valueTo="0" />
+                        </aapt:attr>
+                    </target>
+
+                </animated-vector>
+                """
+            ).indented(),
+            gradle(
+                """
+                buildscript {
+                    dependencies {
+                        classpath 'com.android.tools.build:gradle:3.2.0'
+                    }
+                }
+                android.defaultConfig.vectorDrawables.useSupportLibrary = true
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]
+                <ImageView android:src="@drawable/foo" />
+                           ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
     }
+
+    @Language("XML")
+    private val vector =
+        """
+        <vector xmlns:android="http://schemas.android.com/apk/res/android"
+                android:height="256dp"
+                android:width="256dp"
+                android:viewportWidth="32"
+                android:viewportHeight="32">
+            <path android:fillColor="#8fff"
+                  android:pathData="M20.5,9.5
+                                c-1.955,0,-3.83,1.268,-4.5,3
+                                c-0.67,-1.732,-2.547,-3,-4.5,-3
+                                C8.957,9.5,7,11.432,7,14
+                                c0,3.53,3.793,6.257,9,11.5
+                                c5.207,-5.242,9,-7.97,9,-11.5
+                                C25,11.432,23.043,9.5,20.5,9.5z" />
+        </vector>
+        """.trimIndent()
+
+    @Language("XML")
+    private val layoutSrc =
+        """
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android">
+
+            <ImageView android:src="@drawable/foo" />
+        </RelativeLayout>
+        """.trimIndent()
+
+    @Language("XML")
+    private val layoutSrcCompat =
+        """
+        <RelativeLayout
+                        xmlns:app="http://schemas.android.com/apk/res-auto">
+            <ImageView app:srcCompat="@drawable/foo" />
+        </RelativeLayout>
+        """.trimIndent()
 }

@@ -13,202 +13,149 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
-
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_SRC;
-import static com.android.SdkConstants.ATTR_SRC_COMPAT;
-import static com.android.SdkConstants.AUTO_URI;
-import static com.android.SdkConstants.TAG_ANIMATED_VECTOR;
-import static com.android.SdkConstants.TAG_VECTOR;
-import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.repository.GradleVersion;
-import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.common.util.PathString;
-import com.android.resources.ResourceFolderType;
-import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
-import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LintModelModule;
-import com.android.tools.lint.model.LintModelVariant;
-import com.android.utils.XmlUtils;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Predicate;
-import org.w3c.dom.Attr;
+import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_SRC
+import com.android.SdkConstants.ATTR_SRC_COMPAT
+import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.DOT_XML
+import com.android.SdkConstants.FN_BUILD_GRADLE
+import com.android.SdkConstants.TAG_ANIMATED_VECTOR
+import com.android.SdkConstants.TAG_VECTOR
+import com.android.ide.common.rendering.api.ResourceNamespace
+import com.android.ide.common.resources.ResourceRepository
+import com.android.resources.ResourceFolderType
+import com.android.resources.ResourceType
+import com.android.resources.ResourceUrl
+import com.android.tools.lint.client.api.ResourceRepositoryScope
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.ResourceXmlDetector
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.utils.XmlUtils
+import org.w3c.dom.Attr
+import java.io.File
 
 /**
- * Finds all the vector drawables and checks references to them in layouts.
+ * Finds all the vector drawables and checks references to them in
+ * layouts.
  *
- * <p>This detector looks for common mistakes related to AppCompat support for vector drawables,
- * that is:
- *
- * <ul>
- *   <li>Using app:srcCompat without useSupportLibrary in build.gradle
- *   <li>Using android:src with useSupportLibrary in build.gradle
- * </ul>
+ * This detector looks for common mistakes related to AppCompat support
+ * for vector drawables, that is:
+ * * Using app:srcCompat without useSupportLibrary in build.gradle
+ * * Using android:src with useSupportLibrary in build.gradle
  */
-public class VectorDrawableCompatDetector extends ResourceXmlDetector {
-
-    /** The main issue discovered by this detector */
-    public static final Issue ISSUE =
-            Issue.create(
-                            "VectorDrawableCompat",
-                            "Using VectorDrawableCompat",
-                            "To use VectorDrawableCompat, you need to make two modifications to your project. "
-                                    + "First, set `android.defaultConfig.vectorDrawables.useSupportLibrary = true` "
-                                    + "in your `build.gradle` file, "
-                                    + "and second, use `app:srcCompat` instead of `android:src` to refer to vector "
-                                    + "drawables.",
-                            Category.CORRECTNESS,
-                            5,
-                            Severity.ERROR,
-                            new Implementation(
-                                    VectorDrawableCompatDetector.class,
-                                    Scope.ALL_RESOURCES_SCOPE,
-                                    Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo(
-                            "https://developer.android.com/guide/topics/graphics/vector-drawable-resources")
-                    .addMoreInfo(
-                            "https://medium.com/androiddevelopers/using-vector-assets-in-android-apps-4318fd662eb9");
+class VectorDrawableCompatDetector : ResourceXmlDetector() {
+    companion object {
+        /** The main issue discovered by this detector */
+        @JvmField
+        val ISSUE = create(
+            id = "VectorDrawableCompat",
+            briefDescription = "Using VectorDrawableCompat",
+            explanation = """
+                To use VectorDrawableCompat, you need to make two modifications to your project. \
+                First, set `android.defaultConfig.vectorDrawables.useSupportLibrary = true` in your \
+                `build.gradle` file, and second, use `app:srcCompat` instead of `android:src` to \
+                refer to vector drawables.""",
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.ERROR,
+            implementation = Implementation(
+                VectorDrawableCompatDetector::class.java,
+                Scope.ALL_RESOURCES_SCOPE,
+                Scope.RESOURCE_FILE_SCOPE
+            )
+        )
+            .addMoreInfo("https://developer.android.com/guide/topics/graphics/vector-drawable-resources")
+            .addMoreInfo("https://medium.com/androiddevelopers/using-vector-assets-in-android-apps-4318fd662eb9")
+    }
 
     /** Whether to skip the checks altogether. */
-    private boolean mSkipChecks;
+    private var skipChecks = false
 
     /** Whether the project uses AppCompat for vectors. */
-    private boolean mUseSupportLibrary;
+    private var useSupportLibrary = false
 
-    @Override
-    public void beforeCheckRootProject(@NonNull Context context) {
-        LintModelVariant variant = context.getProject().getBuildVariant();
+    override fun beforeCheckRootProject(context: Context) {
+        val variant = context.project.buildVariant
         if (variant == null) {
-            mSkipChecks = true;
-            return;
+            skipChecks = true
+            return
         }
-
-        if (context.getProject().getMinSdk() >= 21) {
-            mSkipChecks = true;
-            return;
+        if (context.project.minSdk >= 21) {
+            skipChecks = true
+            return
         }
-
-        GradleVersion version = context.getProject().getGradleModelVersion();
-        if (version == null || version.getMajor() < 2) {
-            mSkipChecks = true;
-            return;
+        val version = context.project.gradleModelVersion
+        if (version == null || version.major < 2) {
+            skipChecks = true
+            return
         }
-
-        mUseSupportLibrary = variant.getUseSupportLibraryVectorDrawables();
+        useSupportLibrary = variant.useSupportLibraryVectorDrawables
     }
 
-    @Override
-    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        //noinspection SimplifiableIfStatement
-        if (mSkipChecks) {
-            return false;
-        }
-
-        return folderType == ResourceFolderType.DRAWABLE || folderType == ResourceFolderType.LAYOUT;
+    override fun appliesTo(folderType: ResourceFolderType): Boolean {
+        return if (skipChecks)
+            false
+        else
+            folderType == ResourceFolderType.DRAWABLE || folderType == ResourceFolderType.LAYOUT
     }
 
-    @Nullable
-    @Override
-    public Collection<String> getApplicableAttributes() {
-        return mSkipChecks ? null : ImmutableList.of(ATTR_SRC, ATTR_SRC_COMPAT);
+    override fun getApplicableAttributes(): Collection<String>? {
+        return if (skipChecks) null else listOf(ATTR_SRC, ATTR_SRC_COMPAT)
     }
 
-    @Override
-    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
-        if (mSkipChecks) {
-            return;
+    override fun visitAttribute(context: XmlContext, attribute: Attr) {
+        if (skipChecks) {
+            return
         }
-
-        Predicate<String> isVector;
-        LintClient client = context.getClient();
-        boolean full = context.isGlobalAnalysis();
-        Project project = full ? context.getMainProject() : context.getProject();
-        ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
-        isVector = name -> checkResourceRepository(resources, name);
-
-        String name = attribute.getLocalName();
-        String namespace = attribute.getNamespaceURI();
-        if ((ATTR_SRC.equals(name) && !ANDROID_URI.equals(namespace)
-                || (ATTR_SRC_COMPAT.equals(name) && !AUTO_URI.equals(namespace)))) {
+        val client = context.client
+        val full = context.isGlobalAnalysis()
+        val project = if (full) context.mainProject else context.project
+        val resources = client.getResources(project, ResourceRepositoryScope.LOCAL_DEPENDENCIES)
+        fun isVector(name: String) = checkResourceRepository(resources, name)
+        val name = attribute.localName
+        val namespace = attribute.namespaceURI
+        if (ATTR_SRC == name && ANDROID_URI != namespace || ATTR_SRC_COMPAT == name && AUTO_URI != namespace) {
             // Not the attribute we are looking for.
-            return;
+            return
         }
-
-        ResourceUrl resourceUrl = ResourceUrl.parse(attribute.getValue());
-        if (resourceUrl == null) {
-            return;
-        }
-
-        if (mUseSupportLibrary && ATTR_SRC.equals(name) && isVector.test(resourceUrl.name)) {
-            Location location = context.getNameLocation(attribute);
-            String message = "When using VectorDrawableCompat, you need to use `app:srcCompat`";
-            context.report(ISSUE, attribute, location, message);
-        }
-
-        if (!mUseSupportLibrary
-                && ATTR_SRC_COMPAT.equals(name)
-                && isVector.test(resourceUrl.name)) {
-            Location location = context.getNameLocation(attribute);
-            String path = "build.gradle";
-            LintModelModule model = context.getProject().getBuildModule();
+        val resourceUrl = ResourceUrl.parse(attribute.value) ?: return
+        if (useSupportLibrary && ATTR_SRC == name && isVector(resourceUrl.name)) {
+            val location = context.getNameLocation(attribute)
+            val message = "When using VectorDrawableCompat, you need to use `app:srcCompat`"
+            context.report(ISSUE, attribute, location, message)
+        } else if (!useSupportLibrary && ATTR_SRC_COMPAT == name && isVector(resourceUrl.name)) {
+            val location = context.getNameLocation(attribute)
+            var path = FN_BUILD_GRADLE
+            val model = context.project.buildModule
             if (model != null) {
-                path = model.getModulePath() + File.separator + path;
+                path = model.modulePath + File.separator + path
             }
-            String message =
-                    "To use VectorDrawableCompat, you need to set "
-                            + "`android.defaultConfig.vectorDrawables.useSupportLibrary = true` in `"
-                            + path
-                            + "`";
-            context.report(ISSUE, attribute, location, message);
+            val message = "To use VectorDrawableCompat, you need to set " +
+                    "`android.defaultConfig.vectorDrawables.useSupportLibrary = true` in `$path`"
+            context.report(ISSUE, attribute, location, message)
         }
     }
 
-    private static boolean checkResourceRepository(
-            @NonNull ResourceRepository resources, @NonNull String name) {
-        List<ResourceItem> items =
-                resources.getResources(ResourceNamespace.TODO(), ResourceType.DRAWABLE, name);
+    private fun checkResourceRepository(resources: ResourceRepository, name: String): Boolean {
+        val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.DRAWABLE, name)
 
         // Check if at least one drawable with this name is a vector.
-        for (ResourceItem item : items) {
-            PathString source = item.getSource();
-            if (source == null) {
-                return false;
+        for (item in items) {
+            val source = item.source ?: return false
+            val file = source.toFile() ?: return false
+            if (!source.fileName.endsWith(DOT_XML)) {
+                continue
             }
-            File file = source.toFile();
-            if (file == null) {
-                return false;
-            }
-
-            if (!source.getFileName().endsWith(SdkConstants.DOT_XML)) {
-                continue;
-            }
-
-            String rootTagName = XmlUtils.getRootTagName(file);
-            return TAG_VECTOR.equals(rootTagName) || TAG_ANIMATED_VECTOR.equals(rootTagName);
+            val rootTagName = XmlUtils.getRootTagName(file)
+            return TAG_VECTOR == rootTagName || TAG_ANIMATED_VECTOR == rootTagName
         }
-
-        return false;
+        return false
     }
 }
