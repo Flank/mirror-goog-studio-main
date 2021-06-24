@@ -259,9 +259,9 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             }
 
             runner.setRunOptions(
-                    testData.getAnimationsDisabled()
-                            ? "--no_window_animation "
-                            : "" + "--user " + userId);
+                    (testData.getAnimationsDisabled() ? "--no_window_animation " : "")
+                            + "--user "
+                            + userId);
 
             runner.setRunName(deviceName);
             runner.setMaxtimeToOutputResponse(timeoutInMs);

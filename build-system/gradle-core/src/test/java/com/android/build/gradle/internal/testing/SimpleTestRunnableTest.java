@@ -72,6 +72,7 @@ public class SimpleTestRunnableTest {
     @NonNull private String instrumentationRunner;
     @NonNull private String applicationId;
 
+    private boolean animationsDisabled;
     private String testedApplicationId;
     @NonNull private String flavorName;
     @NonNull private File testApk;
@@ -88,6 +89,7 @@ public class SimpleTestRunnableTest {
         applicationId = "com.example.app";
         instrumentationRunner = "android.support.test.runner.AndroidJUnitRunner";
         flavorName = "";
+        animationsDisabled = false;
         testDirectories = new ArrayList<>();
         testedApks = new ArrayList<>();
         instrumentationRunnerArguments = new HashMap<>();
@@ -436,6 +438,19 @@ public class SimpleTestRunnableTest {
                         logger);
     }
 
+    @Test
+    public void verifyAnimationsDisabled() throws Exception {
+        animationsDisabled = true;
+        call(
+                1,
+                "am instrument -w -r --no_window_animation --user 42"
+                        + "  -e shardIndex 2 -e numShards 10 "
+                        + "com.example.app/android.support.test.runner.AndroidJUnitRunner");
+        verify(deviceConnector).installPackage(eq(testedApks.get(0)), any(), anyInt(), any());
+        verify(deviceConnector).installPackage(eq(testApk), any(), anyInt(), any());
+        verifyNoMoreInteractions(deviceConnector);
+    }
+
     private SimpleTestRunnable getSimpleTestRunnable(
             File buddyApk,
             File resultsDir,
@@ -465,6 +480,13 @@ public class SimpleTestRunnableTest {
     }
 
     private void call(int apkCount) throws Exception {
+        call(
+                apkCount,
+                "am instrument -w -r --user 42  -e shardIndex 2 -e numShards 10 "
+                        + "com.example.app/android.support.test.runner.AndroidJUnitRunner");
+    }
+
+    private void call(int apkCount, String expectedShellCommand) throws Exception {
         File prodApks = temporaryFolder.newFolder();
         testedApks = new ArrayList<>();
         for (int i = 0; i < apkCount; i++) {
@@ -502,14 +524,7 @@ public class SimpleTestRunnableTest {
 
         verify(deviceConnector).installPackage(buddyApk, installOptions, TIMEOUT, logger);
         verify(deviceConnector)
-                .executeShellCommand(
-                        eq(
-                                "am instrument -w -r --user 42  -e shardIndex 2 -e numShards 10 "
-                                        + "com.example.app/android.support.test.runner.AndroidJUnitRunner"),
-                        any(),
-                        anyLong(),
-                        anyLong(),
-                        any());
+                .executeShellCommand(eq(expectedShellCommand), any(), anyLong(), anyLong(), any());
         verify(deviceConnector).uninstallPackage("com.example.app", TIMEOUT, logger);
         verify(deviceConnector).disconnect(TIMEOUT, logger);
         verifyNoMoreInteractions(deviceConnector);
@@ -522,7 +537,7 @@ public class SimpleTestRunnableTest {
                 testedApplicationId,
                 instrumentationRunner,
                 instrumentationRunnerArguments,
-                false,
+                animationsDisabled,
                 false,
                 minSdkVersion,
                 false,
