@@ -280,6 +280,7 @@ class VariantDslInfoBuilder private constructor(
     var variantSourceProvider: DefaultAndroidSourceSet? = null
     var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
     var parentVariant: VariantDslInfoImpl? = null
+    var inconsistentTestAppId: Boolean = false
 
     fun addProductFlavor(
         productFlavor: ProductFlavor,
@@ -316,6 +317,7 @@ class VariantDslInfoBuilder private constructor(
             extension.getDslNamespace(variantType),
             nativeBuildSystem,
             experimentalProperties,
+            inconsistentTestAppId
         )
     }
 
