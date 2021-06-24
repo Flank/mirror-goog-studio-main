@@ -20,6 +20,7 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_FRAGMENT
 import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.CLASS_ACTIVITY
 import com.android.SdkConstants.CLASS_APPLICATION
@@ -114,7 +115,8 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                     TAG_PROVIDER == tag
                 ) {
                     val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
-                    val pkg = context.project.getPackage()
+                    val pkg = context.document.documentElement.getAttributeNode(ATTR_PACKAGE)?.value
+                        ?: context.project.getPackage()
                     checkClassReference(
                         context,
                         pkg,

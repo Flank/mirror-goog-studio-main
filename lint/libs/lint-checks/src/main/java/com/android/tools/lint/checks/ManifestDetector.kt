@@ -731,6 +731,9 @@ class ManifestDetector :
         }
         val incident = Incident(issue, message, location, fix)
         context.report(incident)
+        if (context.isGlobalAnalysis()) {
+            incident.project(context.mainProject)
+        }
     }
 
     private fun checkOverride(context: XmlContext, element: Element, attributeName: String) {
@@ -819,7 +822,8 @@ class ManifestDetector :
                 if (nameNode != null) {
                     var name = nameNode.value
                     if (name.isNotEmpty()) {
-                        val pkg = context.project.getPackage()
+                        val pkg = context.document.documentElement.getAttributeNode(ATTR_PACKAGE)?.value
+                            ?: context.project.getPackage()
                         if (name[0] == '.') {
                             name = pkg + name
                         } else if (name.indexOf('.') == -1) {
@@ -1144,7 +1148,8 @@ class ManifestDetector :
             val nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: continue
             var name = nameNode.value
             val base = name.substring(name.lastIndexOf('.') + 1)
-            val pkg = mainProject.getPackage()
+            val pkg = mergedManifest.documentElement.getAttributeNode(ATTR_PACKAGE)?.value
+                ?: mainProject.getPackage()
 
             if (!mainProject.isLibrary && pkg != null && name.contains("\${applicationId}")) {
                 name = name.replace("\${applicationId}", pkg)
@@ -1189,6 +1194,9 @@ class ManifestDetector :
                         "${humanReadableName.usLocaleCapitalize()} name `$base` is not unique (appears in both `$prevName` and `$name`)"
                     val incident = Incident(UNIQUE_PERMISSION, element, location, message)
                     context.report(incident)
+                    if (context.isGlobalAnalysis()) {
+                        incident.project(context.mainProject)
+                    }
                 }
                 nameToFull
             } else {

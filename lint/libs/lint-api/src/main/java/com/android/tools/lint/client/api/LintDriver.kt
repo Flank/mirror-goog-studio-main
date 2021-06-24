@@ -1144,9 +1144,7 @@ class LintDriver(
             check.beforeCheckEachProject(projectContext)
         }
 
-        assert(currentProject === project)
-        runFileDetectors(project, main)
-        runDelayedRunnables()
+        val manifestContexts = initializeManifests(project, main)
 
         val analyzeLibraries = checkDependencies && !isIsolated() &&
             // If the client supports partial analysis, it should merge results
@@ -1159,6 +1157,8 @@ class LintDriver(
         }
 
         currentProject = project
+        runFileDetectors(project, main, manifestContexts)
+        runDelayedRunnables()
 
         for (check in applicableDetectors) {
             client.runReadAction {
@@ -1246,7 +1246,25 @@ class LintDriver(
 
     private class CachedUastSourceList(val project: Project, var uastSourceList: UastSourceList)
 
-    private fun runFileDetectors(project: Project, main: Project?) {
+    private fun initializeManifests(project: Project, main: Project?): List<XmlContext> {
+        // Look up manifest information (but not for library projects)
+        val contexts = mutableListOf<XmlContext>()
+        if (project.isAndroidProject) {
+            for (manifestFile in project.manifestFiles) {
+                client.runReadAction(
+                    Runnable {
+                        val context = createXmlContext(project, main, manifestFile, null)
+                            ?: return@Runnable
+                        project.readManifest(context.document)
+                        contexts.add(context)
+                    }
+                )
+            }
+        }
+        return contexts
+    }
+
+    private fun runFileDetectors(project: Project, main: Project?, manifestContexts: List<XmlContext>? = null) {
         if (phase == 1) {
             moduleCount++
         }
@@ -1282,36 +1300,27 @@ class LintDriver(
         }
 
         // Look up manifest information (but not for library projects)
-        if (project.isAndroidProject) {
-            for (manifestFile in project.manifestFiles) {
-                client.runReadAction(
-                    Runnable {
-                        val context = createXmlContext(project, main, manifestFile, null)
-                            ?: return@Runnable
-                        project.readManifest(context.document)
-                        if ((
-                            !project.isLibrary || main != null &&
-                                main.isMergingManifests
-                            ) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
-                                }
-
-                                val v = ResourceVisitor(client, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
+        if ((!project.isLibrary || main != null && main.isMergingManifests) && scope.contains(Scope.MANIFEST)) {
+            val contexts = manifestContexts
+                ?: initializeManifests(project, main)
+            contexts.forEach { context ->
+                client.runReadAction {
+                    val detectors = scopeDetectors[Scope.MANIFEST]
+                    if (detectors != null) {
+                        val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                        for (detector in detectors) {
+                            if (detector is XmlScanner) {
+                                xmlDetectors.add(detector)
                             }
                         }
+
+                        val v = ResourceVisitor(client, xmlDetectors, null)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        v.visitFile(context)
+                        fileCount++
+                        resourceFileCount++
                     }
-                )
+                }
             }
         }
 
