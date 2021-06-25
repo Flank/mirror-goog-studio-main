@@ -448,7 +448,9 @@ public abstract class BasePlugin<
         project.getPlugins().apply(JavaBasePlugin.class);
 
         dslServices =
-                new DslServicesImpl(projectServices, sdkComponentsBuildService, getProjectTypeV2());
+                new DslServicesImpl(
+                        projectServices,
+                        sdkComponentsBuildService);
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(

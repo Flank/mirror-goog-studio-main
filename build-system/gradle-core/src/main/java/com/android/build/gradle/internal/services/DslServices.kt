@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.builder.model.v2.ide.ProjectType
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectContainer
@@ -27,6 +26,8 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KClass
 
 /**
  * Services for the DSL objects.
@@ -41,7 +42,6 @@ interface DslServices: BaseServices {
     val logger: Logger
     val buildDirectory: DirectoryProperty
     val sdkComponents: Provider<SdkComponentsBuildService>
-    val projectType: ProjectType?
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
     fun <T> domainObjectContainer(
