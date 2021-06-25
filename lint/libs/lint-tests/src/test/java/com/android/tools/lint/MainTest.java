@@ -492,7 +492,8 @@ public class MainTest extends AbstractCheckTest {
         assertTrue(baseline.exists());
 
         String baselineContents = FilesKt.readText(baseline, Charsets.UTF_8);
-        assertThat(baselineContents).contains("client=\"gradle\" name=\"AGP (4.2.1)\"");
+        assertThat(baselineContents).contains("client=\"gradle\"");
+        assertThat(baselineContents).contains("name=\"AGP (4.2.1)\"");
 
         //noinspection ResultOfMethodCallIgnored
         baseline.delete();

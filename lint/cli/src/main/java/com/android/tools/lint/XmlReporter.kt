@@ -19,8 +19,6 @@ package com.android.tools.lint
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Incident
 import com.google.common.annotations.Beta
-import com.google.common.io.Files
-import java.io.BufferedWriter
 import java.io.File
 import java.io.IOException
 
@@ -45,7 +43,7 @@ class XmlReporter constructor(
 ) : Reporter(client, output) {
     private var attributes: MutableMap<String, String>? = null
 
-    fun setBaselineAttributes(client: LintClient, variant: String?) {
+    fun setBaselineAttributes(client: LintClient, variant: String?, includeDependencies: Boolean) {
         setAttribute(ATTR_CLIENT, LintClient.clientName)
         setAttribute(ATTR_CLIENT_NAME, client.getClientDisplayName())
         val revision = client.getClientDisplayRevision()
@@ -55,6 +53,7 @@ class XmlReporter constructor(
         if (variant != null) {
             setAttribute(ATTR_VARIANT, variant)
         }
+        setAttribute(ATTR_CHECK_DEPS, includeDependencies.toString())
     }
 
     /**
@@ -72,7 +71,7 @@ class XmlReporter constructor(
 
     @Throws(IOException::class)
     override fun write(stats: LintStats, incidents: List<Incident>) {
-        val writer = BufferedWriter(Files.newWriter(output!!, Charsets.UTF_8))
+        val writer = output?.bufferedWriter() ?: return
         val xmlWriter = XmlWriter(client, type, writer)
 
         val clientAttributes: List<Pair<String, String?>> =
