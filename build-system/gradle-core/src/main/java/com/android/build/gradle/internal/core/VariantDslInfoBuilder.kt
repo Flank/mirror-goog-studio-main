@@ -294,7 +294,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
 
     var variantSourceProvider: DefaultAndroidSourceSet? = null
     var multiFlavorSourceProvider: DefaultAndroidSourceSet? = null
-    var parentVariant: VariantDslInfoImpl<*>? = null
+    var productionVariant: VariantDslInfoImpl<*>? = null
     var inconsistentTestAppId: Boolean = false
 
     fun addProductFlavor(
@@ -346,7 +346,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             // this could be removed once the product flavor is internal only.
             flavorList.toImmutableList(),
             signingConfigOverride,
-            parentVariant,
+            productionVariant,
             manifestDataProvider,
             dslServices,
             variantPropertiesApiServices,

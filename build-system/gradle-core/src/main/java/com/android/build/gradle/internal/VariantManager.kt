@@ -466,7 +466,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             testFixtureMainVariantName = mainComponentInfo.variant.name
         )
 
-        variantDslInfoBuilder.parentVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+        variantDslInfoBuilder.productionVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
 
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
@@ -643,7 +643,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 variantPropertiesApiServices,
                 extension = dslExtension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures())
-        variantDslInfoBuilder.parentVariant =
+        variantDslInfoBuilder.productionVariant =
                 testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
         variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
 

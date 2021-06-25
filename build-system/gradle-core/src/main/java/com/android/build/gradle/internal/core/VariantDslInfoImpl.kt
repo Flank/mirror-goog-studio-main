@@ -94,13 +94,12 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     override val productFlavorList: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
     /**
-     * The parent variant. This is only valid for test and test fixtures variants. This
-     * is the "production" variant.
+     * The production variant. This is only valid for test and test fixtures variants.
      * This is mostly used to derive some property values from the parent when it's either
      * not present in the DSL for this (test/test-fixture) variant, or when it's always
      * derived from the parent (e.g. test fixture namespace).
      */
-    private val parentVariant: VariantDslInfoImpl<*>? = null,
+    private val productionVariant: VariantDslInfoImpl<*>? = null,
     val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
@@ -147,7 +146,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      * @see VariantType.isTestComponent
      */
     override val testedVariant: VariantDslInfo<*>?
-        get() = if (variantType.isTestComponent) { parentVariant } else null
+        get() = if (variantType.isTestComponent) { productionVariant } else null
 
     private val mergedNdkConfig = MergedNdkConfig()
     private val mergedExternalNativeBuildOptions =
@@ -316,7 +315,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
             // Namespace is always derived from the parent variant's namespace
             variantType.isTestFixturesComponent -> {
                 val parentVariant =
-                        parentVariant
+                        productionVariant
                                 ?: throw RuntimeException("null parentVariantImpl in test-fixtures VariantDslInfoImpl")
                 parentVariant.namespace.map { "$it.$testFixturesFeatureName" }
             }
@@ -377,7 +376,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
                 throw RuntimeException("namespaceForR should only be used by test variants")
             }
 
-            val testedVariant = parentVariant!!
+            val testedVariant = productionVariant!!
 
             // For legacy reason, this code does the following:
             // - If testNamespace is set, use it.
@@ -644,7 +643,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
         get() {
             val variantDslInfo: VariantDslInfoImpl<*> =
                 if (variantType.isTestComponent) {
-                    parentVariant!!
+                    productionVariant!!
                 } else {
                     this
                 }
