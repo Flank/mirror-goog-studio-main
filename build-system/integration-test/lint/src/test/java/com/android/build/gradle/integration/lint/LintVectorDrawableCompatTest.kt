@@ -55,6 +55,7 @@ class LintVectorDrawableCompatTest(private val usePartialAnalysis: Boolean) {
 
                                 lintOptions {
                                     abortOnError false
+                                    enable 'VectorDrawableCompat'
                                     textOutput file("lint-results.txt")
                                 }
                             }

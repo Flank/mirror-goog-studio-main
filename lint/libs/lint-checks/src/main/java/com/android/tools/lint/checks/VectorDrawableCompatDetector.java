@@ -89,7 +89,10 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
                     .addMoreInfo(
                             "https://developer.android.com/guide/topics/graphics/vector-drawable-resources")
                     .addMoreInfo(
-                            "https://medium.com/androiddevelopers/using-vector-assets-in-android-apps-4318fd662eb9");
+                            "https://medium.com/androiddevelopers/using-vector-assets-in-android-apps-4318fd662eb9")
+                    // b/187341964: Temporarily disabled; fixed in 7.1 but the fix is too risky for
+                    // 7.0
+                    .setEnabledByDefault(false);
 
     /** Whether to skip the checks altogether. */
     private boolean mSkipChecks;
