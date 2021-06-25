@@ -152,6 +152,7 @@ function run_bazel_test() {
     --build_tag_filters=${build_tag_filters} \
     --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
     --define=meta_android_build_number="${BUILD_NUMBER}" \
+    --build_metadata=ANDROID_BUILD_ID="${BUILD_NUMBER}" \
     --test_tag_filters=${test_tag_filters} \
     --tool_tag=${SCRIPT_NAME} \
     --embed_label="${AS_BUILD_NUMBER}" \
