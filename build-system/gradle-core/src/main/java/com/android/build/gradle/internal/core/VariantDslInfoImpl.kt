@@ -84,7 +84,6 @@ import java.util.concurrent.Callable
  */
 open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> internal constructor(
     override val componentIdentity: ComponentIdentity,
-    override val dslExtension: CommonExtensionT,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     /**

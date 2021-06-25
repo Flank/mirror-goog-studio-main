@@ -340,7 +340,6 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 dimensionCombination.buildType,
                 dimensionCombination.productFlavors
             ),
-            extension,
             variantType,
             defaultConfig,
             buildType,

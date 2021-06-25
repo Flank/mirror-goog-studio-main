@@ -817,7 +817,6 @@ class VariantDslInfoTest2 :
     override fun defaultWhen(given: GivenData): ResultData? {
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
-        val dslExtension = Mockito.mock(CommonExtension::class.java)
 
         // this does not quite test what VariantManager does because this only checks
         // for the product flavors of that one variant, while VariantManager looks
@@ -831,7 +830,6 @@ class VariantDslInfoTest2 :
 
             VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
                 componentIdentity = componentIdentity,
-                dslExtension = dslExtension,
                 variantType = parentData.variantType,
                 defaultConfig = given.defaultConfig,
                 buildTypeObj = given.buildType,
@@ -853,7 +851,6 @@ class VariantDslInfoTest2 :
 
         val variantDslInfo = VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
             componentIdentity = componentIdentity,
-            dslExtension = dslExtension,
             variantType = given.variantType,
             defaultConfig = given.defaultConfig,
             buildTypeObj = given.buildType,

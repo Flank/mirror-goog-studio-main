@@ -67,11 +67,6 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
     val testedVariant: VariantDslInfo<*>?
 
     /**
-     * Returns the DSL initialized extension object for this plugin.
-     */
-    val dslExtension: CommonExtensionT
-
-    /**
      * Returns a full name that includes the given splits name.
      *
      * @param splitName the split name
