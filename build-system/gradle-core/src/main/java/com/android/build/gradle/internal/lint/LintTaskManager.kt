@@ -5,11 +5,13 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStdout
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.core.VariantType
+import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.TaskProvider
@@ -187,8 +189,8 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
     companion object {
 
-        internal fun File?.isLintStdout() = this?.path == "stdout"
-        internal fun File?.isLintStderr() = this?.path == "stdout"
+        internal fun File.isLintStdout() = this.path == File("stdout").path
+        internal fun File.isLintStderr() = this.path == File("stderr").path
 
         internal fun needsCopyReportTask(lintOptions: LintOptions) : Boolean {
             val textOutput = lintOptions.textOutput
