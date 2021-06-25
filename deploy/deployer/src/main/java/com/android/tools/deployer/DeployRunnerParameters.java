@@ -31,7 +31,10 @@ public class DeployRunnerParameters {
     private boolean forceFullInstall = false;
     private boolean optimisticInstall = false;
     private String installersPath = null;
-    private List<String> parameters = new ArrayList<>();
+
+    private String applicationId;
+    private final List<String> targetDevices = new ArrayList<>();
+    private final List<String> apkPaths = new ArrayList<>();
 
     private DeployRunnerParameters() {}
 
@@ -39,55 +42,53 @@ public class DeployRunnerParameters {
         if ("--force-full-install".equals(arg)) {
             forceFullInstall = true;
         } else if (arg.startsWith("--installers-path=")) {
-            installersPath = arg.substring(18);
+            installersPath = arg.substring("--installers-path=".length());
         } else if (arg.startsWith("--optimistic-install")) {
             optimisticInstall = true;
+        } else if (arg.startsWith("--device=")) {
+            targetDevices.add(arg.substring("--device=".length()));
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
     }
 
-    private Command parseCommand(String arg) {
+    private void parseCommand(String arg) {
         try {
             command = Command.valueOf(arg.toUpperCase());
         } catch (Exception e) {
             throw new RuntimeException("Unknown command: '" + arg + "'");
         }
-        return Command.UNKNOWN;
     }
 
     public static DeployRunnerParameters parse(String[] args) {
         DeployRunnerParameters drp = new DeployRunnerParameters();
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
-            if (arg.startsWith("--")) {
-                drp.parseFlag(arg);
-                continue;
+        drp.parseCommand(args[0]);
+        for (int i = 1; i < args.length; i++) {
+            if (args[i].startsWith("--")) {
+                drp.parseFlag(args[i]);
+            } else if (drp.applicationId == null) {
+                drp.applicationId = args[i];
+            } else {
+                drp.apkPaths.add(args[i]);
             }
-
-            if (drp.command == Command.UNKNOWN) {
-                drp.parseCommand(arg);
-                continue;
-            }
-            drp.add(arg);
         }
         return drp;
     }
 
-    public int size() {
-        return parameters.size();
-    }
-
-    public void add(String parameter) {
-        parameters.add(parameter);
-    }
-
-    public String get(int index) {
-        return parameters.get(index);
-    }
-
     public Command getCommand() {
         return command;
+    }
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public List<String> getTargetDevices() {
+        return targetDevices;
+    }
+
+    public List<String> getApks() {
+        return apkPaths;
     }
 
     public boolean isForceFullInstall() {

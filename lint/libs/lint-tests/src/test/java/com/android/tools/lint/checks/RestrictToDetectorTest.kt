@@ -610,6 +610,51 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testCrossPackage() {
+        // Regression test for http://b/190113936 AGP 7 VisibleForTests Lint check bug
+        lint().files(
+            bytecode(
+                "libs/library.jar",
+                java(
+                    """
+                    package com.example;
+
+                    import androidx.annotation.VisibleForTesting;
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+                    public class Foo {
+                      public void foo() { }
+                    }
+                    """
+                ).indented(),
+                0x624cd40e,
+                """
+                com/example/Foo.class:
+                H4sIAAAAAAAAAGVOTUvDQBScZ9qkTaut3kQ8ePLjYI4eLIIIgUJR0NL7Jlnr
+                lmSfJJvav+VJ8OAP8EeJLxF68bAzb2dn3s73z+cXgCschPAwCjAOsE/wJ8Ya
+                d0Pwzs4XhM4dZ5owmhmr7+si0eVcJbko3jMzIXziukx1bBqpFzNfrtRaEY4e
+                a+tMoad2bSojgVtr2Sln2FaE05myWckm20Rqq0eLP2fM5VxXztjlNaHP7kWX
+                b6bSnnT1huigK21SLiK9UcVrrqO46TFuvo1yZZfRQ7LSqcMJdtBkIExNTNCX
+                27EwCXcvPkDvMhACQb8VA8He1nrYvuK/rSc7++3mEAPhgahDObtT7P0CP54v
+                9VcBAAA=
+                """
+            ),
+            manifest(),
+            java(
+                """
+                package com.example;
+
+                public class Bar {
+                  public void useFoo(Foo foo) {
+                    foo.foo(); // OK
+                  }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun testGmsHide() {
         // Tests that the @Hide works, and that when applied to classes, it is applied to
         // constructors and to static methods.

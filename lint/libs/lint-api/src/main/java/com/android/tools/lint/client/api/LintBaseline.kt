@@ -326,6 +326,12 @@ class LintBaseline(
                 val s = "Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
                 old.startsWith(s) && new.startsWith(s)
             }
+            "NewApi", "InlinedApi", "UnusedAttribute", -> {
+                val index1 = old.indexOf(':')
+                val index2 = new.indexOf(':')
+                index1 != -1 && index2 != -1 && old.regionMatches(index1, new, index2, old.length - index1)
+            }
+
             "RestrictedApi" -> {
                 val index1 = old.indexOf('(')
                 val index2 = new.indexOf('(')

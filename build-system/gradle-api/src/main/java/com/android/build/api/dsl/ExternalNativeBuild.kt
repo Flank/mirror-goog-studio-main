@@ -41,7 +41,6 @@ import org.gradle.api.Incubating
  * To learn more about including external native builds to your Android Studio projects, read
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html)
  */
-@Incubating
 interface ExternalNativeBuild {
 
     /**

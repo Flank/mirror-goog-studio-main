@@ -59,6 +59,7 @@ import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.tools.lint.model.LintModelAndroidLibrary
 import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.PathVariables
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
@@ -938,6 +939,9 @@ abstract class LintClient {
     val knownProjects: Collection<Project>
         get() = dirToProject.values
 
+    /** Path variables to use when reading and writing paths */
+    open val pathVariables = PathVariables()
+
     /**
      * Registers the given project for the given directory. This can be
      * used when projects are initialized outside of the client itself.
@@ -1230,6 +1234,10 @@ abstract class LintClient {
      * @return a list of rule jars (possibly empty).
      */
     open fun findGlobalRuleJars(): List<File> {
+        if (isUnitTest) {
+            return emptyList()
+        }
+
         // Look for additional detectors registered by the user, via
         // (1) an environment variable (useful for build servers etc), and
         // (2) via jar files in the .android/lint directory
@@ -1245,13 +1253,15 @@ abstract class LintClient {
                                 files = ArrayList()
                             }
                             files.add(jarFile)
-                            log(
-                                Severity.WARNING, null,
-                                "Loaded lint jar file from %1\$s (%2\$s); this will stop " +
-                                    "working soon. If you need to push lint rules into a " +
-                                    "build, use the ANDROID_LINT_JARS environment variable.",
-                                jarFile.parent, jarFile.name
-                            )
+                            val message =
+                                "Loaded lint jar file from ${jarFile.parent} ($jarFile.name); this will stop " +
+                                    "working soon. If you need to push lint rules into a build, use the " +
+                                    "`ANDROID_LINT_JARS` environment variable or the `--lint-rule-jars` flag or " +
+                                    "a `lint.xml` file setting `<lint lintJars=\"path\"...>`"
+                            report(this, IssueRegistry.LINT_WARNING, message, jarFile)
+                            if (isStudio) {
+                                log(Severity.WARNING, null, message, jarFile.parent, jarFile.name)
+                            }
                         }
                     }
                 }
@@ -1276,7 +1286,7 @@ abstract class LintClient {
             }
         }
 
-        return if (files != null) files else emptyList()
+        return files ?: emptyList()
     }
 
     /**

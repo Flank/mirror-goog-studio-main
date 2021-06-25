@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
+import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
@@ -1390,6 +1391,105 @@ class PermissionDetectorTest : AbstractCheckTest() {
             // App skeleton
             getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION").to("../app/AndroidManifest.xml")
         ).run().expectClean()
+    }
+
+    fun test183760049() {
+        fun getTestProject(manifest: TestFile): ProjectDescription = project().files(
+            manifest,
+            java(
+                """
+                package test.pkg;
+
+                import android.app.AlarmManager;
+                import android.app.PendingIntent;
+
+                public class ExactAlarmTest {
+                    public void test(AlarmManager alarmManager,
+                                     AlarmManager.AlarmClockInfo info,
+                                     PendingIntent operation) {
+                        alarmManager.setAlarmClock(info, operation);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.AlarmManager
+                import android.app.PendingIntent
+
+                fun test(
+                    alarmManager: AlarmManager,
+                    operation: PendingIntent?
+                ) {
+                    alarmManager.setExact(0, 0L, operation)
+                    alarmManager.setExact(0, 0L, "", null, null)
+                    alarmManager.setExactAndAllowWhileIdle(0, 0L, operation)
+                }
+                """
+            ).indented(),
+            // Extracted from android-S's annotations.zip (until our test builds use the Android 12 SDK)
+            jar(
+                "annotations.zip",
+                xml(
+                    "android/app/annotations.xml",
+                    """
+                    <root>
+                      <item name="android.app.AlarmManager void setAlarmClock(android.app.AlarmManager.AlarmClockInfo, android.app.PendingIntent)">
+                        <annotation name="androidx.annotation.RequiresPermission">
+                          <val name="value" val="&quot;android.permission.SCHEDULE_EXACT_ALARM&quot;" />
+                        </annotation>
+                      </item>
+                      <item name="android.app.AlarmManager void setExact(int, long, android.app.PendingIntent)">
+                        <annotation name="androidx.annotation.RequiresPermission">
+                          <val name="value" val="&quot;android.permission.SCHEDULE_EXACT_ALARM&quot;" />
+                          <val name="conditional" val="true" />
+                        </annotation>
+                      </item>
+                      <item name="android.app.AlarmManager void setExact(int, long, java.lang.String, android.app.AlarmManager.OnAlarmListener, android.os.Handler)">
+                        <annotation name="androidx.annotation.RequiresPermission">
+                          <val name="value" val="&quot;android.permission.SCHEDULE_EXACT_ALARM&quot;" />
+                          <val name="conditional" val="true" />
+                        </annotation>
+                      </item>
+                      <item name="android.app.AlarmManager void setExactAndAllowWhileIdle(int, long, android.app.PendingIntent)">
+                        <annotation name="androidx.annotation.RequiresPermission">
+                          <val name="value" val="&quot;android.permission.SCHEDULE_EXACT_ALARM&quot;" />
+                          <val name="conditional" val="true" />
+                        </annotation>
+                      </item>
+                    </root>
+                    """
+                ).indented()
+            )
+        )
+
+        // No warnings if targetSdkVersion < S
+        lint().projects(getTestProject(manifest().targetSdk(30))).run().expectClean()
+
+        // No warnings if we already have the permissions in the manifest
+        val manifest = manifest().targetSdk(31).permissions("android.permission.SCHEDULE_EXACT_ALARM")
+        lint().projects(getTestProject(manifest)).run().expectClean()
+
+        // Otherwise complain with warning, not error, severity
+        lint().projects(getTestProject(manifest().targetSdk(31))).run().expect(
+            """
+            src/test/pkg/ExactAlarmTest.java:10: Warning: Setting Exact alarms with setAlarmClock requires the SCHEDULE_EXACT_ALARM permission or power exemption from user; it is intended for applications where the user knowingly schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. Check out the javadoc on this permission to make sure your use case is valid. [MissingPermission]
+                    alarmManager.setAlarmClock(info, operation);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:10: Warning: Setting Exact alarms with setExact requires the SCHEDULE_EXACT_ALARM permission or power exemption from user; it is intended for applications where the user knowingly schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. Check out the javadoc on this permission to make sure your use case is valid. [MissingPermission]
+                alarmManager.setExact(0, 0L, operation)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:11: Warning: Setting Exact alarms with setExact requires the SCHEDULE_EXACT_ALARM permission or power exemption from user; it is intended for applications where the user knowingly schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. Check out the javadoc on this permission to make sure your use case is valid. [MissingPermission]
+                alarmManager.setExact(0, 0L, "", null, null)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: Setting Exact alarms with setExactAndAllowWhileIdle requires the SCHEDULE_EXACT_ALARM permission or power exemption from user; it is intended for applications where the user knowingly schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. Check out the javadoc on this permission to make sure your use case is valid. [MissingPermission]
+                alarmManager.setExactAndAllowWhileIdle(0, 0L, operation)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
+        )
     }
 
     fun testHasPermissionsAcrossModulesInMultiProject() {

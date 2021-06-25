@@ -136,4 +136,18 @@ class LintMapTest {
         assertThat(map.getString("key")).isNull()
         assertThat(map.getInt("key")).isNull()
     }
+
+    @Test
+    fun testSeverity() {
+        val map = LintMap()
+        assertThat(map.getSeverity("key")).isNull()
+        map.put("key", Severity.FATAL)
+        assertThat(map.getSeverity("key")).isEqualTo(Severity.FATAL)
+        assertThat(map.getSeverity("key2")).isNull()
+        assertThat(map.getSeverity("key2", Severity.ERROR)).isEqualTo(Severity.ERROR)
+
+        assertThat(map.getLocation("key")).isNull()
+        assertThat(map.getString("key")).isNull()
+        assertThat(map.getInt("key")).isNull()
+    }
 }

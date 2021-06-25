@@ -18,7 +18,6 @@
 #define LIVE_LITERAL_H_
 
 #include "tools/base/deploy/installer/agent_interaction.h"
-#include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/workspace.h"
 
 namespace deploy {
@@ -36,29 +35,11 @@ class LiveLiteralUpdateCommand : public AgentInteractionCommand {
  private:
   proto::LiveLiteralUpdateRequest request_;
 
-  // Copied from BaseSwap
-  InstallClient* client_ = nullptr;
-  std::string package_name_;
   std::vector<int> process_ids_;
-  std::string agent_path_;
   int extra_agents_count_;  // Not sure we need this nor how debugger should
                             // update LL yet.
   void Update(const proto::LiveLiteralUpdateRequest& request,
-              proto::LiveLiteralUpdateResponse* responsea);
-  void FilterProcessIds(std::vector<int>* process_ids);
-  proto::LiveLiteralUpdateResponse::Status ListenForAgents();
-  void ProcessResponse(proto::LiveLiteralUpdateResponse* response);
-  void PrepareAndBuildRequest(proto::LiveLiteralUpdateResponse* response);
-  void GetAgentLogs(proto::LiveLiteralUpdateResponse* response);
-  void SetUpdateParameters(const std::string& package_name,
-                           const std::vector<int>& process_ids,
-                           int extra_agents_count) {
-    package_name_ = package_name;
-    process_ids_ = process_ids;
-    extra_agents_count_ = extra_agents_count;
-  }
-  bool CheckFilesExist(const std::vector<std::string>& files,
-                       std::unordered_set<std::string>* missing_files);
+              proto::LiveLiteralUpdateResponse* response);
 };
 
 }  // namespace deploy

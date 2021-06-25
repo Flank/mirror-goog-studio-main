@@ -19,6 +19,7 @@ package com.android.build.api.transform;
 /**
  * The format in which content is stored.
  */
+@Deprecated
 public enum Format {
 
     /**

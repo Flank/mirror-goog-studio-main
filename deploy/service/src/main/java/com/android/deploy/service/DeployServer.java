@@ -93,6 +93,11 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
             Deploy.ClientRequest request, StreamObserver<Deploy.ClientResponse> responseObserver) {
         Deploy.ClientResponse.Builder response = Deploy.ClientResponse.newBuilder();
         for (IDevice device : myActiveBridge.getDevices()) {
+            if (!request.getDeviceId().isEmpty()
+                    && !request.getDeviceId().equals(device.getSerialNumber())) {
+                // We are looking for a particular device, but this is not that device.
+                continue;
+            }
             for (Client client : device.getClients()) {
                 response.addClients(ddmClientToRpcClient(client));
             }

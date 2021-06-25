@@ -821,7 +821,7 @@
       > android.arch.core:runtime:1.1.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = android.arch.core:runtime:1.1.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/android/arch/core/runtime/1.1.1/runtime-1.1.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -865,7 +865,7 @@
       > android.arch.lifecycle:livedata-core:1.1.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = android.arch.lifecycle:livedata-core:1.1.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/livedata-core/1.1.1/livedata-core-1.1.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -887,7 +887,7 @@
       > android.arch.lifecycle:livedata:1.1.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = android.arch.lifecycle:livedata:1.1.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/livedata/1.1.1/livedata-1.1.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -909,7 +909,7 @@
       > android.arch.lifecycle:runtime:1.1.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = android.arch.lifecycle:runtime:1.1.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/runtime/1.1.1/runtime-1.1.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -931,7 +931,7 @@
       > android.arch.lifecycle:viewmodel:1.1.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = android.arch.lifecycle:viewmodel:1.1.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/viewmodel/1.1.1/viewmodel-1.1.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -953,7 +953,7 @@
       > com.android.support.test:monitor:1.0.2@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support.test:monitor:1.0.2@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -975,7 +975,7 @@
       > com.android.support.test:rules:1.0.2@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support.test:rules:1.0.2@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -997,7 +997,7 @@
       > com.android.support.test:runner:1.0.2@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support.test:runner:1.0.2@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1019,7 +1019,7 @@
       > com.android.support:asynclayoutinflater:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:asynclayoutinflater:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/asynclayoutinflater/28.0.0/asynclayoutinflater-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1063,7 +1063,7 @@
       > com.android.support:coordinatorlayout:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:coordinatorlayout:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/coordinatorlayout/28.0.0/coordinatorlayout-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1085,7 +1085,7 @@
       > com.android.support:cursoradapter:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:cursoradapter:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/cursoradapter/28.0.0/cursoradapter-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1107,7 +1107,7 @@
       > com.android.support:customview:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:customview:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/customview/28.0.0/customview-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1129,7 +1129,7 @@
       > com.android.support:documentfile:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:documentfile:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/documentfile/28.0.0/documentfile-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1151,7 +1151,7 @@
       > com.android.support:drawerlayout:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:drawerlayout:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/drawerlayout/28.0.0/drawerlayout-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1173,7 +1173,7 @@
       > com.android.support:interpolator:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:interpolator:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/interpolator/28.0.0/interpolator-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1195,7 +1195,7 @@
       > com.android.support:loader:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:loader:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/loader/28.0.0/loader-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1217,7 +1217,7 @@
       > com.android.support:localbroadcastmanager:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:localbroadcastmanager:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/localbroadcastmanager/28.0.0/localbroadcastmanager-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1239,7 +1239,7 @@
       > com.android.support:print:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:print:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/print/28.0.0/print-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1261,7 +1261,7 @@
       > com.android.support:slidingpanelayout:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:slidingpanelayout:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/slidingpanelayout/28.0.0/slidingpanelayout-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1305,7 +1305,7 @@
       > com.android.support:support-compat:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-compat:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-compat/28.0.0/support-compat-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1327,7 +1327,7 @@
       > com.android.support:support-core-ui:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-core-ui:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-core-ui/28.0.0/support-core-ui-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1349,7 +1349,7 @@
       > com.android.support:support-core-utils:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-core-utils:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-core-utils/28.0.0/support-core-utils-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1371,7 +1371,7 @@
       > com.android.support:support-fragment:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-fragment:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-fragment/28.0.0/support-fragment-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1393,7 +1393,7 @@
       > com.android.support:support-media-compat:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-media-compat:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-media-compat/28.0.0/support-media-compat-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1415,7 +1415,7 @@
       > com.android.support:support-v13:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-v13:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1437,7 +1437,7 @@
       > com.android.support:support-v4:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:support-v4:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1459,7 +1459,7 @@
       > com.android.support:swiperefreshlayout:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:swiperefreshlayout:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/swiperefreshlayout/28.0.0/swiperefreshlayout-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1481,7 +1481,7 @@
       > com.android.support:versionedparcelable:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:versionedparcelable:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/versionedparcelable/28.0.0/versionedparcelable-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1503,7 +1503,7 @@
       > com.android.support:viewpager:28.0.0@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.android.support:viewpager:28.0.0@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/android/support/viewpager/28.0.0/viewpager-28.0.0.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1525,7 +1525,7 @@
       > com.google.android.gms:play-services-base:15.0.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.google.android.gms:play-services-base:15.0.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1547,7 +1547,7 @@
       > com.google.android.gms:play-services-basement:15.0.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.google.android.gms:play-services-basement:15.0.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-basement/15.0.1/play-services-basement-15.0.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)
@@ -1569,7 +1569,7 @@
       > com.google.android.gms:play-services-tasks:15.0.1@aar:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.google.android.gms:play-services-tasks:15.0.1@aar
-         - artifact            = (null)
+         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-tasks/15.0.1/play-services-tasks-15.0.1.aar{F}
          - buildId             = null
          - projectPath         = (null)
          - variant             = (null)

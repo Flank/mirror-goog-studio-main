@@ -17,16 +17,18 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
+import org.gradle.api.Named
 
 /** DSL object to configure signing configs. */
-@Incubating
-interface ApkSigningConfig: SigningConfig {
+interface ApkSigningConfig: SigningConfig, Named {
     /**
      * Whether signing using JAR Signature Scheme (aka v1 signing) is enabled.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
     @Deprecated("This property is deprecated", ReplaceWith("enableV1Signing"))
+    @get:Incubating
+    @set:Incubating
     var isV1SigningEnabled: Boolean
 
     /**
@@ -35,6 +37,8 @@ interface ApkSigningConfig: SigningConfig {
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
     @Deprecated("This property is deprecated", ReplaceWith("enableV2Signing"))
+    @get:Incubating
+    @set:Incubating
     var isV2SigningEnabled: Boolean
 
     /**
@@ -42,6 +46,8 @@ interface ApkSigningConfig: SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var enableV1Signing: Boolean?
 
     /**
@@ -50,6 +56,8 @@ interface ApkSigningConfig: SigningConfig {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var enableV2Signing: Boolean?
 
     /**
@@ -58,11 +66,15 @@ interface ApkSigningConfig: SigningConfig {
      *
      * See [APK Signature Scheme v3](https://source.android.com/security/apksigning/v3)
      */
+    @get:Incubating
+    @set:Incubating
     var enableV3Signing: Boolean?
 
     /**
      * Enable signing using APK Signature Scheme v4 (aka v4 signing). If null, a default value is
      * used.
      */
+    @get:Incubating
+    @set:Incubating
     var enableV4Signing: Boolean?
 }

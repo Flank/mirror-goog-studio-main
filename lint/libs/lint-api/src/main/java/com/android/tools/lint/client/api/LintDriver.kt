@@ -79,6 +79,7 @@ import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getNextInstruction
 import com.android.tools.lint.detector.api.isAnonymousClass
 import com.android.tools.lint.detector.api.isXmlFile
+import com.android.tools.lint.model.PathVariables
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.annotations.Beta
@@ -567,6 +568,21 @@ class LintDriver(
 
         for (project in projects) {
             fireEvent(EventType.REGISTERED_PROJECT, project = project)
+        }
+
+        for (project in projects) {
+            if (mode == ANALYSIS_ONLY) {
+                // Make sure we don't look at lint.xml files outside this project
+                assert(projects.size == 1)
+                client.configurations.rootDir = project.dir
+            }
+            // side effect: ensures parent table is initialized
+            project.getConfiguration(this)
+            for (library in project.allLibraries) {
+                if (!library.isExternalLibrary) {
+                    library.getConfiguration(this)
+                }
+            }
         }
 
         return projects
@@ -2797,9 +2813,9 @@ class LintDriver(
             delegate.mergeState(root, driver)
         }
 
-        override fun getRootDir(): File? {
-            return delegate.getRootDir()
-        }
+        override fun getRootDir(): File? = delegate.getRootDir()
+
+        override val pathVariables: PathVariables get() = delegate.pathVariables
     }
 
     private val runLaterOutsideReadActionList = mutableListOf<Runnable>()
@@ -3422,6 +3438,12 @@ class LintDriver(
                     // testsuite which rapidly opens, edits and closes projects.
                     // Silently abort the analysis.
                     throw ProcessCanceledException(throwable)
+                }
+                throwable is AssertionError &&
+                    throwable.stackTrace.isNotEmpty() &&
+                    throwable.stackTrace[0].methodName == "fail" -> {
+                    // org.junit.Assert.fail() from test suite
+                    throw throwable
                 }
             }
 

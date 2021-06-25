@@ -139,6 +139,7 @@ public class TestLintTask {
     @Nullable ProjectDescription reportFrom = null;
     boolean stripRoot = true;
     boolean includeSelectionMarkers = true;
+    boolean allowAbsolutePathsInMessages = false;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -241,6 +242,18 @@ public class TestLintTask {
     public TestLintTask allowMissingSdk(boolean allowMissingSdk) {
         ensurePreRun();
         this.allowMissingSdk = allowMissingSdk;
+        return this;
+    }
+
+    /**
+     * Sets whether the test task should allow lint checks to include absolute paths to local files
+     * in error messages. This is normally false.
+     *
+     * @param allowAbsolutePathsInMessages whether to allow absolute paths
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowAbsolutePathsInMessages(boolean allowAbsolutePathsInMessages) {
+        this.allowAbsolutePathsInMessages = allowAbsolutePathsInMessages;
         return this;
     }
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -359,6 +360,23 @@ val CxxAbiModel.configurationHash
  */
 val CxxAbiModel.tag
     get() = abi.tag
+/**
+ * The CPU architecture name
+ */
+val CxxAbiModel.cpuArchitecture
+    get() = abi.architecture
+
+/**
+ * The name of the CPU architecture (like "arm") for use in
+ * android triplet naming that is compatible with vcpkg.
+ * The difference is that X86_64 is represented by "x64" not
+ * "x86_64"
+ */
+val CxxAbiModel.altCpuArchitecture
+    get() = when(abi) {
+        Abi.X86_64 -> "x64"
+        else -> abi.architecture
+    }
 
 /**
  * True if this ABI is 64 bits.

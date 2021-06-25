@@ -28,6 +28,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 public class Task<T> {
+    private final String name;
     private final Callable<T> callable;
     private final Task<?>[] inputs;
     final SettableFuture<T> future;
@@ -37,25 +38,8 @@ public class Task<T> {
     Task(String name, Callable<T> callable, Task<?>... inputs) {
         this.future = SettableFuture.create();
         this.inputs = inputs;
-        this.callable =
-                () -> {
-                    String status = "Not Started";
-                    metric = new DeployMetric(name);
-                    try (Trace ignored = Trace.begin(name)) {
-                        T value = callable.call();
-                        status = "Success";
-                        return value;
-                    } catch (ExecutionException e) {
-                        // Dropped this task because one of the previous task failed.
-                        status = "Dropped";
-                        throw e;
-                    } catch (Throwable t) {
-                        status = "Failed";
-                        throw t;
-                    } finally {
-                        metric.finish(status);
-                    }
-                };
+        this.name = name;
+        this.callable = callable;
     }
 
     public T get() throws DeployerException {
@@ -72,10 +56,39 @@ public class Task<T> {
         }
     }
 
-    public void run(Executor executor) {
+    public void run(Executor executor, Canceller canceller) {
+        Callable<T> task =
+                () -> {
+                    String status = "Not Started";
+                    metric = new DeployMetric(name);
+                    try (Trace ignored = Trace.begin(name)) {
+                        T value;
+                        if (canceller.cancelled()) {
+                            status = "Cancelled";
+                            throw DeployerException.interrupted(Canceller.REASON);
+                        }
+
+                        try {
+                            value = callable.call();
+                        } catch (ExecutionException e) {
+                            // Dropped this task because one of the previous task failed.
+                            status = "Dropped";
+                            throw e;
+                        } catch (Throwable t) {
+                            status = "Failed";
+                            throw t;
+                        }
+
+                        status = "Success";
+                        return value;
+                    } finally {
+                        metric.finish(status);
+                    }
+                };
+
         List<? extends SettableFuture<?>> futures =
                 Arrays.stream(inputs).map(t -> t.future).collect(Collectors.toList());
-        future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
+        future.setFuture(Futures.whenAllComplete(futures).call(task, executor));
     }
 
     public DeployMetric getMetric() {

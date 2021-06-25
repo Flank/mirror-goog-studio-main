@@ -58,7 +58,7 @@ class MethodBodyEvaluator {
     }
 
     public Object eval(Object thisObject, String ObjectType, Object[] arguments) {
-        Frame<Value> init = new Frame<Value>(target.maxLocals, target.maxStack);
+        Frame<Value> init = new Frame<>(target.maxLocals, target.maxStack);
         int localIndex = 0;
         boolean isStatic = (target.access & Opcodes.ACC_STATIC) != 0;
         if (!isStatic) {
@@ -68,8 +68,7 @@ class MethodBodyEvaluator {
 
         Type[] argTypes = Type.getArgumentTypes(target.desc);
         for (int i = 0, len = argTypes.length; i < len; i++) {
-            init.setLocal(
-                    localIndex++, AndroidEval.objectToValueWithUnboxing(arguments[i], argTypes[i]));
+            init.setLocal(localIndex++, AndroidEval.makeValue(arguments[i], argTypes[i]));
         }
 
         InterpreterResult result =

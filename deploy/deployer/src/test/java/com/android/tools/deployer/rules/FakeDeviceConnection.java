@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer.rules;
 
+
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
@@ -79,7 +80,8 @@ public class FakeDeviceConnection implements TestRule {
 
     private void stopFakeAdbServer() throws Exception {
         device.shutdown();
-        AndroidDebugBridge.terminate();
         server.close();
+        AndroidDebugBridge.terminate();
+        AndroidDebugBridge.disableFakeAdbServerMode();
     }
 }

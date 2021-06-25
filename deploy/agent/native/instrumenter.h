@@ -20,31 +20,13 @@
 
 #include <jvmti.h>
 
-#include <memory>
-#include <unordered_map>
+#include <string>
+#include <vector>
 
-#include "slicer/dex_ir.h"
-#include "slicer/instrumentation.h"
-#include "slicer/reader.h"
 #include "slicer/writer.h"
-#include "tools/base/deploy/common/log.h"
-
-using std::shared_ptr;
-using std::string;
-using std::unordered_map;
+#include "tools/base/deploy/agent/native/transform/transforms.h"
 
 namespace deploy {
-
-namespace {
-// Converts a java-friendly class name into JNI format.
-const std::string ToJniFormat(const std::string& class_name) {
-  return "L" + class_name + ";";
-}
-
-}  // namespace
-
-bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
-                           const std::string& package_name, bool overlay_swap);
 
 // Probably should be in a utility header, but also only used here.
 class JvmtiAllocator : public dex::Writer::Allocator {
@@ -69,74 +51,31 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_;
 };
 
-class Transform {
- public:
-  Transform(const std::string& class_name) : class_name_(class_name) {}
-  virtual ~Transform() = default;
+bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
+                           const std::string& package_name, bool overlay_swap);
 
-  std::string GetClassName() const { return class_name_; }
-  virtual void Apply(std::shared_ptr<ir::DexFile> dex_ir) const = 0;
+class Instrumenter {
+ public:
+  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni, const TransformCache& cache)
+      : jvmti_(jvmti), jni_(jni), cache_(cache), caching_enabled_(true) {}
+
+  bool Instrument(const Transform& transform) const;
+  bool Instrument(const std::vector<const Transform*>& transforms) const;
+
+  void SetCachingEnabled(bool enabled);
 
  private:
-  const std::string class_name_;
-};
+  jvmtiEnv* jvmti_;
+  JNIEnv* jni_;
 
-struct MethodHooks {
-  const std::string method_name;
-  const std::string method_signature;
-  const std::string entry_hook;
-  const std::string exit_hook;
+  TransformCache cache_;
+  bool caching_enabled_;
 
-  static const std::string kNoHook;
+  bool ApplyCachedTransforms(
+      const std::vector<jclass> classes,
+      const std::vector<const Transform*>& transforms) const;
 
-  MethodHooks(const std::string& method_name,
-              const std::string& method_signature,
-              const std::string& entry_hook, const std::string& exit_hook)
-      : method_name(method_name),
-        method_signature(method_signature),
-        entry_hook(entry_hook),
-        exit_hook(exit_hook) {}
-};
-
-class HookTransform : public Transform {
- public:
-  HookTransform(const std::string& class_name, const std::string& method_name,
-                const std::string& method_signature,
-                const std::string& entry_hook, const std::string& exit_hook)
-      : Transform(class_name) {
-    hooks_.emplace_back(method_name, method_signature, entry_hook, exit_hook);
-  }
-
-  HookTransform(const std::string& class_name,
-                const std::vector<MethodHooks>& hooks)
-      : Transform(class_name), hooks_(hooks) {}
-
-  void Apply(std::shared_ptr<ir::DexFile> dex_ir) const override {
-    for (const MethodHooks& hook : hooks_) {
-      slicer::MethodInstrumenter mi(dex_ir);
-      if (hook.entry_hook != MethodHooks::kNoHook) {
-        const ir::MethodId entry_hook(kHookClassName, hook.entry_hook.c_str());
-        mi.AddTransformation<slicer::EntryHook>(
-            entry_hook, slicer::EntryHook::Tweak::ThisAsObject);
-      }
-      if (hook.exit_hook != MethodHooks::kNoHook) {
-        const ir::MethodId exit_hook(kHookClassName, hook.exit_hook.c_str());
-        mi.AddTransformation<slicer::ExitHook>(exit_hook);
-      }
-      const std::string jni_name = ToJniFormat(GetClassName());
-      const ir::MethodId target_method(jni_name.c_str(),
-                                       hook.method_name.c_str(),
-                                       hook.method_signature.c_str());
-      if (!mi.InstrumentMethod(target_method)) {
-        Log::E("Failed to instrument: %s", GetClassName().c_str());
-      }
-    }
-  }
-
- private:
-  const char* kHookClassName =
-      "Lcom/android/tools/deploy/instrument/InstrumentationHooks;";
-  std::vector<MethodHooks> hooks_;
+  bool ApplyTransforms(const std::vector<const Transform*>& transforms) const;
 };
 
 }  // namespace deploy

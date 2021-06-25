@@ -308,7 +308,7 @@ void Agent::RunHeartbeatThread() {
   SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
   bool was_daemon_alive = false;
-  while (running_) {
+  while (running_.load()) {
     // agent_stub() is blocking while the stub is unavailable. If we don't call
     // it here and rely only on the one right before calling HeartBeat(),
     // |start_ns| and gPRC's deadline may likely include the time being blocked,
@@ -362,7 +362,7 @@ void Agent::RunSocketThread() {
       ListenToSocket(CreateUnixSocket(app_socket_name.str().c_str()));
 
   int buffer_length = 1;
-  while (running_) {
+  while (running_.load()) {
     int receive_fd;
     char buf[buffer_length];
     // Try to get next message with a 1-second timeout.
@@ -430,7 +430,7 @@ void Agent::RunCommandHandlerThread() {
   Log::V(Log::Tag::TRANSPORT, "Agent command stream started.");
 
   proto::Command command;
-  while (reader->Read(&command)) {
+  while (running_.load() && reader->Read(&command)) {
     auto search = command_handlers_.find(command.type());
     if (search != command_handlers_.end()) {
       Log::V(Log::Tag::TRANSPORT, "Handling agent command %d for pid: %d.",

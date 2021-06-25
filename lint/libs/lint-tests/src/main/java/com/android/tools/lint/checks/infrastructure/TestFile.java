@@ -584,15 +584,7 @@ public class TestFile {
                     sb.append("\n");
                 }
 
-                sb.append(
-                        ""
-                                + "\n"
-                                + "    <application\n"
-                                + "        android:icon=\"@drawable/ic_launcher\"\n"
-                                + "        android:label=\"@string/app_name\" >\n"
-                                + "    </application>\n"
-                                + "\n"
-                                + "</manifest>");
+                sb.append("\n</manifest>");
                 contents = sb.toString();
             }
 

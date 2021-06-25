@@ -50,6 +50,65 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test191378558() {
+        // Regression test for https://issuetracker.google.com/191378558
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                fun test() {
+                    if (checkBoolean()) {
+                        println()
+                    }
+                }
+
+                @CheckResult
+                fun checkBoolean(): Boolean = true
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.CheckResult;
+
+                public class CheckResultTest {
+                    @CheckResult
+                    private boolean checkBoolean() {
+                        return true;
+                    }
+
+                    public void test() {
+                        if (checkBoolean()) {
+                            System.out.println();
+                        }
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.Manifest
+                import android.content.Context
+                import android.os.Build
+
+                fun test(context: Context) {
+                    if (context.packageManager.isPermissionRevokedByPolicy(
+                            Manifest.permission.ACCESS_FINE_LOCATION, context.packageName)) {
+                        println()
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun testCheckResult() {
         val expected =
             """
@@ -929,4 +988,82 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         }
         """
     )
+
+    fun testTernary() {
+        // Regression test for b/191788196
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.CheckResult;
+
+                public class JavaIgnore {
+                    public void test(boolean x) {
+                        String t1 = x ? test1() : test2(); // OK
+                        String t2 = x ? ( test1() ) : ( test2() ); // OK
+                        String t3 = (x ? test1() : test2()); // OK
+                    }
+
+                    @CheckResult public String test1() { return ""; }
+                    @CheckResult public String test2() { return ""; }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testReturnIfKotlin() {
+        // Regression test for b/189970773
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                class KotlinIgnore {
+                    fun test(x: Boolean): String {
+                        if (x) test1() else test2() // ERROR 1
+                        if (x) (test1()) else (test2()) // ERROR 2
+                        val t1 = if (x) test1() else (test2()) // OK 1
+                        var t2: String = ""
+                        t2 = if (x) test1() else (test2()) // OK 2
+                        return if (x) {
+                            test1() // OK 3
+                        } else {
+                            test2() // OK 4
+                        }
+                    }
+
+                    @Suppress("ConstantConditionIf")
+                    fun test(): String {
+                        return if(true) test1() else test2() // OK 5
+                    }
+
+                    @CheckResult fun test1(): String = ""
+                    @CheckResult fun test2(): String = ""
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/KotlinIgnore.kt:8: Warning: The result of test1 is not used [CheckResult]
+                                    if (x) test1() else test2() // ERROR 1
+                                           ~~~~~~~
+            src/test/pkg/KotlinIgnore.kt:8: Warning: The result of test2 is not used [CheckResult]
+                                    if (x) test1() else test2() // ERROR 1
+                                                        ~~~~~~~
+            src/test/pkg/KotlinIgnore.kt:9: Warning: The result of test1 is not used [CheckResult]
+                                    if (x) (test1()) else (test2()) // ERROR 2
+                                            ~~~~~~~
+            src/test/pkg/KotlinIgnore.kt:9: Warning: The result of test2 is not used [CheckResult]
+                                    if (x) (test1()) else (test2()) // ERROR 2
+                                                           ~~~~~~~
+            0 errors, 4 warnings
+            """
+        )
+    }
 }

@@ -261,4 +261,15 @@ class XmlStringBuilderTest {
     Truth.assertThat(untranslatables[1].startIndex).isEqualTo(11)
     Truth.assertThat(untranslatables[1].endIndex).isEqualTo(19)
   }
+
+    @Test
+    fun testHandleEscapeQuotationsBetweenTextChunks() {
+        val stringBuilder = XmlStringBuilder(false)
+        val flattendSample = stringBuilder
+            .append("[[198745]] You\\")
+            .append("'ve blocked. Tap to report and share more details.")
+        Truth.assertThat(stringBuilder.error).isEmpty()
+        Truth.assertThat(flattendSample.getFlattenedXml().styleString.str)
+            .isEqualTo("[[198745]] You've blocked. Tap to report and share more details.")
+    }
 }

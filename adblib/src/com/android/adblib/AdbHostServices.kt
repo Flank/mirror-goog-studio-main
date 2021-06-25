@@ -8,6 +8,7 @@ package com.android.adblib
  * are cancelled.
  */
 interface AdbHostServices {
+
     /**
      * Returns the internal version of the ADB server ("host:version" query).
      *
@@ -16,4 +17,39 @@ interface AdbHostServices {
      * public consumers, but this API is provided for completeness.
      */
     suspend fun version(): Int
+
+    /**
+     * Returns the list of features supported by the ADB server ("host:host-features" query).
+     *
+     * Note that these features may not be supported by the ADB daemon running on a device.
+     * TODO: Add link to method to use to retrieve device features
+     */
+    suspend fun hostFeatures(): List<String>
+
+    /**
+     * Returns the list of devices known to the ADB Server as a [DeviceList] object
+     * ("host:devices" query).
+     *
+     * Use the [format] parameter to specify how much information to collect for each
+     * device ([short][DeviceInfoFormat.SHORT_FORMAT] or [long][DeviceInfoFormat.LONG_FORMAT]
+     * format supported).
+     */
+    suspend fun devices(format: DeviceInfoFormat): DeviceList
+
+    enum class DeviceInfoFormat {
+        /**
+         * [DeviceInfo.serialNumber] and [DeviceInfo.deviceState] only
+         */
+        SHORT_FORMAT,
+
+        /**
+         * [DeviceInfo.serialNumber], [DeviceInfo.deviceState], and additional fields, such as [DeviceInfo.transportId]
+         */
+        LONG_FORMAT
+    }
+
+    /**
+     * Kills the running instance of the ADB server ("host:kill" query).
+     */
+    suspend fun kill()
 }

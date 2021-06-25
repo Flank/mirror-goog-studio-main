@@ -19,6 +19,7 @@ import com.android.adblib.impl.AdbHostServicesImpl
 import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.hostcommandhandlers.FaultyVersionCommandHandler
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -86,6 +87,116 @@ class AdbHostServicesTest {
         // Act (should throw)
         exceptionRule.expect(AdbProtocolErrorException::class.java)
         /*val internalVersion = */runBlocking { hostServices.version() }
+
+        // Assert (should not reach this point)
+        Assert.fail()
+    }
+
+    @Test
+    fun testHostFeaturesWorks() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val host = registerCloseable(TestingAdbLibHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
+
+        // Act
+        val featureList = runBlocking { hostServices.hostFeatures() }
+
+        // Assert
+        Assert.assertTrue(featureList.contains("shell_v2"))
+        Assert.assertTrue(featureList.contains("fixed_push_mkdir"))
+        Assert.assertTrue(featureList.contains("push_sync"))
+        Assert.assertTrue(featureList.contains("abb_exec"))
+    }
+
+    @Test
+    fun testDevicesShortFormatWorks() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice =
+            fakeAdb.connectDevice(
+                "1234",
+                "test1",
+                "test2",
+                "model",
+                "sdk",
+                DeviceState.HostConnectionType.USB
+            )
+        fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
+        val host = registerCloseable(TestingAdbLibHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
+
+        // Act
+        val deviceList = runBlocking { hostServices.devices(AdbHostServices.DeviceInfoFormat.SHORT_FORMAT) }
+
+        // Assert
+        Assert.assertEquals(1, deviceList.devices.size)
+        Assert.assertEquals(0, deviceList.errors.size)
+        deviceList.devices[0].let { device ->
+            Assert.assertEquals("1234", device.serialNumber)
+            Assert.assertEquals(com.android.adblib.DeviceState.ONLINE, device.deviceState)
+            Assert.assertNull(device.product)
+            Assert.assertNull(device.model)
+            Assert.assertNull(device.device)
+            Assert.assertNull(device.transportId)
+        }
+    }
+
+    @Test
+    fun testDevicesLongFormatWorks() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice =
+            fakeAdb.connectDevice(
+                "1234",
+                "test1",
+                "test2",
+                "model",
+                "sdk",
+                DeviceState.HostConnectionType.USB
+            )
+        fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
+        val host = registerCloseable(TestingAdbLibHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
+
+        // Act
+        val deviceList = runBlocking { hostServices.devices(AdbHostServices.DeviceInfoFormat.LONG_FORMAT) }
+
+        // Assert
+        Assert.assertEquals(1, deviceList.devices.size)
+        Assert.assertEquals(0, deviceList.errors.size)
+        deviceList.devices[0].let { device ->
+            Assert.assertEquals("1234", device.serialNumber)
+            Assert.assertEquals(com.android.adblib.DeviceState.ONLINE, device.deviceState)
+            Assert.assertEquals("test1", device.product)
+            Assert.assertEquals("test2", device.model)
+            Assert.assertEquals("model", device.device)
+            Assert.assertEquals(fakeDevice.transportId.toString(), device.transportId)
+        }
+    }
+
+    @Test
+    fun testKillServer() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val host = registerCloseable(TestingAdbLibHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
+
+        // Act
+        runBlocking { hostServices.kill() }
+
+        // Note: We need to for the server to terminate before verifying sending another
+        //       command fails, because the current implementation of "kill" in fakeAdbServer
+        //       does not wait for the server to be fully shutdown before sending and
+        //       'OKAY response.
+        fakeAdb.awaitTermination()
+
+        exceptionRule.expect(IOException::class.java)
+        runBlocking { hostServices.version() }
 
         // Assert (should not reach this point)
         Assert.fail()

@@ -68,7 +68,6 @@ public final class GradleTestProjectBuilder {
     // The resulting symlink path is always in the form */ndk/
     private String ndkSymlinkPath = ".";
     @Nullable String cmakeVersion;
-    @Nullable private List<Path> repoDirectories;
     @Nullable private File androidSdkDir;
     @Nullable private File androidNdkDir;
     @Nullable private String sideBySideNdkVersion = null;
@@ -77,7 +76,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String kotlinVersion;
     @Nullable private String buildFileName = null;
 
-    private Boolean withDeviceProvider = null;
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
     private boolean withKotlinGradlePlugin = false;
@@ -141,10 +139,6 @@ public final class GradleTestProjectBuilder {
             kotlinVersion = TestUtils.KOTLIN_VERSION_FOR_TESTS;
         }
 
-        if (withDeviceProvider == null) {
-            withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
-        }
-
         MemoryRequirement memoryRequirement = MemoryRequirement.use(heapSize, metaspace);
 
         return new GradleTestProject(
@@ -161,14 +155,13 @@ public final class GradleTestProjectBuilder {
                 cmakeVersion,
                 withCmakeDirInLocalProp,
                 ndkSymlinkPath,
-                withDeviceProvider,
+                GradleTestProject.APPLY_DEVICEPOOL_PLUGIN,
                 withSdk,
                 withAndroidGradlePlugin,
                 withKotlinGradlePlugin,
                 withPluginManagementBlock,
                 withIncludedBuilds,
                 null,
-                repoDirectories,
                 additionalMavenRepo,
                 androidSdkDir,
                 androidNdkDir,
@@ -268,18 +261,8 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    public GradleTestProjectBuilder withDeviceProvider(boolean withDeviceProvider) {
-        this.withDeviceProvider = withDeviceProvider;
-        return this;
-    }
-
     public GradleTestProjectBuilder withSdk(boolean withSdk) {
         this.withSdk = withSdk;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withRepoDirectories(List<Path> repoDirectories) {
-        this.repoDirectories = repoDirectories;
         return this;
     }
 

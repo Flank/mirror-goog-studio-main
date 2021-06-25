@@ -176,7 +176,7 @@ java_binary(
     main_class = "com.android.tools.binaries.PomGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
     ],
     deps = [
         ":maven",
@@ -185,19 +185,30 @@ java_binary(
     ],
 )
 
-java_binary(
-    name = "repo_builder",
-    srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
-    main_class = "com.android.tools.binaries.RepoBuilder",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
-    ],
+java_library(
+    name = "repo_zipper_lib",
+    srcs = ["src/com/android/tools/binaries/RepoZipper.java"],
     deps = [
-        ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/bazel/repolinker:repo_linker",
+    ],
+)
+
+java_binary(
+    name = "repo_zipper",
+    main_class = "com.android.tools.binaries.RepoZipper",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":repo_zipper_lib"],
+)
+
+java_test(
+    name = "repo_zipper_test",
+    srcs = ["testSrc/com/android/tools/binaries/RepoZipperTest.java"],
+    test_class = "com.android.tools.binaries.RepoZipperTest",
+    deps = [
+        ":repo_zipper_lib",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 
@@ -208,9 +219,10 @@ java_binary(
     main_class = "com.android.tools.binaries.JavaImportGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -229,9 +241,10 @@ java_binary(
     main_class = "com.android.tools.binaries.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -250,9 +263,10 @@ java_binary(
     main_class = "com.android.tools.binaries.AddDependency",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
     ],
     deps = [
+        ":bazel_generator",
         ":maven",
         ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
@@ -266,13 +280,13 @@ java_binary(
     main_class = "com.tonicsystems.jarjar.Main",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
-        "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-command/1.0.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-core/1.0.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
-        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.2:jar",
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+        "//prebuilts/tools/common/m2:net.sf.jopt-simple.jopt-simple.4.9",
+        "//prebuilts/tools/common/m2:org.anarres.jarjar.jarjar-command.1.0.0",
+        "//prebuilts/tools/common/m2:org.anarres.jarjar.jarjar-core.1.0.0",
+        "//prebuilts/tools/common/m2:org.ow2.asm.asm.5.0.4",
+        "//prebuilts/tools/common/m2:org.ow2.asm.asm-commons.5.0.4",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-api.1.7.2",
+        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
     ],
 )
 
@@ -358,8 +372,8 @@ py_test(
 java_jarjar(
     name = "studio-proto",
     srcs = [
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/" + PROTOC_VERSION + ":jar",
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + PROTOC_VERSION + ":jar",
+        "//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java-util." + PROTOC_VERSION + "",
+        "//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java." + PROTOC_VERSION + "",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],
@@ -368,27 +382,27 @@ java_jarjar(
 java_jarjar(
     name = "studio-grpc",
     srcs = [
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-api/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.21.1:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-socks/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler-proxy/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.34.Final:jar",
-        "//prebuilts/tools/common/m2/repository/io/opencensus/opencensus-api/0.21.0:jar",
-        "//prebuilts/tools/common/m2/repository/io/opencensus/opencensus-contrib-grpc-metrics/0.21.0:jar",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-api.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-auth.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-context.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-core.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-netty.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-okhttp.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-protobuf.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-protobuf-lite.1.21.1",
+        "//prebuilts/tools/common/m2:io.grpc.grpc-stub.1.21.1",
+        "//prebuilts/tools/common/m2:io.netty.netty-buffer.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-codec.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-codec-http.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-codec-http2.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-codec-socks.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-common.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-handler.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-handler-proxy.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-resolver.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.netty.netty-transport.4.1.34.Final",
+        "//prebuilts/tools/common/m2:io.opencensus.opencensus-api.0.21.0",
+        "//prebuilts/tools/common/m2:io.opencensus.opencensus-contrib-grpc-metrics.0.21.0",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],
@@ -528,6 +542,7 @@ coverage_java_test(
     ],
     test_class = "com.android.tools.binaries.ThirdPartyBuildConsistencyTest",
     deps = [
+        ":bazel_generator",
         ":maven",
         ":third_party_build_generator",
         ":utils",

@@ -1400,6 +1400,7 @@ public final class SdkConstants {
 
     // Attributes: View Binding
     public static final String ATTR_VIEW_BINDING_IGNORE = "viewBindingIgnore";
+    public static final String ATTR_VIEW_BINDING_TYPE = "viewBindingType";
 
     // Attributes: Layout
     public static final String ATTR_LAYOUT_RESOURCE_PREFIX = "layout_";
@@ -2165,6 +2166,7 @@ public final class SdkConstants {
     public static final String DOT_TTC = ".ttc";
     public static final String DOT_OTF = ".otf";
     public static final String DOT_EXEC = ".exec";
+    public static final String DOT_AVIF = ".avif";
 
     /** Extension of the Application package Files, i.e. "apk". */
     public static final String EXT_ANDROID_PACKAGE = "apk";

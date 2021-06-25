@@ -175,12 +175,12 @@ kotlin_test(
     # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
     deps = ["//tools/base/build-system:gradle-api"] + [
         ":gradle-core",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.1.5:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.1.5:jar",
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.3:jar",
-        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/7.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/7.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/7.0:jar",
+        "//prebuilts/tools/common/m2:com.android.tools.desugar_jdk_libs.1.1.5",
+        "//prebuilts/tools/common/m2:com.android.tools.desugar_jdk_libs_configuration.1.1.5",
+        "//prebuilts/tools/common/m2:org.jacoco.org.jacoco.core.0.8.3",
+        "//prebuilts/tools/common/m2:org.ow2.asm.asm.7.0",
+        "//prebuilts/tools/common/m2:org.ow2.asm.asm-commons.7.0",
+        "//prebuilts/tools/common/m2:org.ow2.asm.asm-tree.7.0",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/apkzlib",

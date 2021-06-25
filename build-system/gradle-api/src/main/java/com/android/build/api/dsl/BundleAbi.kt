@@ -18,7 +18,8 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-@Incubating
 interface BundleAbi {
+    @get:Incubating
+    @set:Incubating
     var enableSplit: Boolean?
 }

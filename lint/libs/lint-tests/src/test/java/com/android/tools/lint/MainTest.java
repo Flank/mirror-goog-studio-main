@@ -21,6 +21,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
@@ -30,15 +31,18 @@ import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
@@ -93,6 +97,9 @@ public class MainTest extends AbstractCheckTest {
                             }
                         }
                     };
+
+            setConfigurationRoot(args);
+
             int exitCode = main.run(args);
 
             String stderr = error.toString();
@@ -124,11 +131,48 @@ public class MainTest extends AbstractCheckTest {
         }
     }
 
+    /**
+     * Process the arguments and see if we can find where the project or project descriptor file is
+     * and set the configuration hierarchy root to that folder such that we don't pick up any
+     * lint.xml files in the environment outside the test
+     */
+    private static void setConfigurationRoot(String[] args) {
+        String prevArg = "";
+        File root = null;
+        for (String arg : args) {
+            if (!arg.startsWith("--")) {
+                File file = new File(arg);
+                if (prevArg.equals("--project") || prevArg.equals("--config")) {
+                    File parentFile = file.getParentFile();
+                    if (parentFile != null && parentFile.isDirectory()) {
+                        if (root == null) {
+                            root = parentFile;
+                        } else {
+                            root = Lint.getCommonParent(root, parentFile);
+                        }
+                    }
+                }
+            }
+            prevArg = arg;
+        }
+        if (root == null
+                && args.length > 0
+                && Arrays.stream(args).anyMatch(s -> new File(s).exists())) {
+            String last = args[args.length - 1];
+            File file = new File(last);
+            if (file.isDirectory()) {
+                root = file.getParentFile();
+            }
+        }
+        if (root != null) {
+            ConfigurationHierarchy.Companion.setDefaultRootDir(root);
+        }
+    }
+
     public void testArguments() throws Exception {
         checkDriver(
                 // Expected output
                 "\n"
-                        + "Scanning MainTest_testArguments: .\n"
                         + "res/layout/accessibility.xml:4: Error: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
@@ -277,8 +321,6 @@ public class MainTest extends AbstractCheckTest {
 
         checkDriver(
                 ""
-                        + "\n"
-                        + "Scanning MainTest_testCustomResourceDirs: ..\n"
                         + "myres1/layout/accessibility1.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
@@ -320,8 +362,6 @@ public class MainTest extends AbstractCheckTest {
 
         checkDriver(
                 ""
-                        + "\n"
-                        + "Scanning MainTest_testPathList: ..\n"
                         + "myres1/layout/accessibility1.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
@@ -358,8 +398,7 @@ public class MainTest extends AbstractCheckTest {
     public void testClassPath() throws Exception {
         File project = getProjectDir(null, manifest().minSdk(1), cipherTestSource, cipherTestClass);
         checkDriver(
-                "\n"
-                        + "Scanning MainTest_testClassPath: \n"
+                ""
                         + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
                         + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
                         + "               ~~~~\n"
@@ -384,7 +423,7 @@ public class MainTest extends AbstractCheckTest {
     public void testLibraries() throws Exception {
         File project = getProjectDir(null, manifest().minSdk(1), cipherTestSource, cipherTestClass);
         checkDriver(
-                "\nScanning MainTest_testLibraries: \nNo issues found.\n",
+                "No issues found.",
                 "",
 
                 // Expected exit code
@@ -425,7 +464,9 @@ public class MainTest extends AbstractCheckTest {
                         + "If not, investigate the baseline path in the lintOptions config\n"
                         + "or verify that the baseline file has been checked into version\n"
                         + "control.\n"
-                        + "\n",
+                        + "\n"
+                        + "You can run lint with -Dlint.baselines.continue=true\n"
+                        + "if you want to create many missing baselines in one go.",
 
                 // Expected exit code
                 ERRNO_CREATED_BASELINE,
@@ -440,9 +481,19 @@ public class MainTest extends AbstractCheckTest {
                     TestUtils.getSdk().toString(),
                     "--disable",
                     "LintError",
+                    "--client-id",
+                    "gradle",
+                    "--client-version",
+                    "4.2.1",
+                    "--client-name",
+                    "AGP",
                     getProjectDir(null, mAccessibility).getPath()
                 });
         assertTrue(baseline.exists());
+
+        String baselineContents = FilesKt.readText(baseline, Charsets.UTF_8);
+        assertThat(baselineContents).contains("client=\"gradle\" name=\"AGP (4.2.1)\"");
+
         //noinspection ResultOfMethodCallIgnored
         baseline.delete();
     }
@@ -457,8 +508,7 @@ public class MainTest extends AbstractCheckTest {
 
         checkDriver(
                 // Expected output
-                "\n"
-                        + "Scanning MainTest_testUpdateBaseline: .\n"
+                ""
                         + "res/layout/accessibility.xml:4: Information: Missing contentDescription attribute on image [ContentDescription]\n"
                         + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "     ~~~~~~~~~\n"
@@ -520,8 +570,6 @@ public class MainTest extends AbstractCheckTest {
     /**
      * This test emulates Google3's `android_lint` setup, and catches regression caused by relative
      * path for JAR files.
-     *
-     * @throws Exception
      */
     public void testRelativePaths() throws Exception {
         // Project with source only
@@ -534,8 +582,7 @@ public class MainTest extends AbstractCheckTest {
 
         try {
             checkDriver(
-                    "\n"
-                            + "Scanning MainTest_testRelativePaths: \n"
+                    ""
                             + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
                             + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
                             + "               ~~~~\n"
@@ -673,7 +720,6 @@ public class MainTest extends AbstractCheckTest {
                 "",
                 ERRNO_SUCCESS,
                 new String[] {
-                    "--quiet",
                     // The FontValidationWarning id is an old alias for FontValidation; here
                     // we're testing that reported error applied to FontValidation and changed
                     // its severity to warning
@@ -699,7 +745,6 @@ public class MainTest extends AbstractCheckTest {
                 "",
                 ERRNO_SUCCESS,
                 new String[] {
-                    "--quiet",
                     "--disable",
                     "UsesMinSdkAttributes,UnusedResources,AllowBackup",
                     project.getPath()
@@ -710,8 +755,6 @@ public class MainTest extends AbstractCheckTest {
         File project = getProjectDir(null, java("class Test {\n    // STOPSHIP\n}"));
         checkDriver(
                 ""
-                        + "Scanning MainTest_testWall: ..\n"
-                        + "Scanning MainTest_testWall (Phase 2): .\n"
                         + "src/Test.java:2: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                         + "    // STOPSHIP\n"
                         + "       ~~~~~~~~\n"
@@ -732,7 +775,6 @@ public class MainTest extends AbstractCheckTest {
                 getProjectDir(null, java("class Test {\n    String s = \"/sdcard/path\";\n}"));
         checkDriver(
                 ""
-                        + "Scanning MainTest_testWerror: ..\n"
                         + "src/Test.java:2: Error: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    String s = \"/sdcard/path\";\n"
                         + "               ~~~~~~~~~~~~~~\n"
@@ -762,7 +804,6 @@ public class MainTest extends AbstractCheckTest {
                                         + "</LinearLayout>\n"));
         checkDriver(
                 ""
-                        + "Scanning MainTest_testNoWarn: ....\n"
                         + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
                         + "    <Button android:id='@+id/duplicated'/>\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -819,7 +860,6 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "-Werror",
-                    "--quiet",
                     "--disable",
                     "LintError,UsesMinSdkAttributes,UnusedResources",
                     project.getPath()
@@ -865,10 +905,7 @@ public class MainTest extends AbstractCheckTest {
                                         + "}\n"),
                         SUPPORT_ANNOTATIONS_JAR);
         checkDriver(
-                ""
-                        + "Scanning MainTest_testWrongThreadOff: ..\n"
-                        + "Scanning MainTest_testWrongThreadOff (Phase 2): .\n"
-                        + "No issues found.",
+                "No issues found.",
                 "",
 
                 // Expected exit code
@@ -906,7 +943,6 @@ public class MainTest extends AbstractCheckTest {
                         source("bin/classes/foo/bar/ApiCallTest.class", ""));
         checkDriver(
                 ""
-                        + "Scanning MainTest_testInvalidLintXmlId: \n"
                         + "lint.xml:4: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
                         + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -974,7 +1010,6 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    "--quiet",
                     "--disable",
                     "LintError,UsesMinSdkAttributes,ButtonStyle,AllowBackup",
                     project.getPath()
@@ -999,7 +1034,6 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    "--quiet",
                     "--disable",
                     "LintError",
                     "--disable",
@@ -1043,10 +1077,8 @@ public class MainTest extends AbstractCheckTest {
 
         checkDriver(
                 ""
-                        + "Scanning MainTest_testPrintFirstError: ......\n"
-                        + "Scanning MainTest_testPrintFirstError (Phase 2): ...\n"
                         + "Wrote HTML report to file://report.html\n"
-                        + "Lint found 2 errors and 5 warnings. First failure:\n"
+                        + "Lint found 2 errors and 4 warnings. First failure:\n"
                         + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
                         + "    <Button android:id='@+id/duplicated'/>\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -1056,7 +1088,6 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    // "--quiet",
                     "--disable",
                     "LintError",
                     "--html",
@@ -1090,7 +1121,7 @@ public class MainTest extends AbstractCheckTest {
         assertTrue(outputDir.setWritable(true));
 
         checkDriver(
-                "Scanning MainTest_testValidateOutput: .\n", // Expected output
+                "",
                 "",
 
                 // Expected exit code

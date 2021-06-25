@@ -24,6 +24,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Properties;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,6 +35,14 @@ public class SdkLibDataFactoryTest {
     MockLog log;
     Properties properties;
     SdkLibDataFactory factory;
+    SdkLibDataFactory.Environment environment =
+            new SdkLibDataFactory.Environment() {
+                @Nullable
+                @Override
+                public String getSystemProperty(@NotNull SystemProperty property) {
+                    return properties.getProperty(property.getKey());
+                }
+            };
 
     @Before
     public void setup() {
@@ -47,7 +57,7 @@ public class SdkLibDataFactoryTest {
         InetAddress loopback = InetAddress.getByName(null);
         properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("http.proxyHost", "8.8.8.8");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
     }
 
@@ -55,7 +65,7 @@ public class SdkLibDataFactoryTest {
     public void createProxy_localhost_https_defaultPort() throws Exception {
         InetAddress loopback = InetAddress.getByName(null);
         properties.setProperty("https.proxyHost", "localhost");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().isEmpty());
     }
@@ -65,7 +75,7 @@ public class SdkLibDataFactoryTest {
         InetAddress loopback = InetAddress.getByName(null);
         properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("https.proxyPort", "123");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress(loopback, 123), proxy.address());
         assertTrue(log.getMessages().isEmpty());
     }
@@ -75,7 +85,7 @@ public class SdkLibDataFactoryTest {
         InetAddress loopback = InetAddress.getByName(null);
         properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("https.proxyPort", "bad");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().get(0).contains("bad"));
         assertTrue(log.getMessages().get(0).contains("443"));
@@ -84,7 +94,7 @@ public class SdkLibDataFactoryTest {
     @Test
     public void createProxy_remote_http() {
         properties.setProperty("http.proxyHost", "8.8.8.8");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 80), proxy.address());
     }
 
@@ -92,7 +102,7 @@ public class SdkLibDataFactoryTest {
     public void createProxy_remote_http_port_override() {
         properties.setProperty("http.proxyHost", "8.8.8.8");
         properties.setProperty("http.proxyPort", "123");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 123), proxy.address());
     }
 
@@ -100,7 +110,7 @@ public class SdkLibDataFactoryTest {
     public void createProxy_remote_http_bad_port_override() {
         properties.setProperty("http.proxyHost", "8.8.8.8");
         properties.setProperty("http.proxyPort", "bad");
-        Proxy proxy = factory.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(environment, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 80), proxy.address());
         assertTrue(log.getMessages().get(0).contains("bad"));
         assertTrue(log.getMessages().get(0).contains("80"));

@@ -553,6 +553,19 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * #compiled(String, TestFile, String...)} instead.
      */
     public static CompiledSourceFile bytecode(
+            @NonNull String into,
+            @NonNull TestFile source,
+            long checksum,
+            @NonNull String... encoded) {
+        return TestFiles.bytecode(into, source, encoded);
+    }
+
+    /**
+     * Like {@link #bytecode(String, TestFile, long, String...)}, but does not specify a checksum
+     *
+     * @deprecated Use the version with a checksum instead
+     */
+    public static CompiledSourceFile bytecode(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         return TestFiles.bytecode(into, source, encoded);
     }

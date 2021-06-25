@@ -1413,39 +1413,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      * This should not be called for classes that will also be compiled from source by jack.
      */
     protected fun addJavacClassesStream(creationConfig: ComponentCreationConfig) {
-        val artifacts = creationConfig.artifacts
-        val javaOutputs = artifacts.get(JAVAC)
-        Preconditions.checkNotNull(javaOutputs)
-
-        // create separate streams for the output of JAVAC and for the pre/post javac
-        // bytecode hooks
+        // create separate streams for all the classes coming from javac, pre/post hooks and R.
         val transformManager = creationConfig.transformManager
         val needsJavaResStreams = creationConfig.variantScope.needsJavaResStreams
         transformManager.addStream(
-                OriginalStream.builder("javac-output") // Need both classes and resources because some annotation
+                OriginalStream.builder("all-classes") // Need both classes and resources because some annotation
                         // processors generate resources
                         .addContentTypes(
                                 if (needsJavaResStreams) TransformManager.CONTENT_JARS else ImmutableSet.of<QualifiedContent.ContentType>(
                                         DefaultContentType.CLASSES))
                         .addScope(QualifiedContent.Scope.PROJECT)
-                        .setFileCollection(project.layout.files(javaOutputs))
-                        .build())
-        val variantData = creationConfig.variantData
-        transformManager.addStream(
-                OriginalStream.builder("pre-javac-generated-bytecode")
-                        .addContentTypes(
-                                if (needsJavaResStreams) TransformManager.CONTENT_JARS else ImmutableSet.of<QualifiedContent.ContentType>(
-                                        DefaultContentType.CLASSES))
-                        .addScope(QualifiedContent.Scope.PROJECT)
-                        .setFileCollection(variantData.allPreJavacGeneratedBytecode)
-                        .build())
-        transformManager.addStream(
-                OriginalStream.builder("post-javac-generated-bytecode")
-                        .addContentTypes(
-                                if (needsJavaResStreams) TransformManager.CONTENT_JARS else ImmutableSet.of<QualifiedContent.ContentType>(
-                                        DefaultContentType.CLASSES))
-                        .addScope(QualifiedContent.Scope.PROJECT)
-                        .setFileCollection(variantData.allPostJavacGeneratedBytecode)
+                        .setFileCollection(creationConfig.artifacts.getAllClasses())
                         .build())
     }
 
@@ -1567,22 +1545,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskContainer.assembleTask.configure { task: Task -> task.group = null }
     }
 
-    protected fun registerRClassTransformStream(variant: ComponentImpl) {
-        if (extension.aaptOptions.namespaced) {
-            return
-        }
-        val rClassJar = variant.artifacts
-                .get(
-                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-        variant.transformManager
-                .addStream(
-                        OriginalStream.builder("compile-and-runtime-light-r-classes")
-                                .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(QualifiedContent.Scope.PROJECT)
-                                .setFileCollection(project.files(rClassJar))
-                                .build())
-    }
-
     /** Creates the tasks to build android tests.  */
     private fun createAndroidTestVariantTasks(androidTestProperties: AndroidTestImpl) {
         createAnchorTasks(androidTestProperties)
@@ -1614,7 +1576,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Add a task to generate resource source files
         createApkProcessResTask(androidTestProperties)
-        registerRClassTransformStream(androidTestProperties)
 
         // process java resources
         createProcessJavaResTask(androidTestProperties)

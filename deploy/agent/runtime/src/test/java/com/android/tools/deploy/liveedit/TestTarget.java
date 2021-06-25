@@ -17,17 +17,21 @@ package com.android.tools.deploy.liveedit;
 
 class TestTarget {
 
-    private static int getStaticTwo() {
+    private static int getPrivateStaticInt() {
         return 2;
     }
 
-    public static int getInstanceNine() {
+    public static int getPublicStaticInt() {
         return 9;
     }
 
     private String field = "A_FIEID";
 
     private int six = 6;
+
+    private int getSix() {
+        return six;
+    }
 
     private static int ten = 10;
 
@@ -45,7 +49,7 @@ class TestTarget {
         x[0] = ten;
         staticInt = memberInt = six + x.length + x[0] + staticInt;
         staticInt += this.hashCode();
-        return memberInt + getStaticTwo() + getInstanceNine() + memberInt + staticInt;
+        return memberInt + getPrivateStaticInt() + getPublicStaticInt() + memberInt + staticInt;
     }
 
     public String returnHappiness() {
@@ -58,5 +62,132 @@ class TestTarget {
 
     public int returnPlusOne(int input) {
         return input + 1;
+    }
+
+    public byte returnByteFromArray() {
+        byte[] array = new byte[2];
+        array[1] = 0xA;
+        return array[1];
+    }
+
+    public Object returnObjectFromArray() {
+        Integer[] array = new Integer[2];
+        array[1] = Integer.valueOf(666);
+        return array[1];
+    }
+
+    public short returnShortFromArray() {
+        short[] array = new short[2];
+        array[1] = (short) 555;
+        return array[1];
+    }
+
+    public char returnCharFromArray() {
+        char[] array = new char[2];
+        array[1] = (char) 555;
+        return array[1];
+    }
+
+    public boolean returnBooleanFromArray() {
+        boolean[] array = new boolean[2];
+        array[1] = true;
+        return array[1];
+    }
+
+    public int returnIntFromArray() {
+        int[] array = new int[2];
+        array[1] = 1234;
+        return array[1];
+    }
+
+    public long returnLongFromArray() {
+        long[] array = new long[2];
+        array[1] = Integer.MAX_VALUE + 1L;
+        return array[1];
+    }
+
+    public float returnFloatFromArray() {
+        float[] array = new float[2];
+        array[1] = 1.0f;
+        return array[1];
+    }
+
+    public double returnDoubleFromArray() {
+        double[] array = new double[2];
+        array[1] = 1.0;
+        return array[1];
+    }
+
+    Object instanceOfObject = new Object();
+    public boolean isInstanceOf() {
+        return instanceOfObject instanceof Object;
+    }
+
+    public int getPrivateField() {
+        return getSix();
+    }
+
+    public Parent newParent() {
+        return new Parent();
+    }
+
+    public Parent newParentWithParameter(int i) {
+        return new Parent(i);
+    }
+
+    private long l1 = 1;
+    private long l2 = 2;
+
+    public long getLongFields() {
+        return l1 + l2;
+    }
+
+    private float f1 = 1.0f;
+    private float f2 = 2.0f;
+
+    public float getFloatFields() {
+        return f1 + f2;
+    }
+
+    private double d1 = 1.0;
+    private double d2 = 2.0;
+
+    public double getDoubleFields() {
+        return d1 + d2;
+    }
+
+    private boolean z1 = true;
+    private boolean z2 = true;
+
+    public boolean getBooleanFields() {
+        return z1 && z2;
+    }
+
+    private byte b1 = 1;
+    private byte b2 = 1;
+
+    public byte getByteFields() {
+        return (byte) (b1 & b2);
+    }
+
+    private short s1 = 1;
+    private short s2 = 1;
+
+    public short getShortFields() {
+        return (short) (s1 & s2);
+    }
+
+    private char c1 = 1;
+    private char c2 = 1;
+
+    public char getCharacterFields() {
+        return (char) (c1 & c2);
+    }
+
+    private int i1 = 1;
+    private int i2 = 1;
+
+    public int getIntegerFields() {
+        return i1 & i2;
     }
 }

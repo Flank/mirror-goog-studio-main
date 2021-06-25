@@ -19,12 +19,14 @@ package com.android.tools.lint
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.AppCompatResourceDetector
 import com.android.tools.lint.checks.AutofillDetector
+import com.android.tools.lint.checks.CommentDetector
 import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.MotionLayoutDetector
 import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -74,20 +76,25 @@ class SarifReporterTest {
                     warning 'DuplicateDefinition'
                 }
             }
+            // STOPSHIP
             """
     ).indented()
 
+    private val singleLineJavaFile = java("// STOPSHIP")
+
     @Test
     fun testBasic() {
-        lint().files(sampleManifest, sampleLayout, sampleStrings, gradleFile)
+        lint().files(sampleManifest, sampleLayout, sampleStrings, gradleFile, singleLineJavaFile)
             .issues(
                 ManifestDetector.MULTIPLE_USES_SDK,
                 HardcodedValuesDetector.ISSUE,
                 DuplicateResourceDetector.ISSUE,
                 // Issue included in registry but not found in results, to make
                 // sure our rules section only included encountered issues
-                MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE
+                MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE,
+                CommentDetector.STOP_SHIP
             )
+            .variant("release") // To enable STOP_SHIP detector.
             .stripRoot(false)
             .run()
             .expectSarif(
@@ -164,6 +171,26 @@ class SarifReporterTest {
                                                     "Correctness"
                                                 ]
                                             }
+                                        },
+                                        {
+                                            "id": "StopShip",
+                                            "shortDescription": {
+                                                "text": "Code contains STOPSHIP marker",
+                                                "markdown": "Code contains `STOPSHIP` marker"
+                                            },
+                                            "fullDescription": {
+                                                "text": "Using the comment // STOPSHIP can be used to flag code that is incomplete but checked in. This comment marker can be used to indicate that the code should not be shipped until the issue is addressed, and lint will look for these. In Gradle projects, this is only checked for non-debug (release) builds.\n\nIn Kotlin, the TODO() method is also treated as a stop ship marker; you can use it to make incomplete code compile, but it will throw an exception at runtime and therefore should be fixed before shipping releases.",
+                                                "markdown": "Using the comment `// STOPSHIP` can be used to flag code that is incomplete but checked in. This comment marker can be used to indicate that the code should not be shipped until the issue is addressed, and lint will look for these. In Gradle projects, this is only checked for non-debug (release) builds.\n\nIn Kotlin, the `TODO()` method is also treated as a stop ship marker; you can use it to make incomplete code compile, but it will throw an exception at runtime and therefore should be fixed before shipping releases."
+                                            },
+                                            "defaultConfiguration": {
+                                                "level": "error",
+                                                "rank": 10
+                                            },
+                                            "properties": {
+                                                "tags": [
+                                                    "Correctness"
+                                                ]
+                                            }
                                         }
                                     ]
                                 }
@@ -174,6 +201,146 @@ class SarifReporterTest {
                                 }
                             },
                             "results": [
+                                {
+                                    "ruleId": "StopShip",
+                                    "ruleIndex": 3,
+                                    "message": {
+                                        "text": "STOPSHIP comment found; points to code which must be fixed prior to release",
+                                        "markdown": "`STOPSHIP` comment found; points to code which must be fixed prior to release"
+                                    },
+                                    "level": "error",
+                                    "locations": [
+                                        {
+                                            "physicalLocation": {
+                                                "artifactLocation": {
+                                                    "uriBaseId": "%SRCROOT%",
+                                                    "uri": "build.gradle"
+                                                },
+                                                "region": {
+                                                    "startLine": 12,
+                                                    "startColumn": 4,
+                                                    "endLine": 12,
+                                                    "endColumn": 12,
+                                                    "charOffset": 316,
+                                                    "charLength": 8,
+                                                    "snippet": {
+                                                        "text": "STOPSHIP"
+                                                    }
+                                                },
+                                                "contextRegion": {
+                                                    "startLine": 10,
+                                                    "endLine": 12,
+                                                    "snippet": {
+                                                        "text": "    }\n}\n// STOPSHIP"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "fixes": [
+                                        {
+                                            "description": {
+                                                "text": "Remove STOPSHIP"
+                                            },
+                                            "artifactChanges": [
+                                                {
+                                                    "artifactLocation": {
+                                                        "uriBaseId": "%SRCROOT%",
+                                                        "uri": "build.gradle"
+                                                    },
+                                                    "replacements": [
+                                                        {
+                                                            "deletedRegion": {
+                                                                "startLine": 12,
+                                                                "startColumn": 4,
+                                                                "charOffset": 316,
+                                                                "endLine": 12,
+                                                                "endColumn": 12,
+                                                                "charLength": 8
+                                                            },
+                                                            "insertedContent": {
+                                                                "text": "\n"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "partialFingerprints": {
+                                        "sourceContext/v1": "437fd3fbfed6988a"
+                                    }
+                                },
+                                {
+                                    "ruleId": "StopShip",
+                                    "ruleIndex": 3,
+                                    "message": {
+                                        "text": "STOPSHIP comment found; points to code which must be fixed prior to release",
+                                        "markdown": "`STOPSHIP` comment found; points to code which must be fixed prior to release"
+                                    },
+                                    "level": "error",
+                                    "locations": [
+                                        {
+                                            "physicalLocation": {
+                                                "artifactLocation": {
+                                                    "uriBaseId": "%SRCROOT%",
+                                                    "uri": "src/main/java/package-info.java"
+                                                },
+                                                "region": {
+                                                    "startLine": 1,
+                                                    "startColumn": 4,
+                                                    "endLine": 1,
+                                                    "endColumn": 12,
+                                                    "charOffset": 3,
+                                                    "charLength": 8,
+                                                    "snippet": {
+                                                        "text": "STOPSHIP"
+                                                    }
+                                                },
+                                                "contextRegion": {
+                                                    "startLine": 1,
+                                                    "endLine": 1,
+                                                    "snippet": {
+                                                        "text": "// STOPSHIP"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "fixes": [
+                                        {
+                                            "description": {
+                                                "text": "Remove STOPSHIP"
+                                            },
+                                            "artifactChanges": [
+                                                {
+                                                    "artifactLocation": {
+                                                        "uriBaseId": "%SRCROOT%",
+                                                        "uri": "src/main/java/package-info.java"
+                                                    },
+                                                    "replacements": [
+                                                        {
+                                                            "deletedRegion": {
+                                                                "startLine": 1,
+                                                                "startColumn": 4,
+                                                                "charOffset": 3,
+                                                                "endLine": 1,
+                                                                "endColumn": 12,
+                                                                "charLength": 8
+                                                            },
+                                                            "insertedContent": {
+                                                                "text": "\n"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "partialFingerprints": {
+                                        "sourceContext/v1": "73fc79ead797da8d"
+                                    }
+                                },
                                 {
                                     "ruleId": "DuplicateDefinition",
                                     "ruleIndex": 0,
@@ -520,10 +687,10 @@ class SarifReporterTest {
                                                     {
                                                         "deletedRegion": {
                                                             "startLine": 3,
-                                                            "startColumn": 42,
+                                                            "startColumn": 41,
                                                             "charOffset": 78,
                                                             "endLine": 3,
-                                                            "endColumn": 44,
+                                                            "endColumn": 43,
                                                             "charLength": 2
                                                         },
                                                         "insertedContent": {
@@ -589,7 +756,7 @@ class SarifReporterTest {
                                                     {
                                                         "deletedRegion": {
                                                             "startLine": 9,
-                                                            "startColumn": 14,
+                                                            "startColumn": 13,
                                                             "charOffset": 387
                                                         },
                                                         "insertedContent": {
@@ -614,7 +781,7 @@ class SarifReporterTest {
                                                     {
                                                         "deletedRegion": {
                                                             "startLine": 10,
-                                                            "startColumn": 14,
+                                                            "startColumn": 13,
                                                             "charOffset": 419
                                                         },
                                                         "insertedContent": {
@@ -757,7 +924,7 @@ class SarifReporterTest {
                                                     {
                                                         "deletedRegion": {
                                                             "startLine": 4,
-                                                            "startColumn": 10,
+                                                            "startColumn": 9,
                                                             "charOffset": 174
                                                         },
                                                         "insertedContent": {
@@ -767,10 +934,10 @@ class SarifReporterTest {
                                                     {
                                                         "deletedRegion": {
                                                             "startLine": 6,
-                                                            "startColumn": 10,
+                                                            "startColumn": 9,
                                                             "charOffset": 260,
                                                             "endLine": 6,
-                                                            "endColumn": 34,
+                                                            "endColumn": 33,
                                                             "charLength": 24
                                                         },
                                                         "insertedContent": {

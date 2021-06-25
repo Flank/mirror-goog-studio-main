@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.build.gradle.integration.common.truth.TaskStateList
-import com.android.builder.model.ProjectBuildOutput
 import com.google.api.client.repackaged.com.google.common.base.Preconditions
 import com.google.api.client.repackaged.com.google.common.base.Throwables
 import com.google.common.collect.ImmutableList
@@ -37,12 +36,11 @@ import java.util.Scanner
  *
  * @property exception The exception from the build, null if the build succeeded.
  */
-class GradleBuildResult @JvmOverloads constructor(
+class GradleBuildResult(
     private val stdoutFile: File,
     private val stderrFile: File,
     private val taskEvents: ImmutableList<ProgressEvent>,
     val exception: GradleConnectionException?,
-    buildOutputContainer: ModelContainer<ProjectBuildOutput>? = null
 ) {
     /**
      * Returns a new [Scanner] for the stderr messages. This instance MUST be closed when done.
@@ -55,12 +53,6 @@ class GradleBuildResult @JvmOverloads constructor(
      */
     val stdout
         get() = Scanner(stdoutFile)
-
-    private val _buildOutputContainer = buildOutputContainer
-    val buildOutputContainer: ModelContainer<ProjectBuildOutput>
-        get() = _buildOutputContainer
-                ?: throw IllegalStateException("ProjectBuildOutput models were not fetched by the "
-                    + "build. Make sure to use GradleTaskExecutor::withOutputModelQuery.")
 
     /**
      * Most tests don't examine the state of the build's tasks and [TaskStateList] is relatively

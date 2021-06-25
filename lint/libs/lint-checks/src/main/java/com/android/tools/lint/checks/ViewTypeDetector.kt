@@ -21,6 +21,7 @@ import com.android.SdkConstants.ANDROID_WEBKIT_PKG
 import com.android.SdkConstants.ANDROID_WIDGET_PREFIX
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_ID
+import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_TAG
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.DOT_XML
@@ -119,6 +120,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                 }
 
                 cls = attribute.ownerElement.getAttribute(ATTR_CLASS)
+            } else if (attribute.ownerElement.hasAttributeNS(ANDROID_URI, ATTR_NAME)) {
+                cls = attribute.ownerElement.getAttributeNS(ANDROID_URI, ATTR_NAME)
             }
             cls = cls.replace('$', '.')
             if (cls.isEmpty()) {

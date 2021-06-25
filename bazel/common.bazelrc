@@ -5,9 +5,6 @@
 # Remote Build Execution requires a strong hash function, such as SHA256.
 startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
 
-# For now we require python 2
-build --host_force_python=PY2
-
 # Enforces UTF-8 encoding in bazel tests.
 test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'

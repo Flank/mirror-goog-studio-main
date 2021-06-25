@@ -54,10 +54,8 @@ void SwapCommand::ParseParameters(const proto::InstallerRequest& request) {
   }
 
   request_ = request.swap_request();
+  package_name_ = request_.package_name();
 
-  // Set this value here so we can re-use it in other methods.
-  const std::string& pkg = request_.package_name();
-  target_dir_ = Sites::AppStudio(pkg);
   ready_to_run_ = true;
 }
 
@@ -81,7 +79,14 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
 
   LogEvent("Got swap request for:" + request_.package_name());
 
-  if (!Setup()) {
+  // Attach agents to pids.
+  std::string agent_filename = kAgent;
+#if defined(__aarch64__) || defined(__x86_64__)
+  if (request_.arch() == proto::ARCH_32_BIT) {
+    agent_filename = kAgentAlt;
+  }
+#endif
+  if (!PrepareInteraction(agent_filename)) {
     cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Unable to setup workspace");
@@ -109,72 +114,27 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
   response_->set_status(proto::SwapResponse::OK);
 }
 
-bool SwapCommand::Setup() noexcept {
-  // Make sure the target dir exists.
-  Phase p("Setup");
-
-  if (!CopyBinaries()) {
-    ErrEvent("Could not copy binaries");
-    return false;
-  }
-
-  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
-                            workspace_.GetVersion());
-  return true;
-}
-
-bool SwapCommand::CopyBinaries() const noexcept {
-  Phase p("CopyBinaries");
-
-  // Extract binaries from matryoshka to the tmp folder.
-  const std::string tmp_dir = workspace_.GetTmpFolder();
-  std::vector<std::string> to_extract = {kAgent, kInstallServer};
-#if defined(__aarch64__) || defined(__x86_64__)
-  to_extract.emplace_back(kAgentAlt);
-#endif
-  ExtractBinaries(workspace_.GetTmpFolder(), to_extract);
-
-  // Copy binaries from tmp folder to app world.
-  std::string pkg = request_.package_name();
-  const std::string dst_dir = Sites::AppStudio(pkg);
-
-  std::string cp_output;
-  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", tmp_dir, dst_dir}, &cp_output)) {
-    cp_output.clear();
-    // We don't need to check the output of this. It will fail if the code_cache
-    // already exists; if the code_cache doesn't exist and we can't create it,
-    // that failure will be caught when we try to copy the binaries.
-    RunCmd("mkdir", User::APP_PACKAGE, {dst_dir}, nullptr);
-    if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", tmp_dir, dst_dir},
-                &cp_output)) {
-      ErrEvent("Could not copy agent binary: "_s + cp_output);
-      return false;
-    }
-  }
-
-  return true;
-}
-
 proto::SwapResponse::Status SwapCommand::Swap() {
   // Don't bother with the server if we have no work to do.
   if (request_.process_ids().empty() && request_.extra_agents() <= 0) {
     LogEvent("No PIDs needs to be swapped");
     return proto::SwapResponse::OK;
   }
+
   // Start the server and wait for it to begin listening for connections.
-  if (!WaitForServer()) {
-    ErrEvent("Unable to start server");
+  auto listen_resp = ListenForAgents();
+  if (listen_resp == nullptr) {
+    ErrEvent("ListenForAgents() No response from app-server");
     return proto::SwapResponse::START_SERVER_FAILED;
   }
 
-  // Attach agents to pids.
-  std::string agent_path = target_dir_ + kAgent;
-#if defined(__aarch64__) || defined(__x86_64__)
-  if (request_.arch() == proto::ARCH_32_BIT) {
-    agent_path = target_dir_ + kAgentAlt;
+  if (listen_resp->status() != proto::OpenAgentSocketResponse::OK) {
+    ErrEvent("ListenForAgents: No OK response (" +
+             to_string(listen_resp->status()) + ")");
+    return proto::SwapResponse::START_SERVER_FAILED;
   }
-#endif
-  if (!Attach(request_.process_ids(), agent_path)) {
+
+  if (!Attach(request_.process_ids())) {
     ErrEvent("Could not attach agents");
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
   }
@@ -232,37 +192,4 @@ proto::SwapResponse::Status SwapCommand::Swap() {
 
   return proto::SwapResponse::MISSING_AGENT_RESPONSES;
 }
-
-bool SwapCommand::WaitForServer() {
-  Phase p("WaitForServer");
-
-  proto::OpenAgentSocketRequest socket_request;
-  socket_request.set_socket_name(GetSocketName());
-
-  auto resp = client_->OpenAgentSocket(socket_request);
-  if (!resp) {
-    ErrEvent("SwapCommand::WaitForServer: Error with install-server");
-    return false;
-  }
-
-  if (resp->status() != proto::OpenAgentSocketResponse::OK) {
-    ErrEvent("SwapCommand::WaitForServer: Bad response from install-server");
-    return false;
-  }
-
-  return true;
-}
-
-bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
-                         const std::vector<std::string>& args,
-                         std::string* output) const {
-  std::string err;
-  Executor* executor = &Executor::Get();
-  RunasExecutor alt(request_.package_name(), *executor);
-  if (run_as == User::APP_PACKAGE) {
-    executor = &alt;
-  }
-  return executor->Run(shell_cmd, args, output, &err);
-}
-
 }  // namespace deploy

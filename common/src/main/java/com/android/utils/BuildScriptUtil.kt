@@ -28,11 +28,11 @@ import java.io.File
 /**
  * Returns the path of a build.gradle or build.gradle.kts file in the directory at the given
  * [dirPath]. build.gradle.kts is only returned when build.gradle doesn't exist and
- * build.gradle.kts exists.
+ * build.gradle.kts does exist.
  *
  * Please note that the build.gradle file may not exist at the returned path.
  *
- * __Note__: Do __not__ use this method if you all calling from the IDE and have a reference to
+ * __Note__: Do __not__ use this method if you are calling from the IDE and have a reference to
  * a module, in these cases prefer to use the path contained within the module's Gradle facet.
  *
  * This method returns the path of a build.gradle or build.gradle.kts file in the directory at
@@ -50,8 +50,8 @@ fun findGradleBuildFile(dirPath: File) : File {
 
 /**
  * Returns the path of a settings.gradle or settings.gradle.kts file in the directory at the given
- * [dirPath]. settings.gradle.kts is only returned when build.gradle doesn't exist and
- * build.gradle.kts exists.
+ * [dirPath]. settings.gradle.kts is only returned when settings.gradle doesn't exist and
+ * settings.gradle.kts does exist.
  *
  * Please note that the settings.gradle file may not exist at the returned path.
  *
@@ -64,7 +64,7 @@ fun findGradleSettingsFile(dirPath: File) : File {
   val kotlinSettingsFile = File(dirPath, FN_SETTINGS_GRADLE_KTS)
   if (kotlinSettingsFile.isFile) return kotlinSettingsFile
 
-  // Default to Groovy is none exist.
+  // Default to Groovy if none exist.
   return groovySettingsFile
 }
 

@@ -75,6 +75,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ApiDetector.OVERRIDE,
                 ApiDetector.UNSUPPORTED,
                 ApiDetector.UNUSED,
+                AppBundleLocaleChangesDetector.ISSUE,
                 AppCompatCallDetector.ISSUE,
                 AppCompatCustomViewDetector.ISSUE,
                 AppCompatResourceDetector.ISSUE,

@@ -93,7 +93,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    @get:Incubating
     val installation: Installation
 
     /**
@@ -103,7 +102,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    @Incubating
     fun installation(action: Installation.() -> Unit)
 
     /**
@@ -151,7 +149,6 @@ interface CommonExtension<
      *
      * @see [BuildType
      */
-    @get:Incubating
     val buildTypes: NamedDomainObjectContainer<out BuildTypeT>
 
     /**
@@ -159,7 +156,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [BuildType]
      */
-    @Incubating
     fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit)
 
     /**
@@ -176,7 +172,6 @@ interface CommonExtension<
      * }
      * ```
      */
-    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit)
     /**
      * Shortcut extension method to allow easy access to the predefined `release` [BuildType]
@@ -192,7 +187,6 @@ interface CommonExtension<
      * }
      * ```
      */
-    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.release(action: BuildTypeT.() -> Unit)
 
     /**
@@ -355,7 +349,6 @@ interface CommonExtension<
      *
      * @see [ProductFlavor]
      */
-    @get:Incubating
     val productFlavors: NamedDomainObjectContainer<out ProductFlavorT>
 
     /**
@@ -364,7 +357,6 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block,
      * see [ProductFlavor]
      */
-    @Incubating
     fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit)
 
 
@@ -440,7 +432,6 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
-    @get:Incubating
     val externalNativeBuild: ExternalNativeBuild
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
@@ -460,7 +451,6 @@ interface CommonExtension<
      *
      * @since 2.2.0
      */
-    @Incubating
     fun externalNativeBuild(action: ExternalNativeBuild.()->Unit)
 
     /**

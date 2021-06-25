@@ -141,9 +141,11 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lint")
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lintDebug")
 
+        // Regression test for b/190855628
         assertThat(projectWithLibs.file("app/lint-results.txt")).containsAllOf(
             "app_layout.xml:10: Warning: Hardcoded string",
-            "feature_layout.xml:10: Warning: Hardcoded string"
+            "feature_layout.xml:10: Warning: Hardcoded string",
+            "lib2_layout.xml:10: Warning: Hardcoded string"
         )
         assertThat(projectWithLibs.file("lib1/lint-results.txt")).contains(
             "lib1_layout.xml:10: Warning: Hardcoded string"

@@ -135,6 +135,11 @@ public class FakeDevice extends DeviceConnector {
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
         System.out.println(String.format("EXECSHELL(%S) CALLED", name));
+        if (command == "am get-current-user") {
+            addLineToReceiver("10\r\n", receiver);
+            receiver.flush();
+            return;
+        }
 
         // now fake out some tests result to make the test runner happy.
         addLineToReceiver("INSTRUMENTATION_STATUS: numtests=2\r\n", receiver);

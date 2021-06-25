@@ -16,11 +16,15 @@
 
 package com.android.tools.lint.checks
 
+import com.android.ide.common.repository.GradleCoordinate
+import com.android.ide.common.repository.GradleVersion
+import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
@@ -70,15 +74,14 @@ class PropertyFileDetector : Detector() {
         val distributionPrefix = "distributionUrl=http\\"
         if (line.startsWith(distributionPrefix)) {
             val https = "https" + line.substring(distributionPrefix.length - 1)
-            val message = String.format(
-                "Replace HTTP with HTTPS for better security; use %1\$s",
-                https.replace("\\", "\\\\")
-            )
+            val escaped = https.replace("\\", "\\\\")
             val startOffset = offset + valueStart
             val endOffset = startOffset + 4 // 4: "http".length()
-            val fix = fix().replace().text("http").with("https").build()
-            val location = Location.create(context.file, contents, startOffset, endOffset)
-            context.report(HTTP, location, message, fix)
+            val incident = Incident(context, HTTP)
+                .message("Replace HTTP with HTTPS for better security; use $escaped")
+                .fix(fix().replace().text("http").with("https").build())
+                .location(Location.create(context.file, contents, startOffset, endOffset))
+            report(incident, contents, startOffset)
         } else if (line.startsWith("systemProp.http.proxyPassword=") ||
             line.startsWith("systemProp.https.proxyPassword=")
         ) {
@@ -88,15 +91,54 @@ class PropertyFileDetector : Detector() {
 
             val startOffset = offset + valueStart
             val endOffset = line.length
-            val location = Location.create(context.file, contents, startOffset, endOffset)
-            context.report(
-                PROXY_PASSWORD,
-                location,
-                "Storing passwords in clear text is risky; " +
-                    "make sure this file is not shared or checked in via version control"
-            )
+            val incident = Incident(context, PROXY_PASSWORD)
+                .message(
+                    "Storing passwords in clear text is risky; " +
+                        "make sure this file is not shared or checked in via version control"
+                )
+                .location(Location.create(context.file, contents, startOffset, endOffset))
+            report(incident, contents, startOffset)
         } else if (line.indexOf('\\') != -1 || line.indexOf(':') != -1) {
             checkEscapes(context, contents, line, offset, valueStart)
+        } else if (line.startsWith(LINT_VERSION_KEY)) {
+            checkNewerVersion(context, contents, line)
+        }
+    }
+
+    private fun checkNewerVersion(context: Context, contents: CharSequence, line: String) {
+        val index = line.indexOf('=')
+        if (index == -1 || line.substring(0, index).trim() != LINT_VERSION_KEY) {
+            return
+        }
+        val versionString = line.substring(index + 1).trim()
+        if (versionString.isEmpty()) {
+            return
+        }
+        val version = GradleVersion.tryParse(versionString) ?: return
+        val repository = GradleDetector().getGoogleMavenRepository(context.client)
+        // Lint uses the same version as AGP
+        val gc = GradleCoordinate("com.android.tools.build", "gradle", versionString)
+        // We're assuming that users who use this facility want to use the very latest version,
+        // even if they're currently on stable. Alternatively we could use
+        // val allowPreview = version.isPreview || version.isSnapshot
+        val allowPreview = true
+        val newerVersion = repository.findVersion(gc, null, allowPreview) ?: return
+        if (newerVersion > version) {
+            val startOffset = contents.indexOf(versionString)
+            val endOffset = startOffset + versionString.length
+            val newerVersionString = newerVersion.toString()
+            val fix = fix()
+                .name("Update lint to $newerVersionString")
+                .replace()
+                .all()
+                .with(newerVersionString)
+                .build()
+            val location = Location.create(context.file, contents, startOffset, endOffset)
+            val incident = Incident(context, DEPENDENCY)
+                .location(location)
+                .message("Newer version of lint available: $newerVersion")
+                .fix(fix)
+            report(incident, contents, startOffset)
         }
     }
 
@@ -183,11 +225,14 @@ class PropertyFileDetector : Detector() {
                 .with(escapedRange)
                 .build()
             val location = Location.create(context.file, contents, startOffset, endOffset)
-            context.report(ESCAPE, location, message, fix)
+            val incident = Incident(context, ESCAPE).message(message).fix(fix).location(location)
+            report(incident, contents, startOffset)
         }
     }
 
     companion object {
+        private const val LINT_VERSION_KEY = "android.experimental.lint.version"
+
         /** Property file not escaped. */
         @JvmField
         val ESCAPE = Issue.create(
@@ -238,6 +283,28 @@ class PropertyFileDetector : Detector() {
         fun suggestEscapes(value: String): String {
             val escaped = value.replace("\\:", ":").replace("\\\\", "\\")
             return escapePropertyValue(escaped)
+        }
+
+        private fun report(incident: Incident, source: CharSequence, startOffset: Int) {
+            if (isSuppressed(incident.issue, source, startOffset)) {
+                return
+            }
+            incident.report()
+        }
+
+        fun isSuppressed(issue: Issue, source: CharSequence, offset: Int): Boolean {
+            val prevLineEnd = source.lastIndexOf('\n', offset) - 1
+            if (prevLineEnd < 0) {
+                return false
+            }
+
+            val prevLineBegin = source.lastIndexOf('\n', prevLineEnd).let { if (it == -1) 0 else it }
+            val suppress = source.indexOf(Context.SUPPRESS_JAVA_COMMENT_PREFIX, prevLineBegin)
+            return if (suppress in 0 until prevLineEnd) {
+                source.indexOf(issue.id, suppress) in 0 until prevLineEnd
+            } else {
+                false
+            }
         }
     }
 }

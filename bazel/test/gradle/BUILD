@@ -12,7 +12,7 @@ gradle_build(
     ] + glob(["library/**"]),
     output_file = "outputs/aar/library-release.aar",
     output_file_source = "outputs/aar/library-release.aar",
-    repo_manifests = [
+    repos = [
         "//tools/adt/idea/android:test_deps",
         "//tools/base/build-system:gradle_plugin_repo",
     ],

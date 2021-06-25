@@ -18,8 +18,9 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-@Incubating
 interface BundleTexture {
+    @get:Incubating
+    @set:Incubating
     var enableSplit: Boolean?
 
     /**
@@ -36,5 +37,7 @@ interface BundleTexture {
      *
      * @since 4.1.0
      */
+    @get:Incubating
+    @set:Incubating
     var defaultFormat: String?
 }

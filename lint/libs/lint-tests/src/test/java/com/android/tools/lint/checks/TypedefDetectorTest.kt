@@ -65,7 +65,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                                 test(UNRELATED) // ERROR - not part of the @DetailsInfoTab list
                                      ~~~~~~~~~
             2 errors, 0 warnings
-            """.trimIndent()
+            """
         )
     }
 
@@ -313,7 +313,46 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_INDEFINITE:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_INDEFINITE); /// OK within range
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_SHORT:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_SHORT); /// OK within range
+            Fix for src/test/pkg/X.java line 27: Change to X.LENGTH_LONG:
+            @@ -27 +27
+            -         setDuration(UNRELATED); /// OK within range
+            +         setDuration(X.LENGTH_LONG); /// OK within range
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_INDEFINITE:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_INDEFINITE); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_SHORT:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_SHORT); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 28: Change to X.LENGTH_LONG:
+            @@ -28 +28
+            -         setDuration(-5); // ERROR (not right int def or value
+            +         setDuration(X.LENGTH_LONG); // ERROR (not right int def or value
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_INDEFINITE:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_INDEFINITE); // ERROR (not matching number range)
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_SHORT:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_SHORT); // ERROR (not matching number range)
+            Fix for src/test/pkg/X.java line 29: Change to X.LENGTH_LONG:
+            @@ -29 +29
+            -         setDuration(8); // ERROR (not matching number range)
+            +         setDuration(X.LENGTH_LONG); // ERROR (not matching number range)
+            """
+        )
     }
 
     fun testMultipleProjects() {
@@ -386,7 +425,14 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Fix for src/test/zpkg/SomeClassTest.java line 10: Change to SomeClass.MY_CONSTANT:
+            @@ -10 +10
+            -         SomeClass.doSomething("error");
+            +         SomeClass.doSomething(SomeClass.MY_CONSTANT);
+            """
+        )
     }
 
     /**
@@ -1501,6 +1547,25 @@ class TypedefDetectorTest : AbstractCheckTest() {
                                            ~~
             2 errors, 0 warnings
             """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 20: Change to IntDefTest.LINE:
+            @@ -20 +20
+            -         shapeType = 99;
+            +         shapeType = IntDefTest.LINE;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 20: Change to IntDefTest.CORNER:
+            @@ -20 +20
+            -         shapeType = 99;
+            +         shapeType = IntDefTest.CORNER;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 21: Change to IntDefTest.LINE:
+            @@ -21 +21
+            -         myClassObj.shapeType = 99;
+            +         myClassObj.shapeType = IntDefTest.LINE;
+            Fix for src/test/pkg/myapplication/IntDefTest.java line 21: Change to IntDefTest.CORNER:
+            @@ -21 +21
+            -         myClassObj.shapeType = 99;
+            +         myClassObj.shapeType = IntDefTest.CORNER;
+            """
         )
     }
 
@@ -1617,6 +1682,245 @@ class TypedefDetectorTest : AbstractCheckTest() {
                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
+        ).expectFixDiffs(
+            """
+            Fix for src/com/example/android/linttest/MainActivity.java line 15: Change to FragmentNames.HOME:
+            @@ -15 +15
+            -         toastFragmentNameAndText(getSomeTextFromThisClass(), FragmentNames.HOME); // ERROR
+            +         toastFragmentNameAndText(FragmentNames.HOME, FragmentNames.HOME); // ERROR
+            """
         )
+    }
+
+    fun testQuickfix() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.app.AlarmManager;
+                import android.app.PendingIntent;
+
+                public class ExactAlarmTest {
+                    public void test(AlarmManager alarmManager, PendingIntent operation) {
+                        alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.PendingIntent
+
+                fun test(alarmManager: android.app.AlarmManager, operation: PendingIntent?) {
+                    alarmManager.setExact(1, 0L, operation)
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/ExactAlarmTest.java:7: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
+                    alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+                                          ~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:6: Error: Must be one of: AlarmManager.RTC_WAKEUP, AlarmManager.RTC, AlarmManager.ELAPSED_REALTIME_WAKEUP, AlarmManager.ELAPSED_REALTIME [WrongConstant]
+                alarmManager.setExact(1, 0L, operation)
+                                      ~
+            2 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.RTC_WAKEUP:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.RTC_WAKEUP, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.RTC:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.RTC, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.ELAPSED_REALTIME_WAKEUP:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, 0L, operation);
+            Fix for src/test/pkg/ExactAlarmTest.java line 7: Change to AlarmManager.ELAPSED_REALTIME:
+            @@ -7 +7
+            -         alarmManager.setExact(Integer.MAX_VALUE, 0L, operation);
+            +         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME, 0L, operation);
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.RTC (1):
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.RTC, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.RTC_WAKEUP:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.ELAPSED_REALTIME_WAKEUP:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, 0L, operation)
+            Fix for src/test/pkg/test.kt line 6: Change to AlarmManager.ELAPSED_REALTIME:
+            @@ -6 +6
+            -     alarmManager.setExact(1, 0L, operation)
+            +     alarmManager.setExact(android.app.AlarmManager.ELAPSED_REALTIME, 0L, operation)
+            """
+        )
+    }
+
+    fun testListDifference() {
+        // See b//174571734#comment9 for repro: this is extracted from a failure found in AndroidX
+        // running :camera:integration-tests:camera-testapp-extensions:lintDebug
+        lint().files(
+            java(
+                """
+                package androidx.camera.view;
+
+                import androidx.annotation.IntDef;
+                import androidx.camera.core.AspectRatio;
+                import androidx.camera.core.impl.ImageOutputConfig;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings({"unused", "FieldCanBeLocal", "FieldMayBeFinal"})
+                public class CameraController {
+                    private void setTargetOutputSize(ImageOutputConfig.Builder<?> builder,
+                                                     OutputSize outputSize) {
+                        builder.setTargetAspectRatio(outputSize.getAspectRatio()); // ERROR
+                        if (outputSize.getAspectRatio() != OutputSize.UNASSIGNED_ASPECT_RATIO) {
+                            builder.setTargetAspectRatio(outputSize.getAspectRatio()); // OK
+                        }
+                    }
+
+                    public static class OutputSize {
+                        public static final int UNASSIGNED_ASPECT_RATIO = -1;
+
+                        @Retention(RetentionPolicy.SOURCE)
+                        @IntDef(value = {UNASSIGNED_ASPECT_RATIO, AspectRatio.RATIO_4_3, AspectRatio.RATIO_16_9})
+                        public @interface OutputAspectRatio {
+                        }
+
+                        @OutputAspectRatio
+                        private int mAspectRatio = UNASSIGNED_ASPECT_RATIO;
+
+                        @OutputAspectRatio
+                        public int getAspectRatio() {
+                            return mAspectRatio;
+                        }
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package androidx.camera.core;
+
+                import androidx.annotation.IntDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                public class AspectRatio {
+                    public static final int RATIO_4_3 = 0;
+                    public static final int RATIO_16_9 = 1;
+
+                    private AspectRatio() {
+                    }
+
+                    @IntDef({RATIO_4_3, RATIO_16_9})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface Ratio {
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package androidx.camera.core.impl;
+
+                import androidx.camera.core.AspectRatio;
+
+                @SuppressWarnings("UnusedReturnValue")
+                public interface ImageOutputConfig {
+                    interface Builder<B> {
+                        B setTargetAspectRatio(@AspectRatio.Ratio int aspectRatio);
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            // , but could be X, Y or Z
+            // and add baseline matching
+            """
+            src/androidx/camera/view/CameraController.java:14: Error: Must be one of: AspectRatio.RATIO_4_3, AspectRatio.RATIO_16_9, but could be OutputSize.UNASSIGNED_ASPECT_RATIO [WrongConstant]
+                                    builder.setTargetAspectRatio(outputSize.getAspectRatio()); // ERROR
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
+    fun test() {
+        lint().files(
+            java(
+                """
+                package androidx.camera.camera2.internal.compat.params;
+
+                import android.hardware.camera2.params.SessionConfiguration;
+                import android.os.Build;
+
+                import androidx.annotation.IntDef;
+                import androidx.annotation.RequiresApi;
+                import androidx.camera.camera2.internal.compat.CameraDeviceCompat;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings("unused")
+                @RequiresApi(api = Build.VERSION_CODES.P)
+                public class SessionConfigurationCompat {
+                    public static final int SESSION_REGULAR = CameraDeviceCompat.SESSION_OPERATION_MODE_NORMAL;
+                    public static final int SESSION_HIGH_SPEED =
+                            CameraDeviceCompat.SESSION_OPERATION_MODE_CONSTRAINED_HIGH_SPEED;
+
+                    private static final class SessionConfigurationCompatApi28Impl implements
+                            SessionConfigurationCompatImpl {
+
+                        private final SessionConfiguration mObject;
+
+                        private SessionConfigurationCompatApi28Impl(SessionConfiguration mObject) {
+                            this.mObject = mObject;
+                        }
+
+                        @Override
+                        public int getSessionType() {
+                            return mObject.getSessionType();
+                        }
+                    }
+
+                    @Retention(RetentionPolicy.SOURCE)
+                    @IntDef(value = {SESSION_REGULAR, SESSION_HIGH_SPEED})
+                    public @interface SessionMode {
+                    }
+
+                    private interface SessionConfigurationCompatImpl {
+                        @SessionMode
+                        int getSessionType();
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.camera.camera2.internal.compat;
+
+                public class CameraDeviceCompat {
+                    public static final int SESSION_OPERATION_MODE_NORMAL =
+                            0; // ICameraDeviceUser.NORMAL_MODE;
+                    public static final int SESSION_OPERATION_MODE_CONSTRAINED_HIGH_SPEED =
+                            1; // ICameraDeviceUser.CONSTRAINED_HIGH_SPEED_MODE;
+
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }

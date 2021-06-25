@@ -46,7 +46,7 @@ public class TaskRunnerTest {
         TaskRunner runner = new TaskRunner(service);
         Task<String> start = runner.create(input);
         Task<String> add = runner.create(Tasks.TASK1, a -> a + " added", start);
-        runner.run();
+        runner.run(Canceller.NO_OP);
         String output = add.get();
 
         Assert.assertEquals("text added", output);
@@ -69,7 +69,7 @@ public class TaskRunnerTest {
         Task<String> task1 = runner.create(Tasks.TASK1, a -> a + " task1", start);
         Task<String> task2 = runner.create(Tasks.TASK2, a -> a + " task2", start);
         Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
-        runner.run();
+        runner.run(Canceller.NO_OP);
         String output = add.get();
 
         Assert.assertEquals("text task1.text task2", output);
@@ -95,7 +95,7 @@ public class TaskRunnerTest {
         Task<String> task2 = runner.create(Tasks.TASK2, a -> a + " task2", start);
         Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
         try {
-            runner.run();
+            runner.run(Canceller.NO_OP);
             add.get();
             fail();
         } catch (DeployerException de) {
@@ -148,7 +148,7 @@ public class TaskRunnerTest {
                         start);
 
         Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
-        runner.run();
+        runner.run(Canceller.NO_OP);
 
         String output = add.get();
         Assert.assertEquals("text task1.text task2", output);
@@ -177,11 +177,11 @@ public class TaskRunnerTest {
         // The order in which task1 and task2 is run cannot be guaranteed, but blocking task2 should not prevent task1 to finish.
         // We have two threads in the executor, so we give a different one to runAsync to not block any thread in there.
         ExecutorService async = Executors.newSingleThreadExecutor();
-        runner.runAsync(async);
+        runner.runAsync(async, Canceller.NO_OP);
         String output = task1.get();
         task2Latch.countDown();
 
-        runner.run();
+        runner.run(Canceller.NO_OP);
         Assert.assertEquals("text task1", output);
 
         service.shutdown();
@@ -216,7 +216,7 @@ public class TaskRunnerTest {
         Future<Void> running =
                 executor.submit(
                         () -> {
-                            runner.run();
+                            runner.run(Canceller.NO_OP);
                             return null;
                         });
 
@@ -243,7 +243,7 @@ public class TaskRunnerTest {
         Task<String> task3 =
                 runner.create(Tasks.TASK3, (a, b, c) -> a + b + c + " task3", start, task1, task2);
 
-        runner.run();
+        runner.run(Canceller.NO_OP);
         List<Runnable> runnables = service.shutdownNow();
         assertTrue(runnables.isEmpty());
         service.shutdown();
@@ -264,7 +264,7 @@ public class TaskRunnerTest {
                         },
                         start);
 
-        DeployerException e = runner.run().getException();
+        DeployerException e = runner.run(Canceller.NO_OP).getException();
             assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
             assertEquals("failed", e.getDetails());
 
@@ -287,7 +287,7 @@ public class TaskRunnerTest {
                         start);
         runner.create(Tasks.TASK2, a -> a + "2", task1);
 
-        DeployerException e = runner.run().getException();
+        DeployerException e = runner.run(Canceller.NO_OP).getException();
         assertEquals(DeployerException.Error.OPERATION_NOT_SUPPORTED, e.getError());
         assertEquals("failed", e.getDetails());
 
@@ -326,7 +326,7 @@ public class TaskRunnerTest {
                         },
                         start);
 
-        runner.runAsync();
+        runner.runAsync(Canceller.NO_OP);
         try {
             task1.get();
             fail("Task 1 should have thrown an exception");
@@ -367,7 +367,7 @@ public class TaskRunnerTest {
         MockTask childProb = new MockTask(false);
         runner.create(Tasks.TASK2, childProb::run, childProb::fail, parentTask);
 
-        runner.run();
+        runner.run(Canceller.NO_OP);
         service.shutdown();
 
         Assert.assertTrue("Parent ran", parentProb.ran());
@@ -389,7 +389,7 @@ public class TaskRunnerTest {
         MockTask childProb = new MockTask(true);
         runner.create(Tasks.TASK2, childProb::run, childProb::fail, parentTask);
 
-        runner.run();
+        runner.run(Canceller.NO_OP);
         service.shutdown();
 
         Assert.assertTrue("Parent ran", parentProb.ran());
@@ -413,7 +413,7 @@ public class TaskRunnerTest {
                             throw new RuntimeException("oh no");
                         },
                         start);
-        runner.run();
+        runner.run(Canceller.NO_OP);
         String output = null;
         try {
             output = add.get();
@@ -421,6 +421,34 @@ public class TaskRunnerTest {
             return;
         }
         System.out.println(output);
+        Assert.fail("Unreachable: Should have handled all exceptions");
+    }
+
+    @Test
+    public void testCancelled() {
+        String input = "text";
+
+        ExecutorService service = Executors.newFixedThreadPool(2);
+
+        TaskRunner runner = new TaskRunner(service);
+        Task<String> start = runner.create(input);
+        Task<String> add = runner.create(Tasks.TASK1, a -> "done", start);
+        runner.run(
+                new Canceller() {
+                    @Override
+                    public boolean cancelled() {
+                        return true;
+                    }
+                });
+        String output;
+        try {
+            output = add.get();
+        } catch (DeployerException e) {
+            Assert.assertEquals(
+                    e.getMessage(), DeployerException.interrupted(Canceller.REASON).getMessage());
+            Assert.assertEquals(e.getDetails(), Canceller.REASON);
+            return;
+        }
         Assert.fail("Unreachable: Should have handled all exceptions");
     }
 }

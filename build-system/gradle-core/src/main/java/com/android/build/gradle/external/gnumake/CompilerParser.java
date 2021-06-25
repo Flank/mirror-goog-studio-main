@@ -37,30 +37,34 @@ public class CompilerParser {
         -Iinclude-path
      */
     @NonNull
-    static final List<String> WITH_REQUIRED_ARG_FLAGS = Arrays.asList(
-            //"B", // -B <directory> Add <directory> to the compiler's search paths
-            "target",
-            "MF", // -MF <file> Write dependency output to the given file
-            "gcc-toolchain",
-            "f", // Flags about the language being compiled (c++ in our case)
-            // -Wa,<options> Pass comma-separated <options> on to the assemble
-            // -Wl,<options> Pass comma-separated <options> on to the linker
-            // -Wp,<options> Pass comma-separated <options> on to the preprocessor
-            "m", // Pass flags to target. For example, -marm
-            "O", // Pass flags to optimization subsystem
-            "D", // D<macro>[=<val>] Define a <macro> with <val> as its value
-            "I", // -I <dir> Add <dir> to the end of the main include path
-            "std", // -std=<standard> Assume that the input sources are for <standard>
-            "isystem",  // -isystem <dir> Add <dir> to the start of the system include path
-            "o", // The output file
-            "sysroot", // --sysroot=<directory> Use <directory> as the root directory for headers
-                       // and libraries
-            "l", // -l LIBNAME
-            "L", // -L DIRECTORY
-            "U", // Undefine macro
-            "include", // Includes a .h file
-            "macros"
-    );
+    static final List<String> WITH_REQUIRED_ARG_FLAGS =
+            Arrays.asList(
+                    // "B", // -B <directory> Add <directory> to the compiler's search paths
+                    "target",
+                    "MF", // -MF <file> Write dependency output to the given file
+                    "gcc-toolchain",
+                    "f", // Flags about the language being compiled (c++ in our case)
+                    // -Wa,<options> Pass comma-separated <options> on to the assemble
+                    // -Wl,<options> Pass comma-separated <options> on to the linker
+                    // -Wp,<options> Pass comma-separated <options> on to the preprocessor
+                    "m", // Pass flags to target. For example, -marm
+                    "O", // Pass flags to optimization subsystem
+                    "D", // D<macro>[=<val>] Define a <macro> with <val> as its value
+                    "I", // -I <dir> Add <dir> to the end of the main include path
+                    "std", // -std=<standard> Assume that the input sources are for <standard>
+                    "isystem", // -isystem <dir> Add <dir> to the start of the system include path
+                    "o", // The output file
+                    "sysroot", // --sysroot=<directory> Use <directory> as the root directory for
+                    // headers
+                    // and libraries
+                    "l", // -l LIBNAME
+                    "L", // -L DIRECTORY
+                    "U", // Undefine macro
+                    "include", // Includes a .h file
+                    "macros",
+                    "mllvm" // Options to pass to llvm backend (see
+                    // https://issuetracker.google.com/189966589)
+                    );
 
     @NonNull
     static final List<String> WITH_NO_ARG_FLAGS = Arrays.asList(

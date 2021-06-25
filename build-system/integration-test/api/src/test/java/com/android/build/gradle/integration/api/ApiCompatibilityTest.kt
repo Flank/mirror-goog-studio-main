@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.integration.api
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -28,10 +26,8 @@ class ApiCompatibilityTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("apiBinaryCompatibility")
-            // Disabled because of https://youtrack.jetbrains.com/issue/KT-43605
-            // and https://github.com/gradle/gradle/issues/15900
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .create()
+        .withConfigurationCacheMaxProblems(4) // https://youtrack.jetbrains.com/issue/KT-43605
+        .create()
 
     @Test
     fun binaryCompatibilityTest() {

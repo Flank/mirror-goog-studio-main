@@ -120,13 +120,17 @@ open class VariantApiBaseTest(
          */
         Kotlin("build.gradle.kts", "settings.gradle.kts") {
 
-            override fun configureBuildFile(repositories: List<String>) =
+            override fun configureBuildFile(
+                repositories: List<String>,
+                additionalClasspath: List<String>
+            ) =
                     """
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${agpVersion}")
         classpath(kotlin("gradle-plugin", version = "$kotlinVersion"))
+        ${addClasspath(additionalClasspath)}
     }
 }
 allprojects {
@@ -186,12 +190,16 @@ allprojects {
         },
         Groovy("build.gradle", "settings.gradle") {
 
-            override fun configureBuildFile(repositories: List<String>) =
+            override fun configureBuildFile(
+                repositories: List<String>,
+                additionalClasspath: List<String>
+            ) =
                     """
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${agpVersion}")
+        ${addClasspath(additionalClasspath)}
     }
 }
 allprojects {
@@ -238,6 +246,11 @@ ${
                         postfix = "\n}"
                 )
 
+        protected fun addClasspath(classpath: List<String>) =
+            if (classpath.isNotEmpty()) {
+                classpath.joinToString(")\nclasspath(\"", "classpath(\"", "\")")
+            } else ""
+
         /**
          * Configure a module build file for the [scriptingLanguage].
          *
@@ -247,7 +260,10 @@ ${
          * @param repositories the list of repositories where project dependencies will be obtained
          * from
          */
-        abstract fun configureBuildFile(repositories: List<String>): String
+        abstract fun configureBuildFile(
+            repositories: List<String>,
+            additionalClasspath: List<String> = listOf()
+        ): String
 
         /**
          * Configure the buildSrc/ build file for the [scriptingLanguage]
@@ -384,6 +400,12 @@ ${
          */
         internal val tasksToInvoke = mutableListOf<String>()
 
+        internal var failureExpected = false
+
+        fun expectFailure() {
+            failureExpected = true
+        }
+
         private fun modulesPath(): List<String> = modules.filter { it.first != "buildSrc" }.map { it.first }
 
         /**
@@ -451,9 +473,15 @@ rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
             }
         }
 
+        private val additionalClasspath = mutableListOf<String>()
+
+        fun addClasspath(classpath: String) {
+            additionalClasspath.add(classpath)
+        }
+
         override fun addBuildFile(folder: File) {
             File(folder, scriptingLanguage.buildFileName).apply {
-                writeText(scriptingLanguage.configureBuildFile(generalRepos) + (buildFile ?: ""))
+                writeText(scriptingLanguage.configureBuildFile(generalRepos, additionalClasspath) + (buildFile ?: ""))
             }
         }
     }
@@ -543,7 +571,7 @@ zipStorePath=wrapper/dists
                     File("$srcDir/tools/gradle/wrapper/$relativePathDistribution").toURI())
             }
         }
-        return gradleRunner.build()
+        return if (given.failureExpected) gradleRunner.buildAndFail() else gradleRunner.build()
     }
 
     override fun instantiateGiven(): GivenBuilder = GivenBuilder(scriptingLanguage, testName)

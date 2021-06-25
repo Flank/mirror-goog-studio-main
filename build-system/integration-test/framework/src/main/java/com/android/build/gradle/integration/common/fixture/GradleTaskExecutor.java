@@ -19,11 +19,10 @@ package com.android.build.gradle.integration.common.fixture;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.BufferedOutputStream;
@@ -32,10 +31,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.function.Supplier;
-import org.gradle.tooling.BuildActionExecuter;
+import java.util.Map;
 import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.ConfigurableLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.events.OperationType;
@@ -44,7 +41,7 @@ import org.gradle.tooling.events.OperationType;
 public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
 
     private boolean isExpectingFailure = false;
-    private boolean queryOutputModel = false;
+    private ImmutableMap<String, String> env;
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
@@ -69,9 +66,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         return this;
     }
 
-    /** Retrieve the ProjectBuildOutput models along with the build */
-    public GradleTaskExecutor withOutputModelQuery() {
-        queryOutputModel = true;
+    public GradleTaskExecutor withEnvironmentVariables(Map<String, String> env) {
+        this.env = ImmutableMap.copyOf(env);
         return this;
     }
 
@@ -97,28 +93,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         File tmpStdOut = File.createTempFile("stdout", "log");
         File tmpStdErr = File.createTempFile("stderr", "log");
 
-
-        ConfigurableLauncher launcher;
-        Supplier<ModelContainer<ProjectBuildOutput>> runBuild;
-        if (queryOutputModel) {
-            BuildActionExecuter<ModelContainer<ProjectBuildOutput>> actionExecutor =
-                    projectConnection
-                            .action(new GetAndroidModelAction<>(ProjectBuildOutput.class))
-                            .forTasks(Iterables.toArray(tasksList, String.class));
-            runBuild = () -> runBuild(actionExecutor, BuildActionExecuter::run);
-            launcher = actionExecutor;
-        } else {
-            BuildLauncher buildLauncher =
-                    projectConnection
-                            .newBuild()
-                            .forTasks(Iterables.toArray(tasksList, String.class));
-            runBuild =
-                    () -> {
-                        runBuild(buildLauncher, BuildLauncher::run);
-                        return null;
-                    };
-            launcher = buildLauncher;
-        }
+        BuildLauncher launcher =
+                projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
 
         setJvmArguments(launcher);
 
@@ -128,8 +104,9 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
         launcher.withArguments(Iterables.toArray(args, String.class));
 
+        launcher.setEnvironmentVariables(env);
+
         GradleConnectionException failure = null;
-        ModelContainer<ProjectBuildOutput> outputModelContainer = null;
         try (OutputStream stdout = new BufferedOutputStream(new FileOutputStream(tmpStdOut));
                 OutputStream stderr = new BufferedOutputStream(new FileOutputStream(tmpStdErr))) {
 
@@ -146,18 +123,13 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             setStandardOut(launcher, stdout);
             setStandardError(launcher, stderr);
 
-            outputModelContainer = runBuild.get();
+            runBuild(launcher, BuildLauncher::run);
         } catch (GradleConnectionException e) {
             failure = e;
         }
 
         GradleBuildResult result =
-                new GradleBuildResult(
-                        tmpStdOut,
-                        tmpStdErr,
-                        progressListener.getEvents(),
-                        failure,
-                        outputModelContainer);
+                new GradleBuildResult(tmpStdOut, tmpStdErr, progressListener.getEvents(), failure);
         lastBuildResultConsumer.accept(result);
 
         if (isExpectingFailure && failure == null) {

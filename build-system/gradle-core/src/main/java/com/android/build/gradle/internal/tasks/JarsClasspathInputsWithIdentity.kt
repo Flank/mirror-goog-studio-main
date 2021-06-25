@@ -72,4 +72,4 @@ class JarsIdentityMapping(val jarsInfo: Map<File, FileInfo>, val reprocessAll: B
 /**
  * Contains file identity for this run, and info if the file changed in the current run.
  */
-data class FileInfo(val identity: String, val hasChanged: Boolean)
+data class FileInfo(val identity: String, val hasChanged: Boolean): Serializable

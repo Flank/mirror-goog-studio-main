@@ -19,6 +19,21 @@ package com.android.tools.idea.wizard.template.impl.activities.googleMapsActivit
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
 import com.android.tools.idea.wizard.template.impl.activities.common.collapseEmptyActivityTags
 
+fun geoApiKeyMetadataEntry() = """
+        <!--
+             TODO: Before you run your application, you need a Google Maps API key.
+
+             To get one, follow the directions here:
+
+                https://developers.google.com/maps/documentation/android-sdk/get-api-key
+
+             Once you have your API key (it starts with "AIza"), define a new property in your
+             project's local.properties file (e.g. MAPS_API_KEY=Aiza...), and replace the
+             "YOUR_API_KEY" string in this file with "${'$'}{MAPS_API_KEY}".
+         -->
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_API_KEY"/>
+"""
+
 fun androidManifestXml(
   activityClass: String,
   isLauncher: Boolean,
@@ -32,24 +47,9 @@ fun androidManifestXml(
 
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-      <!--
-         The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
-         Google Maps Android API v2, but you must specify either coarse or fine
-         location permissions for the "MyLocation" functionality.
-      -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-
     <application>
 
-        <!--
-             The API key for Google Maps-based APIs is defined as a string resource.
-             (See the file "res/values/google_maps_api.xml").
-             Note that the API key is linked to the encryption key used to sign the APK.
-             You need a different API key for each encryption key, including the release key that is used to
-             sign the APK for publishing.
-             You can define the keys for the debug and release targets in src/debug/ and src/release/.
-         -->
-        <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_maps_key"/>
+        ${geoApiKeyMetadataEntry()}
 
         <activity android:name="${packageName}.${activityClass}"
             android:exported="true"

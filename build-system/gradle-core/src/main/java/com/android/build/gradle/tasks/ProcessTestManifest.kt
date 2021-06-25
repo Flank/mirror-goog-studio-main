@@ -447,7 +447,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ProcessTestManifest::mergeBlameFile
-            ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
+            ).withName("manifest-merger-blame-" + creationConfig.name + "-report.txt")
                 .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
         }
 

@@ -52,11 +52,12 @@ public class ThirdPartyBuildConsistencyTest {
     public void ensureThirdPartyGeneratorRun() throws IOException {
         Path buildFile = TestUtils.resolveWorkspacePath("tools/base/third_party/BUILD");
         Path localRepo = TestUtils.resolveWorkspacePath("prebuilts/tools/common/m2/repository");
+        Path workspace = TestUtils.getWorkspaceRoot();
         Path dependenciesPropertiesFile =
                 TestUtils.resolveWorkspacePath("tools/buildSrc/base/dependencies.properties");
 
         ThirdPartyBuildGenerator thirdPartyBuildGenerator =
-                new ThirdPartyBuildGenerator(buildFile, localRepo);
+                new ThirdPartyBuildGenerator(buildFile, localRepo, workspace);
         String buildContents = Joiner.on("\n").join(Files.readAllLines(buildFile));
 
         Stream<String> depsFromDependenciesProperties =
@@ -87,8 +88,8 @@ public class ThirdPartyBuildConsistencyTest {
 
         Pattern pattern =
                 Pattern.compile(
-                        "\"//prebuilts/tools/common/m2/repository/"
-                                + "(?<artifact>[^:]+)/(?<version>[^:/]+):[^:]+\"");
+                        "\"//prebuilts/tools/common/m2:"
+                                + "(?<artifact>.+)\\.(?<version>[0-9][^:/]+)\"");
         ImmutableMultimap.Builder<String, String> artifactsBuilder = ImmutableMultimap.builder();
         try (Stream<String> lines = Files.lines(buildFile)) {
             lines.forEach(

@@ -310,7 +310,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources>\n"
                                         + "\n"
-                                        + "    <string name=\"app_name\">LibraryProject</string>\n"
                                         + "    <string name=\"string1\">String 1</string>\n"
                                         + "    <string name=\"string2\">String 2</string>\n"
                                         + "    <string name=\"string3\">String 3</string>\n"
@@ -319,7 +318,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "../LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                                + "../LibraryProject/res/values/strings.xml:6: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
                                 + "    <string name=\"string3\">String 3</string>\n"
                                 + "            ~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");
@@ -1748,6 +1747,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "src/main/res/layout/activity_property_type.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
 
                         // View Binding usage here will reference activity_dot_syntax.xml
                         kotlin(
@@ -1791,6 +1797,18 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
 
+                        // View Binding usage here will reference activity_property_type.xml
+                        kotlin(
+                                ""
+                                        + "package my.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import my.pkg.databinding.ActivityPropertyTypeBinding\n"
+                                        + "\n"
+                                        + "class PropertyTypeBinding {\n"
+                                        + "    private lateinit var binding: ActivityPropertyTypeBinding\n"
+                                        + "}\n"),
+
                         // Here we provide code that would have been generated for view binding /
                         // provided by the view binding lirary
                         java(
@@ -1823,6 +1841,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "public final class ActivityMethodImportBinding implements androidx.viewbinding.ViewBinding {\n"
                                         + "  public static ActivityMethodImportBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityPropertyTypeBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityPropertyTypeBinding inflate(LayoutInflater inflater) {\n"
                                         + "    return this;\n"
                                         + "  }\n"
                                         + "}\n"),
@@ -2183,6 +2212,32 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
                         xml("src/main/res/layout/mosaic_view.xml", "" + "<LinearLayout/>\n"))
                 .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
+    public void testImportAliases() throws Exception {
+        // Regression test for workaround for https://issuetracker.google.com/188871862
+        lint().files(
+                        manifest().minSdk(21),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"lib2\">String from lib2</string>\n"
+                                        + "</resources>"),
+                        kotlin(
+                                ""
+                                        + "package com.android.tools.test.lib1\n"
+                                        + "import com.android.tools.test.lib2.R.string.lib2 as String_lib2\n"
+                                        + "\n"
+                                        + "class Lib1 {\n"
+                                        + "    fun test() {\n"
+                                        + "        println(String_lib2)\n"
+                                        + "    }\n"
+                                        + "}"))
+                // Deliberately missing imported symbol; this test is checking our fallback handling
+                .allowCompilationErrors()
                 .run()
                 .expectClean();
     }

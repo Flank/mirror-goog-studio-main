@@ -138,8 +138,6 @@ public abstract class AbstractAppTaskManager<
         // Add a task to process the Android Resources and generate source files
         createApkProcessResTask(appVariantProperties);
 
-        registerRClassTransformStream(appVariantProperties);
-
         // Add a task to process the java resources
         createProcessJavaResTask(appVariantProperties);
 

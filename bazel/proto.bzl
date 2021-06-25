@@ -171,17 +171,17 @@ def java_proto_library(
         name = srcs_name,
         srcs = srcs,
         deps = proto_deps,
-        include = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
+        include = "@//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java." + protoc_version + ".include_include",
         outs = outs,
         proto_include_version = protoc_version,
-        protoc = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/" + protoc_version + ":exe",
+        protoc = "@//prebuilts/tools/common/m2:com.google.protobuf.protoc." + protoc_version + "_exe",
         grpc_plugin =
-            "@//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/" + protoc_grpc_version + ":exe" if grpc_support else None,
+            "@//prebuilts/tools/common/m2:io.grpc.protoc-gen-grpc-java." + protoc_grpc_version + "_exe" if grpc_support else None,
         target_language = proto_languages.JAVA,
         visibility = visibility,
     )
 
-    grpc_extra_deps = ["@//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.3.2:jar"]
+    grpc_extra_deps = ["@//prebuilts/tools/common/m2:javax.annotation.javax.annotation-api.1.3.2"]
     java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
     java_deps += proto_java_runtime_library
 
@@ -269,7 +269,7 @@ def cc_grpc_proto_library(
         srcs = srcs,
         deps = deps,
         outs = outs + hdrs,
-        include = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
+        include = "@//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java." + protoc_version + ".include_include",
         proto_include_version = protoc_version,
         protoc = "//external:protoc",
         grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,

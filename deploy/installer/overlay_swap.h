@@ -17,11 +17,11 @@
 #ifndef OVERLAY_SWAP_H
 #define OVERLAY_SWAP_H
 
-#include "tools/base/deploy/installer/base_swap.h"
+#include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
+#include <memory>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 namespace deploy {
@@ -32,25 +32,30 @@ namespace deploy {
 // agent_server, etc.) need to be copied
 // - Start the agent server and send a SwapRequest
 // - Send an OverlayUpdateRequest to the install server to update the overlays
-class OverlaySwapCommand : public BaseSwapCommand {
+class OverlaySwapCommand : public AgentInteractionCommand {
  public:
-  OverlaySwapCommand(Workspace& workspace) : BaseSwapCommand(workspace) {}
+  OverlaySwapCommand(Workspace& workspace)
+      : AgentInteractionCommand(workspace) {}
   virtual ~OverlaySwapCommand() = default;
   virtual void ParseParameters(const proto::InstallerRequest& request) override;
-
- protected:
-  virtual std::unique_ptr<proto::SwapRequest> PrepareAndBuildRequest() override;
-  virtual void ProcessResponse(proto::SwapResponse* response) override;
+  virtual void Run(proto::InstallerResponse* response) override;
 
  private:
   proto::OverlaySwapRequest request_;
+  std::vector<int> process_ids_;
+  int extra_agents_count_;
+
+  bool Swap(const std::unique_ptr<proto::SwapRequest> request,
+            proto::SwapResponse* response);
+
+  std::unique_ptr<proto::SwapRequest> PrepareAndBuildRequest();
+  void ProcessResponse(proto::SwapResponse* response);
 
   void BuildOverlayUpdateRequest(proto::OverlayUpdateRequest* request);
   proto::SwapResponse::Status OverlayStatusToSwapStatus(
       proto::OverlayUpdateResponse::Status status);
 
   void UpdateOverlay(proto::SwapResponse* response);
-  void GetAgentLogs(proto::SwapResponse* response);
 };
 
 }  // namespace deploy

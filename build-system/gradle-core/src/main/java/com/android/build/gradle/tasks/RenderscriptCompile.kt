@@ -60,6 +60,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.Callable
 import javax.inject.Inject
+import kotlin.math.min
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -176,7 +177,7 @@ abstract class RenderscriptCompile : NdkTask() {
             resDestDir,
             objDestDir,
             libDestDir,
-            targetApi.get(),
+            min(targetApi.get(), 24), // Max api level for renderscript is 24
             optimLevel.get(),
             ndkMode.get(),
             supportMode.get(),

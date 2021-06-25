@@ -1799,17 +1799,27 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
-                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStartupAgent("com.example.simpleapp"),
+                    "mkdir " + Sites.appStartupAgent("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "mkdir " + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "/system/bin/cmd activity attach-agent 10001 "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),
@@ -1839,17 +1849,27 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
-                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStartupAgent("com.example.simpleapp"),
+                    "mkdir " + Sites.appStartupAgent("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "mkdir " + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "/system/bin/cmd activity attach-agent 10001 "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),
@@ -2188,17 +2208,27 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
-                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStartupAgent("com.example.simpleapp"),
+                    "mkdir " + Sites.appStartupAgent("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "mkdir " + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "/system/bin/cmd activity attach-agent 10001 "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),
@@ -2223,24 +2253,32 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
-                    "/system/bin/cmd package "
-                            + (device.getApi() < 28 ? "dump" : "path")
-                            + " com.example.simpleapp",
+                    "/system/bin/cmd package path com.example.simpleapp",
                     INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     INSTALLER_INVOCATION, // swap
-                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
-                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
-                            + Sites.appStudio("com.example.simpleapp"),
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
                     "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStartupAgent("com.example.simpleapp"),
+                    "mkdir " + Sites.appStartupAgent("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp mkdir "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "mkdir " + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/agent.so "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so",
+                    "/system/bin/cmd activity attach-agent 10001 "
+                            + Sites.appStartupAgent("com.example.simpleapp")
+                            + "$VERSION-agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),

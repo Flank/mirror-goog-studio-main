@@ -97,8 +97,9 @@ import java.io.File
  *          // Normally lint will analyze all dependencies along with each module; this ensures
  *          // that lint can correctly (for example) determine if a resource declared in a library
  *          // is unused; checking only the library in isolation would not be able to identify this
- *          // problem. However, this leads to quite a bit of extra computation; a library is
- *          // analyzed repeatedly, for each module that it is used in.
+ *          // problem. However, checking dependencies leads to some extra computation. You can
+ *          // configure whether or not lint checks dependencies with the following flag, true by
+ *          // default for application modules and false by default for other types of modules:
  *          checkDependencies false
  *     }
  * }
@@ -241,7 +242,7 @@ interface LintOptions {
 
     /**
      * Returns whether lint should check all dependencies too as part of its analysis. Default is
-     * false.
+     * true for application modules and false for other types of modules.
      */
     val isCheckDependencies: Boolean
 

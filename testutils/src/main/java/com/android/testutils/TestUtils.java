@@ -276,10 +276,11 @@ public class TestUtils {
     @NonNull
     public static Path getPrebuiltOfflineMavenRepo() {
         if (runningFromBazel()) {
-            // If running with Bazel, then Maven artifacts are unzipped into this directory
-            // at runtime using IdeaTestSuiteBase#unzipIntoOfflineMavenRepo. Thus we use
-            // a writeable temp directory instead of //prebuilts/tools/common/m2/repository.
-            // See b/148081564 for how this could be simplified in the future.
+            // If running with Bazel, then Maven artifacts are unzipped or linked into this
+            // directory at runtime using IdeaTestSuiteBase#unzipIntoOfflineMavenRepo or
+            // IdeaTestSuiteBase#linkIntoOfflineMavenRepo. Thus, we use a writeable temp
+            // directory instead of //prebuilts/tools/common/m2/repository.
+            // See b/148081564#comment1 for how this could be simplified in the future.
             Path dir = Paths.get(System.getProperty("java.io.tmpdir"), "offline-maven-repo");
             try {
                 Files.createDirectories(dir);

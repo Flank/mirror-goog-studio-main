@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-cb3157cadde3d9c44ffa287f6791db066b7db5c73f119f18853cd8078acd3269
+8341c1d267aef3110308d880f630c6e4800ba39e9fec58794c7c2c1ae23f3a7b
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -101,12 +101,17 @@ com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
+com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
 com.android.build.api.dsl.ApkSigningConfig$DefaultImpls
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
+com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
+com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.ApplicationSingleVariant implements com.android.build.api.dsl.SingleVariant
@@ -118,23 +123,49 @@ com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.Varian
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildType$DefaultImpls
+com.android.build.api.dsl.Bundle
+com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.codeTransparency: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleCodeTransparency, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
+com.android.build.api.dsl.Bundle.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
+com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
+com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
+com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()
+com.android.build.api.dsl.Bundle.language: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.texture: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture, kotlin.Unit>)
+com.android.build.api.dsl.BundleAbi
+com.android.build.api.dsl.BundleDensity
+com.android.build.api.dsl.BundleLanguage
+com.android.build.api.dsl.BundleTexture
+com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension$DefaultImpls
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.buildTypes: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
 com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.debug: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (kotlin.jvm.functions.Function1<? super DefaultConfigT, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeBuild, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getAndroidResources: com.android.build.api.dsl.AndroidResources ()
+com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<? extends BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
+com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
+com.android.build.api.dsl.CommonExtension.getInstallation: com.android.build.api.dsl.Installation ()
 com.android.build.api.dsl.CommonExtension.getLint: com.android.build.api.dsl.Lint ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<? extends ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.api.dsl.CommonExtension.installation: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Installation, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.productFlavors: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.release: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
@@ -145,6 +176,7 @@ com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.DataBinding$DefaultImpls
 com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Split
+com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DynamicFeatureBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
@@ -152,8 +184,15 @@ com.android.build.api.dsl.DynamicFeatureDefaultConfig implements com.android.bui
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.ExternalNativeBuild
+com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
+com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: com.android.build.api.dsl.NdkBuild ()
+com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.NdkBuild, kotlin.Unit>)
 com.android.build.api.dsl.FailureRetention$DefaultImpls
+com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
+com.android.build.api.dsl.JavaCompileOptions
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
@@ -170,12 +209,14 @@ com.android.build.api.dsl.MultipleVariants
 com.android.build.api.dsl.MultipleVariants.allVariants: void ()
 com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
 com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void (java.lang.String, java.lang.String[])
+com.android.build.api.dsl.NdkBuild
 com.android.build.api.dsl.PackagingOptions$DefaultImpls
 com.android.build.api.dsl.PostProcessing$DefaultImpls
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
+com.android.build.api.dsl.SigningConfig
 com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.SingleVariant.getVariantName: java.lang.String ()
 com.android.build.api.dsl.Split
@@ -192,6 +233,8 @@ com.android.build.api.dsl.TestProductFlavor implements com.android.build.api.dsl
 com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension$DefaultImpls
+com.android.build.api.dsl.VariantDimension.getJavaCompileOptions: com.android.build.api.dsl.JavaCompileOptions ()
+com.android.build.api.dsl.VariantDimension.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls
 com.android.build.api.extension.AndroidComponentsExtension$DefaultImpls.beforeVariants$default: void (com.android.build.api.extension.AndroidComponentsExtension, com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1, int, java.lang.Object)

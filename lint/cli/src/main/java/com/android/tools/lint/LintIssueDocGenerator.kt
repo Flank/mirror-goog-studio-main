@@ -799,6 +799,7 @@ class LintIssueDocGenerator constructor(
         val resourceFile = issueScope.contains(Scope.RESOURCE_FILE)
         val manifestFile = issueScope.contains(Scope.MANIFEST)
         val gradle = issueScope.contains(Scope.GRADLE_FILE)
+        val properties = issueScope.contains(Scope.PROPERTY_FILE)
 
         var annotation: String? = null
         var comment: String? = null
@@ -850,6 +851,16 @@ class LintIssueDocGenerator constructor(
                           ```kt
                           //noinspection $id
                           problematicStatement()
+                          ```
+                """.trimIndent()
+        } else if (properties) {
+            comment =
+                """
+                        * Using a suppression comment like this on the line above:
+
+                          ```kt
+                          #noinspection $id
+                          key = problematic-value
                           ```
                 """.trimIndent()
         }

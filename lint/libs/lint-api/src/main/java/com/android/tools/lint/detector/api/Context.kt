@@ -581,6 +581,16 @@ open class Context(
     private val forbidMainAccess: Boolean get() = driver.mode == DriverMode.ANALYSIS_ONLY
 
     companion object {
+        const val SUPPRESS_XML_COMMENT_PREFIX = "<!--suppress "
+
+        /**
+         * The prefix is usually //noinspection but it can
+         * also be @noinspection (such as / ** @noinspection
+         * ClassNameDiffersFromFileName
+         * * / in a javadoc, so just use the basename as the prefix
+         */
+        const val SUPPRESS_JAVA_COMMENT_PREFIX = "noinspection "
+
         @VisibleForTesting
         fun isSuppressedWithComment(line: String, issue: Issue): Boolean {
             return lineContainsId(line, issue.id) ||

@@ -141,7 +141,7 @@ bool Overlay::DeleteDirectory(const std::string& path) const {
   }
 
   if (IO::rmdir(path) != 0) {
-    ErrEvent("Could not remove file '" + path + "': " + strerror(errno));
+    ErrEvent("Could not remove dir '" + path + "': " + strerror(errno));
     return false;
   }
 

@@ -17,7 +17,6 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
-import org.gradle.api.Named
 import java.io.File
 
 /**
@@ -26,14 +25,15 @@ import java.io.File
  * [ApkSigningConfig] extends this with options relating to just APKs
  *
  */
-@Incubating
-interface SigningConfig: Named {
+interface SigningConfig {
 
     /**
      * Store file used when signing.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storeFile: File?
 
     /**
@@ -41,6 +41,8 @@ interface SigningConfig: Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storePassword: String?
 
     /**
@@ -48,6 +50,8 @@ interface SigningConfig: Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var keyAlias: String?
 
     /**
@@ -55,6 +59,8 @@ interface SigningConfig: Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var keyPassword: String?
 
     /**
@@ -62,10 +68,13 @@ interface SigningConfig: Named {
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
+    @get:Incubating
+    @set:Incubating
     var storeType: String?
 
     /**
      * Copies all properties from the given signing config.
      */
+    @Incubating
     fun initWith(that: SigningConfig)
 }

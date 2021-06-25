@@ -898,6 +898,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.core.DefaultVectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.model.VectorDrawablesOptions ()
+com.android.build.gradle.internal.dsl.BaseFlavor.initWith: void (com.android.build.api.dsl.BaseFlavor)
 com.android.build.gradle.internal.dsl.BaseFlavor.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.javaCompileOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.JavaCompileOptions>)
 com.android.build.gradle.internal.dsl.BaseFlavor.maxSdkVersion: void (int)
@@ -1069,6 +1070,7 @@ com.android.build.gradle.internal.dsl.BundleOptions.abi: void (org.gradle.api.Ac
 com.android.build.gradle.internal.dsl.BundleOptions.density: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsDensity>)
 com.android.build.gradle.internal.dsl.BundleOptions.deviceTier: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier>)
 com.android.build.gradle.internal.dsl.BundleOptions.getAbi: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
+com.android.build.gradle.internal.dsl.BundleOptions.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.gradle.internal.dsl.BundleOptions.getDensity: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptions.getDeviceTier: com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier ()
 com.android.build.gradle.internal.dsl.BundleOptions.getIntegrityConfigDir: org.gradle.api.file.DirectoryProperty ()
@@ -1078,6 +1080,8 @@ com.android.build.gradle.internal.dsl.BundleOptions.language: void (org.gradle.a
 com.android.build.gradle.internal.dsl.BundleOptions.texture: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsTexture>)
 com.android.build.gradle.internal.dsl.BundleOptionsAbi implements com.android.build.api.dsl.BundleAbi
 com.android.build.gradle.internal.dsl.BundleOptionsAbi.<init>: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
+com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency implements com.android.build.api.dsl.BundleCodeTransparency
+com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency.<init>: com.android.build.gradle.internal.dsl.BundleOptionsCodeTransparency ()
 com.android.build.gradle.internal.dsl.BundleOptionsDensity implements com.android.build.api.dsl.BundleDensity
 com.android.build.gradle.internal.dsl.BundleOptionsDensity.<init>: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier implements com.android.build.api.dsl.BundleDeviceTier
@@ -1656,6 +1660,7 @@ com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixPare
 com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixParent.getSigningConfig: com.android.builder.model.SigningConfig ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions implements com.android.build.api.dsl.VectorDrawables
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
+com.android.build.gradle.internal.dsl.VectorDrawablesOptions.copyOf: com.android.build.gradle.internal.dsl.VectorDrawablesOptions (com.android.builder.model.VectorDrawablesOptions)
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])
 com.android.builder.core.AbstractBuildType extends com.android.builder.internal.BaseConfigImpl implements com.android.builder.model.BuildType
 com.android.builder.core.AbstractBuildType$Companion

@@ -39,10 +39,18 @@ public class DictExpression extends Expression {
         this(Token.NONE, Token.NONE, new LinkedList<>(), new LinkedList<>());
     }
 
-    public static DictExpression build(Map<String, String> values) {
+    public static DictExpression build(Map<String, ? extends Object> values) {
         DictExpression dict = new DictExpression();
-        for (Map.Entry<String, String> e : values.entrySet()) {
-            dict.add(LiteralExpression.string(e.getKey()), LiteralExpression.string(e.getValue()));
+        for (Map.Entry<String, ? extends Object> e : values.entrySet()) {
+            Expression value = null;
+            if (e.getValue() instanceof String) {
+                value = LiteralExpression.string((String) e.getValue());
+            } else if (e.getValue() instanceof Expression) {
+                value = (Expression) e.getValue();
+            } else {
+                throw new IllegalStateException("Unsupported value type");
+            }
+            dict.add(LiteralExpression.string(e.getKey()), value);
         }
         return dict;
     }

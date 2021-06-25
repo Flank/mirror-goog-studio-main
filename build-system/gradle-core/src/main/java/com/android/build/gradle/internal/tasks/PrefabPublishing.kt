@@ -47,6 +47,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.StringWriter
+import java.util.regex.Pattern
 
 // TODO: Automatic importing of CMake/ndk-build modules?
 // CMake doesn't appear to expose the data we need from CMake server (though that could be a
@@ -313,6 +314,12 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
             task.sdkComponents.setDisallowChanges(
                     getBuildService(creationConfig.services.buildServiceRegistry)
             )
+            val pattern = "^\\d+(\\.\\d+(\\.\\d+(\\.\\d+)?)?)?"
+            val p = Pattern.compile(pattern)
+            val m = p.matcher(project.version.toString())
+            if (m.find()) {
+                task.packageVersion = m.group()
+            }
         }
     }
 }

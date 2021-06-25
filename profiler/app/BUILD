@@ -51,7 +51,7 @@ java_library(
     }),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
     ],
 )
 
@@ -64,9 +64,9 @@ java_library(
     ],
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         # TODO(b/77923456): Track version changes and revisit.
-        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
+        "//prebuilts/tools/common/m2:com.google.android.gms.play-services-location.11.8.0",
     ],
 )
 
@@ -82,7 +82,7 @@ dex_library(
     name = "perfa",
     jars = [
         ":perfa_java",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
+        "//prebuilts/tools/common/m2:androidx.inspection.inspection.1.0.0",
         "//tools/base/app-inspection/agent",
     ],
 )
@@ -95,10 +95,10 @@ java_library(
     deps = [
         ":perfa_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
+        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "//prebuilts/tools/common/m2:com.squareup.okhttp.okhttp.2.5.0",
+        "//prebuilts/tools/common/m2:com.squareup.okhttp3.okhttp.3.3.0",
+        "//prebuilts/tools/common/m2:com.squareup.okio.okio.1.6.0",
     ],
 )
 
@@ -117,9 +117,7 @@ genrule(
     name = "perfa_okhttp",
     srcs = [":perfa_okhttp_dex.jar"],
     outs = ["perfa_okhttp.dex"],
-
     # Assumes everything fits into classes.dex, add classes02.dex should when it is full
-    cmd = "$(location //tools/base/bazel:unzipper) $(location :perfa_okhttp_dex.jar) " +
-          " classes.dex:$(location :perfa_okhttp.dex)",
+    cmd = "$(location //tools/base/bazel:unzipper) $(location :perfa_okhttp_dex.jar) classes.dex:$(location :perfa_okhttp.dex)",
     tools = ["//tools/base/bazel:unzipper"],
 )

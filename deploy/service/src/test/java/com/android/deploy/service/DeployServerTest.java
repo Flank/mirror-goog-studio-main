@@ -36,7 +36,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 public class DeployServerTest {
+
     String myPackageName = "com.example.myapp";
+
     String myProcessName = "com.example.myapp:process";
 
     @Test
@@ -54,9 +56,36 @@ public class DeployServerTest {
     }
 
     @Test
-    public void getClients() {
+    public void getClientsForAllDevices() {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
-        IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
+        IDevice[] devices =
+                new IDevice[] {
+                    mockDevice("1234", IDevice.DeviceState.ONLINE),
+                    mockDevice("5678", IDevice.DeviceState.ONLINE)
+                };
+        when(bridge.getDevices()).thenReturn(devices);
+        DeployServer server = new DeployServer(bridge, null);
+        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
+        Deploy.ClientRequest request = Deploy.ClientRequest.newBuilder().build();
+        server.getClients(request, response);
+        assertThat(response.getResponse()).isNotNull();
+        assertThat(response.getResponse().getClientsCount()).isEqualTo(2);
+        for (int i = 0; i < 2; i++) {
+            assertThat(response.getResponse().getClients(i).getPid()).isEqualTo(1234);
+            assertThat(response.getResponse().getClients(i).getName()).isEqualTo(myPackageName);
+            assertThat(response.getResponse().getClients(i).getDescription())
+                    .isEqualTo(myProcessName);
+        }
+    }
+
+    @Test
+    public void getClientsForOneDevice() {
+        AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
+        IDevice[] devices =
+                new IDevice[] {
+                    mockDevice("1234", IDevice.DeviceState.ONLINE),
+                    mockDevice("5678", IDevice.DeviceState.ONLINE)
+                };
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
         FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();

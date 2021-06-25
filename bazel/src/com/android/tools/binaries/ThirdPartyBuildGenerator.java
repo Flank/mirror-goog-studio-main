@@ -18,6 +18,8 @@ package com.android.tools.binaries;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.tools.bazel.model.Package;
+import com.android.tools.bazel.model.Workspace;
 import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.maven.MavenCoordinates;
@@ -27,6 +29,7 @@ import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +70,7 @@ import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
  * Maven dependency graph using java_libraries with exports.
  */
 public class ThirdPartyBuildGenerator {
-    private static final String PREBUILTS_BAZEL_PACKAGE = "//prebuilts/tools/common/m2/repository/";
+    private static final String PREBUILTS_BAZEL_PACKAGE = "//prebuilts/tools/common/m2";
     private static final String GENERATED_WARNING =
             "#\n"
                     + "# !!! ATTENTION !!!\n"
@@ -120,8 +123,8 @@ public class ThirdPartyBuildGenerator {
             artifacts = readDependenciesProperties(dependenciesPropertiesFile);
         }
         Set<Artifact> artifactSet = artifacts.map(DefaultArtifact::new).collect(Collectors.toSet());
-
-        new ThirdPartyBuildGenerator(buildFile, localRepo).generateBuildFile(artifactSet);
+        Path workspace = WorkspaceUtils.findWorkspace();
+        new ThirdPartyBuildGenerator(buildFile, localRepo, workspace).generateBuildFile(artifactSet);
     }
 
     private static void usage() {
@@ -136,11 +139,13 @@ public class ThirdPartyBuildGenerator {
 
     private final Path mBuildFile;
     private final MavenRepository mRepo;
+    private final Workspace mWorkspace;
 
     @VisibleForTesting
-    protected ThirdPartyBuildGenerator(Path buildFile, Path localRepo) {
+    protected ThirdPartyBuildGenerator(Path buildFile, Path localRepo, Path workspace) {
         mBuildFile = checkNotNull(buildFile);
         mRepo = new MavenRepository(localRepo);
+        mWorkspace = new Workspace(workspace.toFile());
     }
 
     private void generateBuildFile(Set<Artifact> artifacts)
@@ -256,10 +261,10 @@ public class ThirdPartyBuildGenerator {
         String ruleName;
         switch (artifact.getExtension()) {
             case "jar":
-                ruleName = JavaImportGenerator.JAR_RULE_NAME;
+                ruleName = JavaImportGenerator.JAR_RULE_SUFFIX;
                 break;
             case "pom":
-                ruleName = JavaImportGenerator.POM_RULE_NAME;
+                ruleName = JavaImportGenerator.POM_RULE_SUFFIX;
                 break;
             default:
                 throw new IllegalStateException(
@@ -267,7 +272,7 @@ public class ThirdPartyBuildGenerator {
                                 "Artifact '%s' has unknown packaging type '%s'.",
                                 artifact.toString(), artifact.getExtension()));
         }
-        return PREBUILTS_BAZEL_PACKAGE + jar.getParent() + ":" + ruleName;
+        return PREBUILTS_BAZEL_PACKAGE + ":" + jar.getParent().toString().replaceAll("/", ".") + ruleName;
     }
 
     private SortedMap<String, Artifact> computeEffectiveVersions(Set<Artifact> artifacts)
@@ -294,7 +299,7 @@ public class ThirdPartyBuildGenerator {
 
         SortedMap<String, Artifact> versions = new TreeMap<>();
 
-        JavaImportGenerator imports = new JavaImportGenerator(mRepo);
+        JavaImportGenerator imports = new JavaImportGenerator(mRepo, mWorkspace);
         result.getRoot()
                 .accept(
                         new DependencyVisitor() {
@@ -319,6 +324,10 @@ public class ThirdPartyBuildGenerator {
                                 return true;
                             }
                         });
+        Path rel = mWorkspace.getDirectory().toPath().relativize(mRepo.getDirectory());
+        Package pkg = mWorkspace.findPackage(rel.toString());
+        imports.save();
+
         return versions;
     }
 

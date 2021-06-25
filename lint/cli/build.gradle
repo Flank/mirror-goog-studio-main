@@ -2,6 +2,7 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
+apply plugin: 'application'
 
 group = 'com.android.tools.lint'
 version = rootProject.ext.baseVersion
@@ -50,7 +51,7 @@ task lintStartScripts(type: CreateStartScripts) {
     description "Creates OS specific scripts to start the lint CLI"
     mainClassName = 'com.android.tools.lint.Main'
     applicationName = 'lint'
-    defaultJvmOpts = ["-Xmx1024m", "-Dcom.android.tools.lint.bindir=MY_APP_HOME"]
+    defaultJvmOpts = ["-Xmx1024m", "-Dcom.android.tools.lint.bindir=MY_APP_HOME", "-Dfile.encoding=UTF-8"]
 
     doLast {
         unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
@@ -88,4 +89,10 @@ publishing {
             artifactId = 'lint'
         }
     }
+}
+
+application {
+    mainClass = 'com.android.tools.lint.Main'
+    applicationName = "lint"
+    applicationDefaultJvmArgs = ['-Xmx2g', '-Dfile.encoding=UTF-8']
 }

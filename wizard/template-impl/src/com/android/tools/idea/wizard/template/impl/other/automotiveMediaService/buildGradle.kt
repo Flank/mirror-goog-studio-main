@@ -27,19 +27,16 @@ fun buildGradle(
   useAndroidX: Boolean
 ): String {
   return """
-apply plugin: "com.android.library"
-${renderIf(generateKotlin) {"""
-apply plugin: "kotlin-android"
-"""}}
-
+plugins {
+    id 'com.android.library'
+    ${renderIf(generateKotlin) {"    id 'org.jetbrains.kotlin.android'"}}
+}
 android {
     compileSdkVersion ${buildApiString?.toIntOrNull() ?: "\"$buildApiString\""}
 
     defaultConfig {
         minSdkVersion ${minApi.toIntOrNull() ?: "\"$minApi\""}
         targetSdkVersion ${targetApi.toIntOrNull() ?: "\"$targetApi\""}
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "${getMaterialComponentName("android.support.test.runner.AndroidJUnitRunner", useAndroidX)}"
     }

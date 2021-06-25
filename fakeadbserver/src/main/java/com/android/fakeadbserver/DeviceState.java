@@ -37,6 +37,9 @@ public class DeviceState {
     private final Map<Integer, PortForwarder> mPortForwarders = new HashMap<>();
     private final FakeAdbServer mServer;
     private final HostConnectionType mHostConnectionType;
+
+    private int myTransportId;
+
     private final String mDeviceId;
     private final String mManufacturer;
     private final String mModel;
@@ -51,7 +54,8 @@ public class DeviceState {
             @NonNull String model,
             @NonNull String release,
             @NonNull String sdk,
-            @NonNull HostConnectionType hostConnectionType) {
+            @NonNull HostConnectionType hostConnectionType,
+            int transportId) {
         mServer = server;
         mDeviceId = deviceId;
         mManufacturer = manufacturer;
@@ -59,6 +63,7 @@ public class DeviceState {
         mBuildVersionRelease = release;
         mBuildVersionSdk = sdk;
         mHostConnectionType = hostConnectionType;
+        myTransportId = transportId;
         mDeviceStatus = DeviceStatus.OFFLINE;
     }
 
@@ -94,6 +99,11 @@ public class DeviceState {
     @NonNull
     public DeviceStatus getDeviceStatus() {
         return mDeviceStatus;
+    }
+
+    @NonNull
+    public int getTransportId() {
+        return myTransportId;
     }
 
     public void setDeviceStatus(@NonNull DeviceStatus status) {

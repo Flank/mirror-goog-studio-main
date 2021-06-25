@@ -40,19 +40,25 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.tools.build.bundletool.commands.CheckTransparencyCommand
+import com.android.tools.build.bundletool.model.exceptions.InvalidBundleException
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import groovy.json.StringEscapeUtils
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
 import kotlin.test.fail
+import org.junit.Assert
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 private const val MAIN_DEX_LIST_PATH = "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt"
 
@@ -999,6 +1005,84 @@ class DynamicAppTest {
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            val entries = it.entries.map { it.toString() }
+            Truth.assertThat(entries).contains("/META-INF/MANIFEST.MF")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase(Locale.US)}.RSA")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase(Locale.US)}.SF")
+        }
+
+        val result = ApkVerifier.Builder(bundleFile)
+            .setMaxCheckedPlatformVersion(18)
+            .setMinCheckedPlatformVersion(18)
+            .build()
+            .verify()
+        assertThat(result.isVerified).isTrue()
+
+        assertThat(
+            ProcessBuilder(
+                listOf(
+                    getJarSignerPath(),
+                    "-verify",
+                    bundleFile.absolutePath))
+                .start()
+                .waitFor())
+            .isEqualTo(0)
+
+        // Check that we don't accidentally use signing config for code transparency signing
+        Assert.assertThrows(InvalidBundleException::class.java) {
+            CheckTransparencyCommand.builder().setBundlePath(bundleFile.toPath()).build().execute()
+        }
+    }
+
+    @Test
+    fun `test bundleRelease is signed correctly with Code Transparency`() {
+        val storePass = "abc"
+        val keyPass = "abc"
+        val keyAlias = "key0"
+
+        val keyStoreFile = tmpFile.root.resolve("keystore")
+        KeystoreHelper.createNewStore(
+            "jks",
+            keyStoreFile,
+            storePass,
+            keyPass,
+            keyAlias,
+            "CN=Bundle signing test",
+            100)
+
+        val appProject = project.getSubproject(":app")
+        TestFileUtils.appendToFile(
+            appProject.buildFile,
+            """
+                android.bundle.codeTransparency.signing {
+                    keyAlias '${StringEscapeUtils.escapeJava(keyAlias)}'
+                    keyPassword '${StringEscapeUtils.escapeJava(keyPass)}'
+                    storeFile file('${StringEscapeUtils.escapeJava(keyStoreFile.absolutePath)}')
+                    storePassword '${StringEscapeUtils.escapeJava(storePass)}'
+                }
+            """.trimIndent()
+        )
+
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor()
+            .with(StringOption.IDE_SIGNING_STORE_FILE, keyStoreFile.path)
+            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, storePass)
+            .with(StringOption.IDE_SIGNING_KEY_ALIAS, keyAlias)
+            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, keyPass)
+            .run("app:$bundleTaskName")
+
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        assertThat(bundleFile).exists()
+
+        ByteArrayOutputStream().use { outputStream ->
+            CheckTransparencyCommand.builder().setBundlePath(bundleFile.toPath()).build().checkTransparency(
+                PrintStream(outputStream)
+            )
+            Truth.assertThat(outputStream.toString()).isEqualTo("Code transparency verified.")
+        }
 
         Zip(bundleFile).use {
             val entries = it.entries.map { it.toString() }

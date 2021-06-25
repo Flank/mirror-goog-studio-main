@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -321,7 +322,7 @@ public class SimpleTestRunnableTest {
                         coverageDir,
                         installOptions);
 
-        assertThat(runnable.getCoverageFile()).isEqualTo(customCoverageFilePath);
+        assertThat(runnable.getCoverageFile("0")).isEqualTo(customCoverageFilePath);
     }
 
     @Test
@@ -340,8 +341,8 @@ public class SimpleTestRunnableTest {
                         coverageDir,
                         installOptions);
 
-        assertThat(runnable.getCoverageFile())
-                .isEqualTo(String.format("/data/data/%s/%s", null, FILE_COVERAGE_EC));
+        assertThat(runnable.getCoverageFile("12"))
+                .isEqualTo(String.format("/data/user/12/%s/%s", null, FILE_COVERAGE_EC));
     }
 
     @Test
@@ -368,8 +369,9 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector)
-                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
-        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of(), TIMEOUT, logger);
+                .installPackage(testedApks.get(0), ImmutableList.of("--user 42"), TIMEOUT, logger);
+        verify(deviceConnector)
+                .installPackage(buddyApk, ImmutableList.of("--user 42"), TIMEOUT, logger);
     }
 
     @Test
@@ -396,8 +398,9 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector)
-                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
-        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of("-g"), TIMEOUT, logger);
+                .installPackage(testedApks.get(0), ImmutableList.of("--user 42"), TIMEOUT, logger);
+        verify(deviceConnector)
+                .installPackage(buddyApk, ImmutableList.of("--user 42", "-g"), TIMEOUT, logger);
     }
 
     @Test
@@ -424,10 +427,13 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector)
-                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
+                .installPackage(testedApks.get(0), ImmutableList.of("--user 42"), TIMEOUT, logger);
         verify(deviceConnector)
                 .installPackage(
-                        buddyApk, ImmutableList.of("-g", "--force-queryable"), TIMEOUT, logger);
+                        buddyApk,
+                        ImmutableList.of("--user 42", "-g", "--force-queryable"),
+                        TIMEOUT,
+                        logger);
     }
 
     private SimpleTestRunnable getSimpleTestRunnable(
@@ -470,7 +476,7 @@ public class SimpleTestRunnableTest {
         File resultsDir = temporaryFolder.newFile();
         File additionalTestOutputDir = temporaryFolder.newFolder();
         File coverageDir = temporaryFolder.newFile();
-        List<String> installOptions = ImmutableList.of();
+        List<String> installOptions = ImmutableList.of("--user 42");
         SimpleTestRunnable runnable =
                 getSimpleTestRunnable(
                         buddyApk,
@@ -478,7 +484,7 @@ public class SimpleTestRunnableTest {
                         false,
                         additionalTestOutputDir,
                         coverageDir,
-                        installOptions);
+                        ImmutableList.of());
         runnable.run();
 
         verify(deviceConnector, atLeastOnce()).getName();
@@ -498,7 +504,7 @@ public class SimpleTestRunnableTest {
         verify(deviceConnector)
                 .executeShellCommand(
                         eq(
-                                "am instrument -w -r   -e shardIndex 2 -e numShards 10 "
+                                "am instrument -w -r --user 42  -e shardIndex 2 -e numShards 10 "
                                         + "com.example.app/android.support.test.runner.AndroidJUnitRunner"),
                         any(),
                         anyLong(),
@@ -525,5 +531,19 @@ public class SimpleTestRunnableTest {
                 testDirectories,
                 (@NonNull DeviceConfigProvider deviceConfigProvider, ILogger logger) ->
                         ImmutableList.copyOf(testedApks));
+    }
+
+    static class SimpleTestRunnable
+            extends com.android.build.gradle.internal.testing.SimpleTestRunnable {
+
+        public SimpleTestRunnable(SimpleTestParams params) {
+            super(params);
+        }
+
+        @NotNull
+        @Override
+        protected String getUserId() {
+            return "42";
+        }
     }
 }

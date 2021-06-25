@@ -290,9 +290,10 @@ public class TaskRunner {
         }
     }
 
-    private void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
+    private void runInternal(ArrayList<Task<?>> batch, Canceller canceller)
+            throws DeployerException {
         for (Task<?> task : batch) {
-            task.run(executor);
+            task.run(executor, canceller);
         }
 
         joinAllTasks(batch, false);
@@ -314,18 +315,23 @@ public class TaskRunner {
         }
     }
 
+    /** Wrapper for {@link #run(Canceller)}, with an identity {@link Canceller}. */
+    public TaskResult run() {
+        return run(Canceller.NO_OP);
+    }
+
     /**
      * Runs and waits for all the pending tasks to be executed.
      *
      * <p>If no tasks are pending this is a no-op, except that it will wait for the existing running
      * tasks to end.
      */
-    public TaskResult run() {
+    public TaskResult run(Canceller canceller) {
         running.acquireUninterruptibly();
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         try {
             tasks.clear();
-            runInternal(batch);
+            runInternal(batch, canceller);
             return new TaskResult(batch);
         } catch (DeployerException e) {
             return new TaskResult(batch, e);
@@ -340,14 +346,14 @@ public class TaskRunner {
      * Utility method to run the tasks on a separate executor. The exceptions are then thrown as
      * runtime exceptions.
      */
-    public void runAsync(Executor executor) {
+    public void runAsync(Executor executor, Canceller canceller) {
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         tasks.clear();
         running.acquireUninterruptibly();
         executor.execute(
                 () -> {
                     try {
-                        runInternal(batch);
+                        runInternal(batch, canceller);
                     } catch (DeployerException e) {
                         throw new RuntimeException(e);
                     } finally {
@@ -361,8 +367,8 @@ public class TaskRunner {
      * Subsequent work queued via run or runAsync on this TaskRunner will wait until the async batch
      * completes before beginning.
      */
-    public void runAsync() {
-        runAsync(executor);
+    public void runAsync(Canceller canceller) {
+        runAsync(executor, canceller);
     }
 
     public interface ThrowingFunction<I, O> {

@@ -27,6 +27,7 @@ import com.android.builder.model.LintOptions.Companion.SEVERITY_FATAL
 import com.android.builder.model.LintOptions.Companion.SEVERITY_IGNORE
 import com.android.builder.model.LintOptions.Companion.SEVERITY_INFORMATIONAL
 import com.android.builder.model.LintOptions.Companion.SEVERITY_WARNING
+import com.android.builder.model.v2.ide.ProjectType
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import java.io.File
@@ -48,6 +49,7 @@ abstract class LintOptions
         isCheckReleaseBuilds = true
         htmlReport = true
         xmlReport = true
+        isCheckDependencies = dslServices?.projectType == ProjectType.APPLICATION
     }
 
     protected val severities: MutableMap<String, Int> = Maps.newHashMap()

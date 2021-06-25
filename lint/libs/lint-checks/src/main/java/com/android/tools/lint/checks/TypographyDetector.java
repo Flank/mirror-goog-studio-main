@@ -174,7 +174,9 @@ public class TypographyDetector extends ResourceXmlDetector {
      * like 'Double quote: "', and not sentences where there are multiple apostrophes but not in a
      * quoting context such as "Mind Your P's and Q's".
      */
-    @VisibleForTesting static final Pattern SINGLE_QUOTE = Pattern.compile(".*\\W*'[^']+'(\\W.*)?");
+    @VisibleForTesting
+    static final Pattern SINGLE_QUOTE =
+            Pattern.compile(".*\\W*'[^']+'(\\W.*)?", Pattern.UNICODE_CHARACTER_CLASS);
 
     private static final String FRACTION_MESSAGE =
             "Use fraction character %1$c (%2$s) instead of %3$s ?";

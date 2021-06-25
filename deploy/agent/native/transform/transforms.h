@@ -23,8 +23,23 @@
 #include <memory>
 
 #include "slicer/dex_ir.h"
+#include "slicer/instrumentation.h"
+#include "slicer/reader.h"
+#include "slicer/writer.h"
 
 namespace deploy {
+
+class Transform {
+ public:
+  Transform(const std::string& class_name) : class_name_(class_name) {}
+  virtual ~Transform() = default;
+
+  std::string GetClassName() const { return class_name_; }
+  virtual void Apply(std::shared_ptr<ir::DexFile> dex_ir) const = 0;
+
+ private:
+  const std::string class_name_;
+};
 
 // Provides a cache for the dex file output of jvmti class transforms, and
 // allows for the retrieval of previously cached dex files keyed by class name.

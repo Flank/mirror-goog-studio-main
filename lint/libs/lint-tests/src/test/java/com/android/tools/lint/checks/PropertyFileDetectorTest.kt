@@ -110,7 +110,7 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
         lint().files(
             source(
                 "local.properties",
-                "" + "sdk.dir=D:\\\\development\\\\android-sdks\n" + "\n"
+                "sdk.dir=D:\\\\development\\\\android-sdks\n" + "\n"
             )
         ).run().expect(expected).expectFixDiffs(
             "" +
@@ -129,6 +129,65 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
         assertEquals("c\\:\\\\foo\\\\bar", suggestEscapes("c:\\\\foo\\bar"))
     }
 
+    fun testNewLintVersion() {
+        val task = lint()
+        task.issues(GradleDetector.DEPENDENCY, PropertyFileDetector.HTTP)
+        task.networkData(
+            "https://maven.google.com/master-index.xml",
+            """
+            <metadata>
+              <com.android.tools.build/>
+            </metadata>
+            """.trimIndent()
+        )
+        task.networkData(
+            "https://maven.google.com/com/android/tools/build/group-index.xml",
+            "" +
+                "<com.android.tools.build>\n" +
+                "  <gradle versions=\"3.0.0-alpha1,7.0.0,7.1.0-alpha01,7.1.0-alpha02,7.1.0-alpha03\"/>\n" +
+                "</com.android.tools.build>"
+        )
+        task.files(
+            source(
+                "gradle.properties",
+                "" +
+                    "android.experimental.lint.version=7.0.0-alpha08\n" +
+                    // Extra whitespace
+                    "android.experimental.lint.version = 7.0.0-alpha09\n" +
+                    // Too high, no suggestion
+                    "android.experimental.lint.version=100.0.0-alpha10\n" +
+                    // Suppressed
+                    "#noinspection GradleDependency\n" +
+                    "android.experimental.lint.version=7.0.0-alpha11\n" +
+                    ""
+
+                // TODO: Figure out if we're allowed to have comments trailing on lines
+                // TODO write changes.md.html
+            )
+        ).run().expect(
+            """
+            gradle.properties:1: Warning: Newer version of lint available: 7.1.0-alpha03 [GradleDependency]
+            android.experimental.lint.version=7.0.0-alpha08
+                                              ~~~~~~~~~~~~~
+            gradle.properties:2: Warning: Newer version of lint available: 7.1.0-alpha03 [GradleDependency]
+            android.experimental.lint.version = 7.0.0-alpha09
+                                                ~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for gradle.properties line 1: Update lint to 7.1.0-alpha03:
+            @@ -1 +1
+            - android.experimental.lint.version=7.0.0-alpha08
+            + android.experimental.lint.version=7.1.0-alpha03
+            Fix for gradle.properties line 2: Update lint to 7.1.0-alpha03:
+            @@ -2 +2
+            - android.experimental.lint.version = 7.0.0-alpha09
+            + android.experimental.lint.version = 7.1.0-alpha03
+            """
+        )
+    }
+
     fun testPasswords1() {
         // Regression test for b/63914231
 
@@ -141,7 +200,7 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
         lint().files(
             source(
                 "gradle.properties",
-                "" + "systemProp.http.proxyPassword=something\n"
+                "systemProp.http.proxyPassword=something\n"
             )
         ).run().expect(expected)
     }
@@ -150,7 +209,7 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
         lint().files(
             source(
                 "local.properties",
-                "" + "systemProp.http.proxyPassword=something\n"
+                "systemProp.http.proxyPassword=something\n"
             ),
             source(
                 ".gitignore",

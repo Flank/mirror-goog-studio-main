@@ -17,36 +17,22 @@
 #ifndef OVERLAY_INSTALL_H
 #define OVERLAY_INSTALL_H
 
-#include <string>
-#include <unordered_set>
-#include <vector>
-
-#include "tools/base/deploy/installer/command.h"
-#include "tools/base/deploy/installer/server/install_client.h"
+#include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
-class OverlayInstallCommand : public Command {
+class OverlayInstallCommand : public AgentInteractionCommand {
  public:
-  OverlayInstallCommand(Workspace& workspace) : Command(workspace) {}
+  OverlayInstallCommand(Workspace& workspace)
+      : AgentInteractionCommand(workspace) {}
   virtual ~OverlayInstallCommand() = default;
   virtual void ParseParameters(const proto::InstallerRequest& request) override;
   virtual void Run(proto::InstallerResponse* response) override;
 
  private:
   proto::OverlayInstallRequest request_;
-  InstallClient* client_ = nullptr;
-
-  bool SetUpAgent(const std::string& agent,
-                  proto::OverlayInstallResponse* overlay_response);
   void UpdateOverlay(proto::OverlayInstallResponse* overlay_response);
-  void GetAgentLogs(proto::OverlayInstallResponse* overlay_response);
-
-  // This method was lifted directly from base_swap.cc and should probably be
-  // extracted into a shared utility.
-  bool CheckFilesExist(const std::vector<std::string>& files,
-                       std::unordered_set<std::string>* missing_files);
 };
 
 }  // namespace deploy

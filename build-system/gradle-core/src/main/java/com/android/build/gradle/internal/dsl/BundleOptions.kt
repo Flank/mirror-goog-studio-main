@@ -17,16 +17,19 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.Bundle
+import com.android.build.api.dsl.BundleCodeTransparency
 import org.gradle.api.Action
 import org.gradle.api.file.DirectoryProperty
 
 /** Features that apply to distribution by the bundle  */
-abstract class BundleOptions: Bundle {
+abstract class BundleOptions : Bundle {
+
     abstract override val abi: BundleOptionsAbi
     abstract override val density: BundleOptionsDensity
     abstract override val language: BundleOptionsLanguage
     abstract override val texture: BundleOptionsTexture
     abstract override val deviceTier: BundleOptionsDeviceTier
+    abstract override val codeTransparency: BundleCodeTransparency
 
     abstract val integrityConfigDir: DirectoryProperty
 

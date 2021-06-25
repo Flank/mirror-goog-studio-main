@@ -21,6 +21,7 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
+import com.android.tools.deployer.tasks.Canceller;
 import com.android.tools.deployer.tasks.Task;
 import com.android.tools.deployer.tasks.TaskResult;
 import com.android.tools.deployer.tasks.TaskRunner;
@@ -142,6 +143,8 @@ public class Deployer {
             String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
+            Canceller canceller = options.getCancelChecker();
+
             if (supportsNewPipeline()) {
                 installMode =
                         installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
@@ -177,7 +180,7 @@ public class Deployer {
 
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
             runner.create(Tasks.CACHE, splitter::cache, apkList);
-            runner.runAsync();
+            runner.runAsync(canceller);
 
             if (installCoroutineDebugger != null) {
                 installCoroutineDebugger.get();
@@ -192,6 +195,7 @@ public class Deployer {
             InstallOptions installOptions,
             InstallMode installMode)
             throws DeployerException {
+        Canceller canceller = installOptions.getCancelChecker();
         Task<String> packageName = runner.create(pkgName);
         Task<String> deviceSerial = runner.create(adb.getSerial());
         Task<List<Apk>> apks =
@@ -222,7 +226,7 @@ public class Deployer {
                                 overlayId);
             }
 
-            TaskResult result = runner.run();
+            TaskResult result = runner.run(canceller);
             installSuccess = result.isSuccess();
             if (installSuccess) {
                 runner.create(
@@ -266,7 +270,7 @@ public class Deployer {
                     Tasks.DEPLOY_CACHE_STORE, deployCache::invalidate, deviceSerial, packageName);
         }
 
-        runner.runAsync();
+        runner.runAsync(canceller);
 
         if (installCoroutineDebugger != null) {
             deployResult.coroutineDebuggerInstalled = installCoroutineDebugger.get();
@@ -275,23 +279,26 @@ public class Deployer {
         return deployResult;
     }
 
-    public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> debuggerRedefiners)
+    public Result codeSwap(
+            List<String> apks, Map<Integer, ClassRedefiner> debuggerRedefiners, Canceller canceller)
             throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
             if (supportsNewPipeline()) {
-                return optimisticSwap(apks, false /* Restart Activity */, debuggerRedefiners);
+                return optimisticSwap(
+                        apks, false /* Restart Activity */, debuggerRedefiners, canceller);
             } else {
-                return swap(apks, false /* Restart Activity */, debuggerRedefiners);
+                return swap(apks, false /* Restart Activity */, debuggerRedefiners, canceller);
             }
         }
     }
 
-    public Result fullSwap(List<String> apks) throws DeployerException {
+    public Result fullSwap(List<String> apks, Canceller canceller) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
             if (supportsNewPipeline() && options.useOptimisticResourceSwap) {
-                return optimisticSwap(apks, /* Restart Activity */ true, ImmutableMap.of());
+                return optimisticSwap(
+                        apks, /* Restart Activity */ true, ImmutableMap.of(), canceller);
             } else {
-                return swap(apks, true /* Restart Activity */, ImmutableMap.of());
+                return swap(apks, true /* Restart Activity */, ImmutableMap.of(), canceller);
             }
         }
     }
@@ -319,7 +326,8 @@ public class Deployer {
     private Result swap(
             List<String> argPaths,
             boolean argRestart,
-            Map<Integer, ClassRedefiner> debuggerRedefiners)
+            Map<Integer, ClassRedefiner> debuggerRedefiners,
+            Canceller canceller)
             throws DeployerException {
 
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
@@ -369,7 +377,7 @@ public class Deployer {
         ApkSwapper swapper = new ApkSwapper(installer, debuggerRedefiners, argRestart, adb, logger);
         runner.create(Tasks.SWAP, swapper::swap, swapper::error, dumps, sessionId, toSwap);
 
-        TaskResult result = runner.run();
+        TaskResult result = runner.run(canceller);
         result.getMetrics().forEach(metrics::add);
 
         // Update the database with the entire new apk. In the normal case this should
@@ -380,7 +388,7 @@ public class Deployer {
             runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
 
             // Wait only for swap to finish
-            runner.runAsync();
+            runner.runAsync(canceller);
         } else {
             throw result.getException();
         }
@@ -391,7 +399,10 @@ public class Deployer {
     }
 
     private Result optimisticSwap(
-            List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
+            List<String> argPaths,
+            boolean argRestart,
+            Map<Integer, ClassRedefiner> redefiners,
+            Canceller canceller)
             throws DeployerException {
 
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
@@ -463,7 +474,7 @@ public class Deployer {
                         arch,
                         overlayUpdate);
 
-        TaskResult result = runner.run();
+        TaskResult result = runner.run(canceller);
         result.getMetrics().forEach(metrics::add);
 
         if (!result.isSuccess()) {
@@ -485,7 +496,7 @@ public class Deployer {
                 swapResultTask);
 
         // Wait only for swap to finish
-        runner.runAsync();
+        runner.runAsync(canceller);
 
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.

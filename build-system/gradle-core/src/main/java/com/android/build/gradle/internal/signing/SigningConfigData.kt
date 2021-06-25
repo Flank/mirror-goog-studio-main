@@ -98,7 +98,7 @@ data class SigningConfigData(
 
         fun fromDslSigningConfig(signingConfig: SigningConfig): SigningConfigData {
             return SigningConfigData(
-                name = signingConfig.name ?: "default",
+                name = "default",
                 storeType = signingConfig.storeType,
                 storeFile = signingConfig.storeFile,
                 storePassword = signingConfig.storePassword,

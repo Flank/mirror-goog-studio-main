@@ -35,101 +35,35 @@ void OverlayInstallCommand::ParseParameters(
     return;
   }
   request_ = request.overlay_install();
+  package_name_ = request_.package_name();
 
   ready_to_run_ = true;
 }
 
 void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
+  // Determine which agent we need to use.
+  std::string agent_filename = kAgent;
+#if defined(__aarch64__) || defined(__x86_64__)
+  agent_filename = kAgentAlt;
+#endif
+  if (!PrepareInteraction(agent_filename)) {
+    ErrEvent("Unable to prepare interaction");
+    return;
+  }
+
   proto::OverlayInstallResponse* overlay_response =
       response->mutable_overlay_install_response();
 
-  // Determine which agent we need to use.
-#if defined(__aarch64__) || defined(__x86_64__)
-  std::string agent =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#else
-  std::string agent = kAgent;
-#endif
-
-  if (!ExtractBinaries(workspace_.GetTmpFolder(), {agent, kInstallServer})) {
-    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    ErrEvent("Extracting binaries failed");
-    return;
-  }
-
-  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
-                            workspace_.GetVersion());
-
-  if (!SetUpAgent(agent, overlay_response)) {
-    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    ErrEvent("OverlayInstall: SetupAgent failed");
-    return;
-  }
-
   UpdateOverlay(overlay_response);
-  GetAgentLogs(overlay_response);
-}
-
-bool OverlayInstallCommand::SetUpAgent(
-    const std::string& agent, proto::OverlayInstallResponse* overlay_response) {
-  Phase p("SetUpAgent");
-
-  std::string version = workspace_.GetVersion() + "-";
-
-  std::string startup_path = Sites::AppStartupAgent(request_.package_name());
-  std::string studio_path = Sites::AppStudio(request_.package_name());
-  std::string agent_path = startup_path + version + agent;
-
-  std::unordered_set<std::string> missing_files;
-  if (!CheckFilesExist({startup_path, studio_path, agent_path},
-                       &missing_files)) {
-    ErrEvent("LiveLiteral: CheckFilesExist failed");
-    return false;
+  auto logsResp = GetAgentLogs();
+  if (logsResp == nullptr) {
+    return;
   }
 
-  RunasExecutor run_as(request_.package_name());
-  std::string error;
-
-  bool missing_startup =
-      missing_files.find(startup_path) != missing_files.end();
-  bool missing_agent = missing_files.find(agent_path) != missing_files.end();
-
-  // Clean up other agents from the startup_agent directory. Because agents are
-  // versioned (agent-<version#>) we cannot simply copy our agent on top of the
-  // previous file. If the startup_agent directory exists but our agent cannot
-  // be found in it, we assume another agent is present and delete it.
-  if (!missing_startup && missing_agent) {
-    if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
-      ErrEvent("Could not remove old agents: " + error);
-      overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-      return false;
-    }
-    missing_startup = true;
+  for (const auto& log : logsResp->logs()) {
+    auto added = overlay_response->add_agent_logs();
+    *added = log;
   }
-
-  if (missing_startup &&
-      !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
-    ErrEvent("Could not create startup agent directory: " + error);
-    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return false;
-  }
-
-  if (missing_files.find(studio_path) != missing_files.end() &&
-      !run_as.Run("mkdir", {studio_path}, nullptr, &error)) {
-    ErrEvent("Could not create studio directory: " + error);
-    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return false;
-  }
-
-  std::string tmp_agent = workspace_.GetTmpFolder() + agent;
-  if (missing_agent &&
-      !run_as.Run("cp", {"-F", tmp_agent, agent_path}, nullptr, &error)) {
-    ErrEvent("Could not copy binaries: " + error);
-    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return false;
-  }
-
-  return true;
 }
 
 void OverlayInstallCommand::UpdateOverlay(
@@ -178,44 +112,4 @@ void OverlayInstallCommand::UpdateOverlay(
       return;
   }
 }
-
-bool OverlayInstallCommand::CheckFilesExist(
-    const std::vector<std::string>& files,
-    std::unordered_set<std::string>* missing_files) {
-  Phase p("CheckFilesExist");
-
-  proto::CheckSetupRequest request;
-  for (const std::string& file : files) {
-    request.add_files(file);
-  }
-
-  auto resp = client_->CheckSetup(request);
-  if (!resp) {
-    return false;
-  }
-
-  missing_files->insert(resp->missing_files().begin(),
-                        resp->missing_files().end());
-  return true;
-}
-
-void OverlayInstallCommand::GetAgentLogs(
-    proto::OverlayInstallResponse* response) {
-  Phase p("GetAgentLogs");
-  proto::GetAgentExceptionLogRequest req;
-  req.set_package_name(request_.package_name());
-
-  // If this fails, we don't really care - it's a best-effort situation; don't
-  // break the deployment because of it. Just log and move on.
-  auto resp = client_->GetAgentExceptionLog(req);
-  if (resp == nullptr) {
-    return;
-  }
-
-  for (const auto& log : resp->logs()) {
-    auto added = response->add_agent_logs();
-    *added = log;
-  }
-}
-
 }  // namespace deploy

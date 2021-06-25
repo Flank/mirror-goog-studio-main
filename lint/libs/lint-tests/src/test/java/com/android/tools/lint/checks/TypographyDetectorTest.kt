@@ -55,6 +55,7 @@ class TypographyDetectorTest : AbstractCheckTest() {
                     </string-array>
                     <string name="ndash">X Y Z: 10 10 -1</string>
                     <string name="ga_trackingId">UA-0000-0</string>
+                    <string>something somthing d\'avoir something something l\'écran.</string>
                 </resources>
 
                 """

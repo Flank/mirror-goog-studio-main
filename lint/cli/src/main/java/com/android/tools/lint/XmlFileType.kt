@@ -76,7 +76,7 @@ enum class XmlFileType(private val typeName: String) {
      * Should paths in the report always be relative, even if the lint
      * flag turning on absolute paths has been set to true?
      */
-    fun relativePaths(): Boolean = this != REPORT
+    fun relativePaths(): Boolean = this != REPORT && this != REPORT_WITH_FIXES
 
     /** Whether we should use path variables for this file type */
     fun variables(): Boolean = isPersistenceFile()

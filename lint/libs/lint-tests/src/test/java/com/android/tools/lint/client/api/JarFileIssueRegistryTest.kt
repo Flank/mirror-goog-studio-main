@@ -259,6 +259,74 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             .expectClean()
     }
 
+    @Suppress("NullableProblems", "ConstantConditions")
+    fun testAndroidXOk() {
+        // Tests what happens when the loaded lint rule was compiled with
+        // a newer version of the lint apis than the current host, but the
+        // API accesses all seem to be okay
+        val root = Files.createTempDirectory("lintjar").toFile()
+
+        lint().files(
+            *apiStubs,
+            bytecode(
+                "lint.jar",
+                source(
+                    "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
+                    "androidx.annotation.experimental.lint.ExperimentalIssueRegistry"
+                )
+            ),
+            bytecode(
+                "lint.jar",
+                java(
+                    """
+                    package androidx.annotation.experimental.lint;
+                    import com.android.tools.lint.client.api.*;
+                    import com.android.tools.lint.detector.api.*;
+                    import java.util.EnumSet;
+                    import java.util.List;
+                    import java.util.Collections;
+
+                    public class ExperimentalIssueRegistry extends IssueRegistry {
+                        @Override public List<Issue> getIssues() { return Collections.emptyList(); }
+                    }
+                    """
+                ).indented(),
+                0xb12167f,
+                """
+                androidx/annotation/experimental/lint/ExperimentalIssueRegistry.class:
+                H4sIAAAAAAAAAHWQv07DMBDGP/dfmlAoFMoESGwtAx4ZWpWhAgkpYqCI3U2s
+                ysixq8RB7VvBBGLgAXgoxCVUKgLVw9k+/e777u7z6/0DwAUOA9TQDrCLPQ8d
+                D/sMjaEyyo0Yqr3+A0NtbGPJ0A6Vkbd5MpXpvZhqyvgz6W6yLJcZQ6fXDx/F
+                k+C5U5qHKnMDAiZqZoTLU4Iv/wHDMLIJFyZOrYq5s1ZnXCvjeCydjJxNuZgr
+                XhoMRqQWTGyeRvJaFd4nV4u5TFUijRO6ZO7kjETT5Xnh0kIdDQ8HLXQRkPnK
+                ZUF2xjrhlDVc/lL4Md6oycA39BppRfi603VFdz3t2GpNE5EpbcqXydwtiwXg
+                FFVafnEqYEXHFD36HdPN6K6fvYK90IOhSbFRJpsUfQRUUqBHK7T2hsrzH9LH
+                Vindot92+dr5BoPJPOP3AQAA
+                """
+
+            )
+        ).testModes(TestMode.DEFAULT).createProjects(root)
+
+        val lintJar = File(root, "app/lint.jar")
+        assertTrue(lintJar.exists())
+
+        lint().files(
+            source( // instead of xml: not valid XML below
+                "res/values/strings.xml",
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <resources/>
+                """
+            ).indented()
+        )
+            .clientFactory { createGlobalLintJarClient(lintJar) }
+            .testModes(TestMode.DEFAULT)
+            .allowObsoleteLintChecks(false)
+            .issueIds("MyIssueId")
+            .run()
+            .expectClean()
+    }
+
     fun testNewerLintBroken() {
         // Tests what happens when the loaded lint rule was compiled with
         // a newer version of the lint apis than the current host, and

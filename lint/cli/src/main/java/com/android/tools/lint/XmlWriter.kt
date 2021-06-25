@@ -29,6 +29,7 @@ import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.SdkConstants.VALUE_TRUE
+import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.detector.api.AllOfConstraint
 import com.android.tools.lint.detector.api.AnyOfConstraint
 import com.android.tools.lint.detector.api.Constraint
@@ -106,9 +107,9 @@ open class XmlWriter constructor(
         // Unfortunate tag name here; this is really an incident but historically
         // in the file format it was called an issue
         // Format 6: support for storing incidents, lint maps, and configured issues
-        return listOf(
+        return listOfNotNull(
             ATTR_FORMAT to "6",
-            "by" to client.getClientDisplayRevision()?.let { "lint $it" },
+            client.getClientDisplayRevision()?.let { "by" to "lint $it" },
             "type" to if (type != XmlFileType.REPORT) type.name.toLowerCase(Locale.ROOT) else null,
         )
     }
@@ -139,10 +140,10 @@ open class XmlWriter constructor(
         writer.write("</$tag>\n")
     }
 
-    private fun writeCondition(constraint: Constraint, indent: Int = 1) {
+    private fun writeCondition(constraint: Constraint, indent: Int = 1, key: String? = null) {
         indent(indent)
         writer.write("<$TAG_CONDITION")
-
+        key?.let { writeAttribute(writer, -1, ATTR_ID, it) }
         val ind = indent + 1
 
         when (constraint) {
@@ -336,6 +337,7 @@ open class XmlWriter constructor(
                 is String -> ATTR_STRING
                 is Int -> ATTR_INT
                 is Boolean -> ATTR_BOOLEAN
+                is Severity -> ATTR_SEVERITY
                 is Location -> {
                     writeLocation(null, value, TAG_LOCATION, indent + 1, key)
                     continue@loop
@@ -349,7 +351,8 @@ open class XmlWriter constructor(
                     continue@loop
                 }
                 is Constraint -> {
-                    writeCondition(value, indent + 1)
+                    val id = if (key != LintDriver.Companion.KEY_CONDITION) key else null
+                    writeCondition(value, indent + 1, id)
                     continue@loop
                 }
                 else -> error("Unexpected map value type ${value.javaClass}")

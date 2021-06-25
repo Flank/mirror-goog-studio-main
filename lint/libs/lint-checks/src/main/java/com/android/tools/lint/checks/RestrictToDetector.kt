@@ -41,6 +41,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
@@ -58,6 +59,7 @@ import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UastEmptyExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.java.UnknownJavaExpression
 import org.jetbrains.uast.util.isArrayInitializer
 
 class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
@@ -621,22 +623,33 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (value is ULiteralExpression) {
                 val v = value.value
                 if (v is Int) {
-                    return (v as Int?)!!
+                    return v
                 }
             } else if (value is UReferenceExpression) {
                 // Not compiled; this is unlikely (but can happen when editing the support
                 // library project itself)
-                val name = value.resolvedName
-                when (name) {
+                when (value.resolvedName) {
                     "NONE" -> return VISIBILITY_NONE
                     "PRIVATE" -> return VISIBILITY_PRIVATE
                     "PROTECTED" -> return VISIBILITY_PROTECTED
                     "PACKAGE_PRIVATE" -> return VISIBILITY_PACKAGE_PRIVATE
                 }
+            } else if (value is UnknownJavaExpression) {
+                // Workaround for https://youtrack.jetbrains.com/issue/KT-47290 -- see
+                // https://issuetracker.google.com/190113936 for an applicable scenario
+                val sourcePsi = value.sourcePsi
+                if (sourcePsi is PsiLiteralExpression) {
+                    val v = sourcePsi.value
+                    if (v is Int) {
+                        return v
+                    }
+                }
             } else if (value is UastEmptyExpression) {
                 // Some kind of error in UAST; try harder. JavaUAnnotation is used to wrap
                 // class file annotations and in findDeclaredAttributeValue it returns
                 // UastEmptyExpression if it cannot convert it to UAST.
+                // (This may be an older version of KT-47290; it doesn't seem to trigger
+                // from the tests anymore)
                 val psi = annotation.sourcePsi
                 if (psi is ClsAnnotationImpl) {
                     val otherwise = psi.findAttribute(ATTR_OTHERWISE)

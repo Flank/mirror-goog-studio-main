@@ -111,7 +111,8 @@ class AnalyticsEnabledApplicationVariantTest {
     fun getSigningConfig() {
         val signingConfig = Mockito.mock(SigningConfig::class.java)
         Mockito.`when`(delegate.signingConfig).thenReturn(signingConfig)
-        Truth.assertThat(proxy.signingConfig).isEqualTo(signingConfig)
+        Truth.assertThat(
+            (proxy.signingConfig as AnalyticsEnabledSigningConfig).delegate).isEqualTo(signingConfig)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(

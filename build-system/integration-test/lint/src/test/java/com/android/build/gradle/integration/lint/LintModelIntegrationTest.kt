@@ -16,6 +16,7 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.Version
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
@@ -27,6 +28,7 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -59,10 +61,25 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
+    @Before
+    fun before() {
+        project.getSubproject("app")
+            .buildFile
+            .appendText(
+                """
+                    android {
+                        lintOptions {
+                            checkDependencies false
+                        }
+                    }
+                """.trimIndent()
+            )
+    }
+
     @Test
     fun checkLintModels() {
         // Check lint runs correctly before asserting about the model.
-        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
+        getExecutor().expectFailure().run("clean", ":app:cleanLintDebug", ":app:lintDebug")
         getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("8 errors, 6 warnings")
