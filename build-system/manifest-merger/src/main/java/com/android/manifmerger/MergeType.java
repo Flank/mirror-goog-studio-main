@@ -45,7 +45,7 @@ public enum MergeType {
     IGNORE,
 
     /**
-     * Always consume lower priority elements unless it is strictly equals to the higher priority
+     * Always consume lower priority elements unless it is strictly equal to the higher priority
      * element.
      */
     ALWAYS,

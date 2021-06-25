@@ -647,6 +647,9 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY)
         ),
 
+        /** attribution (contained in manifest) */
+        ATTRIBUTION(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
+
         /**
          * Custom tag for any application specific element
          */
