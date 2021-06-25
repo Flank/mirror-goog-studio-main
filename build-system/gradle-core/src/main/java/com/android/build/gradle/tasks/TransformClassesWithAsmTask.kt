@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JSON
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.instrumentation.loadClassData
 import com.android.build.gradle.internal.instrumentation.saveClassData
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
@@ -367,12 +365,14 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                         task.inputJarsDir
                 )
             } else {
-                task.inputClassesDir.from(
-                    creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS)
-                )
+                task.inputClassesDir.from(creationConfig.artifacts.getAllClasses().filter {
+                    !it.name.endsWith(DOT_JAR)
+                })
 
                 task.inputJarsWithIdentity.inputJars.from(
-                    creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS)
+                        creationConfig.artifacts.getAllClasses().filter {
+                            it.name.endsWith(DOT_JAR)
+                        }
                 )
             }
 

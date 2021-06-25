@@ -58,7 +58,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -233,7 +232,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
-        private val outputType: InternalMultipleArtifactType<Directory> = InternalMultipleArtifactType.DEX
+        private val outputType: InternalMultipleArtifactType = InternalMultipleArtifactType.DEX
     ) : VariantTaskCreationAction<DexMergingTask, ApkCreationConfig>(creationConfig) {
 
         private val internalName: String = when (action) {

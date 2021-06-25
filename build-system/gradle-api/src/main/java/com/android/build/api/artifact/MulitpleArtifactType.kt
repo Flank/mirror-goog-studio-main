@@ -16,8 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 
@@ -31,7 +29,7 @@ import org.gradle.api.file.RegularFile
  */
 sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     kind: ArtifactKind<FileTypeT>,
-    category: Category =  Category.INTERMEDIATES,
+    category: Category
 ) : Artifact.Multiple<FileTypeT>(kind, category) {
 
     /**
@@ -45,26 +43,6 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
      */
     object MULTIDEX_KEEP_PROGUARD:
             MultipleArtifact<RegularFile>(FILE, Category.SOURCES),
-            Transformable,
-            Replaceable
-
-    /**
-     * All classes that will eventually be dex'ed for this module provided as directories.
-     */
-    @Incubating
-    object ALL_CLASSES_DIRS:
-            MultipleArtifact<Directory>(DIRECTORY),
-            Appendable,
-            Transformable,
-            Replaceable
-
-    /**
-     * All classes that will eventually be dex'ed for this module provided as jar files.
-     */
-    @Incubating
-    object ALL_CLASSES_JARS:
-            MultipleArtifact<RegularFile>(FILE),
-            Appendable,
             Transformable,
             Replaceable
 }

@@ -25,7 +25,7 @@ import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
@@ -226,32 +226,25 @@ class ArtifactsImpl(
     }
 
     /**
-     * Appends a single [Provider] of [T] to a [Artifact.Multiple] of <T>
-     *
-     * @param type the multiple type to append to.
-     * @param element the element to add.
+     * Backward compatibility section
      */
-    fun <T: FileSystemLocation> appendTo(type: Artifact.Multiple<T>, element: Provider<T>) {
-        getArtifactContainer(type).addInitialProvider(element)
-    }
-    /**
-     * Appends a [List] of [Provider] of [T] to a [MultipleArtifactType] of <T>
-     *
-     * @param type the multiple type to append to.
-     * @param elements the list of elements to add.
-     */
-    fun <T: FileSystemLocation> appendAll(type: Artifact.Multiple<T>, elements: Provider<List<T>>) {
-        getArtifactContainer(type).setInitialProvider(elements);
-    }
 
-    private val allClasses = project.files().from(
-        getAll(MultipleArtifact.ALL_CLASSES_DIRS),
-        getAll(MultipleArtifact.ALL_CLASSES_JARS)
-    )
+    // because of existing public APIs, we cannot move [AnchorOutputType.ALL_CLASSES] to Provider<>
+    private val allClasses= project.files()
 
     /**
-     * The current [FileCollection] for [InternalMultipleArtifactType.ALL_CLASSES_JARS]
-     * and [InternalMultipleArtifactType.ALL_CLASSES_DIRS]
+     * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
+     *
+     * @param files the [FileCollection] to add.
+     */
+    fun appendToAllClasses(files: FileCollection) {
+        synchronized(allClasses) {
+            allClasses.from(files)
+        }
+    }
+
+    /**
+     * The current [FileCollection] for [AnchorOutputType.ALL_CLASSES] as of now.
      * The returned file collection is final but its content can change.
      */
     fun getAllClasses(): FileCollection = allClasses
