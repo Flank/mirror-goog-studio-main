@@ -161,7 +161,7 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
                     .dir(headers)
                     .asFile
         }
-        PrefabModuleTaskData(options.name, headers, options.libraryName)
+        PrefabModuleTaskData(options.name, headers, options.libraryName, options.headerOnly)
     }
     if (modules.isNotEmpty()) {
         val packageTask= taskFactory.register(

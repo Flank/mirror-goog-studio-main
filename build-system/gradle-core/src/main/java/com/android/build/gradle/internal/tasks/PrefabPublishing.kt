@@ -161,7 +161,9 @@ data class PrefabModuleTaskData(
     val headers: File?,
     @get:Optional
     @get:Input
-    val libraryName: String?
+    val libraryName: String?,
+    @get:Input
+    val headerOnly: Boolean,
 )
 
 @DisableCachingByDefault
@@ -218,7 +220,9 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         val installDir = packageDir.resolve("modules/${module.name}").apply { mkdirs() }
         createModuleMetadata(module, installDir)
         installHeaders(module, installDir)
-        installLibs(module, installDir)
+        if (!module.headerOnly) {
+            installLibs(module, installDir)
+        }
     }
 
     private fun createModuleMetadata(module: PrefabModuleTaskData, installDir: File) {

@@ -26,4 +26,6 @@ open class PrefabPackagingOptions @Inject constructor(override var name: String)
     override var headers: String? = null
 
     override var libraryName: String? = null
+
+    override var headerOnly: Boolean = false
 }

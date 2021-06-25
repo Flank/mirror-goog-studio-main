@@ -631,9 +631,11 @@ com.android.build.api.dsl.PostProcessing.setTestProguardFiles: void (java.util.L
 com.android.build.api.dsl.PostProcessing.testProguardFile: void (java.lang.Object)
 com.android.build.api.dsl.PostProcessing.testProguardFiles: void (java.lang.Object[])
 com.android.build.api.dsl.PrefabPackagingOptions
+com.android.build.api.dsl.PrefabPackagingOptions.getHeaderOnly: boolean ()
 com.android.build.api.dsl.PrefabPackagingOptions.getHeaders: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.getLibraryName: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.getName: java.lang.String ()
+com.android.build.api.dsl.PrefabPackagingOptions.setHeaderOnly: void (boolean)
 com.android.build.api.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setName: void (java.lang.String)

@@ -35,6 +35,7 @@ class PrefabPublishingTest(
     private val buildSystem: NativeBuildSystem,
     private val cmakeVersion: String,
 ) {
+
     private val projectName = "prefabPublishing"
     private val gradleModuleName = "foo"
 
@@ -48,7 +49,14 @@ class PrefabPublishingTest(
 
     private val expectedAbis = listOf(Abi.ARMEABI_V7A, Abi.ARM64_V8A, Abi.X86, Abi.X86_64)
 
+    enum class LibraryType {
+        Shared,
+        Static,
+        HeaderOnly,
+    }
+
     companion object {
+
         @Parameterized.Parameters(name = "variant = {0}, build system = {1}, cmake = {2}")
         @JvmStatic
         fun data() = listOf(
@@ -65,22 +73,26 @@ class PrefabPublishingTest(
     fun setUp() {
         val appBuild = project.buildFile.parentFile.resolve("foo/build.gradle")
         if (buildSystem == NativeBuildSystem.NDK_BUILD) {
-            appBuild.appendText("""
+            appBuild.appendText(
+                """
                 android.externalNativeBuild.ndkBuild.path="src/main/cpp/Android.mk"
-                """.trimIndent())
+                """.trimIndent()
+            )
         } else {
-            appBuild.appendText("""
+            appBuild.appendText(
+                """
                 android.externalNativeBuild.cmake.path="src/main/cpp/CMakeLists.txt"
                 android.externalNativeBuild.cmake.version="$cmakeVersion"
                 android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=c++_shared")
-                """.trimIndent())
+                """.trimIndent()
+            )
         }
     }
 
     private fun verifyModule(
         packageDir: File,
         moduleName: String,
-        static: Boolean,
+        libraryType: LibraryType,
         libraryName: String? = null
     ) {
         val moduleDir = packageDir.resolve("modules/$moduleName")
@@ -117,34 +129,51 @@ class PrefabPublishingTest(
         )
 
         for (abi in expectedAbis) {
-            val abiDir = moduleDir.resolve("libs/android.${abi.tag}")
-            val abiMetadata = abiDir.resolve("abi.json").readText()
-            val apiLevel = if (abi.supports64Bits()) {
-                21
-            } else {
-                16
-            }
-
-            Truth.assertThat(abiMetadata).isEqualTo(
-                """
-                {
-                  "abi": "${abi.tag}",
-                  "api": $apiLevel,
-                  "ndk": $ndkMajor,
-                  "stl": "c++_shared"
-                }
-                """.trimIndent()
+            verifyLibrariesForAbi(
+                abi,
+                moduleDir,
+                moduleName,
+                libraryName,
+                libraryType
             )
-
-            val prefix = libraryName ?: "lib$moduleName"
-            val suffix = if (static) {
-                ".a"
-            } else {
-                ".so"
-            }
-            val library = abiDir.resolve("$prefix$suffix")
-            assertThat(library).exists()
         }
+    }
+
+    private fun verifyLibrariesForAbi(
+        abi: Abi,
+        moduleDir: File,
+        moduleName: String,
+        libraryName: String?,
+        libraryType: LibraryType,
+    ) {
+        val prefix = libraryName ?: "lib$moduleName"
+        val suffix = when (libraryType) {
+            LibraryType.Static -> ".a"
+            LibraryType.Shared -> ".so"
+            LibraryType.HeaderOnly -> return
+        }
+
+        val abiDir = moduleDir.resolve("libs/android.${abi.tag}")
+        val abiMetadata = abiDir.resolve("abi.json").readText()
+        val apiLevel = if (abi.supports64Bits()) {
+            21
+        } else {
+            16
+        }
+
+        Truth.assertThat(abiMetadata).isEqualTo(
+            """
+            {
+              "abi": "${abi.tag}",
+              "api": $apiLevel,
+              "ndk": $ndkMajor,
+              "stl": "c++_shared"
+            }
+            """.trimIndent()
+        )
+
+        val library = abiDir.resolve("$prefix$suffix")
+        assertThat(library).exists()
     }
 
     @Test
@@ -170,8 +199,8 @@ class PrefabPublishingTest(
             """.trimIndent()
         )
 
-        verifyModule(packageDir, gradleModuleName, static = false)
-        verifyModule(packageDir, "${gradleModuleName}_static", static = true)
+        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.Shared)
+        verifyModule(packageDir, "${gradleModuleName}_static", libraryType = LibraryType.Static)
     }
 
     @Test
@@ -349,10 +378,10 @@ class PrefabPublishingTest(
 
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
-        verifyModule(packageDir, gradleModuleName, true, "libfoo_static")
+        verifyModule(packageDir, gradleModuleName, LibraryType.Static, "libfoo_static")
         val packageMetadata = packageDir.resolve("prefab.json").readText()
         Truth.assertThat(packageMetadata).isEqualTo(
-                """
+            """
             {
               "name": "$gradleModuleName",
               "schema_version": 1,
@@ -391,6 +420,85 @@ class PrefabPublishingTest(
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
 
-        verifyModule(packageDir, gradleModuleName, static = false)
+        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.Shared)
+    }
+
+    @Test
+    fun `header only libraries are packaged appropriately`() {
+        val subproject = project.getSubproject(gradleModuleName)
+
+        subproject.buildFile.writeText(
+            """
+            plugins {
+                id 'com.android.library'
+            }
+
+            android {
+                compileSdkVersion rootProject.latestCompileSdk
+                buildToolsVersion = rootProject.buildToolsVersion
+
+                defaultConfig {
+                    minSdkVersion 16
+                    targetSdkVersion rootProject.latestCompileSdk
+
+                    externalNativeBuild {
+                        if (!project.hasProperty("ndkBuild")) {
+                            cmake {}
+                        }
+                    }
+                }
+
+                externalNativeBuild {
+                    if (project.hasProperty("ndkBuild")) {
+                        ndkBuild {
+                            path "src/main/cpp/Android.mk"
+                        }
+                    } else {
+                        cmake {
+                            path "src/main/cpp/CMakeLists.txt"
+                        }
+                    }
+                }
+
+                buildFeatures {
+                    prefabPublishing true
+                }
+
+                prefab {
+                    foo {
+                        headers "src/main/cpp/include"
+                        headerOnly true
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+
+        subproject.getMainSrcDir("cpp").resolve("CMakeLists.txt").writeText(
+            """
+            cmake_minimum_required(VERSION 3.6)
+            project(foo VERSION 1.0.0 LANGUAGES CXX)
+
+            add_library(foo INTERFACE)
+            target_include_directories(foo INTERFACE include)
+            """.trimIndent()
+        )
+        subproject.getMainSrcDir("cpp").resolve("Android.mk").writeText(
+            """
+            LOCAL_PATH := $(call my-dir)
+
+            include $(CLEAR_VARS)
+            LOCAL_MODULE := foo
+            LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+            include $(BUILD_STATIC_LIBRARY)
+            """.trimIndent()
+        )
+
+        project.execute("assemble$variant")
+
+        val packageDir = project.getSubproject(gradleModuleName)
+            .getIntermediateFile("prefab_package", variant, "prefab")
+
+        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.HeaderOnly)
     }
 }
