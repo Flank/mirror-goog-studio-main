@@ -95,6 +95,7 @@ def _iml_module_jar_impl(
             friends = friends,
             out = kotlin_jar,
             jre = ctx.files._bootclasspath,
+            transitive_classpath = False,  # Matches JPS.
         )]
         jars += [kotlin_jar]
 
