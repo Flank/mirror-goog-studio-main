@@ -17,6 +17,8 @@
 package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.CONSTRUCTOR_NAME
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.fromPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.model.DefaultLintModelMavenName
@@ -25,6 +27,7 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.google.common.collect.Maps
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiArrayType
@@ -45,6 +48,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeVisitor
 import com.intellij.psi.PsiWildcardType
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -59,8 +63,8 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUClass
+import org.jetbrains.uast.java.JavaUAnnotation
 import java.io.File
-import java.util.ArrayList
 
 const val TYPE_OBJECT = "java.lang.Object"
 const val TYPE_STRING = "java.lang.String"
@@ -1056,34 +1060,43 @@ class JavaEvaluator {
      * this method will return the `@IntDef` annotation instead
      * of `@Duration` for the element annotated with a duration.
      */
-    open fun filterRelevantAnnotations(annotations: Array<PsiAnnotation>): Array<PsiAnnotation> {
-        if (relevantAnnotations == null) {
-            return PsiAnnotation.EMPTY_ARRAY
-        }
-        var result: MutableList<PsiAnnotation>? = null
+    fun filterRelevantAnnotations(
+        annotations: Array<PsiAnnotation>,
+        context: UElement? = null,
+        relevantAnnotations: Set<String>? = null
+    ): List<UAnnotation> {
         val length = annotations.size
         if (length == 0) {
-            return annotations
+            return emptyList()
         }
+        val relevant = relevantAnnotations ?: this.relevantAnnotations ?: return emptyList()
+        var result: MutableList<UAnnotation>? = null
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
-            if (signature == null || signature.startsWith("java.") && !relevantAnnotations!!.contains(
-                    signature
-                )
+            if (signature == null || (signature.startsWith("kotlin.") || signature.startsWith("java.")) &&
+                !relevant.contains(signature)
             ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue
             }
 
-            if (relevantAnnotations!!.contains(signature)) {
+            if (relevant.contains(signature)) {
+                val uAnnotation = JavaUAnnotation.wrap(annotation)
+
                 // Common case: there's just one annotation; no need to create a list copy
                 if (length == 1) {
-                    return annotations
+                    return listOf(uAnnotation)
                 }
                 if (result == null) {
                     result = ArrayList(2)
                 }
-                result.add(annotation)
+                result.add(uAnnotation)
+                continue
+            } else if (isPlatformAnnotation(signature)) {
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(annotation.fromPlatformAnnotation(signature))
                 continue
             }
 
@@ -1092,31 +1105,42 @@ class JavaEvaluator {
             // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
             // Here we want to map from @foo.bar.Baz to the corresponding int def.
             // Don't need to compute this if performing @IntDef or @StringDef lookup
-            val ref = annotation.nameReferenceElement ?: continue
-            val resolved = ref.resolve()
-            if (resolved !is PsiClass || !resolved.isAnnotationType) {
+            val cls = annotation.nameReferenceElement?.resolve() ?: run {
+                val project = annotation.project
+                JavaPsiFacade.getInstance(project).findClass(
+                    signature,
+                    GlobalSearchScope.projectScope(project)
+                )
+            } ?: continue
+            if (cls !is PsiClass || !cls.isAnnotationType) {
                 continue
             }
-            val cls = resolved as PsiClass?
-            val innerAnnotations = getAllAnnotations(cls!!, false)
+            val innerAnnotations = getAllAnnotations(cls, inHierarchy = false)
             for (j in innerAnnotations.indices) {
                 val inner = innerAnnotations[j]
-                val a = inner.qualifiedName
-                if (a != null && relevantAnnotations!!.contains(a)) {
-                    if (length == 1 && j == innerAnnotations.size - 1 && result == null) {
-                        return innerAnnotations
-                    }
+                val innerName = inner.qualifiedName ?: continue
+                if (relevant.contains(innerName)) {
                     if (result == null) {
                         result = ArrayList(2)
                     }
-                    result.add(inner)
+                    val innerU = getAnnotationLookup().findRealAnnotation(inner, cls, context)
+                    result.add(innerU)
+                } else if (isPlatformAnnotation(innerName)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    val innerU = getAnnotationLookup().findRealAnnotation(inner, cls, context)
+                    result.add(innerU.fromPlatformAnnotation(innerName))
                 }
             }
         }
 
-        return if (result != null)
-            result.toTypedArray()
-        else PsiAnnotation.EMPTY_ARRAY
+        return result ?: emptyList()
+    }
+
+    private var annotationLookup: AnnotationLookup? = null
+    private fun getAnnotationLookup(): AnnotationLookup {
+        return annotationLookup ?: AnnotationLookup().also { annotationLookup = it }
     }
 
     /**

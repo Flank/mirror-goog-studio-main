@@ -308,9 +308,12 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
+        private const val AOSP_INT_RANGE_ANNOTATION = "android.annotation.IntRange"
+
         fun findIntRange(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
-                if (INT_RANGE_ANNOTATION.isEquals(annotation.qualifiedName)) {
+                val qualifiedName = annotation.qualifiedName
+                if (INT_RANGE_ANNOTATION.isEquals(qualifiedName) || AOSP_INT_RANGE_ANNOTATION == qualifiedName) {
                     return annotation
                 }
             }

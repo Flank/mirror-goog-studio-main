@@ -414,8 +414,9 @@ open class LintModelModuleProject(
                                     .map { it.projectPath }
                             // don't throw error for compile-only dependencies.
                             if (packageDependencies.contains(projectPath)) {
-                                error("Missing lint model for $projectPath, which is a dependency "
-                                        + "of ${project.getName()}"
+                                error(
+                                    "Missing lint model for $projectPath, which is a dependency " +
+                                        "of ${project.getName()}"
                                 )
                             }
                         } else {

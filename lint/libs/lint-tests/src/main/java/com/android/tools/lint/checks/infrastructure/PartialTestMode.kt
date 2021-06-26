@@ -44,6 +44,7 @@ internal class PartialTestMode : TestMode(
     )
 
     override val folderName: String = "partial"
+    override val modifiesSources: Boolean = true
 
     override fun applies(context: TestModeContext): Boolean {
         return context.task.incrementalFileName == null

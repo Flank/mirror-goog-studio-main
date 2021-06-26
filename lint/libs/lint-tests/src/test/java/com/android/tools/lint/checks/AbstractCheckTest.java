@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
@@ -90,12 +88,17 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         return new ProjectDescription();
     }
 
+    public static AndroidPlatformAnnotationsTestMode PLATFORM_ANNOTATIONS_TEST_MODE =
+            new AndroidPlatformAnnotationsTestMode();
+
     @Override
     @NonNull
     protected TestLintTask lint() {
         // instead of super.lint: don't set issues such that we can compute and compare
         // detector results below
         TestLintTask task = TestLintTask.lint();
+
+        task.addTestModes(PLATFORM_ANNOTATIONS_TEST_MODE);
 
         task.testName(this.getClass().getSimpleName() + "_" + getName());
 

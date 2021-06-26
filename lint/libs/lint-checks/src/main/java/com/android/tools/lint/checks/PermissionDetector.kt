@@ -424,16 +424,14 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val method = node.getParentOfType(UMethod::class.java, true) ?: return emptyList()
         val methodAnnotation =
             method.findAnnotation(PERMISSION_ANNOTATION.oldName())
-                ?: method.findAnnotation(
-                    PERMISSION_ANNOTATION.newName()
-                )
+                ?: method.findAnnotation(PERMISSION_ANNOTATION.newName())
+                ?: method.findAnnotation(AOSP_PERMISSION_ANNOTATION)
 
         val containingClass = method.getContainingUClass()
         val classAnnotation =
             containingClass?.findAnnotation(PERMISSION_ANNOTATION.oldName())
-                ?: containingClass?.findAnnotation(
-                    PERMISSION_ANNOTATION.newName()
-                )
+                ?: containingClass?.findAnnotation(PERMISSION_ANNOTATION.newName())
+                ?: containingClass?.findAnnotation(AOSP_PERMISSION_ANNOTATION)
 
         return listOfNotNull(methodAnnotation, classAnnotation).map { PermissionRequirement.create(it) }
     }
@@ -644,6 +642,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         )
 
         private const val THINGS_LIBRARY = "com.google.android.things"
+        const val AOSP_PERMISSION_ANNOTATION = "android.annotation.RequiresPermission"
 
         /** Method result should be used. */
         @JvmField

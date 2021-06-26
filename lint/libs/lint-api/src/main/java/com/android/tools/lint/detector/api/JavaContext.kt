@@ -34,7 +34,6 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSwitchStatement
-import org.jetbrains.kotlin.asJava.elements.KtLightFieldForSourceDeclarationSupport
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass

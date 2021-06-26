@@ -24,6 +24,9 @@ import com.android.tools.lint.checks.AnnotationDetector.MAIN_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.THREAD_SUFFIX
 import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.PLATFORM_ANNOTATIONS_PREFIX
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
@@ -53,7 +56,6 @@ import org.jetbrains.uast.UObjectLiteralExpression
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParameterForArgument
 import org.jetbrains.uast.getParentOfType
-import java.util.ArrayList
 
 class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -213,11 +215,9 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
         val signature = this.qualifiedName
-        return (
-            signature != null &&
-                signature.endsWith(THREAD_SUFFIX) &&
-                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature)
-            )
+        return signature != null &&
+            signature.endsWith(THREAD_SUFFIX) &&
+            (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature) || isPlatformAnnotation(signature))
     }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
@@ -245,7 +245,13 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         BINDER_THREAD_ANNOTATION.oldName(), BINDER_THREAD_ANNOTATION.newName() -> "binder"
         WORKER_THREAD_ANNOTATION.oldName(), WORKER_THREAD_ANNOTATION.newName() -> "worker"
         ANY_THREAD_ANNOTATION.oldName(), ANY_THREAD_ANNOTATION.newName() -> "any"
-        else -> "other"
+        else -> {
+            if (isPlatformAnnotation(annotation)) {
+                describeThread(toAndroidxAnnotation(annotation))
+            } else {
+                "other"
+            }
+        }
     }
 
     /** returns true if the two threads are compatible */
@@ -419,8 +425,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ): MutableList<String>? {
         var resultList = result
         val name = annotation.qualifiedName
-        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name) &&
-            name.endsWith(THREAD_SUFFIX)
+        if (name != null && name.endsWith(THREAD_SUFFIX) &&
+            (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name) || isPlatformAnnotation(name))
         ) {
             if (resultList == null) {
                 resultList = ArrayList(4)
@@ -432,6 +438,10 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (name.startsWith(SUPPORT_ANNOTATIONS_PREFIX.newName())) {
                 val oldName = SUPPORT_ANNOTATIONS_PREFIX.oldName() +
                     name.substring(SUPPORT_ANNOTATIONS_PREFIX.newName().length)
+                resultList.add(oldName)
+            } else if (name.startsWith(PLATFORM_ANNOTATIONS_PREFIX)) {
+                val oldName = SUPPORT_ANNOTATIONS_PREFIX.oldName() +
+                    name.substring(PLATFORM_ANNOTATIONS_PREFIX.length)
                 resultList.add(oldName)
             } else {
                 resultList.add(name)

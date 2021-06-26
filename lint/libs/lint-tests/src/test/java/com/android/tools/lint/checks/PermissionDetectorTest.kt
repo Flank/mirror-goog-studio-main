@@ -636,8 +636,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "}\n"
             ),
             SUPPORT_ANNOTATIONS_JAR
-        )
-            .run().expect(expected)
+        ).run().expect(expected)
     }
 
     fun testRequiresPermissionWithinRequires() {

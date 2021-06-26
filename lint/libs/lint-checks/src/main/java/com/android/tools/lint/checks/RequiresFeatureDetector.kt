@@ -55,17 +55,17 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.getUastContext
 import org.jetbrains.uast.getValueIfStringLiteral
+import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
         "android.support.annotation.RequiresFeature",
-        "androidx.annotation.RequiresFeature",
-        "android.annotation.RequiresFeature"
+        "androidx.annotation.RequiresFeature"
     )
 
     override fun visitAnnotationUsage(
@@ -315,11 +315,10 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                         val mapping = evaluator.computeArgumentMapping(call, method)
                         val parameter = mapping[prev]
                         if (parameter != null) {
-                            val context = element.getUastContext()
-                            val uMethod = context.getMethod(method)
+                            val uMethod = method.toUElementOfType<UMethod>()
                             val match = Ref<UCallExpression>()
                             val parameterName = parameter.name
-                            uMethod.accept(object : AbstractUastVisitor() {
+                            uMethod?.accept(object : AbstractUastVisitor() {
                                 override fun visitCallExpression(node: UCallExpression): Boolean {
                                     val callName = getMethodName(node)
                                     if (callName == parameterName) {
@@ -452,10 +451,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
 
             // Unconditional feature check utility method? If so just attempt to call it
             if (!method.hasModifierProperty(PsiModifier.ABSTRACT)) {
-                val context = call.getUastContext()
-                val body = context.getMethodBody(method) ?: return null
-                val expressions: List<UExpression>
-                expressions = if (body is UBlockExpression) {
+                val body = UastFacade.getMethodBody(method) ?: return null
+                val expressions: List<UExpression> = if (body is UBlockExpression) {
                     body.expressions
                 } else {
                     listOf(body)

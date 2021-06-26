@@ -23,6 +23,8 @@ import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toAndroidxAnnotation;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
@@ -63,8 +65,6 @@ import com.android.tools.lint.detector.api.UastLintUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.intellij.openapi.project.Project;
-import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
@@ -72,14 +72,12 @@ import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
-import com.intellij.psi.search.GlobalSearchScope;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +86,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import kotlin.collections.CollectionsKt;
+import kotlin.collections.SetsKt;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
@@ -109,7 +109,6 @@ import org.jetbrains.uast.USwitchExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastUtils;
-import org.jetbrains.uast.java.JavaUAnnotation;
 import org.jetbrains.uast.java.JavaUTypeCastExpression;
 import org.jetbrains.uast.kotlin.KotlinUSwitchExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
@@ -129,7 +128,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
     public static final AndroidxName SIZE_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Size");
     public static final AndroidxName PERMISSION_ANNOTATION =
-            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX.oldName(), "RequiresPermission");
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresPermission");
     public static final AndroidxName UI_THREAD_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "UiThread");
     public static final AndroidxName MAIN_THREAD_ANNOTATION =
@@ -148,12 +147,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             AndroidxName.of(PERMISSION_ANNOTATION, "Read");
     public static final AndroidxName PERMISSION_ANNOTATION_WRITE =
             AndroidxName.of(PERMISSION_ANNOTATION, "Write");
-
-    public static final String KEY_CASES = "cases";
-
-    // TODO: Add analysis to enforce this annotation:
     public static final AndroidxName HALF_FLOAT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "HalfFloat");
+
+    public static final String KEY_CASES = "cases";
 
     public static final String THREAD_SUFFIX = "Thread";
     public static final String ATTR_SUGGEST = "suggest";
@@ -299,7 +296,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             if (type == null || type.startsWith("java.lang.")) {
                 return;
             }
+            checkAnnotation(annotation, type);
+        }
 
+        private void checkAnnotation(@NonNull UAnnotation annotation, String type) {
             if (FQCN_SUPPRESS_LINT.equals(type)) {
                 UElement parent = annotation.getUastParent();
                 if (parent == null) {
@@ -497,6 +497,11 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         for (PsiAnnotation a :
                                 mContext.getEvaluator().getAllAnnotations(cls, false)) {
                             String name = a.getQualifiedName();
+                            if (name == null) {
+                                continue;
+                            } else if (isPlatformAnnotation(name)) {
+                                name = toAndroidxAnnotation(name);
+                            }
                             if (INT_DEF_ANNOTATION.isEquals(name)) {
                                 checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
                             } else if (LONG_DEF_ANNOTATION.isEquals(name)) {
@@ -506,6 +511,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             }
                         }
                     }
+                }
+
+                if (isPlatformAnnotation(type)) {
+                    checkAnnotation(annotation, toAndroidxAnnotation(type));
                 }
             }
         }
@@ -661,14 +670,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 PsiElement resolved = ((UReferenceExpression) expression).resolve();
 
                 if (resolved instanceof PsiModifierListOwner) {
-                    PsiAnnotation[] annotations =
-                            mContext.getEvaluator()
-                                    .getAllAnnotations((PsiModifierListOwner) resolved, true);
-                    PsiAnnotation[] relevantAnnotations =
-                            filterRelevantAnnotations(mContext.getEvaluator(), annotations);
                     UAnnotation annotation =
-                            TypedefDetector.Companion.findIntDef(
-                                    JavaUAnnotation.wrap(relevantAnnotations));
+                            findTypeDef(expression, (PsiModifierListOwner) resolved);
                     if (annotation != null) {
                         return annotation;
                     }
@@ -686,12 +689,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             } else if (expression instanceof UCallExpression) {
                 PsiMethod method = ((UCallExpression) expression).resolve();
                 if (method != null) {
-                    PsiAnnotation[] annotations =
-                            mContext.getEvaluator().getAllAnnotations(method, true);
-                    PsiAnnotation[] relevantAnnotations =
-                            filterRelevantAnnotations(mContext.getEvaluator(), annotations);
-                    List<UAnnotation> uAnnotations = JavaUAnnotation.wrap(relevantAnnotations);
-                    UAnnotation annotation = TypedefDetector.Companion.findIntDef(uAnnotations);
+                    UAnnotation annotation = findTypeDef(expression, method);
                     if (annotation != null) {
                         return annotation;
                     }
@@ -719,6 +717,20 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             }
 
             return null;
+        }
+
+        @Nullable
+        private UAnnotation findTypeDef(
+                @NotNull UExpression expression, PsiModifierListOwner owner) {
+            JavaEvaluator evaluator = mContext.getEvaluator();
+            PsiAnnotation[] annotations = evaluator.getAllAnnotations(owner, true);
+            List<UAnnotation> uAnnotations =
+                    evaluator.filterRelevantAnnotations(
+                            annotations,
+                            expression,
+                            SetsKt.setOf(
+                                    INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName()));
+            return TypedefDetector.Companion.findIntDef(uAnnotations);
         }
 
         @Nullable
@@ -1174,90 +1186,5 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
         }
 
         return false;
-    }
-
-    // Like JavaEvaluator#filterRelevantAnnotations, but hardcoded for the IntRange and
-    // IntDef annotations since this check isn't a generalized annotation checker like the
-    // others.
-    @NonNull
-    static PsiAnnotation[] filterRelevantAnnotations(
-            @NonNull JavaEvaluator evaluator, @NonNull PsiAnnotation[] annotations) {
-        List<PsiAnnotation> result = null;
-        int length = annotations.length;
-        if (length == 0) {
-            return annotations;
-        }
-        for (PsiAnnotation annotation : annotations) {
-            String signature = annotation.getQualifiedName();
-            if (signature == null || signature.startsWith("java.")) {
-                // @Override, @SuppressWarnings etc. Ignore
-                continue;
-            }
-
-            if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature)
-                    || signature.equals(GMS_HIDE_ANNOTATION)) {
-                // Bail on the nullness annotations early since they're the most commonly
-                // defined ones. They're not analyzed in lint yet.
-                if (signature.endsWith(".Nullable") || signature.endsWith(".NonNull")) {
-                    continue;
-                }
-
-                // Common case: there's just one annotation; no need to create a list copy
-                if (length == 1) {
-                    return annotations;
-                }
-                if (result == null) {
-                    result = new ArrayList<>(2);
-                }
-                result.add(annotation);
-            }
-
-            // Special case @IntDef and @StringDef: These are used on annotations
-            // themselves. For example, you create a new annotation named @foo.bar.Baz,
-            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
-            // Here we want to map from @foo.bar.Baz to the corresponding int def.
-            // Don't need to compute this if performing @IntDef or @StringDef lookup
-            PsiClass cls = null;
-            PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
-            if (ref != null) {
-                PsiElement resolved = ref.resolve();
-                if (resolved instanceof PsiClass) {
-                    cls = (PsiClass) resolved;
-                }
-            } else {
-                Project project = annotation.getProject();
-                GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
-                cls = JavaPsiFacade.getInstance(project).findClass(signature, scope);
-            }
-            if (cls == null || !cls.isAnnotationType()) {
-                continue;
-            }
-            PsiAnnotation[] innerAnnotations = evaluator.getAllAnnotations(cls, false);
-            for (int j = 0; j < innerAnnotations.length; j++) {
-                PsiAnnotation inner = innerAnnotations[j];
-                String a = inner.getQualifiedName();
-                if (a == null || a.startsWith("java.")) {
-                    // @Override, @SuppressWarnings etc. Ignore
-                    continue;
-                }
-                if (INT_DEF_ANNOTATION.isEquals(a)
-                        || LONG_DEF_ANNOTATION.isEquals(a)
-                        || PERMISSION_ANNOTATION.isEquals(a)
-                        || INT_RANGE_ANNOTATION.isEquals(a)
-                        || STRING_DEF_ANNOTATION.isEquals(a)) {
-                    if (length == 1 && j == innerAnnotations.length - 1 && result == null) {
-                        return innerAnnotations;
-                    }
-                    if (result == null) {
-                        result = new ArrayList<>(2);
-                    }
-                    result.add(inner);
-                }
-            }
-        }
-
-        return result != null
-                ? result.toArray(PsiAnnotation.EMPTY_ARRAY)
-                : PsiAnnotation.EMPTY_ARRAY;
     }
 }

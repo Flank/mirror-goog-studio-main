@@ -43,9 +43,7 @@ class AnnotationLookup {
             kotlinClass = resolvedKotlinClassCache[resolved] ?: run {
                 // We sometimes get binaries out of Kotlin files after a resolve; find the
                 // original AST nodes
-                val project = resolved.project
-                val cls =
-                    UastFacade.convertElement(resolved, null, UClass::class.java) as UClass?
+                val cls = UastFacade.convertElement(resolved, null, UClass::class.java) as UClass?
                 cls?.let {
                     kotlinClass = it
                     resolvedKotlinClassCache[resolved] = it

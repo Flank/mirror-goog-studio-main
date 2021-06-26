@@ -18,6 +18,8 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.fromPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -59,8 +61,6 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.ArrayList
-import java.util.HashSet
 
 /**
  * Looks up annotations on method calls and enforces the various things
@@ -147,15 +147,9 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 ): Boolean {
                     val referencedVariable = node.resolve()
                     if (variable == referencedVariable || variablePsi == referencedVariable) {
-                        val expression = node.getParentOfType<UExpression>(
-                            UExpression::class.java,
-                            true
-                        )
+                        val expression = node.getParentOfType(UExpression::class.java, true)
                         if (expression != null) {
-                            val inner = node.getParentOfType<UExpression>(
-                                UExpression::class.java,
-                                false
-                            ) ?: return false
+                            val inner = node.getParentOfType(UExpression::class.java, false) ?: return false
                             checkAnnotations(
                                 context = context,
                                 argument = inner,
@@ -774,6 +768,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 }
                 result.add(uAnnotation)
                 continue
+            } else if (isPlatformAnnotation(signature)) {
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(annotation.fromPlatformAnnotation(signature))
+                continue
             }
 
             // Special case @IntDef and @StringDef: These are used on annotations
@@ -795,13 +795,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             val innerAnnotations = evaluator.getAllAnnotations(cls, inHierarchy = false)
             for (j in innerAnnotations.indices) {
                 val inner = innerAnnotations[j]
-                val a = inner.qualifiedName
-                if (a != null && relevantAnnotations.contains(a)) {
+                val innerName = inner.qualifiedName ?: continue
+                if (relevantAnnotations.contains(innerName)) {
                     if (result == null) {
                         result = ArrayList(2)
                     }
                     val innerU = annotationLookup.findRealAnnotation(inner, cls, context)
                     result.add(innerU)
+                } else if (isPlatformAnnotation(innerName)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    val innerU = annotationLookup.findRealAnnotation(inner, cls, context)
+                    result.add(innerU.fromPlatformAnnotation(innerName))
                 }
             }
         }
@@ -837,6 +843,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 }
                 result.add(annotation)
                 continue
+            } else if (isPlatformAnnotation(signature)) {
+                if (result == null) {
+                    result = ArrayList(2)
+                }
+                result.add(annotation.fromPlatformAnnotation(signature))
+                continue
             }
 
             // Special case @IntDef and @StringDef: These are used on annotations
@@ -851,13 +863,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             val innerAnnotations = evaluator.getAllAnnotations(cls, inHierarchy = false)
             for (j in innerAnnotations.indices) {
                 val inner = innerAnnotations[j]
-                val a = inner.qualifiedName
-                if (a != null && relevantAnnotations.contains(a)) {
+                val innerName = inner.qualifiedName ?: continue
+                if (relevantAnnotations.contains(innerName)) {
                     if (result == null) {
                         result = ArrayList(2)
                     }
                     val innerU = annotationLookup.findRealAnnotation(inner, cls)
                     result.add(innerU)
+                } else if (isPlatformAnnotation(innerName)) {
+                    if (result == null) {
+                        result = ArrayList(2)
+                    }
+                    val innerU = annotationLookup.findRealAnnotation(inner, cls)
+                    result.add(innerU.fromPlatformAnnotation(innerName))
                 }
             }
         }

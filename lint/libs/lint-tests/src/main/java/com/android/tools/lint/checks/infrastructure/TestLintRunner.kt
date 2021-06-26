@@ -147,6 +147,9 @@ class TestLintRunner(private val task: TestLintTask) {
                     }
                     val beforeState = TestModeContext(this, projectList, files, null)
                     val clientState: Any? = mode.before(beforeState)
+                    if (clientState === TestMode.CANCEL) {
+                        continue
+                    }
                     var listener: LintListener? = null
                     try {
                         val lintClient: TestLintClient = createClient()
@@ -253,23 +256,23 @@ class TestLintRunner(private val task: TestLintTask) {
             }
 
             // Make sure the output matches
-            var prev: TestMode? = null
+            var first: TestMode? = null
             for (mode in testModes) {
-                if (prev == null) {
-                    prev = mode
+                if (first == null) {
+                    first = mode
                     continue
                 }
                 // Skip if this is a configured test type which we skipped during analysis
                 val resultState = results[mode] ?: continue
                 val actual = resultState.output
-                val expected = results[prev]?.output
+                val expected = results[first]?.output
                 if (expected != actual) {
-                    val expectedLabel = prev.description
+                    val expectedLabel = first.description
                     val actualLabel = mode.description
                     val message = mode.diffExplanation
                         ?: """
                         The lint output was different between the test types
-                        $prev and $mode.
+                        $first and $mode.
 
                         If this difference is expected, you can set the
                         eventType() set to include only one of these two.
@@ -284,7 +287,6 @@ class TestLintRunner(private val task: TestLintTask) {
                         "$actualLabel:\n\n$actual"
                     )
                 }
-                prev = mode
             }
         }
     }

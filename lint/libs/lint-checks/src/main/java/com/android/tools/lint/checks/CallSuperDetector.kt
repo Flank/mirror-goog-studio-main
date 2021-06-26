@@ -62,6 +62,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         )
 
         private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
+        private const val AOSP_CALL_SUPER_ANNOTATION = "android.annotation.CallSuper"
         private const val ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow"
         private const val ON_VISIBILITY_CHANGED = "onVisibilityChanged"
 
@@ -106,7 +107,9 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             val annotations = evaluator.getAllAnnotations(directSuper, true)
             for (annotation in annotations) {
                 val signature = annotation.qualifiedName
-                if (CALL_SUPER_ANNOTATION.isEquals(signature) || signature != null &&
+                if (CALL_SUPER_ANNOTATION.isEquals(signature) ||
+                    signature == AOSP_CALL_SUPER_ANNOTATION ||
+                    signature != null &&
                     (
                         signature.endsWith(".OverrideMustInvoke") ||
                             signature.endsWith(".OverridingMethodsMustInvokeSuper")
