@@ -23,6 +23,7 @@ import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.impl.AnnotationProcessorImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
@@ -2242,31 +2243,22 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun setDataBindingAnnotationProcessorParams(
             creationConfig: ComponentCreationConfig) {
-        val variantDslInfo = creationConfig.variantDslInfo
-        val javaCompileOptions = variantDslInfo.javaCompileOptions
-        val processorOptions = javaCompileOptions.annotationProcessorOptions
-        if (processorOptions is AnnotationProcessorOptions) {
-            // We want to pass data binding processor's class name to the Java compiler. However, if
-            // the class names of other annotation processors were not added previously, adding the
-            // class name of data binding alone would disable Java compiler's automatic discovery of
-            // annotation processors and the other annotation processors would not be invoked.
-            // Therefore, we add data binding only if another class name was specified before.
-            if (processorOptions.getClassNames().isNotEmpty()
-                    && !processorOptions.getClassNames().contains(DataBindingBuilder.PROCESSOR_NAME)) {
-                processorOptions.className(DataBindingBuilder.PROCESSOR_NAME)
-            }
-            val dataBindingArgs = createArguments(
-                    creationConfig,
-                    logger.isDebugEnabled,
-                    DataBindingBuilder.getPrintMachineReadableOutput(),
-                    isKotlinKaptPluginApplied(project))
-            processorOptions.compilerArgumentProvider(dataBindingArgs)
-        } else {
-            logger
-                    .error("Cannot setup data binding for {} because java compiler options"
-                            + " is not an instance of AnnotationProcessorOptions",
-                            processorOptions)
-        }
+        val processorOptions = creationConfig.javaCompilation.annotationProcessor
+
+        val dataBindingArgs = createArguments(
+                creationConfig,
+                logger.isDebugEnabled,
+                DataBindingBuilder.getPrintMachineReadableOutput(),
+                isKotlinKaptPluginApplied(project))
+        // Even though at this point, the old variantDsl related objects are dead, the KAPT plugin
+        // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
+        // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
+        // new variant API.
+        creationConfig.variantDslInfo.javaCompileOptions.annotationProcessorOptions
+            .compilerArgumentProviders.add(dataBindingArgs)
+
+        // add it the new Variant API objects, this is what our tasks use.
+        processorOptions.argumentProviders.add(dataBindingArgs)
     }
 
     /**
