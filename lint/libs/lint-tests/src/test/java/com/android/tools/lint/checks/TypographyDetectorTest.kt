@@ -112,6 +112,73 @@ class TypographyDetectorTest : AbstractCheckTest() {
                                          ~~~~~~~~
             0 errors, 16 warnings
             """
+        ).expectFixDiffs(
+            """
+            Fix for res/values/typography.xml line 17: Replace with –:
+            @@ -17 +17
+            -     <string name="ndash">For ages 3-5</string>
+            +     <string name="ndash">For ages 3–5</string>
+            Fix for res/values/typography.xml line 18: Replace with –:
+            @@ -18 +18
+            -     <string name="ndash2">Copyright 2007 - 2011</string>
+            +     <string name="ndash2">Copyright 2007 – 2011</string>
+            Fix for res/values/typography.xml line 20: Replace with —:
+            @@ -20 +20
+            -     <string name="mdash">Not found -- please try again</string>
+            +     <string name="mdash">Not found — please try again</string>
+            Fix for res/values/typography.xml line 24: Replace with –:
+            @@ -24 +24
+            -         <item>Ages 3-5</item>
+            +         <item>Ages 3–5</item>
+            Fix for res/values/typography.xml line 15: Replace with …:
+            @@ -15 +15
+            -     <string name="ellipsis">40 times...</string>
+            +     <string name="ellipsis">40 times…</string>
+            Fix for res/values/typography.xml line 12: Replace with ½:
+            @@ -12 +12
+            -     <string name="fraction1">5 1/2 times</string>
+            +     <string name="fraction1">5 ½ times</string>
+            Fix for res/values/typography.xml line 13: Replace with ¼:
+            @@ -13 +13
+            -     <string name="fraction4">1/4 times</string>
+            +     <string name="fraction4">¼ times</string>
+            Fix for res/values/typography.xml line 25: Replace with ½:
+            @@ -25 +25
+            -         <item>Age 5 1/2</item>
+            +         <item>Age 5 ½</item>
+            Fix for res/values/typography.xml line 3: Replace with ‘Sample’:
+            @@ -3 +3
+            -     <string name="home_title">Home 'Sample'</string>
+            +     <string name="home_title">Home ‘Sample’</string>
+            Fix for res/values/typography.xml line 5: Replace with “All”:
+            @@ -5 +5
+            -     <string name="show_all_apps2">Show "All"</string>
+            +     <string name="show_all_apps2">Show “All”</string>
+            Fix for res/values/typography.xml line 6: Replace with “All\”:
+            @@ -6 +6
+            -     <string name="escaped">Skip \"All\"</string>
+            +     <string name="escaped">Skip \“All\”</string>
+            Fix for res/values/typography.xml line 7: Replace with ’:
+            @@ -7 +7
+            -     <string name="single">Android's</string>
+            +     <string name="single">Android’s</string>
+            Fix for res/values/typography.xml line 9: Replace with ’:
+            @@ -9 +9
+            -     <string name="badquotes1">`First'</string>
+            +     <string name="badquotes1">`First’</string>
+            Fix for res/values/typography.xml line 10: Replace with “second”:
+            @@ -10 +10
+            -     <string name="badquotes2">``second''</string>
+            +     <string name="badquotes2">“second”</string>
+            Fix for res/values/typography.xml line 11: Replace with ‘Escape’:
+            @@ -11 +11
+            -     <string name="notbadquotes">Type Option-` then 'Escape'</string>
+            +     <string name="notbadquotes">Type Option-` then ‘Escape’</string>
+            Fix for res/values/typography.xml line 8: Replace with ©:
+            @@ -8 +8
+            -     <string name="copyright">(c) 2011</string>
+            +     <string name="copyright">© 2011</string>
+        """
         )
     }
 
@@ -178,6 +245,21 @@ class TypographyDetectorTest : AbstractCheckTest() {
                           ~~~~~~~~~~
             0 errors, 3 warnings
             """
+        ).expectFixDiffs(
+            """
+            Fix for res/values/plurals_typography.xml line 5: Replace with –:
+            @@ -5 +5
+            -         <item quantity="one">For ages 3-5</item>
+            +         <item quantity="one">For ages 3–5</item>
+            Fix for res/values/plurals_typography.xml line 6: Replace with ¼:
+            @@ -6 +6
+            -         <item quantity="few">1/4 times</item>
+            +         <item quantity="few">¼ times</item>
+            Fix for res/values/plurals_typography.xml line 14: Replace with “second”:
+            @@ -14 +14
+            -         <item>``second''</item>
+            +         <item>“second”</item>
+        """
         )
     }
 

@@ -97,7 +97,10 @@ class TypographyDetector : ResourceXmlDetector() {
             // Replace ... with ellipsis character?
             val ellipsis = text.indexOf("...")
             if (ellipsis != -1 && !text.startsWith(".", ellipsis + 3)) {
-                context.report(ELLIPSIS, element, context.getLocation(textNode), ELLIPSIS_MESSAGE)
+                context.report(
+                    ELLIPSIS, element, context.getLocation(textNode), ELLIPSIS_MESSAGE,
+                    fix().replace().text("...").with("…").build()
+                )
             }
         }
 
@@ -118,7 +121,8 @@ class TypographyDetector : ResourceXmlDetector() {
                             )
                     if (!isNegativeNumber && !isAnalyticsTrackingId(element)) {
                         context.report(
-                            DASHES, element, context.getLocation(textNode), EN_DASH_MESSAGE
+                            DASHES, element, context.getLocation(textNode), EN_DASH_MESSAGE,
+                            fix().replace().text("-").with("–").build()
                         )
                     }
                 }
@@ -128,7 +132,10 @@ class TypographyDetector : ResourceXmlDetector() {
                 // Don't suggest replacing -- or "--" with an m dash since these are sometimes
                 // used as digit marker strings
                 if (emdash > 1 && !text.startsWith("-", emdash + 2)) {
-                    context.report(DASHES, element, context.getLocation(textNode), EM_DASH_MESSAGE)
+                    context.report(
+                        DASHES, element, context.getLocation(textNode), EM_DASH_MESSAGE,
+                        fix().replace().text("--").with("—").build()
+                    )
                 }
             }
         }
@@ -141,7 +148,9 @@ class TypographyDetector : ResourceXmlDetector() {
                     SINGLE_QUOTE.matcher(text).matches()
                 ) {
                     context.report(
-                        QUOTES, element, context.getLocation(textNode), SINGLE_QUOTE_MESSAGE
+                        QUOTES, element, context.getLocation(textNode), SINGLE_QUOTE_MESSAGE,
+                        fix().replace().text(text.substring(quoteStart, quoteEnd + 1))
+                            .with("‘${text.substring(quoteStart + 1, quoteEnd)}’").build()
                     )
                     return
                 }
@@ -152,7 +161,8 @@ class TypographyDetector : ResourceXmlDetector() {
                         QUOTES,
                         element,
                         context.getLocation(textNode),
-                        TYPOGRAPHIC_APOSTROPHE_MESSAGE
+                        TYPOGRAPHIC_APOSTROPHE_MESSAGE,
+                        fix().replace().text("'").with("’").build()
                     )
                     return
                 }
@@ -165,17 +175,28 @@ class TypographyDetector : ResourceXmlDetector() {
                 if (quoteEnd != -1 && quoteEnd > quoteStart + 1) {
                     if (quoteEnd < text.length - 1 || quoteStart > 0) {
                         context.report(
-                            QUOTES, element, context.getLocation(textNode), DBL_QUOTES_MESSAGE
+                            QUOTES, element, context.getLocation(textNode), DBL_QUOTES_MESSAGE,
+                            fix().replace().text(text.substring(quoteStart, quoteEnd + 1))
+                                .with("“${text.substring(quoteStart + 1, quoteEnd)}”").build()
                         )
                         return
                     }
                 }
             }
 
+            val graveStart = text.indexOf('`')
             // Check for grave accent quotations
-            if (text.indexOf('`') != -1 && GRAVE_QUOTATION.matcher(text).matches()) {
+            if (graveStart != -1 && GRAVE_QUOTATION.matcher(text).matches()) {
+                val quoteEnd = text.indexOf("'")
                 // Are we indenting ``like this'' or `this' ? If so, complain
-                context.report(QUOTES, element, context.getLocation(textNode), GRAVE_QUOTE_MESSAGE)
+                val quickfix = if (text[graveStart + 1] == '`') { // Double quotes
+                    fix().replace().text(text.substring(graveStart, quoteEnd + 2))
+                        .with("“${text.substring(graveStart + 2, quoteEnd)}”").build()
+                } else { // Single quotes
+                    fix().replace().text(text.substring(graveStart, quoteEnd + 1))
+                        .with("‘${text.substring(graveStart + 1, quoteEnd)}’").build()
+                }
+                context.report(QUOTES, element, context.getLocation(textNode), GRAVE_QUOTE_MESSAGE, quickfix)
                 return
             }
 
@@ -197,31 +218,36 @@ class TypographyDetector : ResourceXmlDetector() {
                         context.report(
                             FRACTIONS,
                             element,
-                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2")
+                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BD', "&#189;", "1/2"),
+                            fix().replace().text("1/2").with("½").build()
                         )
                     top == "1" && bottom == "4" ->
                         context.report(
                             FRACTIONS,
                             element,
-                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4")
+                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BC', "&#188;", "1/4"),
+                            fix().replace().text("1/4").with("¼").build()
                         )
                     top == "3" && bottom == "4" ->
                         context.report(
                             FRACTIONS,
                             element,
-                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4")
+                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u00BE', "&#190;", "3/4"),
+                            fix().replace().text("3/4").with("¾").build()
                         )
                     top == "1" && bottom == "3" ->
                         context.report(
                             FRACTIONS,
                             element,
-                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3")
+                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2153', "&#8531;", "1/3"),
+                            fix().replace().text("1/3").with("\u2153").build()
                         )
                     top == "2" && bottom == "3" ->
                         context.report(
                             FRACTIONS,
                             element,
-                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3")
+                            context.getLocation(textNode), String.format(FRACTION_MESSAGE, '\u2154', "&#8532;", "2/3"),
+                            fix().replace().text("2/3").with("\u2154").build()
                         )
                 }
             }
@@ -230,34 +256,15 @@ class TypographyDetector : ResourceXmlDetector() {
             // Fix copyright symbol?
             if (text.indexOf('(') != -1 && (text.contains("(c)") || text.contains("(C)"))) {
                 // Suggest replacing with copyright symbol?
-                context.report(OTHER, element, context.getLocation(textNode), COPYRIGHT_MESSAGE)
+                context.report(
+                    OTHER, element, context.getLocation(textNode), COPYRIGHT_MESSAGE,
+                    fix().replace().text(if (text.contains("(c)")) "(c)" else "(C)").with("©").build()
+                )
                 // Replace (R) and TM as well? There are unicode characters for these but they
                 // are probably not very common within Android app strings.
             }
         }
     }
-
-    /**
-     * An object describing a single edit to be made. The offset points to a location to start
-     * editing; the length is the number of characters to delete, and the replaceWith string points
-     * to a string to insert at the offset. Note that this can model not just replacement edits but
-     * deletions (empty replaceWith) and insertions (replace length = 0) too.
-     */
-    class ReplaceEdit
-    /**
-     * Creates a new replace edit
-     *
-     * @param offset the offset of the edit
-     * @param length the number of characters to delete at the offset
-     * @param replaceWith the characters to insert at the offset
-     */(
-        /** The offset of the edit */
-        @JvmField val offset: Int,
-        /** The number of characters to delete at the offset */
-        @JvmField val length: Int,
-        /** The characters to insert at the offset */
-        @JvmField val replaceWith: String
-    )
 
     companion object {
         private val IMPLEMENTATION = Implementation(
@@ -399,118 +406,6 @@ class TypographyDetector : ResourceXmlDetector() {
         private fun isAnalyticsTrackingId(element: Element): Boolean {
             val name = element.getAttribute(ATTR_NAME)
             return "ga_trackingId" == name
-        }
-
-        /**
-         * Returns a list of edits to be applied to fix the suggestion made by the given warning. The
-         * specific issue id and message should be the message provided by this detector in an earlier
-         * run.
-         *
-         *
-         * This is intended to help tools implement automatic fixes of these warnings. The reason
-         * only the message and issue id can be provided instead of actual state passed in the data
-         * field to a reporter is that fix operation can be run much later than the lint is processed
-         * (for example, in a subsequent run of the IDE when only the warnings have been persisted),
-         *
-         * @param issueId the issue id, which should be the id for one of the typography issues
-         * @param message the actual error message, which should be a message provided by this detector
-         * @param textNode a text node which corresponds to the text node the warning operated on
-         * @return a list of edits, which is never null but could be empty. The offsets in the edit
-         * objects are relative to the text node.
-         */
-        @JvmStatic
-        fun getEdits(issueId: String?, message: String, textNode: Node): List<ReplaceEdit> {
-            return getEdits(issueId, message, textNode.nodeValue)
-        }
-
-        /**
-         * Returns a list of edits to be applied to fix the suggestion made by the given warning. The
-         * specific issue id and message should be the message provided by this detector in an earlier
-         * run.
-         *
-         *
-         * This is intended to help tools implement automatic fixes of these warnings. The reason
-         * only the message and issue id can be provided instead of actual state passed in the data
-         * field to a reporter is that fix operation can be run much later than the lint is processed
-         * (for example, in a subsequent run of the IDE when only the warnings have been persisted),
-         *
-         * @param issueId the issue id, which should be the id for one of the typography issues
-         * @param message the actual error message, which should be a message provided by this detector
-         * @param text the text of the XML node where the warning appeared
-         * @return a list of edits, which is never null but could be empty. The offsets in the edit
-         * objects are relative to the text node.
-         */
-        @JvmStatic
-        fun getEdits(issueId: String?, message: String, text: String): List<ReplaceEdit> {
-            val edits = ArrayList<ReplaceEdit>()
-            if (message == ELLIPSIS_MESSAGE) {
-                val offset = text.indexOf("...")
-                if (offset != -1) {
-                    edits.add(ReplaceEdit(offset, 3, "\u2026"))
-                }
-            } else if (message == EN_DASH_MESSAGE) {
-                val offset = text.indexOf('-')
-                if (offset != -1) {
-                    edits.add(ReplaceEdit(offset, 1, "\u2013"))
-                }
-            } else if (message == EM_DASH_MESSAGE) {
-                val offset = text.indexOf("--")
-                if (offset != -1) {
-                    edits.add(ReplaceEdit(offset, 2, "\u2014"))
-                }
-            } else if (message == TYPOGRAPHIC_APOSTROPHE_MESSAGE) {
-                val offset = text.indexOf('\'')
-                if (offset != -1) {
-                    edits.add(ReplaceEdit(offset, 1, "\u2019"))
-                }
-            } else if (message == COPYRIGHT_MESSAGE) {
-                var offset = text.indexOf("(c)")
-                if (offset == -1) {
-                    offset = text.indexOf("(C)")
-                }
-                if (offset != -1) {
-                    edits.add(ReplaceEdit(offset, 3, "\u00A9"))
-                }
-            } else if (message == SINGLE_QUOTE_MESSAGE) {
-                val offset = text.indexOf('\'')
-                if (offset != -1) {
-                    val endOffset = text.indexOf('\'', offset + 1)
-                    if (endOffset != -1) {
-                        edits.add(ReplaceEdit(offset, 1, "\u2018"))
-                        edits.add(ReplaceEdit(endOffset, 1, "\u2019"))
-                    }
-                }
-            } else if (message == DBL_QUOTES_MESSAGE) {
-                val offset = text.indexOf('"')
-                if (offset != -1) {
-                    val endOffset = text.indexOf('"', offset + 1)
-                    if (endOffset != -1) {
-                        edits.add(ReplaceEdit(offset, 1, "\u201C"))
-                        edits.add(ReplaceEdit(endOffset, 1, "\u201D"))
-                    }
-                }
-            } else if (message == GRAVE_QUOTE_MESSAGE) {
-                val offset = text.indexOf('`')
-                if (offset != -1) {
-                    val endOffset = text.indexOf('\'', offset + 1)
-                    if (endOffset != -1) {
-                        edits.add(ReplaceEdit(offset, 1, "\u2018"))
-                        edits.add(ReplaceEdit(endOffset, 1, "\u2019"))
-                    }
-                }
-            } else {
-                val matcher = Pattern.compile(FRACTION_MESSAGE_PATTERN).matcher(message)
-                if (matcher.find()) {
-                    //  "Use fraction character %1$c (%2$s) instead of %3$s ?";
-                    val replace = matcher.group(3)
-                    val offset = text.indexOf(replace)
-                    if (offset != -1) {
-                        val replaceWith = matcher.group(2)
-                        edits.add(ReplaceEdit(offset, replace.length, replaceWith))
-                    }
-                }
-            }
-            return edits
         }
     }
 }
