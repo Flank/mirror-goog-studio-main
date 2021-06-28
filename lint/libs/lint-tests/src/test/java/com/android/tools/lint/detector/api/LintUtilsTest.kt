@@ -19,12 +19,10 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_NAME
-import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.ide.common.repository.GradleVersion
 import com.android.resources.ResourceFolderType
-import com.android.sdklib.IAndroidTarget
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.UastEnvironment
@@ -33,13 +31,9 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
-import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintClient
-import com.android.tools.lint.checks.infrastructure.TestLintTask
-import com.android.tools.lint.checks.infrastructure.findKotlinStdlibPath
+import com.android.tools.lint.checks.infrastructure.createXmlContext
 import com.android.tools.lint.client.api.LintClient.Companion.CLIENT_UNIT_TESTS
-import com.android.tools.lint.client.api.LintDriver
-import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
 import com.android.tools.lint.client.api.TYPE_BOOLEAN_WRAPPER
 import com.android.tools.lint.client.api.TYPE_BYTE
@@ -60,15 +54,16 @@ import com.android.utils.Pair
 import com.android.utils.SdkUtils.escapePropertyValue
 import com.android.utils.XmlUtils
 import com.android.utils.iterator
-import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.w3c.dom.Document
@@ -76,10 +71,8 @@ import org.w3c.dom.Element
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.io.OutputStreamWriter
 import java.util.Arrays
-import java.util.EnumSet
 import java.util.Locale
 
 class LintUtilsTest : TestCase() {
@@ -381,12 +374,12 @@ class LintUtilsTest : TestCase() {
         var context: XmlContext
 
         xml = TestFiles.xml("res/values/strings.xml", "<resources>\n</resources>\n")
-        context = createXmlContext(xml.getContents(), File(xml.targetPath))
+        context = createXmlContext(xml.getContents()!!, File(xml.targetPath))
         assertNull(getLocale(context))
         dispose(context)
 
         xml = TestFiles.xml("res/values-no/strings.xml", "<resources>\n</resources>\n")
-        context = createXmlContext(xml.getContents(), File(xml.targetPath))
+        context = createXmlContext(xml.getContents()!!, File(xml.targetPath))
         assertEquals("no", getLocale(context)!!.language)
         dispose(context)
 
@@ -396,7 +389,7 @@ class LintUtilsTest : TestCase() {
                 "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                 "</resources>\n"
         )
-        context = createXmlContext(xml.getContents(), File(xml.targetPath))
+        context = createXmlContext(xml.getContents()!!, File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
         dispose(context)
 
@@ -407,7 +400,7 @@ class LintUtilsTest : TestCase() {
                 "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                 "</resources>\n"
         )
-        context = createXmlContext(xml.getContents(), File(xml.targetPath))
+        context = createXmlContext(xml.getContents()!!, File(xml.targetPath))
         assertEquals("nb", getLocale(context)!!.language)
         dispose(context)
 
@@ -803,32 +796,6 @@ class LintUtilsTest : TestCase() {
         assertNull(matchXmlElement(missing, doc2))
     }
 
-    private class JavaTestContext(
-        driver: LintDriver,
-        project: Project,
-        private val mJavaSource: String,
-        file: File
-    ) : JavaContext(driver, project, null, file) {
-
-        override fun getContents(): String? {
-            return mJavaSource
-        }
-    }
-
-    private class XmlTestContext(
-        driver: LintDriver,
-        project: Project,
-        private val xmlSource: String,
-        file: File,
-        type: ResourceFolderType,
-        document: Document
-    ) : XmlContext(driver, project, null, file, type, xmlSource, document) {
-
-        override fun getContents(): String? {
-            return xmlSource
-        }
-    }
-
     companion object {
         private fun checkEncoding(encoding: String, writeBom: Boolean, lineEnding: String) {
             val sb = StringBuilder()
@@ -895,165 +862,6 @@ class LintUtilsTest : TestCase() {
             assertEquals(expected, seq.toString())
         }
 
-        private fun createTestProjectForFile(
-            dir: File,
-            relativePath: File,
-            source: String,
-            libs: List<File> = emptyList(),
-            library: Boolean = false,
-            android: Boolean = true,
-            javaLanguageLevel: LanguageLevel? = null,
-            kotlinLanguageLevel: LanguageVersionSettings? = null
-        ): Project {
-            val fullPath = File(dir, relativePath.path)
-            fullPath.parentFile.mkdirs()
-            try {
-                Files.asCharSink(fullPath, Charsets.UTF_8).write(source)
-            } catch (e: IOException) {
-                fail(e.message)
-            }
-
-            val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
-                override fun readFile(file: File): CharSequence {
-                    return if (file.path == fullPath.path) {
-                        source
-                    } else super.readFile(file)
-                }
-
-                override fun getCompileTarget(project: Project): IAndroidTarget? {
-                    if (!android) {
-                        return null
-                    }
-                    val targets = getTargets()
-                    for (i in targets.indices.reversed()) {
-                        val target = targets[i]
-                        if (target.isPlatform) {
-                            return target
-                        }
-                    }
-
-                    return super.getCompileTarget(project)
-                }
-
-                override fun getJavaSourceFolders(project: Project): List<File> {
-                    return listOf(dir)
-                }
-
-                override fun getSdkHome(): File {
-                    return TestUtils.getSdk().toFile()
-                }
-
-                override fun getJavaLanguageLevel(project: Project): LanguageLevel {
-                    if (javaLanguageLevel != null) {
-                        return javaLanguageLevel
-                    }
-                    return super.getJavaLanguageLevel(project)
-                }
-
-                override fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
-                    if (kotlinLanguageLevel != null) {
-                        return kotlinLanguageLevel
-                    }
-                    return super.getKotlinLanguageLevel(project)
-                }
-
-                override fun createProject(dir: File, referenceDir: File): Project {
-                    val clone = super.createProject(dir, referenceDir)
-                    val p =
-                        object : TestLintClient.TestProject(this, dir, referenceDir, null, null) {
-                            override fun isLibrary(): Boolean {
-                                return library
-                            }
-
-                            override fun isAndroidProject(): Boolean {
-                                return android
-                            }
-                        }
-                    p.buildTargetHash = clone.buildTargetHash
-                    p.ideaProject = clone.ideaProject
-                    return p
-                }
-
-                override fun getJavaLibraries(
-                    project: Project,
-                    includeProvided: Boolean
-                ): List<File> {
-                    return libs + findKotlinStdlibPath().map { File(it) }
-                }
-            }
-            val project = client.getProject(dir, dir)
-            client.initializeProjects(listOf(project))
-            return project
-        }
-
-        private fun createTestProjectForFiles(
-            dir: File,
-            sourcesMap: Map<File, String>,
-            libs: List<File> = emptyList()
-        ): Project {
-            sourcesMap.forEach { fullPath, source ->
-                fullPath.parentFile.mkdirs()
-                try {
-                    Files.asCharSink(fullPath, Charsets.UTF_8).write(source)
-                } catch (e: IOException) {
-                    fail(e.message)
-                }
-            }
-
-            val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
-                override fun readFile(file: File): CharSequence {
-                    return if (file in sourcesMap) {
-                        sourcesMap[file] as CharSequence
-                    } else super.readFile(file)
-                }
-
-                override fun getCompileTarget(project: Project): IAndroidTarget? {
-                    val targets = getTargets()
-                    for (i in targets.indices.reversed()) {
-                        val target = targets[i]
-                        if (target.isPlatform) {
-                            return target
-                        }
-                    }
-
-                    return super.getCompileTarget(project)
-                }
-
-                override fun getSdkHome(): File {
-                    return TestUtils.getSdk().toFile()
-                }
-
-                override fun getJavaLibraries(
-                    project: Project,
-                    includeProvided: Boolean
-                ): List<File> {
-                    return libs + findKotlinStdlibPath().map { File(it) }
-                }
-
-                override fun getJavaSourceFolders(project: Project): List<File> {
-                    // Include the top-level dir as a source root, so Java references are resolved.
-                    return super.getJavaSourceFolders(project) + dir
-                }
-            }
-            val project = client.getProject(dir, dir)
-            client.initializeProjects(listOf(project))
-            return project
-        }
-
-        fun createXmlContext(@Language("XML") xml: String?, relativePath: File): XmlContext {
-            val dir = File(System.getProperty("java.io.tmpdir"))
-            val fullPath = File(dir, relativePath.path)
-            val project = createTestProjectForFile(dir, relativePath, xml!!)
-            val client = project.getClient() as LintCliClient
-
-            val request = LintRequest(client, listOf(fullPath))
-            val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
-            driver.scope = Scope.JAVA_FILE_SCOPE
-            val folderType = ResourceFolderType.getFolderType(relativePath.parentFile.name)
-            val document = client.getXmlDocument(fullPath, xml)
-            return XmlTestContext(driver, project, xml, fullPath, folderType!!, document!!)
-        }
-
         @JvmStatic
         fun parse(
             @Language("JAVA") javaSource: String,
@@ -1118,91 +926,43 @@ class LintUtilsTest : TestCase() {
             android: Boolean = true
         ): Pair<JavaContext, Disposable> {
             val temp = Files.createTempDir()
-            val dir = File(temp, "src")
-            dir.mkdir()
-
-            val libs: List<File> = if (testFiles.size > 1) {
-                val projects = TestLintTask().files(*testFiles).createProjects(dir)
-                testFiles.filter { it.targetRelativePath.endsWith(DOT_JAR) }
-                    .map { File(projects[0], it.targetRelativePath) }
-            } else {
-                emptyList()
-            }
-
-            val primary = testFiles[0]
-            val relativePath = File(primary.targetRelativePath)
-            val source = primary.getContents()!!
-
-            val fullPath = File(dir, relativePath.path)
-            val project = createTestProjectForFile(
-                dir, relativePath, source, libs,
-                library, android, javaLanguageLevel, kotlinLanguageLevel
+            val temporaryFolder = TemporaryFolder(temp)
+            temporaryFolder.create()
+            val parsed = com.android.tools.lint.checks.infrastructure.parseFirst(
+                javaLanguageLevel = javaLanguageLevel,
+                kotlinLanguageLevel = kotlinLanguageLevel,
+                library = library,
+                android = android,
+                sdkHome = TestUtils.getSdk().toFile(),
+                temporaryFolder = temporaryFolder,
+                testFiles = testFiles
             )
-            val client = project.getClient() as LintCliClient
-            val request = LintRequest(client, listOf(fullPath))
-
-            val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
-            driver.scope = Scope.JAVA_FILE_SCOPE
-            val context = JavaTestContext(driver, project, source, fullPath)
-            val uastParser = client.getUastParser(project)
-            assertNotNull(uastParser)
-            context.uastParser = uastParser
-            uastParser.prepare(listOf(context), javaLanguageLevel, kotlinLanguageLevel)
-            val uFile = uastParser.parse(context)
-            context.uastFile = uFile
-            assert(uFile != null)
-            context.setJavaFile(uFile!!.psi)
             val disposable = Disposable {
-                client.disposeProjects(listOf(project))
+                Disposer.dispose(parsed.second)
                 temp.deleteRecursively()
             }
-            return Pair.of<JavaContext, Disposable>(context, disposable)
+            return Pair.of(parsed.first, disposable)
         }
 
         @JvmStatic
         fun parseAll(vararg testFiles: TestFile): Pair<List<JavaContext>, Disposable> {
             val temp = Files.createTempDir()
-            val dir = File(temp, "src")
-            dir.mkdir()
-
-            val libs: List<File> = if (testFiles.size > 1) {
-                val projects = TestLintTask().files(*testFiles).createProjects(dir)
-                testFiles.filter { it.targetRelativePath.endsWith(DOT_JAR) }
-                    .map { File(projects[0], it.targetRelativePath) }
-            } else {
-                emptyList()
-            }
-
-            val sources = testFiles
-                .filter { !it.targetRelativePath.endsWith(DOT_JAR) }
-                .associate { Pair(File(dir, it.targetRelativePath), it.contents) }
-
-            val project = createTestProjectForFiles(dir, sources, libs)
-            val client = project.getClient() as LintCliClient
-            val request = LintRequest(client, sources.keys.toList())
-            val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
-            driver.scope = EnumSet.of(Scope.ALL_JAVA_FILES)
-
-            val uastParser = client.getUastParser(project)
-            assertNotNull(uastParser)
-            val contexts = sources.map { (fullPath, source) ->
-                val context = JavaTestContext(driver, project, source, fullPath)
-                context.uastParser = uastParser
-                context
-            }
-            uastParser.prepare(contexts)
-            contexts.forEach { context ->
-                val uFile = uastParser.parse(context)
-                context.uastFile = uFile
-                assert(uFile != null)
-                context.setJavaFile(uFile!!.sourcePsi)
-            }
-
+            val temporaryFolder = TemporaryFolder(temp)
+            temporaryFolder.create()
+            val parsed = com.android.tools.lint.checks.infrastructure.parse(
+                javaLanguageLevel = null,
+                kotlinLanguageLevel = null,
+                library = false,
+                android = true,
+                sdkHome = TestUtils.getSdk().toFile(),
+                temporaryFolder = temporaryFolder,
+                testFiles = testFiles
+            )
             val disposable = Disposable {
-                client.disposeProjects(listOf(project))
+                Disposer.dispose(parsed.second)
                 temp.deleteRecursively()
             }
-            return Pair.of<List<JavaContext>, Disposable>(contexts, disposable)
+            return Pair.of(parsed.first, disposable)
         }
 
         private fun getElementWithNameValue(
