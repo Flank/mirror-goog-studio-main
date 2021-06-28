@@ -15,13 +15,26 @@
  */
 package com.android.tools.deployer;
 
-public class ComponentActivationException extends Exception {
+import com.android.annotations.NonNull;
+import com.android.ddmlib.MultiLineReceiver;
+import com.android.utils.ILogger;
+import java.util.Arrays;
 
-    public ComponentActivationException(String s) {
-        super(s);
+class LoggerReceiver extends MultiLineReceiver {
+
+    ILogger logger;
+
+    LoggerReceiver(ILogger logger) {
+        this.logger = logger;
     }
 
-    public ComponentActivationException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public void processNewLines(@NonNull String[] lines) {
+        Arrays.stream(lines).forEach(logger::info);
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return false;
     }
 }

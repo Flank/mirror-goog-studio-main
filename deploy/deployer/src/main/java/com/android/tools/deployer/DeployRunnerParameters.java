@@ -15,8 +15,12 @@
  */
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.tools.deployer.model.component.ComponentType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DeployRunnerParameters {
 
@@ -24,10 +28,11 @@ public class DeployRunnerParameters {
         INSTALL,
         CODESWAP,
         FULLSWAP,
+        ACTIVATE,
         UNKNOWN
     }
 
-    private Command command = Command.UNKNOWN;
+    private final List<Command> commands = new ArrayList<>();
     private boolean forceFullInstall = false;
     private boolean optimisticInstall = false;
     private String installersPath = null;
@@ -35,6 +40,7 @@ public class DeployRunnerParameters {
     private String applicationId;
     private final List<String> targetDevices = new ArrayList<>();
     private final List<String> apkPaths = new ArrayList<>();
+    private Component componentToActivate = null;
 
     private DeployRunnerParameters() {}
 
@@ -47,6 +53,8 @@ public class DeployRunnerParameters {
             optimisticInstall = true;
         } else if (arg.startsWith("--device=")) {
             targetDevices.add(arg.substring("--device=".length()));
+        } else if (arg.startsWith("--activate=")) {
+            parseComponentToActivate(arg);
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -54,10 +62,28 @@ public class DeployRunnerParameters {
 
     private void parseCommand(String arg) {
         try {
-            command = Command.valueOf(arg.toUpperCase());
+            commands.add(Command.valueOf(arg.toUpperCase()));
         } catch (Exception e) {
             throw new RuntimeException("Unknown command: '" + arg + "'");
         }
+    }
+
+    private void parseComponentToActivate(String arg) {
+        String[] typeAndName = arg.substring("--activate=".length()).split(",");
+        if (typeAndName.length != 2) {
+            throw new RuntimeException(
+                    "Incorrect parameters for --activate flag. Usage: --activate=type,name");
+        }
+        commands.add(Command.ACTIVATE);
+        final ComponentType type;
+        try {
+            type = ComponentType.valueOf(typeAndName[0].trim().toUpperCase(Locale.US));
+        } catch (Exception e) {
+            throw new RuntimeException("Unknown component type");
+        }
+
+        final String name = typeAndName[1].trim();
+        componentToActivate = new Component(type, name);
     }
 
     public static DeployRunnerParameters parse(String[] args) {
@@ -72,11 +98,14 @@ public class DeployRunnerParameters {
                 drp.apkPaths.add(args[i]);
             }
         }
+        if (drp.commands.contains(Command.ACTIVATE) && drp.componentToActivate == null) {
+            throw new RuntimeException("App component for activation is not specified");
+        }
         return drp;
     }
 
-    public Command getCommand() {
-        return command;
+    public List<Command> getCommands() {
+        return commands;
     }
 
     public String getApplicationId() {
@@ -101,5 +130,20 @@ public class DeployRunnerParameters {
 
     public boolean isOptimisticInstall() {
         return optimisticInstall;
+    }
+
+    @Nullable
+    public Component getComponentToActivate() {
+        return componentToActivate;
+    }
+
+    static class Component {
+        @NonNull final ComponentType type;
+        @NonNull final String name;
+
+        private Component(@NonNull ComponentType type, @NonNull String name) {
+            this.type = type;
+            this.name = name;
+        }
     }
 }

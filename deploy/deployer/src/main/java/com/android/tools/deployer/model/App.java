@@ -19,7 +19,7 @@ package com.android.tools.deployer.model;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-import com.android.tools.deployer.ComponentActivationException;
+import com.android.tools.deployer.DeployerException;
 import com.android.tools.deployer.model.component.Activity;
 import com.android.tools.deployer.model.component.AppComponent;
 import com.android.tools.deployer.model.component.ComponentType;
@@ -27,7 +27,6 @@ import com.android.tools.deployer.model.component.WatchFace;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -54,24 +53,29 @@ public class App {
     }
 
     public void activateComponent(
-            @NonNull ComponentType type, @NonNull String componentName,
+            @NonNull ComponentType type,
+            @NonNull String componentName,
             @NonNull IShellOutputReceiver receiver)
-            throws ComponentActivationException {
+            throws DeployerException {
         activateComponent(type, componentName, "", AppComponent.Mode.DEBUG, receiver);
     }
 
     public void activateComponent(
-            @NonNull ComponentType type, @NonNull String componentName,
-            @NonNull String extraFlags, @NonNull IShellOutputReceiver receiver)
-            throws ComponentActivationException {
+            @NonNull ComponentType type,
+            @NonNull String componentName,
+            @NonNull String extraFlags,
+            @NonNull IShellOutputReceiver receiver)
+            throws DeployerException {
         activateComponent(type, componentName, extraFlags, AppComponent.Mode.RUN, receiver);
     }
 
     private void activateComponent(
-            @NonNull ComponentType type, @NonNull String componentName,
-            @NonNull String extraFlags, @NonNull AppComponent.Mode mode,
+            @NonNull ComponentType type,
+            @NonNull String componentName,
+            @NonNull String extraFlags,
+            @NonNull AppComponent.Mode mode,
             @NonNull IShellOutputReceiver receiver)
-            throws ComponentActivationException {
+            throws DeployerException {
         String qualifiedName = componentName.startsWith(".")
                                ? appId + componentName
                                : componentName;
@@ -81,7 +85,7 @@ public class App {
 
     @NonNull
     private AppComponent getComponent(@NonNull ComponentType type, @NonNull String qualifiedName)
-            throws ComponentActivationException {
+            throws DeployerException {
         AppComponent component = null;
         switch (type) {
             case ACTIVITY:
@@ -97,14 +101,14 @@ public class App {
                 }
                 break;
             default:
-                throw new ComponentActivationException("Unsupported app component type " + type);
+                throw DeployerException.componentActivationException(
+                        "Unsupported app component type " + type);
         }
         if (component == null) {
-            throw new ComponentActivationException(String.format(
-                    "'%s' with name '%s' is not found in '%s'",
-                    type,
-                    qualifiedName,
-                    appId));
+            throw DeployerException.componentActivationException(
+                    String.format(
+                            "'%s' with name '%s' is not found in '%s'",
+                            type, qualifiedName, appId));
         }
         return component;
     }

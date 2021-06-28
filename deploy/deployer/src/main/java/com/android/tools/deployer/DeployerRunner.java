@@ -37,6 +37,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DeployerRunner {
 
@@ -169,8 +170,9 @@ public class DeployerRunner {
                         metrics,
                         logger,
                         deployerOption);
+        final Deployer.Result deployResult;
         try {
-            if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
+            if (parameters.getCommands().contains(DeployRunnerParameters.Command.INSTALL)) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
                 if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
                     options.setGrantAllPermissions();
@@ -180,22 +182,34 @@ public class DeployerRunner {
                 if (parameters.isForceFullInstall()) {
                     installMode = Deployer.InstallMode.FULL;
                 }
-                deployer.install(
-                        parameters.getApplicationId(),
-                        parameters.getApks(),
-                        options.build(),
-                        installMode);
-            } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
-                deployer.fullSwap(parameters.getApks(), Canceller.NO_OP);
-            } else if (parameters.getCommand() == DeployRunnerParameters.Command.CODESWAP) {
-                deployer.codeSwap(parameters.getApks(), ImmutableMap.of(), Canceller.NO_OP);
+                deployResult =
+                        deployer.install(
+                                parameters.getApplicationId(),
+                                parameters.getApks(),
+                                options.build(),
+                                installMode);
+            } else if (parameters.getCommands().contains(DeployRunnerParameters.Command.FULLSWAP)) {
+                deployResult = deployer.fullSwap(parameters.getApks(), Canceller.NO_OP);
+            } else if (parameters.getCommands().contains(DeployRunnerParameters.Command.CODESWAP)) {
+                deployResult =
+                        deployer.codeSwap(parameters.getApks(), ImmutableMap.of(), Canceller.NO_OP);
             } else {
                 throw new RuntimeException("UNKNOWN command");
             }
             runner.run(Canceller.NO_OP);
+            if (parameters.getCommands().contains(DeployRunnerParameters.Command.ACTIVATE)) {
+                DeployRunnerParameters.Component component = parameters.getComponentToActivate();
+                assert component != null;
+                deployResult.app.activateComponent(
+                        component.type, component.name, new LoggerReceiver(logger));
+            }
         } catch (DeployerException e) {
-            logger.error(
-                    e, "Not possible to execute " + parameters.getCommand().name().toLowerCase());
+            String commands =
+                    parameters.getCommands().stream()
+                            .map(String::valueOf)
+                            .map(String::toLowerCase)
+                            .collect(Collectors.joining(","));
+            logger.error(e, "Not possible to execute " + commands);
             logger.warning(e.getDetails());
             return e.getError().ordinal();
         } finally {

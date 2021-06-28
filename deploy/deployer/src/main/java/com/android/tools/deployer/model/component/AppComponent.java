@@ -22,8 +22,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-import com.android.tools.deployer.ComponentActivationException;
-
+import com.android.tools.deployer.DeployerException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -38,17 +37,18 @@ public abstract class AppComponent {
     protected AppComponent(IDevice device) { this.device = device; }
 
     public abstract void activate(
-            @NonNull String extraFlags,
-            Mode activationMode,
-            @NonNull IShellOutputReceiver receiver
-    ) throws ComponentActivationException;
+            @NonNull String extraFlags, Mode activationMode, @NonNull IShellOutputReceiver receiver)
+            throws DeployerException;
 
     protected void runShellCommand(String command, IShellOutputReceiver receiver)
-            throws ComponentActivationException {
+            throws DeployerException {
         try {
             device.executeShellCommand(command, receiver, SHELL_TIMEOUT, SHELL_TIMEUNIT);
-        } catch (TimeoutException | AdbCommandRejectedException | ShellCommandUnresponsiveException | IOException e) {
-            throw new ComponentActivationException(e.getMessage());
+        } catch (TimeoutException
+                | AdbCommandRejectedException
+                | ShellCommandUnresponsiveException
+                | IOException e) {
+            throw DeployerException.componentActivationException(e.getMessage());
         }
     }
 
