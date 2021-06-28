@@ -124,6 +124,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             AddTransparencyCommand.builder()
                 .setBundlePath(inputFile.toPath())
                 .setOutputPath(outputFile.toPath())
+                .setDexMergingChoice(AddTransparencyCommand.DexMergingChoice.CONTINUE)
                 .setSignerConfig(codeSigning)
                 .build().execute()
         }

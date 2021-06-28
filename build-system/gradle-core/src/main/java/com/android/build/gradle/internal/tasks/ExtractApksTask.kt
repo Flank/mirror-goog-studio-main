@@ -31,6 +31,7 @@ import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -157,20 +158,26 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 val deliveryTypeMap = mutableMapOf<String, String>()
                 var path = ""
                 reader.beginObject()
-                reader.nextName()
-                reader.beginArray()
-                while (reader.hasNext()) {
-                    reader.beginObject()
-                    while (reader.hasNext()) {
-                        when (reader.nextName()) {
-                            "moduleName" -> reader.nextString()
-                            "path" -> path = reader.nextString()
-                            "deliveryType" -> deliveryTypeMap[path] = reader.nextString()
+                while (reader.hasNext() && reader.peek() != JsonToken.END_OBJECT) {
+                    val name = reader.nextName()
+                    if (name == "apks") {
+                        reader.beginArray()
+                        while (reader.hasNext()) {
+                            reader.beginObject()
+                            while (reader.hasNext()) {
+                                when (reader.nextName()) {
+                                    "moduleName" -> reader.nextString()
+                                    "path" -> path = reader.nextString()
+                                    "deliveryType" -> deliveryTypeMap[path] = reader.nextString()
+                                }
+                            }
+                            reader.endObject()
                         }
+                        reader.endArray()
+                    } else {
+                        reader.skipValue()
                     }
-                    reader.endObject()
                 }
-                reader.endArray()
                 reader.endObject()
                 deliveryTypeMap.forEach { elementList.add(BuiltArtifactImpl.make(outputFile = parameters.outputDir.asFile.get().absolutePath + "/" + it.key,
                         attributes = mapOf("deliveryType" to it.value))) }

@@ -1032,7 +1032,11 @@ class DynamicAppTest {
 
         // Check that we don't accidentally use signing config for code transparency signing
         Assert.assertThrows(InvalidBundleException::class.java) {
-            CheckTransparencyCommand.builder().setBundlePath(bundleFile.toPath()).build().execute()
+            CheckTransparencyCommand.builder()
+                .setMode(CheckTransparencyCommand.Mode.BUNDLE)
+                .setBundlePath(bundleFile.toPath())
+                .build()
+                .execute()
         }
     }
 
@@ -1087,7 +1091,8 @@ class DynamicAppTest {
             keyPass,
             keyAlias,
             "CN=Bundle signing test",
-            100)
+            100,
+            3072)
 
         val appProject = project.getSubproject(":app")
         TestFileUtils.appendToFile(
@@ -1108,10 +1113,13 @@ class DynamicAppTest {
         assertThat(bundleFile).exists()
 
         ByteArrayOutputStream().use { outputStream ->
-            CheckTransparencyCommand.builder().setBundlePath(bundleFile.toPath()).build().checkTransparency(
-                PrintStream(outputStream)
-            )
-            Truth.assertThat(outputStream.toString()).isEqualTo("Code transparency verified.")
+            CheckTransparencyCommand.builder()
+                .setMode(CheckTransparencyCommand.Mode.BUNDLE)
+                .setBundlePath(bundleFile.toPath())
+                .build()
+                .checkTransparency(PrintStream(outputStream))
+            Truth.assertThat(outputStream.toString())
+                .contains("Code transparency signature is valid.")
         }
 
         Zip(bundleFile).use {

@@ -57,9 +57,8 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 public final class KeystoreHelper {
 
     /**
-     * Certificate CN value. This is a hard-coded value for the debug key.
-     * Android Market checks against this value in order to refuse applications signed with
-     * debug keys.
+     * Certificate CN value. This is a hard-coded value for the debug key. Android Market checks
+     * against this value in order to refuse applications signed with debug keys.
      */
     private static final String CERTIFICATE_DESC = "CN=Android Debug,O=Android,C=US";
 
@@ -124,6 +123,41 @@ public final class KeystoreHelper {
             @NonNull String dn,
             int validityYears)
             throws KeytoolException {
+        return createNewStore(
+                storeType,
+                storeFile,
+                storePassword,
+                keyPassword,
+                keyAlias,
+                dn,
+                validityYears,
+                /* keySize= */ 2048);
+    }
+
+    /**
+     * Creates a new store with a self-signed certificate. The certificate will be valid starting
+     * from the current date up to the number of years provided.
+     *
+     * @param storeType an optional type of keystore; if {@code null} the default
+     * @param storeFile the file where the store should be created
+     * @param storePassword a password for the key store
+     * @param keyPassword a password for the key
+     * @param keyAlias the alias under which the key is stored in the store
+     * @param dn the distinguished name of the owner and issuer of the certificate
+     * @param validityYears number of years the certificate should be valid
+     * @param keySize generated key size
+     * @throws KeytoolException failed to generate the self-signed certificate or the store
+     */
+    public static boolean createNewStore(
+            @Nullable String storeType,
+            @NonNull File storeFile,
+            @NonNull String storePassword,
+            @NonNull String keyPassword,
+            @NonNull String keyAlias,
+            @NonNull String dn,
+            int validityYears,
+            int keySize)
+            throws KeytoolException {
         Preconditions.checkArgument(validityYears > 0, "validityYears (%s) <= 0", validityYears);
 
         String useStoreType = storeType;
@@ -136,8 +170,8 @@ public final class KeystoreHelper {
             KeyStore ks = KeyStore.getInstance(useStoreType);
             ks.load(null, null);
 
-            Pair<PrivateKey, X509Certificate> generated = generateKeyAndCertificate("RSA",
-                    "SHA1withRSA", validityYears, dn);
+            Pair<PrivateKey, X509Certificate> generated =
+                    generateKeyAndCertificate("RSA", "SHA1withRSA", validityYears, dn, keySize);
             ks.setKeyEntry(keyAlias, generated.getFirst(), keyPassword.toCharArray(),
                     new Certificate[]{generated.getSecond()});
             FileOutputStream fos = new FileOutputStream(storeFile);
@@ -187,8 +221,10 @@ public final class KeystoreHelper {
             fis.close();
 
             char[] keyPasswordArray = keyPassword.toCharArray();
-            PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(
-                    keyAlias, new KeyStore.PasswordProtection(keyPasswordArray));
+            PrivateKeyEntry entry =
+                    (KeyStore.PrivateKeyEntry)
+                            keyStore.getEntry(
+                                    keyAlias, new KeyStore.PasswordProtection(keyPasswordArray));
 
             if (entry == null) {
                 throw new KeytoolException(
@@ -213,22 +249,29 @@ public final class KeystoreHelper {
 
     /**
      * Generates a key and self-signed certificate pair.
+     *
      * @param asymmetric the asymmetric encryption algorithm (<em>e.g.,</em> {@code RSA})
      * @param sign the signature algorithm (<em>e.g.,</em> {@code SHA1withRSA})
      * @param validityYears number of years the certificate should be valid, must be greater than
-     * zero
+     *     zero
      * @param dn the distinguished name of the issuer and owner of the certificate
      * @return a pair with the private key and the corresponding certificate
      * @throws KeytoolException failed to generate the pair
      */
     private static Pair<PrivateKey, X509Certificate> generateKeyAndCertificate(
-            @NonNull String asymmetric, @NonNull String sign, int validityYears,
-            @NonNull String dn) throws KeytoolException {
+            @NonNull String asymmetric,
+            @NonNull String sign,
+            int validityYears,
+            @NonNull String dn,
+            int keySize)
+            throws KeytoolException {
         Preconditions.checkArgument(validityYears > 0, "validityYears <= 0");
 
         KeyPair keyPair;
         try {
-            keyPair = KeyPairGenerator.getInstance(asymmetric).generateKeyPair();
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(asymmetric);
+            keyPairGenerator.initialize(keySize);
+            keyPair = keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new KeytoolException("Failed to generate key and certificate pair for "
                     + "algorithm '" + asymmetric + "'.", e);
