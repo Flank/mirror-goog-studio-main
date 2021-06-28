@@ -36,6 +36,7 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT_WRAPP
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
 import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 import static com.android.utils.CharSequences.indexOf;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -1199,7 +1200,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
             // we'll need to handle that such that we don't think this is a single
             // argument
 
-            UExpression lastArg = args.get(args.size() - 1);
+            UExpression lastArg = skipParenthesizedExprDown(args.get(args.size() - 1));
             PsiParameterList parameterList = calledMethod.getParameterList();
             int parameterCount = parameterList.getParametersCount();
             if (parameterCount > 0
@@ -1212,6 +1213,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     if (resolved instanceof PsiVariable) {
                         UExpression initializer =
                                 UastFacade.INSTANCE.getInitializerBody((PsiVariable) resolved);
+                        if (initializer != null) {
+                            initializer = skipParenthesizedExprDown(initializer);
+                        }
                         if (initializer != null
                                 && (UastExpressionUtils.isNewArray(initializer)
                                         || UastExpressionUtils.isArrayInitializer(initializer))) {
@@ -1222,8 +1226,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     }
                 }
 
-                if (UastExpressionUtils.isNewArray(lastArg)
-                        || UastExpressionUtils.isArrayInitializer(lastArg)) {
+                if (lastArg != null
+                        && (UastExpressionUtils.isNewArray(lastArg)
+                                || UastExpressionUtils.isArrayInitializer(lastArg))) {
                     UCallExpression arrayInitializer = (UCallExpression) lastArg;
 
                     if (UastExpressionUtils.isNewArrayWithInitializer(lastArg)
@@ -1233,7 +1238,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     } else if (UastExpressionUtils.isNewArrayWithDimensions(lastArg)) {
                         List<UExpression> arrayDimensions = arrayInitializer.getValueArguments();
                         if (arrayDimensions.size() == 1) {
-                            UExpression first = arrayDimensions.get(0);
+                            UExpression first = skipParenthesizedExprDown(arrayDimensions.get(0));
                             if (first instanceof ULiteralExpression) {
                                 Object o = ((ULiteralExpression) first).getValue();
                                 if (o instanceof Integer) {

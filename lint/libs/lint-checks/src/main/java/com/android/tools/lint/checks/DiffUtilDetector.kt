@@ -37,10 +37,12 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
@@ -87,21 +89,27 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     private fun defaultEquals(context: JavaContext, node: UElement): Boolean {
         val resolved: PsiMethod?
 
-        if (node is UBinaryExpression) {
-            resolved = node.resolveOperator()
-            if (resolved == null) {
-                val left = node.leftOperand.getExpressionType() as? PsiClassType
-                return defaultEquals(context, left)
+        when (node) {
+            is UBinaryExpression -> {
+                resolved = node.resolveOperator()
+                if (resolved == null) {
+                    val left = node.leftOperand.getExpressionType() as? PsiClassType
+                    return defaultEquals(context, left)
+                }
             }
-        } else if (node is UCallExpression) {
-            resolved = node.resolve()
-        } else {
-            // We don't know any better
-            return false
+            is UCallExpression -> {
+                resolved = node.resolve()
+            }
+            is UParenthesizedExpression -> {
+                return defaultEquals(context, node.expression)
+            }
+            else -> {
+                // We don't know any better
+                return false
+            }
         }
 
-        resolved ?: return false
-        return resolved.containingClass?.qualifiedName == JAVA_LANG_OBJECT
+        return resolved?.containingClass?.qualifiedName == JAVA_LANG_OBJECT
     }
 
     private fun defaultEquals(
@@ -154,9 +162,9 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
      * something like "return a is A && b is B && a.equals(b)".
      */
     private fun withinCastWithEquals(context: JavaContext, node: UExpression): Boolean {
-        var parent = node.uastParent
+        var parent = skipParenthesizedExprUp(node.uastParent)
         if (parent is UQualifiedReferenceExpression) {
-            parent = parent.uastParent
+            parent = skipParenthesizedExprUp(parent.uastParent)
         }
         val target: PsiElement? = when (node) {
             is UCallExpression -> node.receiver?.tryResolve()
@@ -182,21 +190,27 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isCastWithEquals(context: JavaContext, node: UExpression, target: PsiElement?): Boolean {
-        if (node is UBinaryExpressionWithType) {
-            if (target != null) {
-                val resolved = node.operand.tryResolve()
-                // Unfortunately in some scenarios isEquivalentTo returns false for equal instances
-                //noinspection LintImplPsiEquals
-                if (resolved != null && !(target == resolved || target.isEquivalentTo(resolved))) {
-                    return false
+        when {
+            node is UBinaryExpressionWithType -> {
+                if (target != null) {
+                    val resolved = node.operand.tryResolve()
+                    // Unfortunately in some scenarios isEquivalentTo returns false for equal instances
+                    //noinspection LintImplPsiEquals
+                    if (resolved != null && !(target == resolved || target.isEquivalentTo(resolved))) {
+                        return false
+                    }
+                }
+                return !defaultEquals(context, node.type as? PsiClassType)
+            }
+            node is UPolyadicExpression && node.operator == UastBinaryOperator.LOGICAL_AND -> {
+                for (operand in node.operands) {
+                    if (isCastWithEquals(context, operand, target)) {
+                        return true
+                    }
                 }
             }
-            return !defaultEquals(context, node.type as? PsiClassType)
-        } else if (node is UPolyadicExpression && node.operator == UastBinaryOperator.LOGICAL_AND) {
-            for (operand in node.operands) {
-                if (isCastWithEquals(context, operand, target)) {
-                    return true
-                }
+            node is UParenthesizedExpression -> {
+                return isCastWithEquals(context, node.expression, target)
             }
         }
         return false

@@ -101,6 +101,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.PsiParenthesizedExpression
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UAnnotated
@@ -110,6 +111,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUFile
@@ -3990,31 +3992,38 @@ class LintDriver(
             issue: Issue,
             value: PsiAnnotationMemberValue?
         ): Boolean {
-            if (value is PsiLiteral) {
-                val literalValue = value.value
-                if (literalValue is String) {
-                    if (isSuppressed(issue, literalValue)) {
-                        return true
-                    }
-                } else if (literalValue == null) {
-                    // Kotlin UAST workaround
-                    val v = value.text.removeSurrounding("\"")
-                    if (v.isNotEmpty() && isSuppressed(issue, v)) {
-                        return true
-                    }
-                }
-            } else if (value is PsiArrayInitializerMemberValue) {
-                for (mmv in value.initializers) {
-                    if (isSuppressed(issue, mmv)) {
-                        return true
+            when (value) {
+                is PsiLiteral -> {
+                    val literalValue = value.value
+                    if (literalValue is String) {
+                        if (isSuppressed(issue, literalValue)) {
+                            return true
+                        }
+                    } else if (literalValue == null) {
+                        // Kotlin UAST workaround
+                        val v = value.text.removeSurrounding("\"")
+                        if (v.isNotEmpty() && isSuppressed(issue, v)) {
+                            return true
+                        }
                     }
                 }
-            } else if (value is PsiArrayInitializerExpression) {
-                val initializers = value.initializers
-                for (e in initializers) {
-                    if (isSuppressed(issue, e)) {
-                        return true
+                is PsiArrayInitializerMemberValue -> {
+                    for (mmv in value.initializers) {
+                        if (isSuppressed(issue, mmv)) {
+                            return true
+                        }
                     }
+                }
+                is PsiArrayInitializerExpression -> {
+                    val initializers = value.initializers
+                    for (e in initializers) {
+                        if (isSuppressed(issue, e)) {
+                            return true
+                        }
+                    }
+                }
+                is PsiParenthesizedExpression -> {
+                    return isSuppressed(issue, value.expression)
                 }
             }
 
@@ -4033,25 +4042,32 @@ class LintDriver(
          */
         @JvmStatic
         private fun isSuppressedExpression(issue: Issue, value: UExpression?): Boolean {
-            if (value is ULiteralExpression) {
-                val literalValue = value.value
-                if (literalValue is String) {
-                    if (isSuppressed(issue, literalValue)) {
-                        return true
+            when (value) {
+                is ULiteralExpression -> {
+                    val literalValue = value.value
+                    if (literalValue is String) {
+                        if (isSuppressed(issue, literalValue)) {
+                            return true
+                        }
                     }
                 }
-            } else if (value is UCallExpression) {
-                for (mmv in value.valueArguments) {
-                    if (isSuppressedExpression(issue, mmv)) {
-                        return true
+                is UCallExpression -> {
+                    for (mmv in value.valueArguments) {
+                        if (isSuppressedExpression(issue, mmv)) {
+                            return true
+                        }
                     }
                 }
-            } else if (value is UInjectionHost) {
-                val literalValue = value.evaluateToString()
-                if (literalValue is String) {
-                    if (isSuppressed(issue, literalValue)) {
-                        return true
+                is UInjectionHost -> {
+                    val literalValue = value.evaluateToString()
+                    if (literalValue is String) {
+                        if (isSuppressed(issue, literalValue)) {
+                            return true
+                        }
                     }
+                }
+                is UParenthesizedExpression -> {
+                    return isSuppressedExpression(issue, value.expression)
                 }
             }
 

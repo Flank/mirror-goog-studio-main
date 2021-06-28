@@ -102,7 +102,6 @@ import com.android.tools.lint.detector.api.getInternalMethodName
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.resolveOperator
-import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
 import com.intellij.psi.CommonClassNames
@@ -159,6 +158,8 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedName
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isInstanceCheck
 import org.jetbrains.uast.util.isMethodCall
@@ -984,7 +985,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             while (true) {
                 val check = curr.getParentOfType(UIfExpression::class.java, true, UMethod::class.java)
                     ?: break
-                val condition = check.condition
+                val condition = check.condition.skipParenthesizedExprDown()
                 if (condition is UBinaryExpressionWithType) {
                     val type = condition.type
                     // Explicitly checked with surrounding instanceof check
@@ -2143,7 +2144,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                         // Declaring enum constants are safe; they won't be called on older
                         // platforms.
-                        val parent = skipParentheses(node.uastParent)
+                        val parent = skipParenthesizedExprUp(node.uastParent)
                         if (parent is USwitchClauseExpression) {
                             val conditions = parent.caseValues
 

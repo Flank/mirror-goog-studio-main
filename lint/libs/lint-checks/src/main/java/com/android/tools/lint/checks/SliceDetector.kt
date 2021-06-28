@@ -54,9 +54,11 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.util.isConstructorCall
 import org.w3c.dom.Element
 
@@ -291,18 +293,14 @@ class SliceDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         constructor: PsiMethod
     ) {
-        val method = node.getParentOfType<UMethod>(UMethod::class.java, true) ?: return
+        val method = node.getParentOfType(UMethod::class.java, true) ?: return
         val name = constructor.containingClass?.qualifiedName ?: return
         when (name) {
             LIST_BUILDER_CLASS -> checkListBuilder(context, node, method)
             ROW_BUILDER_CLASS -> checkRowBuilder(context, node, method)
             // GRID_ROW_BUILDER_CLASS -> checkGridRowBuilder(context, node, method)
-            GRID_ROW_CELL_BUILDER_CLASS, LIST_HEADER_BUILDER_CLASS -> checkHasContent(
-                name,
-                context,
-                node,
-                method
-            )
+            GRID_ROW_CELL_BUILDER_CLASS, LIST_HEADER_BUILDER_CLASS ->
+                checkHasContent(name, context, node, method)
         }
     }
 
@@ -327,7 +325,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         val initialReferences = mutableListOf<PsiVariable>()
         for (call in rows) {
             if (!call.isConstructorCall() && isBuildConsumer(call)) {
-                val lambda = call.valueArguments[0]
+                val lambda = call.valueArguments[0].skipParenthesizedExprDown()
                 if (lambda is ULambdaExpression) {
                     val parameters = lambda.valueParameters
                     val parameter = parameters[0].sourcePsi as? PsiParameter ?: continue
@@ -365,8 +363,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
                     if (arguments.isEmpty()) {
                         return
                     }
-                    val first = arguments[0]
-                    val type = first.getExpressionType()?.canonicalText
+                    val first = arguments[0].skipParenthesizedExprDown()
+                    val type = first?.getExpressionType()?.canonicalText
                     if (type == SLICE_ACTION_CLASS) {
                         endActionItems.add(first)
                     }
@@ -422,10 +420,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                         context.getLocation(default),
                         "Conflicting action type here"
                     )
-                    context.report(
-                        ISSUE, custom, location,
-                        message
-                    )
+                    context.report(ISSUE, custom, location, message)
                     break
                 }
             }
@@ -465,15 +460,17 @@ class SliceDetector : Detector(), SourceCodeScanner {
 
                 if (isAddRowMethod(getMethodName(call))) {
                     call.valueArguments.firstOrNull()?.let {
-                        if (it is UCallExpression) {
-                            argument(it, it)
-                        } else if (it is UQualifiedReferenceExpression) {
-                            var curr: UElement = it
+                        val arg = it.skipParenthesizedExprDown()
+                        if (arg is UCallExpression) {
+                            argument(arg, arg)
+                        } else if (arg is UQualifiedReferenceExpression) {
+                            var curr: UElement = arg
                             while (curr is UQualifiedReferenceExpression) {
-                                if (curr.receiver is UQualifiedReferenceExpression) {
-                                    curr = curr.receiver
-                                } else if (curr.receiver is UCallExpression) {
-                                    argument(curr.receiver as UCallExpression, curr)
+                                val receiver = curr.receiver.skipParenthesizedExprDown()
+                                if (receiver is UQualifiedReferenceExpression) {
+                                    curr = receiver
+                                } else if (receiver is UCallExpression) {
+                                    argument(receiver, curr)
                                     return
                                 } else if (curr.selector is UCallExpression) {
                                     argument(curr.selector as UCallExpression, curr)
@@ -497,9 +494,9 @@ class SliceDetector : Detector(), SourceCodeScanner {
         // a single Consumer parameter where the generic type is a Builder.
         // Some examples:
         //    main/java/androidx/slice/builders/ListBuilder.java
-        //        public ListBuilder addRow(@NonNull Consumer<RowBuilder> c) {
-        //        public ListBuilder addGrid(@NonNull Consumer<GridBuilder> c) {
-        //        public ListBuilder addGridRow(@NonNull Consumer<GridRowBuilder> c) {
+        //        public ListBuilder addRow(@NonNull Consumer<RowBuilder> c) { }
+        //        public ListBuilder addGrid(@NonNull Consumer<GridBuilder> c) { }
+        //        public ListBuilder addGridRow(@NonNull Consumer<GridRowBuilder> c) { }
         //        ...
         if (call.valueArgumentCount != 1) {
             return false
@@ -575,8 +572,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
                     if (arguments.isEmpty()) {
                         return
                     }
-                    val first = arguments[0]
-                    val type = first.getExpressionType()?.canonicalText
+                    val first = arguments[0].skipParenthesizedExprDown()
+                    val type = first?.getExpressionType()?.canonicalText
                     if (arguments.size == 1 && type == TYPE_LONG) {
                         if (timestamp != null) {
                             val location = context.getLocation(call).withSecondary(
@@ -648,7 +645,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         if (node is UReferenceExpression) {
             val resolved = node.resolve() ?: return null
             if (resolved is ULocalVariable) {
-                val initializer = resolved.uastInitializer ?: return null
+                val initializer = resolved.uastInitializer?.skipParenthesizedExprDown() ?: return null
                 return findSliceActionConstructor(initializer)
             } else if (resolved is PsiLocalVariable) {
                 val initializer = UastLintUtils.findLastAssignment(resolved, node) ?: return null
@@ -659,6 +656,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
             if (name == SLICE_ACTION_CLASS) {
                 return node
             }
+        } else if (node is UParenthesizedExpression) {
+            return findSliceActionConstructor(node.expression)
         }
         return null
     }

@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ATTR_PERMISSION;
 import static com.android.SdkConstants.CLASS_SERVICE;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_SERVICE;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -100,12 +101,15 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
         if (arguments.size() < 2) {
             return;
         }
-        UExpression componentName = arguments.get(1);
+        UExpression componentName = skipParenthesizedExprDown(arguments.get(1));
         if (componentName instanceof UReferenceExpression) {
             PsiElement resolved = ((UReferenceExpression) componentName).resolve();
             if (resolved instanceof PsiVariable) {
                 componentName =
                         UastLintUtils.findLastAssignment((PsiVariable) resolved, componentName);
+                if (componentName != null) {
+                    componentName = skipParenthesizedExprDown(componentName);
+                }
             }
         }
         if (!(componentName instanceof UCallExpression)) {
@@ -116,7 +120,7 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
         if (arguments.size() < 2) {
             return;
         }
-        UExpression typeReference = arguments.get(1);
+        UExpression typeReference = skipParenthesizedExprDown(arguments.get(1));
         if (!(typeReference instanceof UClassLiteralExpression)) {
             return;
         }

@@ -20,8 +20,8 @@ import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.impl.compiled.ClsAnnotationImpl
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.util.isArrayInitializer
-import java.util.Arrays
 
 internal sealed class AnnotationValuesExtractor {
 
@@ -58,34 +58,20 @@ internal sealed class AnnotationValuesExtractor {
             annotation: UAnnotation?,
             name: String
         ): Array<String>? {
-            val attributeValue = annotation?.findDeclaredAttributeValue(name) ?: return null
+            val attributeValue = annotation?.findDeclaredAttributeValue(name)?.skipParenthesizedExprDown()
+                ?: return null
 
-            if (attributeValue.isArrayInitializer()) {
+            return if (attributeValue.isArrayInitializer()) {
                 val initializers = (attributeValue as UCallExpression).valueArguments
-
-                val constantEvaluator = ConstantEvaluator()
-                val result = initializers.stream()
-                    .map { e -> constantEvaluator.evaluate(e) }
-                    .filter { e -> e is String }
-                    .map { e -> e as String }
-                    .toArray<String> { size -> arrayOfNulls(size) }
-
-                return result.takeIf { result.isNotEmpty() }?.let { it }
+                val evaluator = ConstantEvaluator()
+                val result = initializers.map { evaluator.evaluate(it) }.filterIsInstance<String>().toTypedArray()
+                result.takeIf { result.isNotEmpty() }
             } else {
                 // Use constant evaluator since we want to resolve field references as well
-                return when (val o = ConstantEvaluator.evaluate(null, attributeValue)) {
-                    is String -> {
-                        arrayOf(o)
-                    }
-                    is Array<*> -> {
-                        Arrays.stream(o)
-                            .filter { e -> e is String }
-                            .map { e -> e as String }
-                            .toArray<String> { size -> arrayOfNulls(size) }
-                    }
-                    else -> {
-                        null
-                    }
+                when (val o = ConstantEvaluator.evaluate(null, attributeValue)) {
+                    is String -> arrayOf(o)
+                    is Array<*> -> o.filterIsInstance<String>().toTypedArray()
+                    else -> null
                 }
             }
         }
@@ -106,32 +92,17 @@ internal sealed class AnnotationValuesExtractor {
             val clsAnnotation = getClsAnnotation(annotation) ?: return null
             val attribute = clsAnnotation.findDeclaredAttributeValue(name) ?: return null
 
-            if (attribute is PsiArrayInitializerMemberValue) {
+            return if (attribute is PsiArrayInitializerMemberValue) {
                 val initializers = attribute.initializers
-                val constantEvaluator = ConstantEvaluator()
-
-                val result = Arrays.stream(initializers)
-                    .map { e -> constantEvaluator.evaluate(e) }
-                    .filter { e -> e is String }
-                    .map { e -> e as String }
-                    .toArray<String> { size -> arrayOfNulls(size) }
-
-                return result.takeIf { it.isNotEmpty() }?.let { it }
+                val evaluator = ConstantEvaluator()
+                val result = initializers.map { evaluator.evaluate(it) }.filterIsInstance<String>().toTypedArray()
+                result.takeIf { it.isNotEmpty() }
             } else {
                 // Use constant evaluator since we want to resolve field references as well
-                return when (val o = ConstantEvaluator.evaluate(null, attribute)) {
-                    is String -> {
-                        arrayOf(o)
-                    }
-                    is Array<*> -> {
-                        Arrays.stream(o)
-                            .filter { e -> e is String }
-                            .map { e -> e as String }
-                            .toArray<String> { size -> arrayOfNulls(size) }
-                    }
-                    else -> {
-                        null
-                    }
+                when (val o = ConstantEvaluator.evaluate(null, attribute)) {
+                    is String -> arrayOf(o)
+                    is Array<*> -> o.filterIsInstance<String>().toTypedArray()
+                    else -> null
                 }
             }
         }

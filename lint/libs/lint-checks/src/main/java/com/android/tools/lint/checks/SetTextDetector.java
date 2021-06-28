@@ -35,6 +35,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;
+import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UastBinaryOperator;
@@ -148,6 +149,8 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
             for (UExpression operand : expression.getOperands()) {
                 checkNode(context, operand);
             }
+        } else if (node instanceof UParenthesizedExpression) {
+            checkNode(context, ((UParenthesizedExpression) node).getExpression());
         }
     }
 }

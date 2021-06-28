@@ -334,6 +334,14 @@ open class TestMode(
         @JvmField
         val PARTIAL: TestMode = PartialTestMode()
 
+        @JvmField
+        val PARENTHESIZED: TestMode = ParenthesisTestMode()
+
+        @JvmField
+        val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
+            PARENTHESIZED
+        )
+
         /** Returns all default included test modes. */
         @JvmStatic
         fun values(): List<TestMode> = listOf(
@@ -342,7 +350,8 @@ open class TestMode(
             RESOURCE_REPOSITORIES,
             PARTIAL,
             BYTECODE_ONLY,
-            SOURCE_ONLY
+            SOURCE_ONLY,
+            SOURCE_TRANSFORMATION_GROUP,
         )
     }
 

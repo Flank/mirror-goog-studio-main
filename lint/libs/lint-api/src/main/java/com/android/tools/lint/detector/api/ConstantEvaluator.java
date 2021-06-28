@@ -1116,7 +1116,9 @@ public class ConstantEvaluator {
         }
 
         private static boolean elementHasLevel(UElement node) {
-            return !(node instanceof UBlockExpression || node instanceof UDeclarationsExpression);
+            return !(node instanceof UBlockExpression
+                    || node instanceof UDeclarationsExpression
+                    || node instanceof UParenthesizedExpression);
         }
     }
 

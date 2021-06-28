@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.getMethodName
-import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
@@ -60,6 +59,8 @@ import org.jetbrains.uast.java.JavaUIfExpression
 import org.jetbrains.uast.kotlin.KotlinPostfixOperators
 import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
 import org.jetbrains.uast.kotlin.expressions.KotlinUElvisExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -108,7 +109,7 @@ abstract class DataFlowAnalyzer(
         if (name == "print" || name == "println" || name == "log") {
             return true
         } else if (name.length == 1) {
-            val receiver = call.receiver
+            val receiver = call.receiver?.skipParenthesizedExprDown()
             if (receiver is USimpleNameReferenceExpression && receiver.identifier == "Log") {
                 return true
             }
@@ -190,7 +191,7 @@ abstract class DataFlowAnalyzer(
             instances.addAll(initial)
             for (element in initial) {
                 if (element is UCallExpression) {
-                    val parent = skipParentheses(element.uastParent)
+                    val parent = skipParenthesizedExprUp(element.uastParent)
                     if (parent is UQualifiedReferenceExpression && parent.selector == element) {
                         instances.add(parent)
                     }
@@ -202,7 +203,7 @@ abstract class DataFlowAnalyzer(
     }
 
     override fun visitCallExpression(node: UCallExpression): Boolean {
-        val receiver = node.receiver
+        val receiver = node.receiver?.skipParenthesizedExprDown()
         var matched = false
         if (receiver != null) {
             if (instances.contains(receiver)) {
@@ -245,23 +246,23 @@ abstract class DataFlowAnalyzer(
             // being received on a tracked element.
             matched = true
         } else {
-            val parent = skipParentheses(node.uastParent)
-            val parentParent = skipParentheses(parent?.uastParent)
+            val parent = skipParenthesizedExprUp(node.uastParent)
+            val parentParent = skipParenthesizedExprUp(parent?.uastParent)
             val lambda = parent as? ULambdaExpression
                 ?: parentParent as? ULambdaExpression
                 // Kotlin 1.3.50 may add another layer UImplicitReturnExpression
-                ?: skipParentheses(parentParent)?.uastParent as? ULambdaExpression
-            val lambdaCall = skipParentheses(lambda?.uastParent) as? UCallExpression
+                ?: skipParenthesizedExprUp(parentParent)?.uastParent as? ULambdaExpression
+            val lambdaCall = skipParenthesizedExprUp(lambda?.uastParent) as? UCallExpression
             if (lambdaCall != null && isReturningContext(lambdaCall)) {
                 if (instances.contains(node)) {
                     matched = true
                 }
             } else if (isScopingThis(node)) {
                 val args = node.valueArguments
-                if (args.size == 2 && instances.contains(args[0]) &&
-                    args[1] is ULambdaExpression
+                if (args.size == 2 && instances.contains(args[0].skipParenthesizedExprDown()) &&
+                    args[1].skipParenthesizedExprDown() is ULambdaExpression
                 ) {
-                    handleLambdaSuffix(args[1] as ULambdaExpression, node)
+                    handleLambdaSuffix(args[1].skipParenthesizedExprDown() as ULambdaExpression, node)
                 }
             }
         }
@@ -271,8 +272,8 @@ abstract class DataFlowAnalyzer(
                 receiver(node)
 
                 if (isReturningContext(node)) {
-                    val parent = skipParentheses(node.uastParent)
-                    val parentCall = skipParentheses(parent?.uastParent)
+                    val parent = skipParenthesizedExprUp(node.uastParent)
+                    val parentCall = skipParenthesizedExprUp(parent?.uastParent)
                     if (parentCall is UCallExpression) {
                         // The node is being passed as an argument to a method, e.g.
                         //  call(arg1, arg2, something.also { })
@@ -284,10 +285,10 @@ abstract class DataFlowAnalyzer(
             }
             if (returnsSelf(node)) {
                 instances.add(node)
-                val parent = skipParentheses(node.uastParent) as? UQualifiedReferenceExpression
+                val parent = skipParenthesizedExprUp(node.uastParent) as? UQualifiedReferenceExpression
                 if (parent != null) {
                     instances.add(parent)
-                    val parentParent = skipParentheses(parent.uastParent) as? UQualifiedReferenceExpression
+                    val parentParent = skipParenthesizedExprUp(parent.uastParent) as? UQualifiedReferenceExpression
                     val chained = parentParent?.selector
                     if (chained != null) {
                         instances.add(chained)
@@ -295,7 +296,7 @@ abstract class DataFlowAnalyzer(
                 }
             }
 
-            val lambda = node.valueArguments.lastOrNull() as? ULambdaExpression
+            val lambda = node.valueArguments.lastOrNull()?.skipParenthesizedExprDown() as? ULambdaExpression
             if (lambda != null) {
                 handleLambdaSuffix(lambda, node)
             }
@@ -399,7 +400,7 @@ abstract class DataFlowAnalyzer(
                 }
 
                 override fun visitCallExpression(node: UCallExpression): Boolean {
-                    val callReceiver = node.receiver
+                    val callReceiver = node.receiver?.skipParenthesizedExprDown()
                     if (callReceiver == null) {
                         checkBinding(node, node.resolve(), received)
                     } else if (callReceiver is UThisExpression) {
@@ -414,7 +415,7 @@ abstract class DataFlowAnalyzer(
                     // If we run into another lambda that also scopes this, and it's
                     // of the same type, then stop recursing, since inside this lambda,
                     // that other scope will take over.
-                    val parent = skipParentheses(node.uastParent) as? UCallExpression
+                    val parent = skipParenthesizedExprUp(node.uastParent) as? UCallExpression
                     val typeClass = (parent?.getExpressionType() as? PsiClassType)?.resolve()
                     instances.contains(lambda)
                     if (isMatchingType(typeClass)) {
@@ -447,6 +448,13 @@ abstract class DataFlowAnalyzer(
         return false
     }
 
+    override fun visitParenthesizedExpression(node: UParenthesizedExpression): Boolean {
+        if (instances.contains(node)) { // node.sourcePsi?.text
+            instances.add(node.expression)
+        }
+        return super.visitParenthesizedExpression(node)
+    }
+
     override fun afterVisitParenthesizedExpression(node: UParenthesizedExpression) {
         if (instances.contains(node.expression)) {
             instances.add(node)
@@ -456,7 +464,7 @@ abstract class DataFlowAnalyzer(
 
     override fun afterVisitVariable(node: UVariable) {
         if (node is ULocalVariable) {
-            val initializer = node.uastInitializer
+            val initializer = node.uastInitializer?.skipParenthesizedExprDown()
             if (initializer != null) {
                 if (instances.contains(initializer)) {
                     // Instance is stored in a variable
@@ -531,9 +539,9 @@ abstract class DataFlowAnalyzer(
     override fun afterVisitIfExpression(node: UIfExpression) {
         if (node !is JavaUIfExpression) { // Does not apply to Java
             // Handle Elvis operator
-            val parent = skipParentheses(node.uastParent)
+            val parent = skipParenthesizedExprUp(node.uastParent)
             if (parent is KotlinUElvisExpression) {
-                val then = node.thenExpression
+                val then = node.thenExpression?.skipParenthesizedExprDown()
                 if (then is USimpleNameReferenceExpression) {
                     val variable = then.resolve()
                     if (variable != null) {
@@ -552,8 +560,8 @@ abstract class DataFlowAnalyzer(
                 }
             }
 
-            val thenExpression = node.thenExpression
-            val elseExpression = node.elseExpression
+            val thenExpression = node.thenExpression?.skipParenthesizedExprDown()
+            val elseExpression = node.elseExpression?.skipParenthesizedExprDown()
             if (thenExpression != null && instances.contains(thenExpression)) {
                 instances.add(node)
             } else if (elseExpression != null && instances.contains(elseExpression)) {
@@ -629,11 +637,11 @@ abstract class DataFlowAnalyzer(
 
         if (clearLhs) {
             // If we reassign one of the variables, clear it out
-            val lhs = node.leftOperand.tryResolve()
+            val lhs = node.leftOperand.skipParenthesizedExprDown()?.tryResolve()
             if (lhs != null && lhs != initial && references.contains(lhs)) {
-                val block = node.uastParent
+                val block = skipParenthesizedExprUp(node.uastParent)
                 if (block is UBlockExpression && initial.size == 1) {
-                    val element: UElement = initial.first()
+                    val element = (initial.first() as? UExpression)?.skipParenthesizedExprDown() ?: return
                     if (element.isBelow(node)) {
                         return
                     }
@@ -647,7 +655,7 @@ abstract class DataFlowAnalyzer(
                         references.remove(lhs)
                     } else if (node.isBelow(initialBlock)) {
                         var referenced = false
-                        val target = node.uastParent
+                        val target = skipParenthesizedExprUp(node.uastParent) ?: return
 
                         initialBlock.accept(object : AbstractUastVisitor() {
                             private var reachedTarget = false
@@ -657,10 +665,6 @@ abstract class DataFlowAnalyzer(
                                     reachedTarget = true
                                 }
                                 super.afterVisitElement(node)
-                            }
-
-                            override fun afterVisitBinaryExpression(node: UBinaryExpression) {
-                                super.afterVisitBinaryExpression(node)
                             }
 
                             override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
@@ -698,7 +702,7 @@ abstract class DataFlowAnalyzer(
     }
 
     override fun afterVisitReturnExpression(node: UReturnExpression) {
-        val returnValue = node.returnExpression
+        val returnValue = node.returnExpression?.skipParenthesizedExprDown()
         if (returnValue != null) {
             if (instances.contains(returnValue)) {
                 returns(node)
@@ -774,7 +778,7 @@ abstract class DataFlowAnalyzer(
             allowChainedCalls: Boolean,
             allowFields: Boolean
         ): PsiVariable? {
-            var parent = skipParentheses(rhs.getQualifiedParentOrThis().uastParent)
+            var parent = skipParenthesizedExprUp(rhs.getQualifiedParentOrThis().uastParent)
 
             // Handle some types of chained calls; e.g. you might have
             //    var = prefs.edit().put(key,value)
@@ -782,9 +786,9 @@ abstract class DataFlowAnalyzer(
             if (allowChainedCalls) {
                 while (true) {
                     if (parent is UQualifiedReferenceExpression) {
-                        val parentParent = skipParentheses(parent.uastParent)
+                        val parentParent = skipParenthesizedExprUp(parent.uastParent)
                         if (parentParent is UQualifiedReferenceExpression) {
-                            parent = skipParentheses(parentParent.uastParent)
+                            parent = skipParenthesizedExprUp(parentParent.uastParent)
                         } else if (parentParent is UVariable || parentParent is UPolyadicExpression) {
                             parent = parentParent
                             break

@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.TypeEvaluator
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.tryResolve
 
 /** Checks for hardcoded seeds with random numbers. */
@@ -47,7 +48,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         if (arguments.isEmpty()) {
             return
         }
-        val seedArgument = arguments[0]
+        val seedArgument = arguments[0].skipParenthesizedExprDown() ?: return
         val evaluator = context.evaluator
         if (evaluator.isMemberInClass(method, JAVA_SECURITY_SECURE_RANDOM) ||
             evaluator.isMemberInSubClassOf(method, JAVA_UTIL_RANDOM, false) &&
@@ -86,7 +87,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
     private fun isSecureRandomReceiver(
         call: UCallExpression
     ): Boolean {
-        val operand = call.receiver
+        val operand = call.receiver?.skipParenthesizedExprDown()
         return operand != null && isSecureRandomType(operand)
     }
 

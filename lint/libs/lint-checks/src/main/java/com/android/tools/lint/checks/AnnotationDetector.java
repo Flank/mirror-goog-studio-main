@@ -43,6 +43,8 @@ import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStr
 import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValues;
 import static com.android.tools.lint.detector.api.UastLintUtils.getDoubleAttribute;
 import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprUp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -304,7 +306,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
         private void checkAnnotation(@NonNull UAnnotation annotation, String type) {
             if (FQCN_SUPPRESS_LINT.equals(type)) {
-                UElement parent = annotation.getUastParent();
+                UElement parent = skipParenthesizedExprUp(annotation.getUastParent());
                 if (parent == null) {
                     return;
                 }
@@ -317,15 +319,16 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 List<UNamedExpression> attributes = annotation.getAttributeValues();
                 if (attributes.size() == 1) {
                     UNamedExpression attribute = attributes.get(0);
-                    UExpression value = attribute.getExpression();
+                    UExpression value = skipParenthesizedExprDown(attribute.getExpression());
                     if (value instanceof ULiteralExpression) {
                         Object v = ((ULiteralExpression) value).getValue();
                         if (v instanceof String) {
                             String id = (String) v;
                             checkSuppressLint(annotation, id);
                         }
-                    } else if (UastExpressionUtils.isArrayInitializer(value)) {
+                    } else if (value != null && UastExpressionUtils.isArrayInitializer(value)) {
                         for (UExpression ex : ((UCallExpression) value).getValueArguments()) {
+                            ex = skipParenthesizedExprDown(ex);
                             if (ex instanceof ULiteralExpression) {
                                 Object v = ((ULiteralExpression) ex).getValue();
                                 if (v instanceof String) {
@@ -341,8 +344,9 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             } else if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(type)) {
                 if (CHECK_RESULT_ANNOTATION.isEquals(type)) {
                     // Check that the return type of this method is not void!
-                    if (annotation.getUastParent() instanceof UMethod) {
-                        UMethod method = (UMethod) annotation.getUastParent();
+                    UElement parent = skipParenthesizedExprUp(annotation.getUastParent());
+                    if (parent instanceof UMethod) {
+                        UMethod method = (UMethod) parent;
                         if (!method.isConstructor()
                                 && PsiType.VOID.equals(method.getReturnType())) {
                             mContext.report(
@@ -429,7 +433,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         || PERMISSION_ANNOTATION_WRITE.isEquals(type)) {
                     // Check that if there are no arguments, this is specified on a parameter,
                     // and conversely, on methods and fields there is a valid argument.
-                    if (annotation.getUastParent() instanceof UMethod) {
+                    UElement parent = skipParenthesizedExprUp(annotation.getUastParent());
+                    if (parent instanceof UMethod) {
                         String value = getAnnotationStringValue(annotation, ATTR_VALUE);
                         String[] anyOf = getAnnotationStringValues(annotation, ATTR_ANY_OF);
                         String[] allOf = getAnnotationStringValues(annotation, ATTR_ALL_OF);
@@ -483,7 +488,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     } else {
                         String values = attributeValue.asSourceString();
                         if (values.contains("SUBCLASSES")
-                                && annotation.getUastParent() instanceof UClass) {
+                                && skipParenthesizedExprUp(annotation.getUastParent())
+                                        instanceof UClass) {
                             mContext.report(
                                     ANNOTATION_USAGE,
                                     annotation,
@@ -540,7 +546,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 @Nullable String type3,
                 @Nullable String type4,
                 boolean allowCollection) {
-            UElement parent = node.getUastParent();
+            UElement parent = skipParenthesizedExprUp(node.getUastParent());
             PsiType type;
 
             if (parent instanceof UDeclarationsExpression) {
@@ -690,6 +696,9 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     if (value == null) {
                         value = annotation.findAttributeValue(null);
                     }
+                    if (value != null) {
+                        value = skipParenthesizedExprDown(value);
+                    }
 
                     if (value != null && UastExpressionUtils.isArrayInitializer(value)) {
                         List<UExpression> allowedValues =
@@ -790,8 +799,9 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             if (value == null) {
                 return;
             }
+            value = skipParenthesizedExprDown(value);
 
-            if (!(UastExpressionUtils.isArrayInitializer(value))) {
+            if (value == null || !(UastExpressionUtils.isArrayInitializer(value))) {
                 return;
             }
 
@@ -806,7 +816,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
             ConstantEvaluator constantEvaluator = new ConstantEvaluator();
             for (int index = 0; index < initializers.size(); index++) {
-                UExpression expression = initializers.get(index);
+                UExpression expression = skipParenthesizedExprDown(initializers.get(index));
                 Object o = constantEvaluator.evaluate(expression);
                 if (o instanceof Number) {
                     Number number = (Number) o;
@@ -930,6 +940,9 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     if (!(resolved instanceof PsiCompiledElement) && resolved instanceof PsiField) {
                         UExpression initializer =
                                 UastFacade.INSTANCE.getInitializerBody((PsiField) resolved);
+                        if (initializer != null) {
+                            initializer = UastUtils.skipParenthesizedExprDown(initializer);
+                        }
                         if (initializer instanceof ULiteralExpression) {
                             ULiteralExpression literal = (ULiteralExpression) initializer;
                             Object o = literal.getValue();
@@ -1120,6 +1133,9 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                 UExpression initializer =
                                         UastFacade.INSTANCE.getInitializerBody(
                                                 ((PsiField) resolved));
+                                if (initializer != null) {
+                                    initializer = skipParenthesizedExprDown(initializer);
+                                }
                                 if (initializer instanceof UReferenceExpression) {
                                     resolved = ((UReferenceExpression) initializer).resolve();
                                     if (resolved instanceof PsiField) {

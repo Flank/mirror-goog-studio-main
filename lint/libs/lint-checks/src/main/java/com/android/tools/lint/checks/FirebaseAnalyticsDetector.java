@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -124,7 +125,10 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
             context.report(INVALID_NAME, call, context.getLocation(call), error);
         }
 
-        UExpression secondParameter = expressions.get(1);
+        UExpression secondParameter = skipParenthesizedExprDown(expressions.get(1));
+        if (secondParameter == null) {
+            return;
+        }
         List<BundleModification> bundleModifications =
                 getBundleModifications(context, secondParameter);
 
@@ -204,6 +208,10 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                 }
 
                 UExpression initializer = local.getUastInitializer();
+                if (initializer == null) {
+                    continue;
+                }
+                initializer = skipParenthesizedExprDown(initializer);
                 PsiMethod resolvedMethod;
                 if (initializer instanceof UCallExpression) {
                     resolvedMethod = ((UCallExpression) initializer).resolve();
@@ -244,7 +252,10 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                 return;
             }
 
-            UElement token = expression.getReceiver();
+            UExpression token = expression.getReceiver();
+            if (token != null) {
+                token = skipParenthesizedExprDown(token);
+            }
             if (token == null || !mBundleReference.equals(token.asSourceString())) {
                 return;
             }
@@ -288,6 +299,9 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
         @Override
         public boolean visitReturnExpression(UReturnExpression statement) {
             UExpression returnExpression = statement.getReturnExpression();
+            if (returnExpression != null) {
+                returnExpression = skipParenthesizedExprDown(returnExpression);
+            }
             if (returnExpression instanceof UReferenceExpression) {
                 mReturnReference = (UReferenceExpression) returnExpression;
             }

@@ -40,9 +40,11 @@ import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -172,9 +174,9 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     private fun findPendingIntentConstruction(node: UCallExpression): UCallExpression? {
         val methodName = getMethodName(node)
         val pendingIntentArgument = if (methodName == "addAction")
-            node.getArgumentForParameter(2) ?: return null
+            node.getArgumentForParameter(2)?.skipParenthesizedExprDown() ?: return null
         else
-            node.getArgumentForParameter(0) ?: return null
+            node.getArgumentForParameter(0)?.skipParenthesizedExprDown() ?: return null
 
         return findPendingIntentConstruction(pendingIntentArgument, node)
     }
@@ -188,9 +190,10 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     }
 
     private fun findPendingIntentConstruction(
-        pendingIntentArgument: UExpression,
+        pendingIntentArgument: UExpression?,
         node: UElement
     ): UCallExpression? {
+        pendingIntentArgument ?: return null
         when (val resolved = pendingIntentArgument.tryResolve()) {
             is PsiVariable -> {
                 return findLastAssignment(resolved, node)
@@ -203,7 +206,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
                         if (pendingIntentArgument is UCallExpression) {
                             return pendingIntentArgument
                         } else if (pendingIntentArgument is UQualifiedReferenceExpression) {
-                            val selector = pendingIntentArgument.selector
+                            val selector = pendingIntentArgument.selector.skipParenthesizedExprDown()
                             if (selector is UCallExpression) {
                                 return selector
                             }
@@ -216,7 +219,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
                 method.accept(object : AbstractUastVisitor() {
                     override fun visitReturnExpression(node: UReturnExpression): Boolean {
                         node.returnExpression?.let {
-                            val construction = findPendingIntentConstruction(it, node)
+                            val construction = findPendingIntentConstruction(it.skipParenthesizedExprDown(), node)
                             if (construction != null && isBroadcastReceiver(construction) != null) {
                                 ref.set(construction)
                             }
@@ -237,9 +240,9 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
         if (getBroadcastMethod.parameterList.parametersCount != 4) {
             return null
         }
-        val intentArg = pendingConstruction.getArgumentForParameter(2) ?: return null
+        val intentArg = pendingConstruction.getArgumentForParameter(2)?.skipParenthesizedExprDown() ?: return null
         val intentDeclaration = intentArg.tryResolve() as? PsiVariable ?: return null
-        val intentAssignment = findLastAssignment(intentDeclaration, pendingConstruction) ?: return null
+        val intentAssignment = findLastAssignment(intentDeclaration, pendingConstruction)?.skipParenthesizedExprDown() ?: return null
         return intentAssignment as? UCallExpression
     }
 
@@ -420,10 +423,14 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     }
 }
 
-fun UElement.findSelector(): UElement? {
+fun UElement.findSelector(): UElement {
     var curr = this
-    while (curr is UQualifiedReferenceExpression) {
-        curr = curr.selector
+    while (true) {
+        curr = when (curr) {
+            is UQualifiedReferenceExpression -> curr.selector
+            is UParenthesizedExpression -> curr.expression
+            else -> break
+        }
     }
     return curr
 }

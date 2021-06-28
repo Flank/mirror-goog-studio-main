@@ -53,7 +53,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getLanguageLevel
-import com.android.tools.lint.detector.api.skipParentheses
 import com.android.tools.lint.detector.api.stripIdPrefix
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -72,6 +71,8 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.w3c.dom.Attr
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -176,8 +177,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         val client = context.client
-        val current = skipParentheses(node) ?: return
-        var parent = current.uastParent
+        val current = skipParenthesizedExprUp(node) ?: return
+        var parent = skipParenthesizedExprUp(current.uastParent)
 
         val errorNode: UElement
         val castType: PsiClassType
@@ -187,7 +188,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                 val cast = parent
                 val type = cast.type as? PsiClassType ?: return
                 castType = type
-                errorNode = cast
+                errorNode = cast.skipParenthesizedExprDown() ?: cast
             }
             is UExpression -> {
                 if (parent is UCallExpression) {
@@ -198,11 +199,11 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
                 if (parent is UQualifiedReferenceExpression) {
                     val ref = parent
-                    if (ref.selector !== current) {
+                    if (ref.selector.skipParenthesizedExprDown() !== current) {
                         return
                     }
 
-                    parent = parent.uastParent
+                    parent = skipParenthesizedExprUp(parent.uastParent)
                     if (parent !is UBinaryExpressionWithType) {
                         return
                     }
@@ -240,7 +241,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         val args = node.valueArguments
         if (args.size == 1) {
-            val first = args[0]
+            val first = args[0].skipParenthesizedExprDown() ?: return
             var tag: String? = null
             var id: String? = null
             if (findTag) {
@@ -331,14 +332,15 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             return
         }
 
-        if (surroundingCall.uastParent !is UQualifiedReferenceExpression) return
+        val parent = skipParenthesizedExprUp(surroundingCall.uastParent)
+        if (parent !is UQualifiedReferenceExpression) return
 
         val valueArguments = surroundingCall.valueArguments
         var parameterIndex = -1
         var i = 0
         val n = valueArguments.size
         while (i < n) {
-            if (findViewByIdCall == valueArguments[i]) {
+            if (findViewByIdCall == valueArguments[i].skipParenthesizedExprDown()) {
                 parameterIndex = i
             }
             i++

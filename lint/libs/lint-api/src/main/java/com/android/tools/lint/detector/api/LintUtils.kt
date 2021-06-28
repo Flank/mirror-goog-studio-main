@@ -105,12 +105,12 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
-import com.intellij.psi.PsiParenthesizedExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
+import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
@@ -125,6 +125,7 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.util.isAssignment
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -140,8 +141,6 @@ import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
 import java.util.ArrayDeque
-import java.util.ArrayList
-import java.util.HashSet
 import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
@@ -1764,15 +1763,22 @@ fun isFalseLiteral(element: PsiElement?): Boolean {
     return element is PsiLiteral && "false" == element.text
 }
 
+@Deprecated(
+    message = "This method is ambiguous. To move up/out in the AST, use skipParenthesizedExprUp instead " +
+        "(and from Java, import static method in UastUtils). " +
+        "To go inside the parentheses, instead use skipParenthesizedExprUp()",
+    replaceWith = ReplaceWith("skipParenthesizedExprUp(element)", "com.intellij.psi.util.PsiUtil.skipParenthesizedExprUp")
+)
 fun skipParentheses(element: PsiElement?): PsiElement? {
-    var current = element
-    while (current is PsiParenthesizedExpression) {
-        current = current.parent
-    }
-
-    return current
+    return PsiUtil.skipParenthesizedExprUp(element)
 }
 
+@Deprecated(
+    message = "This method is ambiguous. To move up/out in the AST, use skipParenthesizedExprUp instead " +
+        "(and from Java, import static method in UastUtils). If the element is not a UExpression there's no need to call this method. " +
+        "To go inside the parentheses, instead use skipParenthesizedExprUp()",
+    replaceWith = ReplaceWith("skipParenthesizedExprUp(element)", "org.jetbrains.uast.skipParenthesizedExprUp")
+)
 fun skipParentheses(element: UElement?): UElement? {
     var current = element
     while (current is UParenthesizedExpression) {
@@ -2886,7 +2892,7 @@ object LintUtils {
         replaceWith = ReplaceWith("com.android.tools.lint.detector.api.skipParentheses(element)")
     )
     fun skipParentheses(element: UElement?): UElement? {
-        return com.android.tools.lint.detector.api.skipParentheses(element)
+        return skipParenthesizedExprUp(element)
     }
 
     @JvmStatic

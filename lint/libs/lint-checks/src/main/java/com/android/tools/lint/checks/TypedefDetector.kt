@@ -69,6 +69,8 @@ import org.jetbrains.uast.UastBinaryOperator.Companion.NOT_EQUALS
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isArrayInitializer
@@ -324,7 +326,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        val allowed = getAnnotationValue(annotation) ?: return
+        val allowed = getAnnotationValue(annotation)?.skipParenthesizedExprDown() ?: return
 
         if (allowed.isArrayInitializer()) {
             // See if we're passing in a variable which itself has been annotated with
@@ -348,7 +350,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         STRING_DEF_ANNOTATION.isEquals(qualifiedName)
                     ) {
                         hadTypeDef = true
-                        val paramValues = getAnnotationValue(a)
+                        val paramValues = getAnnotationValue(a)?.skipParenthesizedExprDown()
                         if (paramValues != null) {
                             if (paramValues == allowed) {
                                 return
@@ -394,7 +396,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                                     // of ways this comparison be done, by value comparisons, by early returns, by
                                     // earlier switch cases etc.)
                                     val condition =
-                                        argument.getParentOfType<UIfExpression>()?.condition as? UBinaryExpression
+                                        argument.getParentOfType<UIfExpression>()?.condition?.skipParenthesizedExprDown() as? UBinaryExpression
                                     if ((
                                         condition?.operator == IDENTITY_NOT_EQUALS ||
                                             condition?.operator == NOT_EQUALS
@@ -427,9 +429,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     if (uMethod is UMethod) {
                         val body = uMethod.uastBody
                         val retValue = if (body is UBlockExpression) {
-                            if (body.expressions.size == 1 && body.expressions[0] is UReturnExpression) {
-                                val ret = body.expressions[0] as UReturnExpression
-                                ret.returnExpression
+                            if (body.expressions.size == 1) {
+                                (body.expressions[0].skipParenthesizedExprDown() as? UReturnExpression)?.returnExpression
                             } else {
                                 null
                             }
@@ -455,13 +456,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             }
 
-            val fieldInitialization =
-                if (argument is ULiteralExpression && argument.uastParent is UField) {
-                    argument.uastParent as UField
-                } else {
-                    null
-                }
-
+            val fieldInitialization = skipParenthesizedExprUp((argument as? ULiteralExpression)?.uastParent) as? UField
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
             var psiValue: PsiElement? = null
@@ -469,7 +464,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 psiValue = value
             }
 
-            for (expression in initializers) {
+            for (initializer in initializers) {
+                val expression = initializer.skipParenthesizedExprDown()
                 // Is this a literal string initialization in a field? If so,
                 // see if that field is a member of the allowed constants (e.g.
                 // a constant declaration intended to be used in a typedef itself)
@@ -505,8 +501,11 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // Check field initializers provided it's not a class field, in which case
             // we'd be reading out literal values which we don't want to do
             if (value is PsiField && rangeAnnotation == null) {
-                val initializer = UastFacade.getInitializerBody(value)
-                if (initializer != null && initializer !is ULiteralExpression && initializer.sourcePsi !is PsiLiteralExpression) {
+                val initializer = UastFacade.getInitializerBody(value)?.skipParenthesizedExprDown()
+                if (initializer != null && initializer !is ULiteralExpression &&
+                    initializer.sourcePsi !is PsiLiteralExpression
+                ) {
+                    initializer.sourcePsi?.containingFile?.text
                     checkTypeDefConstant(
                         context, annotation, initializer, errorNode,
                         flag, allAnnotations
@@ -542,6 +541,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             is ULiteralExpression -> expression.value
             is ExternalReferenceExpression -> UastLintUtils.resolve(expression as ExternalReferenceExpression, context)
             is UReferenceExpression -> expression.resolve()
+            is UParenthesizedExpression -> getResolvedValue(expression.expression, context)
             else -> null
         }
     }
@@ -553,7 +553,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         errorNode: UElement?,
         allAnnotations: List<UAnnotation>
     ) {
-        val allowed = getAnnotationValue(annotation)
+        val allowed = getAnnotationValue(annotation)?.skipParenthesizedExprDown()
         if (allowed != null && allowed.isArrayInitializer()) {
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
@@ -583,7 +583,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         // Allow "0" as initial value in variable expressions
         if (UastLintUtils.isZero(node)) {
             val declaration = node.getParentOfType(UVariable::class.java, true)
-            if (declaration != null && node == declaration.uastInitializer) {
+            if (declaration != null && node == declaration.uastInitializer?.skipParenthesizedExprDown()) {
                 return
             }
         }

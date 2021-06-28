@@ -38,16 +38,16 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UInstanceExpression
 import org.jetbrains.uast.ULiteralExpression
-import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
+import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.kotlin.KotlinUTypeCheckExpression
-import org.jetbrains.uast.toUElement
+import org.jetbrains.uast.skipParenthesizedExprUp
 
 /** Looks for assertion usages. */
 class AssertDetector : Detector(), SourceCodeScanner {
@@ -198,12 +198,10 @@ class AssertDetector : Detector(), SourceCodeScanner {
             }
             return false
         } else if (argument is UParenthesizedExpression) {
-            return isExpensive(argument.expression, depth + 1)
+            return isExpensive(argument.expression, depth) // not +1: cheap and want to allow parenthesis mode tests
         } else if (argument is UBinaryExpression) {
-            return isExpensive(
-                argument.leftOperand,
-                depth + 1
-            ) || isExpensive(argument.rightOperand, depth + 1)
+            return isExpensive(argument.leftOperand, depth + 1) ||
+                isExpensive(argument.rightOperand, depth + 1)
         } else if (argument is UUnaryExpression) {
             return isExpensive(argument.operand, depth + 1)
         } else if (argument is USimpleNameReferenceExpression) {
@@ -225,16 +223,15 @@ class AssertDetector : Detector(), SourceCodeScanner {
         } else if (argument is UCallExpression) {
             val method = argument.resolve()
             if (method != null && method !is PsiCompiledElement) {
-                val body = method.toUElement(UMethod::class.java)?.uastBody
+                val body = skipParenthesizedExprUp(UastFacade.getMethodBody(method))
                     ?: return true
                 if (body is UBlockExpression) {
                     val expressions = body.expressions
                     if (expressions.size == 1 && expressions[0] is UReturnExpression) {
-                        val retExp = (expressions[0] as UReturnExpression)
-                            .returnExpression
+                        val retExp = (expressions[0] as UReturnExpression).returnExpression
                         return retExp == null || isExpensive(retExp, depth + 1)
                     }
-                } else {
+                } else if (body is UExpression) {
                     // Expression body
                     return isExpensive(body, depth + 1)
                 }

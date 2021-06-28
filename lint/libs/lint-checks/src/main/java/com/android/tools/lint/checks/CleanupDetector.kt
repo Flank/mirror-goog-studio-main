@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
-import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
@@ -43,6 +42,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UResolvable
@@ -51,6 +51,7 @@ import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.util.isConstructorCall
 
 /**
@@ -242,7 +243,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     // (See also ktx use method, issue 140344435, which
                     // handles recycle() calls.)
                     // Now make sure we're calling it on the right variable:
-                    val operand: UExpression? = call.receiver
+                    val operand: UExpression? = call.receiver?.skipParenthesizedExprDown()
                     if (operand != null && instances.contains(operand)) {
                         return true
                     } else if (operand is UResolvable) {
@@ -544,30 +545,34 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         // See if the return value is read: can only replace commit with
         // apply if the return value is not considered
 
-        var qualifiedNode: UElement = node
-        var parent = skipParentheses(node.uastParent)
-        while (parent is UReferenceExpression) {
-            qualifiedNode = parent
-            parent = skipParentheses(parent.uastParent)
+        var prev: UElement = node
+        var parent = node.uastParent
+        while (parent is UReferenceExpression || parent is UParenthesizedExpression) {
+            prev = parent
+            parent = parent.uastParent
         }
         var returnValueIgnored = true
 
-        if (parent is UCallExpression ||
-            parent is UVariable ||
-            parent is UPolyadicExpression ||
-            parent is UUnaryExpression ||
-            parent is UReturnExpression
-        ) {
-            returnValueIgnored = false
-        } else if (parent is UIfExpression) {
-            val condition = parent.condition
-            returnValueIgnored = condition != qualifiedNode
-        } else if (parent is UWhileExpression) {
-            val condition = parent.condition
-            returnValueIgnored = condition != qualifiedNode
-        } else if (parent is UDoWhileExpression) {
-            val condition = parent.condition
-            returnValueIgnored = condition != qualifiedNode
+        when (parent) {
+            is UCallExpression,
+            is UVariable,
+            is UPolyadicExpression,
+            is UUnaryExpression,
+            is UReturnExpression -> {
+                returnValueIgnored = false
+            }
+            is UIfExpression -> {
+                val condition = parent.condition
+                returnValueIgnored = condition !== prev
+            }
+            is UWhileExpression -> {
+                val condition = parent.condition
+                returnValueIgnored = condition !== prev
+            }
+            is UDoWhileExpression -> {
+                val condition = parent.condition
+                returnValueIgnored = condition !== prev
+            }
         }
 
         if (returnValueIgnored) {

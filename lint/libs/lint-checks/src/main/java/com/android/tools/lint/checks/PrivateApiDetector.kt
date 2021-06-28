@@ -41,9 +41,11 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
 
 /**
  * Checks that the code is not using reflection to access hidden Android
@@ -352,6 +354,10 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
      */
     private fun getJavaClassType(element: UElement?): PsiType? {
         if (element is UExpression) {
+            if (element is UParenthesizedExpression) {
+                return getJavaClassType(element.expression)
+            }
+
             // First try the type inferred from the Psi, in case it's a known class reference.
             val type = element.getExpressionType()
 
@@ -364,7 +370,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                         // Int::class.javaPrimitiveType in Kotlin)
                         if (element is UQualifiedReferenceExpression) {
                             val identifier =
-                                (element.selector as? USimpleNameReferenceExpression)?.identifier
+                                (element.selector.skipParenthesizedExprDown() as? USimpleNameReferenceExpression)?.identifier
                             if (identifier == "javaPrimitiveType" || identifier == "TYPE") {
                                 clazz = it
                             }
@@ -389,8 +395,10 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                     }
                 }
 
-                if (element is UQualifiedReferenceExpression && element.selector is UCallExpression) {
-                    val call = element.selector as UCallExpression
+                if (element is UQualifiedReferenceExpression &&
+                    element.selector.skipParenthesizedExprDown() is UCallExpression
+                ) {
+                    val call = element.selector.skipParenthesizedExprDown() as UCallExpression
                     val name = call.methodName
 
                     if (FOR_NAME == name || LOAD_CLASS == name) {

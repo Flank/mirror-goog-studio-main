@@ -39,7 +39,9 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
@@ -111,6 +113,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 checkIntRange(context, annotation, elseExpression, allAnnotations)
             }
             return
+        } else if (argument is UParenthesizedExpression) {
+            checkIntRange(context, annotation, argument.expression, allAnnotations)
+            return
         }
 
         val message = getIntRangeError(context, annotation, argument)
@@ -138,6 +143,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             argument.elseExpression?.let { elseExpression ->
                 checkFloatRange(context, annotation, elseExpression)
             }
+            return
+        } else if (argument is UParenthesizedExpression) {
+            checkFloatRange(context, annotation, argument.expression)
             return
         }
 
@@ -254,6 +262,9 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 checkSize(context, annotation, elseExpression)
             }
             return
+        } else if (argument is UParenthesizedExpression) {
+            checkSize(context, annotation, argument.expression)
+            return
         } else {
             val `object` = ConstantEvaluator.evaluate(context, argument)
             // Check string length
@@ -328,7 +339,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         ): String? {
             if (argument.isNewArrayWithInitializer()) {
                 val newExpression = argument as UCallExpression
-                for (expression in newExpression.valueArguments) {
+                for (topExpression in newExpression.valueArguments) {
+                    val expression = topExpression.skipParenthesizedExprDown() ?: continue
                     val error = getIntRangeError(context, annotation, expression)
                     if (error != null) {
                         return error
