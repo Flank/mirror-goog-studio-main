@@ -141,7 +141,9 @@ abstract class LintTool {
         arguments: List<String>,
         android: Boolean,
         fatalOnly: Boolean,
-        await: Boolean) {
+        await: Boolean,
+        returnValueOutputFile: File? = null
+    ) {
         val workQueue = if (runInProcess.get()) {
             workerExecutor.noIsolation()
         } else {
@@ -160,6 +162,7 @@ abstract class LintTool {
             parameters.android.set(android)
             parameters.fatalOnly.set(fatalOnly)
             parameters.runInProcess.set(runInProcess.get())
+            parameters.returnValueOutputFile.set(returnValueOutputFile)
         }
         if (await) {
             workQueue.await()

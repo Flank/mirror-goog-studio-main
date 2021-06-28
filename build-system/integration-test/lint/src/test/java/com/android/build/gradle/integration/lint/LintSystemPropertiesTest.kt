@@ -34,13 +34,13 @@ class LintSystemPropertiesTest {
     fun checkLintNotUpToDate() {
         project.executor().run(":lintDebug").also { result ->
             assertThat(result.getTask(":lintAnalyzeDebug")).didWork()
-            assertThat(result.getTask(":lintDebug")).didWork()
+            assertThat(result.getTask(":lintReportDebug")).didWork()
         }
 
         // check that the lint tasks are up-to-date if nothing changes
         project.executor().run(":lintDebug").also { result ->
             assertThat(result.getTask(":lintAnalyzeDebug")).wasUpToDate()
-            assertThat(result.getTask(":lintDebug")).wasUpToDate()
+            assertThat(result.getTask(":lintReportDebug")).wasUpToDate()
         }
 
         val systemProperties =
@@ -66,8 +66,8 @@ class LintSystemPropertiesTest {
                     assertThat(result.getTask(":lintAnalyzeDebug"))
                         .named(":lintAnalyzeDebug with -D$systemProperty=foo")
                         .didWork()
-                    assertThat(result.getTask(":lintDebug"))
-                        .named(":lintDebug with -D$systemProperty=foo")
+                    assertThat(result.getTask(":lintReportDebug"))
+                        .named(":lintReportDebug with -D$systemProperty=foo")
                         .didWork()
                 }
 
@@ -92,8 +92,8 @@ class LintSystemPropertiesTest {
                     assertThat(result.getTask(":lintAnalyzeDebug"))
                         .named(":lintAnalyzeDebug with -D$systemProperty=foo")
                         .wasUpToDate()
-                    assertThat(result.getTask(":lintDebug"))
-                        .named(":lintDebug with -D$systemProperty=foo")
+                    assertThat(result.getTask(":lintReportDebug"))
+                        .named(":lintReportDebug with -D$systemProperty=foo")
                         .didWork()
                 }
 

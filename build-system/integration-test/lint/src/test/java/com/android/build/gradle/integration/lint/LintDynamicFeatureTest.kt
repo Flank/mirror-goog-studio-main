@@ -133,13 +133,17 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
         assertThat(projectWithLibs.buildResult.tasks).contains(":app:lint")
         assertThat(projectWithLibs.buildResult.tasks).contains(":app:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":app:lintReportDebug")
         assertThat(projectWithLibs.buildResult.tasks).contains(":lib1:lint")
         assertThat(projectWithLibs.buildResult.tasks).contains(":lib1:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib1:lintReportDebug")
         assertThat(projectWithLibs.buildResult.tasks).contains(":lib2:lint")
         assertThat(projectWithLibs.buildResult.tasks).contains(":lib2:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib2:lintReportDebug")
         // There should not be a lint reporting task or lint anchor task for the dynamic feature.
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lint")
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lintReportDebug")
 
         assertThat(projectWithLibs.file("app/lint-results.txt")).containsAllOf(
             "app_layout.xml:10: Warning: Hardcoded string",
@@ -201,17 +205,17 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         if (usePartialAnalysis) {
             assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
                 listOf(
-                    ":app:lintDebug",
+                    ":app:lintReportDebug",
                     ":app:lintAnalyzeDebug",
                     ":feature1:lintAnalyzeDebug",
                     ":feature2:lintAnalyzeDebug",
                 )
             )
         } else {
-            // The lint task should not be up-to-date if not using partial analysis with dynamic
-            // features because the inputs are not modeled correctly in that case.
+            // The lint report task should not be up-to-date if not using partial analysis with
+            // dynamic features because the inputs are not modeled correctly in that case.
             assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
-                listOf(":app:lintDebug")
+                listOf(":app:lintReportDebug")
             )
         }
     }
@@ -234,15 +238,15 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             )
             assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
                 listOf(
-                    ":app:lintDebug",
+                    ":app:lintReportDebug",
                     ":feature2:lintAnalyzeDebug",
                 )
             )
         } else {
-            // The lint task should not be up-to-date if not using partial analysis with dynamic
-            // features because the inputs are not modeled correctly in that case.
+            // The lint task report should not be up-to-date if not using partial analysis with
+            // dynamic features because the inputs are not modeled correctly in that case.
             assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
-                listOf(":app:lintDebug")
+                listOf(":app:lintReportDebug")
             )
         }
     }
@@ -271,6 +275,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         project.getExecutor().run("lintVitalRelease")
 
         assertThat(project.buildResult.tasks).contains(":app:lintVitalRelease")
+        assertThat(project.buildResult.tasks).contains(":app:lintVitalReportRelease")
         if (usePartialAnalysis) {
             assertThat(project.buildResult.tasks).contains(":app:lintVitalAnalyzeRelease")
             assertThat(project.buildResult.tasks).contains(":feature1:lintVitalAnalyzeRelease")
@@ -282,7 +287,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         project.getExecutor().run("lintVitalRelease")
 
         if (usePartialAnalysis) {
-            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
+            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalReportRelease")
             assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
             assertThat(project.buildResult.upToDateTasks).contains(
                 ":feature1:lintVitalAnalyzeRelease"
@@ -291,7 +296,9 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
                 ":feature2:lintVitalAnalyzeRelease"
             )
         } else {
-            assertThat(project.buildResult.upToDateTasks).doesNotContain(":app:lintVitalRelease")
+            assertThat(project.buildResult.upToDateTasks).doesNotContain(
+                ":app:lintVitalReportRelease"
+            )
         }
     }
 

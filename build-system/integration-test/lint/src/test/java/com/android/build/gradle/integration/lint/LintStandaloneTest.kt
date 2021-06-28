@@ -19,10 +19,11 @@ package com.android.build.gradle.integration.lint
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,16 +70,37 @@ class LintStandaloneTest(private val runLintInProcess: Boolean) {
             "textOutput file(\"lint-results2.txt\")"
         )
         // Run twice to catch issues with configuration caching
-        val secondRun = getExecutor().run(":lint")
-        assertThat(secondRun.getTask(":lint")).wasUpToDate()
-        val thirdRun = getExecutor().run(":lint")
-        assertThat(thirdRun.getTask(":lint")).wasUpToDate()
+        getExecutor().run(":lint")
+        getExecutor().run(":lint")
         val secondFile = project.file("lint-results2.txt")
         assertThat(secondFile).exists()
         assertThat(secondFile).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")
         assertThat(secondFile).contains("build.gradle:7: Warning: no Java language level directives")
         assertThat(secondFile).contains("0 errors, 2 warnings")
+    }
 
+    @Test
+    fun checkStandaloneLintFailure()  {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            "\n\nlintOptions.error 'UseValueOf'\n\n"
+        )
+        getExecutor().expectFailure().run( ":lint")
+        ScannerSubject.assertThat(project.buildResult.stderr).contains(
+            """
+                Lint found errors in the project; aborting build.
+
+                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
+                ...
+                lintOptions {
+                    abortOnError false
+                }
+                ...
+                """.trimIndent()
+        )
+        assertThat(project.buildResult.failedTasks).contains(":lint")
+        assertThat(project.buildResult.didWorkTasks).contains(":lintReport")
+        assertThat(project.buildResult.failedTasks).doesNotContain(":lintReport")
     }
 
     private fun getExecutor(): GradleTaskExecutor =

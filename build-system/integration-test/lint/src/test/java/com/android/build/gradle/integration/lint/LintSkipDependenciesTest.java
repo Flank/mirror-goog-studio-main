@@ -56,8 +56,8 @@ public class LintSkipDependenciesTest {
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:clean", ":app:lintDebug");
+        getExecutor().run(":app:clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");

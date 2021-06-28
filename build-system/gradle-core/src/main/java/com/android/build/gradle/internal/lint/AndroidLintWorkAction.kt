@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask.Companion.HANDLED_ERRORS
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -36,6 +38,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
         abstract val runInProcess: Property<Boolean>
+        abstract val returnValueOutputFile: RegularFileProperty
     }
 
     override fun execute() {
@@ -51,75 +54,15 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         }
         val execResult = runLint(arguments)
         logger.debug("Lint returned $execResult")
-        if (execResult == ERRNO_SUCCESS) {
-            return
-        }
-
-        val message: String = when {
-            !parameters.android.get() -> {
-                """
-                    Lint found errors in the project; aborting build.
-
-                    Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                    ...
-                    lintOptions {
-                        abortOnError false
-                    }
-                    ...
-                    """.trimIndent()
-            }
-            parameters.fatalOnly.get() -> {
-                """
-                    Lint found fatal errors while assembling a release target.
-
-                    To proceed, either fix the issues identified by lint, or modify your build script as follows:
-                    ...
-                    android {
-                        lintOptions {
-                            checkReleaseBuilds false
-                            // Or, if you prefer, you can continue to check for errors in release builds,
-                            // but continue the build even when errors are found:
-                            abortOnError false
-                        }
-                    }
-                    ...
-                    """.trimIndent()
-            }
-            else -> {
-                """
-                    Lint found errors in the project; aborting build.
-
-                    Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                    ...
-                    android {
-                        lintOptions {
-                            abortOnError false
-                        }
-                    }
-                    ...
-                    """.trimIndent()
+        parameters.returnValueOutputFile.orNull?.asFile?.let {
+            it.writeText("$execResult")
+            if (execResult in HANDLED_ERRORS) {
+                // return early in this case because a subsequent task will throw the corresponding
+                // exception if necessary.
+                return@execute
             }
         }
-
-        when (execResult) {
-            ERRNO_ERRORS -> {
-                logger.error(message)
-                throw RuntimeException(
-                    if (parameters.android.get() && parameters.fatalOnly.get()) {
-                        "Lint found fatal errors while assembling a release target."
-                    } else {
-                        "Lint found errors in the project; aborting build."
-                    }
-                )
-            }
-            ERRNO_USAGE -> throw IllegalStateException("Internal Error: Unexpected lint usage")
-            ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
-            ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
-            ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
-            ERRNO_CREATED_BASELINE -> throw RuntimeException("Aborting build since new baseline file was created")
-            ERRNO_APPLIED_SUGGESTIONS -> throw RuntimeException("Aborting build since sources were modified to apply quickfixes after compilation")
-            else -> throw IllegalStateException("Internal error: unexpected lint return value ${execResult}")
-        }
+        maybeThrowException(execResult, parameters.android.get(), parameters.fatalOnly.get())
     }
 
     private fun runLint(arguments: List<String>): Int {
@@ -147,7 +90,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
     companion object {
 
         private const val ERRNO_SUCCESS = 0
-        private const val ERRNO_ERRORS = 1
+        const val ERRNO_ERRORS = 1
         private const val ERRNO_USAGE = 2
         private const val ERRNO_EXISTS = 3
         private const val ERRNO_HELP = 4
@@ -183,6 +126,66 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             _cachedClassLoader?.loadClass("com.android.tools.lint.UastEnvironment")
                 ?.getDeclaredMethod("disposeApplicationEnvironment")
                 ?.invoke(null)
+        }
+
+        @JvmStatic
+        fun maybeThrowException(execResult: Int, android: Boolean, fatalOnly: Boolean) =
+            when (execResult) {
+                ERRNO_SUCCESS -> {}
+                ERRNO_ERRORS -> throw RuntimeException(getErrorMessage(android, fatalOnly))
+                ERRNO_USAGE -> throw IllegalStateException("Internal Error: Unexpected lint usage")
+                ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
+                ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
+                ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
+                ERRNO_CREATED_BASELINE -> throw RuntimeException("Aborting build since new baseline file was created")
+                ERRNO_APPLIED_SUGGESTIONS -> throw RuntimeException("Aborting build since sources were modified to apply quickfixes after compilation")
+                else -> throw IllegalStateException("Internal error: unexpected lint return value ${execResult}")
+            }
+
+        private fun getErrorMessage(android: Boolean, fatalOnly: Boolean) : String = when {
+            !android -> {
+                """
+                Lint found errors in the project; aborting build.
+
+                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
+                ...
+                lintOptions {
+                    abortOnError false
+                }
+                ...
+                """.trimIndent()
+            }
+            fatalOnly -> {
+                """
+                Lint found fatal errors while assembling a release target.
+
+                To proceed, either fix the issues identified by lint, or modify your build script as follows:
+                ...
+                android {
+                    lintOptions {
+                        checkReleaseBuilds false
+                        // Or, if you prefer, you can continue to check for errors in release builds,
+                        // but continue the build even when errors are found:
+                        abortOnError false
+                    }
+                }
+                ...
+                """.trimIndent()
+            }
+            else -> {
+                """
+                Lint found errors in the project; aborting build.
+
+                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
+                ...
+                android {
+                    lintOptions {
+                        abortOnError false
+                    }
+                }
+                ...
+                """.trimIndent()
+            }
         }
     }
 }

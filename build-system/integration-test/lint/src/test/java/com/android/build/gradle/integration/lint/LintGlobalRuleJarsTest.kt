@@ -59,16 +59,17 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         FileUtils.cleanOutputDir(prefsLintDir)
 
         val lintTaskName = ":lintDebug"
+        val lintReportTaskName = ":lintReportDebug"
         val lintAnalyzeTaskName = ":lintAnalyzeDebug"
         executor.run(lintTaskName)
         executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            assertThat(result.getTask(lintReportTaskName)).wasUpToDate()
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
         FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
         executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintTaskName)).didWork()
+            assertThat(result.getTask(lintReportTaskName)).didWork()
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
 
         }
@@ -85,16 +86,17 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
                         .withEnvironmentVariables(mapOf("ANDROID_LINT_JARS" to absolutePath))
 
         val lintTaskName = ":lintDebug"
+        val lintReportTaskName = ":lintReportDebug"
         val lintAnalyzeTaskName = ":lintAnalyzeDebug"
         executor.run(lintTaskName)
         executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintTaskName)).wasUpToDate()
+            assertThat(result.getTask(lintReportTaskName)).wasUpToDate()
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
         FileUtils.createFile(lintJar, "FOO_BAR")
         executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintTaskName)).didWork()
+            assertThat(result.getTask(lintReportTaskName)).didWork()
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
         }
     }

@@ -30,12 +30,12 @@ import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
 import com.android.build.gradle.internal.lint.AndroidLintAnalysisTask
 import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
 import com.android.build.gradle.internal.lint.AndroidLintTask
+import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask
 import com.android.build.gradle.internal.lint.LintFixBuildService
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.lint.createLintClasspathConfiguration
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
-import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
@@ -114,15 +114,16 @@ abstract class LintPlugin : Plugin<Project> {
         val artifacts = ArtifactsImpl(project, "global")
         // Create the 'lint' task before afterEvaluate to avoid breaking existing build scripts that
         // expect it to be present during evaluation
-        val lintTask =
-            project.tasks.register("lint", AndroidLintTask::class.java) { task ->
-                task.description = "Generates the lint report for project `${project.name}`"
-            }
+        val lintTask = project.tasks.register("lint", AndroidLintTextOutputTask::class.java)
         project.tasks.named(JavaBasePlugin.CHECK_TASK_NAME).configure { t: Task -> t.dependsOn(lintTask) }
 
         // Avoid reading the lintOptions DSL and build directory before the build author can customize them
         project.afterEvaluate {
             lintTask.configure { task ->
+                task.configureForStandalone(artifacts, lintOptions!!)
+            }
+            project.tasks.register("lintReport", AndroidLintTask::class.java) { task ->
+                task.description = "Generates the lint report for project `${project.name}`"
                 task.configureForStandalone(
                     project,
                     projectServices.projectOptions,
@@ -132,9 +133,23 @@ abstract class LintPlugin : Plugin<Project> {
                     artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
                     artifacts.getOutputPath(InternalArtifactType.LINT_MODEL)
                 )
+            }.also {
+                AndroidLintTask.VariantCreationAction.registerLintIntermediateArtifacts(
+                    it,
+                    artifacts
+                )
+                AndroidLintTask.SingleVariantCreationAction.registerLintReportArtifacts(
+                    it,
+                    artifacts,
+                    null,
+                    project.buildDir.resolve("reports")
+                )
             }
 
-            project.tasks.register("lintVital", AndroidLintTask::class.java) { task ->
+            project.tasks.register("lintVital", AndroidLintTextOutputTask::class.java) { task ->
+                task.configureForStandalone(artifacts, lintOptions!!, fatalOnly = true)
+            }
+            project.tasks.register("lintVitalReport", AndroidLintTask::class.java) { task ->
                 task.description =
                     "Generates the lint report for just the fatal issues for project  `${project.name}`"
                 task.configureForStandalone(
@@ -147,7 +162,14 @@ abstract class LintPlugin : Plugin<Project> {
                     artifacts.getOutputPath(InternalArtifactType.LINT_MODEL),
                     fatalOnly = true
                 )
+            }.also {
+                AndroidLintTask.VariantCreationAction.registerLintIntermediateArtifacts(
+                    it,
+                    artifacts,
+                    fatalOnly = true
+                )
             }
+
             project.tasks.register("lintFix", AndroidLintTask::class.java) { task ->
                 task.description = "Generates the lint report for project `${project.name}` and applies any safe suggestions to the source code."
                 task.configureForStandalone(
@@ -206,7 +228,6 @@ abstract class LintPlugin : Plugin<Project> {
                 )
             }
             LintModelWriterTask.BaseCreationAction.registerOutputArtifacts(lintModelWriterTask, artifacts)
-            AndroidLintTask.SingleVariantCreationAction.registerLintReportArtifacts(lintTask, artifacts, null, project.buildDir.resolve("reports"))
             if (LintTaskManager.needsCopyReportTask(lintOptions!!)) {
                 val copyLintReportsTask =
                     project.tasks.register(

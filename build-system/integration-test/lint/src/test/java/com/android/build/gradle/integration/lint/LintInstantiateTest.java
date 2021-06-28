@@ -49,7 +49,7 @@ public class LintInstantiateTest {
     public void checkFindErrors() throws Exception {
         project.executor()
                 .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
-                .run(":app:cleanLintDebug", ":app:lintDebug");
+                .run(":app:clean", ":app:lintDebug");
         File lintReport = project.file("app/lint-results.txt");
         assertThat(lintReport).contains("No issues found.");
 

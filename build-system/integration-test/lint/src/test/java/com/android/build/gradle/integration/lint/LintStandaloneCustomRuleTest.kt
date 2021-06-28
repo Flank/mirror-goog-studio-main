@@ -44,8 +44,8 @@ class LintStandaloneCustomRuleTest {
     @Throws(Exception::class)
     fun checkStandaloneLint() {
         // Run twice to catch issues with configuration caching
-        project.executor().run(":library:cleanLint", ":library:lint")
-        project.executor().run(":library:cleanLint", ":library:lint")
+        project.executor().run(":library:clean", ":library:lint")
+        project.executor().run(":library:clean", ":library:lint")
 
         val file = project.getSubproject("library").file("lint-results.txt")
         assertThat(file).exists()

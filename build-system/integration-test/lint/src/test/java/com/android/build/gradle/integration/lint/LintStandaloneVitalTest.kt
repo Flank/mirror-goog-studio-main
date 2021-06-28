@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
@@ -40,8 +41,11 @@ class LintStandaloneVitalTest {
     @Test
     fun checkStandaloneLintVital() {
         // Run twice to catch issues with configuration caching
-        project.executor().expectFailure().run(":cleanLintVital", "lintVital")
-        val result = project.executor().expectFailure().run(":cleanLintVital", "lintVital")
+        project.executor().expectFailure().run("clean", "lintVital")
+        val result = project.executor().expectFailure().run("clean", "lintVital")
+        Truth.assertThat(result.failedTasks).contains(":lintVital")
+        Truth.assertThat(result.didWorkTasks).contains(":lintVitalReport")
+        Truth.assertThat(result.failedTasks).doesNotContain(":lintVitalReport")
 
         result.stderr.use {
             assertThat(it).contains(

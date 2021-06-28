@@ -60,7 +60,7 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testQuiet() {
-        // first check that we see "Scanning" in stdout if running with --info and quiet=false
+        // first check that we see "Wrote HTML ..." in stdout if running with --info and quiet=false
         project.getExecutor().withArgument("--info").run("lintDebug")
         ScannerSubject.assertThat(project.buildResult.stdout).contains("Wrote HTML report to ")
         // then set quiet to true and check that stdout doesn't contain "Scanning".

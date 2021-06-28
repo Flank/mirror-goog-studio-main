@@ -54,8 +54,8 @@ class LintNoJavaClassesTest(private val usePartialAnalysis: Boolean) {
     @Throws(Exception::class)
     fun checkNoMissingClass() {
         // Run twice to catch issues with configuration caching
-        getExecutor().run("clean", ":app:cleanLintDebug", ":app:lintDebug")
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug")
+        getExecutor().run("clean", ":app:lintDebug")
+        getExecutor().run(":app:clean", ":app:lintDebug")
         val app = project.getSubproject("app")
         val file = File(app.projectDir, "lint-results.txt")
         assertThat(file).exists()

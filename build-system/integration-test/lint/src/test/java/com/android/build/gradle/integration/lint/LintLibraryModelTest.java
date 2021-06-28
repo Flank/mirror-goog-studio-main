@@ -61,8 +61,8 @@ public class LintLibraryModelTest {
     @Test
     public void checkLintLibraryModel() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
-        GradleBuildResult result = getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:clean", ":app:lintDebug");
+        GradleBuildResult result = getExecutor().run(":app:clean", ":app:lintDebug");
         String expected =
                 ""
                         + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "javalib", "JavaLib.java") + ":4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"

@@ -338,6 +338,12 @@ InternalArtifactType<T : FileSystemLocation>(
     object LINT_HTML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
     object LINT_XML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
     object LINT_SARIF_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
+    // Intermediate lint reports to be read and printed to stdout or stderr
+    object LINT_INTERMEDIATE_TEXT_REPORT: InternalArtifactType<RegularFile>(FILE)
+    object LINT_VITAL_INTERMEDIATE_TEXT_REPORT: InternalArtifactType<RegularFile>(FILE)
+    // Files holding the corresponding lint invocation's return value
+    object LINT_RETURN_VALUE: InternalArtifactType<RegularFile>(FILE)
+    object LINT_VITAL_RETURN_VALUE: InternalArtifactType<RegularFile>(FILE)
     // Partial lint results, which are the module-specific lint results generated when running lint
     // with the --analyze-only flag. These partial results are merged into a final report
     // downstream.

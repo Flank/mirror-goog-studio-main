@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
+import com.google.common.truth.Truth;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,6 +60,7 @@ public class LintFixTest {
         assertThat(result.getStderr())
                 .contains(
                         "Aborting build since sources were modified to apply quickfixes after compilation");
+        Truth.assertThat(result.getFailedTasks()).contains(":app:lintFixDebug");
 
         // Make sure quickfixes worked too
         File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");

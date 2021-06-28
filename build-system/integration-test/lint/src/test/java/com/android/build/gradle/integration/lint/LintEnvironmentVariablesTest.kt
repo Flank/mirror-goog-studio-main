@@ -34,13 +34,13 @@ class LintEnvironmentVariablesTest {
     fun checkLintNotUpToDate() {
         project.executor().run(":lintDebug").also { result ->
             assertThat(result.getTask(":lintAnalyzeDebug")).didWork()
-            assertThat(result.getTask(":lintDebug")).didWork()
+            assertThat(result.getTask(":lintReportDebug")).didWork()
         }
 
         // check that the lint tasks are up-to-date if nothing changes
         project.executor().run(":lintDebug").also { result ->
             assertThat(result.getTask(":lintAnalyzeDebug")).wasUpToDate()
-            assertThat(result.getTask(":lintDebug")).wasUpToDate()
+            assertThat(result.getTask(":lintReportDebug")).wasUpToDate()
         }
 
         val environmentVariables =
@@ -66,8 +66,8 @@ class LintEnvironmentVariablesTest {
                     assertThat(result.getTask(":lintAnalyzeDebug"))
                         .named(":lintAnalyzeDebug with $environmentVariable=foo")
                         .didWork()
-                    assertThat(result.getTask(":lintDebug"))
-                        .named(":lintDebug with $environmentVariable=foo")
+                    assertThat(result.getTask(":lintReportDebug"))
+                        .named(":lintReportDebug with $environmentVariable=foo")
                         .didWork()
                 }
 
@@ -80,6 +80,6 @@ class LintEnvironmentVariablesTest {
         project.executor()
             .withEnvironmentVariables(mapOf("LINT_HTML_PREFS" to "foo"))
             .run(":lintDebug")
-            .also { result -> assertThat(result.getTask(":lintDebug")).didWork() }
+            .also { result -> assertThat(result.getTask(":lintReportDebug")).didWork() }
     }
 }
