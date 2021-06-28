@@ -15,16 +15,19 @@
  */
 package com.android.tools.deployer;
 
-import static com.android.tools.deployer.model.FileDiff.Status.CREATED;
-import static com.android.tools.deployer.model.FileDiff.Status.MODIFIED;
-
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
-import java.util.ArrayList;
-import java.util.List;
+import com.android.tools.manifest.parser.XmlNode;
+import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.android.tools.deployer.model.FileDiff.Status.CREATED;
+import static com.android.tools.deployer.model.FileDiff.Status.MODIFIED;
 
 public class SwapVerifierTest {
 
@@ -123,7 +126,7 @@ public class SwapVerifierTest {
     }
 
     @Test
-    public void testCrashlyticsBuildIdCodeSwap() throws DeployerException {
+    public void testCrashlyticsBuildIdCodeSwap() {
         List<FileDiff> diffs = new ArrayList<>();
         diffs.add(makeDiff("META-INF/CERT.SF ", MODIFIED));
         diffs.add(makeDiff("META-INF/CERT.RSA", MODIFIED));
@@ -134,6 +137,29 @@ public class SwapVerifierTest {
         } catch (DeployerException e) {
             Assert.assertEquals(
                     DeployerException.Error.CANNOT_SWAP_CRASHLYTICS_PROPERTY, e.getError());
+            return;
+        }
+        Assert.fail("Exception not thrown");
+    }
+
+    @Test
+    public void testIsolatedServicesNotSupported() {
+        List<Apk> apks = new ArrayList<>();
+        List<ManifestServiceInfo> services = new ArrayList<>();
+        XmlNode node = new XmlNode();
+        node.attributes().put("name", ".MyService");
+        node.attributes().put("isolatedProcess", "true");
+        services.add(new ManifestServiceInfo(node, "com.android.app"));
+
+        apks.add(Apk.builder().setServices(services).build());
+        try {
+            new SwapVerifier().verify(apks, new ArrayList<>(), false);
+        } catch (DeployerException e) {
+            Assert.assertEquals(
+                    DeployerException.Error.ISOLATED_SERVICE_NOT_SUPPORTED, e.getError());
+            Assert.assertEquals(
+                    "The following service(s) are set to run in an isolated process: com.android.app.MyService",
+                    e.getDetails());
             return;
         }
         Assert.fail("Exception not thrown");

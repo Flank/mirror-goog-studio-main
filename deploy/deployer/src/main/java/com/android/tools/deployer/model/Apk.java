@@ -15,15 +15,20 @@
  */
 package com.android.tools.deployer.model;
 
+import com.android.annotations.NonNull;
 import com.android.tools.deployer.ZipUtils;
+import com.android.tools.manifest.parser.components.ManifestActivityInfo;
+import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 public class Apk implements Serializable {
+
     public final String name;
     public final String checksum;
     public final String path;
@@ -38,8 +43,9 @@ public class Apk implements Serializable {
     // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
 
-    // The list of service classes running in isolated processes in this APK.
-    public final List<String> isolatedServices;
+    public final @NonNull List<ManifestActivityInfo> activities;
+
+    public final @NonNull List<ManifestServiceInfo> services;
 
     public final Map<String, ApkEntry> apkEntries;
 
@@ -50,7 +56,8 @@ public class Apk implements Serializable {
             String packageName,
             List<String> libraryAbis,
             List<String> targetPackages,
-            List<String> isolatedServices,
+            @NonNull List<ManifestServiceInfo> services,
+            @NonNull List<ManifestActivityInfo> activities,
             Map<String, ApkEntry> apkEntries) {
         this.name = name;
         this.checksum = checksum;
@@ -58,7 +65,8 @@ public class Apk implements Serializable {
         this.packageName = packageName;
         this.libraryAbis = libraryAbis;
         this.targetPackages = targetPackages;
-        this.isolatedServices = isolatedServices;
+        this.services = services;
+        this.activities = activities;
         this.apkEntries = apkEntries;
     }
 
@@ -67,14 +75,16 @@ public class Apk implements Serializable {
     }
 
     public static class Builder {
+
+        private final ImmutableList.Builder<String> libraryAbis;
+        private final ImmutableMap.Builder<String, ApkEntry> apkEntries;
         private String name;
         private String checksum;
         private String path;
         private String packageName;
-        private ImmutableList.Builder<String> libraryAbis;
         private List<String> targetPackages;
-        private List<String> isolatedServices;
-        private ImmutableMap.Builder<String, ApkEntry> apkEntries;
+        private List<ManifestServiceInfo> services;
+        private List<ManifestActivityInfo> activities;
 
         public Builder() {
             this.name = "";
@@ -83,7 +93,8 @@ public class Apk implements Serializable {
             this.packageName = "";
             this.libraryAbis = ImmutableList.builder();
             this.targetPackages = null;
-            this.isolatedServices = null;
+            this.services = null;
+            this.activities = null;
             this.apkEntries = ImmutableMap.builder();
         }
 
@@ -112,8 +123,13 @@ public class Apk implements Serializable {
             return this;
         }
 
-        public Builder setIsolatedServices(List<String> isolatedServices) {
-            this.isolatedServices = isolatedServices;
+        public Builder setServices(List<ManifestServiceInfo> services) {
+            this.services = services;
+            return this;
+        }
+
+        public Builder setActivities(List<ManifestActivityInfo> activities) {
+            this.activities = activities;
             return this;
         }
 
@@ -135,7 +151,8 @@ public class Apk implements Serializable {
 
         public Apk build() {
             targetPackages = targetPackages == null ? ImmutableList.of() : targetPackages;
-            isolatedServices = isolatedServices == null ? ImmutableList.of() : isolatedServices;
+            services = services == null ? ImmutableList.of() : services;
+            activities = activities == null ? ImmutableList.of() : activities;
             Apk apk =
                     new Apk(
                             name,
@@ -144,7 +161,8 @@ public class Apk implements Serializable {
                             packageName,
                             libraryAbis.build(),
                             targetPackages,
-                            isolatedServices,
+                            services,
+                            activities,
                             apkEntries.build());
             apk.apkEntries.values().forEach(entry -> entry.setApk(apk));
             return apk;

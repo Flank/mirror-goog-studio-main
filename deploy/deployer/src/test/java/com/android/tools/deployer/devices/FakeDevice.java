@@ -22,12 +22,14 @@ import com.android.fakeadbserver.FakeAdbServer;
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
+import com.android.tools.manifest.parser.ManifestInfo;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -275,7 +277,7 @@ public class FakeDevice {
         }
         List<String> paths = new ArrayList<>();
         for (Apk apk : app.apks) {
-            paths.add(app.path + "/" + apk.details.fileName);
+            paths.add(app.path + "/" + apk.getFileName());
         }
         return paths;
     }
@@ -367,7 +369,7 @@ public class FakeDevice {
         int versionCode = 0;
 
         SortedMap<String, byte[]> stage = new TreeMap<>(); // sorted by the apk name
-        Map<String, ApkParser.ApkDetails> details = new HashMap<>();
+        Map<String, ManifestInfo> details = new HashMap<>();
         Application inherit = apps.get(session.inherit);
         if (inherit != null) {
             packageName = inherit.packageName;
@@ -375,10 +377,10 @@ public class FakeDevice {
             for (Apk apk : inherit.apks) {
                 byte[] bytes =
                         Files.readAllBytes(
-                                new File(getStorage(), inherit.path + "/" + apk.details.fileName)
+                                new File(getStorage(), inherit.path + "/" + apk.getFileName())
                                         .toPath());
-                stage.put(apk.details.fileName, bytes);
-                details.put(apk.details.fileName, apk.details);
+                stage.put(apk.getFileName(), bytes);
+                details.put(apk.getFileName(), apk.details);
             }
         }
 
@@ -386,24 +388,25 @@ public class FakeDevice {
             Path tmp = Files.createTempFile(getStorage().toPath(), "apk", ".apk");
             Files.write(tmp, bytes);
             ApkParser parser = new ApkParser();
-            ApkParser.ApkDetails apkDetails = parser.getApkDetails(tmp.toFile().getAbsolutePath());
-            stage.put(apkDetails.fileName, bytes);
-            details.put(apkDetails.fileName, apkDetails);
+            Apk apk = new Apk(parser.getApkDetails(tmp.toFile().getAbsolutePath()));
+
+            stage.put(apk.getFileName(), bytes);
+            details.put(apk.getFileName(), apk.details);
         }
 
         if (stage.isEmpty()) {
             throw new IllegalArgumentException("No apks added");
         }
 
-        for (ApkParser.ApkDetails apkDetails : details.values()) {
+        for (ManifestInfo apkDetails : details.values()) {
             if (packageName == null) {
-                packageName = apkDetails.packageName;
-                versionCode = apkDetails.versionCode;
-            } else if (versionCode != apkDetails.versionCode) {
+                packageName = apkDetails.getApplicationId();
+                versionCode = apkDetails.getVersionCode();
+            } else if (versionCode != apkDetails.getVersionCode()) {
                 return new InstallResult(
                         InstallResult.Error.INSTALL_FAILED_INVALID_APK,
                         versionCode,
-                        apkDetails.versionCode);
+                        apkDetails.getVersionCode());
             }
         }
 
@@ -586,10 +589,16 @@ public class FakeDevice {
     }
 
     public static class Apk {
-        public final ApkParser.ApkDetails details;
+        public final ManifestInfo details;
 
-        public Apk(ApkParser.ApkDetails details) {
+        public Apk(ManifestInfo details) {
             this.details = details;
+        }
+
+        public String getFileName() {
+            return details.getSplitName() == null
+                   ? "base.apk"
+                   : "split_" + details.getSplitName() + ".apk";
         }
     }
 

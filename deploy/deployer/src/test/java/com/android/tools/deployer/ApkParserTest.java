@@ -16,15 +16,16 @@
 
 package com.android.tools.deployer;
 
-import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.manifest.parser.components.ManifestActivityInfo;
+import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,8 +37,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.junit.Assert;
-import org.junit.Test;
+
+import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ApkParserTest {
 
@@ -295,5 +299,30 @@ public class ApkParserTest {
         } catch (IOException e) {
             Assert.assertTrue(e.getMessage().startsWith(ApkParser.NO_MANIFEST_MSG));
         }
+    }
+
+    @Test
+    public void testParseManifest() throws DeployerException {
+        Path file = TestUtils.resolveWorkspacePath(BASE + "parserTest/app.apk");
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0);
+
+        assertEquals(1, apk.services.size());
+        ManifestServiceInfo service = apk.services.get(0);
+        assertEquals("com.example.parser.test.MyService", service.getQualifiedName());
+        assertFalse(service.isolatedProcess);
+        assertTrue(service.hasPermission("com.google.android.wearable.permission.BIND_TILE_PROVIDER"));
+        assertTrue(service.hasAction(
+                "android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"));
+        assertTrue(service.getIntentFilters().get(0).getCategories().isEmpty());
+
+        assertEquals(1, apk.activities.size());
+        ManifestActivityInfo activity = apk.activities.get(0);
+        assertEquals("com.example.parser.test.MyActivity", activity.getQualifiedName());
+        assertTrue(activity.hasPermission("android.permission.CAMERA"));
+        assertTrue(activity.hasAction("android.intent.action.MAIN"));
+        assertTrue(activity.getIntentFilters()
+                           .get(0)
+                           .getCategories()
+                           .contains("android.intent.category.APP_BROWSER"));
     }
 }

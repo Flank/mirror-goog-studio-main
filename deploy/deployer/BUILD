@@ -43,6 +43,7 @@ iml_module(
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
         "//tools/base/deploy/deployer:libjava_sites",
         "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/base/manifest-parser:studio.android.sdktools.manifest-parser[module]",
     ],
 )
 
@@ -73,6 +74,7 @@ coverage_java_library(
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/manifest-parser:tools.manifest-parser",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
     ],
@@ -134,6 +136,7 @@ coverage_java_test(
         "//tools/base/deploy/installer/tests:fake_device_proto",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
+        "//tools/base/manifest-parser:tools.manifest-parser",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",

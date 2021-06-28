@@ -17,8 +17,11 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
+import com.android.tools.manifest.parser.components.ManifestAppComponentInfo;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** A verifier that determines whether or not a swap operation can be performed. */
 class SwapVerifier {
@@ -26,8 +29,12 @@ class SwapVerifier {
     public List<FileDiff> verify(List<Apk> apks, List<FileDiff> diffs, boolean allChanges)
             throws DeployerException {
         for (Apk apk : apks) {
-            if (!apk.isolatedServices.isEmpty()) {
-                throw DeployerException.isolatedServiceNotSupported(apk.isolatedServices);
+            List<String> isolatedProcessServicesNames = apk.services.stream()
+                    .filter(s -> s.isolatedProcess)
+                    .map(ManifestAppComponentInfo::getQualifiedName)
+                    .collect(Collectors.toList());
+            if (!isolatedProcessServicesNames.isEmpty()) {
+                throw DeployerException.isolatedServiceNotSupported(isolatedProcessServicesNames);
             }
         }
         return verify(diffs, allChanges);
