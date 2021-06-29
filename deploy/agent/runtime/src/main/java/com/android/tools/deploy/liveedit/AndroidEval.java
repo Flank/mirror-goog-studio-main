@@ -35,6 +35,12 @@ import org.jetbrains.org.objectweb.asm.Type;
 
 class AndroidEval implements Eval {
 
+    private final ClassLoader classloader;
+
+    public AndroidEval(ClassLoader classloader) {
+        this.classloader = classloader;
+    }
+
     @Override
     public Value getArrayElement(Value array, Value index) {
         try {
@@ -111,7 +117,7 @@ class AndroidEval implements Eval {
         String name = description.getName();
         String type = description.getDesc();
         try {
-            Field field = Class.forName(owner).getDeclaredField(name);
+            Field field = forName(owner).getDeclaredField(name);
             field.setAccessible(true);
             Value result = makeValue(field.get(owner), Type.getType(type));
             return result;
@@ -166,7 +172,7 @@ class AndroidEval implements Eval {
             // We use invokevirtual for everything else which is inaccurate for private methods
             // and super methods invocations.
             Method method =
-                    Class.forName(owner.replace('/', '.')).getDeclaredMethod(name, parameterClass);
+                    forName(owner.replace('/', '.')).getDeclaredMethod(name, parameterClass);
             method.setAccessible(true);
             Object result =
                     method.invoke(
@@ -347,7 +353,7 @@ class AndroidEval implements Eval {
         String ownerClassName = description.getOwnerInternalName().replace('/', '.');
         String name = description.getName();
         try {
-            Class<?> ownerClass = Class.forName(ownerClassName);
+            Class<?> ownerClass = forName(ownerClassName);
             Field field = ownerClass.getDeclaredField(name);
             field.setAccessible(true);
             if (description.getDesc().equals("I")) {
@@ -405,7 +411,15 @@ class AndroidEval implements Eval {
         }
     }
 
-    public static Class<?> typeToClass(Type type) throws ClassNotFoundException {
+    Class<?> forName(String className) throws ClassNotFoundException {
+        return Class.forName(className.replace('/', '.'), true, classloader);
+    }
+
+    Class<?> forName(Type type) throws ClassNotFoundException {
+        return forName(type.getClassName());
+    }
+
+    public Class<?> typeToClass(Type type) throws ClassNotFoundException {
         switch (type.getSort()) {
             case Type.INT:
                 return int.class;
@@ -426,7 +440,7 @@ class AndroidEval implements Eval {
             case Type.VOID:
                 return void.class;
             default:
-                return Class.forName(type.getClassName().replace('/', '.'));
+                return forName(type);
         }
     }
 

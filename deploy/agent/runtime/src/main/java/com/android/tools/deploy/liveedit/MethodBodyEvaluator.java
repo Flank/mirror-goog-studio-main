@@ -52,9 +52,23 @@ class MethodBodyEvaluator {
     }
 
     private final MethodNode target;
+    private final ClassLoader classLoader;
 
     public MethodBodyEvaluator(byte[] classData, String targetMethod) {
+        this(classData, targetMethod, new byte[0][]);
+    }
+
+    public MethodBodyEvaluator(byte[] classData, String targetMethod, byte[][] supportClasses) {
         this.target = MethodNodeFinder.findIn(classData, targetMethod);
+        if (target == null) {
+            String msg = String.format("Cannot find target '%s'", targetMethod);
+            throw new IllegalStateException(msg);
+        }
+        this.classLoader = new LiveEditClassLoader(supportClasses);
+    }
+
+    public Object evalStatic(Object[] arguments) {
+        return eval(null, null, arguments);
     }
 
     public Object eval(Object thisObject, String objectType, Object[] arguments) {
@@ -71,9 +85,9 @@ class MethodBodyEvaluator {
             init.setLocal(localIndex++, AndroidEval.makeValue(arguments[i], argTypes[i]));
         }
 
+        AndroidEval evaluator = new AndroidEval(classLoader);
         InterpreterResult result =
-                interpreterLoop(
-                        target, init, new AndroidEval(), new NoOpInterpretationEventHandler());
+                interpreterLoop(target, init, evaluator, new NoOpInterpretationEventHandler());
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
             return AndroidEval.valueToObject(value);

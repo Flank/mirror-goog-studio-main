@@ -1,5 +1,6 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 coverage_java_library(
     name = "runtime_java",
@@ -18,6 +19,14 @@ coverage_java_library(
     ],
 )
 
+kotlin_library(
+    name = "runtime_kotlin_test",
+    srcs = glob([
+        "src/test/**/*.kt",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
 coverage_java_test(
     name = "runtime_java_test",
     size = "small",
@@ -32,6 +41,7 @@ coverage_java_test(
         "lib/kotlin-eval4j.jar",
         "lib/kotlin-stdlib.jar",
         ":runtime_java",
+        ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",

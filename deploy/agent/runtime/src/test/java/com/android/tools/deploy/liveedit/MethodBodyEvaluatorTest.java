@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Supplier;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -347,29 +348,67 @@ public class MethodBodyEvaluatorTest {
         Assert.assertEquals(owner.isInstanceOf(), z.booleanValue());
     }
 
+    @org.junit.Test
+    public void testLambda() throws IOException, ClassNotFoundException {
+        String pkg = "com.android.tools.deploy.liveedit.";
+        String lambdaSimpleName = "StaticGetterFactoryKt$create$1";
+        String lambdaBinaryName = pkg + lambdaSimpleName;
+        String targetSimpleName = "StaticGetterFactoryKt";
+        String targetBinaryName = pkg + targetSimpleName;
+
+        byte[] interpretedClass =
+                buildClass(
+                        StaticGetterFactoryKt.class.getClassLoader().loadClass(targetBinaryName));
+        byte[][] supportClasses = new byte[2][];
+        supportClasses[0] = buildClass(lambdaBinaryName);
+        supportClasses[1] = interpretedClass;
+        MethodBodyEvaluator evaluator =
+                new MethodBodyEvaluator(interpretedClass, "create", supportClasses);
+
+        // Make sure the lambda class is not loaded
+        Supplier<Integer> sLiveEdit = (Supplier<Integer>) evaluator.evalStatic(new Object[] {});
+        Supplier<Integer> sVM = StaticGetterFactoryKt.create();
+        Assert.assertNotEquals(
+                sLiveEdit.getClass().getClassLoader(), sVM.getClass().getClassLoader());
+
+        // Increase the VM static value, this should leave the one in LiveEdit unchanged.
+        StaticGetterFactoryKt.setStatic(StaticGetterFactoryKt.getStatic() + 1);
+        // Check that indeed the previous instruction did not affect support classes
+        Assert.assertNotEquals(sLiveEdit.get(), sVM.get());
+    }
+
+    private static byte[] buildClass(String binaryClassName)
+            throws IOException, ClassNotFoundException {
+        Class klass = Class.forName(binaryClassName);
+        return buildClass(klass);
+    }
     /**
-     * Extract the bytecode data from a class file from a class. If this is run from intellij, it
+     * Extract the bytecode data from a class file from its name. If this is run from intellij, it
      * searches for .class file in the idea out director. If this is run from a jar file, it
      * extracts the class file from the jar.
      */
     private static byte[] buildClass(Class clazz) throws IOException {
         InputStream in = null;
+        String pathToSearch = "/" + clazz.getName().replaceAll("\\.", "/") + ".class";
         if (StudioPathManager.isRunningFromSources()) {
             String loc =
                     StudioPathManager.getSourcesRoot()
-                            + "/tools/adt/idea/out/test/android.sdktools.deployer.deployer-runtime-support/"
-                            + clazz.getName().replaceAll("\\.", "/")
-                            + ".class";
+                            + "/tools/adt/idea/out/test/android.sdktools.deployer.deployer-runtime-support"
+                            + pathToSearch;
             File file = new File(loc);
             if (file.exists()) {
                 in = new FileInputStream(file);
             } else {
-                in = clazz.getResourceAsStream(clazz.getSimpleName() + ".class");
+                in = clazz.getResourceAsStream(pathToSearch);
             }
         } else {
-            in = clazz.getResourceAsStream(clazz.getSimpleName() + ".class");
+            in = clazz.getResourceAsStream(pathToSearch);
         }
 
+        if (in == null) {
+            throw new IllegalStateException(
+                    "Unable to load '" + clazz + "' from classLoader " + clazz.getClassLoader());
+        }
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         byte[] buffer = new byte[0xFFFF];
         for (int len = in.read(buffer); len != -1; len = in.read(buffer)) {
