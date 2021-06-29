@@ -60,7 +60,8 @@ class BooleanOptionTest {
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
             BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
             BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS,
-            BooleanOption.ENABLE_LEGACY_API
+            BooleanOption.ENABLE_LEGACY_API,
+            BooleanOption.FULL_R8,
         )
 
         val violatingOptions = BooleanOption.values().filter {

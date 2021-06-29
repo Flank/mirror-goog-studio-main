@@ -103,6 +103,7 @@ enum class BooleanOption(
 
     // FIXME switch to false once we know we don't use these getters internally.
     ENABLE_LEGACY_API("android.compatibility.enableLegacyApi", true, FeatureStage.Supported),
+    FULL_R8("android.enableR8.fullMode", false, FeatureStage.Supported),
 
     /* ---------------------
      * EXPERIMENTAL FEATURES
@@ -120,7 +121,6 @@ enum class BooleanOption(
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
-    FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
