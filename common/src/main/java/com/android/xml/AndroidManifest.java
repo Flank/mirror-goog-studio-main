@@ -90,6 +90,7 @@ public final class AndroidManifest {
     public static final String ATTRIBUTE_SPLIT = "split";
     public static final String ATTRIBUTE_RESIZEABLE_ACTIVITY = "resizeableActivity";
     public static final String ATTRIBUTE_SCREEN_ORIENTATION = "screenOrientation";
+    public static final String ATTRIBUTE_ENABLED = "enabled";
 
     public static final String VALUE_PARENT_ACTIVITY =
             SdkConstants.ANDROID_SUPPORT_PKG_PREFIX + "PARENT_ACTIVITY";
