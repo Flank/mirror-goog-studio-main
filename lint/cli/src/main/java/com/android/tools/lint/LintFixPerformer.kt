@@ -982,7 +982,9 @@ open class LintFixPerformer constructor(
         }
 
         fun apply(contents: String): String {
-            return contents.substring(0, startOffset) + replacement + contents.substring(endOffset)
+            return StringBuilder(contents).apply {
+                replace(startOffset, endOffset, replacement)
+            }.toString()
         }
 
         fun adjustOffset(offset: Int, biasLeft: Boolean): Int {
