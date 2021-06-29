@@ -27,6 +27,7 @@ import java.util.Objects
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import java.util.concurrent.ConcurrentHashMap
 
@@ -35,7 +36,7 @@ object BootClasspathBuilder {
 
     private data class CacheKey(val target: AndroidVersion, val addAllOptionalLibraries: Boolean, val libraryRequests: List<LibraryRequest>)
 
-    private val classpathCache = ConcurrentHashMap<CacheKey, List<RegularFile>>()
+    private val classpathCache = ConcurrentHashMap<CacheKey, ListProperty<RegularFile>>()
 
     /**
      * Computes the classpath for compilation.
@@ -60,12 +61,12 @@ object BootClasspathBuilder {
         libraryRequests: List<LibraryRequest>
     ): Provider<List<RegularFile>> {
 
-        return targetBootClasspath.map { bootClasspath ->
+        return targetBootClasspath.flatMap { bootClasspath ->
             val target = targetAndroidVersion.get()
             val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
             classpathCache.getOrPut(key) {
-                val files = ImmutableList.builder<RegularFile>()
+                val files = project.objects.listProperty(RegularFile::class.java)
                 files.addAll(bootClasspath.map {
                     project.objects.fileProperty().fileValue(it).get()
                 })
@@ -84,11 +85,12 @@ object BootClasspathBuilder {
 
                 // add annotations.jar if needed.
                 if (target.apiLevel <= 15) {
-
-                    files.add(project.layout.file(annotationsJar).get())
+                    files.add(annotationsJar.flatMap { it: File ->
+                        project.layout.buildDirectory.file(it.absolutePath)
+                    })
                 }
 
-                files.build()
+                files
             }
         }
     }
