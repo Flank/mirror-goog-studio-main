@@ -15,12 +15,15 @@
  */
 package com.android.tools.manifest.parser.components;
 
-
 import com.android.tools.manifest.parser.XmlNode;
+import com.android.xml.AndroidManifest;
 
-public class ManifestActivityInfo extends ManifestAppComponentInfo {
+public class ManifestServiceInfo extends ManifestAppComponentInfo {
+    public final boolean isolatedProcess;
 
-    public ManifestActivityInfo(XmlNode child, String name) {
-        super(child, name);
+    public ManifestServiceInfo(XmlNode node, String name) {
+        super(node, name);
+        String isolatedProcessRawValue = node.attributes().getOrDefault(AndroidManifest.ATTRIBUTE_ISOLATED_PROCESS, "");
+        isolatedProcess = !isolatedProcessRawValue.isEmpty() && "true".equals(isolatedProcessRawValue);
     }
 }

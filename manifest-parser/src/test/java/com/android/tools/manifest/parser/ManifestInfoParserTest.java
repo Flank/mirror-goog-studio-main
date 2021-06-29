@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestResources;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
+import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -87,12 +88,46 @@ public class ManifestInfoParserTest {
         }
     }
 
-    @Nullable
+    @Test
+    public void testServiceParsing() throws IOException {
+        URL url = TestResources.getFile("/manifest/serviceParsing/AndroidManifest.bxml")
+                .toURI()
+                .toURL();
+        Assert.assertNotNull(url);
+        try (InputStream input = url.openStream()) {
+            ManifestInfo manifest = ManifestInfo.parseBinaryFromStream(input);
+            Assert.assertEquals(2, manifest.services().size());
+
+            ManifestServiceInfo service = getServiceByQName("com.example.myapplication.MyService",
+                                                            manifest.services());
+            Assert.assertTrue(service.isolatedProcess);
+            Assert.assertTrue(service.hasAction("androidx.wear.tiles.action.BIND_TILE_PROVIDER"));
+
+            ManifestServiceInfo complication = getServiceByQName(
+                    "com.example.myapplication.MyComplication",
+                    manifest.services());
+            Assert.assertFalse(complication.isolatedProcess);
+            Assert.assertTrue(complication.hasAction(
+                    "android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"));
+        }
+    }
+
     private static ManifestActivityInfo getActivityByQName(@NonNull String qname,
             @NonNull List<ManifestActivityInfo> activities) {
         for (ManifestActivityInfo activity : activities) {
             if (qname.equals(activity.getQualifiedName())) {
                 return activity;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static ManifestServiceInfo getServiceByQName(@NonNull String qname,
+            @NonNull List<ManifestServiceInfo> services) {
+        for (ManifestServiceInfo service : services) {
+            if (qname.equals(service.getQualifiedName())) {
+                return service;
             }
         }
         return null;

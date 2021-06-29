@@ -17,6 +17,7 @@ package com.android.tools.manifest.parser;
 
 import com.android.annotations.NonNull;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
+import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.xml.AndroidManifest;
 
 import java.io.IOException;
@@ -28,10 +29,13 @@ public class ManifestInfo {
 
     private final List<ManifestActivityInfo> activities;
 
+    private final List<ManifestServiceInfo> services;
+
     private String applicationId;
 
     private ManifestInfo() {
         activities = new ArrayList<>();
+        services = new ArrayList<>();
         applicationId = "";
     }
 
@@ -43,6 +47,11 @@ public class ManifestInfo {
     @NonNull
     public List<ManifestActivityInfo> activities() {
         return activities;
+    }
+
+    @NonNull
+    public List<ManifestServiceInfo> services() {
+        return services;
     }
 
     private void parseNode(@NonNull XmlNode node) {
@@ -65,6 +74,8 @@ public class ManifestInfo {
             if (AndroidManifest.NODE_ACTIVITY.equals(child.name()) ||
                 AndroidManifest.NODE_ACTIVITY_ALIAS.equals(child.name())) {
                 activities.add(new ManifestActivityInfo(child, applicationId));
+            } else if (AndroidManifest.NODE_SERVICE.equals(child.name())) {
+                services.add(new ManifestServiceInfo(child, applicationId));
             }
         }
     }
