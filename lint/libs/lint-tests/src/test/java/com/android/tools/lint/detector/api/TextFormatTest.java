@@ -24,6 +24,7 @@ import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
 import com.android.tools.lint.checks.PrivateApiDetector;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
+import com.android.tools.lint.client.api.LintClient;
 import junit.framework.TestCase;
 
 public class TextFormatTest extends TestCase {
@@ -464,6 +465,7 @@ public class TextFormatTest extends TestCase {
     }
 
     public void testConvertAll() {
+        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
         for (Issue issue : new TestIssueRegistry().getIssues()) {
             // Make sure there are no exceptions during conversion for any of the builtin strings
             issue.getExplanation(TextFormat.RAW);
