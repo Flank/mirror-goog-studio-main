@@ -154,7 +154,7 @@ class AndroidEval implements Eval {
                     throw new IllegalStateException("Unable to do super.<init>");
                 }
                 Class klass = typeToClass(objTarget.getAsmType());
-                Constructor constructor = klass.getConstructor(parameterClass);
+                Constructor constructor = klass.getDeclaredConstructor(parameterClass);
                 constructor.setAccessible(true);
                 Object obj =
                         constructor.newInstance(

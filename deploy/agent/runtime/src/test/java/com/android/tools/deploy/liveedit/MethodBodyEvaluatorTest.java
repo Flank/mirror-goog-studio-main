@@ -108,6 +108,17 @@ public class MethodBodyEvaluatorTest {
     }
 
     @org.junit.Test
+    public void testProtectedConstructor() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        Child child = new Child(0);
+        Object result =
+                new MethodBodyEvaluator(classInput, "callProtectedConstructor")
+                        .eval(child, Child.class.getTypeName(), new Object[] {});
+
+        Assert.assertNotNull(result);
+    }
+
+    @org.junit.Test
     public void testSuperMethod() throws Exception {
         byte[] classInput = buildClass(Child.class);
         int a = 1;
