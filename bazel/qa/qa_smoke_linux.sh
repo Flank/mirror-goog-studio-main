@@ -69,7 +69,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --keep_going \
     ${config_options} \
     --test_strategy=exclusive \
-    --jobs=8 \
+    --jobs=4 \
     --worker_verbose=true \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
