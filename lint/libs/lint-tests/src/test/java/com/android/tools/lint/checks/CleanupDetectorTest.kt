@@ -701,6 +701,33 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testSurfaceTextureSubclass() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import android.graphics.SurfaceTexture
+
+                class SafeSurfaceTexture(texName: Int) : SurfaceTexture(texName)
+            """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import android.graphics.SurfaceTexture;
+                import android.view.Surface;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName"})
+                public class SafeSurfaceTexture2 extends SurfaceTexture {
+                    public SafeSurfaceTexture2(int texName) {
+                        super(texName);
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     fun testContentProviderClient() {
 
         val expected =

@@ -36,6 +36,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
 import com.intellij.psi.PsiVariable
 import com.intellij.psi.util.PsiTreeUtil.getParentOfType
+import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
@@ -121,6 +122,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         constructor: PsiMethod
     ) {
         val type = constructor.containingClass?.qualifiedName ?: return
+        if (isSuperConstructorCall(node)) return
         if (type == SURFACE_TEXTURE_CLS || type == SURFACE_CLS) {
             checkRecycled(context, node, type, RELEASE)
         } else {
@@ -411,6 +413,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         return evaluator.extendsClass(containingClass, fragmentClass, false) ||
             evaluator.extendsClass(containingClass, v4FragmentClass, false)
     }
+
+    private fun isSuperConstructorCall(node: UCallExpression) =
+        node.sourcePsi is KtSuperTypeCallEntry || node.methodName == "super"
 
     private fun checkEditorApplied(
         context: JavaContext,
