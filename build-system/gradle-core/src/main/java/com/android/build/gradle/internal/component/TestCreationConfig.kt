@@ -35,7 +35,4 @@ interface TestCreationConfig: ComponentCreationConfig {
     val isTestCoverageEnabled: Boolean
 
     val manifestPlaceholders: MapProperty<String, String>
-
-    val targetSdkVersion: AndroidVersion
-
 }

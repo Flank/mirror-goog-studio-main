@@ -97,6 +97,9 @@ open class UnitTestImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 
+    override val targetSdkVersionOverride: AndroidVersion?
+        get() = testedVariant.targetSdkVersionOverride
+
     /**
      * Return the default runner as with unit tests, there is no dexing. However aapt2 requires
      * the instrumentation tag to be present in the merged manifest to process android resources.

@@ -33,40 +33,79 @@ abstract class VariantBuilderImpl (
     ComponentBuilderImpl(variantDslInfo, componentIdentity, variantApiServices),
     VariantBuilder {
 
-    private var _minSdkPreview: String? = variantDslInfo.minSdkVersion.codename
-    private var _minSdk: Int? = if (variantDslInfo.minSdkVersion.codename == null)
-        variantDslInfo.minSdkVersion.apiLevel else null
+    /**
+     * MinSdkVersion usable in the Variant API
+     */
+    internal val minSdkVersion: AndroidVersion
+        get() = mutableMinSdk.sanitize()
+
+    /** backing property for [minSdk] and [minSdkPreview] */
+    private val mutableMinSdk: MutableAndroidVersion = variantDslInfo.minSdkVersion
 
     override var minSdk: Int?
-        get() = _minSdk
+        get() = mutableMinSdk.api
         set(value) {
-            _minSdkPreview = null
-            _minSdk = value
+            mutableMinSdk.codename = null
+            mutableMinSdk.api = value
         }
 
     override var minSdkPreview: String?
-        get() = _minSdkPreview
+        get() = mutableMinSdk.codename
         set(value) {
-            _minSdk = null
-            _minSdkPreview = value
+            mutableMinSdk.codename = value
+            mutableMinSdk.api = null
         }
 
-    private var _targetSdkPreview: String? =  variantDslInfo.targetSdkVersion.codename
-    private var _targetSdk: Int? =  if (variantDslInfo.targetSdkVersion.codename == null)
-        variantDslInfo.targetSdkVersion.apiLevel else null
+    /**
+     * TargetSdkVersion usable in the Variant API
+     */
+    internal val targetSdkVersion: AndroidVersion
+        get() = mutableTargetSdk?.sanitize() ?: minSdkVersion
+
+    /**
+     * backing property for [targetSdk] and [targetSdkPreview]
+     * This could be null and will be instantiated on demand in the setter.
+     */
+    internal var mutableTargetSdk: MutableAndroidVersion? = variantDslInfo.targetSdkVersion
 
     override var targetSdk: Int?
-        get() = _targetSdk
+        get() {
+            val target = mutableTargetSdk
+            // we only return minSdk if target is null, no matter what the value of api is
+            // (so no using the fancy elvis operator to simplify this)
+            return if (target != null) {
+                target.api
+            } else {
+                minSdk
+            }
+        }
         set(value) {
-            _targetSdkPreview = null
-            _targetSdk = value
+            val target =
+                    mutableTargetSdk ?: MutableAndroidVersion(null, null).also {
+                        mutableTargetSdk = it
+                    }
+            target.codename = null
+            target.api = value
         }
 
     override var targetSdkPreview: String?
-        get() = _targetSdkPreview
+        get() {
+            val target = mutableTargetSdk
+            // we only return minSdk if target is null, no matter what the value of codename is
+            // (so no using the fancy elvis operator to simplify this)
+            return if (target != null) {
+                target.codename
+            } else {
+                minSdkPreview
+            }
+        }
         set(value) {
-            _targetSdk = null
-            _targetSdkPreview = value
+            val target =
+                    mutableTargetSdk ?: MutableAndroidVersion(null, null).also {
+                        mutableTargetSdk = it
+                    }
+            target.codename = value
+            target.api = null
         }
 
     override var maxSdk: Int? = variantDslInfo.maxSdkVersion
@@ -82,9 +121,7 @@ abstract class VariantBuilderImpl (
             if (field != -1) return field
             val targetApi = variantDslInfo.renderscriptTarget
             // default to -1 if not in build.gradle file.
-            val minSdk = AndroidVersionImpl(
-                _minSdk ?: 1,
-                _minSdkPreview).getFeatureLevel()
+            val minSdk = mutableMinSdk.getFeatureLevel()
             return if (targetApi > minSdk) targetApi else minSdk
         }
 

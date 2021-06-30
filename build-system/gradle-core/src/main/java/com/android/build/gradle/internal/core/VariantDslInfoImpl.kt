@@ -26,6 +26,7 @@ import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.VariantDimension
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
@@ -703,52 +704,30 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
         }
 
     /**
-     * Return the minSdkVersion for this variant.
+     * The minSdkVersion for this variant.
      *
-     *
-     * This uses both the value from the manifest (if present), and the override coming from the
-     * flavor(s) (if present).
-     *
-     * @return the minSdkVersion
+     * This is only the version declared in the DSL, not including the value present in the Manifest.
      */
-    override val minSdkVersion: AndroidVersion
-        get() {
-            val testedVariant = testedVariant
-            if (testedVariant != null) {
-                return testedVariant.minSdkVersion
-            }
-            // default to 1 for minSdkVersion.
-            val minSdkVersion =
-                mergedFlavor.minSdkVersion ?: DefaultApiVersion.create(Integer.valueOf(1))
-
-            return AndroidVersion(
-                minSdkVersion.apiLevel,
-                minSdkVersion.codename
-            )
-        }
+    override val minSdkVersion: MutableAndroidVersion
+        // if there's a testedVariant, return its value, otherwise return the merged flavor
+        // value. If there's no value set, then the default is just the first API Level: 1
+        get() = testedVariant?.minSdkVersion
+                ?: mergedFlavor.minSdkVersion?.let { MutableAndroidVersion(it.apiLevel, it.codename) }
+                ?: MutableAndroidVersion(1)
 
     override val maxSdkVersion: Int?
         get() = mergedFlavor.maxSdkVersion
 
     /**
-     * Return the targetSdkVersion for this variant.
+     * The targetSdkVersion for this variant.
      *
-     *
-     * This uses both the value from the manifest (if present), and the override coming from the
-     * flavor(s) (if present).
-     *
-     * @return the targetSdkVersion
+     * This is only the version declared in the DSL, not including the value present in the Manifest.
      */
-    override val targetSdkVersion: ApiVersion
-        get() {
-            val testedVariant = testedVariant
-            if (testedVariant != null) {
-                return testedVariant.targetSdkVersion
-            }
-            return mergedFlavor.targetSdkVersion
-                // default to -1 if not in build.gradle file.
-                ?: DefaultApiVersion.create(Integer.valueOf(-1))
-        }
+    override val targetSdkVersion: MutableAndroidVersion?
+        // if there's a testedVariant, return its value, otherwise return the merged flavor
+        // value. If there's no value set, then return null
+        get() = testedVariant?.targetSdkVersion
+                ?: mergedFlavor.targetSdkVersion?.let { MutableAndroidVersion(it.apiLevel, it.codename) }
 
     override val renderscriptTarget: Int = mergedFlavor.renderscriptTargetApi ?: -1
 

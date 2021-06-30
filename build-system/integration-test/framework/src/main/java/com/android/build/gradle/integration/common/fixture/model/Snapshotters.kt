@@ -406,7 +406,7 @@ private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
         item("apiLevel", ApiVersion::apiLevel)
         item("codename", ApiVersion::codename)
     }
-    dataObject("targetSdkVersion", AndroidArtifact::targetSdkVersion) {
+    dataObject("targetSdkVersionOverride", AndroidArtifact::targetSdkVersionOverride) {
         item("apiLevel", ApiVersion::apiLevel)
         item("codename", ApiVersion::codename)
     }

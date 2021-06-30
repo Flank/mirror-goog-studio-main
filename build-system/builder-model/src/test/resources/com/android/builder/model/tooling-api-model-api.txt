@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5ee60ed4a7893c3d3aa10784e8480cda072160ba0c08e7db8584992b02e1c725
+c94c4fa8cfbc858bf78e1d850adae00ec8f122a0f035ed09ebf44b1e451ada10
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -569,7 +569,7 @@ com.android.builder.model.v2.ide.AndroidArtifact.getMaxSdkVersion: java.lang.Int
 com.android.builder.model.v2.ide.AndroidArtifact.getMinSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
-com.android.builder.model.v2.ide.AndroidArtifact.getTargetSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
+com.android.builder.model.v2.ide.AndroidArtifact.getTargetSdkVersionOverride: com.android.builder.model.v2.ide.ApiVersion ()
 com.android.builder.model.v2.ide.AndroidArtifact.getTestInfo: com.android.builder.model.v2.ide.TestInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.isSigned: boolean ()
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags

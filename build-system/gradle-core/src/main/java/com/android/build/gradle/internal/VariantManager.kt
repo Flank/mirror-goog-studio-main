@@ -855,10 +855,10 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             )?.let { variantInfo ->
                 addVariant(variantInfo)
                 val variant = variantInfo.variant
-                val variantDslInfo = variant.variantDslInfo
-                val minSdkVersion = variantInfo.variant.minSdkVersion.apiLevel
-                val targetSdkVersion = variantDslInfo.targetSdkVersion.apiLevel
-                if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
+                val variantBuilder = variantInfo.variantBuilder
+                val minSdkVersion = variant.minSdkVersion
+                val targetSdkVersion = variant.targetSdkVersion
+                if (minSdkVersion.apiLevel > targetSdkVersion.apiLevel) {
                     projectServices
                             .issueReporter
                             .reportWarning(
@@ -868,14 +868,14 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                                             + " (%d) for variant \"%s\". Please change the"
                                             + " values such that minSdkVersion is less than or"
                                             + " equal to targetSdkVersion.",
-                                    minSdkVersion,
-                                    targetSdkVersion,
+                                    minSdkVersion.apiLevel,
+                                    targetSdkVersion.apiLevel,
                                     variant.name))
                 }
 
                 val testFixturesEnabledForVariant =
-                    variantInfo.variant.variantBuilder is HasTestFixturesBuilder &&
-                            (variantInfo.variant.variantBuilder as HasTestFixturesBuilder)
+                    variantBuilder is HasTestFixturesBuilder &&
+                            (variantBuilder as HasTestFixturesBuilder)
                             .enableTestFixtures
 
                 if (testFixturesEnabledForVariant) {
@@ -886,7 +886,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         variantInfo
                     )
                     testFixturesComponents.add(testFixtures)
-                    (variantInfo.variant as HasTestFixtures).testFixtures = testFixtures
+                    (variant as HasTestFixtures).testFixtures = testFixtures
                 }
 
                 if (variantFactory.variantType.hasTestComponents) {
@@ -902,7 +902,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         )
                         androidTest?.let {
                             addTestComponent(it)
-                            (variantInfo.variant as HasAndroidTest).androidTest =
+                            (variant as HasAndroidTest).androidTest =
                                 it as com.android.build.api.component.AndroidTest
                         }
                     }
@@ -917,13 +917,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     )
                     unitTest?.let {
                         addTestComponent(it)
-                        variantInfo.variant.unitTest = it as UnitTest
+                        variant.unitTest = it as UnitTest
                     }
                 }
 
                 // Now that unitTest and/or androidTest have been created and added to the main
                 // user visible variant object, we can run the onVariants() actions
-                val userVisibleVariant = (variantInfo.variant as VariantImpl)
+                val userVisibleVariant = (variant as VariantImpl)
                     .createUserVisibleVariantObject<Variant>(projectServices,
                         variantApiOperationsRegistrar,
                         variantInfo.stats)
@@ -950,7 +950,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
 
                 variantApiOperationsRegistrar.dslExtensions.forEach { registeredExtension ->
                     registeredExtension.configurator.invoke(variantExtensionConfig).let {
-                        variantInfo.variantBuilder.registerExtension<Any>(
+                        variantBuilder.registerExtension<Any>(
                             if (it is GeneratedSubclass) it.publicType() else it.javaClass,
                             it
                         )
@@ -964,7 +964,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 variantAnalytics?.let {
                     it
                         .setIsDebug(buildType.isDebuggable)
-                        .setMinSdkVersion(AnalyticsUtil.toProto(variantInfo.variant.minSdkVersion))
+                        .setMinSdkVersion(AnalyticsUtil.toProto(minSdkVersion))
                         .setMinifyEnabled(variant.minifiedEnabled)
                         .setUseMultidex(variant.isMultiDexEnabled)
                         .setUseLegacyMultidex(variant.dexingType.isLegacyMultiDexMode())
@@ -978,11 +978,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         // If code shrinker is used, it can only be R8
                         variantAnalytics.codeShrinker = GradleBuildVariant.CodeShrinkerTool.R8
                     }
-                    if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
-                        variantAnalytics.targetSdkVersion =
-                            AnalyticsUtil.toProto(variantDslInfo.targetSdkVersion)
-                    }
-                    variantDslInfo.maxSdkVersion?.let { version ->
+                    variantAnalytics.targetSdkVersion = AnalyticsUtil.toProto(targetSdkVersion)
+                    variant.maxSdkVersion?.let { version ->
                         variantAnalytics.setMaxSdkVersion(
                             ApiVersion.newBuilder().setApiLevel(version.toLong()))
                     }

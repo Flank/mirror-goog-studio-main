@@ -45,12 +45,8 @@ internal class VariantBuilderImplTest {
     lateinit var componentIdentity: ComponentIdentity
     @Mock
     lateinit var variantApiServices: VariantApiServices
-    @Mock
-    lateinit var minSdkVersion: AndroidVersion
-    @Mock
-    lateinit var targetSdkVersion: ApiVersion
 
-    val builder by lazy {
+    val builder: VariantBuilder by lazy {
         object : VariantBuilderImpl(
             variantDslInfo,
             componentIdentity,
@@ -67,13 +63,8 @@ internal class VariantBuilderImplTest {
 
     @Before
     fun setup() {
-        Mockito.`when`(variantDslInfo.minSdkVersion).thenReturn(minSdkVersion)
-        Mockito.`when`(minSdkVersion.apiLevel).thenReturn(12)
-        Mockito.`when`(minSdkVersion.codename).thenReturn(null)
-
-        Mockito.`when`(variantDslInfo.targetSdkVersion).thenReturn(targetSdkVersion)
-        Mockito.`when`(targetSdkVersion.apiLevel).thenReturn(12)
-        Mockito.`when`(targetSdkVersion.codename).thenReturn(null)
+        Mockito.`when`(variantDslInfo.minSdkVersion).thenReturn(MutableAndroidVersion(12, null))
+        Mockito.`when`(variantDslInfo.targetSdkVersion).thenReturn(null)
     }
 
     @Test
@@ -100,12 +91,22 @@ internal class VariantBuilderImplTest {
 
     @Test
     fun testTargetSdkSetters() {
+        // check we get the minSdkVersion by default
         Truth.assertThat(builder.targetSdk).isEqualTo(12)
         Truth.assertThat(builder.targetSdkPreview).isNull()
+        builder.minSdk = 43
+        Truth.assertThat(builder.targetSdk).isEqualTo(43)
+        Truth.assertThat(builder.targetSdkPreview).isNull()
+        builder.minSdkPreview = "N"
+        Truth.assertThat(builder.targetSdk).isNull()
+        Truth.assertThat(builder.targetSdkPreview).isEqualTo("N")
 
         builder.targetSdk = 43
         Truth.assertThat(builder.targetSdk).isEqualTo(43)
         Truth.assertThat(builder.targetSdkPreview).isNull()
+        // check the min sdk is not impacted by changes to target
+        Truth.assertThat(builder.minSdk).isNull()
+        Truth.assertThat(builder.minSdkPreview).isEqualTo("N")
 
         builder.targetSdkPreview = "M"
         Truth.assertThat(builder.targetSdk).isNull()
@@ -116,6 +117,11 @@ internal class VariantBuilderImplTest {
         Truth.assertThat(builder.targetSdkPreview).isEqualTo("N")
 
         builder.targetSdk = 23
+        Truth.assertThat(builder.targetSdk).isEqualTo(23)
+        Truth.assertThat(builder.targetSdkPreview).isNull()
+
+        // check changing the min sdk does impact the target after it's forked
+        builder.minSdk = 43
         Truth.assertThat(builder.targetSdk).isEqualTo(23)
         Truth.assertThat(builder.targetSdkPreview).isNull()
     }

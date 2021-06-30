@@ -523,16 +523,15 @@ class ModelBuilder<
 
         val minSdkVersion =
                 ApiVersionImpl(component.minSdkVersion.apiLevel, component.minSdkVersion.codename)
-        val targetSdkVersion =
-                if (component is VariantCreationConfig) ApiVersionImpl(
-                    component.targetSdkVersion.apiLevel,
-                    component.targetSdkVersion.codename
-                ) else ApiVersionImpl(1, null)
-        val maxSdkVersion = if (component is VariantCreationConfig) component.maxSdkVersion else null
+        val targetSdkVersionOverride = component.targetSdkVersionOverride?.let {
+            ApiVersionImpl(it.apiLevel, it.codename)
+        }
+        val maxSdkVersion =
+                if (component is VariantCreationConfig) component.maxSdkVersion else null
 
         return AndroidArtifactImpl(
             minSdkVersion = minSdkVersion,
-            targetSdkVersion = targetSdkVersion,
+            targetSdkVersionOverride = targetSdkVersionOverride,
             maxSdkVersion = maxSdkVersion,
 
             variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),

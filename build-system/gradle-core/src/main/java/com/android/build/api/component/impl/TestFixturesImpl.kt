@@ -92,6 +92,8 @@ open class TestFixturesImpl @Inject constructor(
         get() = mainVariant.debuggable
     override val minSdkVersion: AndroidVersion
         get() = mainVariant.minSdkVersion
+    override val targetSdkVersion: AndroidVersion
+        get() = mainVariant.targetSdkVersion
     override val needsMainDexListForBundle: Boolean
         get() = mainVariant.needsMainDexListForBundle
 
@@ -103,6 +105,10 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
+
+    override val targetSdkVersionOverride: AndroidVersion?
+        get() = mainVariant.targetSdkVersionOverride
+
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
         operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,

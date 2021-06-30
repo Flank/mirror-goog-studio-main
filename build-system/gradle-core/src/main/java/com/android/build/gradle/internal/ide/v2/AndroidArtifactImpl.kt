@@ -30,7 +30,7 @@ import java.io.Serializable
  */
 data class AndroidArtifactImpl(
     override val minSdkVersion: ApiVersion,
-    override val targetSdkVersion: ApiVersion,
+    override val targetSdkVersionOverride: ApiVersion?,
     override val maxSdkVersion: Int?,
     override val variantSourceProvider: SourceProvider?,
     override val multiFlavorSourceProvider: SourceProvider?,

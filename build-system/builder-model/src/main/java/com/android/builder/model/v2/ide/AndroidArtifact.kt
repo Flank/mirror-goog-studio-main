@@ -35,9 +35,11 @@ interface AndroidArtifact : BaseArtifact, AndroidModel {
     val minSdkVersion: ApiVersion
 
     /**
-     * The target SDK version of this artifact
+     * The target SDK version override. If null, there is no override and the value may
+     * be coming from the manifest(s) if present there.
+     * If not null, this is the final resolved value.
      */
-    val targetSdkVersion: ApiVersion
+    val targetSdkVersionOverride: ApiVersion?
 
     /**
      * The max SDK version of this artifact, or null if not set
