@@ -34,6 +34,6 @@ data class SigningConfigVersions(
         // The lowest API with v3 signing support
         const val MIN_V3_SDK = 28
         // The lowest API with v4 signing support
-        const val MIN_V4_SDK = 28
+        const val MIN_V4_SDK = 30
     }
 }

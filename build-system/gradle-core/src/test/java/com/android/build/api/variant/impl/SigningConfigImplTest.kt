@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V2_SDK
 import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V3_SDK
+import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V4_SDK
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +31,7 @@ class SigningConfigImplTest(
     private val enableV1Signing: Boolean?,
     private val enableV2Signing: Boolean?,
     private val enableV3Signing: Boolean?,
+    private val enableV4Signing: Boolean?,
     private val minSdk: Int,
     private val targetApi: Int?
 ) {
@@ -41,6 +43,7 @@ class SigningConfigImplTest(
                 it.enableV1Signing = enableV1Signing
                 it.enableV2Signing = enableV2Signing
                 it.enableV3Signing = enableV3Signing
+                it.enableV4Signing = enableV4Signing
             }
 
         val signingConfigImpl =
@@ -54,6 +57,7 @@ class SigningConfigImplTest(
         val v1Signed = signingConfigImpl.enableV1Signing.get()
         val v2Signed = signingConfigImpl.enableV2Signing.get()
         val v3Signed = signingConfigImpl.enableV3Signing.get()
+        val v4Signed = signingConfigImpl.enableV4Signing.get()
 
         // For each version, if it's explicitly disabled, we shouldn't sign with it.
         if (enableV1Signing == false) {
@@ -65,9 +69,12 @@ class SigningConfigImplTest(
         if (enableV3Signing == false) {
             assertThat(v3Signed).isFalse()
         }
+        if (enableV4Signing == false) {
+            assertThat(v4Signed).isFalse()
+        }
 
-        // If there are no resulting signatures, all versions must be either (1) explicitly disabled
-        // (or not set if v3) or (2) not supported on the given targetApi.
+        // If there are no resulting v1-v3 signatures, all versions must be either (1) explicitly
+        // disabled (or not set if v3) or (2) not supported on the given targetApi.
         if (!v1Signed && !v2Signed && !v3Signed) {
             assertThat(enableV1Signing).isFalse()
             assertThat(enableV2Signing == false || (targetApi != null && targetApi < MIN_V2_SDK))
@@ -90,6 +97,11 @@ class SigningConfigImplTest(
             assertThat(v3Signed).isFalse()
         } else if (enableV3Signing == true) {
             assertThat(v3Signed).isTrue()
+        }
+        if (targetApi != null && targetApi < MIN_V4_SDK) {
+            assertThat(v4Signed).isFalse()
+        } else if (enableV4Signing == true) {
+            assertThat(v4Signed).isTrue()
         }
 
         // Check logic for device API == MIN_V3_SDK
@@ -127,26 +139,31 @@ class SigningConfigImplTest(
 
     companion object {
         @Parameterized.Parameters(
-            name = "enableV1Signing={0}, enableV2Signing={1}, enableV3Signing={2}, minSdk={3}, targetApi={4}"
+            name = "enableV1Signing={0}, enableV2Signing={1}, enableV3Signing={2}, enableV4Signing={3}, minSdk={4}, targetApi={5}"
         )
         @JvmStatic
         fun data(): Array<Array<Any?>> {
-            // cover every combination of parameters, limited to APIs 23, 24, and 28.
+            // cover every combination of parameters, limited to APIs 23, 24, 28, and 30.
+            val minSdks = listOf(MIN_V2_SDK - 1, MIN_V2_SDK, MIN_V3_SDK, MIN_V4_SDK)
+            val targetApis = minSdks + null
             val list: MutableList<Array<Any?>> = mutableListOf()
             listOf(true, false, null).forEach { enableV1Signing ->
                 listOf(true, false, null).forEach { enableV2Signing ->
                     listOf(true, false, null).forEach { enableV3Signing ->
-                        listOf(MIN_V2_SDK - 1, MIN_V2_SDK, MIN_V3_SDK, null).forEach { targetApi ->
-                            listOf(MIN_V2_SDK - 1, MIN_V2_SDK, MIN_V3_SDK).forEach { minSdk ->
-                                list.add(
-                                    arrayOf(
-                                        enableV1Signing,
-                                        enableV2Signing,
-                                        enableV3Signing,
-                                        minSdk,
-                                        targetApi
+                        listOf(true, false, null).forEach { enableV4Signing ->
+                            targetApis.forEach { targetApi ->
+                                minSdks.forEach { minSdk ->
+                                    list.add(
+                                        arrayOf(
+                                            enableV1Signing,
+                                            enableV2Signing,
+                                            enableV3Signing,
+                                            enableV4Signing,
+                                            minSdk,
+                                            targetApi
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
