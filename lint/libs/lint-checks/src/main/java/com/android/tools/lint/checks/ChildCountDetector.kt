@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.CLASS_NESTED_SCROLL_VIEW
 import com.android.SdkConstants.GRID_VIEW
 import com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW
 import com.android.SdkConstants.LIST_VIEW
@@ -77,7 +78,9 @@ class ChildCountDetector : LayoutDetector() {
         SCROLL_VIEW,
         HORIZONTAL_SCROLL_VIEW,
         LIST_VIEW,
-        GRID_VIEW
+        GRID_VIEW,
+        CLASS_NESTED_SCROLL_VIEW.oldName(),
+        CLASS_NESTED_SCROLL_VIEW.newName()
         // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
     )
 
@@ -89,7 +92,9 @@ class ChildCountDetector : LayoutDetector() {
             }
         }
         val tagName = element.tagName
-        if (tagName == SCROLL_VIEW || tagName == HORIZONTAL_SCROLL_VIEW) {
+        if (tagName == SCROLL_VIEW || tagName == HORIZONTAL_SCROLL_VIEW ||
+            tagName == CLASS_NESTED_SCROLL_VIEW.oldName() || tagName == CLASS_NESTED_SCROLL_VIEW.newName()
+        ) {
             if (childCount > 1) {
                 context.report(
                     SCROLLVIEW_ISSUE, element,
