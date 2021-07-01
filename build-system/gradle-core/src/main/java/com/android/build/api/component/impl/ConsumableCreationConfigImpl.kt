@@ -102,8 +102,7 @@ open class ConsumableCreationConfigImpl(
      */
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
         val extension: BaseExtension = globalScope.getExtension()
-        val libDesugarEnabled = (extension.compileOptions.coreLibraryDesugaringEnabled != null
-                && extension.compileOptions.coreLibraryDesugaringEnabled!!)
+        val libDesugarEnabled = extension.compileOptions.coreLibraryDesugaringEnabled ?: false
         val multidexEnabled = creationConfig.isMultiDexEnabled
         val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8
