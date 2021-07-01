@@ -226,6 +226,52 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         )
     }
 
+    fun testInheritedFileBasePath() {
+        // Regression test for https://issuetracker.google.com/191692647
+        val folder = temporaryFolder.root
+        val parentConfiguration = getConfiguration(
+            """
+            <lint>
+                <issue id="UnknownNullness">
+                    <option name="exceptions" value="exceptions.xml" />
+                </issue>
+                <issue id="NewApi">
+                    <option name="allowed" value="api/list.xml" />
+                </issue>
+            </lint>
+            """.trimIndent(),
+            initialDir = File(folder, "parent")
+        )
+
+        val configuration = getConfiguration(
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <lint>
+                <issue id="UnknownNullness">
+                    <option name="exceptions" value="new-exceptions.xml" />
+                </issue>
+            </lint>
+            """.trimIndent(),
+            initialDir = File(folder, "child")
+        )
+
+        configuration.configurations.setParent(configuration, parentConfiguration)
+
+        fun getPath(file: File?): String {
+            file ?: return "null"
+            return file.path.removePrefix(temporaryFolder.root.path).replace(File.separatorChar, '/')
+        }
+
+        assertEquals(
+            "/parent/api/list.xml", // not /child/api/list.xml
+            getPath(configuration.getOptionAsFile(ApiDetector.UNSUPPORTED, "allowed"))
+        )
+        assertEquals(
+            "/child/new-exceptions.xml",
+            getPath(configuration.getOptionAsFile(InteroperabilityDetector.PLATFORM_NULLNESS, "exceptions"))
+        )
+    }
+
     fun testClientFilters() {
         // Also tests the "hide" and "hidden" aliases for "ignore"
         val configuration = getConfiguration(

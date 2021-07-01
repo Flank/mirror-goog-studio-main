@@ -315,7 +315,7 @@ open class LintXmlConfiguration protected constructor(
         return parent?.isIgnored(context, incident) ?: false
     }
 
-    override fun getOption(
+    private fun getLocalOption(
         issue: Issue,
         name: String,
         default: String?
@@ -329,6 +329,15 @@ open class LintXmlConfiguration protected constructor(
             issueMap[VALUE_ALL]?.options?.get(name)?.let { return it }
         }
 
+        return default
+    }
+
+    override fun getOption(
+        issue: Issue,
+        name: String,
+        default: String?
+    ): String? {
+        getLocalOption(issue, name, default)?.let { return it }
         return parent?.getOption(issue, name, default) ?: default
     }
 
@@ -337,7 +346,10 @@ open class LintXmlConfiguration protected constructor(
         name: String,
         default: File?
     ): File? {
-        val value = getOption(issue, name, null) ?: return default
+        val value = getLocalOption(issue, name, null)
+            ?: return parent?.getOptionAsFile(issue, name, null)
+                ?: default
+
         val file = File(value.replace('/', File.separatorChar))
         if (file.isAbsolute) {
             return file
