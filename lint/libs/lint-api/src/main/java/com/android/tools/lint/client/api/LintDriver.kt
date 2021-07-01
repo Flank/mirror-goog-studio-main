@@ -2520,7 +2520,7 @@ class LintDriver(
             incident.severity = severity
 
             val baseline = baseline
-            if (baseline != null) {
+            if (baseline != null && mode != ANALYSIS_ONLY) {
                 val filtered = baseline.findAndMark(incident)
                 if (filtered) {
                     if (!allowSuppress && issue.suppressNames != null) {

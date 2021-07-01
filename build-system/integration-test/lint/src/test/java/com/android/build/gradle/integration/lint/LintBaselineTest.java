@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.Arrays;
@@ -74,6 +75,9 @@ public class LintBaselineTest {
 
     @Test
     public void checkMerging() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n\nandroid.lintOptions.textOutput file(\"lint-report.txt\")\n\n");
         final GradleBuildResult result;
         if (lintBaselinesContinue) {
             result = getExecutor().run(":app:lint");
@@ -114,6 +118,11 @@ public class LintBaselineTest {
                                 + "\n");
         // Check the written baseline means that a subsequent lint invocation passes.
         getExecutor().run("clean", ":app:lint");
+        File lintResults = project.file("app/lint-report.txt");
+        // Regression test for b/192572040
+        assertThat(lintResults)
+                .doesNotContain(
+                        "errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project");
     }
 
     private GradleTaskExecutor getExecutor() {

@@ -67,11 +67,16 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
-        FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
-        executor.run(lintTaskName).also { result ->
-            assertThat(result.getTask(lintReportTaskName)).didWork()
-            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
-
+        val file = prefsLintDir.resolve("abcdefg.jar")
+        try {
+            FileUtils.createFile(file, "FOO_BAR")
+            executor.run(lintTaskName).also { result ->
+                assertThat(result.getTask(lintReportTaskName)).didWork()
+                if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+            }
+        } finally {
+            // Make sure we don't leave this jar around in a shared directory to affect later tests
+            file.delete()
         }
     }
 
