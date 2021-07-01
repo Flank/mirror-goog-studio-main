@@ -71,16 +71,14 @@ open class ConsumableCreationConfigImpl(
 
     open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
         // in order of precedence
-        if (!globalScope.extension
+        return if (!globalScope.extension
                         .compileOptions
                         .targetCompatibility
-                        .isJava8Compatible()) {
-            return VariantScope.Java8LangSupport.UNUSED
-        }
-        if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
-            return VariantScope.Java8LangSupport.RETROLAMBDA
-        }
-        return if (config.minifiedEnabled) {
+                        .isJava8Compatible) {
+            VariantScope.Java8LangSupport.UNUSED
+        } else if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
+            VariantScope.Java8LangSupport.RETROLAMBDA
+        } else if (config.minifiedEnabled) {
             VariantScope.Java8LangSupport.R8
         } else {
             // D8 cannot be used if R8 is used
