@@ -300,7 +300,10 @@ abstract class DataFlowAnalyzer(
                 handleLambdaSuffix(lambda, node)
             }
         }
+        return super.visitCallExpression(node)
+    }
 
+    override fun afterVisitCallExpression(node: UCallExpression) {
         for (expression in node.valueArguments) {
             if (instances.contains(expression)) {
                 if (!ignoreArgument(node, expression)) {
@@ -316,7 +319,7 @@ abstract class DataFlowAnalyzer(
             }
         }
 
-        return super.visitCallExpression(node)
+        super.afterVisitCallExpression(node)
     }
 
     private fun handleLambdaSuffix(lambda: ULambdaExpression, node: UCallExpression) {

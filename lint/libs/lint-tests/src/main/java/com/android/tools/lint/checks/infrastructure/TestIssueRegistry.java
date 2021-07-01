@@ -18,7 +18,6 @@ package com.android.tools.lint.checks.infrastructure;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import java.util.EnumSet;
