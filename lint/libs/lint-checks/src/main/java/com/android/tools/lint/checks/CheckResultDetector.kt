@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnot
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
@@ -43,11 +44,13 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.java.JavaUTernaryIfExpression
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -168,14 +171,18 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     companion object {
         fun isExpressionValueUnused(element: UElement): Boolean {
+            if (element is UParenthesizedExpression) {
+                return element.uastParent?.let(::isExpressionValueUnused) ?: true
+            }
+
             var prev = element.getParentOfType(
                 UExpression::class.java, false
             ) ?: return true
 
-            var curr = prev.uastParent ?: return true
+            var curr = skipParentheses(prev.uastParent) ?: return true
             while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
                 prev = curr
-                curr = curr.uastParent ?: return true
+                curr = skipParentheses(curr.uastParent) ?: return true
             }
 
             @Suppress("RedundantIf")
@@ -203,7 +210,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 // It's the last child: see if the parent is unused
-                val parent = curr.uastParent
+                val parent = skipParentheses(curr.uastParent)
                 if (parent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
                     val expressionType = parent.getExpressionType()?.canonicalText
                     if (expressionType != null &&
@@ -235,18 +242,26 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             } else if (curr is UIfExpression) {
                 if (curr.condition === prev) {
                     return false
+                } else if (curr is JavaUTernaryIfExpression) {
+                    // Ternary expressions can only be used as expressions, not statements,
+                    // so we know that the value is used
+                    return false
                 }
-                val parent = curr.uastParent ?: return true
+                val parent = skipParentheses(curr.uastParent) ?: return true
                 if (parent is UMethod || parent is UClassInitializer) {
                     return true
                 }
-                return isExpressionValueUnused(parent)
+                return isExpressionValueUnused(curr)
             } else if (curr is UMethod || curr is UClassInitializer) {
                 return true
-            } else if (curr is UYieldExpression && curr.uastParent?.uastParent is USwitchClauseExpressionWithBody) {
-                val switch = curr.uastParent?.uastParent?.getParentOfType(USwitchExpression::class.java) ?: return true
-                return isExpressionValueUnused(switch)
             } else {
+                @Suppress("UnstableApiUsage")
+                if (curr is UYieldExpression) {
+                    val p2 = skipParentheses((skipParentheses(curr.uastParent))?.uastParent)
+                    val body = p2 as? USwitchClauseExpressionWithBody ?: return false
+                    val switch = body.getParentOfType(USwitchExpression::class.java) ?: return true
+                    return isExpressionValueUnused(switch)
+                }
                 // Some other non block node type, such as assignment,
                 // method declaration etc: not unused
                 // TODO: Make sure that a void/unit method inline declaration

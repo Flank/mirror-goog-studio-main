@@ -31,15 +31,18 @@ import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Lint;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
@@ -69,10 +72,10 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public static void checkDriver(
-            String expectedOutput,
-            String expectedError,
+            @Nullable String expectedOutput,
+            @Nullable String expectedError,
             int expectedExitCode,
-            String[] args,
+            @NonNull String[] args,
             @Nullable Cleanup cleanup,
             @Nullable LintListener listener) {
 
@@ -94,6 +97,9 @@ public class MainTest extends AbstractCheckTest {
                             }
                         }
                     };
+
+            setConfigurationRoot(args);
+
             int exitCode = main.run(args);
 
             String stderr = error.toString();
@@ -122,6 +128,44 @@ public class MainTest extends AbstractCheckTest {
         } finally {
             System.setOut(previousOut);
             System.setErr(previousErr);
+        }
+    }
+
+    /**
+     * Process the arguments and see if we can find where the project or project descriptor file is
+     * and set the configuration hierarchy root to that folder such that we don't pick up any
+     * lint.xml files in the environment outside the test
+     */
+    private static void setConfigurationRoot(String[] args) {
+        String prevArg = "";
+        File root = null;
+        for (String arg : args) {
+            if (!arg.startsWith("--")) {
+                File file = new File(arg);
+                if (prevArg.equals("--project") || prevArg.equals("--config")) {
+                    File parentFile = file.getParentFile();
+                    if (parentFile != null && parentFile.isDirectory()) {
+                        if (root == null) {
+                            root = parentFile;
+                        } else {
+                            root = Lint.getCommonParent(root, parentFile);
+                        }
+                    }
+                }
+            }
+            prevArg = arg;
+        }
+        if (root == null
+                && args.length > 0
+                && Arrays.stream(args).anyMatch(s -> new File(s).exists())) {
+            String last = args[args.length - 1];
+            File file = new File(last);
+            if (file.isDirectory()) {
+                root = file.getParentFile();
+            }
+        }
+        if (root != null) {
+            ConfigurationHierarchy.Companion.setDefaultRootDir(root);
         }
     }
 
@@ -526,8 +570,6 @@ public class MainTest extends AbstractCheckTest {
     /**
      * This test emulates Google3's `android_lint` setup, and catches regression caused by relative
      * path for JAR files.
-     *
-     * @throws Exception
      */
     public void testRelativePaths() throws Exception {
         // Project with source only

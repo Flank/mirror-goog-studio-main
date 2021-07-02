@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.impl.light.LightMethodBuilder
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -130,6 +131,9 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 val superMethod = getRequiredSuperMethod(evaluator, node) ?: return
                 val visitor = SuperCallVisitor(superMethod)
                 node.accept(visitor)
+                if (visitor.uncertain) {
+                    return
+                }
                 val count = visitor.callsSuperCount
                 if (count == 0) {
                     val methodName = node.name
@@ -166,16 +170,23 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         val superCalls = mutableListOf<USuperExpression>()
         val callsSuperCount: Int get() = superCalls.size
         var anySuperCallCount: Int = 0
+        var uncertain = false
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
             anySuperCallCount++
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
+
                 if (resolved == null || // Avoid false positives for type resolution problems
                     targetMethod.isEquivalentTo(resolved)
                 ) {
                     superCalls.add(node)
+                } else if (resolved is LightMethodBuilder &&
+                    resolved.javaClass.name == "org.jetbrains.uast.kotlin.psi.UastDescriptorLightMethod"
+                ) {
+                    // Temporary workaround for https://issuetracker.google.com/189433125
+                    uncertain = true
                 }
             }
 

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
@@ -34,7 +35,6 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
@@ -62,6 +62,10 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -186,9 +190,21 @@ public abstract class AbstractAppTaskManager<
 
     @Override
     protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
-        super.postJavacCreation(creationConfig);
+        final Provider<Directory> javacOutput = creationConfig.getArtifacts().get(JAVAC.INSTANCE);
+        final FileCollection preJavacGeneratedBytecode =
+                creationConfig.getVariantData().getAllPreJavacGeneratedBytecode();
+        final FileCollection postJavacGeneratedBytecode =
+                creationConfig.getVariantData().getAllPostJavacGeneratedBytecode();
 
         taskFactory.register(new BundleAllClasses.CreationAction(creationConfig));
+
+        // create a lighter weight version for usage inside the same module (unit tests basically)
+        ConfigurableFileCollection files =
+                creationConfig
+                        .getServices()
+                        .fileCollection(
+                                javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
+        creationConfig.getArtifacts().appendToAllClasses(files);
     }
 
     @Override

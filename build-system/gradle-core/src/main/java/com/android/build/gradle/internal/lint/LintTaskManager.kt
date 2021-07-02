@@ -187,8 +187,8 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
     companion object {
 
-        internal fun File?.isLintStdout() = this?.path == "stdout"
-        internal fun File?.isLintStderr() = this?.path == "stdout"
+        internal fun File.isLintStdout() = this.path == File("stdout").path
+        internal fun File.isLintStderr() = this.path == File("stderr").path
 
         internal fun needsCopyReportTask(lintOptions: LintOptions) : Boolean {
             val textOutput = lintOptions.textOutput

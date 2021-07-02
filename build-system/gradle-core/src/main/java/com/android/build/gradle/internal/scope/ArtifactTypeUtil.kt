@@ -19,13 +19,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.Artifact
 import com.android.utils.FileUtils
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
-import org.gradle.api.specs.Spec
 import java.io.File
 import java.util.Locale
 
@@ -58,26 +52,4 @@ fun Artifact<*>.getOutputPath(
         getFileSystemLocationName()
     )
 
-/**
- * Converts a [FileCollection] to a [Provider] of a [List] of [RegularFile], filtering other types
- * like [Directory]
- */
-fun FileCollection.getRegularFiles(projectDirectory: Directory): Provider<List<RegularFile>> =
-    elements.map {
-        it.filter { file -> file.asFile.isFile }
-            .map {
-                fileSystemLocation -> projectDirectory.file(fileSystemLocation.asFile.absolutePath)
-        }
-    }
 
-/**
- * Converts a [FileCollection] to a [Provider] of a [List] of [Directory], ignoring other types
- * like [RegularFile]
- */
-fun FileCollection.getDirectories(projectDirectory: Directory): Provider<List<Directory>> =
-    elements.map {
-        it.filter { file -> file.asFile.isDirectory }
-            .map {
-                fileSystemLocation -> projectDirectory.dir(fileSystemLocation.asFile.absolutePath)
-        }
-    }

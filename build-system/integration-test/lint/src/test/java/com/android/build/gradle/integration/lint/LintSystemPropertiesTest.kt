@@ -43,40 +43,62 @@ class LintSystemPropertiesTest {
             assertThat(result.getTask(":lintDebug")).wasUpToDate()
         }
 
-        // check that the lint tasks are not up-to-date if we run with
-        // -Dlint.configuration.override=foo
-        project.executor()
-            .withArgument("-Dlint.configuration.override=foo")
-            .run(":lintDebug")
-            .also { result ->
-                assertThat(result.getTask(":lintAnalyzeDebug")).didWork()
-                assertThat(result.getTask(":lintDebug")).didWork()
-            }
+        val systemProperties =
+            listOf(
+                "android.lint.log-jar-problems",
+                "gradle.user.home",
+                "LINT_API_DATABASE",
+                "com.android.tools.lint.bindir",
+                "lint.configuration.override",
+                "lint.nullness.ignore-deprecated",
+                "lint.unused-resources.exclude-tests",
+                "lint.unused-resources.include-tests",
+                "com.android.tools.lint.workdir",
+                "user.home"
+            )
 
-        // run build without any arguments before testing the next system property
-        project.executor().run(":lintDebug")
+        for (systemProperty in systemProperties) {
+            // check that the lint tasks are not up-to-date if we set the system property
+            project.executor()
+                .withArgument("-D$systemProperty=foo")
+                .run(":lintDebug")
+                .also { result ->
+                    assertThat(result.getTask(":lintAnalyzeDebug"))
+                        .named(":lintAnalyzeDebug with -D$systemProperty=foo")
+                        .didWork()
+                    assertThat(result.getTask(":lintDebug"))
+                        .named(":lintDebug with -D$systemProperty=foo")
+                        .didWork()
+                }
 
-        // check that the lint reporting task is not up-to-date if we run with -Dlint.autofix=foo
-        // (the lint analysis task should be up-to-date)
-        project.executor()
-            .withArgument("-Dlint.autofix=foo")
-            .run(":lintDebug")
-            .also { result ->
-                assertThat(result.getTask(":lintAnalyzeDebug")).wasUpToDate()
-                assertThat(result.getTask(":lintDebug")).didWork()
-            }
+            // run build without any system properties before testing the next one
+            project.executor().run(":lintDebug")
+        }
 
-        // run build without any arguments before testing the next system property
-        project.executor().run(":lintDebug")
+        val reportTaskSystemProperties =
+            listOf(
+                "lint.autofix",
+                "lint.baselines.continue",
+                "lint.html.prefs"
+            )
 
-        // check that the lint reporting task is not up-to-date if we run with
-        // -Dlint.baselines.continue=foo (the lint analysis task should be up-to-date)
-        project.executor()
-            .withArgument("-Dlint.baselines.continue=foo")
-            .run(":lintDebug")
-            .also { result ->
-                assertThat(result.getTask(":lintAnalyzeDebug")).wasUpToDate()
-                assertThat(result.getTask(":lintDebug")).didWork()
-            }
+        for (systemProperty in reportTaskSystemProperties) {
+            // check that the lint reporting task is not up-to-date if we set the system property
+            // (the lint analysis task should be up-to-date)
+            project.executor()
+                .withArgument("-D$systemProperty=foo")
+                .run(":lintDebug")
+                .also { result ->
+                    assertThat(result.getTask(":lintAnalyzeDebug"))
+                        .named(":lintAnalyzeDebug with -D$systemProperty=foo")
+                        .wasUpToDate()
+                    assertThat(result.getTask(":lintDebug"))
+                        .named(":lintDebug with -D$systemProperty=foo")
+                        .didWork()
+                }
+
+            // run build without any system properties before testing the next one
+            project.executor().run(":lintDebug")
+        }
     }
 }

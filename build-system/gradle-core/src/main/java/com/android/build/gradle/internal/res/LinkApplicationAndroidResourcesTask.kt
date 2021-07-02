@@ -766,16 +766,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             output: BuiltArtifactImpl,
             resPackageOutputFolder: File
         ) {
-            val currentBuiltArtifacts = ArrayList(
-                BuiltArtifactsLoaderImpl.loadFromDirectory(resPackageOutputFolder)?.elements
-                    ?: ArrayList()
-            )
-            currentBuiltArtifacts.add(output)
-            BuiltArtifactsImpl(
-                artifactType = InternalArtifactType.PROCESSED_RES,
-                applicationId = applicationId,
-                variantName = variantName,
-                elements = currentBuiltArtifacts
+            (BuiltArtifactsLoaderImpl.loadFromDirectory(resPackageOutputFolder)?.addElement(output)
+                    ?: BuiltArtifactsImpl(
+                        artifactType = InternalArtifactType.PROCESSED_RES,
+                        applicationId = applicationId,
+                        variantName = variantName,
+                        elements = listOf(output)
+                    )
             ).saveToDirectory(resPackageOutputFolder)
         }
 

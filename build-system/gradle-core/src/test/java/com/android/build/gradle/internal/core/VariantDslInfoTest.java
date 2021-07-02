@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.core;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.Nullable;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -49,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.Provider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -63,8 +63,6 @@ public class VariantDslInfoTest {
     private BuildType buildType;
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
-    private Provider<String> namespace;
-    private String testNamespace;
 
     @Before
     public void setUp() throws Exception {
@@ -286,48 +284,6 @@ public class VariantDslInfoTest {
         assertThat(variant.getApplicationId().get()).isEqualTo("com.example.mapp");
     }
 
-    @Test
-    public void testNamespace() {
-        initNoDeviceApiInjection();
-
-        namespace = FakeProviderFactory.getFactory().provider(() -> "com.example.myNamespace");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getNamespace().get()).isEqualTo("com.example.myNamespace");
-    }
-
-    @Test
-    public void testTestNamespace() {
-        initNoDeviceApiInjection();
-
-        testNamespace = "com.example.myTestNamespace";
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getTestNamespace()).isEqualTo("com.example.myTestNamespace");
-    }
-
-    @Test
-    public void testDefaultTestNamespace() {
-        initNoDeviceApiInjection();
-
-        namespace = FakeProviderFactory.getFactory().provider(() -> "com.example.myNamespace");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getTestNamespace()).isEqualTo("com.example.myNamespace.test");
-    }
-
-    @Test
-    public void testNullTestNamespace() {
-        initNoDeviceApiInjection();
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getTestNamespace()).isEqualTo(null);
-    }
-
     private VariantDslInfo getVariant() {
         return createVariant(null /*signingOverride*/);
     }
@@ -351,9 +307,8 @@ public class VariantDslInfoTest {
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
                         variantPropertiesApiServices,
-                        namespace,
-                        testNamespace,
-                        null /* BuildType */,
+                        null /* NativeBuildType */,
+                        Mockito.mock(BaseExtension.class),
                         Collections.emptyMap());
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
@@ -410,7 +365,5 @@ public class VariantDslInfoTest {
         flavorConfig = dslServices.newInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
         buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
-        namespace = null;
-        testNamespace = null;
     }
 }

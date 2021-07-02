@@ -1556,7 +1556,8 @@ open class LintXmlConfiguration protected constructor(
 
     // For debugging only
     override fun toString(): String {
-        return this.javaClass.simpleName + "(" + configFile + ")"
+        val path = configurations.client.pathVariables.toPathString(configFile)
+        return this.javaClass.simpleName + "(" + path + ")"
     }
 
     companion object {

@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.attributes.VariantAttr;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ModulePropertyKeys;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
@@ -660,7 +659,8 @@ public class VariantDependenciesBuilder {
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
             @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
-        List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavorList();
+        List<com.android.build.api.dsl.ProductFlavor> productFlavors =
+                variantDslInfo.getProductFlavorList();
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map =
                 Maps.newHashMapWithExpectedSize(productFlavors.size());
 
@@ -675,7 +675,7 @@ public class VariantDependenciesBuilder {
         final ObjectFactory objectFactory = project.getObjects();
 
         // first go through the product flavors and add matching attributes
-        for (ProductFlavor f : productFlavors) {
+        for (com.android.build.api.dsl.ProductFlavor f : productFlavors) {
             assert f.getDimension() != null;
 
             map.put(

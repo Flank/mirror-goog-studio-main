@@ -26,9 +26,13 @@ version = rootProject.ext.baseVersion
 dependencies {
     implementation project(':base:common')
     implementation libs.kotlin_stdlib
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7"
+    implementation libs.kotlin_coroutines_core
     implementation libs.apache_commons_io
-    implementation libs.grpc
+    implementation libs.gson
+    implementation libs.grpc_core
+    implementation libs.grpc_netty
+    implementation libs.grpc_protobuf
+    implementation libs.grpc_stub
     implementation libs.protobuf
     implementation libs.guava
     implementation project(':base:utp:android-test-plugin-host-retention-proto')

@@ -22,10 +22,12 @@ group = 'com.android.tools.utp'
 version = rootProject.ext.baseVersion
 
 dependencies {
+    implementation libs.gson
     implementation libs.grpc_core
     implementation libs.grpc_netty
     implementation libs.grpc_protobuf
     implementation libs.grpc_stub
+    implementation libs.guava
     implementation libs.protobuf
     compileOnly libs.javax_annotation
 }

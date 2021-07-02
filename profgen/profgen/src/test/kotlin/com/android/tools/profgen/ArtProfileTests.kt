@@ -44,6 +44,15 @@ class ArtProfileTests {
     }
 
     @Test
+    fun testJetNewsApk() {
+        val obf = ObfuscationMap(testData("jetnews/mapping.txt"))
+        val hrp = strictHumanReadableProfile("baseline-prof-all-compose.txt")
+        val apk = Apk(testData("jetnews/app-release.apk"))
+        val prof = ArtProfile(hrp, obf, apk)
+        assertSerializationIntegrity(prof, ArtProfileSerializer.V0_1_0_P)
+    }
+
+    @Test
     fun testSerializationDeserializationForP() {
         val obf = ObfuscationMap(testData("mapping.txt"))
         val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")

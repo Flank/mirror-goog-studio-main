@@ -135,6 +135,13 @@ class LintBaseline(
         readBaselineFile()
     }
 
+    private fun ignored(id: String): Boolean {
+        return IssueRegistry.isDeletedIssueId(id) ||
+                // Temporarily disabled, but we don't want to interpret entries
+                // in the baseline no longer getting reported as "fixed in the codebase"
+                id == "VectorDrawableCompat"
+    }
+
     /**
      * Checks if we should report baseline activity (filtered out
      * issues, found fixed issues etc and if so reports them.
@@ -160,7 +167,7 @@ class LintBaseline(
             val ids = Maps.newHashMap<String, Int>()
             for (entry in messageToEntry.values()) {
                 val id = entry.issueId
-                if (IssueRegistry.isDeletedIssueId(id)) {
+                if (ignored(id)) {
                     continue
                 }
                 var count: Int? = ids[id]
@@ -390,7 +397,7 @@ class LintBaseline(
                                 idToMessages.put(issue, message)
                             }
                         } else if (tag == TAG_ISSUE) {
-                            if (issue != null && !IssueRegistry.isDeletedIssueId(issue)) {
+                            if (issue != null && !ignored(issue)) {
                                 totalCount++
                             }
                             issue = null
