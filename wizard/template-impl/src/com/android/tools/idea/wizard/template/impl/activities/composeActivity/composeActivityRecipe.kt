@@ -19,9 +19,8 @@ package com.android.tools.idea.wizard.template.impl.activities.composeActivity
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
-import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.res.values.themesXml
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.ui.colorKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.src.app_package.ui.shapeKt
@@ -38,7 +37,6 @@ fun RecipeExecutor.composeActivityRecipe(
 ) {
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
-  addMaterialDependency(true) // useAndroidX should be always true for Compose
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
   setExtVar(composeVersionVarName, "1.0.0-rc01")
@@ -52,10 +50,22 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.0-rc01")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeVersionVarName}", configuration="androidTestImplementation")
   generateManifest(
-    moduleData, activityClass, packageName, isLauncher, true,
+    moduleData = moduleData,
+    activityClass = activityClass,
+    activityThemeName = moduleData.themesData.main.name,
+    packageName = packageName,
+    isLauncher = isLauncher,
+    hasNoActionBar = true,
     generateActivityTitle = true
   )
-  generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
+  // It doesn't have to create separate themes.xml for light and night because the default
+  // status bar color is same between them at this moment
+  // TODO remove themes.xml once Compose library supports setting the status bar color in Composable
+  // this themes.xml exists just for settings the status bar color.
+  // Thus, themeName follows the non-Compose project convention.
+  // (E.g. Theme.MyApplication) as opposed to the themeName variable below (E.g. MyApplicationTheme)
+  mergeXml(themesXml(themeName = moduleData.themesData.main.name), resOut.resolve("values/themes.xml"))
+
   val themeName = "${moduleData.themesData.appName}Theme"
   save(mainActivityKt(activityClass, defaultPreview, greeting, packageName, themeName), srcOut.resolve("${activityClass}.kt"))
   val uiThemeFolder = "ui/theme"

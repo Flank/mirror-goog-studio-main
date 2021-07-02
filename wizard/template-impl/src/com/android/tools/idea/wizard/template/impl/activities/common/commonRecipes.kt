@@ -55,7 +55,7 @@ fun RecipeExecutor.generateManifest(
   packageName: String,
   isLauncher: Boolean,
   hasNoActionBar: Boolean,
-  noActionBarTheme: ThemeData = moduleData.themesData.noActionBar,
+  activityThemeName: String = moduleData.themesData.noActionBar.name,
   isNewModule: Boolean = moduleData.isNewModule,
   isLibrary: Boolean = moduleData.isLibrary,
   manifestOut: File = moduleData.manifestDir,
@@ -72,7 +72,7 @@ fun RecipeExecutor.generateManifest(
     activityClass = activityClass,
     isLauncher = isLauncher,
     isLibraryProject = isLibrary,
-    hasNoActionBarTheme = noActionBarTheme,
+    activityThemeName = activityThemeName,
     generateActivityTitle = generateActivityTitle,
     isResizeable = isResizeable
   )
