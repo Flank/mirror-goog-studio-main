@@ -270,18 +270,20 @@ message SchedulingEventsResult {
     // Will be in [0, num_cores - 1].
     int32 cpu = 3;
 
-    // The timestamp in nanoseconds of when this event happened.
+    // The timestamp in nanoseconds of when the thread began running.
     int64 timestamp_nanoseconds = 4;
-    // For how long the thread stayed in this state.
+    // For how long the thread ran.
     int64 duration_nanoseconds = 5;
-
-    SchedulingState state = 6;
+    // The end state of the thread (why it stopped).
+    SchedulingState end_state = 6;
     int32 priority = 7;
 
+    // The RUNNING state is implied as the start state so it's not encoded here.
+    // See https://perfetto.dev/docs/data-sources/cpu-scheduling#decoding-code-end_state-code-
     enum SchedulingState {
       UNKNOWN = 0;
-      RUNNING = 1;
-      RUNNING_FOREGROUND = 2;
+      RUNNABLE = 1;
+      RUNNABLE_PREEMPTED = 2;
       SLEEPING = 3;
       SLEEPING_UNINTERRUPTIBLE = 4;
       DEAD = 5;
