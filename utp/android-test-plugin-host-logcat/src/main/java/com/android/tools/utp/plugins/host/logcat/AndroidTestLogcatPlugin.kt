@@ -66,18 +66,20 @@ class AndroidTestLogcatPlugin : HostPlugin {
         val className = testCase.testClass
         val methodName = testCase.testMethod
         val updatedTestResult = testResult.toBuilder().apply {
-             logcatFilePaths.forEach {
-                 if (it == generateLogcatFileName("$packageName.$className", methodName)) {
-                     addOutputArtifact(
-                             TestArtifactProto.Artifact.newBuilder().apply {
-                                 labelBuilder.label = "logcat"
-                                 labelBuilder.namespace = "android"
-                                 sourcePathBuilder.path = it
-                             }.build()
-                     )
-                 }
-             }
-         }.build()
+            synchronized (logcatFilePaths) {
+                logcatFilePaths.forEach {
+                    if (it == generateLogcatFileName("$packageName.$className", methodName)) {
+                        addOutputArtifact(
+                                TestArtifactProto.Artifact.newBuilder().apply {
+                                    labelBuilder.label = "logcat"
+                                    labelBuilder.namespace = "android"
+                                    sourcePathBuilder.path = it
+                                }.build()
+                        )
+                    }
+                }
+            }
+        }.build()
         return updatedTestResult
     }
 
