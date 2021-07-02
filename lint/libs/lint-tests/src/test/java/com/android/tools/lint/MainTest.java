@@ -817,10 +817,7 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    "-w",
-                    "--disable",
-                    "LintError,UsesMinSdkAttributes",
-                    project.getPath()
+                    "-w", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
                 });
     }
 

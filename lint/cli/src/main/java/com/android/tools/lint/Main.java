@@ -613,7 +613,7 @@ public class Main {
 
         @NonNull
         @Override
-        public List<File> findGlobalRuleJars() {
+        public List<File> findGlobalRuleJars(@Nullable LintDriver driver, boolean warnDeprecated) {
             if (metadata != null) {
                 List<File> jars = metadata.getGlobalLintChecks();
                 if (!jars.isEmpty()) {
@@ -621,7 +621,7 @@ public class Main {
                 }
             }
 
-            return super.findGlobalRuleJars();
+            return super.findGlobalRuleJars(driver, warnDeprecated);
         }
 
         @Nullable
@@ -1592,7 +1592,8 @@ public class Main {
 
     private IssueRegistry getGlobalRegistry(LintCliClient client) {
         if (globalIssueRegistry == null) {
-            globalIssueRegistry = client.addCustomLintRules(new BuiltinIssueRegistry());
+            globalIssueRegistry =
+                    client.addCustomLintRules(new BuiltinIssueRegistry(), null, false);
         }
 
         return globalIssueRegistry;

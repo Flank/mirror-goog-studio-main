@@ -103,7 +103,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         val loggedWarnings = StringWriter()
         val client = createClient(loggedWarnings)
 
-        val registries = JarFileIssueRegistry.get(client, listOf(file1, file2), null)
+        val registries = JarFileIssueRegistry.get(client, listOf(file1, file2))
         // Only *one* registry should have been computed, since the two provide the same lint
         // class names!
         assertThat(registries.size).isEqualTo(1)
@@ -120,7 +120,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         val loggedWarnings = StringWriter()
         val client = createClient(loggedWarnings)
 
-        val registry = JarFileIssueRegistry.get(client, listOf(file1), null).first()
+        val registry = JarFileIssueRegistry.get(client, listOf(file1)).first()
         val vendor = registry.vendor
         assertNotNull(vendor)
         assertEquals("android.support.v7.lint.appcompat", vendor.identifier)
@@ -141,7 +141,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
     private fun getSingleRegistry(client: LintClient, file: File): JarFileIssueRegistry? {
         val list = listOf(file)
-        val registries = JarFileIssueRegistry.get(client, list, null)
+        val registries = JarFileIssueRegistry.get(client, list)
         return if (registries.size == 1) registries[0] else null
     }
 
@@ -863,12 +863,12 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
 fun createGlobalLintJarClient(lintJar: File) =
     object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-        override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
+        override fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> = listOf(lintJar)
         override fun findRuleJars(project: Project): List<File> = emptyList()
     }
 
 fun createProjectLintJarClient(lintJar: File) =
     object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-        override fun findGlobalRuleJars(): List<File> = emptyList()
+        override fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> = emptyList()
         override fun findRuleJars(project: Project): List<File> = listOf(lintJar)
     }

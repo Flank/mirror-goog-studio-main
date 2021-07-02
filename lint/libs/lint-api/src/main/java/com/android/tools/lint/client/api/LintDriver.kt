@@ -705,12 +705,13 @@ class LintDriver(
             jarFiles.addAll(configuration.getLintJars())
         }
 
-        jarFiles.addAll(client.findGlobalRuleJars())
+        jarFiles.addAll(client.findGlobalRuleJars(this, true))
 
         if (jarFiles.isNotEmpty()) {
             val extraRegistries = JarFileIssueRegistry.get(
                 client, jarFiles,
-                currentProject ?: projects.firstOrNull()
+                currentProject ?: projects.firstOrNull(),
+                this
             )
             if (extraRegistries.isNotEmpty()) {
                 val registries = ArrayList<IssueRegistry>(jarFiles.size + 1)
@@ -2722,7 +2723,8 @@ class LintDriver(
 
         override fun createProject(dir: File, referenceDir: File): Project = unsupported()
 
-        override fun findGlobalRuleJars(): List<File> = delegate.findGlobalRuleJars()
+        override fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> =
+            delegate.findGlobalRuleJars(driver, warnDeprecated)
 
         override fun findRuleJars(project: Project): Iterable<File> = delegate.findRuleJars(project)
 
@@ -2730,8 +2732,12 @@ class LintDriver(
 
         override fun registerProject(dir: File, project: Project): Unit = unsupported()
 
-        override fun addCustomLintRules(registry: IssueRegistry): IssueRegistry =
-            delegate.addCustomLintRules(registry)
+        override fun addCustomLintRules(
+            registry: IssueRegistry,
+            driver: LintDriver?,
+            warnDeprecated: Boolean
+        ): IssueRegistry =
+            delegate.addCustomLintRules(registry, driver, warnDeprecated)
 
         override fun getAssetFolders(project: Project): List<File> =
             delegate.getAssetFolders(project)

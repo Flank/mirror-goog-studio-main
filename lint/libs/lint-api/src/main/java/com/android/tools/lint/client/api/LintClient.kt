@@ -91,8 +91,6 @@ import java.net.URLClassLoader
 import java.net.URLConnection
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.Locale
 import java.util.function.Predicate
 import kotlin.math.max
@@ -1233,7 +1231,7 @@ abstract class LintClient {
      *
      * @return a list of rule jars (possibly empty).
      */
-    open fun findGlobalRuleJars(): List<File> {
+    open fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> {
         if (isUnitTest) {
             return emptyList()
         }
@@ -1253,14 +1251,19 @@ abstract class LintClient {
                                 files = ArrayList()
                             }
                             files.add(jarFile)
-                            val message =
-                                "Loaded lint jar file from ${jarFile.parent} ($jarFile.name); this will stop " +
-                                    "working soon. If you need to push lint rules into a build, use the " +
-                                    "`ANDROID_LINT_JARS` environment variable or the `--lint-rule-jars` flag or " +
-                                    "a `lint.xml` file setting `<lint lintJars=\"path\"...>`"
-                            report(this, IssueRegistry.LINT_WARNING, message, jarFile)
-                            if (isStudio) {
-                                log(Severity.WARNING, null, message, jarFile.parent, jarFile.name)
+
+                            // Don't flag the same warnings for each analyzed module -- doing it in the reporting
+                            // task is enough and avoids a lot of redundant/duplicate warnings
+                            if (warnDeprecated && driver?.mode != LintDriver.DriverMode.ANALYSIS_ONLY) {
+                                val message =
+                                    "Loaded lint jar file from ${jarFile.parent} (${jarFile.name}); this will stop " +
+                                        "working soon. If you need to push lint rules into a build, use the " +
+                                        "`ANDROID_LINT_JARS` environment variable or the `--lint-rule-jars` " +
+                                        "flag or a `lint.xml` file setting `<lint lintJars=\"path\"...>`"
+                                report(this, IssueRegistry.LINT_WARNING, message, jarFile, driver = driver)
+                                if (isStudio) {
+                                    log(Severity.WARNING, null, message, jarFile.parent, jarFile.name)
+                                }
                             }
                         }
                     }
@@ -1271,7 +1274,7 @@ abstract class LintClient {
         }
 
         val lintClassPath = System.getenv("ANDROID_LINT_JARS")
-        if (lintClassPath != null && !lintClassPath.isEmpty()) {
+        if (lintClassPath != null && lintClassPath.isNotEmpty()) {
             val paths = lintClassPath.split(File.pathSeparator)
             for (path in paths) {
                 val jarFile = File(path)
@@ -1466,11 +1469,10 @@ abstract class LintClient {
      *     custom rules, or the original registry
      *     if no custom rules were found
      */
-    open fun addCustomLintRules(registry: IssueRegistry): IssueRegistry {
-        val jarFiles = findGlobalRuleJars()
-
-        if (!jarFiles.isEmpty()) {
-            val extraRegistries = JarFileIssueRegistry.get(this, jarFiles, null)
+    open fun addCustomLintRules(registry: IssueRegistry, driver: LintDriver?, warnDeprecated: Boolean): IssueRegistry {
+        val jarFiles = findGlobalRuleJars(driver, warnDeprecated)
+        if (jarFiles.isNotEmpty()) {
+            val extraRegistries = JarFileIssueRegistry.get(this, jarFiles, null, driver)
             if (extraRegistries.isNotEmpty()) {
                 return JarFileIssueRegistry.join(registry, *extraRegistries.toTypedArray())
             }
@@ -2217,7 +2219,8 @@ abstract class LintClient {
 
             val incident = Incident(issue, realLocation, message, fix)
             incident.severity = realSeverity
-            client.report(realContext, incident, format)
+            val reportingClient = driver?.client ?: client
+            reportingClient.report(realContext, incident, format)
         }
 
         /**
