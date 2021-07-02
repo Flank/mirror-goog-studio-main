@@ -335,7 +335,7 @@ class SliceDetectorTest : AbstractCheckTest() {
                         val rowBuilder = RowBuilder(listBuilder)
                         rowBuilder.setPrimaryAction(primary)
 
-                        // Bad because mixture of ‘default' toggle and custom toggle
+                        // Bad because mixture of 'default' toggle and custom toggle
                         rowBuilder.addEndItem(defaultToggle)
                         rowBuilder.addEndItem(customToggle)
                     }
@@ -518,7 +518,7 @@ class SliceDetectorTest : AbstractCheckTest() {
 
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class SliceTest {
-                    // RowBuilder shouldn't have a mixture of ‘default' and custom toggles
+                    // RowBuilder shouldn't have a mixture of 'default' and custom toggles
                     //
                     // Message:
                     // A mixture of slice actions and icons are not supported on a row, add
@@ -542,7 +542,7 @@ class SliceDetectorTest : AbstractCheckTest() {
                         RowBuilder rb = new RowBuilder(lb);
                         rb.setPrimaryAction(primary);
 
-                        // Bad because mixture of ‘default' toggle and custom toggle
+                        // Bad because mixture of 'default' toggle and custom toggle
                         rb.addEndItem(defaultToggle);
                         rb.addEndItem(customToggle);
                     }
@@ -583,7 +583,7 @@ class SliceDetectorTest : AbstractCheckTest() {
 
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class SliceTest {
-                    // ListBuilder shouldn't have a mixture of ‘default' and custom toggles
+                    // ListBuilder shouldn't have a mixture of 'default' and custom toggles
                     // set in ListBuilder#addAction
                     // Message:
                     // A mixture of slice actions and icons are not supported on a list,

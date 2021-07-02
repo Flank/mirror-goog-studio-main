@@ -4486,7 +4486,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public enum HealthChangeHandler {\n"
                                         + "    @RequiresApi(api=19)\n"
                                         + "    LOCATION_MODE_CHANGED(LocationManager.MODE_CHANGED_ACTION) {\n"
-                                        + "        @Override String toString() { return super.toString(); }\n"
+                                        + "        @Override public String toString() { return super.toString(); }\n"
                                         + "};\n"
                                         + "\n"
                                         + "    HealthChangeHandler(String mode) {\n"

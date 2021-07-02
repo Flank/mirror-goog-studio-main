@@ -411,6 +411,26 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testExpandImport() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import java.util.List;\n"
+                                        + "import java.io.File;\n"
+                                        + "public class MyTest {\n"
+                                        + "    List<String> list;\n"
+                                        + "    File file;\n"
+                                        + "    public void test() {\n"
+                                        + "        System.out.println(file);\n"
+                                        + "        String s = File.separator;\n"
+                                        + "    }\n"
+                                        + "    File[] files;\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testGenericsInSignatures() {
         //noinspection all // Sample code
         lint().files(

@@ -85,7 +85,7 @@ class UastLintUtils {
                 return null
             }
 
-            val containingFile = element as? PsiFile ?: element.containingFile
+            val containingFile = element as? PsiFile ?: element.containingFile ?: return null
 
             // In Kotlin files identifiers are sometimes using LightElements that are hosted in
             // a placeholder file, these do not have the right PsiFile as containing elements

@@ -465,17 +465,16 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             argument(arg, arg)
                         } else if (arg is UQualifiedReferenceExpression) {
                             var curr: UElement = arg
-                            while (curr is UQualifiedReferenceExpression) {
-                                val receiver = curr.receiver.skipParenthesizedExprDown()
-                                if (receiver is UQualifiedReferenceExpression) {
-                                    curr = receiver
-                                } else if (receiver is UCallExpression) {
-                                    argument(receiver, curr)
-                                    return
-                                } else if (curr.selector is UCallExpression) {
-                                    argument(curr.selector as UCallExpression, curr)
-                                    return
-                                } else {
+                            while (true) {
+                                if (curr is UQualifiedReferenceExpression) {
+                                    val selector = curr.selector
+                                    if (selector.isConstructorCall()) {
+                                        argument(selector as UCallExpression, selector)
+                                        break
+                                    }
+                                    curr = curr.receiver.skipParenthesizedExprDown() ?: break
+                                } else if (curr is UCallExpression) {
+                                    argument(curr, curr)
                                     break
                                 }
                             }
@@ -642,22 +641,29 @@ class SliceDetector : Detector(), SourceCodeScanner {
     }
 
     private fun findSliceActionConstructor(node: UElement): UCallExpression? {
-        if (node is UReferenceExpression) {
-            val resolved = node.resolve() ?: return null
-            if (resolved is ULocalVariable) {
-                val initializer = resolved.uastInitializer?.skipParenthesizedExprDown() ?: return null
-                return findSliceActionConstructor(initializer)
-            } else if (resolved is PsiLocalVariable) {
-                val initializer = UastLintUtils.findLastAssignment(resolved, node) ?: return null
-                return findSliceActionConstructor(initializer)
+        when {
+            node is UReferenceExpression -> {
+                if (node is UQualifiedReferenceExpression && node.selector is UCallExpression) {
+                    return findSliceActionConstructor(node.selector)
+                }
+                val resolved = node.resolve() ?: return null
+                if (resolved is ULocalVariable) {
+                    val initializer = resolved.uastInitializer?.skipParenthesizedExprDown() ?: return null
+                    return findSliceActionConstructor(initializer)
+                } else if (resolved is PsiLocalVariable) {
+                    val initializer = UastLintUtils.findLastAssignment(resolved, node)?.skipParenthesizedExprDown()
+                        ?: return null
+                    return findSliceActionConstructor(initializer)
+                }
             }
-        } else if (node is UCallExpression && node.isConstructorCall()) {
-            val name = node.resolve()?.containingClass?.qualifiedName
-            if (name == SLICE_ACTION_CLASS) {
-                return node
+            node is UCallExpression && node.isConstructorCall() -> {
+                val name = node.resolve()?.containingClass?.qualifiedName
+                if (name == SLICE_ACTION_CLASS) {
+                    return node
+                }
             }
-        } else if (node is UParenthesizedExpression) {
-            return findSliceActionConstructor(node.expression)
+            node is UQualifiedReferenceExpression -> return findSliceActionConstructor(node.selector)
+            node is UParenthesizedExpression -> return findSliceActionConstructor(node.expression)
         }
         return null
     }

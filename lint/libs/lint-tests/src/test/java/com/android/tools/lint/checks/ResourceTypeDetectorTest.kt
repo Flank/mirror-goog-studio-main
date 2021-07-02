@@ -107,13 +107,16 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
 
                     private void foo2(@androidx.annotation.ColorInt int c) {
                     }
-
-                    private static class R {
-                        private static class color {
-                            public static final int red=0x7f060000;
-                            public static final int green=0x7f060001;
-                            public static final int blue=0x7f060002;
-                        }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                public class R {
+                    public static class color {
+                        public static final int red=0x7f060000;
+                        public static final int green=0x7f060001;
+                        public static final int blue=0x7f060002;
                     }
                 }
                 """

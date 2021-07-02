@@ -16,9 +16,22 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 
 public class ExifInterfaceDetectorTest extends AbstractCheckTest {
+
+    @NonNull
+    @Override
+    protected TestLintTask lint() {
+        // This lint check deliberately treats fully qualified imports
+        // differently (they are interpreted as a deliberate usage of
+        // the discouraged API) so the fully qualified equivalence test
+        // does not apply:
+        return super.lint().skipTestModes(TestMode.FULLY_QUALIFIED);
+    }
 
     public void testAndroidX() {
         String expected =

@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.checks.RestrictToDetector.Companion.sameLibraryGroupPrefix
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.TestFile
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Project
 import java.io.File
@@ -835,7 +836,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
                     "6pmB8DyQPsUI4gEAH9csuq8CAAA="
             )
-        ).run().expect(
+        ).skipTestModes(TestMode.FULLY_QUALIFIED).run().expect(
             "" +
                 "src/test/pkg/HideTest.java:7: Error: HiddenInPackage constructor is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
                 "        HiddenInPackage hp = new HiddenInPackage(); // Error\n" +

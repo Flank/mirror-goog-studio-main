@@ -338,8 +338,12 @@ open class TestMode(
         val PARENTHESIZED: TestMode = ParenthesisTestMode()
 
         @JvmField
+        val FULLY_QUALIFIED: TestMode = FullyQualifyNamesTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
-            PARENTHESIZED
+            PARENTHESIZED,
+            FULLY_QUALIFIED
         )
 
         /** Returns all default included test modes. */

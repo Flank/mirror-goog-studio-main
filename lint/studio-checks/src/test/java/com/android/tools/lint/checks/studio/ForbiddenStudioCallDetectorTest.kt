@@ -76,21 +76,16 @@ class ForbiddenStudioCallDetectorTest {
             .files(
                 java(
                     """
-                    package java.nio.file;
+                    package test.pkg;
+                    import java.io.IOException;
+                    import java.io.InputStream;
+                    import java.nio.file.Files;
+                    import java.nio.file.Path;
 
-                    // Actual test
                     public class Test {
-                        public void test(Path p1, Path p2, InputStream in) {
-                            Files.copy(path1, path2); // ERROR
+                        public void test(Path p1, Path p2, InputStream in) throws IOException {
+                            Files.copy(p1, p2); // ERROR
                         }
-                    }
-
-                    // Stubs
-                    public interface InputStream { }
-                    public interface Path { }
-                    public interface CopyOption { }
-                    public class Files {
-                        public static Path copy(Path source, Path target, CopyOption... options) { return null; }
                     }
                     """
                 ).indented(),
@@ -99,9 +94,9 @@ class ForbiddenStudioCallDetectorTest {
             .run()
             .expect(
                 """
-                src/java/nio/file/Test.java:6: Error: Do not use java.nio.file.Files.copy(Path, Path). Instead, use FileUtils.copyFile(Path, Path) or Kotlin's File#copyTo(File) [NoNioFilesCopy]
-                        Files.copy(path1, path2); // ERROR
-                              ~~~~~~~~~~~~~~~~~~
+                src/test/pkg/Test.java:9: Error: Do not use java.nio.file.Files.copy(Path, Path). Instead, use FileUtils.copyFile(Path, Path) or Kotlin's File#copyTo(File) [NoNioFilesCopy]
+                        Files.copy(p1, p2); // ERROR
+                              ~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )

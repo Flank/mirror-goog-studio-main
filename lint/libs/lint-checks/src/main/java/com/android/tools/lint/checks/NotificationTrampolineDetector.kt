@@ -243,7 +243,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
         val intentArg = pendingConstruction.getArgumentForParameter(2)?.skipParenthesizedExprDown() ?: return null
         val intentDeclaration = intentArg.tryResolve() as? PsiVariable ?: return null
         val intentAssignment = findLastAssignment(intentDeclaration, pendingConstruction)?.skipParenthesizedExprDown() ?: return null
-        return intentAssignment as? UCallExpression
+        return intentAssignment.findSelector() as? UCallExpression
     }
 
     private fun findClassArgument(constructorCall: UCallExpression): UElement? {
