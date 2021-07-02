@@ -72,10 +72,10 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public static void checkDriver(
-            String expectedOutput,
-            String expectedError,
+            @Nullable String expectedOutput,
+            @Nullable String expectedError,
             int expectedExitCode,
-            String[] args,
+            @NonNull String[] args,
             @Nullable Cleanup cleanup,
             @Nullable LintListener listener) {
 

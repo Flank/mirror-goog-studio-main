@@ -438,8 +438,11 @@ class LintDriver(
                 //noinspection ExpensiveAssertion
                 assert(projectRoots.size == 1)
                 val project = projectRoots.first()
-                checkProjectRoot(project)
-                client.storeState(project)
+                try {
+                    checkProjectRoot(project)
+                } finally {
+                    client.storeState(project)
+                }
             },
             partial = true
         )
