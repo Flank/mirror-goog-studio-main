@@ -30,6 +30,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
@@ -122,11 +123,6 @@ public class ExtractAnnotationsTest {
                     // check the resulting .aar file to ensure annotations.zip inclusion.
                     assertThat(debugAar).contains("annotations.zip");
 
-                    assertThat(debugAar.getEntryAsZip("annotations.zip"))
-                            .containsFileWithContent(
-                                    "com/android/tests/extractannotations/annotations.xml",
-                                    expectedContent);
-
                     // Check typedefs removals:
 
                     // public typedef: should be present
@@ -146,13 +142,28 @@ public class ExtractAnnotationsTest {
                             .containsClass(
                                     "Lcom/android/tests/extractannotations/ExtractTest$StringMode;");
 
-                    // Make sure the NonMask symbol (from a private typedef) is completely gone from
-                    // the
-                    // outer class
-                    assertThat(debugAar.getEntryAsZip("classes.jar"))
-                            .containsFileWithoutContent(
-                                    "com/android/tests/extractannotations/ExtractTest.class",
-                                    "NonMaskType");
+                    try {
+                        assertThat(
+                                Objects.requireNonNull(debugAar.getEntryAsFile("annotations.zip")),
+                                it -> {
+                                    it.containsFileWithContent(
+                                            "com/android/tests/extractannotations/annotations.xml",
+                                            expectedContent);
+                                });
+                        // Make sure the NonMask symbol (from a private typedef) is completely gone
+                        // from
+                        // the
+                        // outer class
+                        assertThat(
+                                Objects.requireNonNull(debugAar.getEntryAsFile("classes.jar")),
+                                it -> {
+                                    it.containsFileWithoutContent(
+                                            "com/android/tests/extractannotations/ExtractTest.class",
+                                            "NonMaskType");
+                                });
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 });
 
         GradleBuildResult result = project.executor().run("assembleDebug");

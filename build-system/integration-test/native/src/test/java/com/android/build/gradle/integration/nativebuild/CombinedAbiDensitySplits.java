@@ -32,7 +32,6 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
-import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.ZipFileSubject;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -94,23 +93,26 @@ public class CombinedAbiDensitySplits {
                     builtArtifact.getOutputType());
 
             assertThat(builtArtifact.getVersionCode()).isEqualTo(123);
-            try (Zip it = new Zip(new File(builtArtifact.getOutputFile()))) {
-                ZipFileSubject.assertThat(it).entries("/lib/.*").hasSize(1);
-            }
+            ZipFileSubject.assertThat(
+                    new File(builtArtifact.getOutputFile()),
+                    it -> {
+                        it.entries("/lib/.*").hasSize(1);
+                    });
 
             if (densityFilter != null) {
                 expectedDensities.remove(densityFilter);
 
                 // ensure the .so file presence (and only one)
-                try (Zip it = new Zip(new File(builtArtifact.getOutputFile()))) {
-                    assertThat(it)
-                            .contains(
+                assertThat(
+                        new File(builtArtifact.getOutputFile()),
+                        it -> {
+                            it.contains(
                                     "lib/"
                                             + VariantOutputUtils.getFilter(
                                                     builtArtifact,
                                                     FilterConfiguration.FilterType.ABI)
                                             + "/libhello-jni.so");
-                }
+                        });
             }
         }
 

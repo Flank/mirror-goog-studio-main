@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
@@ -132,13 +131,21 @@ public class CompositeBuildTest {
     @Test
     public void assembleDebug() throws Exception {
         app.execute(":assembleDebug");
-        assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
+        assertThat(
+                app.getApkAsFile(GradleTestProject.ApkType.DEBUG),
+                it -> {
+                    it.exists();
+                });
     }
 
     @Test
     public void assembleDebugWithConfigureOnDemand() throws Exception {
         app.executor().withArgument("--configure-on-demand").run(":assembleDebug");
-        assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
+        assertThat(
+                app.getApkAsFile(GradleTestProject.ApkType.DEBUG),
+                it -> {
+                    it.exists();
+                });
     }
 
     @Test

@@ -137,11 +137,10 @@ class AutoNamespaceTransformFunctionalTest {
         assertThat(getJars()).hasSize(0)
         val aars = getAars()
         assertThat(aars).hasSize(1)
-        Zip(aars.first()).use {aar ->
-            assertThat(aar).contains("AndroidManifest.xml")
-            assertThat(aar).contains("classes.jar")
-            assertThat(aar).contains("res.apk")
-            assertThat(aar).containsFileWithContent("R.txt", "")
+        assertThat(aars.first()) {aar ->
+            aar.contains("AndroidManifest.xml")
+            aar.contains("res.apk")
+            aar.containsFileWithContent("R.txt", "")
         }
     }
 
@@ -177,19 +176,19 @@ class AutoNamespaceTransformFunctionalTest {
         assertThat(getJars()).hasSize(0)
         val aars = getAars()
         assertThat(aars).hasSize(2)
-        Zip(aars.first { it.name.contains("foo") }).use { foo ->
-            assertThat(foo).contains("AndroidManifest.xml")
-            assertThat(foo).contains("classes.jar")
-            assertThat(foo).contains("res.apk")
-            assertThat(foo).containsFileWithContent("R.txt", "int string foo_string 0x0")
+        assertThat(aars.first { it.name.contains("foo") }) { foo ->
+            foo.contains("AndroidManifest.xml")
+            foo.contains("classes.jar")
+            foo.contains("res.apk")
+            foo.containsFileWithContent("R.txt", "int string foo_string 0x0")
         }
-        Zip(aars.first { it.name.contains("bar") }).use { bar ->
-            assertThat(bar).contains("AndroidManifest.xml")
-            assertThat(bar).contains("classes.jar")
-            assertThat(bar).contains("res.apk")
+        assertThat(aars.first { it.name.contains("bar") }) { bar ->
+            bar.contains("AndroidManifest.xml")
+            bar.contains("classes.jar")
+            bar.contains("res.apk")
             // Before namespacing, this would most likely have contained foo_string too.
             // (We don't include the R.txt in the given AARs as it is not used anyway.)
-            assertThat(bar).containsFileWithContent("R.txt", "int string bar_string 0x0")
+            bar.containsFileWithContent("R.txt", "int string bar_string 0x0")
         }
     }
 
@@ -220,11 +219,11 @@ class AutoNamespaceTransformFunctionalTest {
         assertThat(getJars()).hasSize(1)
         val aars = getAars()
         assertThat(aars).hasSize(1)
-        Zip(aars.first()).use { foo ->
-            assertThat(foo).contains("AndroidManifest.xml")
-            assertThat(foo).contains("classes.jar")
-            assertThat(foo).contains("res.apk")
-            assertThat(foo).containsFileWithContent("R.txt", "int string aar_string 0x0")
+        assertThat(aars.first()) { foo ->
+            foo.contains("AndroidManifest.xml")
+            foo.contains("classes.jar")
+            foo.contains("res.apk")
+            foo.containsFileWithContent("R.txt", "int string aar_string 0x0")
         }
     }
 

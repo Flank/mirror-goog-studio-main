@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -124,52 +123,52 @@ class NonTransitiveCompileRClassFlowTest {
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .run(tasks)
-        Zip(lib2RJar).use {
+        assertThat(lib2RJar) {
             // It shouldn't contain any other R classes other than the local one
-            assertThat(it).doesNotContain("com/example/lib1/R.class")
-            assertThat(it).contains("com/example/lib2/R.class")
+            it.doesNotContain("com/example/lib1/R.class")
+            it.contains("com/example/lib2/R.class")
             // The R class should only have local resources
-            assertThat(it).contains("com/example/lib2/R\$color.class")
-            assertThat(it).doesNotContain("com/example/lib2/R\$attr.class")
+            it.contains("com/example/lib2/R\$color.class")
+            it.doesNotContain("com/example/lib2/R\$attr.class")
         }
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
             .run(tasks)
-        Zip(lib2RJar).use {
+        assertThat(lib2RJar) {
             // It shouldn't contain any other R classes other than the local one
-            assertThat(it).doesNotContain("com/example/lib1/R.class")
-            assertThat(it).contains("com/example/lib2/R.class")
+            it.doesNotContain("com/example/lib1/R.class")
+            it.contains("com/example/lib2/R.class")
             // The R class should contain all resources
-            assertThat(it).contains("com/example/lib2/R\$color.class")
-            assertThat(it).contains("com/example/lib2/R\$attr.class")
+            it.contains("com/example/lib2/R\$color.class")
+            it.contains("com/example/lib2/R\$attr.class")
         }
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, false)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .run(tasks)
-        Zip(lib2RJar).use {
+        assertThat(lib2RJar) {
             // It contain all R classes
-            assertThat(it).contains("com/example/lib1/R.class")
-            assertThat(it).contains("com/example/lib2/R.class")
+            it.contains("com/example/lib1/R.class")
+            it.contains("com/example/lib2/R.class")
             // The R class should only have local resources
-            assertThat(it).contains("com/example/lib2/R\$color.class")
-            assertThat(it).doesNotContain("com/example/lib2/R\$attr.class")
+            it.contains("com/example/lib2/R\$color.class")
+            it.doesNotContain("com/example/lib2/R\$attr.class")
         }
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, false)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
             .run(tasks)
-        Zip(lib2RJar).use {
+        assertThat(lib2RJar) {
             // It contain all R
-            assertThat(it).contains("com/example/lib1/R.class")
-            assertThat(it).contains("com/example/lib2/R.class")
+            it.contains("com/example/lib1/R.class")
+            it.contains("com/example/lib2/R.class")
             // The R class should contain all resources
-            assertThat(it).contains("com/example/lib2/R\$color.class")
-            assertThat(it).contains("com/example/lib2/R\$attr.class")
+            it.contains("com/example/lib2/R\$color.class")
+            it.contains("com/example/lib2/R\$attr.class")
         }
     }
 }

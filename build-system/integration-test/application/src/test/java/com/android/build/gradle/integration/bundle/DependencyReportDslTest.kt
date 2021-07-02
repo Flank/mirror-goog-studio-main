@@ -138,8 +138,8 @@ class DependenciesReportDslTest {
         project.executor().run(":app:bundleRelease")
         val bundle = getApkFolderOutput("release").bundleFile
         assertThat(bundle).exists()
-        Zip(bundle).use {
-            ZipFileSubject.assertThat(it).doesNotContain("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
+        ZipFileSubject.assertThat(bundle) {
+            it.doesNotContain("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
         }
     }
 

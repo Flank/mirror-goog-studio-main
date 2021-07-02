@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -32,6 +31,7 @@ import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import org.junit.BeforeClass;
@@ -123,9 +123,18 @@ public class NativeSoPackagingFromJarTest {
                 "debug",
                 aar -> {
                     // this zip will be closed with the AAR
-                    Zip entry = aar.getEntryAsZip("libs/bar.jar");
-                    ZipFileSubject.assertThat(entry).contains(COM_FOO_FOO_CLASS);
-                    ZipFileSubject.assertThat(entry).doesNotContain(LIB_X86_LIBHELLO_SO);
+                    Path entry =
+                            java.util.Objects.requireNonNull(aar.getEntryAsFile("libs/bar.jar"));
+                    try {
+                        ZipFileSubject.assertThat(
+                                entry,
+                                it -> {
+                                    it.contains(COM_FOO_FOO_CLASS);
+                                    it.doesNotContain(LIB_X86_LIBHELLO_SO);
+                                });
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 });
     }
 

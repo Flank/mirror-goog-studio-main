@@ -846,6 +846,16 @@ allprojects { proj ->
     }
 
     /**
+     * Return the output apk File from the application plugin for the given dimension as a File.
+     *
+     *
+     * Expected dimensions orders are: - product flavors -
+     */
+    fun getApkAsFile(apk: ApkType, vararg dimensions: String): File {
+        return getApkAsFile(null /* filterName */, apk, *dimensions)
+    }
+
+    /**
      * Return the output apk File from the application plugin for the given dimension.
      *
      *
@@ -873,6 +883,27 @@ allprojects { proj ->
     }
 
     /**
+     * Return the output full split apk File from the application plugin for the given dimension as
+     * a File.
+     *
+     *
+     * Expected dimensions orders are: - product flavors -
+     */
+    fun getApkAsFile(
+        filterName: String?,
+        apkType: ApkType,
+        vararg dimensions: String
+    ): File {
+        return getOutputApkFile(
+            "apk",
+            filterName,
+            apkType,
+            ImmutableList.copyOf(dimensions),
+            null
+        )
+    }
+
+    /**
      * Return the output full split apk File from the application plugin for the given dimension.
      *
      *
@@ -892,6 +923,28 @@ allprojects { proj ->
         )
     }
 
+    private fun getOutputApkFile(
+        pathPrefix: String,
+        filterName: String?,
+        apkType: ApkType,
+        dimensions: ImmutableList<String>,
+        suffix: String?): File {
+        return getOutputFile(
+            pathPrefix
+                    + (if (apkType.testName != null) File.separatorChar
+                .toString() + apkType.testName else "")
+                    + File.separatorChar
+                    + dimensions.combineAsCamelCase()
+                    + File.separatorChar
+                    + apkType.buildType
+                    + File.separatorChar
+                    + mangleApkName(apkType, filterName, dimensions, suffix)
+                    + if (apkType.isSigned) SdkConstants
+                .DOT_ANDROID_PACKAGE else "-unsigned" + SdkConstants
+                .DOT_ANDROID_PACKAGE
+        )
+    }
+
     private fun getOutputApk(
         pathPrefix: String,
         filterName: String?,
@@ -900,20 +953,7 @@ allprojects { proj ->
         suffix: String?
     ): Apk {
         return _getApk(
-            getOutputFile(
-                pathPrefix
-                        + (if (apkType.testName != null) File.separatorChar
-                    .toString() + apkType.testName else "")
-                        + File.separatorChar
-                        + dimensions.combineAsCamelCase()
-                        + File.separatorChar
-                        + apkType.buildType
-                        + File.separatorChar
-                        + mangleApkName(apkType, filterName, dimensions, suffix)
-                        + if (apkType.isSigned) SdkConstants
-                    .DOT_ANDROID_PACKAGE else "-unsigned" + SdkConstants
-                    .DOT_ANDROID_PACKAGE
-            )
+            getOutputApkFile(pathPrefix, filterName, apkType, dimensions, suffix)
         )
     }
 

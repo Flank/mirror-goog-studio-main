@@ -29,13 +29,10 @@ import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableFileChanges
 import com.android.ide.common.resources.FileStatus
 import com.android.testutils.TestUtils
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
-import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.provider.Property
-import org.gradle.work.FileChange
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -79,8 +76,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
 
     private fun assertContains(output: File, relativePath: String) {
         if (output.extension == "jar") {
-            Zip(output).use {
-                ZipFileSubject.assertThat(it).contains(relativePath)
+            ZipFileSubject.assertThat(output) {
+                it.contains(relativePath)
             }
         } else {
             assertThat(output.resolve(relativePath)).exists()
@@ -89,8 +86,8 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
 
     private fun assertDoesNotContain(output: File, relativePath: String) {
         if (output.extension == "jar") {
-            Zip(output).use {
-                ZipFileSubject.assertThat(it).doesNotContain(relativePath)
+            ZipFileSubject.assertThat(output) {
+                it.doesNotContain(relativePath)
             }
         } else {
             assertThat(output.resolve(relativePath)).doesNotExist()

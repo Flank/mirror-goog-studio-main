@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -59,9 +58,9 @@ class ZipMergingTaskTest {
 
         assertThat(output).exists()
 
-        Zip(output).use {
-            assertThat(it).containsFileWithContent("foo.txt", "foo")
-            assertThat(it).containsFileWithContent("bar.txt", "bar")
+        assertThat(output) {
+            it.containsFileWithContent("foo.txt", "foo")
+            it.containsFileWithContent("bar.txt", "bar")
         }
     }
 
@@ -87,8 +86,8 @@ class ZipMergingTaskTest {
 
         assertThat(output).exists()
 
-        Zip(output).use {
-            assertThat(it).containsFileWithContent("foo.txt", "foo")
+        assertThat(output) {
+            it.containsFileWithContent("foo.txt", "foo")
         }
     }
 

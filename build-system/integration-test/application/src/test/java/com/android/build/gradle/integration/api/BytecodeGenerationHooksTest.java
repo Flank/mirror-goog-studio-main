@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth8;
@@ -37,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kotlin.Unit;
@@ -122,21 +122,23 @@ public class BytecodeGenerationHooksTest {
         // also verify that the app's jar used by test compilation contains the kotlin module files
         File classesJar = appProject.getIntermediateFile("app_classes/debug/classes.jar");
         assertThat(classesJar).isFile();
-        try (Zip classesZip = new Zip(classesJar)) {
-            assertThat(classesZip).contains("META-INF/app.kotlin_module");
-            assertThat(classesZip).contains("META-INF/post-app.kotlin_module");
+        assertThat(
+                classesJar,
+                it -> {
+                    it.contains("META-INF/app.kotlin_module");
+                    it.contains("META-INF/post-app.kotlin_module");
+                });
 
-            // verify the compile classpath
-            checkDependencies(
-                    result,
-                    "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
-                    true,
-                    "app/build/intermediates/app_classes/debug/classes.jar",
-                    "library/build/intermediates/"
-                            + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
-                            + "/debug/classes.jar",
-                    "jar/build/libs/jar.jar");
-        }
+        // verify the compile classpath
+        checkDependencies(
+                result,
+                "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
+                true,
+                "app/build/intermediates/app_classes/debug/classes.jar",
+                "library/build/intermediates/"
+                        + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
+                        + "/debug/classes.jar",
+                "jar/build/libs/jar.jar");
     }
 
 
@@ -159,19 +161,23 @@ public class BytecodeGenerationHooksTest {
     }
 
     @Test
-    public void buildLibrary() throws Exception {
+    public void buildLibrary() throws RuntimeException {
         project.execute("clean", "lib:assembleDebug");
 
         project.getSubproject("library")
                 .getAar(
                         "debug",
                         it -> {
-                            try (Zip classes = it.getEntryAsZip("classes.jar")) {
-                                assertThat(classes).contains("com/example/bytecode/Lib.class");
-                                assertThat(classes)
-                                        .contains("com/example/bytecode/PostJavacLib.class");
-                                assertThat(classes).contains("META-INF/lib.kotlin_module");
-                                assertThat(classes).contains("META-INF/post-lib.kotlin_module");
+                            try {
+                                assertThat(
+                                        Objects.requireNonNull(it.getEntryAsFile("classes.jar")),
+                                        classes -> {
+                                            classes.contains("com/example/bytecode/Lib.class");
+                                            classes.contains(
+                                                    "com/example/bytecode/PostJavacLib.class");
+                                            classes.contains("META-INF/lib.kotlin_module");
+                                            classes.contains("META-INF/post-lib.kotlin_module");
+                                        });
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -248,7 +254,7 @@ public class BytecodeGenerationHooksTest {
         if (exactly) {
             TruthHelper.assertThat(lines).containsExactlyElementsIn(deps);
         } else {
-            TruthHelper.assertThat(lines).containsAllIn(deps);
+            TruthHelper.assertThat(lines).containsAtLeastElementsIn(deps);
         }
     }
 
@@ -275,6 +281,6 @@ public class BytecodeGenerationHooksTest {
                                                 .getAbsolutePath())
                         .collect(Collectors.toList());
 
-        TruthHelper.assertThat(lines).containsAllIn(deps);
+        TruthHelper.assertThat(lines).containsAtLeastElementsIn(deps);
     }
 }

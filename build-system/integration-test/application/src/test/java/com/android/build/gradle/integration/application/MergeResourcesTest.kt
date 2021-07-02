@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
@@ -29,8 +28,6 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
-import com.android.testutils.apk.Apk
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
@@ -94,8 +91,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(rDef).exists()
         assertThat(rDef).contains("raw me")
 
-        assertThat(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
-            .containsFileWithContent("res/raw/me.raw", byteArrayOf(0, 1, 2))
+        assertThat(project.getSubproject("app").getApkAsFile(GradleTestProject.ApkType.DEBUG)) {
+            it.containsFileWithContent("res/raw/me.raw", byteArrayOf(0, 1, 2))
+        }
 
         val inIntermediate = File(
                 MERGED_RES.getOutputDir(project.getSubproject("app").buildDir),
@@ -113,7 +111,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         if (project.booleanOptions.getOrDefault(
                 BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
                 BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES.defaultValue
-            ) == true
+            )
         ) {
             assertThat(inIntermediate).doesNotExist()
             assertThat(inCompiledLocalResources).exists()
@@ -135,8 +133,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
 
         project.executor().run(":app:assembleDebug")
 
-        assertThat(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
-            .containsFileWithContent("res/raw/me.raw", byteArrayOf(3))
+        assertThat(project.getSubproject("app").getApkAsFile(GradleTestProject.ApkType.DEBUG)) {
+            it.containsFileWithContent("res/raw/me.raw", byteArrayOf(3))
+        }
         assertThat(inIntermediate).exists()
 
         /*
@@ -158,8 +157,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
 
         project.executor().run(":app:assembleDebug")
 
-        assertThat(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
-            .containsFileWithContent("res/raw/me.raw", byteArrayOf(3))
+        assertThat(project.getSubproject("app").getApkAsFile(GradleTestProject.ApkType.DEBUG)) {
+            it.containsFileWithContent("res/raw/me.raw", byteArrayOf(3))
+        }
 
         assertThat(inIntermediate).wasModifiedAt(inIntermediate.lastModified())
         assertThat(apUnderscore).wasModifiedAt(apUnderscore.lastModified())
@@ -196,8 +196,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         )
 
         assertThat(apUnderscore).exists()
-        Zip(apUnderscore).use { zip ->
-            assertThat(zip).containsFileWithContent(
+        assertThat(apUnderscore) {
+            it.containsFileWithContent(
                 "res/raw/me.raw",
                 byteArrayOf(0, 1, 2)
             )
@@ -213,7 +213,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Check that the file has been removed from the intermediates and from the apk.
          */
         assertThat(inIntermediate).doesNotExist()
-        Zip(apUnderscore).use { zip -> assertThat(zip).doesNotContain("res/raw/me.raw") }
+        assertThat(apUnderscore) { it.doesNotContain("res/raw/me.raw") }
     }
 
     @Test
@@ -244,11 +244,11 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "resources-debug.ap_"
         )
 
-        assertThat(apUnderscore).exists()
-        Apk(apUnderscore).use { apk ->
-            assertThat(apk).containsFileWithContent(
+        assertThat(apUnderscore) {
+            it.exists()
+            it.containsFileWithContent(
                 "res/raw/me.raw",
-                byteArrayOf(0, 1, 2)
+                    byteArrayOf(0, 1, 2)
             )
         }
 
@@ -263,8 +263,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          */
         assertThat(inIntermediate).exists()
 
-        Apk(apUnderscore).use { apk ->
-            assertThat(apk).containsFileWithContent(
+        assertThat(apUnderscore) {
+            it.containsFileWithContent(
                 "res/raw/me.raw",
                 byteArrayOf(1, 2, 3, 4)
             )
@@ -300,8 +300,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         )
 
         assertThat(apUnderscore).exists()
-        Apk(apUnderscore).use { apk ->
-            assertThat(apk).containsFileWithContent(
+        assertThat(apUnderscore) {
+            it.containsFileWithContent(
                 "res/raw/me.raw",
                 byteArrayOf(0, 1, 2)
             )
@@ -321,8 +321,8 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(inIntermediate).doesNotExist()
         assertThat(File(inIntermediate.parent, "raw_me.war.flat")).exists()
         assertThat(apUnderscore).doesNotContain("res/raw/me.raw")
-        Apk(apUnderscore).use { apk ->
-            assertThat(apk).containsFileWithContent(
+        assertThat(apUnderscore) {
+            it.containsFileWithContent(
                 "res/raw/me.war",
                 byteArrayOf(1, 2, 3, 4)
             )

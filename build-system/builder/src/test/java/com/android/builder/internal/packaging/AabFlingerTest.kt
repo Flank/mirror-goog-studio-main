@@ -17,7 +17,6 @@
 package com.android.builder.internal.packaging
 
 import com.android.builder.packaging.JarFlinger
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -62,10 +61,10 @@ class AabFlingerTest {
         getAabFlinger(outputFile).use {
             it.writeZip(jarInput, Deflater.DEFAULT_COMPRESSION)
         }
-        Zip(outputFile).use {
-            ZipFileSubject.assertThat(it).exists()
+        ZipFileSubject.assertThat(outputFile) {
+            it.exists()
             fileInputMap.forEach { (path, content) ->
-                ZipFileSubject.assertThat(it).containsFileWithContent(path, content)
+                it.containsFileWithContent(path, content)
             }
         }
     }
@@ -86,16 +85,16 @@ class AabFlingerTest {
             it.writeZip(jarInput, Deflater.NO_COMPRESSION)
         }
 
-        Zip(uncompressedFile).use {
-            ZipFileSubject.assertThat(it).exists()
+        ZipFileSubject.assertThat(uncompressedFile) {
+            it.exists()
         }
 
         getAabFlinger(outputFile).use {
             it.writeZip(jarInput, Deflater.DEFAULT_COMPRESSION)
         }
 
-        Zip(outputFile).use {
-            ZipFileSubject.assertThat(it).exists()
+        ZipFileSubject.assertThat(outputFile) {
+            it.exists()
         }
 
         // check that the compressed file is smaller than the uncompressed file
@@ -117,10 +116,10 @@ class AabFlingerTest {
         getAabFlinger(outputFile).use {
             it.writeZip(jarInput, Deflater.DEFAULT_COMPRESSION)
         }
-        Zip(outputFile).use {
-            ZipFileSubject.assertThat(it).contains("META-INF/MANIFEST.MF")
-            ZipFileSubject.assertThat(it).contains("META-INF/TEST.RSA")
-            ZipFileSubject.assertThat(it).contains("META-INF/TEST.SF")
+        ZipFileSubject.assertThat(outputFile) {
+            it.contains("META-INF/MANIFEST.MF")
+            it.contains("META-INF/TEST.RSA")
+            it.contains("META-INF/TEST.SF")
         }
     }
 }

@@ -18,7 +18,6 @@ package com.android.tools.gradle.benchmarkassertions;
 
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
-import com.android.testutils.apk.Apk;
 import java.nio.file.Path;
 
 @SuppressWarnings("unused")
@@ -36,8 +35,10 @@ public class CheckJavaResourceHasContent implements BenchmarkProjectAssertion {
 
     @Override
     public void checkProject(Path projectRoot) throws Exception {
-        try (Apk apk = new Apk(projectRoot.resolve(this.apk))) {
-            assertThat(apk).containsFileWithContent(name, value);
-        }
+        assertThat(
+                projectRoot.resolve(this.apk),
+                it -> {
+                    it.containsFileWithContent(name, value);
+                });
     }
 }

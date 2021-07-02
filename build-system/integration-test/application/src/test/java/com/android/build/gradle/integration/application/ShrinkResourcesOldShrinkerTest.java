@@ -37,7 +37,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -115,7 +114,7 @@ public class ShrinkResourcesOldShrinkerTest {
         }
     }
 
-    private Apk getApk(@NonNull ApkType apkType) throws IOException {
+    private Apk getApk(@NonNull ApkType apkType) {
         switch (apkPipeline) {
             case NO_BUNDLE:
                 return project.getApk(apkType);
@@ -624,11 +623,12 @@ public class ShrinkResourcesOldShrinkerTest {
 
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
-            try (Zip it = new Zip(compressed)) {
-                assertThat(it)
-                        .containsFileWithContent(
+            assertThat(
+                    compressed,
+                    it -> {
+                        it.containsFileWithContent(
                                 "res/drawable/force_remove.xml", getIntermediateCompressedXml());
-            }
+                    });
         }
 
         // Check the compressed .ap_:

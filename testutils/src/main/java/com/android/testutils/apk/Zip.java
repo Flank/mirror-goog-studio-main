@@ -49,6 +49,7 @@ public class Zip implements AutoCloseable {
 
     // Cache for opening inner zip files.
     @NonNull private final Map<String, Zip> innerZips;
+    @NonNull private final Map<String, Path> innerZipFiles;
 
     public Zip(@NonNull Path file) throws IOException {
         this(file, file.toString());
@@ -72,6 +73,7 @@ public class Zip implements AutoCloseable {
             this.zip = FileSystems.newFileSystem(file, null);
         }
         this.innerZips = new HashMap<>();
+        this.innerZipFiles = new HashMap<>();
     }
 
     @CheckReturnValue
@@ -115,22 +117,38 @@ public class Zip implements AutoCloseable {
     @CheckReturnValue
     @NonNull
     public final Zip getEntryAsZip(@NonNull String name) {
+        Zip cached = innerZips.get(name);
+        if (cached != null) {
+            return cached;
+        }
         try {
-            Zip cached = innerZips.get(name);
-            if (cached != null) {
-                return cached;
-            }
+            Zip created = new Zip(getEntryAsFile(name), displayName + ":" + name);
+            innerZips.put(name, created);
+            return created;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
+    // Returns an inner zip entry without opening it
+    @CheckReturnValue
+    @NonNull
+    public final Path getEntryAsFile(@NonNull String name) {
+        Path cached = innerZipFiles.get(name);
+        if (cached != null) {
+            return cached;
+        }
+        try {
             // Extract inner zip into temporary location.
             Path zipPath = getEntry(name);
             Preconditions.checkNotNull(zipPath, "Entry %s should exist ", name);
             Path temp = Files.createTempFile(file.getFileName().toString(), "_inner_zip.zip");
             FileUtils.copyFile(zipPath, temp);
             temp.toFile().deleteOnExit();
-            Zip created = new Zip(temp, displayName + ":" + name);
 
-            innerZips.put(name, created);
-            return created;
+            innerZipFiles.put(name, temp);
+
+            return temp;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

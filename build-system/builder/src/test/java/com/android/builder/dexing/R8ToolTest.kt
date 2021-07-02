@@ -17,12 +17,10 @@
 package com.android.builder.dexing
 
 import com.android.builder.packaging.JarFlinger
-import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
@@ -167,7 +165,7 @@ class R8ToolTest {
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
 
-        Zip(javaRes.toFile()).use { assertThat(it).contains("res.txt") }
+        assertThat(javaRes) { it.contains("res.txt") }
 
         // check Java resources are compressed
         ZipFile(javaRes.toFile()).use { zip ->
@@ -214,7 +212,7 @@ class R8ToolTest {
             featureJavaResourceOutputDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        Zip(javaRes.toFile()).use { assertThat(it).contains("res.txt") }
+        assertThat(javaRes) { it.contains("res.txt") }
     }
 
     @Test
@@ -498,7 +496,7 @@ class R8ToolTest {
                 toolConfig,
                 proguardConfig,
                 mainDexConfig,
-                MessageReceiver { message ->
+                { message ->
                     messages.add(message.text)
                     toolNameTags.add(message.toolName!!)
                 },
@@ -676,7 +674,7 @@ class R8ToolTest {
 
         assertThat(dex).containsClass("L$className;")
             .that()
-            .hasMethodThatInvokes("foo", "Ljava/lang/AssertionError;-><init>()V");
+            .hasMethodThatInvokes("foo", "Ljava/lang/AssertionError;-><init>()V")
 
         val releaseToolConfig = debuggableToolConfig.copy(isDebuggable = false)
         FileUtils.cleanOutputDir(output.toFile())
@@ -701,7 +699,7 @@ class R8ToolTest {
             .hasMethodThatDoesNotInvoke(
                 "foo",
                 "Ljava/lang/AssertionError;-><init>(Ljava/lang/Object;)V"
-            );
+            )
     }
 
     @Test

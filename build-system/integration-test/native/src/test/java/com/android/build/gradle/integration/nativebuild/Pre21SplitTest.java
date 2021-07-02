@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.testutils.apk.Apk;
 import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -99,9 +98,13 @@ public class Pre21SplitTest {
         project.execute("assembleDebug");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("x86", ApkType.DEBUG);
-        assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
-        assertThat(apk).contains("lib/x86/libhello-jni.so");
+        File apk = project.getApkAsFile("x86", ApkType.DEBUG);
+        assertThat(
+                apk,
+                it -> {
+                    it.doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+                    it.doesNotContain("lib/mips/libhello-jni.so");
+                    it.contains("lib/x86/libhello-jni.so");
+                });
     }
 }
