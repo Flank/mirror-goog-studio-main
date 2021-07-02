@@ -19,6 +19,7 @@ package com.android.tools.deployer.tasks;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.AdbClient;
 import com.android.tools.deployer.Installer;
+import com.android.tools.idea.protobuf.ByteString;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -34,7 +35,9 @@ import java.util.List;
  * finished and APK steadily available. Here, we need to operate without the APK and concentrate our
  * effort on respond time instead.
  */
-public class LiveLiteralDeployer {
+public class LiveUpdateDeployer {
+
+    /** Inputs for updating Live Literal. */
     public static class UpdateLiveLiteralParam {
         final String key;
         final String type;
@@ -52,21 +55,34 @@ public class LiveLiteralDeployer {
         }
     }
 
+    /** Inputs for Live Edit updates. */
+    public static class UpdateLiveEditsParam {
+        final String className;
+        final String methodName;
+        final byte[] classData;
+
+        public UpdateLiveEditsParam(String className, String methodName, byte[] classData) {
+            this.className = className;
+            this.methodName = methodName;
+            this.classData = classData;
+        }
+    }
+
     /**
      * Everything is an error at the moment. While they are hard error that might cause the update
      * to be aborted. These should not be presented to the user with any sense of urgency due to the
      * agreed "best effort" nature of LL updates.
      */
-    public static class UpdateLiveLiteralError {
+    public static class UpdateLiveEditError {
         public final String msg;
 
-        public UpdateLiveLiteralError(String msg) {
+        public UpdateLiveEditError(String msg) {
             this.msg = msg;
         }
     }
 
     /** Temp solution. Going to refactor / move this elsewhere later. */
-    public List<UpdateLiveLiteralError> updateLiveLiteral(
+    public List<UpdateLiveEditError> updateLiveLiteral(
             Installer installer,
             AdbClient adb,
             String packageName,
@@ -94,11 +110,53 @@ public class LiveLiteralDeployer {
 
         Deploy.LiveLiteralUpdateRequest request = requestBuilder.build();
 
-        List<UpdateLiveLiteralError> errors = new LinkedList<>();
+        List<UpdateLiveEditError> errors = new LinkedList<>();
         try {
             Deploy.LiveLiteralUpdateResponse response = installer.updateLiveLiterals(request);
             for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
-                errors.add(new UpdateLiveLiteralError(failure.getLiveLiteralResponse().getExtra()));
+                errors.add(new UpdateLiveEditError(failure.getLiveLiteralResponse().getExtra()));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return errors;
+    }
+
+    /** Temp solution. Going to refactor / move this elsewhere later. */
+    public List<UpdateLiveEditError> updateLiveEdit(
+            Installer installer, AdbClient adb, String packageName, UpdateLiveEditsParam param) {
+
+        List<Integer> pids = adb.getPids(packageName);
+        Deploy.Arch arch = adb.getArch(pids);
+
+        Deploy.LiveEditRequest.Builder requestBuilder = Deploy.LiveEditRequest.newBuilder();
+
+        requestBuilder.addAllProcessIds(pids);
+        requestBuilder.setArch(arch);
+        requestBuilder.setPackageName(packageName);
+
+        requestBuilder.setClassName(param.className);
+        requestBuilder.setMethodSignature(param.methodName);
+        requestBuilder.setClassData(ByteString.copyFrom(param.classData));
+
+        Deploy.LiveEditRequest request = requestBuilder.build();
+
+        List<UpdateLiveEditError> errors = new LinkedList<>();
+
+        // TODO: Remove when we are fully connected to the agent.
+        System.out.println(
+                "Live Edit: Uploading "
+                        + param.className
+                        + "."
+                        + param.methodName
+                        + " of "
+                        + param.classData.length
+                        + " bytes.");
+
+        try {
+            Deploy.LiveEditResponse response = installer.liveEdit(request);
+            for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
+                errors.add(new UpdateLiveEditError(failure.getLiveLiteralResponse().getExtra()));
             }
         } catch (IOException e) {
             e.printStackTrace();
