@@ -119,6 +119,7 @@ open class UnitTestImpl @Inject constructor(
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
+                || variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}

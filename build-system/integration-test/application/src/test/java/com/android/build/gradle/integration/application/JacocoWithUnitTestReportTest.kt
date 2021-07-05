@@ -21,6 +21,8 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.tooling.BuildException
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,33 +31,39 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean) {
+class JacocoWithUnitTestReportTest(
+    private val isJacocoTransformEnabled: Boolean,
+    private val isJacocoPluginAppliedFromBuildFile: Boolean) {
 
     @get:Rule
     val testProject = GradleTestProjectBuilder()
         .fromTestProject("unitTesting")
         .create()
 
-
     companion object {
+
         @JvmStatic
-        @Parameterized.Parameters
-        fun isJacocoTransformEnabled() = arrayOf(true, false)
+        @Parameterized.Parameters(name="isJacocoTransformEnabled_{0}_isJacocoPluginAppliedFromBuildFile_{1}")
+        fun params() = listOf(
+            arrayOf(true, true),
+            arrayOf(false, false),
+            arrayOf(true, false),
+            arrayOf(false, true)
+        )
     }
 
     @Before
     fun setup() {
-        TestFileUtils.appendToFile(testProject.buildFile,
-        """
-          apply plugin: 'jacoco'
-          android {
-            buildTypes {
-                debug {
-                    testCoverageEnabled true
-                }
-            }
-         }
-        """.trimIndent())
+        if (isJacocoPluginAppliedFromBuildFile) {
+            TestFileUtils.appendToFile(
+                testProject.buildFile,
+                "apply plugin: 'jacoco'\n"
+            )
+        }
+        TestFileUtils.appendToFile(
+            testProject.buildFile,
+            "android.buildTypes.debug.enableUnitTestCoverage true\n"
+        )
     }
 
     @Test
@@ -79,7 +87,7 @@ class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean
         val totalCoverageMetricsContents = Regex("<tfoot>(.*?)</tfoot>")
             .find(generatedCoverageReportHTML)
         val totalCoverageInfo = Regex("<td class=\"ctr2\">(.*?)</td>")
-                .find(totalCoverageMetricsContents?.groups?.first()!!.value)
+            .find(totalCoverageMetricsContents?.groups?.first()!!.value)
         val totalUnitTestCoveragePercentage = totalCoverageInfo!!.groups[1]!!.value
         // Checks if the report title is expected.
         assertThat(reportTitle!!.groups[1]!!.value).isEqualTo("debug")
@@ -96,5 +104,14 @@ class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean
         assertThat(FileUtils.join(reportPackageInfoDir, "someKotlinCode.kt.html").exists())
             .isTrue()
 
+    }
+
+    @Test(expected = BuildException::class)
+    fun `report not generated for build types with unit test coverage disabled`() {
+        // Build fails as the code coverage report task has not been registered as there is no
+        // code coverage data for the release build type.
+        testProject.executor()
+            .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
+            .run("createReleaseUnitTestCoverageReport")
     }
 }

@@ -244,7 +244,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             createJacocoTask(libraryVariant);
         }
 
-        maybeCreateTransformClassesWithAsmTask(libraryVariant, instrumented, false);
+        maybeCreateTransformClassesWithAsmTask(libraryVariant, instrumented);
 
         // ----- External Transforms -----
         // apply all the external transforms.

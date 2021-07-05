@@ -49,16 +49,13 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.Version
 import com.android.builder.core.AbstractProductFlavor
-import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
 import com.android.builder.model.VectorDrawablesOptions
-import com.android.sdklib.AndroidVersion
 import com.android.utils.combineAsCamelCase
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -834,6 +831,9 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
 
     override val isTestCoverageEnabled: Boolean
         get() = buildTypeObj.isTestCoverageEnabled // so far, blindly override the build type placeholders
+
+    override val isUnitTestCoverageEnabled: Boolean
+        get() = buildTypeObj.enableUnitTestCoverage || buildTypeObj.isTestCoverageEnabled
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build

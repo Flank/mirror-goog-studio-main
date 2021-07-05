@@ -56,6 +56,17 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
     var isTestCoverageEnabled: Boolean
 
     /**
+     * Specifies unit test code coverage data collection by configuring the JacocoPlugin.
+     *
+     * When enabled, the Jacoco plugin is applied and coverage data is collected
+     * by the Jacoco plugin. This can avoid unwanted build time instrumentation required to collect
+     * coverage data from other test types such as connected tests.
+    */
+    @get:Incubating
+    @set:Incubating
+    var enableUnitTestCoverage: Boolean
+
+    /**
      * Specifies whether the plugin should generate resources for pseudolocales.
      *
      * A pseudolocale is a locale that simulates characteristics of languages that cause UI,

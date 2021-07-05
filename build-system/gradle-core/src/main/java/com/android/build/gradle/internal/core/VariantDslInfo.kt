@@ -256,6 +256,8 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     val isTestCoverageEnabled: Boolean
 
+    val isUnitTestCoverageEnabled: Boolean
+
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build
      * type specific placeholders are added and potentially overrides product flavors values.

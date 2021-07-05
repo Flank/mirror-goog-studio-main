@@ -38,6 +38,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -58,6 +59,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     fun lazyInit() {
         renderscriptOptimLevel = 3
         isEmbedMicroApp = true
+        enableUnitTestCoverage = dslServices.projectInfo.getProject().pluginManager
+            .hasPlugin(JacocoPlugin.PLUGIN_EXTENSION_NAME)
     }
 
     /**
@@ -66,6 +69,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
     override fun getName(): String {
         return name
     }
+
+    abstract override var enableUnitTestCoverage: Boolean
 
     abstract var _isDebuggable: Boolean
 
@@ -243,6 +248,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         )
         _shrinkResources = thatBuildType._shrinkResources
         shaders._initWith(thatBuildType.shaders)
+        enableUnitTestCoverage = thatBuildType.enableUnitTestCoverage
         externalNativeBuildOptions._initWith(thatBuildType.externalNativeBuildOptions)
         _postProcessing.initWith(that.postprocessing)
         isCrunchPngs = thatBuildType.isCrunchPngs

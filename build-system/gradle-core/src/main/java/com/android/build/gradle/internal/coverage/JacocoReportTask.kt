@@ -104,6 +104,10 @@ abstract class JacocoReportTask : NonIncrementalTask() {
     abstract val outputReportDir: DirectoryProperty
 
     override fun doTaskAction() {
+        if (!jacocoConnectedTestsCoverageDir.isPresent && !jacocoUnitTestCoverageFile.isPresent) {
+            throw IOException("No coverage data found. " +
+                    "Please enable code coverage for this build type in build.gradle.")
+        }
         val coverageFiles: Set<File> = if (jacocoUnitTestCoverageFile.isPresent) {
             // Unit test coverage:
             setOf(jacocoUnitTestCoverageFile.get().asFile)

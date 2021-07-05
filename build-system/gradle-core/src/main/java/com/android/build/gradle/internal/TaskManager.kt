@@ -542,8 +542,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         maybeCreateTransformClassesWithAsmTask(
             testFixturesComponent,
-            instrumented /* Unit Tests do not use offline instrumentation */,
-            false /* Legacy transforms do not apply to test fixtures / unit tests */)
+            instrumented /* Unit Tests do not use offline instrumentation. */)
 
         // packaging tasks
 
@@ -1548,9 +1547,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // This should be done automatically by the classpath
         //        TaskFactoryUtils.dependsOn(javacTask,
         // testedVariantScope.getTaskContainer().getJavacTask());
-        maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig,
-            isTestCoverageEnabled = false,
-            legacyTransformsEnabled = false /* Instrumentation isn't needed for unit tests */
+        maybeCreateTransformClassesWithAsmTask(
+            unitTestCreationConfig,
+            isTestCoverageEnabled = false
         )
 
 
@@ -1636,25 +1635,27 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val ant = JacocoConfigurations.getJacocoAntTaskConfiguration(
             project, JacocoTask.getJacocoVersion(unitTestCreationConfig))
 
+        if (unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
+           unitTestCreationConfig.services.projectInfo.getProject().pluginManager
+               .apply(JacocoPlugin::class.java)
+        }
         val runTestsTask =
                 taskFactory.register(AndroidUnitTest.CreationAction(unitTestCreationConfig))
         taskFactory.configure(JavaPlugin.TEST_TASK_NAME) {
                 test: Task -> test.dependsOn(runTestsTask)
         }
 
-        if (unitTestCreationConfig.isTestCoverageEnabled) {
+        if (unitTestCreationConfig.isTestCoverageEnabled
+            || unitTestCreationConfig.variantDslInfo.isUnitTestCoverageEnabled) {
             unitTestCreationConfig.services.projectInfo.getProject().plugins.withType(
                 JacocoPlugin::class.java
             ) {
                 // Jacoco plugin is applied and test coverage enabled, ∴ generate coverage report.
                 taskFactory.register(
-                    JacocoReportTask.CreateActionUnitTest(
-                        unitTestCreationConfig,
-                        ant
-                    )
+                    JacocoReportTask.CreateActionUnitTest(unitTestCreationConfig, ant)
                 )
             }
-       }
+        }
     }
 
     private fun createTopLevelTestTasks() {
@@ -2013,11 +2014,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(
-            creationConfig,
-            isTestCoverageEnabled,
-            registeredLegacyTransform
-        )
+        maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled)
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -3185,8 +3182,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun maybeCreateTransformClassesWithAsmTask(
         creationConfig: ComponentCreationConfig,
-        isTestCoverageEnabled: Boolean,
-        legacyTransformsEnabled: Boolean
+        isTestCoverageEnabled: Boolean
     ) {
         if (creationConfig.projectClassesAreInstrumented) {
             creationConfig

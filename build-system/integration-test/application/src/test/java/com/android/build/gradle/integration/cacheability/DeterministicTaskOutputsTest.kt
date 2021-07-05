@@ -60,6 +60,8 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/source_set_path_map/debug/file-map.txt",
             "app/build/outputs/apk/debug/app-debug.apk",
             "app/build/outputs/logs/manifest-merger-debug-report.txt",
+            // Coverage data contains timestamps.
+            "app/build/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
 
             // Test reports contain timestamps, which make them different across builds.
             "app/build/reports/tests/testDebugUnitTest",
