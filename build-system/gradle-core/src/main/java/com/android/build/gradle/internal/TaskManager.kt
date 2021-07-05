@@ -221,6 +221,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
+import com.android.sdklib.AndroidVersion
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions
@@ -2029,14 +2030,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // ----- Multi-Dex support
         var dexingType = creationConfig.dexingType
 
-        // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
-        if (dexingType === DexingType.LEGACY_MULTIDEX) {
-            if (creationConfig.isMultiDexEnabled
-                    && creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
-                    >= 21) {
-                dexingType = DexingType.NATIVE_MULTIDEX
-            }
+        // Upgrade from legacy multi-dex to native multi-dex if possible when deploying to device
+        // running L(21)+ from the IDE.
+        if (dexingType === DexingType.LEGACY_MULTIDEX
+                && creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
+                >= AndroidVersion.VersionCodes.LOLLIPOP) {
+            dexingType = DexingType.NATIVE_MULTIDEX
         }
+
         if (creationConfig.needsMainDexListForBundle) {
             taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))
         }
