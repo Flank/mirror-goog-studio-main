@@ -2033,7 +2033,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Upgrade from legacy multi-dex to native multi-dex if possible when deploying to device
         // running L(21)+ from the IDE.
         if (dexingType === DexingType.LEGACY_MULTIDEX
-                && creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
+                && creationConfig.targetDeployApi.getFeatureLevel()
                 >= AndroidVersion.VersionCodes.LOLLIPOP) {
             dexingType = DexingType.NATIVE_MULTIDEX
         }

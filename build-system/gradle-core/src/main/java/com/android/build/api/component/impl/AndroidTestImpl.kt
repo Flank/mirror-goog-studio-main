@@ -256,8 +256,8 @@ open class AndroidTestImpl @Inject constructor(
             else -> testedConfig.variantType.isBaseModule && needsShrinkDesugarLibrary
         }
 
-    override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
-        testedVariant.minSdkVersionWithTargetDeviceApi
+    override val targetDeployApi: AndroidVersion =
+        testedVariant.targetDeployApi
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled

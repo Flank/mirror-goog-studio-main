@@ -326,7 +326,7 @@ fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConf
 fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
         minSdk = creationConfig.minSdkVersion.getFeatureLevel(),
-        targetDeploySdk = creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel(),
+        targetDeploySdk = creationConfig.targetDeployApi.getFeatureLevel(),
         isDebuggable = creationConfig.debuggable,
         enableDesugaring =
             creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,

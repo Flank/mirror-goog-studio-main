@@ -17,6 +17,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.AndroidVersionImpl
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -43,23 +44,18 @@ open class ApkCreationConfigImpl(
         }
 
     /**
-     * Returns the minimum SDK version for this variant, potentially overridden by a property passed
-     * by the IDE.
+     * Returns the minimum SDK version for which we want to deploy this variant on.
+     * In most cases this will be equal the minSdkVersion, but when the IDE is deploying to a
+     * device running a higher API level than the minSdkVersion this will have that value and
+     * can be used to enable some optimizations to build the APK faster.
      *
-     * @see .getMinSdkVersion
+     * This has no relation with targetSdkVersion from build.gradle/manifest.
      */
-    override val minSdkVersionWithTargetDeviceApi: AndroidVersion
+    override val targetDeployApi: AndroidVersion
         get() {
-            val targetDeployApiLevel = variantDslInfo.targetDeployApiFromIDE
-            return if (targetDeployApiLevel != null && config.isMultiDexEnabled && isDebuggable) {
-                // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
-                // debuggable.
-                val minVersion: Int =
-                        if (config.targetSdkVersion.apiLevel > 1) Integer.min(
-                                config.targetSdkVersion.apiLevel,
-                                targetDeployApiLevel
-                        ) else targetDeployApiLevel
-                AndroidVersionImpl(minVersion)
+            val targetDeployApiFromIDE = variantDslInfo.targetDeployApiFromIDE ?: 1
+            return if (targetDeployApiFromIDE > config.minSdkVersion.getFeatureLevel()) {
+                AndroidVersionImpl(targetDeployApiFromIDE)
             } else {
                 config.minSdkVersion
             }

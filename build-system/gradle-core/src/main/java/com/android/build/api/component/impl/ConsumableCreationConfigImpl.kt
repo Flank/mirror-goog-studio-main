@@ -123,7 +123,7 @@ open class ConsumableCreationConfigImpl(
         return libDesugarEnabled
     }
 
-     open val minSdkVersionWithTargetDeviceApi: AndroidVersion
+     open val targetDeployApi: AndroidVersion
         get() = config.minSdkVersion
 
     fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {

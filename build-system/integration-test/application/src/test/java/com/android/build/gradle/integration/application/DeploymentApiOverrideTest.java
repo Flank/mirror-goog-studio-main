@@ -138,8 +138,7 @@ public class DeploymentApiOverrideTest {
 
     @Test
     public void testUpgradeToNativeMultiDexOnReleaseBuild() throws Exception {
-        // ics flavor has minSdk = 14 and we try to upgrade to 21, but this doesn't happen
-        // on non debuggable builds.
+        // ics flavor has minSdk = 14 and we upgrade to 21 via IDE property
         GradleBuildResult result =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
@@ -147,10 +146,10 @@ public class DeploymentApiOverrideTest {
                         .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsRelease");
 
-        assertThat(getMainDexListFile(project, "icsRelease").exists()).isTrue();
+        assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
-        assertDexTask(result, genExpectedTaskStatesFor("IcsRelease", false));
+        assertDexTask(result, genExpectedTaskStatesFor("IcsRelease", true));
     }
 
     /** Regression test for https://issuetracker.google.com/72085541. */
@@ -207,10 +206,8 @@ public class DeploymentApiOverrideTest {
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
                         .run("assembleIcsDebug");
         // We skip the getMainDexListFile() assertion here, because since we didn't cleaned the
-        // project
-        // before running with IDE_TARGET_DEVICE_API, the output is still there even if we execute
-        // in
-        // Native Multidex now.
+        // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
+        // even if we are executing in Native Multidex now.
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         // because IDE_TARGET_DEVICE_API
@@ -238,27 +235,22 @@ public class DeploymentApiOverrideTest {
 
     private static Map<String, TaskStateList.ExecutionState> genExpectedTaskStatesFor(
             String target, boolean nativeMultidex) {
-        if (target.equals("LollipopRelease")) {
-            return ImmutableMap.of(
-                    ":dexBuilderLollipopRelease", TaskStateList.ExecutionState.DID_WORK,
-                    ":mergeDexLollipopRelease", TaskStateList.ExecutionState.DID_WORK,
-                    ":mergeExtDexLollipopRelease", TaskStateList.ExecutionState.DID_WORK);
-        } else if (target.equals("LollipopDebug")) {
-            return ImmutableMap.of(
-                    ":dexBuilderLollipopDebug", TaskStateList.ExecutionState.DID_WORK,
-                    ":mergeLibDexLollipopDebug", TaskStateList.ExecutionState.DID_WORK,
-                    ":mergeExtDexLollipopDebug", TaskStateList.ExecutionState.DID_WORK);
-        } else {
-            if (nativeMultidex) {
+        if (nativeMultidex) {
+            if (target.endsWith("Release")) {
                 return ImmutableMap.of(
                         ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeLibDex" + target, TaskStateList.ExecutionState.DID_WORK,
+                        ":mergeDex" + target, TaskStateList.ExecutionState.DID_WORK,
                         ":mergeExtDex" + target, TaskStateList.ExecutionState.DID_WORK);
             } else {
                 return ImmutableMap.of(
                         ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeDex" + target, TaskStateList.ExecutionState.DID_WORK);
+                        ":mergeLibDex" + target, TaskStateList.ExecutionState.DID_WORK,
+                        ":mergeExtDex" + target, TaskStateList.ExecutionState.DID_WORK);
             }
+        } else {
+            return ImmutableMap.of(
+                    ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
+                    ":mergeDex" + target, TaskStateList.ExecutionState.DID_WORK);
         }
     }
 }

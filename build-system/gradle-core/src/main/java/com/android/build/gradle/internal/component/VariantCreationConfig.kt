@@ -34,8 +34,16 @@ interface VariantCreationConfig: ComponentCreationConfig {
 
     override val needsMainDexListForBundle: Boolean
 
+    /**
+     * Returns the minimum SDK version for which we want to deploy this variant on.
+     * In most cases this will be equal the minSdkVersion, but when the IDE is deploying to a
+     * device running a higher API level than the minSdkVersion this will have that value and
+     * can be used to enable some optimizations to build the APK faster.
+     *
+     * This has no relation with targetSdkVersion from build.gradle/manifest.
+     */
     // TODO: move to ConsumableCreationConfig.
-    val minSdkVersionWithTargetDeviceApi: AndroidVersion
+    val targetDeployApi: AndroidVersion
 
     val maxSdkVersion: Int?
 

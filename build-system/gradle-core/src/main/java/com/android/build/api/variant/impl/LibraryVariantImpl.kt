@@ -16,7 +16,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.variant.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
@@ -160,8 +159,8 @@ open class  LibraryVariantImpl @Inject constructor(
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
 
-    override val minSdkVersionWithTargetDeviceApi: AndroidVersion
-        get() = delegate.minSdkVersionWithTargetDeviceApi
+    override val targetDeployApi: AndroidVersion
+        get() = delegate.targetDeployApi
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
