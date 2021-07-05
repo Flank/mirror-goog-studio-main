@@ -50,15 +50,15 @@ open class ApkCreationConfigImpl(
      */
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() {
-            val targetApiLevel = variantDslInfo.minSdkVersionFromIDE
-            return if (targetApiLevel != null && config.isMultiDexEnabled && isDebuggable) {
+            val targetDeployApiLevel = variantDslInfo.targetDeployApiFromIDE
+            return if (targetDeployApiLevel != null && config.isMultiDexEnabled && isDebuggable) {
                 // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
                 // debuggable.
                 val minVersion: Int =
                         if (config.targetSdkVersion.apiLevel > 1) Integer.min(
                                 config.targetSdkVersion.apiLevel,
-                                targetApiLevel
-                        ) else targetApiLevel
+                                targetDeployApiLevel
+                        ) else targetDeployApiLevel
                 AndroidVersionImpl(minVersion)
             } else {
                 config.minSdkVersion
