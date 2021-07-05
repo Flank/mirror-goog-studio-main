@@ -24,7 +24,9 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.StringReader
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
 
 class AndroidGradlePluginAttributionDataTest {
 
@@ -53,10 +55,20 @@ class AndroidGradlePluginAttributionDataTest {
         )
     )
 
+    private fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
+        val file = AndroidGradlePluginAttributionData.getAttributionFile(outputDir)
+        file.parentFile.mkdirs()
+        BufferedWriter(FileWriter(file)).use {
+            it.write(AndroidGradlePluginAttributionData.AttributionDataAdapter.toJson(
+                attributionData
+            ))
+        }
+    }
+
     @Test
     fun testDataSerialization() {
         val outputDir = temporaryFolder.newFolder()
-        AndroidGradlePluginAttributionData.save(outputDir, data)
+        save(outputDir, data)
 
         val file = FileUtils.join(
             outputDir,
@@ -122,7 +134,7 @@ class AndroidGradlePluginAttributionDataTest {
     @Test
     fun testDeserializationOfNewerAgpData() {
         val outputDir = temporaryFolder.newFolder()
-        AndroidGradlePluginAttributionData.save(outputDir, data)
+        save(outputDir, data)
 
         // modify the file to add a new data field at the end
         val file = FileUtils.join(
@@ -168,7 +180,7 @@ class AndroidGradlePluginAttributionDataTest {
         val outputDir = temporaryFolder.newFolder()
         val data = AndroidGradlePluginAttributionData(buildInfo = BuildInfo(null, null))
 
-        AndroidGradlePluginAttributionData.save(outputDir, data)
+        save(outputDir, data)
         val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
 
         assertThat(deserializedData).isEqualTo(data)
@@ -179,7 +191,7 @@ class AndroidGradlePluginAttributionDataTest {
         val outputDir = temporaryFolder.newFolder()
         val data = AndroidGradlePluginAttributionData()
 
-        AndroidGradlePluginAttributionData.save(outputDir, data)
+        save(outputDir, data)
         val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
 
         assertThat(deserializedData).isEqualTo(data)
