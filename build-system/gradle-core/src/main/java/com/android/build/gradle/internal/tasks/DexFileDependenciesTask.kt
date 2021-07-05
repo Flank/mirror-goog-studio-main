@@ -194,9 +194,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
             // the device we're deploying too.
             // If it's >= N(24) then we can avoid adding extra classes to the classpaths.
-            val targetDeployApi = max(
-                    creationConfig.minSdkVersion.getFeatureLevel(),
-                    creationConfig.targetDeployApi.getFeatureLevel())
+            val targetDeployApi = creationConfig.targetDeployApi.getFeatureLevel()
 
             if (targetDeployApi < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(

@@ -491,9 +491,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
             // the device we're deploying too.
             // If it's >= N(24) then we can avoid adding extra classes to the desugar classpaths.
-            val targetDeployApi = max(
-                    creationConfig.minSdkVersion.getFeatureLevel(),
-                    creationConfig.targetDeployApi.getFeatureLevel())
+            val targetDeployApi = creationConfig.targetDeployApi.getFeatureLevel()
 
             if (languageDesugaring && targetDeployApi < AndroidVersion.VersionCodes.N) {
                 // Set classpath only if desugaring with D8 and minSdkVersion < 24

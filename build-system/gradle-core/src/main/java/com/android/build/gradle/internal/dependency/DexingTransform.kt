@@ -355,8 +355,7 @@ data class DexingArtifactConfiguration(
 
     // If we want to do desugaring and our minSdk (or the API level of the device we're deploying
     // to) is lower than N then we need additional classpaths in order to proper do the desugaring.
-    private val needsClasspath =
-            enableDesugaring && max(minSdk, targetDeploySdk) < AndroidVersion.VersionCodes.N
+    private val needsClasspath = enableDesugaring && targetDeploySdk < AndroidVersion.VersionCodes.N
 
     fun registerTransform(
         projectName: String,

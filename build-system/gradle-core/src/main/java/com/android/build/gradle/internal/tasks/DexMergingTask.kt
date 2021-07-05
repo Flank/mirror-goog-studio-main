@@ -450,9 +450,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
 
                     // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
                     // the device we're deploying too.
-                    val targetDeployApi = max(
-                            creationConfig.minSdkVersion.getFeatureLevel(),
-                            creationConfig.targetDeployApi.getFeatureLevel())
+                    val targetDeployApi = creationConfig.targetDeployApi.getFeatureLevel()
 
                     val overrideMinSdkVersion =
                         if (creationConfig.variantType.isDynamicFeature
