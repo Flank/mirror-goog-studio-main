@@ -89,12 +89,17 @@ public class AbstractDexAndroidSubject<
 
     public void hasDexVersion(int expectedDexVersion) {
         try {
-            if (expectedDexVersion
-                    != actual().getMainDexFile().orElseThrow(AssertionError::new).getVersion()) {
-                fail("dex version", expectedDexVersion);
+            int presentDexVersion =
+                    actual().getMainDexFile().orElseThrow(AssertionError::new).getVersion();
+            if (expectedDexVersion != presentDexVersion) {
+                fail(
+                        String.format(
+                                "expected dex version %s, but has %s",
+                                expectedDexVersion, presentDexVersion));
             }
         } catch (IOException e) {
-            fail("has a dex");
+            failWithoutActual(
+                    Fact.simpleFact(String.format("'%s' does not contain main dex", actual())));
         }
     }
 
