@@ -53,6 +53,7 @@ import com.android.builder.dexing.getSortedFilesInDir
 import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
@@ -89,6 +90,7 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -270,7 +272,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             // Shared parameters
             task.sharedParams.dexingType.setDisallowChanges(dexingType)
             task.sharedParams.minSdkVersion.setDisallowChanges(
-                creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
+                creationConfig.minSdkVersion.getFeatureLevel()
             )
             task.sharedParams.debuggable.setDisallowChanges(creationConfig.debuggable)
             task.sharedParams.errorFormatMode.setDisallowChanges(
@@ -446,17 +448,21 @@ abstract class DexMergingTask : NewIncrementalTask() {
                         return customNumberOfBuckets
                     }
 
-                    // If the property is not set, compute its value
-                    val minSdkVersion =
-                        creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
+                    // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
+                    // the device we're deploying too.
+                    val targetDeployApi = max(
+                            creationConfig.minSdkVersion.getFeatureLevel(),
+                            creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
+
                     val overrideMinSdkVersion =
-                        if (creationConfig.variantType.isDynamicFeature && minSdkVersion < 21) {
+                        if (creationConfig.variantType.isDynamicFeature
+                                && targetDeployApi < AndroidVersion.VersionCodes.LOLLIPOP) {
                             // Dynamic features can always be built in native multidex mode
                             // even with minSdkVersion < 21, so for the following
                             // computation, we consider it to be 21.
                             21
                         } else {
-                            minSdkVersion
+                            targetDeployApi
                         }
                     getNumberOfBuckets(minSdkVersion = overrideMinSdkVersion)
                 }

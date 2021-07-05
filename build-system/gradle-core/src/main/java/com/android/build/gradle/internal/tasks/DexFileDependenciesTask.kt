@@ -46,6 +46,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import kotlin.math.max
 
 @CacheableTask
 abstract class DexFileDependenciesTask: NonIncrementalTask() {
@@ -188,10 +189,16 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.PROCESSED_JAR
                 )
             ).disallowChanges()
-            val minSdkVersion =
-                creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel()
-            task.minSdkVersion.setDisallowChanges(minSdkVersion)
-            if (minSdkVersion < AndroidVersion.VersionCodes.N) {
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getFeatureLevel())
+
+            // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
+            // the device we're deploying too.
+            // If it's >= N(24) then we can avoid adding extra classes to the classpaths.
+            val targetDeployApi = max(
+                    creationConfig.minSdkVersion.getFeatureLevel(),
+                    creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
+
+            if (targetDeployApi < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

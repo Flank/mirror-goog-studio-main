@@ -102,7 +102,7 @@ public class DeploymentApiOverrideTest {
 
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_21);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
     }
 
@@ -163,7 +163,7 @@ public class DeploymentApiOverrideTest {
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isTrue();
-        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_19);
+        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         // because minSdkVersion = 14 and targetApi = 19
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", false));
         List<String> userClasses = new ArrayList<>();
@@ -180,16 +180,14 @@ public class DeploymentApiOverrideTest {
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
                         .run("assembleIcsDebug");
-
-        // make sure all user classes are still there
         apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
         // We skip the getMainDexListFile() assertion here, because since we didn't cleaned the
-        // project
-        // before running with IDE_TARGET_DEVICE_API >= 21, the output is still there even if we are
-        // executing in Native Multidex now.
-        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
+        // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
+        // even if we are executing in Native Multidex now.
+        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         // because IDE_TARGET_DEVICE_API
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
+        // make sure all user classes are still there
         for (String userClass : userClasses) {
             assertThat(apk).containsClass(userClass);
         }
@@ -214,7 +212,7 @@ public class DeploymentApiOverrideTest {
         // in
         // Native Multidex now.
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         // because IDE_TARGET_DEVICE_API
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
     }
