@@ -51,6 +51,9 @@ filegroup(
         "dvlib/src/main/**/*.java",
         "dvlib/src/main/**/*.kt",
         "dvlib/src/main/resources/**",
-    ]) + ["dvlib/build.gradle"],
+    ]) + [
+        "dvlib/build.gradle",
+        "dvlib/NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

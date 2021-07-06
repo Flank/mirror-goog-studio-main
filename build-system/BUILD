@@ -317,6 +317,7 @@ filegroup(
     ]) + [
         "artifacts-built-with-bazel.properties",
         "manifest-merger/build.gradle",
+        "manifest-merger/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

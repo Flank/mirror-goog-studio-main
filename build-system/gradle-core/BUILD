@@ -233,6 +233,9 @@ filegroup(
         "src/main/**/*.kt",
         "src/main/proto/**/*.proto",
         "src/main/resources/**",
-    ]) + ["build.gradle"],
+    ]) + [
+        "build.gradle",
+        "NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

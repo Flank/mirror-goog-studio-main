@@ -33,6 +33,7 @@ filegroup(
         "src/main/resources/**",
     ]) + [
         "build.gradle",
+        "NOTICE",
         "//tools/buildSrc/base:version.properties",
         "//prebuilts/tools/common/aapt:aapt2_version.properties",
     ],

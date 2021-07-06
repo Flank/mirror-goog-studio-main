@@ -365,12 +365,18 @@ filegroup(
         "libs/lint-checks/src/main/resources/**",
     ]) + [
         "libs/lint-model/build.gradle",
+        "libs/lint-model/NOTICE",
         "libs/lint-api/build.gradle",
+        "libs/lint-api/NOTICE",
         "libs/lint-gradle/build.gradle",
+        "libs/lint-gradle/NOTICE",
         "libs/lint-checks/build.gradle",
         "libs/intellij-core/build.gradle",
+        "libs/intellij-core/NOTICE",
         "libs/kotlin-compiler/build.gradle",
+        "libs/kotlin-compiler/NOTICE",
         "libs/uast/build.gradle",
+        "libs/uast/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

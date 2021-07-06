@@ -249,6 +249,7 @@ filegroup(
         "src/main/resources/**",
     ]) + [
         "build.gradle",
+        "NOTICE",
         "//prebuilts/r8",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
