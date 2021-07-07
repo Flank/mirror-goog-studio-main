@@ -37,6 +37,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UInstanceExpression
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
@@ -47,6 +48,7 @@ import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.kotlin.KotlinUTypeCheckExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 
 /** Looks for assertion usages. */
@@ -132,7 +134,13 @@ class AssertDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         assertion: UCallExpression
     ) {
-        val condition = assertion.valueArguments.firstOrNull() ?: return
+        val valueArguments = assertion.valueArguments
+        val first = valueArguments.firstOrNull()?.skipParenthesizedExprDown() ?: return
+        val condition = if (first is ULambdaExpression) {
+            valueArguments.last()
+        } else {
+            first
+        }
         if (context.isEnabled(EXPENSIVE) && warnAboutWork(assertion, condition)) {
             val location = context.getLocation(condition)
             var message =

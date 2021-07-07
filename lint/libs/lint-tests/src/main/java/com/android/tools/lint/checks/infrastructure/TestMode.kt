@@ -341,9 +341,13 @@ open class TestMode(
         val FULLY_QUALIFIED: TestMode = FullyQualifyNamesTestMode()
 
         @JvmField
+        val REORDER_ARGUMENTS: TestMode = ArgumentReorderingTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
-            FULLY_QUALIFIED
+            FULLY_QUALIFIED,
+            REORDER_ARGUMENTS
         )
 
         /** Returns all default included test modes. */

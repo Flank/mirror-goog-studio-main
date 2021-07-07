@@ -426,10 +426,20 @@ class VersionChecks(
                             resolved, PsiParameterList::class.java
                         )
                     if (parameterList != null) {
-                        val index = parameterList.getParameterIndex(resolved)
-                        val arguments = call.valueArguments
-                        if (index != -1 && index < arguments.size) {
-                            apiLevel = getApiLevel(arguments[index], null)
+                        call.resolve()?.let { method ->
+                            val mapping = evaluator.computeArgumentMapping(call, method)
+                            for ((argument, parameter) in mapping) {
+                                if (parameter == resolved) {
+                                    apiLevel = getApiLevel(argument, null)
+                                    break
+                                }
+                            }
+                        } ?: run {
+                            val index = parameterList.getParameterIndex(resolved)
+                            val arguments = call.valueArguments
+                            if (index != -1 && index < arguments.size) {
+                                apiLevel = getApiLevel(arguments[index], null)
+                            }
                         }
                     }
                 }
