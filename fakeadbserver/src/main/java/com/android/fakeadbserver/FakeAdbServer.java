@@ -19,12 +19,14 @@ package com.android.fakeadbserver;
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ExecCommandHandler;
-import com.android.fakeadbserver.hostcommandhandlers.GetStateCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.SyncCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.TrackJdwpCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.AbbCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.FeaturesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ForwardCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.GetDevPathCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.GetSerialNoCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.GetStateCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.KillCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.KillForwardAllCommandHandler;
@@ -380,6 +382,8 @@ public final class FakeAdbServer implements AutoCloseable {
             setHostCommandHandler(AbbCommandHandler.COMMAND, AbbCommandHandler::new);
             setHostCommandHandler(MdnsCommandHandler.COMMAND, MdnsCommandHandler::new);
             setHostCommandHandler(GetStateCommandHandler.COMMAND, GetStateCommandHandler::new);
+            setHostCommandHandler(GetSerialNoCommandHandler.COMMAND, GetSerialNoCommandHandler::new);
+            setHostCommandHandler(GetDevPathCommandHandler.COMMAND, GetDevPathCommandHandler::new);
 
             addDeviceHandler(new TrackJdwpCommandHandler());
             addDeviceHandler(new ExecCommandHandler());
