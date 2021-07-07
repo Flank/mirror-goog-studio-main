@@ -131,7 +131,7 @@ abstract class ComponentImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val asmApiVersion = org.objectweb.asm.Opcodes.ASM7
+    override val asmApiVersion = org.objectweb.asm.Opcodes.ASM9
 
     // this is technically a public API for the Application Variant (only)
     override val outputs: VariantOutputList

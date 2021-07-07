@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +59,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.Opcodes;
 
 /** Tests for the internal workings of the app plugin ("android") */
 public class AppPluginInternalTest {
@@ -514,6 +516,31 @@ public class AppPluginInternalTest {
         assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))
                 .containsExactly("android.jar", "core-lambda-stubs.jar");
         assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
+    }
+
+    @Test
+    public void testAsmVersionIsTheLatest() throws IllegalAccessException {
+        AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        plugin.createAndroidTasks();
+        List<ComponentImpl> components = getComponents(plugin.getVariantManager());
+
+        VariantCheckers.checkDefaultVariants(components);
+
+        int latestAsmVersion = 4;
+        int latestAsmVersionEnum = Opcodes.ASM4;
+        for (Field field : Opcodes.class.getDeclaredFields()) {
+            if (field.getName().startsWith("ASM") && !field.getName().endsWith("EXPERIMENTAL")) {
+                int asmVersion = Integer.parseInt(field.getName().substring(3));
+                if (asmVersion > latestAsmVersion) {
+                    latestAsmVersion = asmVersion;
+                    latestAsmVersionEnum = field.getInt(null);
+                }
+            }
+        }
+
+        for (ComponentImpl component : components) {
+            assertThat(component.getAsmApiVersion()).isEqualTo(latestAsmVersionEnum);
+        }
     }
 
     public static List<ComponentImpl> getComponents(
