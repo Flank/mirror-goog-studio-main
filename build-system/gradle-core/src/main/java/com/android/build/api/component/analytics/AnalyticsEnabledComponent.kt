@@ -22,7 +22,6 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
-import com.android.build.api.variant.JavaCompilation
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
 import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
@@ -42,17 +41,6 @@ abstract class AnalyticsEnabledComponent(
             return objectFactory.newInstance(
                 AnalyticsEnabledArtifacts::class.java,
                 delegate.artifacts,
-                stats,
-                objectFactory)
-        }
-
-    override val javaCompilation: JavaCompilation
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.JAVA_COMPILATION_OPTIONS_VALUE
-            return objectFactory.newInstance(
-                AnalyticsEnabledJavaCompilation::class.java,
-                delegate.javaCompilation,
                 stats,
                 objectFactory)
         }

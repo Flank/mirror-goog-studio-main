@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -164,6 +163,4 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
 
     val packageJacocoRuntime: Boolean
-
-    val javaCompilation: JavaCompilation
 }
