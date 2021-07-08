@@ -192,6 +192,37 @@ public class DeploymentApiOverrideTest {
         }
     }
 
+    /** Regression test for https://issuetracker.google.com/157701376. */
+    @Test
+    public void testSwitchingDevicesBothLightDesugar() throws Exception {
+        // We first target 24, which is the first version that supports desugaring
+        // with less things added to the classpath.
+        GradleBuildResult result24 =
+                project.executor()
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
+                        // http://b/162074215
+                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                        .run("clean", "assembleIcsRelease");
+
+        assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+        assertDexTask(result24, genExpectedTaskStatesFor("IcsRelease", true));
+
+        // Now we re-run only changing the target to 25 and we should see dex tasks being up-to-date
+        GradleBuildResult result25 =
+                project.executor()
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 25)
+                        // http://b/162074215
+                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                        .run("assembleIcsRelease");
+
+        assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+        assertDexTask(result25, genExpectedTaskStatesFor("IcsRelease", true, false));
+    }
+
     @Test
     public void testDexingUsesDeviceApi() throws Exception {
         GradleBuildResult result = project.executor().run("clean", "assembleIcsDebug");
@@ -235,22 +266,31 @@ public class DeploymentApiOverrideTest {
 
     private static Map<String, TaskStateList.ExecutionState> genExpectedTaskStatesFor(
             String target, boolean nativeMultidex) {
+        return genExpectedTaskStatesFor(target, nativeMultidex, true);
+    }
+
+    private static Map<String, TaskStateList.ExecutionState> genExpectedTaskStatesFor(
+            String target, boolean nativeMultidex, boolean didWork) {
+        TaskStateList.ExecutionState expectedState =
+                didWork
+                        ? TaskStateList.ExecutionState.DID_WORK
+                        : TaskStateList.ExecutionState.UP_TO_DATE;
         if (nativeMultidex) {
             if (target.endsWith("Release")) {
                 return ImmutableMap.of(
-                        ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeDex" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeExtDex" + target, TaskStateList.ExecutionState.DID_WORK);
+                        ":dexBuilder" + target, expectedState,
+                        ":mergeDex" + target, expectedState,
+                        ":mergeExtDex" + target, expectedState);
             } else {
                 return ImmutableMap.of(
-                        ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeLibDex" + target, TaskStateList.ExecutionState.DID_WORK,
-                        ":mergeExtDex" + target, TaskStateList.ExecutionState.DID_WORK);
+                        ":dexBuilder" + target, expectedState,
+                        ":mergeLibDex" + target, expectedState,
+                        ":mergeExtDex" + target, expectedState);
             }
         } else {
             return ImmutableMap.of(
-                    ":dexBuilder" + target, TaskStateList.ExecutionState.DID_WORK,
-                    ":mergeDex" + target, TaskStateList.ExecutionState.DID_WORK);
+                    ":dexBuilder" + target, expectedState,
+                    ":mergeDex" + target, expectedState);
         }
     }
 }
