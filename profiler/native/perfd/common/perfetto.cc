@@ -58,6 +58,7 @@ Perfetto::LaunchProcessAndBlockTillStart(const PerfettoArgs &run_args,
 }
 
 Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
+  // |lib_path| and |env_args| are used to sideload Perfetto.
   std::string lib_path =
       string("LD_LIBRARY_PATH=") + CurrentProcess::dir() + run_args.abi_arch;
   const char *env_args[] = {
@@ -65,8 +66,9 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
       "PERFETTO_PRODUCER_SOCK_NAME=@perfetto_perfd_profiler_producer",
       // Path to libperfetto.so
       lib_path.c_str(), nullptr};
+
   LaunchStatus launch_status = LAUNCH_STATUS_SUCCESS;
-  string perfettoPath;
+  string perfetto_path;
   expected_output_path_ = run_args.output_file_path;
 
   // For older than Q we sideload perfetto.
@@ -94,7 +96,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
     // Run perfetto as the interface to configure the traced and traced_probes
     // Perfetto allows us to turn on and off tracing as well as configure
     // what gets traced, how, and where it gets saved to.
-    perfettoPath = GetPath(kPerfettoExecutable, run_args.abi_arch);
+    perfetto_path = GetPath(kPerfettoExecutable, run_args.abi_arch);
     perfetto_trace_path_ = run_args.output_file_path;
   } else {
     // When running built in perfetto we need to enable traced. This is enabled
@@ -106,7 +108,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
     // As such we take the expected file name and tell perfetto to write to a
     // file with that name in the |kFixedPerfettoTracePath| folder. For Q this
     // folder is readonly by shell, for R+ this folder is read/delete.
-    perfettoPath = string(kSystemPerfettoExecutable);
+    perfetto_path = string(kSystemPerfettoExecutable);
     perfetto_trace_path_ = string(kFixedPerfettoTracePath);
     // Find the filename of the expected output file and use that
     // for the filename of the /data/misc/perfetto-traces/ file.
@@ -117,7 +119,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
   }
 
   command_ = std::unique_ptr<NonBlockingCommandRunner>(
-      new NonBlockingCommandRunner(perfettoPath, true));
+      new NonBlockingCommandRunner(perfetto_path, true));
   // Serialize the config as a binary proto.
   std::ostringstream binary_config;
   run_args.config.SerializeToOstream(&binary_config);
@@ -127,7 +129,7 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
   // the config in via the stdin. However since this is currently the way
   // we launch/communicate with perfetto there is little need to change it.
   // The alternative is chagne "-c -" to "-c /path/to/config"
-  const char *args[] = {perfettoPath.c_str(),         "-c",   "-", "-o",
+  const char *args[] = {perfetto_path.c_str(),        "-c",   "-", "-o",
                         perfetto_trace_path_.c_str(), nullptr};
 
   // If we sideload perfetto we need to tell it how to connect to the probes

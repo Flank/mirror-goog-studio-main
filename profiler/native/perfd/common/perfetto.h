@@ -30,6 +30,7 @@ namespace profiler {
 // Arguments for running the perfetto command.
 struct PerfettoArgs {
   const perfetto::protos::TraceConfig& config;
+  // |abi_arch| is used only for API levels < Q to sideload Perfetto.
   const std::string& abi_arch;
   const std::string& output_file_path;
 };
