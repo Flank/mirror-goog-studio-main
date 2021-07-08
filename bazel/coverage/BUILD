@@ -382,15 +382,16 @@ coverage_report(
 )
 
 # Coverage report for R8 rule files editor.
-coverage_report(
-    name = "r8-editing",
-    srcpath_include = [
-        "tools/adt/idea/android-lang/src/com/android/tools/idea/lang/proguardR8",
-    ],
-    tests = [
-        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
-    ],
-)
+# b/193111860 android.lang.tests are too flaky
+#coverage_report(
+#    name = "r8-editing",
+#    srcpath_include = [
+#        "tools/adt/idea/android-lang/src/com/android/tools/idea/lang/proguardR8",
+#    ],
+#    tests = [
+#        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
+#    ],
+#)
 
 # Coverage report for the Resource Manager and Resource Picker classes
 coverage_report(
@@ -666,7 +667,7 @@ combine_report_definitions(
         "parallel-device-test-report",
         "profilers",
         "projectsystem",
-        "r8-editing",
+        #        "r8-editing", TODO(b/193111860) android.lang.tests are too flaky
         "resources-ui",
         "spliteditor",
         "suggested-import",
@@ -691,7 +692,8 @@ coverage_report(
         "//tools/adt/idea/android-common:intellij.android.common_tests",
         #TODO(b/155257347) too flaky for coverage runs
         #"//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
-        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
+        # TODO(b/193111860) test failing too frequently
+        #        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
