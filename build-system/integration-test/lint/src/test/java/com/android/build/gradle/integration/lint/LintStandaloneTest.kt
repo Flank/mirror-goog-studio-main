@@ -23,6 +23,8 @@ import com.android.build.gradle.integration.common.truth.GradleTaskSubject.asser
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,6 +81,31 @@ class LintStandaloneTest(private val runLintInProcess: Boolean) {
         assertThat(secondFile).contains("build.gradle:7: Warning: no Java language level directives")
         assertThat(secondFile).contains("0 errors, 2 warnings")
 
+    }
+
+    @Test
+    fun checkOutputsNotOverlapping() {
+        val lintModelDir =
+            FileUtils.join(project.intermediatesDir, "lint", "android-lint-model")
+        val lintFixModelDir =
+            FileUtils.join(project.intermediatesDir, "lintFix", "android-lint-model")
+        val lintVitalModelDir =
+            FileUtils.join(project.intermediatesDir, "lintVital", "android-lint-model")
+
+        getExecutor().run(":lint")
+        assertThat(lintModelDir).exists()
+        assertThat(lintFixModelDir).doesNotExist()
+        assertThat(lintVitalModelDir).doesNotExist()
+
+        getExecutor().expectFailure().run(":cleanLint", ":lintFix")
+        assertThat(lintModelDir).doesNotExist()
+        assertThat(lintFixModelDir).exists()
+        assertThat(lintVitalModelDir).doesNotExist()
+
+        getExecutor().run(":cleanLintFix", ":lintVital")
+        assertThat(lintModelDir).doesNotExist()
+        assertThat(lintFixModelDir).doesNotExist()
+        assertThat(lintVitalModelDir).exists()
     }
 
     private fun getExecutor(): GradleTaskExecutor =
