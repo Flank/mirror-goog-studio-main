@@ -347,11 +347,19 @@ open class TestMode(
         val BODY_REMOVAL: TestMode = BodyRemovalTestMode()
 
         @JvmField
+        val TYPE_ALIAS: TestMode = TypeAliasTestMode()
+
+        @JvmField
+        val IMPORT_ALIAS: TestMode = ImportAliasTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
             REORDER_ARGUMENTS,
-            BODY_REMOVAL
+            BODY_REMOVAL,
+            TYPE_ALIAS,
+            IMPORT_ALIAS
         )
 
         /** Returns all default included test modes. */
@@ -363,7 +371,7 @@ open class TestMode(
             PARTIAL,
             BYTECODE_ONLY,
             SOURCE_ONLY,
-            SOURCE_TRANSFORMATION_GROUP,
+            SOURCE_TRANSFORMATION_GROUP
         )
     }
 

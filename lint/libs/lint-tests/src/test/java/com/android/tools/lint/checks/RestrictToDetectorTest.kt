@@ -1470,7 +1470,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(
+        ).skipTestModes(TestMode.TYPE_ALIAS).run().expect(
             """
             src/main/kotlin/test/pkg/MyClass.kt:4: Error: RestrictedClass can only be called from tests [RestrictedApi]
                             class MyClass : RestrictedClass()

@@ -38,6 +38,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
@@ -1038,13 +1039,27 @@ internal class UElementVisitor constructor(
             }
 
             if (mVisitReferences) {
-                val list = referenceDetectors[node.identifier]
+                val identifier = node.identifier
+                val list = referenceDetectors[identifier]
                 if (list != null) {
                     val referenced = node.resolve()
                     if (referenced != null) {
                         for (v in list) {
                             val uastScanner = v.uastScanner
                             uastScanner.visitReference(mContext, node, referenced)
+                        }
+                    }
+                }
+
+                if (aliasedImports) {
+                    val referenced = node.resolve()
+                    if (referenced is PsiNamedElement) {
+                        val name = referenced.name
+                        if (name != null && name != identifier) {
+                            referenceDetectors[name]?.forEach { v ->
+                                val uastScanner = v.uastScanner
+                                uastScanner.visitReference(mContext, node, referenced)
+                            }
                         }
                     }
                 }

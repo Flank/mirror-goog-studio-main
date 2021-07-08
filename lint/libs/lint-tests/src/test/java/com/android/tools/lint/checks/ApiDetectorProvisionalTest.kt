@@ -43,7 +43,7 @@ class ApiDetectorProvisionalTest : AbstractCheckTest() {
                    val drawable = BitmapDrawable(resources) // requires API 4
                 }
                 """
-            )
+            ).indented()
         ).name("library")
 
         val app = project(manifest().minSdk(8)).dependsOn(lib)
@@ -53,9 +53,9 @@ class ApiDetectorProvisionalTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                ../library/src/test.kt:6: Error: Call requires API level 14 (current min is 8): android.widget.GridLayout() [NewApi]
-                                   val layout = GridLayout(null) // requires API 14
-                                                ~~~~~~~~~~~~~~~~
+                ../library/src/test.kt:5: Error: Call requires API level 14 (current min is 8): android.widget.GridLayout() [NewApi]
+                   val layout = GridLayout(null) // requires API 14
+                                ~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )

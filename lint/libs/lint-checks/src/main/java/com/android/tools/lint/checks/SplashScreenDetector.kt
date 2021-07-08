@@ -41,6 +41,10 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
             if (SPLASH_SCREEN_KEYWORDS.any { node.name?.contains(it, ignoreCase = true) == true } &&
                 isActivityOrFragment(context, node)
             ) {
+                if (node.sourcePsi == null) {
+                    // A compilation unit class for top level functions
+                    return
+                }
                 val incident = Incident(
                     ISSUE,
                     context.getNameLocation(node),

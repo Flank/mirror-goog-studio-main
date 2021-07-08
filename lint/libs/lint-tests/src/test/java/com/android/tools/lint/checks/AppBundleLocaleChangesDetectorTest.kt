@@ -321,6 +321,7 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
                             return this;
                         }
                     }
+                    public void build() { }
                 }
             """
         ).indented()
@@ -334,6 +335,7 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
                         Builder addLanguage(Locale locale) {
                             return this;
                         }
+                        public void build() { }
                     }
                 }
             """
