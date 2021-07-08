@@ -197,8 +197,8 @@ class AndroidXJetifierMatrixTest {
                         "This behavior will not be allowed in Android Gradle plugin 8.0.\n" +
                         "Please use only AndroidX dependencies or set `android.enableJetifier=true` in the `gradle.properties` file to migrate your project to AndroidX (see https://developer.android.com/jetpack/androidx/migrate for more info).\n" +
                         "The following legacy support libraries are detected:\n" +
-                        "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:28.0.0\n" +
-                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:28.0.0",
+                        "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION\n" +
+                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION",
                 data = "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION," +
                         "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION"
         )

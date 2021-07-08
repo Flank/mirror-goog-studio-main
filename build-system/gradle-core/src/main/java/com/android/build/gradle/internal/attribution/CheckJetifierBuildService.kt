@@ -80,7 +80,7 @@ abstract class CheckJetifierBuildService
     fun addResult(result: CheckJetifierResult) {
         if (parameters.resultFile.isPresent) {
             aggregatedResult = if (aggregatedResult != null) {
-                CheckJetifierResult.aggregateResult(aggregatedResult!!, result)
+                CheckJetifierResult.aggregateResults(aggregatedResult!!, result)
             } else {
                 result
             }
@@ -104,12 +104,12 @@ abstract class CheckJetifierBuildService
         // To safeguard concurrent access to this file, we'll need to use a global (JVM-scoped)
         // lock.
         SynchronizedFile.getInstanceWithSingleProcessLocking(resultFile).write {
-            FileUtils.mkdirs(resultFile.parentFile)
             if (it.exists()) {
                 val existingResult = CheckJetifierResult.load(it)
-                val combinedResult = CheckJetifierResult.aggregateResult(existingResult, result)
+                val combinedResult = CheckJetifierResult.aggregateResults(existingResult, result)
                 CheckJetifierResult.save(combinedResult, it)
             } else {
+                FileUtils.mkdirs(resultFile.parentFile)
                 CheckJetifierResult.save(result, it)
             }
         }
