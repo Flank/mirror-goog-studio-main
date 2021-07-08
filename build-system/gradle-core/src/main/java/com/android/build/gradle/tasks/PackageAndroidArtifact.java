@@ -64,7 +64,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters;
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultManifestParser;
@@ -1457,9 +1456,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     || !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE);
         }
 
-        // We produce deterministic APKs for non-debuggable builds.
+        // We produce deterministic APKs for non-debuggable builds or when
+        // android.experimental.forceDeterministicApk is true
         private static boolean isDeterministic(ApkCreationConfig creationConfig) {
-            return !creationConfig.getDebuggable();
+            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
+            return !creationConfig.getDebuggable()
+                    || projectOptions.get(BooleanOption.FORCE_DETERMINISTIC_APK);
         }
     }
 }
