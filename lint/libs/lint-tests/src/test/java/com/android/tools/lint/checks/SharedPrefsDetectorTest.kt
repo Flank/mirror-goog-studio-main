@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class SharedPrefsDetectorTest : AbstractCheckTest() {
@@ -194,7 +195,7 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(
+        ).skipTestModes(TestMode.BODY_REMOVAL).run().expect(
             """
             src/test/pkg/SharedPrefsEditTest.java:19: Warning: Do not modify the set returned by SharedPreferences.getStringSet()` [MutatingSharedPrefs]
                             roleNames.add(roleName); // OK (but not yet analyzed correctly)

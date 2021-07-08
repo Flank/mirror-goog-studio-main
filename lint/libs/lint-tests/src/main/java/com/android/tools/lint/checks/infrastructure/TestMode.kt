@@ -344,10 +344,14 @@ open class TestMode(
         val REORDER_ARGUMENTS: TestMode = ArgumentReorderingTestMode()
 
         @JvmField
+        val BODY_REMOVAL: TestMode = BodyRemovalTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
-            REORDER_ARGUMENTS
+            REORDER_ARGUMENTS,
+            BODY_REMOVAL
         )
 
         /** Returns all default included test modes. */
