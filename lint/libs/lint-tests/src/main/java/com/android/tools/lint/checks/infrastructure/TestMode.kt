@@ -40,13 +40,13 @@ open class TestMode(
      * Display name of this test type. Included in diffs if the output
      * varies by test type to annotate the two output versions.
      */
-    val description: String,
+    open val description: String,
     /**
      * The qualified name of the canonical field referencing this test
      * mode. This is used by test output to provide guidance on how to
      * run with or without this test mode.
      */
-    val fieldName: String
+    open val fieldName: String
 ) : Iterable<TestMode> {
     /**
      * Folder name to write the test project into. By passing the same
@@ -71,7 +71,7 @@ open class TestMode(
 
     /**
      * Optional hook to run after the test type has finished, which
-     * an perform any appropriate test cleanup. For example, the
+     * can perform any appropriate test cleanup. For example, the
      * [UI_INJECTION_HOST] test type will set a global flag to change
      * the behavior of UAST, so this method lets the test type clean
      * this up.
@@ -87,7 +87,7 @@ open class TestMode(
     open val eventListener: ((TestModeContext, LintListener.EventType, Any?) -> Unit)? = null
 
     /**
-     * Custom explanation to show when the output is different than a
+     * Custom explanation to show when the output is different from a
      * previous test type.
      */
     open val diffExplanation: String? = null
@@ -105,6 +105,17 @@ open class TestMode(
     }
 
     override fun toString(): String = description
+
+    /**
+     * Method to check that the output for this test mode is as
+     * expected; normally this is just equality but some test modes may
+     * modify conditions such that the actual output is different, and
+     * they'll want to take this into account before a difference is
+     * treated as a failure
+     */
+    open fun sameOutput(expected: String, actual: String): Boolean {
+        return expected == actual
+    }
 
     companion object {
         /**
@@ -334,6 +345,8 @@ open class TestMode(
             SOURCE_ONLY
         )
     }
+
+    open fun partition(context: TestModeContext): List<TestMode> = listOf(this)
 
     /**
      * State passed to test modes. This is encapsulated in a separate

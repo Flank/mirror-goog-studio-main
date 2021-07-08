@@ -42,6 +42,7 @@ internal fun studioLint(): TestLintTask {
             return this
         }
     }
+    task.sdkHome(null)
     task.allowMissingSdk()
     return task
 }

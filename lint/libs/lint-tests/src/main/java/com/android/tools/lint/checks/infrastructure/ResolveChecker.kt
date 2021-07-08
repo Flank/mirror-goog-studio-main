@@ -16,12 +16,15 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiImportStaticReferenceElement
@@ -40,7 +43,7 @@ import java.io.StringWriter
 fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
     root ?: error("Failure processing source ${project.getRelativePath(file)}: No UAST AST created")
     val error = PsiTreeUtil.findChildOfType(
-        root.psi,
+        root.sourcePsi,
         PsiErrorElement::class.java
     )
     if (error != null) {
@@ -137,8 +140,9 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
             val s = importReferencePsi?.text ?: importReference.asSourceString()
 
             if (!ignoredImport(s)) {
+                val context: JavaContext = this@checkFile
                 reportResolveProblem(
-                    importReference, "", "import", "", ""
+                    context, importReference, name = "", symbolType = "import", nameMethod = "", visitMethod = ""
                 )
             }
             return super.visitImportStatement(node)
@@ -147,7 +151,8 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         override fun visitCallExpression(node: UCallExpression): Boolean {
             val name = node.methodName ?: node.methodIdentifier?.name
             if (name != null && applicableCalls.contains(name) && node.resolve() == null) {
-                reportResolveProblem(node, name, "call", "getApplicableMethodNames", "visitMethodCall")
+                val context: JavaContext = this@checkFile
+                reportResolveProblem(context, node, name, "call", "getApplicableMethodNames", "visitMethodCall")
             }
             return super.visitCallExpression(node)
         }
@@ -157,12 +162,14 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         ): Boolean {
             val name = node.resolvedName ?: node.identifier
             if (applicableReferences.contains(name) && node.resolve() == null) {
-                reportResolveProblem(node, name, "reference", "getApplicableReferenceNames", "visitReference")
+                val context: JavaContext = this@checkFile
+                reportResolveProblem(context, node, name, "reference", "getApplicableReferenceNames", "visitReference")
             }
             return super.visitSimpleNameReferenceExpression(node)
         }
 
         private fun reportResolveProblem(
+            context: JavaContext,
             node: UElement,
             name: String,
             symbolType: String,
@@ -214,6 +221,24 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                     https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent()
             )
+
+            if (task.runner.currentTestMode is SourceTransformationTestMode) {
+                val files = context.project.dir.walk()
+                    .filter { it.isFile && (it.path.endsWith(DOT_KT) || it.path.endsWith(DOT_JAVA)) }
+                    .sortedBy { it.path }
+                val file = node.sourcePsi?.containingFile?.virtualFile?.let(VfsUtilCore::virtualToIoFile)
+                if (file != null) {
+                    message.append("\n\nThis occurred when running in test mode ${task.runner.currentTestMode.fieldName}.\n")
+                    message.append("The modified source files are:\n\n")
+                    val line = "${"//".repeat(35)}\n"
+                    for (f in files) {
+                        message.append(line)
+                        message.append(f.path.removePrefix(context.project.dir.path)).append(":\n")
+                        message.append(line)
+                        message.append(f.readText())
+                    }
+                }
+            }
 
             error(message.toString())
         }

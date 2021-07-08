@@ -953,8 +953,8 @@ class LintUtilsTest : TestCase() {
                 javaLanguageLevel = null,
                 kotlinLanguageLevel = null,
                 library = false,
-                android = true,
                 sdkHome = TestUtils.getSdk().toFile(),
+                android = true,
                 temporaryFolder = temporaryFolder,
                 testFiles = testFiles
             )
