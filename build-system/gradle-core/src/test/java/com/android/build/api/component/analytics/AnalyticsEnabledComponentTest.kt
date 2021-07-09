@@ -21,31 +21,36 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.JavaCompilation
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
 import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.jetbrains.kotlin.gradle.utils.`is`
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.times
 import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 
 class AnalyticsEnabledComponentTest {
+
+    @get:Rule
+    val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
     lateinit var delegate: Component
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledComponent
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledComponent(delegate, stats, FakeObjectFactory.factory) {}
+    private val proxy: AnalyticsEnabledComponent by lazy {
+        object: AnalyticsEnabledComponent(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     abstract class MockedVisitor : AsmClassVisitorFactory<InstrumentationParameters.None>
@@ -173,5 +178,22 @@ class AnalyticsEnabledComponentTest {
         ).isEqualTo(VariantPropertiesMethodType.FLAVOR_NAME_VALUE)
         Mockito.verify(delegate, times(1))
             .flavorName
+    }
+
+    @Test
+    fun getJavaCompilation() {
+        val javaCompilation = Mockito.mock(JavaCompilation::class.java)
+        Mockito.`when`(delegate.javaCompilation).thenReturn(javaCompilation)
+
+        val javaCompilationProxy = proxy.javaCompilation
+        Truth.assertThat(javaCompilationProxy.javaClass).`is`(AnalyticsEnabledJavaCompilation::class.java)
+        Truth.assertThat((javaCompilationProxy as AnalyticsEnabledJavaCompilation).delegate)
+            .isEqualTo(javaCompilation)
+
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.JAVA_COMPILATION_OPTIONS_VALUE)
+        Mockito.verify(delegate, times(1))
+            .javaCompilation
     }
 }

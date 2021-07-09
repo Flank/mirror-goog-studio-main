@@ -26,6 +26,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
@@ -126,6 +127,12 @@ abstract class ComponentImpl(
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
         asmClassVisitorsRegistry.setAsmFramesComputationMode(mode)
     }
+
+    override val javaCompilation: JavaCompilation =
+        JavaCompilationImpl(
+            variantDslInfo.javaCompileOptions,
+            buildFeatures.dataBinding,
+            internalServices)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

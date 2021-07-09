@@ -728,11 +728,16 @@ com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enu
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.AnnotationProcessor
+com.android.build.api.variant.AnnotationProcessor.getArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
+com.android.build.api.variant.AnnotationProcessor.getArguments: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
+com.android.build.api.variant.AnnotationProcessor.getClassNames: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getBundleConfig: com.android.build.api.variant.BundleConfig ()
 com.android.build.api.variant.BundleConfig
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
 com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)
@@ -753,6 +758,8 @@ com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
+com.android.build.api.variant.JavaCompilation
+com.android.build.api.variant.JavaCompilation.getAnnotationProcessor: com.android.build.api.variant.AnnotationProcessor ()
 com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
