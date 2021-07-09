@@ -88,10 +88,11 @@ public class LintBaselineTest {
         ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
         File baselineFile =
                 new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
+        assertThat(result.getTask(":app:lintReportDebug")).didWork();
         if (lintBaselinesContinue) {
-            assertThat(result.getTask(":app:lintReportDebug")).didWork();
+            assertThat(result.getTask(":app:lintDebug")).didWork();
         } else {
-            assertThat(result.getTask(":app:lintReportDebug")).failed();
+            assertThat(result.getTask(":app:lintDebug")).failed();
         }
         if (usePartialAnalysis) {
             assertThat(result.getTask(":app:lintAnalyzeDebug")).didWork();
@@ -103,10 +104,11 @@ public class LintBaselineTest {
 
         // Run the lint task again and verify that the baseline file was re-created
         final GradleBuildResult result2 = executor.run(":app:lint");
+        assertThat(result2.getTask(":app:lintReportDebug")).didWork();
         if (lintBaselinesContinue) {
-            assertThat(result2.getTask(":app:lintReportDebug")).didWork();
+            assertThat(result2.getTask(":app:lintDebug")).didWork();
         } else {
-            assertThat(result2.getTask(":app:lintReportDebug")).failed();
+            assertThat(result2.getTask(":app:lintDebug")).failed();
         }
         if (usePartialAnalysis) {
             // The Analysis task doesn't need to run again if the baseline file is deleted
