@@ -89,6 +89,7 @@ fi
   --invocation_id=${invocation_id} \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
+  --build_metadata=ANDROID_BUILD_ID="${build_number}" \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \

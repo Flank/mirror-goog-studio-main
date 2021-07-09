@@ -61,6 +61,7 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -662,6 +663,7 @@ public class PluginDslTest {
         assertThat(android.getAdbExe()).named("adb exe").isEqualTo(android.getAdbExecutable());
     }
 
+    @Ignore("https://issuetracker.google.com/192070233")
     @Test
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");

@@ -49,7 +49,7 @@ task lintStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), "scripts")
 
     description "Creates OS specific scripts to start the lint CLI"
-    mainClassName = 'com.android.tools.lint.Main'
+    mainClass.set('com.android.tools.lint.Main')
     applicationName = 'lint'
     defaultJvmOpts = ["-Xmx1024m", "-Dcom.android.tools.lint.bindir=MY_APP_HOME", "-Dfile.encoding=UTF-8"]
 

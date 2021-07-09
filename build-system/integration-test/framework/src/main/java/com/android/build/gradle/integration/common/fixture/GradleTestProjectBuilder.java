@@ -74,7 +74,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private File gradleDistributionDirectory;
     @Nullable private File gradleBuildCacheDirectory;
     @Nullable private String kotlinVersion;
-    @Nullable private String buildFileName = null;
 
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
@@ -143,7 +142,6 @@ public final class GradleTestProjectBuilder {
 
         return new GradleTestProject(
                 (name != null ? name : DEFAULT_TEST_PROJECT_NAME),
-                (buildFileName != null) ? buildFileName : "build.gradle",
                 testProject,
                 (targetGradleVersion != null ? targetGradleVersion : GRADLE_TEST_VERSION),
                 withDependencyChecker,
@@ -448,11 +446,6 @@ public final class GradleTestProjectBuilder {
     /** Sets the cmake version to use */
     public GradleTestProjectBuilder setCmakeVersion(@NonNull String cmakeVersion) {
         this.cmakeVersion = cmakeVersion;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withBuildFileName(@Nullable String buildFileName) {
-        this.buildFileName = buildFileName;
         return this;
     }
 

@@ -15,5 +15,8 @@ iml_module(
     test_srcs = ["testSrc"],
     test_tags = ["manual"],  # There are no tests here---just checking that things build.
     visibility = ["//visibility:public"],
-    deps = [":friends.impl[module, test]"],
+    deps = [
+        ":friends.impl[module, test]",
+        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
+    ],
 )

@@ -89,7 +89,6 @@ import java.util.stream.Collectors
 class GradleTestProject @JvmOverloads internal constructor(
     /** Return the name of the test project.  */
     val name: String = DEFAULT_TEST_PROJECT_NAME,
-    private val buildFileName: String,
     private val testProject: TestProject? = null,
     private val targetGradleVersion: String,
     private val withDependencyChecker: Boolean,
@@ -348,7 +347,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         get() = mutableProjectLocation ?: error("Project location has not been initialized yet")
 
     val buildFile: File
-        get() = File(location.projectDir, buildFileName)
+        get() = File(location.projectDir, "build.gradle")
 
     val projectDir: File
         get() = location.projectDir
@@ -404,7 +403,6 @@ class GradleTestProject @JvmOverloads internal constructor(
     ) :
         this(
             name = subProject.substring(subProject.lastIndexOf(':') + 1),
-            buildFileName = rootProject.buildFileName, // FIXME this is problematic because that may not be what we want.
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
             withDependencyChecker = rootProject.withDependencyChecker,

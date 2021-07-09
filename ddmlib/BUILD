@@ -169,3 +169,14 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
     ],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "src/main/proto/**/*.proto",
+        "src/main/**/*.java",
+        "src/main/**/*.kt",
+        "src/main/resources/**",
+    ]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

@@ -16,9 +16,17 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Detector
 
 class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
+    override fun lint(): TestLintTask {
+        val task = super.lint()
+        // This detector isn't intended to be run on the platform
+        task.skipTestModes(PLATFORM_ANNOTATIONS_TEST_MODE)
+        return task
+    }
+
     fun testThreadingFromJava() {
         val expected =
             """

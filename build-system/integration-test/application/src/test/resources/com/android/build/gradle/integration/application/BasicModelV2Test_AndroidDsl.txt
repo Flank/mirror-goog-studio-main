@@ -172,7 +172,7 @@
       - sarifReport             = false
       - sarifOutput             = (null)
       - isCheckReleaseBuilds    = true
-      - isCheckDependencies     = true
+      - isCheckDependencies     = false
       - baselineFile            = (null)
       - severityOverrides       = (null)
    < lintOptions

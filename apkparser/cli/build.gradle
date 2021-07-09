@@ -31,7 +31,7 @@ task analyzerStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), "scripts")
 
     description "Creates OS specific scripts to start the apkanalyzer CLI"
-    mainClassName = 'com.android.tools.apk.analyzer.ApkAnalyzerCli'
+    mainClass.set('com.android.tools.apk.analyzer.ApkAnalyzerCli')
     applicationName = 'apkanalyzer'
     defaultJvmOpts = ["-Dcom.android.sdklib.toolsdir=MY_APP_HOME"]
 

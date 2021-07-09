@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant
 
+import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
@@ -51,4 +52,11 @@ interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFix
         level = DeprecationLevel.WARNING
     )
     override val androidTest: com.android.build.api.component.AndroidTest?
+
+    /**
+     * Variant's information related to the bundle creation configuration.
+     * @return Variant's [BundleConfig].
+     */
+    @get:Incubating
+    val bundleConfig: BundleConfig
 }

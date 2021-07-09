@@ -50,21 +50,9 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
     val temporaryFolder = TemporaryFolder()
 
     @Before
-    fun before() {
-        // need checkDependencies false if not using partial analysis because the lint task is never
-        // up-to-date when checkDependencies is true when not using partial analysis.
-        project.getSubproject(":app")
-            .buildFile
-            .appendText(
-                """
-                    android {
-                        lintOptions {
-                            abortOnError false
-                            checkDependencies $usePartialAnalysis
-                        }
-                    }
-                """.trimIndent()
-            )
+    fun disableAbortOnError() {
+        project.getSubproject(":app").buildFile
+            .appendText("\nandroid.lintOptions.abortOnError=false\n")
         project.executor().run(":app:cleanLintDebug")
     }
 
@@ -74,7 +62,7 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
 
         assertThat(firstRun.getTask(":app:lintDebug")).didWork()
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("8 errors")
+        assertThat(lintResults).contains("8 errors, 6 warnings")
 
         val secondRun = getExecutor().run(":app:lintDebug")
         assertThat(secondRun.getTask(":app:lintDebug")).wasUpToDate()

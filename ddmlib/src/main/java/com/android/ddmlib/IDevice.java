@@ -508,26 +508,34 @@ public interface IDevice extends IShellEnabledDevice {
      * Removes a port forwarding between a local and a remote port.
      *
      * @param localPort the local port to forward
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    void removeForward(int localPort)
+            throws TimeoutException, AdbCommandRejectedException, IOException;
+
+    /**
+     * Creates a port reversing between a remote and a local port.
+     *
+     * @param remotePort the remote port to reverse.
+     * @param localPort the local port
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    void createReverse(int remotePort, int localPort)
+            throws TimeoutException, AdbCommandRejectedException, IOException;
+
+    /**
+     * Removes a port reversing between a remote and a local port.
+     *
      * @param remotePort the remote port.
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    void removeForward(int localPort, int remotePort)
-            throws TimeoutException, AdbCommandRejectedException, IOException;
-
-    /**
-     * Removes an existing port forwarding between a local and a remote port. Removes an existing
-     * port forwarding between a local and a remote port.
-     *
-     * @param localPort the local port to forward
-     * @param remoteSocketName the remote unix domain socket name.
-     * @param namespace namespace in which the unix domain socket was created
-     * @throws TimeoutException in case of timeout on the connection.
-     * @throws AdbCommandRejectedException if adb rejects the command
-     * @throws IOException in case of I/O error on the connection.
-     */
-    void removeForward(int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
+    void removeReverse(int remotePort)
             throws TimeoutException, AdbCommandRejectedException, IOException;
 
     /**

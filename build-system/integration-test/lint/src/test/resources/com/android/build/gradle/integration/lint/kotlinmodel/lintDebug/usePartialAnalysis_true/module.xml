@@ -6,7 +6,7 @@
     maven="lintKotlin:app:"
     gradle="$androidGradlePluginVersion"
     buildFolder="build"
-    bootClassPath="${androidSdkDir}/platforms/android-30/android.jar:${androidSdkDir}/build-tools/30.0.2/core-lambda-stubs.jar"
+    bootClassPath="${androidSdkDir}/platforms/android-30/android.jar:${androidSdkDir}/build-tools/30.0.3/core-lambda-stubs.jar"
     javaSourceLevel="1.8"
     compileTarget="android-30"
     neverShrinking="true">

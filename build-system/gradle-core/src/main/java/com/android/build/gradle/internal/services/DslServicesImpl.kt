@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
-import com.android.builder.model.v2.ide.ProjectType
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectContainer
@@ -31,8 +30,7 @@ import java.io.File
 
 class DslServicesImpl constructor(
     projectServices: ProjectServices,
-    override val sdkComponents: Provider<SdkComponentsBuildService>,
-    override val projectType: ProjectType? = null
+    override val sdkComponents: Provider<SdkComponentsBuildService>
 ) : BaseServicesImpl(projectServices), DslServices {
 
     override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =

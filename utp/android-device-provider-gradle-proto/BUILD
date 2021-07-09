@@ -24,3 +24,9 @@ java_proto_library(
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob(["*.proto"]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

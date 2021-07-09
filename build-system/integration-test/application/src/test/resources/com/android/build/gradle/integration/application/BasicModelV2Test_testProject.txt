@@ -3,7 +3,7 @@
    - path                  = ":"
    - buildFolder           = {PROJECT}/build{!}
    - namespace             = "com.android.tests.basic"
-   - androidTestNamespace  = "com.android.tests.basic.test"
+   - androidTestNamespace  = "com.android.tests.basic.debug.test"
    - testFixturesNamespace = (null)
    - resourcePrefix        = (null)
    - dynamicFeatures       = []

@@ -19,17 +19,19 @@ import static com.android.SdkConstants.CLASS_INTENT;
 import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
 import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_READ;
 import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_WRITE;
+import static com.android.tools.lint.checks.PermissionDetector.AOSP_PERMISSION_ANNOTATION;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toPlatformAnnotation;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.support.AndroidxName;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiVariable;
 import java.util.List;
 import org.jetbrains.uast.UAnnotation;
@@ -38,11 +40,13 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UastLiteralUtils;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaUAnnotation;
+import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /** Utility for locating permissions required by an intent or content resolver */
@@ -138,10 +142,7 @@ public class PermissionFinder {
                 }
             }
             if (expression.getElseExpression() != null) {
-                Result result = search(expression.getElseExpression());
-                if (result != null) {
-                    return result;
-                }
+                return search(expression.getElseExpression());
             }
         } else if (UastExpressionUtils.isTypeCast(node)) {
             UBinaryExpressionWithType cast = (UBinaryExpressionWithType) node;
@@ -150,9 +151,7 @@ public class PermissionFinder {
         } else if (node instanceof UParenthesizedExpression) {
             UParenthesizedExpression parens = (UParenthesizedExpression) node;
             UExpression expression = parens.getExpression();
-            if (expression != null) {
-                return search(expression);
-            }
+            return search(expression);
         } else if (UastExpressionUtils.isConstructorCall(node) && mOperation == Operation.ACTION) {
             // Identifies "new Intent(argument)" calls and, if found, continues
             // resolving the argument instead looking for the action definition
@@ -173,12 +172,6 @@ public class PermissionFinder {
         } else if (node instanceof UReferenceExpression) {
             PsiElement resolved = ((UReferenceExpression) node).resolve();
             if (resolved instanceof PsiField) {
-                // This returns null for unknown reasons:
-                // UField field = (UField)
-                // mContext.getUastContext().convertElementWithParent(resolved, UField.class);
-                // if (field == null) {
-                //    return null;
-                // }
                 PsiField field = (PsiField) resolved;
                 if (mOperation == Operation.ACTION) {
                     PsiAnnotation annotation =
@@ -189,6 +182,12 @@ public class PermissionFinder {
                         annotation =
                                 mContext.getEvaluator()
                                         .findAnnotation(field, PERMISSION_ANNOTATION.newName());
+
+                        if (annotation == null) {
+                            annotation =
+                                    mContext.getEvaluator()
+                                            .findAnnotation(field, AOSP_PERMISSION_ANNOTATION);
+                        }
                     }
 
                     if (annotation != null) {
@@ -201,27 +200,24 @@ public class PermissionFinder {
                                     ? PERMISSION_ANNOTATION_READ
                                     : PERMISSION_ANNOTATION_WRITE;
 
+                    JavaEvaluator evaluator = mContext.getEvaluator();
                     PsiAnnotation annotation =
-                            mContext.getEvaluator().findAnnotation(field, fqn.oldName());
+                            evaluator.findAnnotation(field, fqn.oldName(), fqn.newName());
                     if (annotation == null) {
-                        annotation = mContext.getEvaluator().findAnnotation(field, fqn.newName());
+                        String s = toPlatformAnnotation(fqn.newName());
+                        annotation = evaluator.findAnnotation(field, s);
                     }
                     if (annotation != null) {
-                        PsiNameValuePair[] attributes =
-                                annotation.getParameterList().getAttributes();
-                        PsiNameValuePair o = attributes.length == 1 ? attributes[0] : null;
-                        if (o != null && o.getValue() instanceof PsiAnnotation) {
-                            annotation = (PsiAnnotation) o.getValue();
-
-                            // List<UNamedExpression> attributes = annotation.getAttributeValues();
-                            // UNamedExpression o = attributes.size() == 1 ? attributes.get(0) :
-                            // null;
-                            // if (o != null && o.getExpression() instanceof UAnnotation) {
-                            //    annotation = (UAnnotation) o.getExpression();
-                            if (PERMISSION_ANNOTATION.isEquals(annotation.getQualifiedName())) {
-                                // return getPermissionRequirement(field, annotation);
-                                return getPermissionRequirement(
-                                        field, JavaUAnnotation.wrap(annotation));
+                        UAnnotation uAnnotation = JavaUAnnotation.wrap(annotation);
+                        List<UNamedExpression> values = uAnnotation.getAttributeValues();
+                        UExpression o = values.size() == 1 ? values.get(0).getExpression() : null;
+                        if (o instanceof JavaUAnnotationCallExpression) {
+                            JavaUAnnotation nested =
+                                    ((JavaUAnnotationCallExpression) o).getUAnnotation();
+                            String qualifiedName = nested.getQualifiedName();
+                            if (PERMISSION_ANNOTATION.isEquals(qualifiedName)
+                                    || AOSP_PERMISSION_ANNOTATION.equals(qualifiedName)) {
+                                return getPermissionRequirement(field, nested);
                             }
                         } else {
                             // The complex annotations used for read/write cannot be
@@ -230,9 +226,7 @@ public class PermissionFinder {
                             //
                             // Instead we've inlined the fields of the annotation on the
                             // outer one:
-                            // return getPermissionRequirement(field, annotation);
-                            return getPermissionRequirement(
-                                    field, JavaUAnnotation.wrap(annotation));
+                            return getPermissionRequirement(field, uAnnotation);
                         }
                     }
                 } else {
@@ -262,7 +256,6 @@ public class PermissionFinder {
                 containingClass != null
                         ? containingClass.getName() + "." + field.getName()
                         : field.getName();
-        assert name != null;
         return new Result(mOperation, requirement, name);
     }
 }

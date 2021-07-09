@@ -118,7 +118,7 @@ public class BasicTest {
                 .isEqualTo("com.android.tests.basic");
         Truth.assertWithMessage("AndroidTestNamespace")
                 .that(model.getAndroidTestNamespace())
-                .isEqualTo("com.android.tests.basic.test");
+                .isEqualTo("com.android.tests.basic.debug.test");
 
         assertEquals(
                 "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());

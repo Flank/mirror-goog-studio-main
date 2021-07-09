@@ -54,6 +54,7 @@ public class Gradle implements Closeable {
     @NonNull private final File distribution;
     @NonNull private final File project;
     @NonNull private final List<String> arguments;
+    @NonNull private final File repoDir;
     @NonNull private final Set<File> usedGradleUserHomes = new HashSet<>();
 
     public Gradle(@NonNull File project, @NonNull File outDir, @NonNull File distribution)
@@ -64,7 +65,7 @@ public class Gradle implements Closeable {
         this.arguments = new LinkedList<>();
 
         File initScript = getInitScript().getAbsoluteFile();
-        File repoDir = getRepoDir().getAbsoluteFile();
+        repoDir = getRepoDir().getAbsoluteFile();
 
         FileUtils.cleanOutputDir(outDir);
         Files.createDirectories(getBuildDir().toPath());
@@ -185,6 +186,7 @@ public class Gradle implements Closeable {
         arguments.add("--offline");
         arguments.add("--init-script");
         arguments.add(getInitScript().getAbsolutePath());
+        arguments.add("-PinjectedMavenRepo=" + repoDir.getAbsolutePath());
         arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.toAbsolutePath().toString());
 
         // Workaround for issue https://github.com/gradle/gradle/issues/5188

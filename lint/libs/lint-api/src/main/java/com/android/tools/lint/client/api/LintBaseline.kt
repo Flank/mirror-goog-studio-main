@@ -40,15 +40,12 @@ import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileWriter
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.Writer
 import java.nio.charset.StandardCharsets
-import java.util.ArrayList
 
 /**
  * A lint baseline is a collection of warnings for a project that have
@@ -87,7 +84,7 @@ class LintBaseline(
     /** Map from message to [Entry] */
     private val messageToEntry = ArrayListMultimap.create<String, Entry>(100, 20)
 
-    private val idToMessages = ArrayListMultimap.create<String, String>(30, 20)
+    private val idToMessages = HashMap<String, MutableSet<String>>(30)
 
     /**
      * Whether we should write the baseline file when the baseline is
@@ -123,7 +120,7 @@ class LintBaseline(
 
     /**
      * Returns the number of issues that appear to have been fixed (e.g.
-     * are present in the baseline but have not been matched.
+     * are present in the baseline but have not been matched.)
      */
     val fixedCount: Int
         get() = totalCount - foundErrorCount - foundWarningCount
@@ -137,7 +134,7 @@ class LintBaseline(
 
     /**
      * Checks if we should report baseline activity (filtered out
-     * issues, found fixed issues etc and if so reports them.
+     * issues, found fixed issues etc and if so reports them.)
      */
     internal fun reportBaselineIssues(driver: LintDriver, project: Project) {
         if (foundErrorCount > 0 || foundWarningCount > 0) {
@@ -232,7 +229,7 @@ class LintBaseline(
         val location = incident.location
         val message = incident.message
         val severity = incident.severity
-        val found = findAndMark(issue, location, message, severity, 0)
+        val found = findAndMark(issue, location, message, severity, null)
 
         if (writeOnClose && (!removeFixed || found)) {
             if (entriesToWrite != null && issue.id != IssueRegistry.BASELINE.id) {
@@ -249,16 +246,25 @@ class LintBaseline(
         location: Location,
         message: String,
         severity: Severity?,
-        depth: Int
+        alreadyChecked: MutableSet<String>?
     ): Boolean {
+        if (message.isEmpty()) {
+            return false
+        }
+
         val entries = messageToEntry[message]
         if (entries == null || entries.isEmpty()) {
-            // Sometimes messages are changed in lint; try to gracefully handle this
-            val messages = idToMessages.get(issue.id)
-            if (messages != null && messages.isNotEmpty() && depth < 20) {
+            // Sometimes messages are changed in lint; try to gracefully handle this via #sameMessage
+            val messages = idToMessages[issue.id]
+            if (messages != null && messages.isNotEmpty() &&
+                (messages.size > 1 || messages.size == 1 && messages.first() != message)
+            ) {
+                val checked = alreadyChecked ?: mutableSetOf<String>().apply { add(message) }
                 for (oldMessage in messages) {
-                    if (message != oldMessage && sameMessage(issue, message, oldMessage)) {
-                        return findAndMark(issue, location, oldMessage, severity, depth + 1)
+                    if (checked.add(oldMessage) && sameMessage(issue, message, oldMessage)) {
+                        if (findAndMark(issue, location, oldMessage, severity, checked)) {
+                            return true
+                        }
                     }
                 }
             }
@@ -284,8 +290,12 @@ class LintBaseline(
                         curr = curr.previous
                     }
                     while (curr != null) {
-                        messageToEntry.remove(curr.message, curr)
-                        idToMessages.remove(issue, curr.message)
+                        val currMessage = curr.message
+                        messageToEntry.remove(currMessage, curr)
+                        val remaining = messageToEntry[currMessage]
+                        if (remaining == null || remaining.isEmpty()) {
+                            idToMessages[issue.id]?.remove(currMessage)
+                        }
                         curr = curr.next
                     }
 
@@ -326,12 +336,22 @@ class LintBaseline(
                 val s = "Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
                 old.startsWith(s) && new.startsWith(s)
             }
-            "NewApi", "InlinedApi", "UnusedAttribute", -> {
-                val index1 = old.indexOf(':')
-                val index2 = new.indexOf(':')
-                index1 != -1 && index2 != -1 && old.regionMatches(index1, new, index2, old.length - index1)
+            "ContentDescription" -> {
+                // Removed [Accessibility] prefix at some point
+                stringsEquivalent(old.removePrefix("[Accessibility] "), new)
             }
-
+            "HardcodedText" -> {
+                // Removed [I18N] prefix at some point
+                stringsEquivalent(old.removePrefix("[I18N] "), new)
+            }
+            "NewApi", "InlinedApi", "UnusedAttribute" -> {
+                // Compare character by character, and when they differ, skip the tokens if they are preceded
+                // by something from the ApiDetector error messages which indicate that they represent an
+                // API level, such as "current min is " or "API level "
+                stringsEquivalent(old, new) { s, i ->
+                    s.precededBy("min is ", i) || s.precededBy("API level ", i)
+                }
+            }
             "RestrictedApi" -> {
                 val index1 = old.indexOf('(')
                 val index2 = new.indexOf('(')
@@ -402,7 +422,9 @@ class LintBaseline(
                                 entry.previous = currentEntry
                                 currentEntry = entry
                                 messageToEntry.put(entry.message, entry)
-                                idToMessages.put(issue, message)
+                                val messages: MutableSet<String> = idToMessages[issue]
+                                    ?: HashSet<String>().also { idToMessages[issue!!] = it }
+                                messages.add(message)
                             }
                         } else if (tag == TAG_ISSUE) {
                             if (issue != null && !IssueRegistry.isDeletedIssueId(issue)) {
@@ -424,22 +446,11 @@ class LintBaseline(
                         val value = parser.getAttributeValue(i)
                         when (name) {
                             ATTR_ID -> issue = value
-                            ATTR_MESSAGE -> {
-                                message = value
-                                // Error message changed recently; let's stay compatible
-                                if (message!!.startsWith("[")) {
-                                    if (message.startsWith("[I18N] ")) {
-                                        message = message.substring("[I18N] ".length)
-                                    } else if (message.startsWith("[Accessibility] ")) {
-                                        message = message.substring("[Accessibility] ".length)
-                                    }
-                                }
-                            }
+                            ATTR_MESSAGE -> message = value
                             ATTR_FILE -> path = value
                             // For now not reading ATTR_LINE; not used for baseline entry matching
                             // ATTR_LINE -> line = value
-                            ATTR_FORMAT, "by" -> {
-                            } // not currently interesting, don't store
+                            ATTR_FORMAT, "by" -> { } // not currently interesting, don't store
                             else -> {
                                 if (parser.depth == 1) {
                                     setAttribute(name, value)
@@ -478,7 +489,7 @@ class LintBaseline(
             }
 
             try {
-                BufferedWriter(FileWriter(file)).use { writer ->
+                file.bufferedWriter().use { writer ->
                     writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                     // Format 4: added urls= attribute with all more info links, comma separated
                     writer.write("<")
@@ -532,7 +543,7 @@ class LintBaseline(
      * Entries that have been reported during this lint run. We only
      * create these when we need to write a baseline file (since we need
      * to sort them before writing out the result file, to ensure stable
-     * files.
+     * files.)
      */
     private class ReportedEntry(
         val issue: Issue,
@@ -600,7 +611,7 @@ class LintBaseline(
                 return 1
             }
 
-            // This handles the case where you have a huge XML document without hewlines,
+            // This handles the case where you have a huge XML document without newlines,
             // such that all the errors end up on the same line.
             if (line != -1 && otherLine != -1) {
                 delta = location.column - other.location.column
@@ -689,11 +700,11 @@ class LintBaseline(
         const val VARIANT_FATAL = "fatal"
 
         /**
-         * Given an error message produced by this lint detector
-         * for the given issue type, determines whether this
-         * corresponds to the warning (produced by {link
-         * {@link #reportBaselineIssues(LintDriver, Project)} above)
-         * that one or more issues have been filtered out.
+         * Given an error message produced by this lint detector for the
+         * given issue type, determines whether this corresponds to the
+         * warning (produced by {@link #reportBaselineIssues(LintDriver,
+         * Project)} above) that one or more issues have been filtered
+         * out.
          *
          * Intended for IDE quickfix implementations.
          */
@@ -703,12 +714,11 @@ class LintBaseline(
         }
 
         /**
-         * Given an error message produced by this lint detector
-         * for the given issue type, determines whether this
-         * corresponds to the warning (produced by {link
-         * {@link #reportBaselineIssues(LintDriver, Project)} above)
-         * that one or more issues have been fixed (present in baseline
-         * but not in project.)
+         * Given an error message produced by this lint detector for the
+         * given issue type, determines whether this corresponds to the
+         * warning (produced by {@link #reportBaselineIssues(LintDriver,
+         * Project)} above) that one or more issues have been
+         * fixed (present in baseline but not in project.)
          *
          * Intended for IDE quickfix implementations.
          */
@@ -815,7 +825,7 @@ class LintBaseline(
         /**
          * Compares two string messages from lint and returns true if
          * they're equivalent, which will be true if they only vary by
-         * suffix or presence of ` characters. This is done to to handle
+         * suffix or presence of ` characters. This is done to handle
          * the case where we tweak the message format over time to
          * either append extra information or to add better formatting
          * (e.g. to put backticks around symbols) or to remove trailing
@@ -869,6 +879,47 @@ class LintBaseline(
                 i2++
                 if (i1 == n1 || i2 == n2) {
                     return true
+                }
+            }
+        }
+
+        fun String.precededBy(prev: String, offset: Int): Boolean {
+            val start = offset - prev.length
+            return if (start < 0) {
+                false
+            } else {
+                this.regionMatches(start, prev, 0, prev.length, false)
+            }
+        }
+
+        /**
+         * Compares two error messages and whenever there is a
+         * difference, it consults the [skipTokenAt] function to ask
+         * whether the next token (letters and digits) can be skipped in
+         * each before resuming the comparison
+         */
+        fun stringsEquivalent(s1: String, s2: String, skipTokenAt: (String, Int) -> Boolean): Boolean {
+            var i1 = 0
+            var i2 = 0
+            val n1 = s1.length
+            val n2 = s2.length
+
+            while (true) {
+                if (i1 >= n1) {
+                    return i2 >= n2
+                } else if (i2 >= n2) {
+                    return false
+                }
+                if (s1[i1] != s2[i2]) {
+                    if (skipTokenAt(s1, i1)) {
+                        while (i1 < n1 && s1[i1].isLetterOrDigit()) i1++
+                        while (i2 < n2 && s2[i2].isLetterOrDigit()) i2++
+                    } else {
+                        return false
+                    }
+                } else {
+                    i1++
+                    i2++
                 }
             }
         }

@@ -57,13 +57,13 @@ class MethodBodyEvaluator {
         this.target = MethodNodeFinder.findIn(classData, targetMethod);
     }
 
-    public Object eval(Object thisObject, String ObjectType, Object[] arguments) {
+    public Object eval(Object thisObject, String objectType, Object[] arguments) {
         Frame<Value> init = new Frame<>(target.maxLocals, target.maxStack);
         int localIndex = 0;
         boolean isStatic = (target.access & Opcodes.ACC_STATIC) != 0;
         if (!isStatic) {
             init.setLocal(
-                    localIndex++, new ObjectValue(thisObject, Type.getObjectType(ObjectType)));
+                    localIndex++, new ObjectValue(thisObject, Type.getObjectType(objectType)));
         }
 
         Type[] argTypes = Type.getArgumentTypes(target.desc);

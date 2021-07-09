@@ -15,53 +15,46 @@
  */
 package com.android.build.gradle.internal
 
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.internal.manifest.LazyManifestParser
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.builder.core.AbstractProductFlavor.DimensionRequest
-import com.android.build.gradle.TestedAndroidConfig
-import java.lang.RuntimeException
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
-import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.variant.AndroidTest
+import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
-import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.HasTestFixtures
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.crash.ExternalApiUsageException
-import com.android.builder.errors.IssueReporter
-import java.util.Locale
-import com.android.build.gradle.internal.profile.AnalyticsUtil
-import com.android.builder.core.VariantTypeImpl
+import com.android.build.gradle.TestedAndroidConfig
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
+import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.crash.ExternalApiUsageException
+import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.manifest.LazyManifestParser
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
+import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -74,7 +67,6 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantApiServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -86,9 +78,13 @@ import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SigningOptions
+import com.android.builder.core.AbstractProductFlavor.DimensionRequest
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.isLegacyMultiDexMode
+import com.android.builder.errors.IssueReporter
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.ApiVersion
@@ -96,8 +92,8 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.internal.GeneratedSubclass
-import org.gradle.api.provider.Provider
 import java.io.File
+import java.util.Locale
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 
@@ -161,16 +157,14 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
      */
     fun createVariants(
         buildFeatureValues: BuildFeatureValues,
-        dslNamespace: String?,
-        dslTestNamespace: String?
     ) {
         variantFactory.validateModel(variantInputModel)
         variantFactory.preVariantWork(project)
-        computeVariants(buildFeatureValues, dslNamespace, dslTestNamespace)
+        computeVariants(buildFeatureValues)
     }
 
-    // TODO : Should return CommonExtensionT instead of BaseExtension
-    val extension: BaseExtension
+    @Deprecated("Do not use. Use dslExtension instead")
+    private val extension: BaseExtension
         get() = dslExtension as BaseExtension
 
     private fun getFlavorSelection(
@@ -194,15 +188,11 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
      * Create all variants.
      *
      * @param buildFeatureValues the build feature value instance
-     * @param dslNamespace the namespace from the android extension DSL
-     * @param dslTestNamespace the testNamespace from the android extension DSL
      */
     private fun computeVariants(
         buildFeatureValues: BuildFeatureValues,
-        dslNamespace: String?,
-        dslTestNamespace: String?
     ) {
-        val flavorDimensionList: List<String> = extension.flavorDimensionList
+        val flavorDimensionList: List<String> = dslExtension.flavorDimensions
         val computer = DimensionCombinator(
                 variantInputModel,
                 projectServices.issueReporter,
@@ -212,11 +202,10 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
         // get some info related to testing
         val testBuildTypeData = testBuildTypeData
 
-        val dslNamespaceProvider = dslNamespace?.let {
-            variantPropertiesApiServices.provider {
-                it
-            }
-        }
+        // figure out whether there are inconsistency in the appId of the flavors
+        val inconsistentTestAppId = checkInconsistentTestAppId(
+            variantInputModel.productFlavors.values.map { it.productFlavor }
+        )
 
         // loop on all the new variant objects to create the legacy ones.
         for (variant in variants) {
@@ -224,8 +213,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     variant,
                     testBuildTypeData,
                     buildFeatureValues,
-                    dslNamespaceProvider,
-                    dslTestNamespace
+                    inconsistentTestAppId
             )
         }
 
@@ -264,8 +252,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
             variantType: VariantType,
             buildFeatureValues: BuildFeatureValues,
-            dslNamespaceProvider: Provider<String>?,
-            dslTestNamespace: String?
     ): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
@@ -286,14 +272,12 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
                 variantPropertiesApiServices,
-                dslNamespaceProvider,
-                dslTestNamespace,
                 configuredNativeBuilder(),
-                extension,
+                dslExtension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures(),
-                (extension as CommonExtension<*, *, *, *>).experimentalProperties,
-                enableTestFixtures = extension is TestedExtension &&
-                        (extension as TestedExtension).testFixtures.enable,
+                dslExtension.experimentalProperties,
+                enableTestFixtures = dslExtension is TestedExtension &&
+                        (dslExtension as TestedExtension).testFixtures.enable,
         )
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -303,7 +287,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     productFlavorData.productFlavor, productFlavorData.sourceSet)
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-                dslExtension,
                 project.layout.buildDirectory)
         val componentIdentity = variantDslInfo.componentIdentity
 
@@ -465,7 +448,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
-        val variantDslInfoBuilder = getBuilder<CommonExtensionT>(
+        val variantDslInfoBuilder = getBuilder(
             dimensionCombination,
             testFixturesVariantType,
             variantInputModel.defaultConfigData.defaultConfig,
@@ -478,14 +461,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 testFixturesVariantType.requiresManifest) { canParseManifest() },
             dslServices,
             variantPropertiesApiServices,
-            variantPropertiesApiServices.provider {
-                mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
-                        testFixturesFeatureName
-            },
-            extension = extension,
+            extension = dslExtension,
             hasDynamicFeatures = globalScope.hasDynamicFeatures(),
             testFixtureMainVariantName = mainComponentInfo.variant.name
         )
+
+        variantDslInfoBuilder.productionVariant = mainComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
@@ -500,7 +482,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             }
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-            dslExtension,
             project.layout.buildDirectory
         )
         val apiAccessStats = mainComponentInfo.stats
@@ -631,12 +612,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
 
     /** Create a TestVariantData for the specified testedVariantData.  */
     fun createTestComponents(
-            dimensionCombination: DimensionCombination,
-            buildTypeData: BuildTypeData<BuildType>,
-            productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-            testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
-            variantType: VariantType,
-            testFixturesEnabled: Boolean
+        dimensionCombination: DimensionCombination,
+        buildTypeData: BuildTypeData<BuildType>,
+        productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
+        testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
+        variantType: VariantType,
+        testFixturesEnabled: Boolean,
+        inconsistentTestAppId: Boolean
     ): TestComponentImpl? {
 
         // handle test variant
@@ -659,10 +641,12 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
                 variantPropertiesApiServices,
-                extension = extension,
+                extension = dslExtension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures())
-        variantDslInfoBuilder.testedVariant =
+        variantDslInfoBuilder.productionVariant =
                 testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
+        variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
+
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
@@ -676,7 +660,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             }
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-                dslExtension,
                 project.layout.buildDirectory)
         val apiAccessStats = testedComponentInfo.stats
         if (variantType.isApk
@@ -830,11 +813,10 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
      * This will create both the prod and the androidTest/unitTest variants.
      */
     private fun createVariantsFromCombination(
-            dimensionCombination: DimensionCombination,
-            testBuildTypeData: BuildTypeData<BuildType>?,
-            buildFeatureValues: BuildFeatureValues,
-            dslNamespaceProvider: Provider<String>?,
-            dslTestNamespace: String?
+        dimensionCombination: DimensionCombination,
+        testBuildTypeData: BuildTypeData<BuildType>?,
+        buildFeatureValues: BuildFeatureValues,
+        inconsistentTestAppId: Boolean,
     ) {
         val variantType = variantFactory.variantType
 
@@ -869,9 +851,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     buildTypeData,
                     productFlavorDataList,
                     variantType,
-                    buildFeatureValues,
-                    dslNamespaceProvider,
-                    dslTestNamespace)?.let { variantInfo ->
+                    buildFeatureValues
+            )?.let { variantInfo ->
                 addVariant(variantInfo)
                 val variant = variantInfo.variant
                 val variantDslInfo = variant.variantDslInfo
@@ -916,7 +897,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                                 productFlavorDataList,
                                 variantInfo,
                                 VariantTypeImpl.ANDROID_TEST,
-                                testFixturesEnabledForVariant
+                                testFixturesEnabledForVariant,
+                                inconsistentTestAppId
                         )
                         androidTest?.let {
                             addTestComponent(it)
@@ -925,12 +907,13 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         }
                     }
                     val unitTest = createTestComponents(
-                            dimensionCombination,
-                            buildTypeData,
-                            productFlavorDataList,
-                            variantInfo,
-                            VariantTypeImpl.UNIT_TEST,
-                            testFixturesEnabledForVariant
+                        dimensionCombination,
+                        buildTypeData,
+                        productFlavorDataList,
+                        variantInfo,
+                        VariantTypeImpl.UNIT_TEST,
+                        testFixturesEnabledForVariant,
+                        false
                     )
                     unitTest?.let {
                         addTestComponent(it)
@@ -1086,6 +1069,26 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
          */
         fun getModifiedName(name: String): String {
             return "____$name"
+        }
+
+        internal fun checkInconsistentTestAppId(
+            flavors: List<ProductFlavor>
+        ): Boolean {
+            if (flavors.isEmpty()) {
+                return false
+            }
+
+            // as soon as one flavor declares an ID or a suffix, we bail.
+            // There are possible corner cases where a project could have 2 flavors setting the same
+            // appId in which case it would be safe to keep the current behavior but this is
+            // unlikely to be a common case.
+            for (flavor in flavors) {
+                if (flavor.applicationId != null || flavor.applicationIdSuffix != null) {
+                    return true
+                }
+            }
+
+            return false
         }
     }
 

@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest.compiled
 import com.android.tools.lint.detector.api.Detector
 
 class CallSuperDetectorTest : AbstractCheckTest() {
@@ -597,5 +598,89 @@ class CallSuperDetectorTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun testIndirectSuperCallCompiled() {
+        // Regression test for b/189433125.
+        lint().files(
+            kotlin(
+                """
+                open class A : Middle() {
+                    override fun foo() {
+                        super.foo() // OK
+                    }
+                }
+
+                open class B : Middle() {
+                    override fun foo() {
+                        // ERROR
+                    }
+                }
+                """
+            ).indented(),
+            compiled(
+                "libs/lib1.jar",
+                kotlin(
+                    """
+                    open class Middle : Base()
+                    """
+                ).indented(),
+                0x26e3997d,
+                """
+                Middle.class:
+                H4sIAAAAAAAAAC1QTUsDMRB9k2237Vrth1rrB4g39WBr8aYIVhAKWw8qvfSU
+                dhcM3WahScVjf4v/wJPgQYpHf5Q42RrIY96bycyb/Px+fgG4wAHB76soSuIC
+                iJDrSsORx+qV0speE7zjk0EZefgBcihwiX1WhlAMV88uCbVwktpE6VY/tjKS
+                VrImpi8eDyAHeQJNWHpVjrU5is4Jh8tFEIimyO5yUWw0l4uOaFM3//3mi6pw
+                ZR32ETpL3LG0mnc2sezhNo1iQiVUOr6fT0fx7EmOElbqYTqWyUDOlOP/YvCY
+                zmfj+E45svsw11ZN44EyirM3WqdWWpVqgyMIXtEdNuw2Ztxh1so473H6geI7
+                BwJNRj8TuSNjeVWAEoIsv5dhA/vZJxPWOFcewuthvYcNRlQcVHuooT4EGWxi
+                i/MGgcG2gf8H2auBiqEBAAA=
+                """,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM2gxKDFAABNj30wGAAAAA==
+                """
+            ),
+            compiled(
+                "libs/lib2.jar",
+                kotlin(
+                    """
+                    import androidx.annotation.CallSuper
+
+                    open class Base {
+                        @CallSuper
+                        open fun foo() {}
+                    }
+                    """
+                ).indented(),
+                0xe30e5a4b,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM2gxKDFAABNj30wGAAAAA==
+                """,
+                """
+                Base.class:
+                H4sIAAAAAAAAAGVQTU8bMRB99mY36RJgoQXCR0HcCkjdFPVUUCVAqppqoVKp
+                csnJyZpisrGrXSfimN/Sf9BTpR5QxJEfVTFeIlSBJT/PvHnPmpm7f39vALzH
+                FkPlWBSyCsYQXYmRiDOhf8Rfu1eyZ6vwGIJDpZX9yOC92WnX4SMIUUGVjPZS
+                FVRP3AcHVL8whmErETrNjUqvY6G1scIqo+MTkWXnw58yJ91C0jc2Uzo+lVak
+                wgri+GDkUUPMgc/A+kRdK5c1KUrfMcSTcRTyBg95NBmHvOYCXltuTMb7vMmO
+                /dtfARFfapG3xpuVzyvOts/oS1Rdf2/7ljo+MalkmE+UlmfDQVfm30U3I2Yx
+                MT2RtUWuXD4l178NtVUD2dIjVSiijh7nobHDczPMe/KTctLVqbT9TIhtcFqX
+                O5x6oe0RrlIW08vctLt/UPtdltcIg5L0sE5YfxDgBUK3G8xQlZfmvTKn+9To
+                /2dkU+PGtFovta9LbGCT3g/EzpJnrgOvhfkWIkIsOFhs4SVedcAKLGG5A79A
+                WGClQFBghoJ7aI1RU0ICAAA=
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/A.kt:8: Error: Overriding method should call super.foo [MissingSuperCall]
+                override fun foo() {
+                             ~~~
+            1 errors, 0 warnings
+            """
+        )
     }
 }

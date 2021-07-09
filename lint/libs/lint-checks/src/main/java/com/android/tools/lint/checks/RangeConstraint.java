@@ -18,9 +18,11 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION;
 import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
 import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiModifierListOwner;
@@ -43,6 +45,10 @@ public abstract class RangeConstraint {
             return FloatRangeConstraint.create(annotation);
         } else if (SIZE_ANNOTATION.isEquals(qualifiedName)) {
             return SizeConstraint.create(annotation);
+        } else if (isPlatformAnnotation(qualifiedName)) {
+            return create(
+                    AndroidPlatformAnnotations.Companion.fromPlatformAnnotation(
+                            annotation, qualifiedName));
         }
 
         return null;

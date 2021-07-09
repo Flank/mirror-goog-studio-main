@@ -15,20 +15,39 @@
  */
 package com.android.adblib.testingutils
 
+import com.android.adblib.AdbChannel
 import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbLibHost
 import com.android.adblib.impl.AdbChannelProviderOpenLocalHost
+import com.android.adblib.impl.channels.AdbSocketChannelImpl
+import com.android.adblib.utils.TimeoutTracker
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.DeviceState.HostConnectionType
 import com.android.fakeadbserver.FakeAdbServer
+import com.android.fakeadbserver.MdnsService
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
-class FakeAdbServerProvider : AutoCloseable {
+/**
+ * Timeout for fake adb server APIs that go through the server's internal
+ * sequential executor. In most cases, API calls take only a few milliseconds,
+ * but the time can dramatically increase under stress testing.
+ */
+val FAKE_ADB_SERVER_EXECUTOR_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(2)
+
+internal class FakeAdbServerProvider : AutoCloseable {
+
+    val inetAddress: InetAddress
+        get() = server?.inetAddress ?: throw IllegalStateException("Server not started")
 
     val port: Int
         get() = server?.port ?: 0
+
+    val socketAddress: InetSocketAddress
+        get() = InetSocketAddress(inetAddress, port)
 
     private val builder = FakeAdbServer.Builder()
     private var server: FakeAdbServer? = null
@@ -68,7 +87,11 @@ class FakeAdbServerProvider : AutoCloseable {
             release,
             sdk,
             hostConnectionType
-        )?.get(1, TimeUnit.SECONDS) ?: throw IllegalArgumentException()
+        )?.get(FAKE_ADB_SERVER_EXECUTOR_TIMEOUT_MS, TimeUnit.MILLISECONDS) ?: throw IllegalArgumentException()
+    }
+
+    fun addMdnsService(service: MdnsService) {
+        server?.addMdnsService(service)?.get(FAKE_ADB_SERVER_EXECUTOR_TIMEOUT_MS, TimeUnit.MILLISECONDS)
     }
 
     fun start(): FakeAdbServerProvider {
@@ -76,8 +99,8 @@ class FakeAdbServerProvider : AutoCloseable {
         return this
     }
 
-    fun createChannelProvider(host: AdbLibHost): AdbChannelProvider {
-        return AdbChannelProviderOpenLocalHost(host, portSupplier = { port })
+    fun createChannelProvider(host: AdbLibHost): TestingChannelProvider {
+        return TestingChannelProvider(host, portSupplier = { port })
     }
 
     override fun close() {
@@ -86,5 +109,26 @@ class FakeAdbServerProvider : AutoCloseable {
 
     fun awaitTermination() {
         server?.awaitServerTermination()
+    }
+
+    internal class TestingChannelProvider(host: AdbLibHost, portSupplier: () -> Int) :
+        AdbChannelProvider {
+
+        private val provider = AdbChannelProviderOpenLocalHost(host, portSupplier)
+
+        var lastCreatedChannel: TestingAdbChannel? = null
+
+        override suspend fun createChannel(timeout: TimeoutTracker): AdbChannel {
+            val channel = provider.createChannel(timeout)
+            return TestingAdbChannel(channel).apply {
+                lastCreatedChannel = this
+            }
+        }
+    }
+
+    internal class TestingAdbChannel(private val channel: AdbChannel) : AdbChannel by channel {
+
+        val isOpen: Boolean
+            get() = (channel as AdbSocketChannelImpl).isOpen
     }
 }

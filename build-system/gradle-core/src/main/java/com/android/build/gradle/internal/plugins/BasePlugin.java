@@ -448,7 +448,9 @@ public abstract class BasePlugin<
         project.getPlugins().apply(JavaBasePlugin.class);
 
         dslServices =
-                new DslServicesImpl(projectServices, sdkComponentsBuildService, getProjectTypeV2());
+                new DslServicesImpl(
+                        projectServices,
+                        sdkComponentsBuildService);
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(
@@ -745,12 +747,7 @@ public abstract class BasePlugin<
                 variantFactory.createBuildFeatureValues(
                         extension.getBuildFeatures(), projectServices.getProjectOptions());
 
-        @Nullable String testNamespace = null;
-        if (extension instanceof TestedExtension) {
-            testNamespace = ((TestedExtension) extension).getTestNamespace();
-        }
-
-        variantManager.createVariants(buildFeatureValues, extension.getNamespace(), testNamespace);
+        variantManager.createVariants(buildFeatureValues);
 
         List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();

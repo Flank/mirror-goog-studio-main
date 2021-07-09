@@ -88,6 +88,7 @@ setlocal
   --invocation_id=%INVOCATIONID% ^
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   --test_tag_filters=%TESTTAGFILTERS% ^
+  --build_metadata=ANDROID_BUILD_ID=%BUILDNUMBER% ^
   --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
   %CONDITIONAL_FLAGS% ^
   -- ^

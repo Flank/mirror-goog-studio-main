@@ -112,6 +112,7 @@ public class DeviceManagerTest {
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
         assertThat(listDisplayNames(dm.getDevices(DeviceFilter.VENDOR)))
                 .containsExactly(
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",
@@ -168,6 +169,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",
@@ -272,6 +274,7 @@ public class DeviceManagerTest {
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
         assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.VENDOR)))
                 .containsExactly(
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",
@@ -326,6 +329,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",
@@ -424,6 +428,7 @@ public class DeviceManagerTest {
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
         assertThat(listDisplayNames(dm.getDevices(DeviceFilter.VENDOR)))
                 .containsExactly(
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",
@@ -478,6 +483,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
                         "Wear OS Round",

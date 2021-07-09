@@ -213,29 +213,16 @@ public class TestProjects {
         try {
             ProjectScopeServices gss =
                     (ProjectScopeServices) ((DefaultProject) project).getServices();
+
             Field state = ProjectScopeServices.class.getSuperclass().getDeclaredField("state");
             state.setAccessible(true);
             AtomicReference<Object> stateValue = (AtomicReference<Object>) state.get(gss);
             Class<?> enumClass = Class.forName(DefaultServiceRegistry.class.getName() + "$State");
             stateValue.set(enumClass.getEnumConstants()[0]);
 
-            Field ownServices =
-                    GradleScopeServices.class.getSuperclass().getDeclaredField("ownServices");
-            ownServices.setAccessible(true);
-            Object ownServicesValue = ownServices.get(gss);
-            Field analyser = ownServicesValue.getClass().getDeclaredField("analyser");
-            analyser.setAccessible(true);
-            Class<?> providerAnalyserClass =
-                    Class.forName(ownServicesValue.getClass().getName() + "$ProviderAnalyser");
-            Constructor<?> ctor =
-                    providerAnalyserClass.getDeclaredConstructor(ownServicesValue.getClass());
-            ctor.setAccessible(true);
-            Object newProviderAnalyser = ctor.newInstance(ownServicesValue);
-            analyser.set(ownServicesValue, newProviderAnalyser);
-
+            // add service and set state so that future mutations are not allowed
             gss.add(BuildEventsListenerRegistry.class, new FakeBuildEventsListenerRegistry());
             stateValue.set(enumClass.getEnumConstants()[1]);
-            analyser.set(ownServicesValue, null);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

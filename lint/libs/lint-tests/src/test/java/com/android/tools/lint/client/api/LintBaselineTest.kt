@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
@@ -33,11 +34,11 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.google.common.base.Charsets
-import com.google.common.io.Files
+import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -54,7 +55,7 @@ class LintBaselineTest {
      * is a public utility for writing lint tests, so it cannot make
      * assumptions specific to tools/base.
      */
-    protected inner class ToolsBaseTestLintClient : TestLintClient() {
+    private inner class ToolsBaseTestLintClient : TestLintClient() {
         override fun getSdkHome(): File? {
             return TestUtils.getSdk().toFile()
         }
@@ -80,69 +81,68 @@ class LintBaselineTest {
 
         @Language("XML")
         val baselineContents =
-            """<?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint unittest">
+            """
+            <issues format="5" by="lint unittest">
 
-    <issue
-        id="UsesMinSdkAttributes"
-        severity="Warning"
-        message="&lt;uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=&quot;?&quot;"
-        category="Correctness"
-        priority="9"
-        summary="Minimum SDK and target SDK attributes not defined"
-        explanation="The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for)."
-        url="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-        urls="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-        errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />"
-        errorLine2="    ^">
-        <location
-            file="AndroidManifest.xml"
-            line="7"/>
-    </issue>
+                <issue
+                    id="UsesMinSdkAttributes"
+                    severity="Warning"
+                    message="&lt;uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=&quot;?&quot;"
+                    category="Correctness"
+                    priority="9"
+                    summary="Minimum SDK and target SDK attributes not defined"
+                    explanation="The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for)."
+                    url="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                    urls="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                    errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />"
+                    errorLine2="    ^">
+                    <location
+                        file="AndroidManifest.xml"
+                        line="7"/>
+                </issue>
 
-    <issue
-        id="HardcodedText"
-        severity="Warning"
-        message="[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource"
-        category="Internationalization"
-        priority="5"
-        summary="Hardcoded text"
-        explanation="Hardcoding text attributes directly in layout files is bad for several reasons:
+                <issue
+                    id="HardcodedText"
+                    severity="Warning"
+                    message="[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource"
+                    category="Internationalization"
+                    priority="5"
+                    summary="Hardcoded text"
+                    explanation="Hardcoding text attributes directly in layout files is bad for several reasons:
 
-* When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)
+            * When creating configuration variations (for example for landscape or portrait)you have to repeat the actual text (and keep it up to date when making changes)
 
-* The application cannot be translated to other languages by just adding new translations for existing string resources.
+            * The application cannot be translated to other languages by just adding new translations for existing string resources.
 
-There are quickfixes to automatically extract this hardcoded string into a resource lookup."
-        errorLine1="        android:text=&quot;Fooo&quot; />"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="res/layout/main.xml"
-            line="12"/>
-        <location
-            file="res/layout/main2.xml"
-            line="11"/>
-    </issue>
+            There are quickfixes to automatically extract this hardcoded string into a resource lookup."
+                    errorLine1="        android:text=&quot;Fooo&quot; />"
+                    errorLine2="        ~~~~~~~~~~~~~~~~~~~">
+                    <location
+                        file="res/layout/main.xml"
+                        line="12"/>
+                    <location
+                        file="res/layout/main2.xml"
+                        line="11"/>
+                </issue>
 
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 (was -1)"
-        errorLine1="                                childHeightSpec = MeasureSpec.makeMeasureSpec(maxLayoutHeight,"
-        errorLine2="                                                                              ~~~~~~~~~~~~~~~">
-        <location
-            file="java/android/support/v4/widget/SlidingPaneLayout.java"
-            line="589"
-            column="79"/>
-    </issue>
+                <issue
+                    id="Range"
+                    message="Value must be ≥ 0 (was -1)"
+                    errorLine1="                                childHeightSpec = MeasureSpec.makeMeasureSpec(maxLayoutHeight,"
+                    errorLine2="                                                                              ~~~~~~~~~~~~~~~">
+                    <location
+                        file="java/android/support/v4/widget/SlidingPaneLayout.java"
+                        line="589"
+                        column="79"/>
+                </issue>
 
-</issues>
-"""
+            </issues>
+            """.trimIndent()
         baselineFile.writeText(baselineContents)
 
         val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
 
-        var found: Boolean
-        found = baseline.findAndMark(
+        var found: Boolean = baseline.findAndMark(
             ManifestDetector.USES_SDK,
             Location.create(File("bogus")), "Unrelated", Severity.WARNING, null
         )
@@ -337,7 +337,15 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertTrue(
             baseline.sameMessage(
                 ApiDetector.UNSUPPORTED,
-                "Call requires API level R (current min is 29): `setZOrderedOnTop`",
+                "Call requires API level R (current min is 1): `setZOrderedOnTop`",
+                "Call requires API level 30 (current min is 29): `setZOrderedOnTop`"
+            )
+        )
+
+        assertFalse(
+            baseline.sameMessage(
+                ApiDetector.UNSUPPORTED,
+                "Field requires API level R (current min is 29): `setZOrderedOnTop`",
                 "Call requires API level 30 (current min is 29): `setZOrderedOnTop`"
             )
         )
@@ -347,6 +355,26 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 ApiDetector.UNSUPPORTED,
                 "Call requires API level R (current min is 29): `setZOrderedOnTop`",
                 "Call requires API level 30 (current min is 29): `setZOrdered`"
+            )
+        )
+    }
+
+    @Test
+    fun tolerateA11yI18nChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                HardcodedValuesDetector.ISSUE,
+                "Hardcoded string \"Fooo\", should use @string resource",
+                "[I18N] Hardcoded string \"Fooo\", should use @string resource"
+            )
+        )
+
+        assertTrue(
+            baseline.sameMessage(
+                AccessibilityDetector.ISSUE,
+                "Empty contentDescription attribute on image",
+                "[Accessibility] Empty contentDescription attribute on image"
             )
         )
     }
@@ -388,11 +416,10 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         )
         baseline.close()
 
-        var actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
-            .replace(File.separatorChar, '/')
+        var actual = baselineFile.readText().replace(File.separatorChar, '/')
 
         @Language("XML")
-        val expected = (
+        val expected =
             """<?xml version="1.0" encoding="UTF-8"?>
 <issues format="5" by="lint unittest">
 
@@ -414,7 +441,6 @@ There are quickfixes to automatically extract this hardcoded string into a resou
 
 </issues>
 """
-            )
         assertThat(actual).isEqualTo(expected)
 
         // Now load the baseline back in and make sure we can match entries correctly
@@ -422,8 +448,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         baseline.writeOnClose = true
         assertThat(baseline.removeFixed).isFalse()
 
-        var found: Boolean
-        found = baseline.findAndMark(
+        var found: Boolean = baseline.findAndMark(
             HardcodedValuesDetector.ISSUE,
             Location.create(sourceFile, "", 0),
             "Hardcoded string \"Fooo\", should use `@string` resource",
@@ -444,8 +469,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(found).isTrue()
         baseline.close()
 
-        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
-            .replace(File.separatorChar, '/')
+        actual = baselineFile.readText().replace(File.separatorChar, '/')
         assertThat(actual).isEqualTo(expected)
 
         // Test the skip fix flag
@@ -475,8 +499,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(found).isFalse()
         baseline.close()
 
-        actual = Files.asCharSource(baselineFile, Charsets.UTF_8).read()
-            .replace(File.separatorChar, '/')
+        actual = baselineFile.readText().replace(File.separatorChar, '/')
 
         // This time we should ONLY get the initial baseline issue back; we should
         // NOT see the new issue, and the fixed issue (the uses sdk error reported in the baseline
@@ -533,6 +556,161 @@ There are quickfixes to automatically extract this hardcoded string into a resou
             )
         )
 
+        baseline.close()
+    }
+
+    @Test
+    fun testPlatformTestCase() {
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
+
+        @Language("text")
+        val path = "packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"
+
+        @Language("XML")
+        val baselineContents =
+            """
+            <issues format="5" by="lint 4.1.0" client="cli" variant="all" version="4.1.0">
+
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`">
+                    <location file="packages/modules/IPsec/src/java/android/net/ipsec/ike/exceptions/AuthenticationFailedException.java"/>
+                </issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.IkeInternalException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeInternalException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.IkeInternalException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeException` to `Throwable` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeException` to `Exception` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.TemporaryFailureException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeProtocolException` to `Exception` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeException` to `Exception` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `ChildSaProposal` to `SaProposal` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.NoValidProposalChosenException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `NoValidProposalChosenException` to `IkeProtocolException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.NoValidProposalChosenException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `NoValidProposalChosenException` to `IkeProtocolException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.NoValidProposalChosenException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `NoValidProposalChosenException` to `IkeProtocolException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.NoValidProposalChosenException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `NoValidProposalChosenException` to `IkeProtocolException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeException` to `Throwable` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeProtocolException` to `Throwable` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeProtocolException` to `Throwable` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.TunnelModeChildSessionParams`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `InvalidSyntaxException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeProtocolException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `InvalidSyntaxException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.NoValidProposalChosenException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Exception requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `InvalidSyntaxException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Class requires API level 31 (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `InvalidSyntaxException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.IkeInternalException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Cast from `IkeInternalException` to `IkeException` requires API level 31 (current min is 30)"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.TsUnacceptableException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidKeException`"><location file="$path" /></issue>
+                <issue id="NewApi" message="Call requires API level 31 (current min is 30): `new android.net.ipsec.ike.exceptions.InvalidSyntaxException`"><location file="$path" /></issue>
+            </issues>
+            """.trimIndent()
+        baselineFile.writeText(baselineContents)
+        assertNotNull(XmlUtils.parseDocumentSilently(baselineContents, false))
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
+
+        fun mark(message: String, path: String): Boolean {
+            val location = Location.create(File(path))
+            return baseline.findAndMark(ApiDetector.UNSUPPORTED, location, message, Severity.WARNING, null)
+        }
+
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeException` to `Throwable` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeInternalException` to `IkeException` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeException` to `Exception` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Exception requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeProtocolException` to `Exception` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeException` to `Exception` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `ChildSaProposal` to `SaProposal` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeException` to `Throwable` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeProtocolException` to `Throwable` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Exception requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeProtocolException` to `Throwable` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.TunnelModeChildSessionParams`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeProtocolException` to `IkeException` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Exception requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Class requires API level S (current min is 30): `android.net.ipsec.ike.exceptions.IkeProtocolException`", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        assertTrue(mark("Cast from `IkeInternalException` to `IkeException` requires API level 31 (current min is 30)", "/packages/modules/IPsec/src/java/com/android/internal/net/ipsec/ike/ChildSessionStateMachine.java"))
+        baseline.close()
+    }
+
+    @Test
+    fun testInexactMatching() {
+        // Test 1: Test matching where we look at the wrong file and return instead of getting to the next one
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
+
+        @Language("XML")
+        val baselineContents =
+            """
+            <issues format="5" by="lint 4.1.0" client="cli" variant="all" version="4.1.0">
+
+                <issue id="NewApi" message="Call requires API level 29: `Something`"><location file="OtherFile.java"/></issue>
+                <issue id="NewApi" message="Call requires API level 30: `Something`"><location file="MyFile.java"/></issue>
+            </issues>
+            """.trimIndent()
+        baselineFile.writeText(baselineContents)
+        assertNotNull(XmlUtils.parseDocumentSilently(baselineContents, false))
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
+        assertTrue(
+            baseline.findAndMark(
+                ApiDetector.UNSUPPORTED,
+                Location.create(File("MyFile.java")),
+                "Call requires API level S: `Something`",
+                Severity.WARNING,
+                null
+            )
+        )
+        baseline.close()
+    }
+
+    @Test
+    fun testMessageToEntryCleanup() {
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
+
+        @Language("XML")
+        val baselineContents =
+            """
+            <issues format="5" by="lint 4.1.0" client="cli" variant="all" version="4.1.0">
+
+                <issue id="NewApi" message="Call requires API level 30: `Something`"><location file="MyFile.java"/></issue>
+                <issue id="NewApi" message="Call requires API level 30: `Something`"><location file="OtherFile.java"/></issue>
+            </issues>
+            """.trimIndent()
+
+        baselineFile.writeText(baselineContents)
+        assertNotNull(XmlUtils.parseDocumentSilently(baselineContents, false))
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
+
+        fun mark(message: String, path: String): Boolean {
+            val location = Location.create(File(path))
+            return baseline.findAndMark(ApiDetector.UNSUPPORTED, location, message, Severity.WARNING, null)
+        }
+
+        assertTrue(mark("Call requires API level 30: `Something`", "MyFile.java"))
+        assertTrue(mark("Call requires API level 29: `Something`", "OtherFile.java"))
         baseline.close()
     }
 }

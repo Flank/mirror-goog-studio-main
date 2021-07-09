@@ -118,21 +118,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         this.projectLocation = projectLocation;
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectConnection = projectConnection;
-        File buildFile = (project != null) ? project.getBuildFile() : null;
-        if (buildFile != null && !buildFile.getName().equals("build.gradle")) {
-            arguments.add("--build-file=" + buildFile.toString());
-        }
         this.memoryRequirement = memoryRequirement;
         this.configurationCaching = configurationCaching;
 
         if (profileDirectory != null) {
             with(StringOption.PROFILE_OUTPUT_DIR, profileDirectory.toString());
         }
-    }
-
-    /** Return the default build cache location for a project. */
-    public final File getBuildCacheDir() {
-        return new File(projectLocation.getProjectDir(), ".buildCache");
     }
 
     public final T with(@NonNull BooleanOption option, boolean value) {
@@ -299,7 +290,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
      * A good-enough heuristic to check if the Kotlin plugin is applied.
      * This is needed because of b/169842093.
      */
-    private boolean ifAppliesKotlinPlugin(GradleTestProject testProject) throws IOException {
+    private boolean ifAppliesKotlinPlugin(GradleTestProject testProject) {
         GradleTestProject rootProject = testProject.getRootProject();
 
         for (File buildFile :
@@ -335,8 +326,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
-    protected final void setJvmArguments(@NonNull LongRunningOperation launcher)
-            throws IOException {
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
 
         List<String> jvmArguments = new ArrayList<>(this.memoryRequirement.getJvmArgs());
 

@@ -58,6 +58,8 @@ class GradleW {
             } else if (arg.equals("--max_workers") && it.hasNext()) {
                 gradleArgs.add("--max-workers");
                 gradleArgs.add(it.next());
+            } else if (arg.startsWith("-P")) {
+                gradleArgs.add(arg);
             } else {
                 throw new IllegalArgumentException("Unknown argument '" + arg + "'.");
             }
@@ -70,6 +72,7 @@ class GradleW {
             for (File repo : repos) {
                 gradle.addRepo(repo);
             }
+            gradle.addArgument("-Dkotlin.compiler.execution.strategy=in-process");
             gradleArgs.forEach(gradle::addArgument);
             OutputStream out = new TeeOutputStream(System.out, log);
             OutputStream err = new TeeOutputStream(System.err, log);

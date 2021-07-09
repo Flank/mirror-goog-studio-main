@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.impl.light.LightMethodBuilder
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
@@ -63,6 +62,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         )
 
         private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
+        private const val AOSP_CALL_SUPER_ANNOTATION = "android.annotation.CallSuper"
         private const val ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow"
         private const val ON_VISIBILITY_CHANGED = "onVisibilityChanged"
 
@@ -107,7 +107,9 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             val annotations = evaluator.getAllAnnotations(directSuper, true)
             for (annotation in annotations) {
                 val signature = annotation.qualifiedName
-                if (CALL_SUPER_ANNOTATION.isEquals(signature) || signature != null &&
+                if (CALL_SUPER_ANNOTATION.isEquals(signature) ||
+                    signature == AOSP_CALL_SUPER_ANNOTATION ||
+                    signature != null &&
                     (
                         signature.endsWith(".OverrideMustInvoke") ||
                             signature.endsWith(".OverridingMethodsMustInvokeSuper")
@@ -131,9 +133,6 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 val superMethod = getRequiredSuperMethod(evaluator, node) ?: return
                 val visitor = SuperCallVisitor(superMethod)
                 node.accept(visitor)
-                if (visitor.uncertain) {
-                    return
-                }
                 val count = visitor.callsSuperCount
                 if (count == 0) {
                     val methodName = node.name
@@ -170,23 +169,16 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         val superCalls = mutableListOf<USuperExpression>()
         val callsSuperCount: Int get() = superCalls.size
         var anySuperCallCount: Int = 0
-        var uncertain = false
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
             anySuperCallCount++
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
-
                 if (resolved == null || // Avoid false positives for type resolution problems
                     targetMethod.isEquivalentTo(resolved)
                 ) {
                     superCalls.add(node)
-                } else if (resolved is LightMethodBuilder &&
-                    resolved.javaClass.name == "org.jetbrains.uast.kotlin.psi.UastDescriptorLightMethod"
-                ) {
-                    // Temporary workaround for https://issuetracker.google.com/189433125
-                    uncertain = true
                 }
             }
 

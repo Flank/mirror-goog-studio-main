@@ -906,6 +906,55 @@ public final class AdbHelper {
     }
 
     /**
+     * Creates a port reversing between a remote and a local port.
+     *
+     * @param adbSockAddr the socket address to connect to adb
+     * @param device the device on which to do the port reversing
+     * @param remotePortSpec specification of the remote port to reverse to, one of: tcp:<port>
+     *     localabstract:<unix domain socket name> localreserved:<unix domain socket name>
+     *     localfilesystem:<unix domain socket name> dev:<character device name> jdwp:<process pid>
+     *     (remote only)
+     * @param localPortSpec specification of the local port, should be of format
+     *     tcp:<port number>
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    @Slow
+    public static void createReverse(
+            InetSocketAddress adbSockAddr,
+            IDevice device,
+            String remotePortSpec,
+            String localPortSpec)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+
+            byte[] request =
+                    formAdbRequest(
+                            String.format(
+                                    "reverse:forward:%1$s;%2$s", //$NON-NLS-1$
+                                    localPortSpec, remotePortSpec));
+
+            setDevice(adbChan, device.getSerialNumber());
+            write(adbChan, request);
+
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.okay) {
+                Log.w("create-reverse", "Error creating reverse: " + resp.message);
+                throw new AdbCommandRejectedException(resp.message);
+            }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
+        }
+    }
+
+    /**
      * Queries a set of supported features from the host or from a device.
      *
      * @throws TimeoutException in case of timeout on the connection.
@@ -970,20 +1019,13 @@ public final class AdbHelper {
      * @param device the device on which to remove the port forwarding
      * @param localPortSpec specification of the local port that was forwarded, should be of format
      *     tcp:<port number>
-     * @param remotePortSpec specification of the remote port forwarded to, one of: tcp:<port>
-     *     localabstract:<unix domain socket name> localreserved:<unix domain socket name>
-     *     localfilesystem:<unix domain socket name> dev:<character device name> jdwp:<process pid>
-     *     (remote only)
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
     @Slow
     public static void removeForward(
-            InetSocketAddress adbSockAddr,
-            IDevice device,
-            String localPortSpec,
-            String remotePortSpec)
+            InetSocketAddress adbSockAddr, IDevice device, String localPortSpec)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
         SocketChannel adbChan = null;
@@ -1001,7 +1043,51 @@ public final class AdbHelper {
 
             AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
             if (!resp.okay) {
-                Log.w("remove-forward", "Error creating forward: " + resp.message);
+                Log.w("remove-forward", "Error removing forward: " + resp.message);
+                throw new AdbCommandRejectedException(resp.message);
+            }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
+        }
+    }
+
+    /**
+     * Remove a port reversing between a remote and a local port.
+     *
+     * @param adbSockAddr the socket address to connect to adb
+     * @param device the device on which to remove the port reversing
+     * @param remotePortSpec specification of the remote port reversed to, one of: tcp:<port>
+     *     localabstract:<unix domain socket name> localreserved:<unix domain socket name>
+     *     localfilesystem:<unix domain socket name> dev:<character device name> jdwp:<process pid>
+     *     (remote only)
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    @Slow
+    public static void removeReverse(
+            InetSocketAddress adbSockAddr,
+            IDevice device,
+            String remotePortSpec)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+
+            byte[] request =
+                    formAdbRequest(
+                            String.format("reverse:killforward:%1$s", remotePortSpec)); //$NON-NLS-1$
+
+            setDevice(adbChan, device.getSerialNumber());
+            write(adbChan, request);
+
+            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            if (!resp.okay) {
+                Log.w("remove-reverse", "Error removing reverse: " + resp.message);
                 throw new AdbCommandRejectedException(resp.message);
             }
         } finally {

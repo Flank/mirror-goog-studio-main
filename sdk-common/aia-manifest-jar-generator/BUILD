@@ -11,3 +11,9 @@ android_java_proto_library(
     srcs = glob(["src/**/*.proto"]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob(["src/**/*.proto"]),
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

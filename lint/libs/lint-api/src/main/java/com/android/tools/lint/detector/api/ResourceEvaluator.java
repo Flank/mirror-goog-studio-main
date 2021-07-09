@@ -24,6 +24,8 @@ import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.SdkConstants.CLS_TYPED_ARRAY;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
+import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toAndroidxAnnotation;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
@@ -613,6 +615,8 @@ public class ResourceEvaluator {
             String signature = annotation.getQualifiedName();
             if (signature == null) {
                 continue;
+            } else if (isPlatformAnnotation(signature)) {
+                signature = toAndroidxAnnotation(signature);
             }
             if (COLOR_INT_ANNOTATION.isEquals(signature)) {
                 return EnumSet.of(COLOR_INT_MARKER_TYPE);
@@ -644,6 +648,8 @@ public class ResourceEvaluator {
             String signature = annotation.getQualifiedName();
             if (signature == null) {
                 continue;
+            } else if (isPlatformAnnotation(signature)) {
+                signature = toAndroidxAnnotation(signature);
             }
             if (COLOR_INT_ANNOTATION.isEquals(signature)) {
                 return EnumSet.of(COLOR_INT_MARKER_TYPE);

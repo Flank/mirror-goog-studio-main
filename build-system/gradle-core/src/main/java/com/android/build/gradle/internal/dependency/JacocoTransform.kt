@@ -21,13 +21,10 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.files.RelativeFile
-import com.android.builder.files.RelativeFiles
-import com.android.builder.files.SerializableChange
 import com.android.builder.files.SerializableFileChanges
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
-import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
@@ -48,6 +45,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.UncheckedIOException
+import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -77,62 +75,65 @@ abstract class JacocoTransform : TransformAction<JacocoTransform.Params> {
     abstract val inputArtifact: Provider<FileSystemLocation>
 
     override fun transform(transformOutputs: TransformOutputs) {
-        val logger = LoggerWrapper.getLogger(this::class.java)
-        transformNonIncrementally(inputArtifact.get().asFile, transformOutputs, logger)
+        val inputArtifactFile = inputArtifact.get().asFile
+        if (isJarFile(inputArtifactFile)) {
+            val outputFile = transformOutputs.file("instrumented_${inputArtifactFile.name}")
+            instrumentJar(inputArtifactFile, outputFile)
+        } else {
+            val changes = inputChanges.getFileChanges(inputArtifact).toSerializable()
+            transformDirectory(inputArtifactFile, changes, transformOutputs)
+        }
+    }
+
+    private fun transformDirectory(
+        rootDir: File,
+        changes: SerializableFileChanges,
+        transformOutputs: TransformOutputs
+    ) {
+        if (!rootDir.isDirectory) {
+            throw IOException("$rootDir must be a directory.")
+        }
+        val classOutputDir = transformOutputs.dir("instrumented_classes")
+        val fileChanges = changes.fileChanges.filter { it.file.isFile }
+        for (change in fileChanges) {
+            val relativeFileChange = RelativeFile.fileInDirectory(
+                change.normalizedPath.replace(File.separatorChar,'/'), change.file)
+            if (change.fileStatus == FileStatus.NEW || change.fileStatus == FileStatus.CHANGED) {
+                instrumentFile(relativeFileChange, classOutputDir)
+            } else {
+                cleanTransformOutputFile(relativeFileChange, classOutputDir.toPath())
+            }
+        }
+    }
+
+    private fun cleanTransformOutputFile(
+        relativeFile: RelativeFile,
+        classesOutputPath: Path
+    ) {
+        if (getInstrumentationAction(relativeFile.relativePath) == JacocoTask.Action.IGNORE) {
+            return
+        }
+        val fileToRemove = FileUtils.join(classesOutputPath.toFile(), relativeFile.relativePath)
+        FileUtils.deleteIfExists(fileToRemove)
     }
 
     private fun isJarFile(candidateFile: File) =
         candidateFile.isFile && candidateFile.extension == SdkConstants.EXT_JAR
 
-    private fun transformNonIncrementally(
-        file: File,
-        transformOutputs: TransformOutputs,
-        logger: LoggerWrapper
-    ) {
-        when {
-            file.isDirectory -> {
-                val classOutDir = transformOutputs.dir("instrumented_classes")
-                classOutDir.mkdirs()
-                logger.info("Instrumenting file: ${file.absolutePath}")
-                instrumentDir(file, classOutDir)
-            }
-            isJarFile(file) -> {
-                val outputFile = transformOutputs.file(
-                    "instrumented_${file.name}"
-                )
-                logger.info("Instrumenting jar: ${file.absolutePath}")
-                instrumentJar(file, outputFile)
-            }
-            else -> {
-                throw IOException(
-                    """$file is not supported as a JacocoTransform input. "
-                            "Input artifacts must be single a directory or file."""
-                )
-            }
-        }
-    }
-
-    private fun instrumentDir(inDirs: File, outputDir: File) {
-        RelativeFiles.fromDirectory(inDirs)
-            .filter { relativeFile ->  relativeFile.file.extension == SdkConstants.EXT_CLASS }
-            .forEach { classFile -> instrumentClassFile(classFile, outputDir) }
-    }
-
     private fun instrumentJar(inputJar: File, outputJar: File) {
         try {
-            ZipOutputStream(BufferedOutputStream(FileOutputStream(outputJar))).use {
-                    instrumentedJar ->
+            ZipOutputStream(BufferedOutputStream(FileOutputStream(outputJar))).use { instrumentedJar ->
                 ZipFile(inputJar).use { zip ->
                     val entries = zip.entries()
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
                         val entryName = entry.name
                         val data = when (getInstrumentationAction(entryName)) {
-                            JacocoTask.Action.IGNORE -> continue
-                            JacocoTask.Action.COPY -> {
+                            JacocoTask.Action.IGNORE ->
+                                continue
+                            JacocoTask.Action.COPY ->
                                 ByteStreams.toByteArray(zip.getInputStream(entry))
-                            }
-                            JacocoTask.Action.INSTRUMENT -> {
+                            JacocoTask.Action.INSTRUMENT ->
                                 parameters.jacocoInstrumentationService.get()
                                     .instrument(
                                         zip.getInputStream(entry),
@@ -140,12 +141,11 @@ abstract class JacocoTransform : TransformAction<JacocoTransform.Params> {
                                         parameters.jacocoConfiguration,
                                         parameters.jacocoVersion.get()
                                     )
-                            }
                         }
                         val nextEntry = ZipEntry(entryName)
                         // Any negative time value sets ZipEntry's xdostime to DOSTIME_BEFORE_1980
                         // constant.
-                        nextEntry.time = - 1L
+                        nextEntry.time = -1L
                         instrumentedJar.putNextEntry(nextEntry)
                         instrumentedJar.write(data)
                         instrumentedJar.closeEntry()
@@ -157,24 +157,28 @@ abstract class JacocoTransform : TransformAction<JacocoTransform.Params> {
         }
     }
 
-    private fun instrumentClassFile(classFile: RelativeFile, outputDir: File) {
-        val outputFile = outputDir.resolve(classFile.relativePath)
+    private fun instrumentFile(sourceFile: RelativeFile, outputDir: File) {
+        val instrumentationAction = getInstrumentationAction(sourceFile)
+        if (instrumentationAction == JacocoTask.Action.IGNORE) {
+            return
+        }
+        val outputFile = outputDir.resolve(sourceFile.relativePath)
         outputFile.ensureParentDirsCreated()
-        when (getInstrumentationAction(classFile)) {
-            JacocoTask.Action.IGNORE -> return
-            JacocoTask.Action.COPY -> FileUtils.copyFile(classFile.file, outputFile)
-            JacocoTask.Action.INSTRUMENT -> {
-                outputFile.writeBytes(classFile.file.inputStream().use {
+        if (instrumentationAction == JacocoTask.Action.INSTRUMENT) {
+            outputFile.writeBytes(
+                sourceFile.file.inputStream().use {
                     parameters.jacocoInstrumentationService.get()
                         .instrument(
                             it,
-                            classFile.relativePath,
+                            sourceFile.relativePath,
                             parameters.jacocoConfiguration,
                             parameters.jacocoVersion.get()
                         )
                 }
-                )
-            }
+            )
+        } else {
+            // instrumentationAction == JacocoTask.Action.COPY
+            FileUtils.copyFile(sourceFile.file, outputFile)
         }
     }
 

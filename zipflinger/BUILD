@@ -215,3 +215,11 @@ iml_module(
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "src/com/android/zipflinger/**/*.java",
+    ]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

@@ -28,7 +28,6 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -60,21 +59,6 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
-
-    @Before
-    fun before() {
-        project.getSubproject("app")
-            .buildFile
-            .appendText(
-                """
-                    android {
-                        lintOptions {
-                            checkDependencies false
-                        }
-                    }
-                """.trimIndent()
-            )
-    }
 
     @Test
     fun checkLintModels() {

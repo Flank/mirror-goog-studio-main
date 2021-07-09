@@ -221,3 +221,15 @@ kotlin_test(
         "//tools/data-binding:tools.compilerCommon",
     ],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/fromGradle/**/*.java",
+        "src/main/**/*.kt",
+        "src/main/proto/**/*.proto",
+        "src/main/resources/**",
+    ]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

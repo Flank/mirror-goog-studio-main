@@ -1,5 +1,7 @@
 package com.android.adblib
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * Exposes services specific to the ADB Server (or "host") as `suspend` functions
  *
@@ -36,6 +38,13 @@ interface AdbHostServices {
      */
     suspend fun devices(format: DeviceInfoFormat): DeviceList
 
+    /**
+     * Returns a [Flow] that emits a new [DeviceList] everytime a device state change is
+     * detected by the ADB Host ("host:track-devices" query). The flow is active until
+     * an exception is thrown or cancellation is requested by the flow consumer.
+     */
+    fun trackDevices(format: DeviceInfoFormat): Flow<DeviceList>
+
     enum class DeviceInfoFormat {
         /**
          * [DeviceInfo.serialNumber] and [DeviceInfo.deviceState] only
@@ -52,4 +61,14 @@ interface AdbHostServices {
      * Kills the running instance of the ADB server ("host:kill" query).
      */
     suspend fun kill()
+
+    /**
+     * Checks mDNS is supported on this version of ADB ("host:mdns:check" query).
+     */
+    suspend fun mdnsCheck(): MdnsCheckResult
+
+    /**
+     * Returns a list of mDNS services known to the ADB server ("host:mdns:services" query).
+     */
+    suspend fun mdnsServices(): MdnsServiceList
 }

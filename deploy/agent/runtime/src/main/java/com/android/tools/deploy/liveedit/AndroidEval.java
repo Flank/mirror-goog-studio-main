@@ -154,14 +154,13 @@ class AndroidEval implements Eval {
                     throw new IllegalStateException("Unable to do super.<init>");
                 }
                 Class klass = typeToClass(objTarget.getAsmType());
-                Constructor constructor = klass.getConstructor(parameterClass);
+                Constructor constructor = klass.getDeclaredConstructor(parameterClass);
                 constructor.setAccessible(true);
                 Object obj =
                         constructor.newInstance(
                                 args.stream().map(AndroidEval::valueToObject).toArray());
-                Value result = new ObjectValue(obj, objTarget.getAsmType());
-                setObjectValue(objTarget, result);
-                return result;
+                setObjectValue(objTarget, obj);
+                return new ObjectValue(obj, objTarget.getAsmType());
             }
 
             // We use invokevirtual for everything else which is inaccurate for private methods

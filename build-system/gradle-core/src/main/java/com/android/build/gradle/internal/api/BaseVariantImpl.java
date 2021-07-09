@@ -46,11 +46,6 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
@@ -66,6 +61,12 @@ import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Base class for variants.
@@ -150,14 +151,17 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
                 (VariantDslInfoImpl) component.getVariantDslInfo();
-        return readOnlyObjectProvider.getBuildType(variantDslInfo.getBuildTypeObj());
+        return readOnlyObjectProvider.getBuildType((BuildType) variantDslInfo.getBuildTypeObj());
     }
 
     @Override
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
-        return new ImmutableFlavorList(
-                component.getVariantDslInfo().getProductFlavorList(), readOnlyObjectProvider);
+        List<ProductFlavor> flavors =
+                component.getVariantDslInfo().getProductFlavorList().stream()
+                        .map(it -> (ProductFlavor) it)
+                        .collect(Collectors.toList());
+        return new ImmutableFlavorList(flavors, readOnlyObjectProvider);
     }
 
     @Override

@@ -61,6 +61,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -335,6 +336,10 @@ public final class DeviceImpl implements IDevice {
     public boolean supportsFeature(@NonNull Feature feature) {
         switch (feature) {
             case SCREEN_RECORD:
+                if (supportsFeature(HardwareFeature.WATCH)) {
+                    // Currently physical watches do not support screen recording.
+                    return false;
+                }
                 if (!getVersion().isGreaterOrEqualThan(19)) {
                     return false;
                 }
@@ -782,24 +787,31 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public void removeForward(int localPort, int remotePort)
+    public void removeForward(int localPort)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         AdbHelper.removeForward(
                 AndroidDebugBridge.getSocketAddress(),
                 this,
-                String.format("tcp:%d", localPort), //$NON-NLS-1$
-                String.format("tcp:%d", remotePort)); //$NON-NLS-1$
+                String.format("tcp:%d", localPort)); // $NON-NLS-1$
     }
 
     @Override
-    public void removeForward(
-            int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
+    public void createReverse(int remotePort, int localPort)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        AdbHelper.removeForward(
+        AdbHelper.createReverse(
                 AndroidDebugBridge.getSocketAddress(),
                 this,
-                String.format("tcp:%d", localPort), //$NON-NLS-1$
-                String.format("%s:%s", namespace.getType(), remoteSocketName)); //$NON-NLS-1$
+                String.format(Locale.US, "tcp:%d", localPort), //$NON-NLS-1$
+                String.format(Locale.US, "tcp:%d", remotePort)); //$NON-NLS-1$
+    }
+
+    @Override
+    public void removeReverse(int remotePort)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        AdbHelper.removeReverse(
+                AndroidDebugBridge.getSocketAddress(),
+                this,
+                String.format(Locale.US, "tcp:%d", remotePort)); //$NON-NLS-1$
     }
 
     // @VisibleForTesting

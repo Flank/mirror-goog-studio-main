@@ -74,6 +74,10 @@ class OptimisticApkInstaller {
      * "files to delete" are removed from the overlay.
      */
     public OverlayId install(String packageName, List<Apk> apks) throws DeployerException {
+        if (hasInstrumentedTests(apks)) {
+            throw DeployerException.runTestsNotSupported();
+        }
+
         try {
             return tracedInstall(packageName, apks);
         } catch (DeployerException ex) {
@@ -87,11 +91,6 @@ class OptimisticApkInstaller {
     }
 
     private OverlayId tracedInstall(String packageName, List<Apk> apks) throws DeployerException {
-        // Fall back to normal install if it looks like we're handling an instrumented test.
-        if (apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty())) {
-            throw DeployerException.runTestsNotSupported();
-        }
-
         final String deviceSerial = adb.getSerial();
         final Deploy.Arch targetArch = adb.getArchFromApk(apks);
 
@@ -159,5 +158,9 @@ class OptimisticApkInstaller {
         metrics.add(response.getAgentLogsList());
 
         return nextOverlayId;
+    }
+
+    private static boolean hasInstrumentedTests(List<Apk> apks) {
+        return apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty());
     }
 }

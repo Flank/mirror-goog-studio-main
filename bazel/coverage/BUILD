@@ -516,6 +516,7 @@ coverage_report(
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/project-system-gradle-upgrade:intellij.android.projectSystem.gradle.upgrade.tests_tests",
     ],
 )
 
@@ -733,6 +734,7 @@ coverage_report(
         "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
         "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
         "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
+        "//tools/adt/idea/project-system-gradle-upgrade:intellij.android.projectSystem.gradle.upgrade.tests_tests",
         "//tools/adt/idea/sdk-updates:intellij.android.sdkUpdates.tests_tests",
         "//tools/adt/idea/smali:intellij.android.smali_tests",
         "//tools/adt/idea/studio-updater:integration_test",

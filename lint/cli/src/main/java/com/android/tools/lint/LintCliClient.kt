@@ -339,7 +339,7 @@ open class LintCliClient : LintClient {
                     baselineFile,
                     XmlFileType.BASELINE
                 )
-                reporter.setBaselineAttributes(this, baselineVariantName)
+                reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
                 reporter.write(stats, definiteIncidents)
                 System.err.println(getBaselineCreationMessage(baselineFile))
                 return if (flags.isContinueAfterBaselineCreated) {
@@ -724,11 +724,25 @@ open class LintCliClient : LintClient {
                 )
             }
             val checkVariant = baselineVariantName
-            val creationVariant = baseline.getAttribute("variant")
+            val creationVariant = baseline.getAttribute(ATTR_VARIANT)
             if (creationVariant != null && creationVariant != checkVariant) {
                 println("\nNote: The baseline was created using a different target/variant than it was checked against.")
                 println("Creation variant: " + getTargetName(creationVariant))
                 println("Current variant: " + if (checkVariant != null) getTargetName(checkVariant) else "none")
+            }
+            val baselineTransitive = baseline.getAttribute(ATTR_CHECK_DEPS)?.let { it == VALUE_TRUE }
+            val transitive = flags.isCheckDependencies
+            if (baselineTransitive != null && baselineTransitive != transitive) {
+                println("\nNote: The baseline was created using `includeDependencies=$baselineTransitive`,")
+                println("but lint is currently running with `includeDependencies=$transitive`.")
+                if (transitive) {
+                    println("This means that any incidents found in the dependencies are not included")
+                    println("in the baseline and will be reported as new incidents.")
+                } else {
+                    println("This means that any incidents listed in the baseline from dependencies")
+                    println("are not included in the current analysis, so lint will consider them")
+                    println("\"fixed\" when comparing with the baseline.")
+                }
             }
             // TODO: If the versions don't match, emit some additional diagnostic hints, such as
             // the possibility that newer versions of lint have newer checks not included in
@@ -1509,7 +1523,7 @@ open class LintCliClient : LintClient {
             // succeeding. So here we'll use the IntelliJ platform's UrlClassLoader
             // instead which does not lock files. See
             // JarFileIssueRegistry#loadAndCloseURLClassLoader for more details.
-            UrlClassLoader.build().parent(parent).urls(*urls).get()
+            UrlClassLoader.build().parent(parent).urls(urls.toList()).get()
         } else {
             super.createUrlClassLoader(urls, parent)
         }

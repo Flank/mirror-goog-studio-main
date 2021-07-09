@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.jetbrains.eval4j.ObjectValue;
 import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
@@ -85,7 +84,7 @@ public class MethodBodyEvaluatorTest {
                 new MethodBodyEvaluator(classInput, "newParent")
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
 
-        Parent actual = (Parent) ((ObjectValue) result).getValue();
+        Parent actual = (Parent) result;
         Parent expected = owner.newParent();
         Assert.assertEquals(actual.getId(), expected.getId());
     }
@@ -103,9 +102,20 @@ public class MethodBodyEvaluatorTest {
                                 TestTarget.class.getTypeName(),
                                 new Object[] {Integer.valueOf(4)});
 
-        Parent actual = (Parent) ((ObjectValue) result).getValue();
+        Parent actual = (Parent) result;
         Parent expected = owner.newParentWithParameter(4);
         Assert.assertEquals(expected.getId(), actual.getId());
+    }
+
+    @org.junit.Test
+    public void testProtectedConstructor() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        Child child = new Child(0);
+        Object result =
+                new MethodBodyEvaluator(classInput, "callProtectedConstructor")
+                        .eval(child, Child.class.getTypeName(), new Object[] {});
+
+        Assert.assertNotNull(result);
     }
 
     @org.junit.Test

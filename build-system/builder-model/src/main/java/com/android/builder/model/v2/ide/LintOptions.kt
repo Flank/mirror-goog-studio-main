@@ -155,7 +155,7 @@ interface LintOptions: AndroidModel {
 
     /**
      * Returns whether lint should check all dependencies too as part of its analysis. Default is
-     * true for application modules and false for other types of modules.
+     * false.
      */
     val isCheckDependencies: Boolean
 

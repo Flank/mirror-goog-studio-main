@@ -27,3 +27,17 @@ java_library(
     resource_strip_prefix = "tools/base/build-system/aapt2-proto",
     resources = ["NOTICE"],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/main/**/*.kt",
+        "src/main/resources/**",
+    ]) + [
+        "build.gradle",
+        "//tools/buildSrc/base:version.properties",
+        "//prebuilts/tools/common/aapt:aapt2_version.properties",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

@@ -202,25 +202,25 @@ class ApkFlingerTest {
 
     @Test
     fun testV4AndV2Signing() {
-        // API 28 is the first to support V4 signing
+        // API 30 is the first to support V4 signing
         testSigning(
             enableV1 = false,
             enableV2 = true,
             enableV3 = false,
             enableV4 = true,
-            minSdk = 28
+            minSdk = 30
         )
     }
 
     @Test
     fun testV4AndV3Signing() {
-        // API 28 is the first to support V4 signing
+        // API 30 is the first to support V4 signing
         testSigning(
             enableV1 = false,
             enableV2 = false,
             enableV3 = true,
             enableV4 = true,
-            minSdk = 28
+            minSdk = 30
         )
     }
 

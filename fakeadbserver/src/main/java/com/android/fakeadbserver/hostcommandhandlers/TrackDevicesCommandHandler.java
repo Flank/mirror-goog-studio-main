@@ -43,14 +43,26 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
     @NonNull
     public static final String COMMAND = "track-devices";
 
+    @NonNull public static final String LONG_COMMAND = "track-devices-l";
+
+    private final boolean longFormat;
+
+    public TrackDevicesCommandHandler() {
+        this(false);
+    }
+
+    public TrackDevicesCommandHandler(boolean longFormat) {
+        this.longFormat = longFormat;
+    }
+
     @NonNull
-    private static Callable<HandlerResult> sendDeviceList(@NonNull Socket responseSocket,
+    private Callable<HandlerResult> sendDeviceList(@NonNull Socket responseSocket,
             @NonNull FakeAdbServer server) {
         return () -> {
             try {
                 OutputStream stream = responseSocket.getOutputStream();
                 String deviceListString = ListDevicesCommandHandler
-                        .formatDeviceList(server.getDeviceListCopy().get(), false);
+                        .formatDeviceList(server.getDeviceListCopy().get(), longFormat);
                 write4ByteHexIntString(stream, deviceListString.length());
                 stream.write(deviceListString.getBytes(US_ASCII));
                 stream.flush();

@@ -24,4 +24,8 @@ public class Child extends Parent {
     int callSuperMethod(int a) {
         return super.protectedInc(a);
     }
+
+    Parent callProtectedConstructor() {
+        return new Parent(1, 2);
+    }
 }

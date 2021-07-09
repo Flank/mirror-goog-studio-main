@@ -145,7 +145,7 @@ public class OptimisticApkInstallerTest {
                                 "file2", "1",
                                 "file4", "2"));
         nextId = apkInstaller.install(TEST_PACKAGE, ImmutableList.of(nextApk));
-        assertOverlay(nextId, "base/file1", "base/file2", "base/file4");
+        assertOverlay(nextId, "base/file4");
     }
 
     @Test
@@ -218,11 +218,73 @@ public class OptimisticApkInstallerTest {
         apkInstaller.install(TEST_PACKAGE, ImmutableList.of(nextApk));
     }
 
+    @Test
+    public void skipTestApks() throws IOException, DeployerException {
+        OptimisticApkInstaller apkInstaller =
+                new OptimisticApkInstaller(installer, adb, cache, metrics, IWI_OFF, logger);
+        metrics.start("test");
+        // Populate the cache. To prevent us from having to mock dump, we create a cache entry with
+        // an empty overlay, which prevents the cache entry from being treated as a base install.
+        Apk installedApk1 =
+                buildApk(
+                        "base",
+                        "0",
+                        ImmutableMap.of(
+                                "file1", "0",
+                                "file2", "1"));
+        Apk installedApk2 =
+                buildApk(
+                        "test",
+                        "0",
+                        ImmutableMap.of(
+                                "file1", "0",
+                                "file2", "1"),
+                        ImmutableList.of("com.example.target"));
+        OverlayId baseId =
+                OverlayId.builder(new OverlayId(ImmutableList.of(installedApk1, installedApk2)))
+                        .build();
+        cache.store(
+                TEST_SERIAL, TEST_PACKAGE, ImmutableList.of(installedApk1, installedApk2), baseId);
+
+        // Test that we throw when we have a test package.
+        Apk nextApk1 =
+                buildApk(
+                        "base",
+                        "1",
+                        ImmutableMap.of(
+                                "file1", "0",
+                                "file2", "99"));
+        Apk nextApk2 =
+                buildApk(
+                        "test",
+                        "1",
+                        ImmutableMap.of(
+                                "file1", "0",
+                                "file2", "99"),
+                        ImmutableList.of("com.example.target"));
+
+        thrown.expect(DeployerException.class);
+        try {
+            apkInstaller.install(TEST_PACKAGE, ImmutableList.of(nextApk1, nextApk2));
+        } finally {
+            // Ensure that the metrics are not impacted by the early exit.
+            assertThat(metrics.getDeployMetrics().size()).isEqualTo(1);
+            assertThat(metrics.getDeployMetrics().get(0).getName()).isEqualTo("test");
+            assertThat(metrics.getDeployMetrics().get(0).hasStatus()).isFalse();
+        }
+    }
+
     private static void assertOverlay(OverlayId id, String... files) {
         assertThat(id.getOverlayContents().allFiles()).containsExactlyElementsIn(files);
     }
 
     private Apk buildApk(String name, String checksum, Map<String, String> files)
+            throws IOException {
+        return buildApk(name, checksum, files, ImmutableList.of());
+    }
+
+    private Apk buildApk(
+            String name, String checksum, Map<String, String> files, List<String> targetPackages)
             throws IOException {
         Path apkFile = folder.getRoot().toPath().resolve(name + "-" + checksum);
 
@@ -241,7 +303,7 @@ public class OptimisticApkInstallerTest {
                         .setPath(apkFile.toAbsolutePath().toString())
                         .addLibraryAbi(TEST_ABI)
                         .setPackageName(TEST_PACKAGE)
-                        .setTargetPackages(ImmutableList.of())
+                        .setTargetPackages(targetPackages)
                         .setIsolatedServices(ImmutableList.of());
 
         ByteBuffer buffer = ByteBuffer.wrap(Files.readAllBytes(apkFile));

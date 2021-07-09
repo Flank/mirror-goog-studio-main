@@ -23,6 +23,8 @@ import com.android.resources.ResourceType.DRAWABLE
 import com.android.resources.ResourceType.MIPMAP
 import com.android.resources.ResourceType.STYLEABLE
 import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -245,7 +247,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun isResourceAnnotation(signature: String): Boolean {
         return ResourceEvaluator.getTypeFromAnnotationSignature(signature) != null ||
-            ANY_RES_ANNOTATION.isEquals(signature)
+            ANY_RES_ANNOTATION.isEquals(signature) ||
+            isPlatformAnnotation(signature) &&
+                ResourceEvaluator.getTypeFromAnnotationSignature(toAndroidxAnnotation(signature)) != null
     }
 
     private fun checkColor(context: JavaContext, argument: UElement) {

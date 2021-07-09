@@ -47,7 +47,7 @@ task sdkManagerStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), "scripts")
 
     description "Creates OS specific scripts to start the sdk manager CLI"
-    mainClassName = 'com.android.sdklib.tool.sdkmanager.SdkManagerCli'
+    mainClass.set('com.android.sdklib.tool.sdkmanager.SdkManagerCli')
     applicationName = 'sdkmanager'
     defaultJvmOpts = ["-Dcom.android.sdklib.toolsdir=MY_APP_HOME"]
 
@@ -63,7 +63,7 @@ task avdManagerStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start avdmanager'
-    mainClassName = 'com.android.sdklib.tool.AvdManagerCli'
+    mainClass.set('com.android.sdklib.tool.AvdManagerCli')
     applicationName = 'avdmanager'
     defaultJvmOpts = ["-Dcom.android.sdkmanager.toolsdir=MY_APP_HOME"]
 
@@ -104,7 +104,7 @@ sdk {
 // (both pre- and post-submit) give good feedback and proper attribution in case of failure.
 task removeSdkComponents(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
+    mainClass.set("com.android.sdklib.tool.sdkmanager.SdkManagerCli")
     args = [
       '--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
       '--verbose',
@@ -120,7 +120,7 @@ task removeSdkComponents(type: JavaExec) {
 task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
+    mainClass.set("com.android.sdklib.tool.sdkmanager.SdkManagerCli")
 
     doFirst {
         if (project.hasProperty('downloaderArgs')) {
@@ -179,7 +179,7 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
 task initSdkForConnectedTestsStableChannel(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
+    mainClass.set("com.android.sdklib.tool.sdkmanager.SdkManagerCli")
 
     args = ['--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
             '--channel=0',
@@ -216,7 +216,7 @@ task initSdkForConnectedTestsStableChannel(type: JavaExec) {
 task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
+    mainClass.set("com.android.sdklib.tool.sdkmanager.SdkManagerCli")
 
     args = ['--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
             '--channel=2',
@@ -249,7 +249,7 @@ offline_sdk_targets.each { config ->
     def dest = "$rootDir/../prebuilts/tools/" + config[2] + "/offline-sdk"
     task "updateOfflineRepo$os$arch"(type: JavaExec) {
         classpath = sourceSets.main.runtimeClasspath
-        main = "com.android.sdklib.tool.OfflineRepoCreator"
+        mainClass.set("com.android.sdklib.tool.OfflineRepoCreator")
         args = ["--dest", dest] + offline_repo_files
         environment("REPO_OS_OVERRIDE", os)
         systemProperties(ImmutableMap.of("os.arch", arch))

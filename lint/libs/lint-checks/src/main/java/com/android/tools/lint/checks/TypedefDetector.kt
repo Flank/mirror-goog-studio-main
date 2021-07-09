@@ -69,7 +69,6 @@ import org.jetbrains.uast.UastBinaryOperator.Companion.NOT_EQUALS
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isArrayInitializer
@@ -342,14 +341,14 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val evaluator = context.evaluator
                 val annotations = evaluator.getAllAnnotations(resolvedArgument, true)
                 var hadTypeDef = false
-                for (a in evaluator.filterRelevantAnnotations(annotations)) {
+                for (a in evaluator.filterRelevantAnnotations(annotations, argument)) {
                     val qualifiedName = a.qualifiedName
                     if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
                         LONG_DEF_ANNOTATION.isEquals(qualifiedName) ||
                         STRING_DEF_ANNOTATION.isEquals(qualifiedName)
                     ) {
                         hadTypeDef = true
-                        val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
+                        val paramValues = getAnnotationValue(a)
                         if (paramValues != null) {
                             if (paramValues == allowed) {
                                 return
@@ -359,7 +358,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             val provided = getResolvedValues(paramValues, argument)
                             val allowedValues = getResolvedValues(allowed, argument)
 
-                            // Here we just want to use "provided.removeAll(allowedValues).
+                            // Here we just want to use provided.removeAll(allowedValues).
                             // However, we want to treat some fields as
                             // equivalent: Class.NAME and ClassCompat.NAME,
                             // because AndroidX has duplicated a bunch of platform

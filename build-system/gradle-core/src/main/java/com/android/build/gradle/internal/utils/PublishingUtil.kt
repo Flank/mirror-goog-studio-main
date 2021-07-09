@@ -18,13 +18,13 @@
 
 package com.android.build.gradle.internal.utils
 
+import com.android.build.api.dsl.BuildType
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.SingleVariant
 import com.android.build.gradle.internal.dsl.AbstractPublishing
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
-import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.MultipleVariantsImpl
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.publishing.ComponentPublishingInfo
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.options.OptionalBooleanOption
@@ -38,8 +38,8 @@ fun createPublishingInfoForLibrary(
     variantName: String,
     buildType: BuildType,
     flavorList: List<ProductFlavor>,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+    buildTypes: NamedDomainObjectContainer<out BuildType>,
+    productFlavors: NamedDomainObjectContainer<out ProductFlavor>,
     testFixtureMainVariantName: String?,
     issueReporter: IssueReporter
 ): VariantPublishingInfo {
@@ -108,8 +108,8 @@ fun createPublishingInfoForLibrary(
 
 private fun ensureUsersInputCorrectness(
     multipleVariant: MultipleVariantsImpl,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
+    buildTypes: NamedDomainObjectContainer<out BuildType>,
+    productFlavors: NamedDomainObjectContainer<out ProductFlavor>,
     issueReporter: IssueReporter
 ) {
     fun computeErrorMessage(element: String) =

@@ -36,6 +36,7 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension
@@ -249,7 +250,11 @@ class ModelBuilder<
         val variantList = variants.map {
             namespace = it.namespace.get()
             if (androidTestNamespace == null && it is HasAndroidTest) {
-                androidTestNamespace = it.androidTest?.namespace?.get()
+                (it.androidTest as? TestComponentCreationConfig)?.let { androidTest ->
+                    // TODO(b/176931684) Use AndroidTest.namespace instead after we stop
+                    //  supporting using applicationId to namespace the test component R class.
+                    androidTestNamespace = androidTest.namespaceForR.get()
+                }
             }
             if (testFixturesNamespace == null && it is HasTestFixtures) {
                 testFixturesNamespace = it.testFixtures?.namespace?.get()

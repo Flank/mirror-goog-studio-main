@@ -25,6 +25,10 @@ public class Parent {
         this.id = id;
     }
 
+    protected Parent(int id, int offset) {
+        this(id + offset);
+    }
+
     public int getId() {
         return id;
     }

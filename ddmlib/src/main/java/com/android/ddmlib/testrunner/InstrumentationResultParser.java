@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
+
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -359,7 +360,12 @@ public class InstrumentationResultParser extends MultiLineReceiver
                     testInfo.mCurrentTestNumber = statusValue;
                 } else if (!KNOWN_KEYS.contains(mCurrentKey)) {
                     // Not one of the recognized key/value pairs, so dump it in mTestMetrics
-                    mTestMetrics.put(mCurrentKey, statusValue);
+                    String previousValue = mTestMetrics.put(mCurrentKey, statusValue);
+                    if (previousValue != null) {
+                        Log.d(LOG_TAG,
+                                String.format("Received a duplicate metric key '%s' which value "
+                                        + "will be overridden.", mCurrentKey));
+                    }
                 }
             }
 

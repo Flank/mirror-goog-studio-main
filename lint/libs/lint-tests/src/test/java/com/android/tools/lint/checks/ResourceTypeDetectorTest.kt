@@ -1919,4 +1919,52 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testAosp() {
+        lint().files(
+            kotlin(
+                """
+                import android.annotation.DrawableRes
+                import android.annotation.StringRes
+
+                fun setLabels(@StringRes titleId: Int) {
+                    // ...
+                }
+
+                fun setIcon(@DrawableRes iconId: Int, @StringRes descId: Int) {
+                    setLabels(iconId) // bug: should have passed descId. Both are ints but of wrong type.
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package android.annotation;
+                import java.lang.annotation.*;
+                import static java.lang.annotation.ElementType.METHOD;
+                import static java.lang.annotation.RetentionPolicy.SOURCE;
+                @Retention(SOURCE) @Target({METHOD})
+                public @interface StringRes {
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package android.annotation;
+                import java.lang.annotation.*;
+                import static java.lang.annotation.ElementType.METHOD;
+                import static java.lang.annotation.RetentionPolicy.SOURCE;
+                @Retention(SOURCE) @Target({METHOD})
+                public @interface DrawableRes {
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test.kt:9: Error: Expected resource of type string [ResourceType]
+                setLabels(iconId) // bug: should have passed descId. Both are ints but of wrong type.
+                          ~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

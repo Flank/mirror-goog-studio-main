@@ -267,6 +267,13 @@ class TestLintResult internal constructor(
      * @return this
      */
     fun expectInlinedMessages(useRaw: Boolean = false): TestLintResult {
+        if (task.runner.currentTestMode.modifiesSources) {
+            // This result checking method relies on comparing the
+            // test descriptor files to the files on disk; that doesn't
+            // work if the test is modifying the generated source
+            return this
+        }
+
         for (project in task.projects) {
             for (file in project.files) {
                 val plainContents: String?

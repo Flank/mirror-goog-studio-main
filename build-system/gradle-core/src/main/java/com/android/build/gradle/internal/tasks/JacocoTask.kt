@@ -390,7 +390,10 @@ abstract class JacocoTask : NewIncrementalTask() {
         // in the intermediate classes jar.
         private val KOTLIN_MODULE_PATTERN = Pattern.compile("^META-INF/.*\\.kotlin_module$")
         fun calculateAction(inputRelativePath: String): Action {
-            if (inputRelativePath.startsWith("org/jacoco")) {
+            // Avoid instrumenting files from these directories as they can cause issues such as
+            // recursive instrumentation.
+            if (inputRelativePath.startsWith("org/jacoco") ||
+                    inputRelativePath.startsWith("org/junit/runner/notification/RunListener")) {
                 return Action.COPY
             }
             for (pattern in Action.COPY.patterns) {

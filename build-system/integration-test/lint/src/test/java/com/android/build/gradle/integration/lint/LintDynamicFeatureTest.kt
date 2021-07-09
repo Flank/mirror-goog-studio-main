@@ -141,11 +141,9 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lint")
         assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lintDebug")
 
-        // Regression test for b/190855628
         assertThat(projectWithLibs.file("app/lint-results.txt")).containsAllOf(
             "app_layout.xml:10: Warning: Hardcoded string",
-            "feature_layout.xml:10: Warning: Hardcoded string",
-            "lib2_layout.xml:10: Warning: Hardcoded string"
+            "feature_layout.xml:10: Warning: Hardcoded string"
         )
         assertThat(projectWithLibs.file("lib1/lint-results.txt")).contains(
             "lib1_layout.xml:10: Warning: Hardcoded string"
@@ -166,6 +164,33 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             "base_layout.xml:10: Warning: Hardcoded string",
             "feature_layout.xml:10: Warning: Hardcoded string",
             "feature2_layout.xml:10: Warning: Hardcoded string"
+        )
+    }
+
+    // Regression test for b/190855628
+    @Test
+    fun testDynamicFeatureIssuesWhenLibrariesPresent() {
+        TestFileUtils.appendToFile(
+            projectWithLibs.getSubproject("app").buildFile,
+            """
+                android {
+                    lintOptions {
+                        checkDependencies true
+                        abortOnError false
+                        textOutput file("lint-results.txt")
+                    }
+                }
+            """.trimIndent()
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":feature").mainResDir, "layout/feature_layout.xml"),
+            layout_text
+        )
+        projectWithLibs.getExecutor().run(":app:clean", ":app:lint")
+        assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
+
+        assertThat(projectWithLibs.file("app/lint-results.txt")).contains(
+            "feature_layout.xml:10: Warning: Hardcoded string"
         )
     }
 

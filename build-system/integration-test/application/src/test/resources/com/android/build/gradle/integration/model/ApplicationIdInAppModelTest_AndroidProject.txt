@@ -1,0 +1,2 @@
+- AndroidProject:
+   - androidTestNamespace = "customized.application.id.test"

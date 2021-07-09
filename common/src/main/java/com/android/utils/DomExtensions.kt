@@ -20,6 +20,7 @@ package com.android.utils
 
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.w3c.dom.Text
 
 // Extension methods to make operating on DOM more convenient
 
@@ -52,6 +53,18 @@ operator fun Element.iterator(): Iterator<Element> {
             next = findNextElement(next?.nextSibling)
             return result ?: error("hasNext is false")
         }
+    }
+}
+
+fun Node.childrenIterator(): Iterator<Node> = object : Iterator<Node> {
+    private var current = firstChild
+
+    override fun hasNext() = current != null
+
+    override fun next(): Node {
+        val next = current
+        current = current!!.nextSibling
+        return next
     }
 }
 

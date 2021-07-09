@@ -14,7 +14,7 @@ task archQueryStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start archQuery'
-    mainClassName = 'com.android.archquery.Main'
+    mainClass.set('com.android.archquery.Main')
     applicationName = 'archquery'
 }
 

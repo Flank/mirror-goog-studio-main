@@ -600,11 +600,10 @@ public class TestFile {
     }
 
     /** Produces byte arrays, for use with {@link BinaryTestFile} */
+    @FunctionalInterface
     public interface ByteProducer {
         @NonNull
-        default byte[] produce() {
-            return new byte[0];
-        }
+        byte[] produce();
     }
 
     public static class BinaryTestFile extends TestFile {

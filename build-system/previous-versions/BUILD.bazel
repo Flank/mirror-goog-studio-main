@@ -1,6 +1,7 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
 
+#keep sorted
 AGP_4_2_0_ARTIFACTS = [
     "//prebuilts/tools/common/m2:androidx.databinding.databinding-common.4.2.0",
     "//prebuilts/tools/common/m2:androidx.databinding.databinding-compiler-common.4.2.0",
@@ -99,6 +100,10 @@ AGP_4_2_0_ARTIFACTS = [
     "//prebuilts/tools/common/m2:org.tensorflow.tensorflow-lite-metadata.0.1.0-rc2",
     "//prebuilts/tools/common/m2:xerces.xercesImpl.2.12.0",
     "//prebuilts/tools/common/m2:xml-apis.xml-apis.1.4.01",
+    "//prebuilts/tools/common/m2:com.android.tools.lint.lint.27.1.0",
+    "//prebuilts/tools/common/m2:com.android.tools.lint.lint-api.27.1.0",
+    "//prebuilts/tools/common/m2:com.android.tools.lint.lint-checks.27.1.0",
+    "//prebuilts/tools/common/m2:com.android.tools.lint.lint-gradle.27.1.0",
 ]
 
 maven_repo(

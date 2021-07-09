@@ -16,7 +16,7 @@ task Screenshot2StartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start screenshot2'
-    mainClassName = 'com.android.screenshot.Screenshot'
+    mainClass.set('com.android.screenshot.Screenshot')
     applicationName = 'screenshot2'
 }
 

@@ -92,6 +92,14 @@ open class TestMode(
      */
     open val diffExplanation: String? = null
 
+    /**
+     * Whether this test mode will modify the source files relative to
+     * what is in the test file descriptors. Adding or removing files
+     * (such as .class files) is not considered a modification, only
+     * actually changing the source content of a described file.
+     */
+    open val modifiesSources: Boolean = false
+
     override fun iterator(): Iterator<TestMode> {
         return values().iterator()
     }
@@ -99,6 +107,13 @@ open class TestMode(
     override fun toString(): String = description
 
     companion object {
+        /**
+         * Special marker state to return from [TestMode.before] to
+         * signal that upon reflection, this test mode does not need to
+         * be checked for this particular test.
+         */
+        val CANCEL: Any = java.lang.String("cancel") // deliberately not interned
+
         fun classOnly(set: EnumSet<Scope>): Boolean {
             return set.all { it == Scope.CLASS_FILE || it == Scope.JAVA_LIBRARIES || it == Scope.ALL_CLASS_FILES }
         }

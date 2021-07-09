@@ -80,12 +80,7 @@ public class LintKotlinTest {
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
         File lintResults = project.file("app/build/reports/lint-results.txt");
-        if (usePartialAnalysis) {
-            // 2 extra CannotEnableHidden warnings (as expected) when using partial analysis
-            assertThat(lintResults).contains("8 errors, 11 warnings");
-        } else {
-            assertThat(lintResults).contains("8 errors, 9 warnings");
-        }
+        assertThat(lintResults).contains("8 errors, 6 warnings");
     }
 
     private GradleTaskExecutor getExecutor() {

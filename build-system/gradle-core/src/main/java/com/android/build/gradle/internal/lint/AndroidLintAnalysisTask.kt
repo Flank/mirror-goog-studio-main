@@ -340,8 +340,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     .orElse(false)
             )
         }
-        systemPropertyInputs.initializeForAnalysis(project.providers)
-        environmentVariableInputs.initialize(project.providers)
+        systemPropertyInputs.initialize(project.providers, isForAnalysis = true)
+        environmentVariableInputs.initialize(project.providers, isForAnalysis = true)
     }
 
     fun configureForStandalone(
