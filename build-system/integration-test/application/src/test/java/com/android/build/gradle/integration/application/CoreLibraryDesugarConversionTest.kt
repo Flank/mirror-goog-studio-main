@@ -26,6 +26,21 @@ import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexClassSubject
 import com.android.utils.FileUtils
+import org.jf.dexlib2.Opcode;
+import org.jf.dexlib2.Opcode.INVOKE_DIRECT;
+import org.jf.dexlib2.Opcode.INVOKE_DIRECT_RANGE;
+import org.jf.dexlib2.Opcode.INVOKE_INTERFACE;
+import org.jf.dexlib2.Opcode.INVOKE_INTERFACE_RANGE;
+import org.jf.dexlib2.Opcode.INVOKE_STATIC;
+import org.jf.dexlib2.Opcode.INVOKE_STATIC_RANGE;
+import org.jf.dexlib2.Opcode.INVOKE_SUPER;
+import org.jf.dexlib2.Opcode.INVOKE_SUPER_RANGE;
+import org.jf.dexlib2.Opcode.INVOKE_VIRTUAL;
+import org.jf.dexlib2.Opcode.INVOKE_VIRTUAL_RANGE;
+import org.jf.dexlib2.iface.instruction.Instruction;
+import org.jf.dexlib2.iface.instruction.formats.Instruction35c;
+import org.jf.dexlib2.iface.instruction.formats.Instruction3rc;
+import org.jf.dexlib2.iface.reference.MethodReference;
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
@@ -134,19 +149,30 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
         val programClass = "Lcom/example/helloworld/HelloWorld;"
         val dex = getDexWithSpecificClass(programClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $programClass")
+
         DexClassSubject.assertThat(dex.classes[programClass])
             .hasMethodThatInvokes(
                 "useConversion",
-                "Lj$/time/TimeConversions;->convert(Lj$/time/ZonedDateTime;)Ljava/time/ZonedDateTime;")
+                findMethodThatInvokes(
+                    dex,
+                    "Lj$/time/TimeConversions;",
+                    "convert",
+                    "Ljava/time/ZonedDateTime;",
+                    listOf("Lj$/time/ZonedDateTime;")))
+
         // Consumer and IntUnaryOperator are desugared up to 23 so conversion doesn't exist for 24 and above
         Assume.assumeTrue(minSdkVersion < 24)
+
         DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokesMethod(
+            .hasMethodThatInvokes(
                 "getNumbers",
-                "convert",
-                listOf("Lj$/util/function/IntUnaryOperator;"),
-                "Ljava/util/function/IntUnaryOperator;")
-        DexClassSubject.assertThat(dex.classes[programClass])
+                findMethodThatInvokes(
+                    dex,
+                    "Lj$/util/function/IntUnaryOperator\$Wrapper;",
+                    "convert",
+                    "Ljava/util/function/IntUnaryOperator;",
+                    listOf("Lj$/util/function/IntUnaryOperator;")))
+	DexClassSubject.assertThat(dex.classes[programClass])
             .hasMethodThatInvokesMethod(
                 "onGetDirectActions",
                 "convert",
@@ -159,6 +185,70 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
             AndroidArchive.checkValidClassName(className)
             it.classes.keys.contains(className)
         }
+
+    private fun findMethodThatInvokes(
+            dex: Dex,
+            definingClass: String,
+            name: String,
+            returnType: String,
+            parameterTypes: List<String>): String {
+        val seen = mutableListOf<String>()
+        val method = dex.classes
+            .flatMap { (_, clazz) -> clazz.methods }
+            .filter { it.implementation != null }
+            .find {
+                it.implementation!!.instructions
+                    .map { getInvokedMethod(it) }
+                    .filter { it != null }
+                    .map { it as MethodReference }
+                    .filter { seen.add(getMethodReference(it)) }
+                    .any { it.definingClass.equals(definingClass)
+                        && it.name.equals(name)
+                        && it.returnType.equals(returnType)
+                        && it.parameterTypes.equals(parameterTypes) }
+            }
+            ?: fail(
+                "Failed to find a method that invokes "
+                    + "${getMethodReference(definingClass, name, returnType, parameterTypes)}, "
+                    + "found: ${seen.joinToString()}")
+        return getMethodReference(method)
+    }
+
+    private fun getMethodReference(reference: MethodReference): String {
+        return getMethodReference(
+            reference.definingClass, reference.name, reference.returnType, reference.parameterTypes)
+    }
+
+    private fun getMethodReference(
+            definingClass: String,
+            name: String,
+            returnType: String,
+            parameterTypes: List<out CharSequence>): String {
+        return "$definingClass->$name(${parameterTypes.joinToString("")})$returnType"
+    }
+
+    private fun getInvokedMethod(instruction: Instruction): MethodReference? {
+        val opcode = instruction.opcode
+        val isInvoke =
+            opcode == INVOKE_VIRTUAL
+                || opcode == INVOKE_SUPER
+                || opcode == INVOKE_DIRECT
+                || opcode == INVOKE_STATIC
+                || opcode == INVOKE_INTERFACE
+        val isInvokeRange =
+            opcode == INVOKE_VIRTUAL_RANGE
+                || opcode == INVOKE_SUPER_RANGE
+                || opcode == INVOKE_DIRECT_RANGE
+                || opcode == INVOKE_STATIC_RANGE
+                || opcode == INVOKE_INTERFACE_RANGE
+        if (isInvoke) {
+          return (instruction as Instruction35c).reference as MethodReference
+        }
+        if (isInvokeRange) {
+          return (instruction as Instruction3rc).reference as MethodReference
+        }
+        return null
+    }
 
     companion object {
         @Parameterized.Parameters(name = "minSdkVersion_{0}")
