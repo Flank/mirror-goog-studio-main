@@ -87,18 +87,8 @@ class LintStandaloneTest(private val runLintInProcess: Boolean) {
             "\n\nlintOptions.error 'UseValueOf'\n\n"
         )
         getExecutor().expectFailure().run( ":lint")
-        ScannerSubject.assertThat(project.buildResult.stderr).contains(
-            """
-                Lint found errors in the project; aborting build.
-
-                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                ...
-                lintOptions {
-                    abortOnError false
-                }
-                ...
-                """.trimIndent()
-        )
+        ScannerSubject.assertThat(project.buildResult.stderr)
+            .contains("Lint found errors in the project; aborting build.")
         assertThat(project.buildResult.failedTasks).contains(":lint")
         assertThat(project.buildResult.didWorkTasks).contains(":lintReport")
         assertThat(project.buildResult.failedTasks).doesNotContain(":lintReport")

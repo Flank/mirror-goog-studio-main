@@ -139,53 +139,50 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
                 ERRNO_CREATED_BASELINE -> throw RuntimeException("Aborting build since new baseline file was created")
                 ERRNO_APPLIED_SUGGESTIONS -> throw RuntimeException("Aborting build since sources were modified to apply quickfixes after compilation")
-                else -> throw IllegalStateException("Internal error: unexpected lint return value ${execResult}")
+                else -> throw IllegalStateException("Internal error: unexpected lint return value $execResult")
             }
 
         private fun getErrorMessage(android: Boolean, fatalOnly: Boolean) : String = when {
-            !android -> {
-                """
+            !android -> """
                 Lint found errors in the project; aborting build.
 
-                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                ...
-                lintOptions {
-                    abortOnError false
+                Fix the issues identified by lint, or create a baseline to see only new errors:
+                ```
+                lint {
+                    baseline = file("lint-baseline.xml")
                 }
-                ...
-                """.trimIndent()
-            }
-            fatalOnly -> {
-                """
+                ```
+
+                For more details, see https://developer.android.com/studio/write/lint#snapshot
+            """.trimIndent()
+            fatalOnly -> """
                 Lint found fatal errors while assembling a release target.
 
-                To proceed, either fix the issues identified by lint, or modify your build script as follows:
-                ...
+                Fix the issues identified by lint, or create a baseline to see only new errors:
+                ```
                 android {
-                    lintOptions {
-                        checkReleaseBuilds false
-                        // Or, if you prefer, you can continue to check for errors in release builds,
-                        // but continue the build even when errors are found:
-                        abortOnError false
+                    lint {
+                        baseline = file("lint-baseline.xml")
                     }
                 }
-                ...
-                """.trimIndent()
-            }
-            else -> {
-                """
+                ```
+
+                For more details, see https://developer.android.com/studio/write/lint#snapshot
+            """.trimIndent()
+            else -> """
                 Lint found errors in the project; aborting build.
 
-                Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                ...
+                Fix the issues identified by lint, or create a baseline to see only new errors:
+                ```
                 android {
-                    lintOptions {
-                        abortOnError false
+                    lint {
+                        baseline = file("lint-baseline.xml")
                     }
                 }
-                ...
-                """.trimIndent()
-            }
+                ```
+
+                For more details, see https://developer.android.com/studio/write/lint#snapshot
+            """.trimIndent()
         }
     }
 }

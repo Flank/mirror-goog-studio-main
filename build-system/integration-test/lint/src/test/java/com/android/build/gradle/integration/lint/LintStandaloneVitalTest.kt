@@ -48,18 +48,7 @@ class LintStandaloneVitalTest {
         Truth.assertThat(result.failedTasks).doesNotContain(":lintVitalReport")
 
         result.stderr.use {
-            assertThat(it).contains(
-                """
-                    Lint found errors in the project; aborting build.
-
-                    Fix the issues identified by lint, or add the following to your build script to proceed with errors:
-                    ...
-                    lintOptions {
-                        abortOnError false
-                    }
-                    ...
-                """.trimIndent()
-            )
+            assertThat(it).contains("Lint found errors in the project; aborting build.")
         }
 
         result.stderr.use {
