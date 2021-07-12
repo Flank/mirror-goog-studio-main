@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "VERSION")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -31,4 +32,13 @@ filegroup(
     name = "agp_gradle_build_files",
     srcs = ["build.gradle"],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+maven_library(
+    name = "annotations_bzl",
+    srcs = glob(["src/main/java/**"]),
+    artifact = "com.android.tools:annotations:" + VERSION,
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/annotations",
+    visibility = ["//visibility:public"],
 )

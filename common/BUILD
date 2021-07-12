@@ -1,7 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_pom", "VERSION")
 load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -71,6 +72,27 @@ maven_pom(
     artifact = "common",
     group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
+)
+
+maven_library(
+    name = "common_bzl",
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
+    artifact = "com.android.tools:common:" + VERSION,
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/common",
+    resources = [
+        ":tools.common.resources",
+        ":version.properties",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations:annotations_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    ],
 )
 
 kotlin_test(

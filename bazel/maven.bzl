@@ -1,5 +1,64 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
+load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
+
+def generate_pom(
+        ctx,
+        group,
+        artifact,
+        version,
+        output_pom,
+        deps = [],
+        source = None,
+        export = False,
+        properties = None,
+        properties_files = None,
+        version_property = None,
+        exclusions = None):
+    inputs = []
+    args = []
+
+    # Input file to take as base
+    if source:
+        args += ["-i", source.path]
+        inputs += [source]
+
+    # Output file
+    args += ["-o", output_pom.path]
+
+    args += ["-x"] if export else []
+
+    # Overrides
+    if group:
+        args += ["--group", group]
+    if artifact:
+        args += ["--artifact", artifact]
+    if version:
+        args += ["--version", version]
+    if properties:
+        args += ["--properties", properties.path]
+        inputs += [properties]
+    if properties_files:
+        args += ["--properties", ":".join([file.path for file in properties_files])]
+        inputs += properties_files
+    if version_property:
+        args += ["--version_property", version_property]
+
+    # Exclusions
+    if exclusions:
+        for (dependency, exclusions) in exclusions.items():
+            args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
+
+    args += ["--deps", ":".join([dep.path for dep in deps])]
+    inputs += deps
+
+    ctx.actions.run(
+        mnemonic = "GenPom",
+        inputs = inputs,
+        outputs = [output_pom],
+        arguments = args,
+        executable = ctx.executable._pom,
+    )
 
 def _maven_pom_impl(ctx):
     # Contains both *.jar and *.aar files.
@@ -76,48 +135,19 @@ def _maven_pom_impl(ctx):
         deps_jars = ctx.attr.source.maven.deps.jars
         deps_clsjars = ctx.attr.source.maven.deps.clsjars
 
-    inputs = []
-    args = []
-
-    # Input file to take as base
-    if ctx.file.source:
-        args += ["-i", ctx.file.source.path]
-        inputs += [ctx.file.source]
-
-    # Output file
-    args += ["-o", ctx.outputs.pom.path]
-
-    args += ["-x"] if ctx.attr.export_pom else []
-
-    # Overrides
-    if ctx.attr.group:
-        args += ["--group", ctx.attr.group]
-    if ctx.attr.artifact:
-        args += ["--artifact", ctx.attr.artifact]
-    if ctx.attr.version:
-        args += ["--version", ctx.attr.version]
-    if ctx.attr.properties:
-        args += ["--properties", ctx.file.properties.path]
-        inputs += [ctx.file.properties]
-    if ctx.files.properties_files:
-        args += ["--properties", ":".join([file.path for file in ctx.files.properties_files])]
-        inputs += ctx.files.properties_files
-    if ctx.attr.version_property:
-        args += ["--version_property", ctx.attr.version_property]
-
-    # Exclusions
-    for (dependency, exclusions) in ctx.attr.exclusions.items():
-        args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
-
-    args += ["--deps", ":".join([dep.path for dep in ctx.files.deps])]
-    inputs += ctx.files.deps
-
-    ctx.actions.run(
-        mnemonic = "GenPom",
-        inputs = inputs,
-        outputs = [ctx.outputs.pom],
-        arguments = args,
-        executable = ctx.executable._pom,
+    generate_pom(
+        ctx,
+        source = ctx.file.source,
+        output_pom = ctx.outputs.pom,
+        export = ctx.attr.export_pom,
+        group = ctx.attr.group,
+        artifact = ctx.attr.artifact,
+        version = ctx.attr.version,
+        properties = ctx.file.properties if ctx.attr.properties else None,
+        properties_files = ctx.files.properties_files,
+        version_property = ctx.attr.version_property,
+        exclusions = ctx.attr.exclusions,
+        deps = ctx.files.deps,
     )
 
     return struct(maven = struct(
@@ -474,3 +504,174 @@ maven_repo_zip = rule(
     },
     implementation = _maven_repo_zip_impl,
 )
+
+# Rule set that supports both Java and Maven providers, still under development
+
+VERSION = "30.1.0-dev"
+
+MavenInfo = provider(fields = {
+    "pom": "A File referencing the pom",
+    "repo_path": "A String with the repo relative path",
+    "files": "The files of this artifact",
+    "transitive": "The transitive files of this artifact",
+})
+
+def _maven_artifact_impl(ctx):
+    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+    return [
+        DefaultInfo(files = depset(ctx.files.files)),
+        MavenInfo(
+            pom = ctx.file.pom,
+            files = ctx.files.files,
+            transitive = depset(direct = files, transitive = [d[MavenInfo].transitive for d in ctx.attr.deps]),
+        ),
+    ]
+
+_maven_artifact = rule(
+    implementation = _maven_artifact_impl,
+    attrs = {
+        "files": attr.label_list(allow_files = True),
+        "deps": attr.label_list(),
+        "pom": attr.label(allow_single_file = True),
+        "repo_path": attr.string(),
+    },
+)
+
+def maven_artifact(
+        name,
+        pom,
+        repo_path = "",
+        parent = None,
+        deps = [],
+        **kwargs):
+    _maven_artifact(
+        name = name,
+        pom = pom,
+        repo_path = repo_path,
+        files = native.glob([repo_path + "/**"]),
+        deps = ([parent] if parent else []) + deps,
+        **kwargs
+    )
+
+def _maven_import_impl(ctx):
+    infos = []
+    for jar in ctx.files.jars:
+        ijar = java_common.run_ijar(
+            actions = ctx.actions,
+            jar = jar,
+            java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+        )
+        infos.append(JavaInfo(
+            output_jar = jar,
+            compile_jar = ijar,
+        ))
+    runfiles = None
+
+    mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
+    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+
+    return struct(
+        providers = [
+            DefaultInfo(files = depset(ctx.files.jars), runfiles = runfiles),
+            MavenInfo(
+                pom = ctx.file.pom,
+                files = ctx.files.files,
+                transitive = depset(direct = files, transitive = [info.transitive for info in mavens]),
+            ),
+            java_common.merge(infos),
+        ],
+    )
+
+_maven_import = rule(
+    implementation = _maven_import_impl,
+    attrs = {
+        "jars": attr.label_list(allow_files = True),
+        "files": attr.label_list(allow_files = True),
+        "deps": attr.label_list(),
+        "repo_path": attr.string(),
+        "parent": attr.label(),
+        "pom": attr.label(allow_single_file = True),
+        "notice": attr.label(allow_single_file = True),
+        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+    },
+)
+
+# A java_import rule extended with pom and parent attributes for maven libraries.
+def maven_import(
+        name,
+        pom,
+        classifiers = [],
+        visibility = None,
+        jars = [],
+        repo_path = "",
+        parent = None,
+        classified_only = False,
+        **kwargs):
+    _maven_import(
+        name = name,
+        visibility = visibility,
+        jars = jars,
+        pom = pom,
+        repo_path = repo_path,
+        parent = parent,
+        files = native.glob([repo_path + "/**"]),
+        notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
+        tags = ["require_license"],
+        **kwargs
+    )
+
+def _maven_repository_impl(ctx):
+    rel_paths = []
+    files = []
+    for artifact in ctx.attr.artifacts:
+        if MavenInfo not in artifact:
+            fail("Maven repositories can only contain maven artifacts")
+        for d, f in artifact[MavenInfo].transitive.to_list():
+            files.append(f)
+            rel_paths.append((d + "/" + f.basename, f))
+
+    zipper_args = ["c", ctx.outputs.repo.path]
+    zipper_files = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
+    zipper_list = create_option_file(ctx, ctx.outputs.repo.basename + ".res.lst", zipper_files)
+    zipper_args += ["@" + zipper_list.path]
+    ctx.actions.run(
+        inputs = files + [zipper_list],
+        outputs = [ctx.outputs.repo],
+        executable = ctx.executable._zipper,
+        arguments = zipper_args,
+        progress_message = "Creating repository zip...",
+        mnemonic = "zipper",
+    )
+
+_maven_repository = rule(
+    attrs = {
+        "artifacts": attr.label_list(),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+    },
+    outputs = {
+        "repo": "%{name}.zip",
+    },
+    implementation = _maven_repository_impl,
+)
+
+def maven_repository(artifacts = [], **kwargs):
+    _maven_repository(
+        artifacts = artifacts,
+        **kwargs
+    )
+
+def maven_coordinate(coordinate):
+    parts = coordinate.split(":")
+    if len(parts) != 3:
+        print("Unsupported coordinate")
+    segments = parts[0].split(".") + [parts[1], parts[2]]
+    return struct(
+        group_id = parts[0],
+        artifact_id = parts[1],
+        version = parts[2],
+        repo_path = "/".join(segments),
+    )

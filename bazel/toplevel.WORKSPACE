@@ -97,3 +97,9 @@ local_repository(
     name = "yourkit_controller",
     path = "tools/base/yourkit-controller",
 )
+
+new_local_repository(
+    name = "maven",
+    path = "prebuilts/tools/common/m2/repository",
+    build_file = "//tools/base/bazel:BUILD.maven",
+)
