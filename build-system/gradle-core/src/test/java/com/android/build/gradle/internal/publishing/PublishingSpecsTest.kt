@@ -60,6 +60,7 @@ class PublishingSpecsTest {
             AndroidArtifacts.ArtifactType.RENDERSCRIPT,
             AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES,
             AndroidArtifacts.ArtifactType.SOURCES_JAR,
+            AndroidArtifacts.ArtifactType.JAVA_DOC_JAR,
         )
 
         val libraryOutputs = getVariantSpec(VariantTypeImpl.LIBRARY).outputs

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-24baf17e7ade6c2edbdc3c72e50491f0638c28683bc792d711f864083a3f3783
+47effc955d161009a4c38e938c9367522732f2b86b61994e9adc9de28cda2589
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -215,6 +215,7 @@ com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
 com.android.build.api.dsl.PublishingOptions
+com.android.build.api.dsl.PublishingOptions.withJavadocJar: void ()
 com.android.build.api.dsl.PublishingOptions.withSourcesJar: void ()
 com.android.build.api.dsl.SigningConfig
 com.android.build.api.dsl.SingleVariant implements com.android.build.api.dsl.PublishingOptions

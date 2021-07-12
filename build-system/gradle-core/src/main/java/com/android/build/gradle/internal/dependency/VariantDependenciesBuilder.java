@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.APK_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.JAVA_DOC_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
@@ -415,6 +416,7 @@ public class VariantDependenciesBuilder {
                     Category library = factory.named(Category.class, Category.LIBRARY);
                     Category documentation = factory.named(Category.class, Category.DOCUMENTATION);
                     DocsType sources = factory.named(DocsType.class, DocsType.SOURCES);
+                    DocsType javaDoc = factory.named(DocsType.class, DocsType.JAVADOC);
 
                     for (ComponentPublishingInfo component : variantPublish.getComponents()) {
 
@@ -503,6 +505,29 @@ public class VariantDependenciesBuilder {
                             elements.put(
                                     new PublishedConfigSpec(SOURCE_PUBLICATION, component),
                                     sourcePublication);
+                        }
+
+                        if (component.getWithJavadocJar()) {
+                            Configuration javaDocPublication =
+                                    createLibraryPublishingConfiguration(
+                                            configurations,
+                                            variantName
+                                                    + "Variant"
+                                                    + capitalizedComponentName
+                                                    + "JavaDocPublication",
+                                            capitalizedComponentName
+                                                    + "JavaDoc publication for"
+                                                    + variantName,
+                                            runtimeUsage,
+                                            jar,
+                                            bundling,
+                                            documentation,
+                                            javaDoc,
+                                            buildTypeAttribute,
+                                            flavorAttributes);
+                            elements.put(
+                                    new PublishedConfigSpec(JAVA_DOC_PUBLICATION, component),
+                                    javaDocPublication);
                         }
                     }
                 } else {

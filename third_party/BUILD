@@ -94,10 +94,78 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "com.fasterxml.jackson.core_jackson-core",
-    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-core.2.1.3",
+    name = "com.fasterxml.jackson.core_jackson-annotations",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-annotations.2.11.1",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.jackson.core_jackson-core",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-core.2.11.1",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.jackson.core_jackson-databind",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-databind.2.11.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.fasterxml.jackson.core_jackson-annotations",
+        ":com.fasterxml.jackson.core_jackson-core",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.jackson.dataformat_jackson-dataformat-xml",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.dataformat.jackson-dataformat-xml.2.11.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.fasterxml.jackson.core_jackson-annotations",
+        ":com.fasterxml.jackson.core_jackson-core",
+        ":com.fasterxml.jackson.core_jackson-databind",
+        ":com.fasterxml.jackson.module_jackson-module-jaxb-annotations",
+        ":com.fasterxml.woodstox_woodstox-core",
+        ":org.codehaus.woodstox_stax2-api",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.jackson.module_jackson-module-jaxb-annotations",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.module.jackson-module-jaxb-annotations.2.11.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.fasterxml.jackson.core_jackson-annotations",
+        ":com.fasterxml.jackson.core_jackson-core",
+        ":com.fasterxml.jackson.core_jackson-databind",
+        ":jakarta.activation_jakarta.activation-api",
+        ":jakarta.xml.bind_jakarta.xml.bind-api",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.jackson.module_jackson-module-kotlin",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.jackson.module.jackson-module-kotlin.2.11.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.fasterxml.jackson.core_jackson-annotations",
+        ":com.fasterxml.jackson.core_jackson-databind",
+        ":org.jetbrains.kotlin_kotlin-reflect",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.fasterxml.woodstox_woodstox-core",
+    export_artifact = "//prebuilts/tools/common/m2:com.fasterxml.woodstox.woodstox-core.6.2.1",
+    visibility = ["//visibility:public"],
+    exports = [":org.codehaus.woodstox_stax2-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1520,6 +1588,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.codehaus.woodstox_stax2-api",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.woodstox.stax2-api.4.2.1",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.easymock_easymock",
     export_artifact = "//prebuilts/tools/common/m2:org.easymock.easymock.3.3",
     visibility = ["//visibility:public"],
@@ -1721,6 +1797,24 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2:org.jetbrains.dokka.dokka-android-gradle-plugin.0.9.17-g004",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.dokka_dokka-gradle-plugin"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.jetbrains.dokka_dokka-core",
+    export_artifact = "//prebuilts/tools/common/m2:org.jetbrains.dokka.dokka-core.1.4.32",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        ":org.jetbrains_markdown-jvm",
+    ],
+    runtime_deps = [
+        ":com.fasterxml.jackson.dataformat_jackson-dataformat-xml",
+        ":com.fasterxml.jackson.module_jackson-module-kotlin",
+        ":org.jetbrains.kotlin_kotlin-reflect",
+        ":org.jetbrains.kotlinx_kotlinx-coroutines-core-jvm",
+        ":org.jsoup_jsoup",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -2025,10 +2119,32 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.jetbrains.kotlinx_kotlinx-coroutines-core-jvm",
+    export_artifact = "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-coroutines-core-jvm.1.4.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+        ":org.jetbrains.kotlin_kotlin-stdlib-common",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.jetbrains_annotations",
     export_artifact = "//prebuilts/tools/common/m2:org.jetbrains.annotations.13.0",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.jetbrains_markdown-jvm",
+    export_artifact = "//prebuilts/tools/common/m2:org.jetbrains.markdown-jvm.0.2.1",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+        ":org.jetbrains.kotlin_kotlin-stdlib-common",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -2042,7 +2158,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jsoup_jsoup",
-    export_artifact = "//prebuilts/tools/common/m2:org.jsoup.jsoup.1.6.3",
+    export_artifact = "//prebuilts/tools/common/m2:org.jsoup.jsoup.1.13.1",
     visibility = ["//visibility:public"],
     exports = [],
 )

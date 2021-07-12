@@ -204,6 +204,7 @@ maven_repo(
         "//tools/base/third_party:org.jdom_jdom2",
         "//tools/base/third_party:org.jetbrains.dokka_dokka-android-gradle-plugin",
         "//tools/base/third_party:org.jetbrains.dokka_dokka-gradle-plugin",
+        "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
         "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
         "//tools/base/third_party:org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions",

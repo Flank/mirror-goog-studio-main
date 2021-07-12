@@ -59,6 +59,9 @@ InternalArtifactType<T : FileSystemLocation>(
 
     object SOURCE_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    object JAVA_DOC_DIR: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object JAVA_DOC_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
+
     // Dex archive artifacts for project.
     object PROJECT_DEX_ARCHIVE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // Dex archive artifacts for sub projects.

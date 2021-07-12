@@ -26,7 +26,8 @@ data class ComponentPublishingInfo(
     val type: AbstractPublishing.Type,
     val attributesConfig: AttributesConfig? = null,
     val isClassifierRequired: Boolean = false,
-    val withSourcesJar: Boolean = false
+    val withSourcesJar: Boolean = false,
+    val withJavadocJar: Boolean = false
 ) {
 
     /**

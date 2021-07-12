@@ -185,11 +185,17 @@ public class VariantScopeImpl implements VariantScope {
                     String classifier = null;
                     boolean isSourcePublication =
                             configType == PublishedConfigType.SOURCE_PUBLICATION;
+                    boolean isJavaDocPublication =
+                            configType == PublishedConfigType.JAVA_DOC_PUBLICATION;
                     if (configSpec.isClassifierRequired()) {
                         if (isSourcePublication) {
                             classifier =
                                     componentIdentity.getName()
                                             + StringHelper.usLocaleCapitalize(DocsType.SOURCES);
+                        } else if (isJavaDocPublication) {
+                            classifier =
+                                    componentIdentity.getName()
+                                            + StringHelper.usLocaleCapitalize(DocsType.JAVADOC);
                         } else {
                             classifier = componentIdentity.getName();
                         }
@@ -197,6 +203,8 @@ public class VariantScopeImpl implements VariantScope {
                         classifier = TestFixturesUtil.testFixturesClassifier;
                     } else if (isSourcePublication) {
                         classifier = DocsType.SOURCES;
+                    } else if (isJavaDocPublication) {
+                        classifier = DocsType.JAVADOC;
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {

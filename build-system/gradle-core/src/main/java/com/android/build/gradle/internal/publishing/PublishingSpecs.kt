@@ -212,6 +212,7 @@ class PublishingSpecs {
                 publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
                 source(InternalArtifactType.SOURCE_JAR, ArtifactType.SOURCES_JAR)
+                javaDoc(InternalArtifactType.JAVA_DOC_JAR, ArtifactType.JAVA_DOC_JAR)
 
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
@@ -351,6 +352,7 @@ class PublishingSpecs {
         fun reverseMetadata(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
         fun publish(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
         fun source(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
+        fun javaDoc(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
     }
 }
 
@@ -363,6 +365,9 @@ private val API_AND_RUNTIME_PUBLICATION: ImmutableList<PublishedConfigType> =
     ImmutableList.of(API_PUBLICATION, RUNTIME_PUBLICATION)
 private val SOURCE_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
     PublishedConfigType.SOURCE_PUBLICATION
+)
+private val JAVA_DOC_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
+    PublishedConfigType.JAVA_DOC_PUBLICATION
 )
 private val APK_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
     PublishedConfigType.APK_PUBLICATION)
@@ -455,6 +460,10 @@ private open class VariantSpecBuilderImpl (
         throw RuntimeException("This VariantSpecBuilder does not support source. VariantType is $variantType")
     }
 
+    override fun javaDoc(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        throw RuntimeException("This VariantSpecBuilder does not support javaDoc. VariantType is $variantType")
+    }
+
     fun toSpec(parentSpec: PublishingSpecs.VariantSpec? = null): PublishingSpecs.VariantSpec {
         return VariantPublishingSpecImpl(
                 variantType,
@@ -479,6 +488,10 @@ private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBu
 
     override fun source(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, SOURCE_PUBLICATION))
+    }
+
+    override fun javaDoc(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, JAVA_DOC_PUBLICATION))
     }
 }
 
