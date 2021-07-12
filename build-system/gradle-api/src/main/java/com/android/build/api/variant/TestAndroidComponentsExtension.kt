@@ -17,14 +17,13 @@
 package com.android.build.api.variant
 
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.AndroidComponentsExtension
-import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantBuilder
 
 /**
- * Extension for Test module variant.
+ * Extension for the Android Test Gradle Plugin components.
  *
- * A test module is created when a build script is applying the 'com.android.test' plugin.
+ * This is the `androidComponents` block when the `com.android.test` plugin is applied.
+ *
+ * Only the Android Gradle Plugin should create instances of interfaces in com.android.build.api.variant.
  */
 interface TestAndroidComponentsExtension:
     AndroidComponentsExtension<TestExtension, TestVariantBuilder, TestVariant>
