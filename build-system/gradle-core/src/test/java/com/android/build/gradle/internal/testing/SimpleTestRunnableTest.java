@@ -74,6 +74,7 @@ public class SimpleTestRunnableTest {
 
     private boolean animationsDisabled;
     private String testedApplicationId;
+    private String instrumentationTargetPackageId;
     @NonNull private String flavorName;
     @NonNull private File testApk;
     @NonNull private List<File> testDirectories;
@@ -87,6 +88,7 @@ public class SimpleTestRunnableTest {
         logger = new MockLog();
 
         applicationId = "com.example.app";
+        instrumentationTargetPackageId = "com.example.app";
         instrumentationRunner = "android.support.test.runner.AndroidJUnitRunner";
         flavorName = "";
         animationsDisabled = false;
@@ -138,6 +140,7 @@ public class SimpleTestRunnableTest {
     @Test
     public void checkAdditionalTestOutputWith15() throws Exception {
         testedApplicationId = "com.example.app.test";
+        instrumentationTargetPackageId = "com.example.app.test";
 
         when(deviceConnector.getApiLevel()).thenReturn(15);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
@@ -170,6 +173,7 @@ public class SimpleTestRunnableTest {
     @Test
     public void checkAdditionalTestOutputWith16() throws Exception {
         testedApplicationId = "com.example.app.test";
+        instrumentationTargetPackageId = "com.example.app.test";
 
         when(deviceConnector.getApiLevel()).thenReturn(16);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
@@ -244,6 +248,7 @@ public class SimpleTestRunnableTest {
     @Test
     public void checkAdditionalTestOutputWith29() throws Exception {
         testedApplicationId = "com.example.app.test";
+        instrumentationTargetPackageId = "com.example.app.test";
 
         when(deviceConnector.getApiLevel()).thenReturn(29);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
@@ -535,6 +540,7 @@ public class SimpleTestRunnableTest {
         return new StaticTestData(
                 applicationId,
                 testedApplicationId,
+                instrumentationTargetPackageId,
                 instrumentationRunner,
                 instrumentationRunnerArguments,
                 animationsDisabled,

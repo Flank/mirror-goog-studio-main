@@ -24,11 +24,21 @@ import java.io.File
 /**
  * Final values for the [TestData] that can be passed to test runners. This should not be used as
  * task input.
+ *
+ * @property applicationId the application ID of the test APK.
+ * @property testedApplicationId the application ID of the APK under testing. This can be null if
+ *     there is no such an APK. For example, android-test in library module does not have tested-
+ *     application.
+ * @property instrumentationTargetPackageId the instrumentation target application id. This is
+ *     same value to [applicationId] if it is a self-instrumeting test, otherwise
+ *     [testedApplicationId].
  */
 data class StaticTestData(
     val applicationId: String,
 
     val testedApplicationId: String?,
+
+    val instrumentationTargetPackageId: String,
 
     val instrumentationRunner: String,
 

@@ -69,6 +69,7 @@ class UtpConfigFactoryTest {
     private val testData = StaticTestData(
         testedApplicationId = "com.example.application",
         applicationId = "com.example.application.test",
+        instrumentationTargetPackageId = "com.example.application",
         instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner",
         instrumentationRunnerArguments = emptyMap(),
         animationsDisabled = false,

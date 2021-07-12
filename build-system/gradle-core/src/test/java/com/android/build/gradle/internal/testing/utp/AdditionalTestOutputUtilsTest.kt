@@ -53,7 +53,7 @@ class AdditionalTestOutputUtilsTest {
 
     @Before
     fun setupMocks() {
-        `when`(testData.testedApplicationId).thenReturn("testedApplicationId")
+        `when`(testData.instrumentationTargetPackageId).thenReturn("testedApplicationId")
         `when`(device.executeShellCommand(eq(QUERY), any(), anyLong(), any())).then {
             val receiver: MultiLineReceiver = it.getArgument(1)
             receiver.processNewLines(arrayOf("Row: 0 _data=/storage/emulated/0/Android"))

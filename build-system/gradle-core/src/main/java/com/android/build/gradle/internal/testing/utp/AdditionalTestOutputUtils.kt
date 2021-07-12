@@ -49,7 +49,7 @@ fun findAdditionalTestOutputDirectoryOnDevice(
         // allows separate shell processes and instrumented tests to both have read/write access
         // without needing to apply external legacy storage flags (which were removed in API 30)
         // or --no-isolated-storage.
-        return "/sdcard/Android/media/${testData.testedApplicationId}/additional_test_output"
+        return "/sdcard/Android/media/${testData.instrumentationTargetPackageId}/additional_test_output"
     }
 
     return requireNotNull(queryAdditionalTestOutputLocation(device, testData))
@@ -89,5 +89,5 @@ private fun queryAdditionalTestOutputLocation(
     )
     receiver.flush()
 
-    return "${result}/data/${testData.testedApplicationId}/files/test_data"
+    return "${result}/data/${testData.instrumentationTargetPackageId}/files/test_data"
 }
