@@ -1212,28 +1212,6 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
         private const val DEFAULT_HANDLE_PROFILING = false
         private const val DEFAULT_FUNCTIONAL_TEST = false
 
-        /**
-         * Fills a list of Object from a given list of ClassField only if the name isn't in a set. Each
-         * new item added adds its name to the list.
-         *
-         * @param outList the out list
-         * @param usedFieldNames the list of field names already in the list
-         * @param list the list to copy items from
-         */
-        private fun fillFieldList(
-            outList: MutableList<Any>,
-            usedFieldNames: MutableSet<String>,
-            list: Collection<ClassField>
-        ) {
-            for (f in list) {
-                val name = f.name
-                if (!usedFieldNames.contains(name)) {
-                    usedFieldNames.add(f.name)
-                    outList.add(f)
-                }
-            }
-        }
-
         private fun getKey(fullOption: String): String {
             val pos = fullOption.lastIndexOf('=')
             return if (pos == -1) {
