@@ -220,11 +220,6 @@ open class ApplicationVariantImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
-    override val needsMainDexListForBundle: Boolean
-        get() = (variantType.isBaseModule
-                    && globalScope.hasDynamicFeatures()
-                    && dexingType.needsMainDexList)
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
