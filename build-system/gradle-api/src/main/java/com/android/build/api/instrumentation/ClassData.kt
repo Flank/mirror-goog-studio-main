@@ -16,12 +16,9 @@
 
 package com.android.build.api.instrumentation
 
-import org.gradle.api.Incubating
-
 /**
  * Data about the class to be instrumented.
  */
-@Incubating
 interface ClassData {
     /**
      * Fully qualified name of the class.

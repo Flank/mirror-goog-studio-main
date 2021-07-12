@@ -16,8 +16,7 @@
 
 package com.android.build.api.instrumentation
 
-import com.android.build.api.component.Component
-import org.gradle.api.Incubating
+import com.android.build.api.variant.Component
 import org.objectweb.asm.ClassWriter
 
 /**
@@ -26,7 +25,6 @@ import org.objectweb.asm.ClassWriter
  *
  * The default mode is to [copy frames][FramesComputationMode.COPY_FRAMES].
  */
-@Incubating
 enum class FramesComputationMode {
     /**
      * Stack frames and the maximum stack sizes will be copied from the original classes to the

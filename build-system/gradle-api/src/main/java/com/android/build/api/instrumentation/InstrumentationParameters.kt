@@ -16,7 +16,6 @@
 
 package com.android.build.api.instrumentation
 
-import org.gradle.api.Incubating
 import org.gradle.api.model.ObjectFactory
 import java.io.Serializable
 
@@ -52,10 +51,7 @@ import java.io.Serializable
  *  })
  * ```
  */
-@Incubating
 interface InstrumentationParameters : Serializable
 {
-
-    @Incubating
     class None : InstrumentationParameters
 }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-02d7e31d48b9321ccb437642a82f14b443672d7d76ce4e991bfca8c6de30f5b3
+24baf17e7ade6c2edbdc3c72e50491f0638c28683bc792d711f864083a3f3783
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -268,6 +268,30 @@ com.android.build.api.extension.VariantSelector.withBuildType: com.android.build
 com.android.build.api.extension.VariantSelector.withFlavor: com.android.build.api.extension.VariantSelector (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.extension.VariantSelector.withName: com.android.build.api.extension.VariantSelector (java.lang.String)
 com.android.build.api.extension.VariantSelector.withName: com.android.build.api.extension.VariantSelector (java.util.regex.Pattern)
+com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
+com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassContext, org.objectweb.asm.ClassVisitor)
+com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()
+com.android.build.api.instrumentation.AsmClassVisitorFactory.getParameters: org.gradle.api.provider.Property<ParametersT> ()
+com.android.build.api.instrumentation.AsmClassVisitorFactory.isInstrumentable: boolean (com.android.build.api.instrumentation.ClassData)
+com.android.build.api.instrumentation.ClassContext
+com.android.build.api.instrumentation.ClassContext.getCurrentClassData: com.android.build.api.instrumentation.ClassData ()
+com.android.build.api.instrumentation.ClassContext.loadClassData: com.android.build.api.instrumentation.ClassData (java.lang.String)
+com.android.build.api.instrumentation.ClassData
+com.android.build.api.instrumentation.ClassData.getClassAnnotations: java.util.List<java.lang.String> ()
+com.android.build.api.instrumentation.ClassData.getClassName: java.lang.String ()
+com.android.build.api.instrumentation.ClassData.getInterfaces: java.util.List<java.lang.String> ()
+com.android.build.api.instrumentation.ClassData.getSuperClasses: java.util.List<java.lang.String> ()
+com.android.build.api.instrumentation.FramesComputationMode extends java.lang.Enum
+com.android.build.api.instrumentation.FramesComputationMode.valueOf: com.android.build.api.instrumentation.FramesComputationMode (java.lang.String)
+com.android.build.api.instrumentation.FramesComputationMode.values: com.android.build.api.instrumentation.FramesComputationMode[] ()
+com.android.build.api.instrumentation.InstrumentationContext implements java.io.Serializable
+com.android.build.api.instrumentation.InstrumentationContext.getApiVersion: org.gradle.api.provider.Property<java.lang.Integer> ()
+com.android.build.api.instrumentation.InstrumentationParameters implements java.io.Serializable
+com.android.build.api.instrumentation.InstrumentationParameters$None implements com.android.build.api.instrumentation.InstrumentationParameters
+com.android.build.api.instrumentation.InstrumentationParameters$None.<init>: com.android.build.api.instrumentation.InstrumentationParameters$None ()
+com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enum
+com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
+com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()

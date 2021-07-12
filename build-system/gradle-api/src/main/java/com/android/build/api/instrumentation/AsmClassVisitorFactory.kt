@@ -16,7 +16,6 @@
 
 package com.android.build.api.instrumentation
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
 import org.objectweb.asm.ClassVisitor
@@ -28,11 +27,7 @@ import java.io.Serializable
  * The implementation of this interface must be an abstract class where the [parameters] and
  * [instrumentationContext] are left unimplemented. The class must have an empty constructor which
  * will be used to construct the factory object.
- *
- * This API is experimental and subject to breaking change and we strongly suggest you don't publish
- * plugins that depend on it yet.
  */
-@Incubating
 interface AsmClassVisitorFactory<ParametersT : InstrumentationParameters> : Serializable {
 
     /**
@@ -77,7 +72,7 @@ interface AsmClassVisitorFactory<ParametersT : InstrumentationParameters> : Seri
     ): ClassVisitor
 
     /**
-     * Whether or not the factory wants to instrument the class with the given [classData].
+     * Whether the factory wants to instrument the class with the given [classData].
      *
      * If returned true, [createClassVisitor] will be called and the returned class visitor will
      * visit the class.

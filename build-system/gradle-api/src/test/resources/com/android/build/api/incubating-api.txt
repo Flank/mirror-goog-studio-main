@@ -764,30 +764,6 @@ com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolea
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.extension.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
-com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
-com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassContext, org.objectweb.asm.ClassVisitor)
-com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()
-com.android.build.api.instrumentation.AsmClassVisitorFactory.getParameters: org.gradle.api.provider.Property<ParametersT> ()
-com.android.build.api.instrumentation.AsmClassVisitorFactory.isInstrumentable: boolean (com.android.build.api.instrumentation.ClassData)
-com.android.build.api.instrumentation.ClassContext
-com.android.build.api.instrumentation.ClassContext.getCurrentClassData: com.android.build.api.instrumentation.ClassData ()
-com.android.build.api.instrumentation.ClassContext.loadClassData: com.android.build.api.instrumentation.ClassData (java.lang.String)
-com.android.build.api.instrumentation.ClassData
-com.android.build.api.instrumentation.ClassData.getClassAnnotations: java.util.List<java.lang.String> ()
-com.android.build.api.instrumentation.ClassData.getClassName: java.lang.String ()
-com.android.build.api.instrumentation.ClassData.getInterfaces: java.util.List<java.lang.String> ()
-com.android.build.api.instrumentation.ClassData.getSuperClasses: java.util.List<java.lang.String> ()
-com.android.build.api.instrumentation.FramesComputationMode extends java.lang.Enum
-com.android.build.api.instrumentation.FramesComputationMode.valueOf: com.android.build.api.instrumentation.FramesComputationMode (java.lang.String)
-com.android.build.api.instrumentation.FramesComputationMode.values: com.android.build.api.instrumentation.FramesComputationMode[] ()
-com.android.build.api.instrumentation.InstrumentationContext implements java.io.Serializable
-com.android.build.api.instrumentation.InstrumentationContext.getApiVersion: org.gradle.api.provider.Property<java.lang.Integer> ()
-com.android.build.api.instrumentation.InstrumentationParameters implements java.io.Serializable
-com.android.build.api.instrumentation.InstrumentationParameters$None implements com.android.build.api.instrumentation.InstrumentationParameters
-com.android.build.api.instrumentation.InstrumentationParameters$None.<init>: com.android.build.api.instrumentation.InstrumentationParameters$None ()
-com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enum
-com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
-com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
