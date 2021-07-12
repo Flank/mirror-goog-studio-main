@@ -2140,7 +2140,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     DexMergingTask.CreationAction(
                             creationConfig,
                             DexMergingAction.MERGE_EXTERNAL_LIBS,
-                            DexingType.NATIVE_MULTIDEX,
+                            dexingType,
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             if (produceSeparateOutputs)
