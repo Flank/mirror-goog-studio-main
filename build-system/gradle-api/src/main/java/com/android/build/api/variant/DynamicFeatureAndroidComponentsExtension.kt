@@ -19,10 +19,11 @@ package com.android.build.api.variant
 import com.android.build.api.dsl.DynamicFeatureExtension
 
 /**
- * Extension for Dynamic Feature module variant.
+ * Extension for the Android Dynamic Feature Gradle Plugin components.
  *
- * A dynamic feature module is created when a build script is applying the
- * 'com.android.dynamic-feature' plugin.
+ * This is the `androidComponents` block when the `com.android.dynamic-feature` plugin is applied.
+ *
+ * Only the Android Gradle Plugin should create instances of interfaces in com.android.build.api.variant.
  */
 interface DynamicFeatureAndroidComponentsExtension:
     AndroidComponentsExtension<DynamicFeatureExtension, DynamicFeatureVariantBuilder, DynamicFeatureVariant>

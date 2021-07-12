@@ -26,6 +26,10 @@ interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFix
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
+     *
+     * Setting this value will override anything set via the DSL with
+     * [com.android.build.api.dsl.ApplicationBaseFlavor.applicationId], and
+     * [com.android.build.api.dsl.ApplicationVariantDimension.applicationIdSuffix]
      */
     override val applicationId: Property<String>
 
