@@ -95,6 +95,11 @@ class UtpTestRunner @JvmOverloads constructor(
                                         retentionConfig,
                                         coverageDir,
                                         useOrchestrator,
+                                        if (additionalTestOutputEnabled) {
+                                            additionalTestOutputDir
+                                        } else {
+                                            null
+                                        },
                                         resultListenerServerMetadata.serverPort,
                                         resultListenerServerMetadata.clientCert,
                                         resultListenerServerMetadata.clientPrivateKey,

@@ -20,6 +20,7 @@ package com.android.aaptcompiler
 import com.android.aaptcompiler.proto.serializeTableToPb
 import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
+import com.android.utils.FileUtils
 import java.io.File
 
 private const val VALUES_DIRECTORY_PREFIX = "values"
@@ -36,8 +37,11 @@ private const val PNG_EXTENSION = "png"
  * @param visibility The visibility of resources in the given file to process. If specified, then
  *   compilation of table files will fail if either the "public" or "public group" tags are
  *   encountered.
+ * @param requirePngCrunching whether PNG file crunching is enabled
  * @param pseudolocalize Whether or not the pseudolocales en-XA and ar-XB are generated for default
  *   string resources.
+ * @param partialRFile file to output symbols defined in the resource file (currently only
+ *   supported for non-raw XML files (e.g. values or layouts) to match AAPT2's behaviour)
  * @param legacyMode Whether or not to error or warn on positional args not being specified in a
  *   translatable string with parameters.
  * @param verbose Whether or not to show verbose logs.
@@ -48,6 +52,7 @@ data class ResourceCompilerOptions(
   val visibility: ResourceVisibility? = null,
   val requirePngCrunching: Boolean = false,
   val pseudolocalize: Boolean = false,
+  val partialRFile: File? = null,
   val legacyMode: Boolean = false,
   val verbose: Boolean = false,
   val sourcePath: String? = null)
@@ -199,9 +204,49 @@ private fun compileTable(
   val container = Container(outputFile.outputStream(), 1)
   val pbTable = serializeTableToPb(table)
 
-  // TODO(b/132800341): write R.txt
-
   container.addResTableEntry(pbTable)
+
+  if (options.partialRFile != null) {
+    val builder = StringBuilder()
+    table.packages.forEach { pkg ->
+      // Only print resources defined locally, e.g. don't write android attributes
+      if (pkg.name.isEmpty()) {
+        pkg.groups.forEach { group ->
+          val javaType = if (group.type == AaptResourceType.STYLEABLE) "int[]" else "int"
+          group.entries.forEach { entry ->
+            val visibility = getVisibility(entry.value.values, group.type)
+            builder.appendln("${visibility.getName()} $javaType ${group.type.tagName} ${entry.key}")
+            if (group.type == AaptResourceType.STYLEABLE) {
+                // We also need to write down styleable children (entries)
+                group.getStyleable(entry).entries.forEach {
+                    val childPackage = if (!it.name.pck.isNullOrEmpty()) "_${it.name.pck}" else ""
+                    // styleables and their children are always public
+                    builder.appendln("public int styleable ${entry.key}${childPackage}_${it.name.entry}")
+              }
+            }
+          }
+        }
+      }
+      FileUtils.writeToFile(options.partialRFile, builder.toString())
+    }
+  }
+}
+
+private fun getVisibility(values: Collection<ResourceEntry>, type: AaptResourceType): ResourceVisibility {
+    // all declare styleables need to be marked as public so they're visible in the R classes
+    if (type == AaptResourceType.STYLEABLE) return ResourceVisibility.PUBLIC
+    var foundPublic = false
+    var foundPrivate = false
+    values.forEach {
+        // We only care about public and private since only these can clash
+        if (it.visibility.level == ResourceVisibility.PUBLIC) foundPublic = true
+        else if (it.visibility.level == ResourceVisibility.PRIVATE) foundPrivate = true
+    }
+    if (foundPublic && foundPrivate)
+        error("Resource cannot be both public and private: ${type.tagName} ${values.first().name}")
+    if (foundPublic) return ResourceVisibility.PUBLIC
+    if (foundPrivate) return ResourceVisibility.PRIVATE
+    return ResourceVisibility.PRIVATE_XML_ONLY // default
 }
 
 /**
@@ -227,6 +272,11 @@ private fun compileFile(
 
     val container = Container(outputFile.outputStream(), 1)
     container.addFileEntry(it, resourceFile)
+
+    if (options.partialRFile != null) {
+      val partialR = "default int ${pathData.type!!.tagName} ${pathData.name}"
+      FileUtils.writeToFile(options.partialRFile, partialR)
+    }
   }
 }
 
@@ -274,6 +324,15 @@ private fun compileXml(
 
     for (resource in xmlProcessor.xmlResources) {
       container.addXmlEntry(resource)
+    }
+
+    if (options.partialRFile != null) {
+      val builder = StringBuilder()
+      builder.appendln("default int ${pathData.type.tagName} ${pathData.name}")
+      fileToProcess.exportedSymbols.forEach { id ->
+        builder.appendln("default int id ${id.name.entry}")
+      }
+      FileUtils.writeToFile(options.partialRFile, builder.toString())
     }
   }
 }

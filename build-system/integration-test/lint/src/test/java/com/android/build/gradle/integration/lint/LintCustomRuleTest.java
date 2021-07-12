@@ -51,8 +51,8 @@ public class LintCustomRuleTest {
     @Test
     public void checkCustomLint() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug");
-        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
+        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
@@ -62,7 +62,7 @@ public class LintCustomRuleTest {
     public void checkCustomLintFromCompileOnlyDependency() throws Exception {
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").getBuildFile(), "implementation", "compileOnly");
-        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);

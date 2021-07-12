@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.tasks
 
+import android.databinding.tool.DataBindingBuilder
+import com.android.build.api.component.impl.AnnotationProcessorImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
@@ -123,7 +125,8 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
                     )
             }
             task.annotationProcessorClassNames.setDisallowChanges(
-                creationConfig.variantDslInfo.javaCompileOptions.annotationProcessorOptions.classNames
+                (creationConfig.javaCompilation.annotationProcessor as AnnotationProcessorImpl)
+                    .finalListOfClassNames
             )
         }
     }

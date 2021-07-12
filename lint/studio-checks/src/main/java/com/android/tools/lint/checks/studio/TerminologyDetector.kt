@@ -153,7 +153,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
 
             private fun checkDeclaration(node: UDeclaration, name: String?) {
                 name ?: return
-                checkCommentStateMachine(context, node, name)
+                checkCommentStateMachine(context, JavaContext.findNameElement(node as UElement) ?: node, name)
                 for (comment in node.comments) {
                     val contents = comment.text
                     if (checkedComments.add(contents)) {

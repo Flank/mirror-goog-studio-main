@@ -19,7 +19,7 @@ package com.android.build.api.dsl
 /**
  * Multi variant publishing options.
  */
-interface MultipleVariants {
+interface MultipleVariants : PublishingOptions {
 
     /**
      * Publish all the variants to the component.

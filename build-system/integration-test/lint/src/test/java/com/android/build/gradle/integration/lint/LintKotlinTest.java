@@ -64,6 +64,9 @@ public class LintKotlinTest {
     public void checkFindErrors() throws Exception {
         getExecutor().expectFailure().run("clean", ":app:lintDebug");
         GradleBuildResult result = getExecutor().expectFailure().run(":app:lintDebug");
+        assertThat(result.getFailedTasks()).contains(":app:lintDebug");
+        assertThat(result.getUpToDateTasks()).contains(":app:lintReportDebug");
+        assertThat(result.getFailedTasks()).doesNotContain(":app:lintReportDebug");
 
         Throwable exception = result.getException();
         while (exception.getCause() != null && exception.getCause() != exception) {

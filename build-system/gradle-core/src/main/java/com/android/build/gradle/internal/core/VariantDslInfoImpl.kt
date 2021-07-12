@@ -954,10 +954,12 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
         get() = variantType.isAar // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is debuggable.
 
     /**
-     * Returns if the property passed by the IDE is set, the minimum SDK version or
-     * null if not.
+     * Returns the API to which device/emulator we're deploying via the IDE or null if not.
+     * Can be used to optimize some build steps when deploying via the IDE (for testing).
+     *
+     * This has no relation with targetSdkVersion from build.gradle/manifest.
      */
-    override val minSdkVersionFromIDE: Int? =
+    override val targetDeployApiFromIDE: Int? =
         dslServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
 
     /**

@@ -93,6 +93,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Bug 178810169 */
             TaskInfo(DID_WORK, "lintVitalAnalyze", "", listOf("Release")),
+            /* Intentionally not cacheable. */
+            TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
             /* b/181142260 */
             TaskInfo(DID_WORK, "merge", "JavaResource", listOf("Debug", "Release")),
             /* Bug 141301405 */

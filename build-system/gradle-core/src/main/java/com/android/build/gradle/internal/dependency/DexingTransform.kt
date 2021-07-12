@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
+import kotlin.math.max
 
 abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : TransformAction<T> {
 
@@ -324,7 +325,8 @@ fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConf
 
 fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel(),
+        minSdk = creationConfig.minSdkVersion.getFeatureLevel(),
+        targetDeploySdk = creationConfig.targetDeployApi.getFeatureLevel(),
         isDebuggable = creationConfig.debuggable,
         enableDesugaring =
             creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
@@ -341,6 +343,7 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
 
 data class DexingArtifactConfiguration(
     private val minSdk: Int,
+    private val targetDeploySdk: Int,
     private val isDebuggable: Boolean,
     private val enableDesugaring: Boolean,
     private val enableCoreLibraryDesugaring: Boolean,
@@ -350,7 +353,9 @@ data class DexingArtifactConfiguration(
     private val useTransformInstrumentation: Boolean
 ) {
 
-    private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
+    // If we want to do desugaring and our minSdk (or the API level of the device we're deploying
+    // to) is lower than N then we need additional classpaths in order to proper do the desugaring.
+    private val needsClasspath = enableDesugaring && targetDeploySdk < AndroidVersion.VersionCodes.N
 
     fun registerTransform(
         projectName: String,
@@ -375,8 +380,8 @@ data class DexingArtifactConfiguration(
                 }
             }
             // There are 2 transform flows for DEX:
-            //   1. CLASSES_DIR -> CLASSES -> DEX
-            //   2. CLASSES_JAR -> CLASSES -> DEX
+            //   1. (JACOCO_)CLASSES_DIR -> (JACOCO_)CLASSES -> DEX
+            //   2. (JACOCO_)CLASSES_JAR -> (JACOCO_)CLASSES -> DEX
             //
             // For incremental dexing, when requesting DEX the consumer will indicate a
             // preference for CLASSES_DIR over CLASSES_JAR (see DexMergingTask), otherwise
@@ -395,14 +400,19 @@ data class DexingArtifactConfiguration(
             // Therefore, to ensure correctness in all cases, we transform CLASSES to DEX only
             // when dexing does not require a classpath. Otherwise, we transform CLASSES_JAR to
             // DEX directly so that CLASSES_DIR will not be selected.
+            //
+            // In the case that the JacocoTransform is executed, the Jacoco equivalent artifact is
+            // used. These artifacts are the same as CLASSES, CLASSES_JAR and ASM_INSTRUMENTED_JARS,
+            // but they have been offline instrumented by Jacoco and include Jacoco dependencies.
             val inputArtifact: AndroidArtifacts.ArtifactType =
-                if (isCoverageEnabled
-                    && useTransformInstrumentation
-                    && asmTransformedVariant == null) {
-                    if (!needsClasspath) {
-                        AndroidArtifacts.ArtifactType.JACOCO_CLASSES
-                    } else {
-                        AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                if (isCoverageEnabled && useTransformInstrumentation) {
+                    when {
+                        asmTransformedVariant != null ->
+                            AndroidArtifacts.ArtifactType.JACOCO_ASM_INSTRUMENTED_JARS
+                        !needsClasspath ->
+                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES
+                        else ->
+                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
                     }
                 } else {
                     when {

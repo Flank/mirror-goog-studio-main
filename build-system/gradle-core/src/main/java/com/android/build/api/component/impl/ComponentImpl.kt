@@ -26,6 +26,7 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
@@ -127,11 +128,17 @@ abstract class ComponentImpl(
         asmClassVisitorsRegistry.setAsmFramesComputationMode(mode)
     }
 
+    override val javaCompilation: JavaCompilation =
+        JavaCompilationImpl(
+            variantDslInfo.javaCompileOptions,
+            buildFeatures.dataBinding,
+            internalServices)
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val asmApiVersion = org.objectweb.asm.Opcodes.ASM7
+    override val asmApiVersion = org.objectweb.asm.Opcodes.ASM9
 
     // this is technically a public API for the Application Variant (only)
     override val outputs: VariantOutputList
@@ -747,18 +754,11 @@ abstract class ComponentImpl(
                 )
             }
         } else {
-            val usingJacocoTransform = variantDslInfo.isTestCoverageEnabled &&
-                    services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
             variantDependencies.getArtifactFileCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 scope,
-                if (usingJacocoTransform) {
-                    AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
-                } else {
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR
-                }
-           )
-
+                AndroidArtifacts.ArtifactType.CLASSES_JAR
+            )
         }
     }
 

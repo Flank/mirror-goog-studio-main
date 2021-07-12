@@ -1000,7 +1000,8 @@ public class TestLintTask {
                 TestLintClient client = runner.createClient();
                 client.task = this;
                 List<JarFileIssueRegistry> registries =
-                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules), null);
+                        JarFileIssueRegistry.Factory.get(
+                                client, Arrays.asList(customRules), null, null);
                 IssueRegistry[] array = registries.toArray(new IssueRegistry[0]);
                 IssueRegistry all = JarFileIssueRegistry.Factory.join(array);
                 return checkedIssues = all.getIssues();

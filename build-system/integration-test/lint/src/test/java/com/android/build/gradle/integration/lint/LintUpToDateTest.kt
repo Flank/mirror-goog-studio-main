@@ -53,19 +53,22 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
     fun disableAbortOnError() {
         project.getSubproject(":app").buildFile
             .appendText("\nandroid.lintOptions.abortOnError=false\n")
-        project.executor().run(":app:cleanLintDebug")
+        project.executor().run(":app:clean")
     }
 
     @Test
     fun checkLintUpToDate() {
         val firstRun = getExecutor().run(":app:lintDebug")
 
-        assertThat(firstRun.getTask(":app:lintDebug")).didWork()
+        assertThat(firstRun.getTask(":app:lintReportDebug")).didWork()
+        if (usePartialAnalysis) {
+            assertThat(firstRun.getTask(":app:lintAnalyzeDebug")).didWork()
+        }
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("8 errors, 6 warnings")
 
         val secondRun = getExecutor().run(":app:lintDebug")
-        assertThat(secondRun.getTask(":app:lintDebug")).wasUpToDate()
+        assertThat(secondRun.getTask(":app:lintReportDebug")).wasUpToDate()
         if (usePartialAnalysis) {
             assertThat(secondRun.getTask(":app:lintAnalyzeDebug")).wasUpToDate()
         }

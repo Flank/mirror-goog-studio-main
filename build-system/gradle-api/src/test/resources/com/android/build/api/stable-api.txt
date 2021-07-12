@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-8341c1d267aef3110308d880f630c6e4800ba39e9fec58794c7c2c1ae23f3a7b
+5cee96cd648c62bce88c8e12c7d279035f8d5313f7a62ed170ab4ed9dc7747ff
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -205,7 +205,7 @@ com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (kotlin.jvm.f
 com.android.build.api.dsl.LibrarySingleVariant implements com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.Lint
-com.android.build.api.dsl.MultipleVariants
+com.android.build.api.dsl.MultipleVariants implements com.android.build.api.dsl.PublishingOptions
 com.android.build.api.dsl.MultipleVariants.allVariants: void ()
 com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
 com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void (java.lang.String, java.lang.String[])
@@ -216,8 +216,10 @@ com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.and
 com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
+com.android.build.api.dsl.PublishingOptions
+com.android.build.api.dsl.PublishingOptions.withSourcesJar: void ()
 com.android.build.api.dsl.SigningConfig
-com.android.build.api.dsl.SingleVariant
+com.android.build.api.dsl.SingleVariant implements com.android.build.api.dsl.PublishingOptions
 com.android.build.api.dsl.SingleVariant.getVariantName: java.lang.String ()
 com.android.build.api.dsl.Split
 com.android.build.api.dsl.TestBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.TestVariantDimension

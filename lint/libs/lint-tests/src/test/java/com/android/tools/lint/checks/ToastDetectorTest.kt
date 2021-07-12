@@ -341,9 +341,39 @@ class ToastDetectorTest : AbstractCheckTest() {
                     public Snackbar setActionTextColor(int color) {
                         return this;
                     }
+                    public Snackbar setAction(int resId, View.OnClickListener listener) {
+                        return this;
+                    }
                 }
                 """
             )
         )
+    }
+
+    fun testChainedArgumentAsArgument() {
+        // Regression test for b/169689480
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.view.View;
+
+                import com.google.android.material.snackbar.Snackbar;
+
+                public class SnackbarTest {
+                    public void test(View view) {
+                        showSnackbar(Snackbar.make(view, "Text", Snackbar.LENGTH_INDEFINITE)
+                                .setAction(android.R.string.ok, View::animate));
+                    }
+
+                    public void showSnackbar(Snackbar snackbar) {
+                        snackbar.show();
+                    }
+                }
+                """
+            ).indented(),
+            *snackbarStubs
+        ).run().expectClean()
     }
 }

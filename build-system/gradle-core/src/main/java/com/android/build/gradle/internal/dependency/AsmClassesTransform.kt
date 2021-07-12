@@ -87,12 +87,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
                     spec.from.attribute(
                         ARTIFACT_FORMAT,
-                        if (creationConfig.variantDslInfo.isTestCoverageEnabled &&
-                            creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
-                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR.type
-                        } else {
-                            AndroidArtifacts.ArtifactType.CLASSES_JAR.type
-                        }
+                        AndroidArtifacts.ArtifactType.CLASSES_JAR.type
                     )
                     spec.to.attribute(
                         ARTIFACT_FORMAT,

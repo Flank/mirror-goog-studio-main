@@ -273,10 +273,12 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
     val isBundled: Boolean
 
     /**
-     * Returns if the property passed by the IDE is set, the minimum SDK version or
-     * null if not.
+     * Returns the API to which device/emulator we're deploying via the IDE or null if not.
+     * Can be used to optimize some build steps when deploying via the IDE.
+     *
+     * This has no relation with targetSdkVersion from build.gradle/manifest.
      */
-    val minSdkVersionFromIDE: Int?
+    val targetDeployApiFromIDE: Int?
 
     val nativeBuildSystem: VariantManager.NativeBuiltType?
 

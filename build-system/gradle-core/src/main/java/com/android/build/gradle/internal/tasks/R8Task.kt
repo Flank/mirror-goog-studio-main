@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.transform.Format
+import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -306,8 +307,7 @@ abstract class R8Task @Inject constructor(
                         && !variantType.isAar)
 
             setBootClasspathForCodeShrinker(task)
-            task.minSdkVersion
-                .set(creationConfig.minSdkVersionWithTargetDeviceApi.apiLevel)
+            task.minSdkVersion.set(creationConfig.minSdkVersion.apiLevel)
             task.debuggable
                 .setDisallowChanges(creationConfig.debuggable)
             task.disableTreeShaking.set(disableTreeShaking)

@@ -108,6 +108,9 @@ public class LintVitalTest {
             assertThat(result.findTask(":lintVitalAnalyzeRelease")).didWork();
         }
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).failed();
+        TruthHelper.assertThat(result.getTask(":lintVitalReportRelease")).didWork();
+        assertThat(project.getBuildResult().getFailedTasks())
+                .doesNotContain(":lintVitalReportRelease");
     }
 
     @Test

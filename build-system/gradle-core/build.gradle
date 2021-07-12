@@ -134,6 +134,7 @@ dependencies {
     implementation project(':base:builder-test-api')
     implementation project(':base:layoutlib-api')
     implementation project(':base:utp:android-device-provider-gradle-proto')
+    implementation project(':base:utp:android-test-plugin-host-additional-test-output-proto')
     implementation project(':base:utp:android-test-plugin-host-coverage-proto')
     implementation project(':base:utp:android-test-plugin-host-retention-proto')
     implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')

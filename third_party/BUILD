@@ -51,7 +51,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
-    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.aapt2-proto.4.1.0-alpha01-6193524",
+    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.aapt2-proto.7.0.0-beta04-7396180",
     visibility = ["//visibility:public"],
     exports = [":com.google.protobuf_protobuf-java"],
 )
@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.6.0",
+    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.7.0",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -71,6 +71,8 @@ maven_java_library(
         ":com.google.protobuf_protobuf-java",
         ":com.google.protobuf_protobuf-java-util",
         ":javax.inject_javax.inject",
+        ":org.bitbucket.b_c_jose4j",
+        ":org.slf4j_slf4j-api",
     ],
 )
 
@@ -1189,6 +1191,14 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2:org.apiguardian.apiguardian-api.1.1.0",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.bitbucket.b_c_jose4j",
+    export_artifact = "//prebuilts/tools/common/m2:org.bitbucket.b_c.jose4j.0.7.0",
+    visibility = ["//visibility:public"],
+    exports = [":org.slf4j_slf4j-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

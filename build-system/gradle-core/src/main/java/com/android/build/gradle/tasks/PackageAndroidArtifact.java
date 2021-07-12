@@ -263,15 +263,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return projectBaseName;
     }
 
-    @Nullable protected Integer targetApi;
-
-    @Nullable
-    @Input
-    @Optional
-    public Integer getTargetApi() {
-        return targetApi;
-    }
-
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
      */
@@ -1285,9 +1276,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     globalScope.getExtension().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
-
-            packageAndroidArtifact.targetApi =
-                    projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
 
             packageAndroidArtifact.apkCreatorType =
                     creationConfig.getVariantScope().getApkCreatorType();

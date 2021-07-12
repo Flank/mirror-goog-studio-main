@@ -26,6 +26,7 @@ import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -99,6 +100,13 @@ open class TestFixturesImpl @Inject constructor(
             internalServices.newInstance(AarMetadata::class.java).also {
                 it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
             }
+
+    override val javaCompilation: JavaCompilation =
+        JavaCompilationImpl(
+            variantDslInfo.javaCompileOptions,
+            buildFeatures.dataBinding,
+            internalServices
+        )
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

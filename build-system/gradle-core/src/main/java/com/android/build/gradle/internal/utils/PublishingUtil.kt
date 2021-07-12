@@ -75,7 +75,8 @@ fun createPublishingInfoForLibrary(
         if (singleVariant != null) {
             components.add(ComponentPublishingInfo(
                 variantBasedComponentName,
-                AbstractPublishing.Type.AAR
+                AbstractPublishing.Type.AAR,
+                withSourcesJar = singleVariant.withSourcesJar
             ))
         }
 
@@ -98,7 +99,8 @@ fun createPublishingInfoForLibrary(
                         buildTypeAttribute,
                         flavorDimensionAttributes
                     ),
-                    isClassifierRequired)
+                    isClassifierRequired,
+                    multipleVariant.withSourcesJar)
                 )
             }
         }

@@ -175,10 +175,10 @@ class SuppressLintTest {
                 """
                 src/Test.java:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
                 @SuppressLint("_SecureIssue")
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test.kt:2: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
                 @SuppressLint("_SecureIssue")
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/Test.java:2: Warning: Some error message here [_SecureIssue]
                 import forbidden;
                 ~~~~~~~~~~~~~~~~~

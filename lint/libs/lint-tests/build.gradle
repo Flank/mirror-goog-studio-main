@@ -43,6 +43,10 @@ sourceSets {
     test.resources.srcDir 'src/test/java'
 }
 
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}
+
 project.ext.pomName = 'Android Tools Lint Test API'
 project.ext.pomDesc = 'API to build lint check tests'
 

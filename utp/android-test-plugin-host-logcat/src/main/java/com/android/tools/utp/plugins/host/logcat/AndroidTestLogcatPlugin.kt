@@ -28,6 +28,7 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuite
 import com.google.testing.platform.runtime.android.controller.ext.deviceShell
 import java.io.BufferedWriter
 import java.io.File
+import java.util.Collections
 
 /**
  * This plugin updates [TestSuiteResult] proto with logcat artifacts
@@ -39,7 +40,7 @@ class AndroidTestLogcatPlugin : HostPlugin {
     private lateinit var logcatCommandHandle: CommandHandle
 
     private val logger = getLogger()
-    private var logcatFilePaths: MutableList<String> = mutableListOf()
+    private var logcatFilePaths: MutableList<String> = Collections.synchronizedList(mutableListOf())
     private var logcatOptions: List<String> = mutableListOf()
 
     override fun configure(config: Config) {
@@ -65,18 +66,20 @@ class AndroidTestLogcatPlugin : HostPlugin {
         val className = testCase.testClass
         val methodName = testCase.testMethod
         val updatedTestResult = testResult.toBuilder().apply {
-             logcatFilePaths.forEach {
-                 if (it == generateLogcatFileName("$packageName.$className", methodName)) {
-                     addOutputArtifact(
-                             TestArtifactProto.Artifact.newBuilder().apply {
-                                 labelBuilder.label = "logcat"
-                                 labelBuilder.namespace = "android"
-                                 sourcePathBuilder.path = it
-                             }.build()
-                     )
-                 }
-             }
-         }.build()
+            synchronized (logcatFilePaths) {
+                logcatFilePaths.forEach {
+                    if (it == generateLogcatFileName("$packageName.$className", methodName)) {
+                        addOutputArtifact(
+                                TestArtifactProto.Artifact.newBuilder().apply {
+                                    labelBuilder.label = "logcat"
+                                    labelBuilder.namespace = "android"
+                                    sourcePathBuilder.path = it
+                                }.build()
+                        )
+                    }
+                }
+            }
+        }.build()
         return updatedTestResult
     }
 

@@ -56,6 +56,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.getNamedDependency
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Project
@@ -4689,6 +4690,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             Implementation(GroovyGradleDetector::class.java, Scope.GRADLE_SCOPE)
 
         init {
+            LintClient.clientName = LintClient.CLIENT_UNIT_TESTS
             for (issue in TestIssueRegistry().issues) {
                 if (issue.implementation.detectorClass == GradleDetector::class.java) {
                     issue.implementation = IMPLEMENTATION

@@ -79,6 +79,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -136,7 +137,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:InputFile
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:PathSensitive(PathSensitivity.NONE)
     abstract val localResourcesFile: RegularFileProperty
 
     @get:InputFiles
@@ -172,9 +173,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Internal
     abstract val sourceSetMaps: ConfigurableFileCollection
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val featureResourcePackages: ConfigurableFileCollection
 
     @get:Input
@@ -211,9 +211,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Input
     abstract val applicationId: Property<String>
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputResourcesDir: DirectoryProperty
 
     @get:Input
@@ -249,9 +248,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     // Not an input as it is only used to rewrite exception and doesn't affect task output
     private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val compiledDependenciesResources: ConfigurableFileCollection
 
     override val incremental: Boolean

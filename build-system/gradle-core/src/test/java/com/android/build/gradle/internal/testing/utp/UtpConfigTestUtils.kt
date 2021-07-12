@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
+import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto
 import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfigProto
@@ -29,6 +30,7 @@ import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.PathProto
 
 private val protoPrinter: ProtoPrinter = ProtoPrinter(listOf(
+    AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig::class.java,
     AndroidDevicePluginProto.AndroidDevicePlugin::class.java,
     AndroidInstrumentationDriverProto.AndroidInstrumentationDriver::class.java,
     AndroidTestCoverageConfigProto.AndroidTestCoverageConfig::class.java,
@@ -50,6 +52,7 @@ fun assertRunnerConfigProto(
     iceboxConfig: String = "",
     useGradleManagedDeviceProvider: Boolean = false,
     testCoverageConfig: String = "",
+    additionalTestOutputConfig: String = "",
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
         label {
@@ -134,6 +137,27 @@ fun assertRunnerConfigProto(
             type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
             value {
               ${"\n" + iceboxConfig.trimIndent().prependIndent(" ".repeat(14))}
+            }
+          }
+        }
+        """
+    } else {
+        ""
+    }
+
+    val additionalTestOutputConfigProto = if (additionalTestOutputConfig.isNotBlank()) { """
+        host_plugin {
+          label {
+            label: "ANDROID_TEST_ADDITIONAL_TEST_OUTPUT_PLUGIN"
+          }
+          class_name: "com.android.tools.utp.plugins.host.additionaltestoutput.AndroidAdditionalTestOutputPlugin"
+          jar {
+            path: "path-to-AdditionalTestOutputPlugin.jar"
+          }
+          config {
+            type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfig"
+            value {
+              ${"\n" + additionalTestOutputConfig.trimIndent().prependIndent(" ".repeat(14))}
             }
           }
         }
@@ -228,6 +252,7 @@ fun assertRunnerConfigProto(
             }
           }
           ${"\n" + testCoveragePluginProto.trimIndent().prependIndent(" ".repeat(10))}
+          ${"\n" + additionalTestOutputConfigProto.trimIndent().prependIndent(" ".repeat(10))}
           environment {
             output_dir {
               path: "mockOutputDirPath"

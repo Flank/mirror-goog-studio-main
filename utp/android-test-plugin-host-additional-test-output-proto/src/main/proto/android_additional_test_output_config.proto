@@ -1,0 +1,36 @@
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package com.android.tools.utp.plugins.host.additionaltestoutput.proto;
+
+option java_package = 'com.android.tools.utp.plugins.host.additionaltestoutput.proto';
+option java_outer_classname = 'AndroidAdditionalTestOutputConfigProto';
+
+// A configuration of AndroidAdditionalTestOutput plugin.
+message AndroidAdditionalTestOutputConfig {
+    // A path to the output directory on device.
+    // Tests may output additional test outputs into this directory.
+    // After each test case, files in the directory are copied to the
+    // host machine.
+    string additional_output_directory_on_device = 1;
+
+    // A path to the output directory on host.
+    // This is the destination directory. After each test case,
+    // files on test device are copied into this directory on host machine.
+    string additional_output_directory_on_host = 2;
+}

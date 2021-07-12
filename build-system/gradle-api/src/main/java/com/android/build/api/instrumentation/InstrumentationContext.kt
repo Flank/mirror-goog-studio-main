@@ -29,6 +29,13 @@ import java.io.Serializable
 interface InstrumentationContext : Serializable {
     /**
      * The asm api version to be passed to the [ClassVisitor] constructor.
+     *
+     * ```
+     * | AGP version | Corresponding ASM version |
+     * |-------------|---------------------------|
+     * | 4.2.0 - 7.0 |            ASM7           |
+     * |    7.1.0+   |            ASM9           |
+     * ```
      */
     @get:Input
     val apiVersion: Property<Int>

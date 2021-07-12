@@ -87,7 +87,6 @@ import java.util.Map;
 import java.util.Set;
 import kotlin.collections.CollectionsKt;
 import kotlin.collections.SetsKt;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
@@ -721,7 +720,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
         @Nullable
         private UAnnotation findTypeDef(
-                @NotNull UExpression expression, PsiModifierListOwner owner) {
+                @NonNull UExpression expression, PsiModifierListOwner owner) {
             JavaEvaluator evaluator = mContext.getEvaluator();
             PsiAnnotation[] annotations = evaluator.getAllAnnotations(owner, true);
             List<UAnnotation> uAnnotations =

@@ -186,7 +186,7 @@ class ResourceTable(val validateResources: Boolean = false, val logger: BlameLog
 
   fun setAllowNewMangled(name: ResourceName, allowNew: AllowNew) =
     setAllowNewImpl(name, allowNew, ::skipNameValidator)
-  
+
   fun setOverlayable(name: ResourceName, overlayable: OverlayableItem) =
     setOverlayableImpl(name, overlayable, ::resourceNameValidator)
 
@@ -442,8 +442,8 @@ class ResourceTable(val validateResources: Boolean = false, val logger: BlameLog
       resourceEntry.id = id.getEntryId()
     }
 
-    // Only mark the group visibility level as public, it doesn't care about being private.
     if (visibility.level == ResourceVisibility.PUBLIC) {
+      // TODO: verify what resourceGroup's visibility is used for.
       resourceGroup.visibility = ResourceVisibility.PUBLIC
     }
 
@@ -454,7 +454,19 @@ class ResourceTable(val validateResources: Boolean = false, val logger: BlameLog
       }
       visibility.level == ResourceVisibility.PRIVATE &&
         resourceEntry.visibility.level == ResourceVisibility.PUBLIC -> {
-        // We can't downgrade public to private. Ignore.
+        logError(
+                blameSource(source),
+                "Failed to add resource '$name' as private (java-symbol) because it was " +
+                        "previously defined as public.")
+        return false
+      }
+      visibility.level == ResourceVisibility.PUBLIC &&
+        resourceEntry.visibility.level == ResourceVisibility.PRIVATE -> {
+        logError(
+                blameSource(source),
+                "Failed to add resource '$name' as public because it was previously defined as " +
+                        "private (java-symbol).")
+        return false
       }
       else -> {
         // This symbol definition takes precedence.
@@ -649,6 +661,19 @@ class ResourceGroup(val type : AaptResourceType) {
 
   internal val entries = sortedMapOf<String, SortedMap<Short?, ResourceEntry>>()
 
+  // To get Styleable's children we need to reach the ResourceEntry's value first
+  internal fun getStyleable(entry: Map.Entry<String, SortedMap<Short?, ResourceEntry>>): Styleable {
+      // To get the actual value we need to find the correct Item that's nested deep in the map
+      // TODO: Keep children at map value level.
+      val mapEntry = entry.value
+      val styleableContainer = mapEntry.values.first().values
+      // Only one Item should be held in the container
+      if (styleableContainer.size != 1)
+          error("Too many resources in one entry: ${styleableContainer.size}")
+      // The children will be present under the Styleable Item.
+      return styleableContainer[0].value!! as Styleable
+  }
+
   fun findEntry(name: String, entryId: Short? = null): ResourceEntry? {
     val nameGroup = entries[name] ?: return null
     return if (entryId != null) {
@@ -679,7 +704,7 @@ class ResourceEntry(val name : String) {
 
   var allowNew: AllowNew? = null
   var overlayable: OverlayableItem? = null
-  
+
   internal val values = mutableListOf<ResourceConfigValue>()
 
   fun findValue(config: ConfigDescription, product: String = ""): ResourceConfigValue? {

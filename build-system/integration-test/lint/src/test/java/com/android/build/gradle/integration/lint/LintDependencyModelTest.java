@@ -67,8 +67,8 @@ public class LintDependencyModelTest {
     @Test
     public void checkFindNestedResult() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
-        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:clean", ":app:lintDebug");
+        getExecutor().run(":app:clean", ":app:lintDebug");
 
         String textReport = readTextReportToString();
 
@@ -118,7 +118,7 @@ public class LintDependencyModelTest {
         if (usePartialAnalysis) {
             ImmutableList<String> tasks =
                     ImmutableList.of(
-                            ":app:lintDebug",
+                            ":app:lintReportDebug",
                             ":app:lintAnalyzeDebug",
                             ":androidlib:lintAnalyzeDebug",
                             ":javalib:lintAnalyze",
@@ -137,14 +137,14 @@ public class LintDependencyModelTest {
 
         } else {
             GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
-            assertThat(firstResult.findTask(":app:lintDebug")).didWork();
+            assertThat(firstResult.findTask(":app:lintReportDebug")).didWork();
             String textReport = readTextReportToString();
             assertThat(textReport).contains("0 errors, 5 warnings");
 
             // The lint task should not be up-to-date if not using partial analysis with
             // checkDependencies because the inputs are not modeled correctly in that case.
             GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
-            assertThat(secondResult.findTask(":app:lintDebug")).didWork();
+            assertThat(secondResult.findTask(":app:lintReportDebug")).didWork();
         }
     }
 
@@ -162,7 +162,7 @@ public class LintDependencyModelTest {
                 project.getSubproject("app")
                         .getIntermediatesDir()
                         .toPath()
-                        .resolve("incremental/lintDebug")
+                        .resolve("incremental/lintReportDebug")
                         .toFile();
         assertThat(lintModelDir).isDirectory();
 

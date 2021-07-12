@@ -23,7 +23,7 @@ import javax.inject.Inject
 abstract class ApplicationSingleVariantImpl @Inject constructor(
     dslServices: DslServices,
     override val variantName: String
-) : ApplicationSingleVariant {
+) : ApplicationSingleVariant, PublishingOptionsImpl() {
 
     internal abstract var publishVariantAsApk: Boolean
 

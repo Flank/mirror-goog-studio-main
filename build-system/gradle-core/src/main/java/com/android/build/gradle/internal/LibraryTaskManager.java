@@ -20,6 +20,7 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.SOURCE_PUBLICATION;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
@@ -73,6 +74,7 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessLibraryArtProfileTask;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
+import com.android.build.gradle.tasks.SourceJarTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
@@ -344,6 +346,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     private void createBundleTask(@NonNull VariantImpl variant) {
         taskFactory.register(new BundleAar.LibraryCreationAction(variant));
+        taskFactory.register(new SourceJarTask.CreationAction(variant));
 
         variant.getTaskContainer()
                 .getAssembleTask()
@@ -383,10 +386,20 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                         new PublishedConfigSpec(
                                 RUNTIME_PUBLICATION, componentName, isClassifierRequired));
 
+        final Configuration sourcePub =
+                variantDependencies.getElements(
+                        new PublishedConfigSpec(
+                                SOURCE_PUBLICATION, componentName, isClassifierRequired));
+
         component.addVariantsFromConfiguration(
                 apiPub, new ConfigurationVariantMapping("compile", isClassifierRequired));
         component.addVariantsFromConfiguration(
                 runtimePub, new ConfigurationVariantMapping("runtime", isClassifierRequired));
+
+        if (sourcePub != null) {
+            component.addVariantsFromConfiguration(
+                    sourcePub, new ConfigurationVariantMapping("runtime", true));
+        }
     }
 
     @Override

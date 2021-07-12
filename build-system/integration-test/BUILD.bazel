@@ -302,6 +302,8 @@ maven_repo(
         "//tools/base/utp/android-device-provider-ddmlib",
         "//tools/base/utp/android-device-provider-gradle",
         "//tools/base/utp/android-device-provider-gradle-proto",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
         "//tools/base/utp/android-test-plugin-host-coverage",
         "//tools/base/utp/android-test-plugin-host-coverage-proto",
         "//tools/base/utp/android-test-plugin-host-device-info",

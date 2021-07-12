@@ -1664,7 +1664,7 @@ class LintIssueDocGenerator constructor(
             if (jars.isEmpty()) {
                 return BuiltinIssueRegistry()
             }
-            val registries = JarFileIssueRegistry.get(client, jars, null) +
+            val registries = JarFileIssueRegistry.get(client, jars) +
                 if (includeBuiltins) listOf(BuiltinIssueRegistry()) else emptyList()
 
             return when {

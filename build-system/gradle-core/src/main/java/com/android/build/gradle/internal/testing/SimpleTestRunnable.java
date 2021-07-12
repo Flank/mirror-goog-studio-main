@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing;
 
+import static com.android.build.gradle.internal.testing.utp.AdditionalTestOutputUtilsKt.findAdditionalTestOutputDirectoryOnDevice;
 import static com.android.ddmlib.DdmPreferences.getTimeOut;
 
 import com.android.annotations.NonNull;
@@ -234,10 +235,8 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             }
 
             if (additionalTestOutputEnabled && device.getApiLevel() >= 16) {
-                String defaultDir = queryAdditionalTestOutputLocation();
                 additionalTestOutputDir =
-                        testData.getInstrumentationRunnerArguments()
-                                .getOrDefault("additionalTestOutputDir", defaultDir);
+                        findAdditionalTestOutputDirectoryOnDevice(device, testData);
 
                 MultiLineReceiver receiver = getOutputReceiver();
                 String mkdirp = "mkdir -p " + additionalTestOutputDir;
@@ -385,55 +384,6 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     @NonNull
     private static String cleanUpDir(@NonNull String path) {
         return String.format("if [ -d %s ]; then rm -rf %s; fi && mkdir -p %s", path, path, path);
-    }
-
-    private String queryAdditionalTestOutputLocation()
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-                    IOException, InstallException {
-        if (device.getApiLevel() < 16) {
-            throw new InstallException(
-                    "additionalTestOutput is not supported on devices running API level < 16");
-        }
-
-        if (device.getApiLevel() >= 29) {
-            // sdcard/Android/media/<package_name> is the only special-cased storage dir, which
-            // allows separate shell processes and instrumented tests to both have read/write access
-            // without needing to apply external legacy storage flags (which were removed in API 30)
-            // or --no-isolated-storage.
-            return "/sdcard/Android/media/"
-                    + testData.getTestedApplicationId()
-                    + "/additional_test_output";
-        }
-
-        final String[] result = new String[1];
-        MultiLineReceiver receiver =
-                new MultiLineReceiver() {
-                    @Override
-                    public void processNewLines(@NonNull String[] lines) {
-                        for (String row : lines) {
-                            if (row.isEmpty()) break;
-                            // Ignore any lines to stdout which aren't results of the content
-                            // provider query.
-                            if (!row.startsWith("Row:")) break;
-
-                            result[0] = row.split("_data=")[1].trim();
-                        }
-                    }
-
-                    @Override
-                    public boolean isCancelled() {
-                        return false;
-                    }
-                };
-
-        executeShellCommand(
-                "content query --uri content://media/external/file"
-                        + " --projection _data --where \"_data LIKE '%/Android'\"",
-                receiver);
-
-        receiver.flush();
-
-        return result[0] + "/data/" + testData.getTestedApplicationId() + "/files/test_data";
     }
 
     private void setUpDirectories(@NonNull String userCoverageDir, @NonNull String userId)

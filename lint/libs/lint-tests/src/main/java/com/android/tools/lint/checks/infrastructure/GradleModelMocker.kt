@@ -99,7 +99,7 @@ class GradleModelMocker @JvmOverloads constructor(
         compileTarget = "android-" + SdkVersionInfo.HIGHEST_KNOWN_API,
         gradleVersion = GradleVersion.parse("2.2.2"),
         javaSourceLevel = "1.7",
-        modulePath = "test_project"
+        modulePath = "test_project-${projectDir.name}"
     )
     private var buildFeatures: TestLintModelBuildFeatures = TestLintModelBuildFeatures()
     private var defaultConfig: TestProductFlavor = TestProductFlavor(

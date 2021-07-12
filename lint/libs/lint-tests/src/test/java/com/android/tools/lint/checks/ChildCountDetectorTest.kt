@@ -134,4 +134,40 @@ class ChildCountDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testNestedScrollView() {
+        // Regression test for https://issuetracker.google.com/191997480
+        lint().files(
+            xml(
+                "res/layout/nested_scroll_views.xml",
+                """
+                <layout xmlns:android="http://schemas.android.com/apk/res/android">
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+                    </androidx.core.widget.NestedScrollView>
+
+                </layout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/nested_scroll_views.xml:2: Warning: A scroll view can have only one child [ScrollViewCount]
+                <androidx.core.widget.NestedScrollView
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
 }

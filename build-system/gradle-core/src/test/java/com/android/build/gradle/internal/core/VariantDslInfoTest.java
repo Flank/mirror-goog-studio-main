@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.core;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.Nullable;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -43,18 +45,15 @@ import com.android.builder.model.ApiVersion;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
 
 /** Test cases for {@link VariantDslInfo}. */
 public class VariantDslInfoTest {
@@ -226,7 +225,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
+        assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -241,7 +240,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
+        assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -256,7 +255,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(18);
+        assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(18);
     }
 
     @Test
@@ -271,7 +270,7 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getMinSdkVersion().getApiLevel()).isEqualTo(16);
-        assertThat(variant.getMinSdkVersionFromIDE()).isEqualTo(22);
+        assertThat(variant.getTargetDeployApiFromIDE()).isEqualTo(22);
     }
 
     @Test

@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.testutils.truth.PathSubject
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -78,6 +79,7 @@ class LintStandaloneFixTest {
             .contains(
                 "Aborting build since sources were modified to apply quickfixes after compilation"
             )
+        Truth.assertThat(result.failedTasks).contains(":lintFix")
 
         // Make sure quickfix worked too
         val sourceFile = project.file("src/main/java/com/example/foo/Foo.java")

@@ -30,20 +30,22 @@ package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import ${escapeKotlinIdentifier(packageName)}.ui.theme.${themeName}
 
-class ${activityClass} : ComponentActivity() {
+class $activityClass : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ${themeName} {
+            $themeName {
                 // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     ${greeting}("Android")
                 }
             }
@@ -59,7 +61,7 @@ fun ${greeting}(name: String) {
 @Preview(showBackground = true)
 @Composable
 fun ${defaultPreview}() {
-    ${themeName} {
+    $themeName {
         ${greeting}("Android")
     }
 }

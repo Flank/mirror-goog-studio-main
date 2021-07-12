@@ -423,6 +423,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 VectorDrawableCompatDetector.ISSUE,
                 VectorPathDetector.PATH_LENGTH,
                 VectorPathDetector.PATH_VALID,
+                ViewBindingTypeDetector.ISSUE,
                 ViewConstructorDetector.ISSUE,
                 ViewHolderDetector.ISSUE,
                 ViewTypeDetector.ADD_CAST,

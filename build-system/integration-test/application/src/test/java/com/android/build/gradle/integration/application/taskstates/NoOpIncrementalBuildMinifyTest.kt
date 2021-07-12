@@ -78,9 +78,8 @@ class NoOpIncrementalBuildMinifyTest {
                 ":javaPreCompileDebugAndroidTest",
                 ":javaPreCompileRelease",
                 ":javaPreCompileReleaseUnitTest",
-                ":lint",
                 ":lintAnalyzeDebug",
-                ":lintDebug",
+                ":lintReportDebug",
                 ":mergeDebugAndroidTestAssets",
                 ":mergeDebugAndroidTestJavaResource",
                 ":mergeDebugAndroidTestJniLibFolders",
@@ -139,6 +138,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileReleaseShaders",
                 ":compileReleaseUnitTestJavaWithJavac",
                 ":extractReleaseNativeSymbolTables",
+                ":lint",
                 ":mergeDebugAndroidTestNativeLibs",
                 ":mergeReleaseNativeDebugMetadata",
                 ":mergeReleaseNativeLibs",
@@ -148,6 +148,14 @@ class NoOpIncrementalBuildMinifyTest {
                 ":processReleaseUnitTestJavaRes",
                 ":stripReleaseDebugSymbols",
                 ":testReleaseUnitTest",
+            ),
+            /*
+             * If you add a task to this DID_WORK set, please add an explanation and/or file a bug.
+             */
+            DID_WORK to setOf(
+                // lintDebug is intentionally not up-to-date because it must print the lint issues
+                // stdout or stderr if necessary.
+                ":lintDebug",
             )
         )
     }

@@ -1991,15 +1991,15 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 import com.example.dotless.DotlessCode
 
                 fun test() {
-                    LibraryCode.method1()
-                    LibraryCode.method2()
-                    LibraryCode.method3()
-                    LibraryCode.method4()
-                    val f1 = LibraryCode.FIELD1
-                    val f2 = LibraryCode.FIELD2
-                    val f3 = LibraryCode.FIELD3
-                    val f4 = LibraryCode.FIELD4
-                    DotlessCode.method()
+                    LibraryCode.method1() // OK
+                    LibraryCode.method2() // ERROR
+                    LibraryCode.method3() // ERROR
+                    LibraryCode.method4() // ERROR
+                    val f1 = LibraryCode.FIELD1 // OK
+                    val f2 = LibraryCode.FIELD2 // ERROR
+                    val f3 = LibraryCode.FIELD3 // ERROR
+                    val f4 = LibraryCode.FIELD4 // ERROR
+                    DotlessCode.method() // ERROR
                 }
                 """
             ).indented(),
@@ -2043,22 +2043,28 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
+                src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method2 can only be called from within the same library (test.pkg.library:test_project-lib1) [RestrictedApi]
+                    LibraryCode.method2() // ERROR
+                                ~~~~~~~
                 src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method3 can only be called from within the same library group (referenced groupId=test.pkg.library from groupId=other.app) [RestrictedApi]
-                    LibraryCode.method3()
+                    LibraryCode.method3() // ERROR
                                 ~~~~~~~
                 src/main/kotlin/com/example/myapplication/test.kt:10: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
-                    LibraryCode.method4()
+                    LibraryCode.method4() // ERROR
                                 ~~~~~~~
+                src/main/kotlin/com/example/myapplication/test.kt:12: Error: LibraryCode.FIELD2 can only be accessed from within the same library (test.pkg.library:test_project-lib1) [RestrictedApi]
+                    val f2 = LibraryCode.FIELD2 // ERROR
+                                         ~~~~~~
                 src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (referenced groupId=test.pkg.library from groupId=other.app) [RestrictedApi]
-                    val f3 = LibraryCode.FIELD3
+                    val f3 = LibraryCode.FIELD3 // ERROR
                                          ~~~~~~
                 src/main/kotlin/com/example/myapplication/test.kt:14: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
-                    val f4 = LibraryCode.FIELD4
+                    val f4 = LibraryCode.FIELD4 // ERROR
                                          ~~~~~~
                 src/main/kotlin/com/example/myapplication/test.kt:15: Error: DotlessCode.method can only be called from within the same library group prefix (referenced groupId=dotless with prefix "" from groupId=other.app) [RestrictedApi]
-                    DotlessCode.method()
+                    DotlessCode.method() // ERROR
                                 ~~~~~~
-                5 errors, 0 warnings
+                7 errors, 0 warnings
                 """
             )
 

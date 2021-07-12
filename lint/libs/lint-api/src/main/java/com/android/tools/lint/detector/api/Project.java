@@ -966,7 +966,12 @@ public class Project {
             return;
         }
 
-        pkg = root.getAttribute(ATTR_PACKAGE);
+        if (pkg == null) {
+            // if we read multiple manifests for a project, only look at the first one.
+            // (This helps when there are feature modules inlined into the main project
+            // with their own packages.)
+            pkg = root.getAttribute(ATTR_PACKAGE);
+        }
 
         // Initialize minSdk and targetSdk
         NodeList usesSdks = root.getElementsByTagName(TAG_USES_SDK);

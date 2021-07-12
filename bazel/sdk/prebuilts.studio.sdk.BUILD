@@ -33,6 +33,14 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/30.0.2",
+    srcs = glob(
+        include = ["*/build-tools/30.0.2/**"],
+    ),
+    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
+)
+
+filegroup(
     name = "build-tools/29.0.2",
     srcs = sdk_glob(
         include = ["build-tools/29.0.2/**"],

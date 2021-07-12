@@ -438,8 +438,11 @@ class LintDriver(
                 //noinspection ExpensiveAssertion
                 assert(projectRoots.size == 1)
                 val project = projectRoots.first()
-                checkProjectRoot(project)
-                client.storeState(project)
+                try {
+                    checkProjectRoot(project)
+                } finally {
+                    client.storeState(project)
+                }
             },
             partial = true
         )
@@ -702,12 +705,13 @@ class LintDriver(
             jarFiles.addAll(configuration.getLintJars())
         }
 
-        jarFiles.addAll(client.findGlobalRuleJars())
+        jarFiles.addAll(client.findGlobalRuleJars(this, true))
 
         if (jarFiles.isNotEmpty()) {
             val extraRegistries = JarFileIssueRegistry.get(
                 client, jarFiles,
-                currentProject ?: projects.firstOrNull()
+                currentProject ?: projects.firstOrNull(),
+                this
             )
             if (extraRegistries.isNotEmpty()) {
                 val registries = ArrayList<IssueRegistry>(jarFiles.size + 1)
@@ -1144,9 +1148,7 @@ class LintDriver(
             check.beforeCheckEachProject(projectContext)
         }
 
-        assert(currentProject === project)
-        runFileDetectors(project, main)
-        runDelayedRunnables()
+        val manifestContexts = initializeManifests(project, main)
 
         val analyzeLibraries = checkDependencies && !isIsolated() &&
             // If the client supports partial analysis, it should merge results
@@ -1159,6 +1161,8 @@ class LintDriver(
         }
 
         currentProject = project
+        runFileDetectors(project, main, manifestContexts)
+        runDelayedRunnables()
 
         for (check in applicableDetectors) {
             client.runReadAction {
@@ -1246,7 +1250,25 @@ class LintDriver(
 
     private class CachedUastSourceList(val project: Project, var uastSourceList: UastSourceList)
 
-    private fun runFileDetectors(project: Project, main: Project?) {
+    private fun initializeManifests(project: Project, main: Project?): List<XmlContext> {
+        // Look up manifest information (but not for library projects)
+        val contexts = mutableListOf<XmlContext>()
+        if (project.isAndroidProject) {
+            for (manifestFile in project.manifestFiles) {
+                client.runReadAction(
+                    Runnable {
+                        val context = createXmlContext(project, main, manifestFile, null)
+                            ?: return@Runnable
+                        project.readManifest(context.document)
+                        contexts.add(context)
+                    }
+                )
+            }
+        }
+        return contexts
+    }
+
+    private fun runFileDetectors(project: Project, main: Project?, manifestContexts: List<XmlContext>? = null) {
         if (phase == 1) {
             moduleCount++
         }
@@ -1282,36 +1304,27 @@ class LintDriver(
         }
 
         // Look up manifest information (but not for library projects)
-        if (project.isAndroidProject) {
-            for (manifestFile in project.manifestFiles) {
-                client.runReadAction(
-                    Runnable {
-                        val context = createXmlContext(project, main, manifestFile, null)
-                            ?: return@Runnable
-                        project.readManifest(context.document)
-                        if ((
-                            !project.isLibrary || main != null &&
-                                main.isMergingManifests
-                            ) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
-                                }
-
-                                val v = ResourceVisitor(client, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
+        if ((!project.isLibrary || main != null && main.isMergingManifests) && scope.contains(Scope.MANIFEST)) {
+            val contexts = manifestContexts
+                ?: initializeManifests(project, main)
+            contexts.forEach { context ->
+                client.runReadAction {
+                    val detectors = scopeDetectors[Scope.MANIFEST]
+                    if (detectors != null) {
+                        val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                        for (detector in detectors) {
+                            if (detector is XmlScanner) {
+                                xmlDetectors.add(detector)
                             }
                         }
+
+                        val v = ResourceVisitor(client, xmlDetectors, null)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        v.visitFile(context)
+                        fileCount++
+                        resourceFileCount++
                     }
-                )
+                }
             }
         }
 
@@ -2508,13 +2521,13 @@ class LintDriver(
             incident.severity = severity
 
             val baseline = baseline
-            if (baseline != null) {
+            if (baseline != null && mode != ANALYSIS_ONLY) {
                 val filtered = baseline.findAndMark(incident)
                 if (filtered) {
                     if (!allowSuppress && issue.suppressNames != null) {
                         flagInvalidSuppress(
                             context, issue, Location.create(baseline.file),
-                            issue.suppressNames
+                            null, issue.suppressNames
                         )
                     } else {
                         return true
@@ -2710,7 +2723,8 @@ class LintDriver(
 
         override fun createProject(dir: File, referenceDir: File): Project = unsupported()
 
-        override fun findGlobalRuleJars(): List<File> = delegate.findGlobalRuleJars()
+        override fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> =
+            delegate.findGlobalRuleJars(driver, warnDeprecated)
 
         override fun findRuleJars(project: Project): Iterable<File> = delegate.findRuleJars(project)
 
@@ -2718,8 +2732,12 @@ class LintDriver(
 
         override fun registerProject(dir: File, project: Project): Unit = unsupported()
 
-        override fun addCustomLintRules(registry: IssueRegistry): IssueRegistry =
-            delegate.addCustomLintRules(registry)
+        override fun addCustomLintRules(
+            registry: IssueRegistry,
+            driver: LintDriver?,
+            warnDeprecated: Boolean
+        ): IssueRegistry =
+            delegate.addCustomLintRules(registry, driver, warnDeprecated)
 
         override fun getAssetFolders(project: Project): List<File> =
             delegate.getAssetFolders(project)
@@ -3101,7 +3119,7 @@ class LintDriver(
                     if (customSuppressNames != null && context != null) {
                         flagInvalidSuppress(
                             context, issue, context.getLocation(currentScope),
-                            issue.suppressNames
+                            currentScope, issue.suppressNames
                         )
                         return false
                     }
@@ -3121,7 +3139,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3181,7 +3199,7 @@ class LintDriver(
                     if (customSuppressNames != null && context != null) {
                         flagInvalidSuppress(
                             context, issue, context.getLocation(currentScope),
-                            issue.suppressNames
+                            currentScope, issue.suppressNames
                         )
                         return false
                     }
@@ -3199,7 +3217,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3237,7 +3255,7 @@ class LintDriver(
                 if (customSuppressNames != null && context != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3254,7 +3272,7 @@ class LintDriver(
                 if (customSuppressNames != null) {
                     flagInvalidSuppress(
                         context, issue, context.getLocation(currentScope),
-                        issue.suppressNames
+                        currentScope, issue.suppressNames
                     )
                     return false
                 }
@@ -3271,6 +3289,7 @@ class LintDriver(
         context: Context,
         issue: Issue,
         location: Location,
+        scope: Any?,
         names: Collection<String>?
     ) {
         var message = "Issue `${issue.id}` is not allowed to be suppressed"
@@ -3284,6 +3303,24 @@ class LintDriver(
             })"
         }
 
+        // Try to flag the warning on the suppression annotation instead
+        if (scope is UAnnotated) {
+            //noinspection ExternalAnnotations
+            scope.uAnnotations.forEach() {
+                if (it.qualifiedName?.contains("Suppress") == true) {
+                    context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
+                    return
+                }
+            }
+        } else if (scope is PsiModifierListOwner) {
+            //noinspection ExternalAnnotations
+            scope.annotations.forEach() {
+                if (it.qualifiedName?.contains("Suppress") == true) {
+                    context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
+                    return
+                }
+            }
+        }
         context.report(IssueRegistry.LINT_ERROR, location, message)
     }
 

@@ -63,6 +63,7 @@ import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -81,6 +82,7 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
+import org.gradle.api.attributes.DocsType;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -181,10 +183,20 @@ public class VariantScopeImpl implements VariantScope {
             if (config != null) {
                 if (configType.isPublicationConfig()) {
                     String classifier = null;
+                    boolean isSourcePublication =
+                            configType == PublishedConfigType.SOURCE_PUBLICATION;
                     if (configSpec.isClassifierRequired()) {
-                        classifier = componentIdentity.getName();
+                        if (isSourcePublication) {
+                            classifier =
+                                    componentIdentity.getName()
+                                            + StringHelper.usLocaleCapitalize(DocsType.SOURCES);
+                        } else {
+                            classifier = componentIdentity.getName();
+                        }
                     } else if (isTestFixturesArtifact) {
                         classifier = TestFixturesUtil.testFixturesClassifier;
+                    } else if (isSourcePublication) {
+                        classifier = DocsType.SOURCES;
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {

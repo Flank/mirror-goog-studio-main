@@ -20,6 +20,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.truth.PathSubject
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -37,6 +39,7 @@ class LintTextOutputTest {
                         """
                             android {
                                 lintOptions {
+                                    disable 'AllowBackup', 'MissingApplicationIcon'
                                     error 'Fake'
                                     textOutput 'stdout'
                                 }
@@ -73,5 +76,44 @@ class LintTextOutputTest {
         ScannerSubject.assertThat(project.buildResult.stderr).doesNotContain(
             "Unknown issue id \"Fake\""
         )
+    }
+
+    // Regression test for b/191897708
+    @Test
+    fun testStdoutWhenUpToDate() {
+        project.executor().run("lintDebug")
+        project.executor().run("lintDebug")
+        assertThat(project.buildResult.upToDateTasks).contains(":lintReportDebug")
+        ScannerSubject.assertThat(project.buildResult.stdout).contains("Unknown issue id \"Fake\"")
+    }
+
+    // Regression test for b/158259845
+    @Test
+    fun testNoIssuesFound() {
+        // First modify the build file so there will be no lint issues.
+        TestFileUtils.searchAndReplace(project.buildFile, "error 'Fake'", "// error 'Fake'")
+        // Verify that stdout and stderr don't contain "No issues found"
+        project.executor().run("lintDebug")
+        ScannerSubject.assertThat(project.buildResult.stdout).doesNotContain("No issues found")
+        ScannerSubject.assertThat(project.buildResult.stderr).doesNotContain("No issues found")
+        // Verify that the text report *does* contain "No issues found" when written to a file
+        TestFileUtils.searchAndReplace(project.buildFile, "'stdout'", "file(\"lint-results.txt\")")
+        project.executor().run("lintDebug")
+        PathSubject.assertThat(project.file("lint-results.txt")).contains("No issues found")
+        // Now modify the build file so that there will be lint issues, and generate a lint baseline
+        TestFileUtils.searchAndReplace(project.buildFile, "disable", "error")
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            "\n\nandroid.lintOptions.baseline file(\"lint-baseline.xml\")\n\n"
+        )
+        project.executor().expectFailure().run("lintDebug")
+        // Verify that the text report says "0 errors, 0 warnings" when written to a file
+        project.executor().run("lintDebug")
+        PathSubject.assertThat(project.file("lint-results.txt")).contains("0 errors, 0 warnings")
+        // Verify that we don't see "0 errors, 0 warnings" if we print to stdout
+        TestFileUtils.searchAndReplace(project.buildFile, "file(\"lint-results.txt\")", "'stdout'")
+        project.executor().run("lintDebug")
+        ScannerSubject.assertThat(project.buildResult.stdout).doesNotContain("0 errors, 0 warnings")
+        ScannerSubject.assertThat(project.buildResult.stderr).doesNotContain("0 errors, 0 warnings")
     }
 }

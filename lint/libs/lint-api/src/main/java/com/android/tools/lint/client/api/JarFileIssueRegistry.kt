@@ -114,7 +114,8 @@ private constructor(
         fun get(
             client: LintClient,
             jarFiles: Collection<File>,
-            currentProject: Project?
+            currentProject: Project? = null,
+            driver: LintDriver? = null
         ): List<JarFileIssueRegistry> {
             val registryMap = try {
                 findRegistries(client, jarFiles)
@@ -134,7 +135,7 @@ private constructor(
 
             for ((registryClass, jarFile) in registryMap) {
                 try {
-                    val registry = get(client, registryClass, jarFile, currentProject) ?: continue
+                    val registry = get(client, registryClass, jarFile, currentProject, driver) ?: continue
                     registries.add(registry)
                 } catch (e: Throwable) {
                     if (logJarProblems()) {
@@ -154,7 +155,8 @@ private constructor(
             client: LintClient,
             registryClassName: String,
             jarFile: File,
-            currentProject: Project?
+            currentProject: Project?,
+            driver: LintDriver?
         ):
             JarFileIssueRegistry? {
                 if (cache == null) {
@@ -172,10 +174,7 @@ private constructor(
                 // Ensure that the scope-to-detector map doesn't return stale results
                 reset()
 
-                val userRegistry = loadIssueRegistry(
-                    client, jarFile, registryClassName,
-                    currentProject
-                )
+                val userRegistry = loadIssueRegistry(client, jarFile, registryClassName, currentProject, driver)
                 return if (userRegistry != null) {
                     val vendor = getVendor(client, userRegistry, jarFile)
                     val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
@@ -229,6 +228,10 @@ private constructor(
             return null
         }
 
+        private fun reportErrors(driver: LintDriver?): Boolean {
+            return driver?.mode != LintDriver.DriverMode.ANALYSIS_ONLY
+        }
+
         /**
          * Given a jar file, create a class loader for it and
          * instantiate the named issue registry.
@@ -241,7 +244,8 @@ private constructor(
             client: LintClient,
             jarFile: File,
             className: String,
-            currentProject: Project?
+            currentProject: Project?,
+            driver: LintDriver?
         ): IssueRegistry? {
             // Make a class loader for this jar
             val url = SdkUtils.fileToUrl(jarFile)
@@ -256,18 +260,20 @@ private constructor(
                 val issues = try {
                     registry.issues
                 } catch (e: Throwable) {
-                    val stacktrace = StringBuilder()
-                    LintDriver.appendStackTraceSummary(e, stacktrace)
-                    val message = "Lint found one or more custom checks that could not " +
-                        "be loaded. The most likely reason for this is that it is using an " +
-                        "older, incompatible or unsupported API in lint. Make sure these " +
-                        "lint checks are updated to the new APIs. The issue registry class " +
-                        "is $className. The class loading issue is ${e.message}: $stacktrace"
+                    if (reportErrors(driver)) {
+                        val stacktrace = StringBuilder()
+                        LintDriver.appendStackTraceSummary(e, stacktrace)
+                        val message = "Lint found one or more custom checks that could not " +
+                            "be loaded. The most likely reason for this is that it is using an " +
+                            "older, incompatible or unsupported API in lint. Make sure these " +
+                            "lint checks are updated to the new APIs. The issue registry class " +
+                            "is $className. The class loading issue is ${e.message}: $stacktrace"
 
-                    LintClient.report(
-                        client = client, issue = OBSOLETE_LINT_CHECK,
-                        message = message, file = jarFile, project = currentProject
-                    )
+                        LintClient.report(
+                            client = client, issue = OBSOLETE_LINT_CHECK,
+                            message = message, file = jarFile, project = currentProject, driver = driver
+                        )
+                    }
                     return null
                 }
 
@@ -288,7 +294,8 @@ private constructor(
                         // doing simple things which is unaffected by lint changes.
                         val verifierError = verify(client, jarFile)
                         if (verifierError != null) {
-                            val message =
+                            if (reportErrors(driver)) {
+                                val message =
 """
 Library lint checks out of date.
 
@@ -309,10 +316,11 @@ if there is a more recent version available.
 Version of Lint API this lint check is using is $api.
 The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
 """.trim()
-                            LintClient.report(
-                                client = client, issue = OBSOLETE_LINT_CHECK,
-                                message = message, file = jarFile, project = currentProject
-                            )
+                                LintClient.report(
+                                    client = client, issue = OBSOLETE_LINT_CHECK,
+                                    message = message, file = jarFile, project = currentProject, driver = driver
+                                )
+                            }
                             return null
                         }
                         // Not returning here: try to run the checks
@@ -320,20 +328,23 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                         try {
                             val minApi = registry.minApi
                             if (minApi > CURRENT_API) {
-                                val message = "Lint found an issue registry (`$className`) which " +
-                                    "requires a newer API level. That means that the custom " +
-                                    "lint checks are intended for a newer lint version; please " +
-                                    "upgrade."
-                                LintClient.report(
-                                    client = client, issue = OBSOLETE_LINT_CHECK,
-                                    message = message, file = jarFile, project = currentProject
-                                )
+                                if (reportErrors(driver)) {
+                                    val message = "Lint found an issue registry (`$className`) which " +
+                                        "requires a newer API level. That means that the custom " +
+                                        "lint checks are intended for a newer lint version; please " +
+                                        "upgrade."
+                                    LintClient.report(
+                                        client = client, issue = OBSOLETE_LINT_CHECK,
+                                        message = message, file = jarFile, project = currentProject, driver = driver
+                                    )
+                                }
                                 return null
                             } else if (api >= CURRENT_API) {
                                 val verifierError = verify(client, jarFile)
                                 if (verifierError != null) {
-                                    val message =
-"""
+                                    if (reportErrors(driver)) {
+                                        val message =
+                                            """
 Requires newer lint.
 
 Lint found an issue registry (`$className`)
@@ -352,10 +363,11 @@ of lint.
 Version of Lint API this lint check is using is $api.
 The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
 """.trim()
-                                    LintClient.report(
-                                        client = client, issue = OBSOLETE_LINT_CHECK,
-                                        message = message, file = jarFile, project = currentProject
-                                    )
+                                        LintClient.report(
+                                            client = client, issue = OBSOLETE_LINT_CHECK,
+                                            message = message, file = jarFile, project = currentProject, driver = driver
+                                        )
+                                    }
                                     return null
                                 }
                             }
@@ -372,44 +384,48 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                         return registry
                     }
 
-                    var message = "Lint found an issue registry (`$className`)\n" +
-                        "which did not specify the Lint API version it was compiled with.\n" +
-                        "\n" +
-                        "**This means that the lint checks are likely not compatible.**\n" +
-                        "\n" +
-                        "If you are the author of this lint check, make your lint\n" +
-                        "`IssueRegistry` class contain\n" +
-                        "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
-                        "or from Java,\n" +
-                        "\u00a0\u00a0@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }"
-
-                    val issueIds = issues.map { it.id }.sorted()
-                    if (issueIds.any()) {
-                        message += (
+                    if (reportErrors(driver)) {
+                        var message = "Lint found an issue registry (`$className`)\n" +
+                            "which did not specify the Lint API version it was compiled with.\n" +
                             "\n" +
+                            "**This means that the lint checks are likely not compatible.**\n" +
+                            "\n" +
+                            "If you are the author of this lint check, make your lint\n" +
+                            "`IssueRegistry` class contain\n" +
+                            "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
+                            "or from Java,\n" +
+                            "\u00a0\u00a0@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }"
+
+                        val issueIds = issues.map { it.id }.sorted()
+                        if (issueIds.any()) {
+                            message += (
                                 "\n" +
-                                "If you are just using lint checks from a third party library\n" +
-                                "you have no control over, you can disable these lint checks (if\n" +
-                                "they misbehave) like this:\n" +
-                                "\n" +
-                                "    android {\n" +
-                                "        lintOptions {\n" +
-                                "            disable ${issueIds.joinToString(
-                                    separator = ",\n                    "
-                                ) { "\"$it\"" }}\n" +
-                                "        }\n" +
-                                "    }\n"
-                            ).replace(
-                            // Force indentation
-                            "    ",
-                            "\u00a0\u00a0\u00a0\u00a0"
+                                    "\n" +
+                                    "If you are just using lint checks from a third party library\n" +
+                                    "you have no control over, you can disable these lint checks (if\n" +
+                                    "they misbehave) like this:\n" +
+                                    "\n" +
+                                    "    android {\n" +
+                                    "        lintOptions {\n" +
+                                    "            disable ${
+                                    issueIds.joinToString(
+                                        separator = ",\n                    "
+                                    ) { "\"$it\"" }
+                                    }\n" +
+                                    "        }\n" +
+                                    "    }\n"
+                                ).replace(
+                                // Force indentation
+                                "    ",
+                                "\u00a0\u00a0\u00a0\u00a0"
+                            )
+                        }
+
+                        LintClient.report(
+                            client = client, issue = OBSOLETE_LINT_CHECK,
+                            message = message, file = jarFile, project = currentProject, driver = driver
                         )
                     }
-
-                    LintClient.report(
-                        client = client, issue = OBSOLETE_LINT_CHECK,
-                        message = message, file = jarFile, project = currentProject
-                    )
                     // Not returning here: try to run the checks
                 }
 

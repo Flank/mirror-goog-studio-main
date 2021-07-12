@@ -18,18 +18,29 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class JacocoWithUnitTestReportTest {
+@RunWith(Parameterized::class)
+class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean) {
 
     @get:Rule
     val testProject = GradleTestProjectBuilder()
         .fromTestProject("unitTesting")
         .create()
+
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun isJacocoTransformEnabled() = arrayOf(true, false)
+    }
 
     @Before
     fun setup() {
@@ -48,7 +59,9 @@ class JacocoWithUnitTestReportTest {
 
     @Test
     fun `test expected report contents`() {
-        testProject.executor().run("createDebugUnitTestCoverageReport")
+        testProject.executor()
+            .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
+            .run("createDebugUnitTestCoverageReport")
         val generatedCoverageReport = FileUtils.join(
             testProject.buildDir,
             "reports",

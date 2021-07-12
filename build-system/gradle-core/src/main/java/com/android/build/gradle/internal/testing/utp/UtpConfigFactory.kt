@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_DDMLIB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_ADDITIONAL_TEST_OUTPUT_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_COVERAGE_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_LOGCAT_PLUGIN
@@ -30,6 +31,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
+import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
 import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto.AndroidTestCoverageConfig
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
@@ -85,6 +87,9 @@ class UtpConfigFactory {
     /**
      * Creates a runner config proto which you can pass into the Unified Test Platform's
      * test executor.
+     *
+     * @param additionalTestOutputDir an additional test output directory on host machine, or null
+     *     when disabled.
      */
     fun createRunnerConfigProtoForLocalDevice(
         device: DeviceConnector,
@@ -99,11 +104,17 @@ class UtpConfigFactory {
         retentionConfig: RetentionConfig,
         coverageOutputDir: File,
         useOrchestrator: Boolean,
+        additionalTestOutputDir: File?,
         testResultListenerServerPort: Int,
         resultListenerClientCert: File,
         resultListenerClientPrivateKey: File,
         trustCertCollection: File
     ): RunnerConfigProto.RunnerConfig {
+        val additionalTestOutputOnDeviceDir = if (additionalTestOutputDir != null) {
+            findAdditionalTestOutputDirectoryOnDevice(device, testData)
+        } else {
+            null
+        }
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
             addDevice(createLocalDevice(device, utpDependencies))
@@ -121,6 +132,8 @@ class UtpConfigFactory {
                     tmpDir,
                     retentionConfig,
                     useOrchestrator,
+                    additionalTestOutputDir,
+                    additionalTestOutputOnDeviceDir,
                     device.name,
                     coverageOutputDir
                 )
@@ -182,6 +195,9 @@ class UtpConfigFactory {
                     null, null, appApks, additionalInstallOptions, helperApks, testData,
                     utpDependencies, versionedSdkLoader,
                     outputDir, tmpDir, retentionConfig, useOrchestrator,
+                    // TODO(b/182813105): Add support for additional test output in managed device.
+                    additionalTestOutputDir = null,
+                    additionalTestOutputOnDeviceDir = null,
                     device.deviceName, coverageOutputDir
                 )
             )
@@ -282,6 +298,8 @@ class UtpConfigFactory {
         tmpDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean,
+        additionalTestOutputDir: File?,
+        additionalTestOutputOnDeviceDir: String?,
         deviceName: String,
         coverageOutputDir: File,
     ): FixtureProto.TestFixture {
@@ -305,7 +323,8 @@ class UtpConfigFactory {
                         .toMutableMap()
                         .apply { put("debug", "true") })
                 testDriver = createTestDriver(
-                    retentionTestData, utpDependencies, useOrchestrator
+                    retentionTestData, utpDependencies, useOrchestrator,
+                    additionalTestOutputOnDeviceDir
                 )
                 addHostPlugin(
                     createIceboxPlugin(
@@ -320,7 +339,8 @@ class UtpConfigFactory {
                                 "automated test snapshot."
                     )
                 }
-                testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
+                testDriver = createTestDriver(testData, utpDependencies, useOrchestrator,
+                                              additionalTestOutputOnDeviceDir)
             }
             addHostPlugin(createAndroidTestPlugin(
                     testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
@@ -330,6 +350,13 @@ class UtpConfigFactory {
                 addHostPlugin(createAndroidTestCoveragePlugin(
                     deviceName, coverageOutputDir, useOrchestrator, testData, utpDependencies
                 ))
+            }
+            if (additionalTestOutputDir != null && additionalTestOutputOnDeviceDir != null) {
+                addHostPlugin(
+                    createAdditionalTestOutputPlugin(
+                        additionalTestOutputDir,
+                        additionalTestOutputOnDeviceDir,
+                        utpDependencies))
             }
         }.build()
     }
@@ -409,7 +436,8 @@ class UtpConfigFactory {
     private fun createTestDriver(
         testData: StaticTestData,
         utpDependencies: UtpDependencies,
-        useOrchestrator: Boolean
+        useOrchestrator: Boolean,
+        additionalTestOutputOnDeviceDir: String?,
     ): ExtensionProto.Extension {
         return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(
             utpDependencies, AndroidInstrumentationDriver::newBuilder) {
@@ -432,6 +460,10 @@ class UtpConfigFactory {
                         putArgsMap(
                             testCoverageArgName,
                             testData.getTestCoverageFilePath(useOrchestrator))
+                    }
+
+                    if (additionalTestOutputOnDeviceDir != null) {
+                        putArgsMap("additionalTestOutputDir", additionalTestOutputOnDeviceDir)
                     }
                 }
             }
@@ -536,6 +568,17 @@ class UtpConfigFactory {
             else -> {
                 "/data/data/${testedApplicationId}/coverage.ec"
             }
+        }
+    }
+
+    private fun createAdditionalTestOutputPlugin(
+        additionalTestOutputDir: File,
+        additionalTestOutputOnDeviceDir: String,
+        utpDependencies:UtpDependencies): ExtensionProto.Extension {
+        return ANDROID_TEST_ADDITIONAL_TEST_OUTPUT_PLUGIN.toExtensionProto(
+            utpDependencies, AndroidAdditionalTestOutputConfig::newBuilder) {
+            additionalOutputDirectoryOnHost = additionalTestOutputDir.absolutePath
+            additionalOutputDirectoryOnDevice = additionalTestOutputOnDeviceDir
         }
     }
 

@@ -2,6 +2,7 @@ package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResValue
 import com.android.aapt.Resources
+import com.android.resources.ResourceType
 import com.android.resources.ResourceVisibility
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -621,6 +622,39 @@ class TableExtractorTest {
     assertThat(getValue("attr/foo")).isNotNull()
     assertThat(getValue("attr/baz")).isNotNull()
     assertThat(getValue("styleable/bar")).isNotNull()
+
+    val styleable = table.packages[0].groups[1].entries.asIterable().first()
+    assertThat(styleable).isNotNull()
+
+    val styleableItem = table.packages[0].groups[1].getStyleable(styleable)
+    assertThat(styleableItem).isNotNull()
+    assertThat(styleableItem.entries.size).isEqualTo(1)
+    assertThat(styleableItem.entries[0].name.entry).isEqualTo("baz")
+  }
+
+  @Test
+  fun testEmptyStyleable() {
+    val input = """
+      <declare-styleable name="bar"/>
+    """.trimIndent()
+    assertThat(testParse(input)).isTrue()
+    assertThat(getValue("styleable/bar")).isNotNull()
+
+    assertThat(table.packages.size).isEqualTo(1)
+    val pck = table.packages[0]
+
+    assertThat(pck.groups.size).isEqualTo(1)
+    val group = pck.groups[0]
+
+    assertThat(group.entries.size).isEqualTo(1)
+    group.entries.forEach {
+        assertThat(it.key).isEqualTo("bar")
+        assertThat(group.type.tagName).isEqualTo("styleable")
+        val styleableContainer = it.value.values.first().values
+        assertThat(styleableContainer.size).isEqualTo(1)
+        assertThat(styleableContainer[0].value).isInstanceOf(Styleable::class.java)
+        assertThat(styleableContainer[0].value).isEqualTo(group.getStyleable(it))
+    }
   }
 
   @Test
@@ -1166,21 +1200,42 @@ class TableExtractorTest {
   @Test
   fun testStrongestSymbolVisibilityWins() {
     val input = """
-      <!-- private -->
-      <java-symbol type="string" name="foo" />
-      <!-- public -->
       <public type="string" name="foo" id="0x01020000" />
-      <!-- private2 -->
-      <java-symbol type="string" name="foo" />
+      <string name="foo" />
+      <java-symbol type="string" name="bar"/>
+      <string name="bar" />
+
+      <string name="foo_rev"/>
+      <public name="foo_rev" type="string"/>
+      <string name="bar_rev"/>
+      <java-symbol name="bar_rev" type="string"/>
     """.trimIndent()
     assertThat(testParse(input)).isTrue()
 
-    val tableResult = table.findResource(parseResourceName("string/foo")!!.resourceName)
-    assertThat(tableResult).isNotNull()
+    val fooResult = table.findResource(parseResourceName("string/foo")!!.resourceName)
+    assertThat(fooResult).isNotNull()
+    assertThat(fooResult!!.entry.visibility.level).isEqualTo(ResourceVisibility.PUBLIC)
 
-    val entry = tableResult!!.entry
-    assertThat(entry.visibility.level).isEqualTo(ResourceVisibility.PUBLIC)
-    assertThat(entry.visibility.comment).isEqualTo("public")
+    val barResult = table.findResource(parseResourceName("string/bar")!!.resourceName)
+    assertThat(barResult).isNotNull()
+    assertThat(barResult!!.entry.visibility.level).isEqualTo(ResourceVisibility.PRIVATE)
+
+    val fooRevResult = table.findResource(parseResourceName("string/foo_rev")!!.resourceName)
+    assertThat(fooRevResult).isNotNull()
+    assertThat(fooRevResult!!.entry.visibility.level).isEqualTo(ResourceVisibility.PUBLIC)
+
+    val barRevResult = table.findResource(parseResourceName("string/bar_rev")!!.resourceName)
+    assertThat(barRevResult).isNotNull()
+    assertThat(barRevResult!!.entry.visibility.level).isEqualTo(ResourceVisibility.PRIVATE)
+  }
+
+  @Test
+  fun testVisibilityConflict() {
+    val input = """
+      <java-symbol type="string" name="foo" />
+      <public type="string" name="foo" id="0x01020000" />
+    """.trimIndent()
+    assertThat(testParse(input)).isFalse()
   }
 
   @Test
