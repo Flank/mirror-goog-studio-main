@@ -57,7 +57,7 @@ public class App {
             @NonNull String componentName,
             @NonNull IShellOutputReceiver receiver)
             throws DeployerException {
-        activateComponent(type, componentName, "", AppComponent.Mode.DEBUG, receiver);
+        activateComponent(type, componentName, "", AppComponent.Mode.RUN, receiver);
     }
 
     public void activateComponent(
@@ -111,6 +111,10 @@ public class App {
                             type, qualifiedName, appId));
         }
         return component;
+    }
+
+    public void forceStop() {
+        device.forceStop(appId);
     }
 
     @NonNull
