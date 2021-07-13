@@ -2125,13 +2125,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     dexingUsingArtifactTransforms,
                     separateFileDependenciesDexingTask)
             taskFactory.register(configAction)
-        } else if (creationConfig.minifiedEnabled) {
-            val configAction = DexMergingTask.CreationAction(
-                    creationConfig,
-                    DexMergingAction.MERGE_ALL,
-                    dexingType,
-                    dexingUsingArtifactTransforms)
-            taskFactory.register(configAction)
         } else {
             val produceSeparateOutputs = (dexingType === DexingType.NATIVE_MULTIDEX
                     && creationConfig.debuggable)
