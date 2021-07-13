@@ -32,6 +32,7 @@ import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.AndroidTest;
 import com.android.build.api.variant.HasAndroidTest;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -945,7 +946,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
 
-        if (component.getVariantType().isTestComponent()) {
+        if (component.getVariantType().isTestComponent() || component instanceof TestVariantImpl) {
             Configuration testHelpers =
                     projectInfo
                             .getProject()
