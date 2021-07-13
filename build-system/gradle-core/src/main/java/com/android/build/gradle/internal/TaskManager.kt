@@ -2655,10 +2655,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     /**
-     * Checks if [ShrinkResourcesOldShrinkerTask] and [ ] should be added to the build pipeline and creates the
-     * tasks
+     * If resource shrinker is enabled, set-up and register the appropriate tasks.
      */
-    protected fun maybeCreateResourcesShrinkerTasks(
+    private fun maybeCreateResourcesShrinkerTasks(
             creationConfig: ConsumableCreationConfig) {
         if (!creationConfig.useResourceShrinker()) {
             return
