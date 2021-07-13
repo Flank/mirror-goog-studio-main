@@ -36,7 +36,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
-    shard_count = 6,
+    shard_count = 7,
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
