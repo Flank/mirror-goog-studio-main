@@ -31,8 +31,10 @@ import java.util.List;
 public class ManifestInfoParserTest {
 
     @Test
-    public void binaryManifestTest() throws IOException {
-        URL url = TestResources.getFile("/manifest/manifestWithActivity.bxml").toURI().toURL();
+    public void activityParsing() throws IOException {
+        URL url = TestResources.getFile("/activityParsing/manifestWithActivity.bxml")
+                .toURI()
+                .toURL();
         Assert.assertNotNull(url);
         try (InputStream input = url.openStream()) {
             ManifestInfo manifest = ManifestInfo.parseBinaryFromStream(input);
@@ -90,7 +92,7 @@ public class ManifestInfoParserTest {
 
     @Test
     public void testServiceParsing() throws IOException {
-        URL url = TestResources.getFile("/manifest/serviceParsing/AndroidManifest.bxml")
+        URL url = TestResources.getFile("/serviceParsing/AndroidManifest.bxml")
                 .toURI()
                 .toURL();
         Assert.assertNotNull(url);
@@ -102,6 +104,8 @@ public class ManifestInfoParserTest {
                                                             manifest.services());
             Assert.assertTrue(service.isolatedProcess);
             Assert.assertTrue(service.hasAction("androidx.wear.tiles.action.BIND_TILE_PROVIDER"));
+            Assert.assertTrue(service.hasPermission(
+                    "com.google.android.wearable.permission.BIND_TILE_PROVIDER"));
 
             ManifestServiceInfo complication = getServiceByQName(
                     "com.example.myapplication.MyComplication",
@@ -109,6 +113,20 @@ public class ManifestInfoParserTest {
             Assert.assertFalse(complication.isolatedProcess);
             Assert.assertTrue(complication.hasAction(
                     "android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"));
+        }
+    }
+
+    @Test
+    public void testManifestInfo() throws IOException {
+        URL url = TestResources.getFile("/manifestInfo/AndroidManifest.bxml")
+                .toURI()
+                .toURL();
+        Assert.assertNotNull(url);
+        try (InputStream input = url.openStream()) {
+            ManifestInfo manifest = ManifestInfo.parseBinaryFromStream(input);
+            Assert.assertEquals(3, manifest.getVersionCode());
+            Assert.assertTrue(manifest.getInstrumentationTargetPackages()
+                                      .contains("com.android.shell"));
         }
     }
 

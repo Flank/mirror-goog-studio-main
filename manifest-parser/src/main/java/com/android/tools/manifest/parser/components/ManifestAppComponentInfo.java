@@ -20,7 +20,9 @@ import com.android.tools.manifest.parser.XmlNode;
 import com.android.xml.AndroidManifest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public abstract class ManifestAppComponentInfo {
 
@@ -31,6 +33,8 @@ public abstract class ManifestAppComponentInfo {
     protected boolean exported = true;
 
     protected List<IntentFilter> intentFilters = new ArrayList<>();
+
+    protected Set<String> permissions = new HashSet<>();
 
     /**
      * Parse an activity xml element (see https://developer.android.com/guide/topics/manifest/activity-element).
@@ -51,6 +55,8 @@ public abstract class ManifestAppComponentInfo {
                 enabled = value.isEmpty() || "true".equals(value);
             } else if (AndroidManifest.ATTRIBUTE_EXPORTED.equals(attribute)) {
                 exported = value.isEmpty() || "true".equals(value);
+            } else if (AndroidManifest.ATTRIBUTE_PERMISSION.equals(attribute)) {
+                permissions.add(value);
             }
         }
 
@@ -81,6 +87,10 @@ public abstract class ManifestAppComponentInfo {
     @NonNull
     public List<IntentFilter> getIntentFilters() {
         return intentFilters;
+    }
+
+    public boolean hasPermission(String permission) {
+        return permissions.contains(permission);
     }
 
     public boolean hasCategory(@NonNull String name) {

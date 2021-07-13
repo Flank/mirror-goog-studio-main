@@ -43,12 +43,15 @@ public class XmlNode {
 
     public XmlNode(XmlStartElementChunk chunk, String chunkName) {
         name = chunkName;
+        // TODO: Instead of a Map<String, String>, we should have it being a Map<String, Value>.
         for (XmlAttribute attribute : chunk.getAttributes()) {
             String name = attribute.name();
             String value;
             BinaryResourceValue typeValue = attribute.typedValue();
             if (typeValue.type() == BinaryResourceValue.Type.INT_BOOLEAN) {
                 value = typeValue.data() == 0 ? "false" : "true";
+            } else if (typeValue.type() == BinaryResourceValue.Type.INT_DEC) {
+                value = String.valueOf(typeValue.data());
             } else {
                 value = attribute.rawValue();
             }

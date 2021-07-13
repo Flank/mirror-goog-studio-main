@@ -93,6 +93,8 @@ public final class AndroidManifest {
     public static final String ATTRIBUTE_ISOLATED_PROCESS = "isolatedProcess";
     public static final String ATTRIBUTE_ENABLED = "enabled";
 
+    public static final String ATTRIBUTE_PERMISSION = "permission";
+
     public static final String VALUE_PARENT_ACTIVITY =
             SdkConstants.ANDROID_SUPPORT_PKG_PREFIX + "PARENT_ACTIVITY";
 

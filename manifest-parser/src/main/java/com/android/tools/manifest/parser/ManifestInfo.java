@@ -16,6 +16,7 @@
 package com.android.tools.manifest.parser;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.xml.AndroidManifest;
@@ -31,12 +32,21 @@ public class ManifestInfo {
 
     private final List<ManifestServiceInfo> services;
 
+    private final List<String> instrumentationTargetPackages;
+
     private String applicationId;
+
+    private String split;
+
+    private int versionCode;
 
     private ManifestInfo() {
         activities = new ArrayList<>();
         services = new ArrayList<>();
         applicationId = "";
+        instrumentationTargetPackages = new ArrayList<>();
+        split = null;
+        versionCode = 0;
     }
 
     @NonNull
@@ -54,17 +64,46 @@ public class ManifestInfo {
         return services;
     }
 
+    @NonNull
+    public List<String> getInstrumentationTargetPackages() {
+        return instrumentationTargetPackages;
+    }
+
+    @Nullable
+    public String getSplitName() {
+        return split;
+    }
+
+    public int getVersionCode() {
+        return versionCode;
+    }
+
     private void parseNode(@NonNull XmlNode node) {
         for (String attribute : node.attributes().keySet()) {
             String value = node.attributes().get(attribute);
             if (AndroidManifest.ATTRIBUTE_PACKAGE.equals(attribute)) {
                 applicationId = value;
+            } else if (AndroidManifest.ATTRIBUTE_SPLIT.equals(attribute)) {
+                split = value;
+            }
+            else if (AndroidManifest.ATTRIBUTE_VERSIONCODE.equals(attribute) && !value.isEmpty()) {
+                versionCode = Integer.parseInt(value);
             }
         }
 
         for (XmlNode child : node.children()) {
             if (AndroidManifest.NODE_APPLICATION.equals(child.name())) {
                 parseApplication(child);
+            } else if (AndroidManifest.NODE_INSTRUMENTATION.equals(child.name())) {
+                parseInstrumentation(child);
+            }
+        }
+    }
+
+    private void parseInstrumentation(@NonNull XmlNode node) {
+        for (String attribute : node.attributes().keySet()) {
+            if (AndroidManifest.ATTRIBUTE_TARGET_PACKAGE.equals(attribute)) {
+                instrumentationTargetPackages.add(node.attributes().get(attribute));
             }
         }
     }
