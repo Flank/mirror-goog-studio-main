@@ -1448,7 +1448,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         if (includeAndroidResources) {
             // merging task for assets in unit tests.
             taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig))
-            
+
             if (testedVariant.variantType.isAar) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(unitTestCreationConfig)
@@ -2029,8 +2029,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(creationConfig)
         maybeCreateJavaCodeShrinkerTask(creationConfig)
+        maybeCreateResourcesShrinkerTasks(creationConfig)
         if (creationConfig.minifiedEnabled) {
-            maybeCreateResourcesShrinkerTasks(creationConfig)
             maybeCreateDesugarLibTask(creationConfig, false)
             return
         }
@@ -2053,7 +2053,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
         createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
-        maybeCreateResourcesShrinkerTasks(creationConfig)
         maybeCreateDexSplitterTask(creationConfig)
     }
 
