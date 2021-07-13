@@ -4,10 +4,7 @@ When bazel is invoked with this aspect attached, it validates that only
 the allowlisted targets below can use the eternal timeout.
 """
 APPROVED_ETERNAL_TESTS = [
-    "//tools/adt/idea/sync-perf-tests:intellij.android.sync-perf-tests_tests__all",
     "//tools/adt/idea/old-agp-tests:intellij.android.old-agp-tests_tests",
-    "//tools/adt/idea/ide-perf-tests:intellij.android.ide-perf-tests_tests__all",
-    "//tools/adt/idea/designer-perf-tests:intellij.android.designer-perf-tests_tests",
     "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__testartifacts",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__other",
