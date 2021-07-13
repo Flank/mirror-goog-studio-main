@@ -17,8 +17,8 @@ package com.android.testutils;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,21 +41,19 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.model.InitializationError;
 
 /**
- * Defines how to extract tests from class path jars or any particular given jar. Once built,
- * tests can be extracted using {@link #scanTestClasses}.
+ * Defines how to extract tests from class path jars or any particular given jar. Once built, tests
+ * can be extracted using {@link #scanTestClasses}.
  *
  * <p>This lets test Suite's filter and run a subset of tests.
  */
-class TestGroup {
+public class TestGroup {
     private static final String JAVA_CLASS_PATH = "java.class.path";
 
     private final ClassLoader classLoader;
@@ -234,11 +232,13 @@ class TestGroup {
         boolean includeJUnit3;
         Set<String> classNamesToExclude;
 
-        private Builder() {}
+        private Builder() {
+            this.classLoader = Thread.currentThread().getContextClassLoader();
+        }
 
         /** Sets the class loader for loading test classes. */
         public Builder setClassLoader(ClassLoader classLoader) {
-            this.classLoader = classLoader;
+            this.classLoader = Preconditions.checkNotNull(classLoader);
             return this;
         }
 
