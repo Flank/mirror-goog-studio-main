@@ -19,6 +19,7 @@ package com.android.tools.utp.plugins.host.additionaltestoutput
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
+import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.config.ProtoConfig
 import com.google.testing.platform.api.device.CommandResult
@@ -27,6 +28,7 @@ import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.core.TestResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
 import org.junit.Before
@@ -40,6 +42,7 @@ import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.inOrder
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
@@ -57,6 +60,8 @@ class AndroidAdditionalTestOutputPluginTest {
 
     @Mock private lateinit var mockDeviceController: DeviceController
     @Mock private lateinit var mockLogger: Logger
+
+    private lateinit var testResultAfterEach: TestResultProto.TestResult
 
     private var commandResult: CommandResult = CommandResult(0, listOf())
 
@@ -90,6 +95,7 @@ class AndroidAdditionalTestOutputPluginTest {
     }
 
     private fun runPlugin(
+        testResult: TestResultProto.TestResult = TestResultProto.TestResult.getDefaultInstance(),
         configFunc: AndroidAdditionalTestOutputConfig.Builder.() -> Unit) {
         val config = AndroidAdditionalTestOutputConfig.newBuilder().apply {
             configFunc(this)
@@ -97,7 +103,7 @@ class AndroidAdditionalTestOutputPluginTest {
         createPlugin(config).apply {
             beforeAll(mockDeviceController)
             beforeEach(null, mockDeviceController)
-            afterEach(TestResultProto.TestResult.getDefaultInstance(), mockDeviceController)
+            testResultAfterEach = afterEach(testResult, mockDeviceController)
             afterAll(TestSuiteResultProto.TestSuiteResult.getDefaultInstance(), mockDeviceController)
         }
     }
@@ -122,9 +128,11 @@ class AndroidAdditionalTestOutputPluginTest {
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
             verify(mockDeviceController).pull(createTestArtifact(
-                "${deviceDir}/output1.txt", "${hostDir}/output1.txt"))
+                "${deviceDir}/output1.txt",
+                "${hostDir}${File.separator}output1.txt"))
             verify(mockDeviceController).pull(createTestArtifact(
-                "${deviceDir}/output2.txt", "${hostDir}/output2.txt"))
+                "${deviceDir}/output2.txt",
+                "${hostDir}${File.separator}output2.txt"))
             verifyNoMoreInteractions()
         }
 
@@ -143,7 +151,8 @@ class AndroidAdditionalTestOutputPluginTest {
         )).thenReturn(CommandResult(0, listOf("output1.txt")))
 
         `when`(mockDeviceController.pull(eq(createTestArtifact(
-            "${deviceDir}/output1.txt", "${hostDir}/output1.txt"))))
+            "${deviceDir}/output1.txt",
+            "${hostDir}${File.separator}output1.txt"))))
             .thenThrow(exception)
 
         runPlugin {
@@ -156,9 +165,75 @@ class AndroidAdditionalTestOutputPluginTest {
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
             verify(mockDeviceController).pull(createTestArtifact(
-                "${deviceDir}/output1.txt", "${hostDir}/output1.txt"))
+                "${deviceDir}/output1.txt",
+                "${hostDir}${File.separator}output1.txt"))
             verify(mockLogger).log(eq(Level.WARNING), eq(exception), any())
             verifyNoMoreInteractions()
         }
+    }
+
+    @Test
+    fun bechmarkResultFilesShouldBeCopiedAfterEachTest() {
+        val hostDir = tempDirs.newFolder().absolutePath
+        val deviceDir = "/onDevice/outputDir/"
+
+        val benchmarkMessage = """
+            WARNING: Running on Emulator
+            Benchmark is running on an emulator, which is not representative of
+            real user devices. Use a physical device to benchmark. Emulator
+            benchmark improvements might not carry over to a real user's
+            experience (or even regress real device performance).
+            FrameTimingBenchmark_start
+            frameTime50thPercentileMs   [min  17](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace),   [median  18](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [max  19](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace)
+            frameTime90thPercentileMs   [min  27](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace),   [median  29](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [max  30](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace)
+            frameTime95thPercentileMs   [min  32](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace),   [median  32](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [max  32](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace)
+            frameTime99thPercentileMs   [min  34](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [median  41](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [max  48](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace)
+            totalFrameCount   [min 285](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace),   [median 291](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace),   [max 296](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace)
+            Traces: Iteration [0](file://FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace) [1](file://FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace)
+        """.trimIndent()
+        val benchmarkOutputDir =
+            "/sdcard/Android/media/com.example.macrobenchmark/additional_test_output"
+
+        val testResultWithBenchmark = TestResultProto.TestResult.newBuilder().apply {
+            addDetailsBuilder().apply {
+                key = "android.studio.v2display.benchmark"
+                value = benchmarkMessage
+            }
+            addDetailsBuilder().apply {
+                key = "android.studio.v2display.benchmark.outputDirPath"
+                value = benchmarkOutputDir
+            }
+        }.build()
+
+        runPlugin(testResultWithBenchmark) {
+            additionalOutputDirectoryOnHost = hostDir
+            additionalOutputDirectoryOnDevice = deviceDir
+        }
+
+        verify(mockDeviceController).pull(createTestArtifact(
+            "${benchmarkOutputDir}/FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace",
+            "${hostDir}${File.separator}FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace"))
+        verify(mockDeviceController).pull(createTestArtifact(
+            "${benchmarkOutputDir}/FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace",
+            "${hostDir}${File.separator}FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace"))
+
+        verifyNoMoreInteractions(mockLogger)
+
+        assertThat(testResultAfterEach.outputArtifactCount).isEqualTo(3)
+        assertThat(testResultAfterEach.getOutputArtifact(0).label.namespace).isEqualTo("android")
+        assertThat(testResultAfterEach.getOutputArtifact(0).label.label)
+            .isEqualTo("additionaltestoutput.benchmark.message")
+        assertThat(testResultAfterEach.getOutputArtifact(0).sourcePath.path)
+            .isEqualTo("${hostDir}${File.separator}additionaltestoutput.benchmark.message.txt")
+        assertThat(testResultAfterEach.getOutputArtifact(1).label.namespace).isEqualTo("android")
+        assertThat(testResultAfterEach.getOutputArtifact(1).label.label)
+            .isEqualTo("additionaltestoutput.benchmark.trace")
+        assertThat(testResultAfterEach.getOutputArtifact(1).sourcePath.path)
+            .isEqualTo("${hostDir}${File.separator}FrameTimingBenchmark_start_iter000_2021-07-15-21-32-39.trace")
+        assertThat(testResultAfterEach.getOutputArtifact(2).label.namespace).isEqualTo("android")
+        assertThat(testResultAfterEach.getOutputArtifact(2).label.label)
+            .isEqualTo("additionaltestoutput.benchmark.trace")
+        assertThat(testResultAfterEach.getOutputArtifact(2).sourcePath.path)
+            .isEqualTo("${hostDir}${File.separator}FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace")
     }
 }

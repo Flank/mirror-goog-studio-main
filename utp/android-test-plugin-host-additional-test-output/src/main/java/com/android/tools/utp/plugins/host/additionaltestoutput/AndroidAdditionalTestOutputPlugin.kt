@@ -16,6 +16,7 @@
 package com.android.tools.utp.plugins.host.additionaltestoutput
 
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
+import com.google.common.io.Files
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
 import com.google.testing.platform.api.device.CommandResult
@@ -36,8 +37,21 @@ import java.util.logging.Logger
  */
 class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()) : HostPlugin {
 
-    // Note: an empty companion object is required for getLogger().
-    companion object {}
+    companion object {
+        const private val BENCHMARK_TEST_METRICS_KEY = "android.studio.display.benchmark"
+        const private val BENCHMARK_V2_TEST_METRICS_KEY = "android.studio.v2display.benchmark"
+        const private val BENCHMARK_PATH_TEST_METRICS_KEY = "android.studio.v2display.benchmark.outputDirPath"
+        private val benchmarkPrefixRegex = "^benchmark:( )?".toRegex(RegexOption.MULTILINE)
+        // Valid string: Benchmark test took [200 ms](path/to/my.trace) to run.
+        // text = 200 ms, url = path/to/my.trace, title = "", total = "[200 ms](path/to/my.trace)"
+        private val benchmarkUrlRegex =
+            "(?<total>\\[(?<text>.+?)\\]\\((?<link>[^ ]+?)(?: \"(?<title>.+?)\")?\\))".toRegex()
+        // Workaround for the Kotlin issue KT-20865.
+        // matchResult.groups.get(BENCHMARK_LINK_REGEX_GROUP_INDEX)?.value is equivalent to
+        // matchResult.groups["link"]?.value.
+        const private val BENCHMARK_LINK_REGEX_GROUP_INDEX = 3
+        const private val BENCHMARK_TRACE_FILE_PREFIX = "file://"
+    }
 
     lateinit var config: AndroidAdditionalTestOutputConfig
 
@@ -77,10 +91,108 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     }
 
     override fun afterEach(testResult: TestResult, deviceController: DeviceController): TestResult {
-        // TODO: Reads testMetrics reported by am instrument command and create and add benchmark
-        //       artifacts to TestResult. UTP's TestResult proto doesn't support testMetrics yet.
-        //       Refer to DdmlibTestRunListenerAdapter for more details.
-        return testResult
+        val builder = testResult.toBuilder()
+        addBenchmarkOutput(testResult, deviceController, builder)
+        return builder.build()
+    }
+
+    /**
+     * Retrieves benchmark output text from a given [testResult] and appends them into
+     * the [builder].
+     */
+    private fun addBenchmarkOutput(
+        testResult: TestResult, deviceController: DeviceController,
+        builder: TestResult.Builder) {
+        // Workaround solution for b/154322086.
+        // Newer libraries output strings on both BENCHMARK_TEST_METRICS_KEY and
+        // BENCHMARK_V2_OUTPUT_TEST_METRICS_KEY. The V2 supports linking while the V1 does not.
+        // This is done to maintain backward compatibility with older versions of studio.
+        val key = if (testResult.detailsList.find { entry ->
+                entry.key == BENCHMARK_V2_TEST_METRICS_KEY
+            } != null) {
+            BENCHMARK_V2_TEST_METRICS_KEY
+        } else {
+            BENCHMARK_TEST_METRICS_KEY
+        }
+
+        val benchmarkMessage = testResult.detailsList.find { entry ->
+            entry.key == key
+        }?.value ?: ""
+        val benchmarkMessageWithoutPrefix = benchmarkPrefixRegex.replace(benchmarkMessage, "")
+        val benchmarkOutputDir = testResult.detailsList.find { entry ->
+            entry.key == BENCHMARK_PATH_TEST_METRICS_KEY
+        }?.value ?: ""
+
+        addBenchmarkMessage(benchmarkMessageWithoutPrefix, builder)
+        addBenchmarkFiles(benchmarkMessageWithoutPrefix, benchmarkOutputDir, deviceController,
+                          builder)
+    }
+
+    /**
+     * Finds a file path to a profiler output file from [benchmarkMessage], pulls files from the
+     * test device to the host machine and adds them to the [builder].
+     */
+    private fun addBenchmarkFiles(
+        benchmarkMessage: String, benchmarkOutputDir: String, deviceController: DeviceController,
+        builder: TestResult.Builder) {
+        if (benchmarkMessage.isBlank() || benchmarkOutputDir.isBlank()) {
+            return;
+        }
+
+        val benchmarkFileRelativePaths = benchmarkMessage.split("\n")
+            .flatMap { line ->
+                benchmarkUrlRegex.findAll(line).asIterable()
+            }
+            .map { matchResult ->
+                matchResult.groups.get(BENCHMARK_LINK_REGEX_GROUP_INDEX)?.value
+            }
+            .filterNotNull()
+            .filter { matchValue ->
+                matchValue.startsWith(BENCHMARK_TRACE_FILE_PREFIX)
+            }
+            .map { matchValue ->
+                matchValue.replace(BENCHMARK_TRACE_FILE_PREFIX, "")
+            }
+            .toSet()
+
+        benchmarkFileRelativePaths.forEach { relativeFilePath ->
+            val deviceFilePath = "${benchmarkOutputDir}/${relativeFilePath}"
+            val hostFilePath =
+                "${File(config.additionalOutputDirectoryOnHost).absolutePath}" +
+                        "${File.separator}${relativeFilePath}"
+            deviceController.pull(TestArtifactProto.Artifact.newBuilder().apply {
+                destinationPathBuilder.path = deviceFilePath
+                sourcePathBuilder.path = hostFilePath
+            }.build())
+
+            builder.addOutputArtifactBuilder().apply {
+                labelBuilder.apply {
+                    namespace = "android"
+                    label = "additionaltestoutput.benchmark.trace"
+                }
+                sourcePathBuilder.apply {
+                    path = hostFilePath
+                }
+            }
+        }
+    }
+
+    private fun addBenchmarkMessage(benchmarkMessage: String, builder: TestResult.Builder) {
+        if (benchmarkMessage.isBlank()) {
+            return
+        }
+        val benchmarkMessageOutputFile = File(config.additionalOutputDirectoryOnHost,
+                                              "additionaltestoutput.benchmark.message.txt")
+        Files.asCharSink(benchmarkMessageOutputFile, Charsets.UTF_8).write(benchmarkMessage)
+        builder.addOutputArtifactBuilder().apply {
+            labelBuilder.apply {
+                namespace = "android"
+                label = "additionaltestoutput.benchmark.message"
+            }
+            sourcePathBuilder.apply {
+                path = benchmarkMessageOutputFile.absolutePath
+            }
+        }
     }
 
     override fun afterAll(
@@ -109,7 +221,7 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
             .forEach {
                 deviceController.pull(TestArtifactProto.Artifact.newBuilder().apply {
                     destinationPathBuilder.path = "${deviceDir}/${it}"
-                    sourcePathBuilder.path = "${hostDir}/${it}"
+                    sourcePathBuilder.path = "${hostDir}${File.separator}${it}"
                 }.build())
             }
     }
