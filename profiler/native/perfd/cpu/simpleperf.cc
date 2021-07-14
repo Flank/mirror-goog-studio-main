@@ -179,7 +179,16 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   }
 
   command << " --exit-with-parent";
-  command << " --log-to-android-buffer";
+
+  // --log-to-android-buffer adds simpleperf logs in logcat. It's available in
+  // the system's builtin simpleperf of R+. The profiler always invokes a
+  // sideloaded simpleperf that supports it, which is sufficient for debuggable
+  // processes. However, for profileable processes, the sideloaded simpleperf
+  // would invoke the system's builtin one. Therefore, for simplicity, we only
+  // add this flag for R+.
+  if (feature_level_ >= DeviceInfo::R) {
+    command << " --log-to-android-buffer";
+  }
 
   return command.str();
 }

@@ -87,7 +87,12 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
   explicit FakeSimpleperfGetFeatures()
       : FakeSimpleperfGetFeatures(false, true) {}
   explicit FakeSimpleperfGetFeatures(bool is_emulator, bool is_user_build)
-      : Simpleperf(kFakeSimpleperfDir, is_emulator, is_user_build) {}
+      : Simpleperf(kFakeSimpleperfDir, DeviceInfo::R, is_emulator,
+                   is_user_build) {}
+  explicit FakeSimpleperfGetFeatures(int feature_level, bool is_emulator,
+                                     bool is_user_build)
+      : Simpleperf(kFakeSimpleperfDir, feature_level, is_emulator,
+                   is_user_build) {}
 
   // A public wrapper for the homonym protected method, for testing.
   string GetRecordCommand(int pid, const string& pkg_name,
@@ -110,8 +115,8 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
   string features_;
 };
 
-TEST(SimpleperfTest, RecordCommandParams) {
-  FakeSimpleperfGetFeatures simpleperf;
+TEST(SimpleperfTest, RecordCommandParamsForRPlus) {
+  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::R, false, true};
 
   string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
                                                       kFakeTracePath, 100);
@@ -131,6 +136,13 @@ TEST(SimpleperfTest, RecordCommandParams) {
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
   // --log-to-android-buffer flag
   EXPECT_THAT(record_command, HasArgument("--log-to-android-buffer"));
+}
+
+TEST(SimpleperfTest, RecordCommandParamsForPreR) {
+  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::Q, false, true};
+  string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
+                                                      kFakeTracePath, 100);
+  EXPECT_THAT(record_command, Not(HasArgument("--log-to-android-buffer")));
 }
 
 TEST(SimpleperfTest, NonUserBuildUseSuRoot) {
