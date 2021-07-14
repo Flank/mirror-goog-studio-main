@@ -110,7 +110,11 @@ abstract class ComponentImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
     override val namespace: Provider<String> =
-        internalServices.providerOf(String::class.java, variantDslInfo.namespace)
+        internalServices.providerOf(
+            type = String::class.java,
+            value = variantDslInfo.namespace,
+            disallowUnsafeRead = false, // allow unsafe read for KAGP : b/193706116
+        )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,

@@ -117,10 +117,12 @@ open class TestVariantImpl @Inject constructor(
     // TODO: We should keep this (for the manifest) but just fix the test runner to get the
     //         tested application id from the APK metadata file for uninstalling.
     override val testedApplicationId: Provider<String> by lazy {
-        if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(experimentalProperties.get())) {
-            applicationId
-        } else {
-            calculateTestedApplicationId(variantDependencies)
+        experimentalProperties.flatMap {
+            if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(it)) {
+                applicationId
+            } else {
+                calculateTestedApplicationId(variantDependencies)
+            }
         }
     }
 

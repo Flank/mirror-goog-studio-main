@@ -19,6 +19,15 @@ package com.android.build.api.variant
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 
+/**
+ * Parameters to use when building native components.
+ *
+ * Warning: Due to current limitations in how Android Gradle Plugin and native build interacts,
+ * it is not possible to wire a [org.gradle.api.Task] mapped [org.gradle.api.provider.Provider] to
+ * any of the collection [ListProperty] or [SetProperty] below. These properties must be resolved at
+ * configuration time and therefore cannot have results based on Task execution. This limitation
+ * might be lifted in the future.
+ */
 interface ExternalNativeBuild {
 
     /**

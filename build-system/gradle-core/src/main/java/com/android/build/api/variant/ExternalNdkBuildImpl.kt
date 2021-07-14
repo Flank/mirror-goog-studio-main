@@ -28,31 +28,36 @@ class ExternalNdkBuildImpl(
 
     override val abiFilters: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeNdkBuildOptions.abiFilters
+                type = String::class.java,
+                value = mergedExternalNativeNdkBuildOptions.abiFilters,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val arguments: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeNdkBuildOptions.arguments
+                type = String::class.java,
+                value = mergedExternalNativeNdkBuildOptions.arguments,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cFlags: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeNdkBuildOptions.getcFlags()
+                type = String::class.java,
+                value = mergedExternalNativeNdkBuildOptions.getcFlags(),
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cppFlags: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeNdkBuildOptions.cppFlags
+                type = String::class.java,
+                value = mergedExternalNativeNdkBuildOptions.cppFlags,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val targets: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeNdkBuildOptions.targets
+                type = String::class.java,
+                value = mergedExternalNativeNdkBuildOptions.targets,
+                disallowUnsafeRead = false, // see b/193722661
             )
 }
