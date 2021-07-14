@@ -38,7 +38,7 @@ class AgentInteractionCommand : public Command {
   // Make sure the app_server and the agent are in the code_cache/startup_agent
   // folder (in app land).
   // Also create an InstallClient to enable app server comm.
-  bool PrepareInteraction(const std::string& agent_filename);
+  bool PrepareInteraction(proto::Arch arch);
 
   // Tries to attach an agent to each process in the request; if any agent fails
   // to attach, returns false.

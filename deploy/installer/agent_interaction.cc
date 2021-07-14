@@ -27,16 +27,22 @@ namespace deploy {
 
 namespace {
 uint64_t socket_counter = 0;
+std::string kAgent = "agent.so";
+std::string kAgentAlt = "agent-alt.so";
 }
 
-bool AgentInteractionCommand::PrepareInteraction(
-    const std::string& agent_filename) {
+bool AgentInteractionCommand::PrepareInteraction(proto::Arch arch) {
+  // Determine which agent we need to use.
+#if defined(__aarch64__) || defined(__x86_64__)
+  agent_filename_ = arch == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
+#else
+  agent_filename_ = kAgent;
+#endif
+
   if (package_name_.empty()) {
     ErrEvent("Unable to Prepare interaction without a package name");
     return false;
   }
-
-  agent_filename_ = agent_filename;
 
   // Extract binaries
   std::vector<std::string> to_extract = {agent_filename_, kInstallServer};

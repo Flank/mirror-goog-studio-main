@@ -48,8 +48,6 @@ struct is_vector<std::vector<T>> : public std::true_type {};
 
 namespace deploy {
 
-extern const std::string kAgent;
-extern const std::string kAgentAlt;
 extern const std::string kInstallServer;
 
 // std::literals::string_literals::operator""s is only available in c++14. Until

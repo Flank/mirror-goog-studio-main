@@ -45,14 +45,7 @@ void OverlaySwapCommand::ParseParameters(
 void OverlaySwapCommand::Run(proto::InstallerResponse* response) {
   proto::SwapResponse* swap_response = response->mutable_swap_response();
 
-  // Determine which agent we need to use.
-#if defined(__aarch64__) || defined(__x86_64__)
-  std::string agent_filename =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#else
-  std::string agent_filename = kAgent;
-#endif
-  if (!PrepareInteraction(agent_filename)) {
+  if (!PrepareInteraction(request_.arch())) {
     ErrEvent("Unable to prepare interaction");
     return;
   }

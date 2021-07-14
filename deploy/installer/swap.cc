@@ -80,13 +80,7 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
   LogEvent("Got swap request for:" + request_.package_name());
 
   // Attach agents to pids.
-  std::string agent_filename = kAgent;
-#if defined(__aarch64__) || defined(__x86_64__)
-  if (request_.arch() == proto::ARCH_32_BIT) {
-    agent_filename = kAgentAlt;
-  }
-#endif
-  if (!PrepareInteraction(agent_filename)) {
+  if (!PrepareInteraction(request_.arch())) {
     cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Unable to setup workspace");
