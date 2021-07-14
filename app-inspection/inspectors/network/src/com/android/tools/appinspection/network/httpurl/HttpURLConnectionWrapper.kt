@@ -16,6 +16,7 @@
 package com.android.tools.appinspection.network.httpurl
 
 import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.HttpURLConnection
@@ -29,11 +30,12 @@ import java.security.Permission
 class HttpURLConnectionWrapper(
     wrapped: HttpURLConnection,
     callstack: String,
-    trackerFactory: HttpTrackerFactory
+    trackerFactory: HttpTrackerFactory,
+    interceptionRuleService: InterceptionRuleService
 ) : HttpURLConnection(wrapped.url) {
 
     private val trackedConnection: TrackedHttpURLConnection =
-        TrackedHttpURLConnection(wrapped, callstack, trackerFactory)
+        TrackedHttpURLConnection(wrapped, callstack, trackerFactory, interceptionRuleService)
 
     override fun getHeaderFieldKey(n: Int): String {
         return trackedConnection.getHeaderFieldKey(n)

@@ -17,6 +17,7 @@ package com.android.tools.appinspection.network.httpurl
 
 import com.android.tools.appinspection.common.getStackTrace
 import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
 import java.net.HttpURLConnection
 import java.net.URLConnection
 import javax.net.ssl.HttpsURLConnection
@@ -28,7 +29,8 @@ import javax.net.ssl.HttpsURLConnection
  */
 fun wrapURLConnection(
     wrapped: URLConnection,
-    trackerFactory: HttpTrackerFactory
+    trackerFactory: HttpTrackerFactory,
+    interceptionRuleService: InterceptionRuleService
 ): URLConnection {
     // Skip the irrelevant stack trace elements (including app inspection stack frames)
     val callstack = getStackTrace(2)
@@ -36,10 +38,10 @@ fun wrapURLConnection(
     // Create the wrapper class based on the dynamic type of the wrapped object
     return when (wrapped) {
         is HttpsURLConnection -> {
-            HttpsURLConnectionWrapper(wrapped, callstack, trackerFactory)
+            HttpsURLConnectionWrapper(wrapped, callstack, trackerFactory, interceptionRuleService)
         }
         is HttpURLConnection -> {
-            HttpURLConnectionWrapper(wrapped, callstack, trackerFactory)
+            HttpURLConnectionWrapper(wrapped, callstack, trackerFactory, interceptionRuleService)
         }
         else -> {
             wrapped

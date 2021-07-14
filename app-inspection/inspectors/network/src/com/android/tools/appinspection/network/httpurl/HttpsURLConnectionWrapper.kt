@@ -16,6 +16,7 @@
 package com.android.tools.appinspection.network.httpurl
 
 import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URL
@@ -33,11 +34,13 @@ import javax.net.ssl.SSLSocketFactory
 class HttpsURLConnectionWrapper(
     private val wrappedHttps: HttpsURLConnection,
     callstack: String,
-    trackerFactory: HttpTrackerFactory
+    trackerFactory: HttpTrackerFactory,
+    interceptionRuleService: InterceptionRuleService
 ) : HttpsURLConnection(wrappedHttps.url) {
 
-    private val trackedConnection: TrackedHttpURLConnection =
-        TrackedHttpURLConnection(wrappedHttps, callstack, trackerFactory)
+    private val trackedConnection =
+        TrackedHttpURLConnection(wrappedHttps, callstack, trackerFactory, interceptionRuleService)
+
     override fun getCipherSuite(): String {
         return wrappedHttps.cipherSuite
     }

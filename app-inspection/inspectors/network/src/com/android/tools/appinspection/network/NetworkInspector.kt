@@ -25,6 +25,9 @@ import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
 import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
 import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
+import com.android.tools.appinspection.network.rules.BodyInterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRuleServiceImpl
+import com.android.tools.appinspection.network.rules.UrlInterceptionCriteria
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
 import kotlinx.coroutines.CoroutineScope
@@ -54,27 +57,48 @@ class NetworkInspector(
 
     private var okHttp2Interceptors: List<Interceptor>? = null
 
-    override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
-        // Network inspector only supports the start inspector command.
-        // Studio should only ever send one start command, but it's harmless to
-        // reply with a response. We just need to make sure that we don't collect
-        // information twice.
-        val command = NetworkInspectorProtocol.Command.parseFrom(data)
-        assert(command.hasStartInspectionCommand())
-        callback.reply(
-            NetworkInspectorProtocol.Response.newBuilder()
-                .setStartInspectionResponse(
-                    NetworkInspectorProtocol.StartInspectionResponse.newBuilder()
-                        .setTimestamp(System.nanoTime())
-                )
-                .build()
-                .toByteArray()
-        )
+    private val interceptionService = InterceptionRuleServiceImpl()
 
-        if (!isStarted) {
-            startSpeedCollection()
-            registerHooks()
-            isStarted = true
+    override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
+        val command = NetworkInspectorProtocol.Command.parseFrom(data)
+        when {
+            command.hasStartInspectionCommand() -> {
+                callback.reply(
+                    NetworkInspectorProtocol.Response.newBuilder()
+                        .setStartInspectionResponse(
+                            NetworkInspectorProtocol.StartInspectionResponse.newBuilder()
+                                .setTimestamp(System.nanoTime())
+                        )
+                        .build()
+                        .toByteArray()
+                )
+
+                // Studio should only ever send one start command, but it's harmless to
+                // reply with a response. We just need to make sure that we don't collect
+                // information twice.
+                if (!isStarted) {
+                    startSpeedCollection()
+                    registerHooks()
+                    isStarted = true
+                }
+            }
+            command.hasInterceptCommand() -> {
+                interceptionService.addRule(
+                    BodyInterceptionRule(
+                        UrlInterceptionCriteria(command.interceptCommand.url),
+                        command.interceptCommand.responseBody.toByteArray()
+                    )
+                )
+                System.err.println("INSPECTOR: Added intercept rule.")
+                callback.reply(
+                    NetworkInspectorProtocol.Response.newBuilder().apply {
+                        interceptResponse =
+                            NetworkInspectorProtocol.InterceptResponse.getDefaultInstance()
+                    }
+                        .build()
+                        .toByteArray()
+                )
+            }
         }
     }
 
@@ -111,7 +135,7 @@ class NetworkInspector(
             URL::class.java,
             "openConnection()Ljava/net/URLConnection;",
             ArtTooling.ExitHook<URLConnection> { urlConnection ->
-                wrapURLConnection(urlConnection, trackerService)
+                wrapURLConnection(urlConnection, trackerService, interceptionService)
             }
         )
 

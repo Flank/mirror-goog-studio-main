@@ -81,16 +81,24 @@ message Command {
         // causing the inspector to apply bytecode transformation in order
         // to add hooks into Http code.
         StartInspectionCommand start_inspection_command = 1;
+        InterceptCommand intercept_command = 2;
     }
 }
 
 message StartInspectionCommand {
 }
 
+message InterceptCommand {
+    string url = 1;
+
+    string response_body = 2;
+}
+
 message Response {
     oneof union {
         // Response to StartInspectionCommand.
         StartInspectionResponse start_inspection_response = 1;
+        InterceptResponse intercept_response = 2;
     }
 }
 
@@ -98,6 +106,9 @@ message StartInspectionResponse {
     // This timestamp in nanoseconds represents the baseline for the clock the app
     // is running on. This helps Studio in rendering the inspector timeline.
     int64 timestamp = 1;
+}
+
+message InterceptResponse {
 }
 
 
