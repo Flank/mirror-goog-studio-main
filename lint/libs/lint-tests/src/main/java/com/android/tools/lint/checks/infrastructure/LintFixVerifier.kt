@@ -46,7 +46,7 @@ import java.util.regex.Pattern
  *     performer accumulates all the fixes into a single edit.
  *     But we should be able to share a bunch of the logic.)
  */
-class LintFixVerifier(private val task: TestLintTask, state: TestResultState) {
+class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode, state: TestResultState) {
     private val incidents: List<Incident> = state.incidents
     private val client: TestLintClient = state.client
     private var diffWindow = 0
@@ -119,17 +119,23 @@ class LintFixVerifier(private val task: TestLintTask, state: TestResultState) {
             // Also allow trailing spaces in embedded lines since the old differ
             // included that
             actual.replace("\\s+\n".toRegex(), "\n")
-                .trim { it <= ' ' } != expected.replace("\\s+\n".toRegex(), "\n").trim { it <= ' ' }
+                .trim() != expected.replace("\\s+\n".toRegex(), "\n").trim()
         ) {
             // Until 3.2 canary 10 the line numbers were off by one; try adjusting
             if (bumpFixLineNumbers(expected.replace("\\s+\n".toRegex(), "\n"))
-                .trim { it <= ' ' } != actual.replace("\\s+\n".toRegex(), "\n").trim { it <= ' ' }
+                .trim() != actual.replace("\\s+\n".toRegex(), "\n").trim()
             ) {
+                if (mode.sameOutput(expected, actual, TestMode.OutputKind.QUICKFIXES)) {
+                    return this
+                }
+
                 // If not implicitly matching with whitespace cleanup and number adjustments
                 // just assert that they're equal -- this will never be true but we want
                 // the test failure output to show the original comparison such that updated
                 // test copying from the diff includes the new normalized output.
-                assertEquals(expected, actual)
+                val modePrefix = TestLintClient.testModePrefix(mode)
+                val defaultPrefix = if (modePrefix.isEmpty()) "" else "Default:\n\n"
+                assertEquals(defaultPrefix + expected, modePrefix + actual)
             }
         }
         return this
@@ -273,7 +279,7 @@ class LintFixVerifier(private val task: TestLintTask, state: TestResultState) {
                 override fun writeFile(pendingFile: PendingEditFile, contents: String) {
                     val project = incident.project
                     val targetPath = project?.getDisplayPath(pendingFile.file) ?: pendingFile.file.path
-                    val initial = findTestFile(targetPath)?.getContents() ?: "" // creating new file
+                    val initial = client.getSourceText(pendingFile.file).toString()
                     before[targetPath] = initial
                     after[targetPath] = contents
                 }
@@ -376,17 +382,19 @@ class LintFixVerifier(private val task: TestLintTask, state: TestResultState) {
     }
 
     companion object {
+        /** Pattern recognizing lint quickfix test output messages */
+        val FIX_PATTERN: Pattern = Pattern.compile("((Fix|Data) for .* line )(\\d+)(: .+)")
+
         /**
          * Given fix-delta output, increases the line numbers by one
          * (needed to gracefully handle older fix diffs where the line
          * numbers were 0-based instead of 1-based like the error
          * output.)
          */
-        private fun bumpFixLineNumbers(output: String): String {
+        fun bumpFixLineNumbers(output: String): String {
             val sb = StringBuilder(output.length)
-            val pattern = Pattern.compile("((Fix|Data) for .* line )(\\d+)(: .+)")
             for (line in output.split("\n").toTypedArray()) {
-                val matcher = pattern.matcher(line)
+                val matcher = FIX_PATTERN.matcher(line)
                 if (matcher.matches()) {
                     val prefix = matcher.group(1)
                     val lineNumber = matcher.group(3)
@@ -398,6 +406,9 @@ class LintFixVerifier(private val task: TestLintTask, state: TestResultState) {
                     sb.append(line)
                 }
                 sb.append('\n')
+            }
+            if (!output.endsWith('\n')) {
+                sb.setLength(sb.length - 1)
             }
             return sb.toString()
         }

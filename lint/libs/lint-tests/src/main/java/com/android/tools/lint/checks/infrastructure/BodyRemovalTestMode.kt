@@ -122,8 +122,19 @@ class BodyRemovalTestMode : SourceTransformationTestMode(
                                     val expressionStart = returnExpressionRange.startOffset
                                     val expressionEnd = returnExpressionRange.endOffset
                                     val blockEnd = blockRange.endOffset
-                                    edits.add(replace(blockStart, expressionStart, "= "))
-                                    edits.add(remove(expressionEnd, blockEnd))
+                                    val openBrace = source.indexOf('{', blockStart)
+                                    val returnStart = source.lastIndexOf("return", expressionStart)
+                                    val closeBrace = source.indexOf('}', expressionEnd)
+                                    if (openBrace in blockStart until expressionStart &&
+                                        returnStart >= openBrace &&
+                                        closeBrace in expressionEnd until blockEnd
+                                    ) {
+                                        var returnEnd = returnStart + "return".length
+                                        if (source[returnEnd] == ' ') returnEnd++
+                                        edits.add(replace(openBrace, openBrace + 1, "="))
+                                        edits.add(remove(returnStart, returnEnd))
+                                        edits.add(remove(closeBrace, closeBrace + 1))
+                                    }
                                 }
                             }
                         }

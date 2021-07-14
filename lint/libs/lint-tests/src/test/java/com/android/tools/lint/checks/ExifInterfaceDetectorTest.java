@@ -40,11 +40,11 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                         + "import android.media.ExifInterface;\n"
                         + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
-                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                        + "        android.media.ExifInterface exif2 =\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
-                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
-                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use androidx.media.ExifInterface instead [ExifInterface]\n"
+                        + "            new android.media.ExifInterface(path);\n"
+                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings";
 
         //noinspection all
@@ -63,9 +63,11 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                                         + "        exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, lat);\n"
                                         + "        exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, lon);\n"
                                         + "        exif.saveAttributes();\n"
-                                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                                        + "        android.media.ExifInterface exif2 =\n"
+                                        + "            new android.media.ExifInterface(path);\n"
                                         + "    }\n"
                                         + "}\n"))
+                .testModes(TestMode.DEFAULT)
                 .run()
                 .expect(expected);
     }
@@ -77,11 +79,11 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                         + "import android.media.ExifInterface;\n"
                         + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                        + "        android.media.ExifInterface exif2 =\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
-                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ExifUsage.java:14: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "            new android.media.ExifInterface(path);\n"
+                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings";
 
         //noinspection all
@@ -100,7 +102,8 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                                         + "        exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, lat);\n"
                                         + "        exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, lon);\n"
                                         + "        exif.saveAttributes();\n"
-                                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                                        + "        android.media.ExifInterface exif2 =\n"
+                                        + "            new android.media.ExifInterface(path);\n"
                                         + "    }\n"
                                         + "}\n"),
                         java(
@@ -133,6 +136,7 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "}\n"))
+                .testModes(TestMode.DEFAULT)
                 .run()
                 .expectClean();
     }

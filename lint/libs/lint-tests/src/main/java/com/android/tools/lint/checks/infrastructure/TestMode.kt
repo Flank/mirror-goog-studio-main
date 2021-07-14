@@ -106,6 +106,8 @@ open class TestMode(
 
     override fun toString(): String = description
 
+    enum class OutputKind { REPORT, QUICKFIXES }
+
     /**
      * Method to check that the output for this test mode is as
      * expected; normally this is just equality but some test modes may
@@ -113,7 +115,7 @@ open class TestMode(
      * they'll want to take this into account before a difference is
      * treated as a failure
      */
-    open fun sameOutput(expected: String, actual: String): Boolean {
+    open fun sameOutput(expected: String, actual: String, type: OutputKind): Boolean {
         return expected == actual
     }
 
@@ -353,13 +355,17 @@ open class TestMode(
         val IMPORT_ALIAS: TestMode = ImportAliasTestMode()
 
         @JvmField
+        val WHITESPACE: TestMode = WhitespaceTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
             REORDER_ARGUMENTS,
             BODY_REMOVAL,
             TYPE_ALIAS,
-            IMPORT_ALIAS
+            IMPORT_ALIAS,
+            WHITESPACE
         )
 
         /** Returns all default included test modes. */
@@ -385,6 +391,7 @@ open class TestMode(
      */
     class TestModeContext(
         val task: TestLintTask,
+        val rootDir: File,
         val projects: List<ProjectDescription>,
         val projectFolders: List<File>,
         val clientState: Any?,

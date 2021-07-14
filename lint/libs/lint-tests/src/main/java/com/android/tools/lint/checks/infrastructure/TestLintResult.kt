@@ -528,7 +528,7 @@ class TestLintResult internal constructor(
 
     /** Verify quick fixes. */
     fun verifyFixes(): LintFixVerifier {
-        return LintFixVerifier(task, states[defaultMode]!!)
+        return LintFixVerifier(task, defaultMode, states[defaultMode]!!)
     }
 
     /**
@@ -537,7 +537,7 @@ class TestLintResult internal constructor(
      * so this lets you test individual fixes for each type.
      */
     fun verifyFixes(testMode: TestMode): LintFixVerifier {
-        return LintFixVerifier(task, states[testMode]!!)
+        return LintFixVerifier(task, testMode, states[testMode]!!)
     }
 
     /**
@@ -566,7 +566,14 @@ class TestLintResult internal constructor(
      * @return this
      */
     fun expectFixDiffs(expected: String): TestLintResult {
-        verifyFixes().expectFixDiffs(expected)
+        for ((mode, result) in states) {
+            if (result.skipped) {
+                continue
+            }
+            if (mode == TestMode.DEFAULT || mode is SourceTransformationTestMode) {
+                verifyFixes(mode).expectFixDiffs(expected)
+            }
+        }
         return this
     }
 

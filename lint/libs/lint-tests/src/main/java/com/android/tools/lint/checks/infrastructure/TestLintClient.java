@@ -1111,6 +1111,28 @@ public class TestLintClient extends LintCliClient {
         }
     }
 
+    @NonNull
+    String testModePrefix() {
+        //noinspection ConstantConditions
+        if (task == null) {
+            return "";
+        }
+        TestMode mode = task.runner.getCurrentTestMode();
+        return testModePrefix(mode);
+    }
+
+    @NonNull
+    static String testModePrefix(@NonNull TestMode mode) {
+        if (mode == TestMode.DEFAULT) {
+            return "";
+        }
+        return "NOTE: The following is specific to test mode \""
+                + mode.getDescription()
+                + "\" ("
+                + mode.getFieldName()
+                + ") :\n\n";
+    }
+
     private void checkMessage(
             @NonNull Context context,
             @NonNull Incident incident,
@@ -1224,7 +1246,8 @@ public class TestLintClient extends LintCliClient {
                     if (!(oldString.equals(LintFix.ReplaceString.INSERT_BEGINNING)
                             || oldString.equals(LintFix.ReplaceString.INSERT_END))) {
                         fail(
-                                "Did not find \""
+                                testModePrefix()
+                                        + "Did not find \""
                                         + oldString
                                         + "\" in \""
                                         + locationRange
@@ -1239,7 +1262,8 @@ public class TestLintClient extends LintCliClient {
                 Pattern pattern = Pattern.compile(oldPattern);
                 if (!pattern.matcher(locationRange).find()) {
                     fail(
-                            "Did not match pattern \""
+                            testModePrefix()
+                                    + "Did not match pattern \""
                                     + oldPattern
                                     + "\" in \""
                                     + locationRange

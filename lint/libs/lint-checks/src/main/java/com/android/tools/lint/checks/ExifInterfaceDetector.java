@@ -193,7 +193,8 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
                         typeElement.getInnermostComponentReferenceElement();
                 if (referenceElement != null
                         && EXIF_INTERFACE.equals(referenceElement.getReferenceName())
-                        && OLD_EXIF_INTERFACE.equals(referenceElement.getText())) {
+                        && OLD_EXIF_INTERFACE.equals(referenceElement.getQualifiedName())
+                        && referenceElement.textContains('.')) {
                     replace(context, referenceElement);
                 }
             }

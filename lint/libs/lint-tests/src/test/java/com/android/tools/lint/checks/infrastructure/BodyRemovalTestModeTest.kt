@@ -102,6 +102,7 @@ class BodyRemovalTestModeTest {
         @Language("kotlin")
         val kotlin = """
             fun test1(): Int {
+                // My comment
                 return 5
             }
             fun test2() {
@@ -111,7 +112,10 @@ class BodyRemovalTestModeTest {
 
         @Language("kotlin")
         val expected = """
-            fun test1(): Int = 5
+            fun test1(): Int =
+                // My comment
+                5
+
             fun test2() {
                 return
             }

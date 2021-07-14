@@ -112,7 +112,7 @@ class TestLintRunner(private val task: TestLintTask) {
             projects.expandProjects()
             projects.addProject(reportFrom)
             val projectMap: MutableMap<String, List<File>> = HashMap()
-            val results: MutableMap<TestMode, TestResultState> = HashMap()
+            val results: MutableMap<TestMode, TestResultState> = LinkedHashMap()
             val notApplicable = HashSet<TestMode>()
             return try {
                 // Note that the test types are taken care of in enum order.
@@ -133,7 +133,7 @@ class TestLintRunner(private val task: TestLintTask) {
                             "applicable in this project context",
                         emptyList(),
                         null
-                    )
+                    ).apply { skipped = true }
                 }
 
                 val defaultMode = pickDefaultMode(results)
@@ -189,13 +189,13 @@ class TestLintRunner(private val task: TestLintTask) {
         // For example, the UInjectionHost tests are only relevant
         // if the project contains Kotlin source files.
         val projectList = projects.projects
-        if (!mode.applies(TestModeContext(this, projectList, emptyList(), null))) {
+        if (!mode.applies(TestModeContext(this, rootDir, projectList, emptyList(), null))) {
             notApplicable.add(mode)
             return
         }
         val (root, files) = getTestModeFiles(mode, rootDir, projectMap)
         val partitions = results[TestMode.DEFAULT]?.let {
-            val state = TestModeContext(this, projectList, files, null)
+            val state = TestModeContext(this, root, projectList, files, null)
             mode.partition(state)
         } ?: listOf(mode)
 
@@ -217,7 +217,7 @@ class TestLintRunner(private val task: TestLintTask) {
         projectList: List<ProjectDescription>,
         files: List<File>
     ) {
-        val beforeState = TestModeContext(this, projectList, files, null)
+        val beforeState = TestModeContext(this, root, projectList, files, null)
         val clientState: Any? = mode.before(beforeState)
         if (clientState === TestMode.CANCEL) {
             return
@@ -235,7 +235,7 @@ class TestLintRunner(private val task: TestLintTask) {
                             context: Context?
                         ) {
                             val testContext = TestModeContext(
-                                task, projectList, files,
+                                task, root, projectList, files,
                                 clientState, driver, context
                             )
                             it.invoke(testContext, type, clientState)
@@ -274,7 +274,7 @@ class TestLintRunner(private val task: TestLintTask) {
                 }
             }
         } finally {
-            val afterState = TestModeContext(this, projectList, files, clientState)
+            val afterState = TestModeContext(this, root, projectList, files, clientState)
             mode.after(afterState)
             if (listener != null) {
                 listeners.remove(listener)
@@ -328,9 +328,10 @@ class TestLintRunner(private val task: TestLintTask) {
         val resultState = results[mode] ?: return
         val actual = resultState.output
         val expected = results[first]?.output ?: ""
-        if (!mode.sameOutput(expected, actual)) {
-            val expectedLabel = first.description
-            val actualLabel = mode.description + "\nTo run in isolation, change .run() to .testModes(${mode.fieldName}).run()"
+        if (!mode.sameOutput(expected, actual, TestMode.OutputKind.REPORT)) {
+            val line = "-".repeat(70)
+            val expectedLabel = first.description + "\n\n$line\n\n"
+            val actualLabel = mode.description + "\n(To run in isolation, change .run() to .testModes(${mode.fieldName}).run())\n$line\n\n"
             val message = mode.diffExplanation
                 ?: """
                 The lint output was different between the test types
@@ -363,14 +364,14 @@ class TestLintRunner(private val task: TestLintTask) {
                 val modifiedFiles = modifications.joinToString("\n") { describe(it.path, it.after) }
                 assertEquals(
                     message,
-                    "$expectedLabel:\n\n$expected$originalFiles",
-                    "$actualLabel:\n\n$actual$modifiedFiles"
+                    "$expectedLabel$expected$originalFiles",
+                    "$actualLabel$actual$modifiedFiles"
                 )
             } else {
                 assertEquals(
                     message,
-                    "$expectedLabel:\n\n$expected",
-                    "$actualLabel:\n\n$actual"
+                    "$expectedLabel$expected",
+                    "$actualLabel$actual"
                 )
             }
         }

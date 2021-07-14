@@ -454,7 +454,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
         LintFix fix =
                 fix().name("Set timeout to 10 minutes")
                         .replace()
-                        .pattern("acquire\\(()\\)")
+                        .pattern("acquire\\s*\\(()\\s*\\)")
                         .with("10*60*1000L /*10 minutes*/")
                         .build();
 

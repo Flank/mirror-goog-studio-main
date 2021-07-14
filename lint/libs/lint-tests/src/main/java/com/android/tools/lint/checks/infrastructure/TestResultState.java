@@ -41,4 +41,5 @@ public class TestResultState {
     @NonNull String output;
     @NonNull List<Incident> incidents;
     @Nullable Throwable firstThrowable;
+    boolean skipped = false;
 }

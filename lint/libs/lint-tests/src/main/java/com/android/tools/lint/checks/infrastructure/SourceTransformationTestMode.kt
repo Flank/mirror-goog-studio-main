@@ -19,6 +19,7 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.LintIssueDocGenerator.Companion.MESSAGE_PATTERN
+import com.android.tools.lint.checks.infrastructure.LintFixVerifier.Companion.FIX_PATTERN
 import com.android.tools.lint.detector.api.JavaContext
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiElement
@@ -87,7 +88,12 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
 
     override fun applies(context: TestModeContext): Boolean {
         return context.task.incrementalFileName == null && context.projects.any { project ->
-            project.files.any { file -> isRelevantFile(file) }
+            project.files.any { file ->
+                if (file is CompiledSourceFile && file.type == CompiledSourceFile.Type.SOURCE_AND_BYTECODE)
+                    isRelevantFile(file.source)
+                else
+                    isRelevantFile(file)
+            }
         }
     }
 
@@ -203,19 +209,21 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
      *
      * as equivalent.
      */
-    override fun sameOutput(expected: String, actual: String): Boolean {
+    override fun sameOutput(expected: String, actual: String, type: OutputKind): Boolean {
         if (expected == actual) {
             return true
         }
 
-        // Just compare the error lines. Inserting parentheses should not have affected line numbers.
+        // Just compare the error lines. Change details about the source
+        // line included in the diff should not affect comparison.
+        val (pattern, group) = if (type == OutputKind.REPORT) Pair(MESSAGE_PATTERN, 3) else Pair(FIX_PATTERN, 0)
         val expectedLines = expected.lines().mapNotNull {
-            val matcher = MESSAGE_PATTERN.matcher(it)
-            if (matcher.matches()) matcher.group(3) else null
+            val matcher = pattern.matcher(it)
+            if (matcher.matches()) matcher.group(group) else null
         }.toList()
         val actualLines = actual.lines().mapNotNull {
-            val matcher = MESSAGE_PATTERN.matcher(it)
-            if (matcher.matches()) matcher.group(3) else null
+            val matcher = pattern.matcher(it)
+            if (matcher.matches()) matcher.group(group) else null
         }.toList()
         if (expectedLines.size != actualLines.size) {
             return false
@@ -224,6 +232,15 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
             val expectedLine = expectedLines[i]
             val actualLine = actualLines[i]
             if (expectedLine != actualLine && !messagesMatch(expectedLine, actualLine)) {
+                if (type == OutputKind.QUICKFIXES) {
+                    // Many existing unit tests used 0-based line numbers; this was changed
+                    // at some point but continue letting older unit tests pass if they
+                    // only vary by line numbers
+                    val adjusted = LintFixVerifier.bumpFixLineNumbers(expectedLine)
+                    if (messagesMatch(adjusted, actualLine)) {
+                        continue
+                    }
+                }
                 return false
             }
         }
@@ -446,7 +463,7 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
 internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestMode(
     "Source code transformations",
     "TestMode.SOURCE_CODE_TRANSFORMATIONS",
-    "source-transformations"
+    "default"
 ) {
     override fun transform(
         source: String,
@@ -462,7 +479,7 @@ internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestM
     val modes: List<TestMode> get() = modes.toList()
     private val validModes: MutableList<SourceTransformationTestMode> =
         modes.mapNotNull { it as? SourceTransformationTestMode }.toMutableList()
-    override val folderName: String = "source-transformations"
+    override val folderName: String = "default"
     override val modifiesSources: Boolean = true
 
     override fun applies(context: TestModeContext): Boolean {
@@ -501,6 +518,7 @@ internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestM
         val partitions = mutableListOf<MergedSourceTransformationTestMode>()
 
         val contents = mutableMapOf<File, String>()
+        val rootDir = testContext.rootDir
         for (mode in this.validModes) {
             if (testContext.task.ignoredTestModes.contains(mode)) {
                 continue
@@ -510,11 +528,12 @@ internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestM
             for (fileContext in contexts) {
                 val file = fileContext.uastFile ?: continue
                 val source = file.sourcePsi.text
-                contents[fileContext.file] = source
+                val relativePath = fileContext.file.relativeTo(rootDir)
+                contents[relativePath] = source
                 val edits = mode.transform(source, fileContext, file, clientData)
                 if (edits.isNotEmpty()) {
                     edits.sort()
-                    pending[fileContext.file] = edits
+                    pending[relativePath] = edits
                 }
             }
             if (pending.isEmpty()) {
@@ -605,19 +624,23 @@ internal class MergedSourceTransformationTestMode(
     override val fieldName: String
         get() = modes.joinToString { it.fieldName }
 
-    override val folderName: String = "source-transformations"
+    override val folderName: String
+        get() = modes.joinToString("-") { it.folderName }
+
     override val modifiesSources: Boolean = true
 
-    private fun initializeSources() {
+    private fun initializeSources(testContext: TestModeContext) {
         for ((file, contents) in edits) {
             val (original, edits) = contents
             val edited = performEdits(original, edits)
-            file.writeText(edited)
+            val target = if (file.isAbsolute) file else File(testContext.rootDir, file.path)
+            assert(target.isFile) { target.path }
+            target.writeText(edited)
         }
     }
 
-    override fun sameOutput(expected: String, actual: String): Boolean {
-        return modes.any { mode -> mode.sameOutput(expected, actual) }
+    override fun sameOutput(expected: String, actual: String, type: OutputKind): Boolean {
+        return modes.any { mode -> mode.sameOutput(expected, actual, type) }
     }
 
     override fun processTestFiles(
@@ -626,7 +649,7 @@ internal class MergedSourceTransformationTestMode(
         sdkHome: File?,
         changeCallback: (JavaContext, String) -> Unit,
     ): Boolean {
-        initializeSources()
+        initializeSources(testContext)
         return true
     }
 
