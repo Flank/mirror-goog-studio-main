@@ -23,7 +23,6 @@ import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.AnnotationProcessorImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
@@ -52,7 +51,6 @@ import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.androidXMappings
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
@@ -2026,20 +2024,26 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(MergeClassesTask.CreationAction(creationConfig))
         }
 
-        // ----- Minify next -----
+        // Produce better error messages when we have duplicated classes.
         maybeCreateCheckDuplicateClassesTask(creationConfig)
-        maybeCreateJavaCodeShrinkerTask(creationConfig)
+
+        // Resource Shrinking
         maybeCreateResourcesShrinkerTasks(creationConfig)
+
+        // Code Shrinking
+        // Since the shrinker (R8) also dexes the class files, if we have minifedEnabled we stop
+        // the flow and don't set-up dexing.
+        maybeCreateJavaCodeShrinkerTask(creationConfig)
         if (creationConfig.minifiedEnabled) {
             maybeCreateDesugarLibTask(creationConfig, false)
             return
         }
 
-        // ----- Multi-Dex support
-        var dexingType = creationConfig.dexingType
+        // Code Dexing (MonoDex, Legacy Multidex or Native Multidex)
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when deploying to device
         // running L(21)+ from the IDE.
+        var dexingType = creationConfig.dexingType
         if (dexingType === DexingType.LEGACY_MULTIDEX
                 && creationConfig.targetDeployApi.getFeatureLevel()
                 >= AndroidVersion.VersionCodes.LOLLIPOP) {
@@ -2064,17 +2068,18 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             creationConfig: ApkCreationConfig,
             dexingType: DexingType,
             registeredLegacyTransforms: Boolean) {
-        val java8SLangSupport = creationConfig.getJava8LangSupportType()
-        val supportsDesugaring = (java8SLangSupport == VariantScope.Java8LangSupport.UNUSED
-                || (java8SLangSupport == VariantScope.Java8LangSupport.D8
-                && creationConfig
-                .services
-                .projectOptions[BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM]))
+        val java8LangSupport = creationConfig.getJava8LangSupportType()
+        val supportsDesugaringViaArtifactTransform =
+                (java8LangSupport == VariantScope.Java8LangSupport.UNUSED
+                        || (java8LangSupport == VariantScope.Java8LangSupport.D8
+                        && creationConfig
+                        .services
+                        .projectOptions[BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM]))
         val enableDexingArtifactTransform = (creationConfig
                 .services
                 .projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]
                 && !registeredLegacyTransforms
-                && supportsDesugaring)
+                && supportsDesugaringViaArtifactTransform)
         taskFactory.register(
                 DexArchiveBuilderTask.CreationAction(enableDexingArtifactTransform, creationConfig))
         maybeCreateDesugarLibTask(creationConfig, enableDexingArtifactTransform)
@@ -2110,6 +2115,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // When desugaring, The file dependencies are dexed in a task with the whole
         // remote classpath present, as they lack dependency information to desugar
         // them correctly in an artifact transform.
+        // This should only be passed to Legacy Multidex MERGE_ALL or MERGE_EXTERNAL_LIBS of
+        // other dexing modes, otherwise it will cause the output of DexFileDependenciesTask
+        // to be included multiple times and will cause the build to fail because of same types
+        // being defined multiple times in the final dex.
         val separateFileDependenciesDexingTask =
                 (creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
                         && dexingUsingArtifactTransforms)
@@ -2117,47 +2126,84 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val desugarFileDeps = DexFileDependenciesTask.CreationAction(creationConfig)
             taskFactory.register(desugarFileDeps)
         }
-        if (dexingType === DexingType.LEGACY_MULTIDEX) {
-            val configAction = DexMergingTask.CreationAction(
-                    creationConfig,
-                    DexMergingAction.MERGE_ALL,
-                    dexingType,
-                    dexingUsingArtifactTransforms,
-                    separateFileDependenciesDexingTask)
-            taskFactory.register(configAction)
-        } else {
-            val produceSeparateOutputs = (dexingType === DexingType.NATIVE_MULTIDEX
-                    && creationConfig.debuggable)
-            taskFactory.register(
-                    DexMergingTask.CreationAction(
-                            creationConfig,
-                            DexMergingAction.MERGE_EXTERNAL_LIBS,
-                            dexingType,
-                            dexingUsingArtifactTransforms,
-                            separateFileDependenciesDexingTask,
-                            if (produceSeparateOutputs)
-                                InternalMultipleArtifactType.DEX
-                            else InternalMultipleArtifactType.EXTERNAL_LIBS_DEX))
-            if (produceSeparateOutputs) {
-                val mergeProject = DexMergingTask.CreationAction(
-                        creationConfig,
-                        DexMergingAction.MERGE_PROJECT,
-                        dexingType,
-                        dexingUsingArtifactTransforms)
-                taskFactory.register(mergeProject)
-                val mergeLibraries = DexMergingTask.CreationAction(
-                        creationConfig,
-                        DexMergingAction.MERGE_LIBRARY_PROJECTS,
-                        dexingType,
-                        dexingUsingArtifactTransforms)
-                taskFactory.register(mergeLibraries)
-            } else {
-                val configAction = DexMergingTask.CreationAction(
-                        creationConfig,
-                        DexMergingAction.MERGE_ALL,
-                        dexingType,
-                        dexingUsingArtifactTransforms)
-                taskFactory.register(configAction)
+
+        when (dexingType) {
+            DexingType.MONO_DEX -> {
+                taskFactory.register(
+                        DexMergingTask.CreationAction(
+                                creationConfig,
+                                DexMergingAction.MERGE_EXTERNAL_LIBS,
+                                dexingType,
+                                dexingUsingArtifactTransforms,
+                                separateFileDependenciesDexingTask,
+                                InternalMultipleArtifactType.EXTERNAL_LIBS_DEX))
+                taskFactory.register(
+                        DexMergingTask.CreationAction(
+                                creationConfig,
+                                DexMergingAction.MERGE_ALL,
+                                dexingType,
+                                dexingUsingArtifactTransforms))
+            }
+            DexingType.LEGACY_MULTIDEX -> {
+                // For Legacy Multidex we cannot employ the same optimization of first merging
+                // the external libraries, because in that step we don't have a main dex list file
+                // to pass to D8 yet, and together with the fact that we'll be setting minApiLevel
+                // to 20 or less it will make the external libs be merged in a way equivalent to
+                // MonoDex, which might cause the build to fail if the external libraries alone
+                // cannot fit into a single dex.
+                taskFactory.register(
+                        DexMergingTask.CreationAction(
+                                creationConfig,
+                                DexMergingAction.MERGE_ALL,
+                                dexingType,
+                                dexingUsingArtifactTransforms,
+                                separateFileDependenciesDexingTask))
+            }
+            DexingType.NATIVE_MULTIDEX -> {
+                // For a debuggable variant, we merge different bits in separate tasks.
+                // Potentially more .dex files being created, but during development-cycle of
+                // developers, code changes will hopefully impact less .dex files and will make
+                // the build be faster.
+                // For non-debuggable (release) builds, we do only a MERGE_EXTERNAL_LIBS in a
+                // separate task and then merge everything using a single MERGE_ALL pass in order
+                // to minimize the number of produced .dex files since there is a systemic overhead
+                // (size-wise) when we have multiple .dex files.
+                if (creationConfig.debuggable) {
+                    taskFactory.register(
+                            DexMergingTask.CreationAction(
+                                    creationConfig,
+                                    DexMergingAction.MERGE_EXTERNAL_LIBS,
+                                    dexingType,
+                                    dexingUsingArtifactTransforms,
+                                    separateFileDependenciesDexingTask))
+                    taskFactory.register(
+                            DexMergingTask.CreationAction(
+                                    creationConfig,
+                                    DexMergingAction.MERGE_PROJECT,
+                                    dexingType,
+                                    dexingUsingArtifactTransforms))
+                    taskFactory.register(
+                            DexMergingTask.CreationAction(
+                                    creationConfig,
+                                    DexMergingAction.MERGE_LIBRARY_PROJECTS,
+                                    dexingType,
+                                    dexingUsingArtifactTransforms))
+                } else {
+                    taskFactory.register(
+                            DexMergingTask.CreationAction(
+                                    creationConfig,
+                                    DexMergingAction.MERGE_EXTERNAL_LIBS,
+                                    dexingType,
+                                    dexingUsingArtifactTransforms,
+                                    separateFileDependenciesDexingTask,
+                                    InternalMultipleArtifactType.EXTERNAL_LIBS_DEX))
+                    taskFactory.register(
+                            DexMergingTask.CreationAction(
+                                    creationConfig,
+                                    DexMergingAction.MERGE_ALL,
+                                    dexingType,
+                                    dexingUsingArtifactTransforms))
+                }
             }
         }
     }
