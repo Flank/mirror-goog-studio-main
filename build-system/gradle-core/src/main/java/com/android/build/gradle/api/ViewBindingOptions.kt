@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.api
 
-@Deprecated("This is deprecated. Use the new variant API in the gradle-api module.")
 interface ViewBindingOptions {
 
     /** Whether to enable view binding.  */
-    @Deprecated("This is deprecated. Use android.buildFeatures.viewBinding instead.")
     var isEnabled: Boolean
 }
