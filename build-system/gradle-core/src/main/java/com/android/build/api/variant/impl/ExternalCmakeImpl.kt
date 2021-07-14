@@ -29,31 +29,36 @@ class ExternalCmakeImpl(
 
     override val abiFilters: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeCmakeOptions.abiFilters
+                type = String::class.java,
+                value = mergedExternalNativeCmakeOptions.abiFilters,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val arguments: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeCmakeOptions.arguments
+                type = String::class.java,
+                value = mergedExternalNativeCmakeOptions.arguments,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cFlags: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeCmakeOptions.getcFlags()
+                type = String::class.java,
+                value = mergedExternalNativeCmakeOptions.getcFlags(),
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val cppFlags: ListProperty<String> =
             variantPropertiesApiServices.listPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeCmakeOptions.cppFlags
+                type = String::class.java,
+                value = mergedExternalNativeCmakeOptions.cppFlags,
+                disallowUnsafeRead = false, // see b/193722661
             )
 
     override val targets: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(
-                    String::class.java,
-                    mergedExternalNativeCmakeOptions.targets
+                String::class.java,
+                mergedExternalNativeCmakeOptions.targets,
+                disallowUnsafeRead = false, // see b/193722661
             )
 }
