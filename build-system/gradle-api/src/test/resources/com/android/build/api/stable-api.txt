@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a11641d7b33eb9e0b4a38a8c5848c1f7632a6aadd8332b7ae280572949e44615
+4300b002a5f852e0f7f852b96c880d672765230d767c094c57a199686be1cbae
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -171,7 +171,6 @@ com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functio
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.ComposeOptions$DefaultImpls
 com.android.build.api.dsl.DataBinding
-com.android.build.api.dsl.DataBinding$DefaultImpls
 com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.DependenciesInfo
