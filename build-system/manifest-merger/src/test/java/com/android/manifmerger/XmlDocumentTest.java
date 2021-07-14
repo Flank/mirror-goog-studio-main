@@ -754,8 +754,12 @@ public class XmlDocumentTest extends TestCase {
         XmlDocument libraryDocument =
                 loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
-        Optional<XmlDocument> mergedDocument = mainDocument
-                .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
+        Optional<XmlDocument> mergedDocument =
+                mainDocument.merge(
+                        libraryDocument,
+                        mergingReportBuilder,
+                        false /* addImplicitPermissions */,
+                        false /* disableMinSdkVersionCheck */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -906,8 +910,12 @@ public class XmlDocumentTest extends TestCase {
         XmlDocument libraryDocument =
                 loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
-        Optional<XmlDocument> mergedDocument = mainDocument
-                .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
+        Optional<XmlDocument> mergedDocument =
+                mainDocument.merge(
+                        libraryDocument,
+                        mergingReportBuilder,
+                        false /* addImplicitPermissions */,
+                        false /* disableMinSdkVersionCheck */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -996,8 +1004,12 @@ public class XmlDocumentTest extends TestCase {
         XmlDocument libraryDocument =
                 loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
-        Optional<XmlDocument> mergedDocument = mainDocument
-                .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
+        Optional<XmlDocument> mergedDocument =
+                mainDocument.merge(
+                        libraryDocument,
+                        mergingReportBuilder,
+                        false /* addImplicitPermissions */,
+                        false /* disableMinSdkVersionCheck */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -1086,8 +1098,12 @@ public class XmlDocumentTest extends TestCase {
         XmlDocument libraryDocument =
                 loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
-        Optional<XmlDocument> mergedDocument = mainDocument
-                .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
+        Optional<XmlDocument> mergedDocument =
+                mainDocument.merge(
+                        libraryDocument,
+                        mergingReportBuilder,
+                        false /* addImplicitPermissions */,
+                        false /* disableMinSdkVersionCheck */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -1529,8 +1545,12 @@ public class XmlDocumentTest extends TestCase {
         XmlDocument libraryDocument =
                 loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
-        Optional<XmlDocument> mergedDocument = mainDocument
-                .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
+        Optional<XmlDocument> mergedDocument =
+                mainDocument.merge(
+                        libraryDocument,
+                        mergingReportBuilder,
+                        false /* addImplicitPermissions */,
+                        false /* disableMinSdkVersionCheck */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();

@@ -92,6 +92,7 @@ class ProcessLibraryManifestTest {
         task.manifestOutputFile.set(temporaryFolder.newFile())
         task.reportFile.set(temporaryFolder.newFile())
         task.mergeBlameFile.set(temporaryFolder.newFile())
+        task.disableMinSdkVersionCheck.set(false)
         task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
         assertThat(task.manifestOutputFile.get().asFile.readText(Charsets.UTF_8))
                 .contains("package=\"random.word\"")

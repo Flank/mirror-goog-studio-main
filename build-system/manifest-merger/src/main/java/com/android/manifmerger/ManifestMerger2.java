@@ -1131,7 +1131,9 @@ public class ManifestMerger2 {
                             lowerPriorityDocument.getXmlDocument(),
                             mergingReportBuilder,
                             !mOptionalFeatures.contains(
-                                    Invoker.Feature.NO_IMPLICIT_PERMISSION_ADDITION));
+                                    Invoker.Feature.NO_IMPLICIT_PERMISSION_ADDITION),
+                            mOptionalFeatures.contains(
+                                    Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK));
         } else {
             // exhaustiveSearch is true in recordAddedNodeAction() below because some of this
             // manifest's nodes might have already been recorded from the loading of
@@ -1640,6 +1642,9 @@ public class ManifestMerger2 {
              * already explicitly set to true.
              */
             DO_NOT_EXTRACT_NATIVE_LIBS,
+
+            /** Unsafely disables minSdkVersion check in libraries. */
+            DISABLE_MINSDKLIBRARY_CHECK,
         }
 
         /**

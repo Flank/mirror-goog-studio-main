@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MER
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -135,6 +136,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             it.aaptFriendlyManifestOutputDirectory.set(aaptFriendlyManifestOutputDirectory)
             it.mainSplit.set(mainSplit.get().toSerializedForm())
             it.tmpDir.set(tmpDir.get())
+            it.disableMinSdkversionCheck.set(disableMinSdkVersionCheck)
         }
     }
 
@@ -170,6 +172,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         abstract val aaptFriendlyManifestOutputDirectory: DirectoryProperty
         abstract val mainSplit: Property<VariantOutputImpl.SerializedForm>
         abstract val tmpDir: DirectoryProperty
+        abstract val disableMinSdkversionCheck: Property<Boolean>
 }
 
     abstract class ProcessLibWorkAction : ProfileAwareWorkAction<ProcessLibParams>() {
@@ -178,6 +181,9 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 if (parameters.namespaced.get()) listOf(
                     ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES
                 ) else emptyList()
+            if (parameters.disableMinSdkversionCheck.get()) {
+                optionalFeatures.plus(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK)
+            }
             val mergingReport = mergeManifests(
                 parameters.mainManifest.asFile.get(),
                 parameters.manifestOverlays.get(), emptyList(), emptyList(),
@@ -270,6 +276,10 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Internal
     abstract val tmpDir: DirectoryProperty
 
+    @get:Optional
+    @get:Input
+    abstract val disableMinSdkVersionCheck: Property<Boolean>
+
     class CreationAction(
         creationConfig: ComponentCreationConfig,
         private val targetSdkVersion: AndroidVersion?,
@@ -357,6 +367,8 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     "ProcessLibraryManifest",
                     creationConfig.dirName
             ))
+            task.disableMinSdkVersionCheck.setDisallowChanges(
+                    creationConfig.services.projectOptions[BooleanOption.DISABLE_MINSDKLIBRARY_CHECK])
         }
     }
 }

@@ -2678,6 +2678,46 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testDisableMinSdkLibraryFlag() throws Exception {
+        String appInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "    <uses-sdk android:minSdkVersion=\"31\" />\n"
+                        + "</manifest>";
+
+        String libInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "    <uses-sdk android:minSdkVersion=\"32\" />\n"
+                        + "</manifest>";
+
+        MockLog mockLog = new MockLog();
+
+        File appFile = TestUtils.inputAsFile("testDisableMinSdkLibraryFlagApp", appInput);
+        assertTrue(appFile.exists());
+
+        File libFile = TestUtils.inputAsFile("testDisableMinSdkLibraryFlagLib", libInput);
+        assertTrue(libFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addLibraryManifest(libFile)
+                            .withFeatures(Feature.DISABLE_MINSDKLIBRARY_CHECK)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+            assertThat(libFile.delete()).named("libFile was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

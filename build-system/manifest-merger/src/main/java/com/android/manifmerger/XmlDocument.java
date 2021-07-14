@@ -148,8 +148,11 @@ public class XmlDocument {
     public Optional<XmlDocument> merge(
             @NonNull XmlDocument lowerPriorityDocument,
             @NonNull MergingReport.Builder mergingReportBuilder) {
-        return merge(lowerPriorityDocument, mergingReportBuilder,
-                true /* addImplicitPermissions */);
+        return merge(
+                lowerPriorityDocument,
+                mergingReportBuilder,
+                true /* addImplicitPermissions */,
+                false /* disableMinSdkVersionCheck */);
     }
 
     /**
@@ -165,7 +168,8 @@ public class XmlDocument {
     public Optional<XmlDocument> merge(
             @NonNull XmlDocument lowerPriorityDocument,
             @NonNull MergingReport.Builder mergingReportBuilder,
-            boolean addImplicitPermissions) {
+            boolean addImplicitPermissions,
+            boolean disableMinSdkVersionCheck) {
 
         if (getFileType() == Type.MAIN) {
             mergingReportBuilder.getActionRecorder().recordAddedNodeAction(getRootNode(), false);
@@ -175,7 +179,11 @@ public class XmlDocument {
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
         addImplicitElements(
-                lowerPriorityDocument, reparse(), mergingReportBuilder, addImplicitPermissions);
+                lowerPriorityDocument,
+                reparse(),
+                mergingReportBuilder,
+                addImplicitPermissions,
+                disableMinSdkVersionCheck);
 
         // force re-parsing as new nodes may have appeared.
         return mergingReportBuilder.hasErrors() ? Optional.empty() : Optional.of(reparse());
@@ -419,7 +427,8 @@ public class XmlDocument {
             @NonNull XmlDocument lowerPriorityDocument,
             @NonNull XmlDocument reparsedXmlDocument,
             @NonNull MergingReport.Builder mergingReport,
-            boolean addImplicitPermissions) {
+            boolean addImplicitPermissions,
+            boolean disableMinSdkVersionCheck) {
 
         // if this document is an overlay, tolerate the absence of uses-sdk and do not
         // assume implicit minimum versions.
@@ -492,7 +501,7 @@ public class XmlDocument {
             }
         }
 
-        if (!checkUsesSdkMinVersion(lowerPriorityDocument)) {
+        if (!disableMinSdkVersionCheck && !checkUsesSdkMinVersion(lowerPriorityDocument)) {
             String error = String.format(
                             "uses-sdk:minSdkVersion %1$s cannot be smaller than version "
                                     + "%2$s declared in library %3$s as the library might be using APIs not available in %1$s\n"
