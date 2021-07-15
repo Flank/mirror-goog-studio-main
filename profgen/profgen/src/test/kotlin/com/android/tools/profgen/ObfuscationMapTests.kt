@@ -33,6 +33,14 @@ class ObfuscationMapTests {
         )
     }
 
+
+    @Test
+    fun testPrimitiveExprectedIssue() {
+        // we want to ensure that this file correctly parses without throwing
+        // an exception.
+        ObfuscationMap(testData("expected-primitive-repro.txt"))
+    }
+
     @Test
     fun testSimpleMapping() {
         val mappingTxt = """
