@@ -24,6 +24,7 @@ import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewRootImpl
+import android.view.WindowManager
 import android.view.WindowManagerGlobal
 import android.webkit.WebView
 import android.widget.TextView
@@ -1209,6 +1210,36 @@ class ViewLayoutInspectorTest {
         ThreadUtils.runOnMainThread {
             assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
         }.get()
+    }
+
+    @Test
+    fun noHardwareAccelerationDuringStartReturnsError() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+        val context = Context("view.inspector.test", Resources(mutableMapOf()))
+        val root = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        // FLAG_HARDWARE_ACCELERATED will be false
+        root.layoutParams = WindowManager.LayoutParams()
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase)
+                .isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error)
+                .isEqualTo("Activity must be hardware accelerated for live inspection")
+        }
     }
 
         // TODO: Add test for filtering system views and properties

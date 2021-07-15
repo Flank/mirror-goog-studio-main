@@ -17,6 +17,7 @@
 package com.android.tools.agent.appinspection
 
 import android.view.View
+import android.view.WindowManager
 import android.view.inspector.WindowInspector
 import androidx.annotation.GuardedBy
 import androidx.inspection.Connection
@@ -63,9 +64,13 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreens
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.lang.UnsupportedOperationException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -177,10 +182,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          */
         @Synchronized
         fun checkRoots() {
-            val currRoots =
-                ThreadUtils.runOnMainThread {
-                    getRootViews().associateBy { it.uniqueDrawingId }
-                }.get()
+            val currRoots = getRootViewsOnMainThread()
 
             val currRootIds = currRoots.keys
             if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
@@ -224,6 +226,20 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 }
             }
+        }
+
+        private fun getRootViewsOnMainThread(): Map<Long, View> {
+            while (!quit.get()) {
+                try {
+                    return ThreadUtils.runOnMainThread {
+                        getRootViews().associateBy { it.uniqueDrawingId }
+                    }.get(100, TimeUnit.MILLISECONDS)
+                } catch (e: TimeoutException) {
+                    // Ignore and try again.
+                }
+            }
+            // We'll only get here if we've already quit
+            return mapOf()
         }
     }
 
@@ -314,6 +330,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private fun startCapturing(root: View) {
         // Starting rendering captures must be called on the View thread or else it throws
         ThreadUtils.assertOnMainThread()
+
+        val params = root.layoutParams
+        if (params is WindowManager.LayoutParams) {
+            if (params.flags and WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED == 0) {
+                rootsDetector.stop()
+                throw UnsupportedOperationException(
+                    "Activity must be hardware accelerated for live inspection"
+                )
+            }
+        }
 
         val os = ByteArrayOutputStream()
         // We might get multiple callbacks for the same view while still processing an earlier
@@ -490,10 +516,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         startFetchCommand: StartFetchCommand,
         callback: CommandCallback
     ) {
-        callback.reply {
-            startFetchResponse = StartFetchResponse.getDefaultInstance()
-        }
-
         forceStopAllCaptures()
 
         synchronized(stateLock) {
@@ -508,10 +530,23 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             // We may be getting here after a previous start / stop flow
             rootsDetector.reset()
         }
-        ThreadUtils.runOnMainThread {
-            for (root in getRootViews()) {
-                startCapturing(root)
+        try {
+            ThreadUtils.runOnMainThread {
+                for (root in getRootViews()) {
+                    startCapturing(root)
+                }
+            }.get()
+        }
+        catch (exception: ExecutionException) {
+            callback.reply {
+                startFetchResponse = StartFetchResponse.newBuilder().apply {
+                    error = exception.cause?.message ?: "Unknown error"
+                }.build()
             }
+            return
+        }
+        callback.reply {
+            startFetchResponse = StartFetchResponse.getDefaultInstance()
         }
     }
 
