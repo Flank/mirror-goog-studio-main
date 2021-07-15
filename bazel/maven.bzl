@@ -627,30 +627,38 @@ def _maven_repository_impl(ctx):
             files.append(f)
             rel_paths.append((d + "/" + f.basename, f))
 
-    zipper_args = ["c", ctx.outputs.repo.path]
-    zipper_files = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
-    zipper_list = create_option_file(ctx, ctx.outputs.repo.basename + ".res.lst", zipper_files)
-    zipper_args += ["@" + zipper_list.path]
-    ctx.actions.run(
-        inputs = files + [zipper_list],
-        outputs = [ctx.outputs.repo],
-        executable = ctx.executable._zipper,
-        arguments = zipper_args,
-        progress_message = "Creating repository zip...",
-        mnemonic = "zipper",
-    )
+    build_manifest_content = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
+    manifest_content = "".join([k + "=" + v.short_path + "\n" for k, v in rel_paths])
+
+    ctx.actions.write(ctx.outputs.manifest, manifest_content)
+    build_manifest = create_option_file(ctx, ctx.label.name + ".build.manifest", build_manifest_content)
+    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip", build_manifest, files, ctx.outputs.zip)
+
+    runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + files)
+    return [
+        DefaultInfo(
+            # Do not include the zip as a default output (like _deploy.jar)
+            files = depset([ctx.outputs.manifest]),
+            runfiles = runfiles,
+        ),
+        MavenRepoInfo(
+            artifacts = files,
+            build_manifest = build_manifest,
+        ),
+    ]
 
 _maven_repository = rule(
     attrs = {
-        "artifacts": attr.label_list(),
+        "artifacts": attr.label_list(providers = [MavenInfo]),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
-            cfg = "host",
+            cfg = "exec",
             executable = True,
         ),
     },
     outputs = {
-        "repo": "%{name}.zip",
+        "manifest": "%{name}.manifest",
+        "zip": "%{name}.zip",
     },
     implementation = _maven_repository_impl,
 )

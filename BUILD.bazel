@@ -54,10 +54,8 @@ maven_repo(
 # artifacts again.
 
 maven_repo(
-    name = "agp_artifacts",
+    name = "agp_dependencies",
     artifacts = [
-        "//tools/base/annotations:annotations",
-        "//tools/base/common:tools.common",
         # These direct dependencies are manually added to satisfy gradle
         # TODO: Analyze what can be cleaned up
         "//prebuilts/tools/common/m2:com.google.protobuf.protoc.3.10.0",
@@ -315,7 +313,7 @@ maven_repo(
 )
 
 maven_repository(
-    name = "agp_artifacts_bzl",
+    name = "agp_artifacts",
     artifacts = [
         "//tools/base/common:common_bzl",
     ],

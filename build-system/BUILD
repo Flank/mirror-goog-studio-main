@@ -385,6 +385,9 @@ gradle_build(
     gradle_properties = {"hybrid-build-embedded-in-bazel": "true"},
     output_file = "android_gradle_plugin.zip",
     output_file_source = "dist/repo.zip",
-    repos = ["//tools/base:agp_artifacts"],
+    repos = [
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
+    ],
     tasks = [":zipPlugin"],
 )
