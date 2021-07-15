@@ -131,37 +131,4 @@ public final class RepoLinkerTest {
         assertExists("group2/artifact2/2.0/artifact2-2.0.pom");
         assertExists("group2/artifact2/2.0/artifact2-2.0-classifier2.jar");
     }
-
-    @Test
-    public void link_withInjectedPluginVersion() throws Exception {
-        // Create a new temporary jar file.
-        File jar = temp.newFile("1.jar");
-        try (OutputStream outputStream = Files.newOutputStream(jar.toPath())) {
-            // Create a manifest for the jar file.
-            Manifest manifest = new Manifest();
-            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-
-            // Write the jar file.
-            JarOutputStream jarStream = new JarOutputStream(outputStream, manifest);
-            jarStream.close();
-        }
-        addStubPom(temp.newFile("1.pom"), "com.android.tools.build", "gradle", "1.0");
-        artifacts.add(jar.toPath().toAbsolutePath().toString());
-
-        // Link repository.
-        linker.link(destination, artifacts);
-
-        assertExists("com/android/tools/build/gradle/1.0/gradle-1.0.pom");
-        assertExists("com/android/tools/build/gradle/1.0/gradle-1.0.jar");
-
-        // Verify the attributes of the jar file.
-        Path outputPath = destination.resolve("com/android/tools/build/gradle/1.0/gradle-1.0.jar");
-        try (JarFile outputJar = new JarFile(outputPath.toString())) {
-            Manifest manifest = outputJar.getManifest();
-            assertThat(manifest.getMainAttributes().getValue("Plugin-Version")).isEqualTo("1.0");
-        }
-
-        // Verify that the linked jar is a file rather than a link.
-        assertThat(Files.isSymbolicLink(outputPath)).isFalse();
-    }
 }

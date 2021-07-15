@@ -161,6 +161,7 @@ def kotlin_library(
         lint_classpath = [],
         lint_is_test_sources = False,
         lint_timeout = None,
+        manifest_lines = None,
         module_name = None):
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -216,6 +217,7 @@ def kotlin_library(
         name = name + ".singlejar",
         jars = [":lib" + target + ".jar" for target in targets],
         out = jar_name,
+        manifest_lines = manifest_lines,
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
