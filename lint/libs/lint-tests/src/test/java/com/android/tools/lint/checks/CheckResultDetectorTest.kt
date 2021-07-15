@@ -1119,4 +1119,123 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testOperatorOverloads() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+                import kotlin.random.Random
+
+                data class Point(val x: Int, val y: Int) {
+                    @CheckResult operator fun unaryMinus() = Point(-x, -y)
+                    @CheckResult operator fun inc() = Point(x + 1, y + 1)
+                }
+
+                @CheckResult
+                operator fun Point.unaryPlus() = Point(+x, +y)
+
+                fun testUnary() {
+                    var point = Point(10, 20)
+                    -point // ERROR 1
+                    +point // ERROR 2
+                    point++ // ERROR 3
+                    println(-point)  // OK 1
+                }
+
+                data class Counter(val dayIndex: Int) {
+                    @CheckResult
+                    operator fun plus(increment: Int): Counter {
+                        return Counter(dayIndex + increment)
+                    }
+
+                    @CheckResult
+                    operator fun plus(other: Counter): Counter {
+                        return Counter(dayIndex + other.dayIndex)
+                    }
+                }
+
+                fun testBinary() {
+                    val counter = Counter(5)
+                    counter + 5 // ERROR 4
+                    val x = counter + 5 // OK 2
+                }
+
+                fun number(): Int = Random(0).nextInt()
+
+                fun testPolyadic() {
+                    val test = number() + number() + number() + number()
+                    val counter = Counter(1)
+                    val counter2 = Counter(2)
+                    val counter3 = Counter(3)
+                    counter + counter2 + counter3 // ERROR 5
+                    val counter4 = counter + counter2 + counter3 // OK 3
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Point.kt:16: Warning: The result of null is not used [CheckResult]
+                -point // ERROR 1
+                ~~~~~~
+            src/test/pkg/Point.kt:17: Warning: The result of null is not used [CheckResult]
+                +point // ERROR 2
+                ~~~~~~
+            src/test/pkg/Point.kt:18: Warning: The result of null is not used [CheckResult]
+                point++ // ERROR 3
+                ~~~~~~~
+            src/test/pkg/Point.kt:36: Warning: The result of null is not used [CheckResult]
+                counter + 5 // ERROR 4
+                ~~~~~~~~~~~
+            src/test/pkg/Point.kt:47: Warning: The result of null is not used [CheckResult]
+                counter + counter2 + counter3 // ERROR 5
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 5 warnings
+            """
+        )
+    }
+
+    fun testOperatorOverloads2() {
+        // Complicated resolve scenario; there's an extension function instead; our resolve utility
+        // won't find this
+
+        lint().files(
+            kotlin(
+                """
+                package test.pkg.other
+
+                import androidx.annotation.CheckResult
+
+                abstract class DataRepository<K, V> {
+                    @CheckResult operator fun get(key: K): V = error("Not implemented")
+                }
+                operator fun <K1, K2, K3, V> DataRepository<Triple<K1, K2, K3>, V>.get(k1: K1, k2: K2, k3: K3): V =
+                    get(Triple(k1, k2, k3))
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import test.pkg.other.DataRepository
+                import test.pkg.other.get
+
+                class AppOpLiveData {
+                    companion object : DataRepository<Triple<String, String, Int>, AppOpLiveData>()
+                }
+
+                fun test(pkg: String, op: String, id: Int) {
+                    val installPackagesAppOpMode2 = AppOpLiveData[pkg, op, id] // OK
+                    // Not reported yet because we don't have resolve of extension methods
+                    // from array access expressions in UAST
+                    AppOpLiveData[pkg, op, id] // ERROR
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean() // until KTIJ-18765 is fixed
+    }
 }

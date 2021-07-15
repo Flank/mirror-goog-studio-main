@@ -1967,4 +1967,173 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             """
         )
     }
+
+    fun testArrayAccessOverloading() {
+        // Regression test for https://issuetracker.google.com/173628041
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.ColorRes
+                import androidx.annotation.StringRes
+
+                class X {
+                    operator fun get(@ColorRes id: Int) = 0
+                }
+
+                fun test(@ColorRes myColor: Int, @StringRes myString: Int) {
+                    val x = X()
+
+                    // Intended type: color
+                    x.get(myColor) // OK 1
+                    x[myColor] // OK 2
+
+                    // Wrong type: string
+                    x.get(myString) // ERROR 1
+                    x[myString] // ERROR 2
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/X.kt:16: Error: Expected resource of type color [ResourceType]
+                x.get(myString) // ERROR 1
+                      ~~~~~~~~
+            src/X.kt:17: Error: Expected resource of type color [ResourceType]
+                x[myString] // ERROR 2
+                  ~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testOperatorOverloading() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.ColorRes
+                import androidx.annotation.StringRes
+
+                class Resource {
+                    operator fun contains(@ColorRes id: Int): Boolean = false
+                    operator fun times(@ColorRes id: Int): Int = 0
+                    operator fun rangeTo(@ColorRes id: Int): Int = 0
+                }
+
+                fun testBinary(resource: Resource, @ColorRes color: Int, @StringRes string: Int) {
+                    println(color in resource) // OK 1
+                    println(string in resource) // ERROR 1
+                    println(string !in resource) // ERROR 2
+                    println(resource * color) // OK 2
+                    println(resource * string) // ERROR 3
+                    println(resource..color) // OK 3
+                    println(resource..string) // ERROR 4
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Resource.kt:12: Error: Expected resource of type color [ResourceType]
+                println(string in resource) // ERROR 1
+                        ~~~~~~
+            src/Resource.kt:13: Error: Expected resource of type color [ResourceType]
+                println(string !in resource) // ERROR 2
+                        ~~~~~~
+            src/Resource.kt:15: Error: Expected resource of type color [ResourceType]
+                println(resource * string) // ERROR 3
+                                   ~~~~~~
+            src/Resource.kt:17: Error: Expected resource of type color [ResourceType]
+                println(resource..string) // ERROR 4
+                                  ~~~~~~
+            4 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testArrayOperatorResolution() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.ColorRes
+                import androidx.annotation.StringRes
+
+                class Test {
+                    operator fun get(@StringRes key: Int) {}
+                    operator fun get(key: String) {}
+                    operator fun get(@StringRes key: Int, @ColorRes key2: Int) {}
+                    operator fun get(@StringRes key: Int, key2: A) {}
+                    operator fun get(@StringRes key: Int, key2: List<CharSequence>) {}
+
+                    operator fun set(@StringRes key: Int, @ColorRes value: Int) {}
+                    operator fun set(@StringRes key: Int, value: String) {}
+                    operator fun set(@StringRes key: Int, @ColorRes color: Int, value: String) {}
+                }
+
+                open class A
+                class B : A()
+
+                fun test(test: Test, @StringRes string: Int, @ColorRes color: Int) {
+                    // Getters
+                    test[string] // OK 1
+                    test[color] // ERROR 1
+                    test[string, color] // OK 2
+                    test[color, string] // ERROR 2 and 3
+
+                    // Setters
+                    test[string] = color // OK 3
+                    test[string] = "string" // OK 4
+                    test[string] = string // ERROR 3
+                    test[string, color] = "test" // OK 5
+                    test[color, string] = "test" // ERROR 4 and 5
+
+                    // Subclass and wildcard matching
+                    val b = B()
+                    test[string, b] // OK 6
+                    test[color, b] // ERROR 6
+
+                    val sb = listOf<StringBuilder>()
+                    test[string, sb] // OK 7
+                    test[color, sb] // ERROR 7
+
+                    test[string]
+                    // Other
+                    val calendar = java.util.GregorianCalendar()
+                    calendar[2016, 2, 4, 18, 52] = 58 // OK 7
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Test.kt:24: Error: Expected resource of type string [ResourceType]
+                test[color] // ERROR 1
+                     ~~~~~
+            src/test/pkg/Test.kt:26: Error: Expected resource of type color [ResourceType]
+                test[color, string] // ERROR 2 and 3
+                            ~~~~~~
+            src/test/pkg/Test.kt:26: Error: Expected resource of type string [ResourceType]
+                test[color, string] // ERROR 2 and 3
+                     ~~~~~
+            src/test/pkg/Test.kt:31: Error: Expected resource of type color [ResourceType]
+                test[string] = string // ERROR 3
+                               ~~~~~~
+            src/test/pkg/Test.kt:33: Error: Expected resource of type color [ResourceType]
+                test[color, string] = "test" // ERROR 4 and 5
+                            ~~~~~~
+            src/test/pkg/Test.kt:33: Error: Expected resource of type string [ResourceType]
+                test[color, string] = "test" // ERROR 4 and 5
+                     ~~~~~
+            src/test/pkg/Test.kt:38: Error: Expected resource of type string [ResourceType]
+                test[color, b] // ERROR 6
+                     ~~~~~
+            src/test/pkg/Test.kt:42: Error: Expected resource of type string [ResourceType]
+                test[color, sb] // ERROR 7
+                     ~~~~~
+            8 errors, 0 warnings
+            """
+        )
+    }
 }

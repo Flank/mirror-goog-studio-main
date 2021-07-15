@@ -110,9 +110,13 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiTypesUtil
+import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
+import org.jetbrains.uast.UArrayAccessExpression
+import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -121,6 +125,7 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
+import org.jetbrains.uast.util.isAssignment
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -565,6 +570,115 @@ fun editDistance(s: String, t: String, max: Int = Integer.MAX_VALUE): Int {
  * @return true if assertions are enabled
  */
 fun assertionsEnabled(): Boolean = LintJavaUtils.assertionsEnabled()
+
+/**
+ * Attempts to find the [PsiMethod] for the operator overload of this
+ * array access expression.
+ *
+ * Temporary workaround for
+ * https://youtrack.jetbrains.com/issue/KTIJ-18765:
+ */
+fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
+    val receiver = this.receiver
+    // for normal arrays this is typically PsiArrayType; a PsiClassType
+    // is a sign that it's an operator overload
+    val type = receiver.getExpressionType() as? PsiClassType ?: return null
+
+    // No UAST accessor method to find the corresponding get/set methods; see
+    // https://youtrack.jetbrains.com/issue/KTIJ-18765
+    // Instead we'll search ourselves.
+    val clz = type.resolve() ?: return null
+    val parent = this.uastParent as? UBinaryExpression
+    val isSetter = parent != null && parent.isAssignment()
+    val indices = this.indices
+    val parameterCount = indices.size
+    val methods = clz.findMethodsByName(if (isSetter) "set" else "get", true)
+    val expectedCount = if (isSetter) parameterCount + 1 else parameterCount
+    if (methods.isEmpty()) {
+        // Should not happen (if the code compiles)
+        return null
+    } else if (methods.size == 1) {
+        // There's only one set method; this must be it
+        val only = methods[0]
+        return if (expectedCount == only.parameterList.parametersCount) only else null
+    }
+
+    val arityCountMatch = methods.singleOrNull { method ->
+        val parameters = method.parameterList
+        parameters.parametersCount == expectedCount
+    }
+    if (arityCountMatch != null) {
+        // Only one method has the right number of parameters
+        return arityCountMatch
+    }
+
+    // Need to match by types
+    val typeEqualsMatch = methods.singleOrNull { method ->
+        val parameters = method.parameterList.parameters
+        if (parameters.size == expectedCount) {
+            var matches = true
+            for (i in 0 until parameterCount) {
+                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = true)) {
+                    matches = false
+                    break
+                }
+            }
+            if (isSetter && matches) {
+                // Check type of last parameter
+                val assignmentType = parent?.rightOperand?.getExpressionType()
+                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = true)) {
+                    matches = false
+                }
+            }
+            matches
+        } else {
+            false
+        }
+    }
+
+    if (typeEqualsMatch != null) {
+        // Only one type matched by type equality
+        return typeEqualsMatch
+    }
+
+    // Need to match by wildcard/erasure and hierarchy checks
+    val typeMatch = methods.firstOrNull { method ->
+        val parameters = method.parameterList.parameters
+        if (parameters.size == expectedCount) {
+            var matches = true
+            for (i in 0 until parameterCount) {
+                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = false)) {
+                    matches = false
+                    break
+                }
+            }
+            if (isSetter && matches) {
+                // Check type of last parameter
+                val assignmentType = parent?.rightOperand?.getExpressionType()
+                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = false)) {
+                    matches = false
+                }
+            }
+            matches
+        } else {
+            false
+        }
+    }
+
+    return typeMatch
+}
+
+private fun sameType(type1: PsiType?, type2: PsiType?, equalsOnly: Boolean): Boolean {
+    val equals = PsiTypesUtil.compareTypes(type1, type2, true)
+    if (equals || equalsOnly) {
+        return equals
+    }
+
+    type1 ?: return false
+    type2 ?: return false
+
+    return TypeConversionUtil.areTypesConvertible(type2, type1)
+}
 
 /**
  * Returns the layout resource name for the given layout file
@@ -1772,10 +1886,10 @@ fun resolvePlaceHolders(
     project: Project?,
     value: String,
     fallbacks: Map<String, String>? = null
-): String? {
+): String {
     var s = value
     while (true) {
-        val start = s.indexOf(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX)
+        val start = s.indexOf(MANIFEST_PLACEHOLDER_PREFIX)
         if (start == -1) {
             return s
         }

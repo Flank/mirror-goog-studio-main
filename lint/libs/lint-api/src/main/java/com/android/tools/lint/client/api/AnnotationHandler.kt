@@ -23,6 +23,7 @@ import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.is
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.resolveOperator
 import com.google.common.collect.Multimap
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
@@ -52,10 +53,12 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
@@ -205,6 +208,31 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 annotated = resolved,
                 referenced = resolved
             )
+        }
+
+        // Overloaded operators
+        val method = node.resolveOperator()
+        if (method != null) {
+            if ((node.operator == UastBinaryOperator.EQUALS || node.operator == UastBinaryOperator.NOT_EQUALS) &&
+                (node.rightOperand.isNullLiteral() || node.leftOperand.isNullLiteral())
+            ) {
+                // If you have "a != null" on a data class technically
+                // if there are annotations on that class we'll be
+                // applying a method call and checking annotations,
+                // but this leads to noise that is unlikely to be
+                // interesting (with for example @VisibleForTesting)
+                return
+            }
+
+            checkCall(context, method, node)
+        }
+    }
+
+    fun visitUnaryExpression(context: JavaContext, node: UUnaryExpression) {
+        // Overloaded operators
+        val method = node.resolveOperator()
+        if (method != null) {
+            checkCall(context, method, node)
         }
     }
 
@@ -541,6 +569,10 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 }
             }
         }
+
+        // Operator overload?
+        val method = expression.resolveOperator() ?: return
+        checkCall(context, method, expression)
     }
 
     fun visitVariable(context: JavaContext, variable: UVariable) {
@@ -561,7 +593,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     private fun checkCall(
         context: JavaContext,
         method: PsiMethod,
-        call: UCallExpression
+        call: UExpression
     ) {
         val evaluator = context.evaluator
         val allAnnotations = evaluator.getAllAnnotations(method, inHierarchy = true)
@@ -662,7 +694,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         methodAnnotations: List<UAnnotation>,
         classAnnotations: List<UAnnotation>,
         pkgAnnotations: List<UAnnotation>,
-        call: UCallExpression,
+        call: UExpression,
         containingClass: PsiClass?
     ) {
         if (method != null && methodAnnotations.isNotEmpty()) {
@@ -713,11 +745,48 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
 
         // Sadly, a null method means no parameter checks at this time.
-        // Right now, computing the argument mapping expects a method object and cannot work based
-        // off a raw UExpression.
         if (method != null) {
+            val mapping: Map<UExpression, PsiModifierListOwner> = when (call) {
+                is UCallExpression -> context.evaluator.computeArgumentMapping(call, method)
+                is UBinaryExpression -> {
+                    val operator = call.operator
+                    // See https://kotlinlang.org/docs/operator-overloading.html#binary-operations
+                    // All the operators are "a.something(b)" except for the containment operators
+                    // which are "b.contains(a)"
+                    val text = operator.text
+                    val operand =
+                        if (text == "in" || text == "!in") {
+                            call.leftOperand
+                        } else {
+                            call.rightOperand
+                        }
+                    mapOf(operand to method.parameterList.parameters[0])
+                }
+                is UUnaryExpression -> return
+                is UArrayAccessExpression -> {
+                    val indices = call.indices
+                    val parent = call.uastParent as? UBinaryExpression
+                    val isSetter = parent != null && parent.isAssignment()
+                    val parameters = method.parameterList.parameters
+                    if (indices.size > parameters.size) {
+                        // Should not happen but technically possible since we're doing
+                        // our own method resolve for UArrayAccessExpression until UAST supports it
+                        // and we could have pointed to the wrong method
+                        return
+                    }
+                    val indexMap = indices.mapIndexed { index, argument -> Pair(argument, parameters[index]) }
+                    if (isSetter) {
+                        val operand = parent!!.rightOperand
+                        (indexMap + (operand to parameters[indices.size])).toMap()
+                    } else {
+                        indexMap.toMap()
+                    }
+                }
+                else -> {
+                    error("Unexpected call type $call")
+                }
+            }
             val evaluator = context.evaluator
-            val mapping = evaluator.computeArgumentMapping(call, method)
             for ((argument, parameter) in mapping) {
                 val allParameterAnnotations =
                     evaluator.getAllAnnotations(parameter, inHierarchy = true)

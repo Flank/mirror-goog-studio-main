@@ -102,6 +102,7 @@ import com.android.tools.lint.detector.api.getChildren
 import com.android.tools.lint.detector.api.getInternalMethodName
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.isString
+import com.android.tools.lint.detector.api.resolveOperator
 import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
@@ -159,7 +160,6 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedName
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.java.JavaUAnnotation
-import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isInstanceCheck
 import org.jetbrains.uast.util.isMethodCall
@@ -171,7 +171,6 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.lang.Boolean.TRUE
-import java.util.ArrayList
 import java.util.EnumSet
 import kotlin.math.max
 import kotlin.math.min
@@ -1917,42 +1916,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         override fun visitArrayAccessExpression(node: UArrayAccessExpression) {
-            val receiver = node.receiver
-            val type = receiver.getExpressionType() ?: return
-            if (type !is PsiClassType) { // for normal arrays this is typically PsiArrayType
-                return
-            }
-
-            // No UAST accessor method to find the corresponding get/set methods; see
-            // https://youtrack.jetbrains.com/issue/KT-46045
-            // Instead we'll search ourselves.
-            val clz = type.resolve() ?: return
-            val parent = node.uastParent as? UBinaryExpression
-            val setter = parent != null && parent.isAssignment()
-            if (setter) {
-                for (method in clz.findMethodsByName("set", true)) {
-                    val parameters = method.parameterList
-                    // Here we can also check that the referenced type in the assignment
-                    // is the same as getParameter(1) but this is probably overkill;
-                    // once KT-46045 this will be moot
-                    if (parameters.parametersCount == 2 &&
-                        parameters.getParameter(0)?.type == PsiType.INT
-                    ) {
-                        visitCall(method, null, node)
-                        break
-                    }
-                }
-            } else {
-                for (method in clz.findMethodsByName("get", true)) {
-                    val parameters = method.parameterList
-                    if (parameters.parametersCount == 1 &&
-                        parameters.getParameter(0)?.type == PsiType.INT
-                    ) {
-                        visitCall(method, null, node)
-                        break
-                    }
-                }
-            }
+            val method = node.resolveOperator() ?: return
+            visitCall(method, null, node)
         }
 
         override fun visitBinaryExpression(node: UBinaryExpression) {

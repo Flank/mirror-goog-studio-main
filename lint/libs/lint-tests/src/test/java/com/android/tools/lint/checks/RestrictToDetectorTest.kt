@@ -655,6 +655,50 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testVisibleForTestingEqualsOperator() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                fun test(testRoot: TestRoot, other: TestRoot) {
+                    if (testRoot == null) {
+                        println("null")
+                    }
+                    if (testRoot != null) {
+                        println("not null")
+                    }
+                    if (testRoot == other) {
+                        println("same")
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                @VisibleForTesting
+                interface TestRoot {
+                    override fun equals(other: Any?): Boolean {
+                        return super.equals(other)
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:10: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                if (testRoot == other) {
+                    ~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testGmsHide() {
         // Tests that the @Hide works, and that when applied to classes, it is applied to
         // constructors and to static methods.
