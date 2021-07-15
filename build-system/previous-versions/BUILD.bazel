@@ -123,6 +123,7 @@ AGP_4_1_0_ARTIFACTS = [
     "//prebuilts/tools/common/m2:com.android.tools.build.jetifier.jetifier-core.1.0.0-beta09",
     "//prebuilts/tools/common/m2:com.android.tools.build.jetifier.jetifier-processor.1.0.0-beta09",
     "//prebuilts/tools/common/m2:com.android.tools.build.aapt2-proto.4.1.0-6503028",
+    "//prebuilts/tools/common/m2:com.android.tools.build.aapt2-proto.4.1.0-alpha01-6193524",
     "//prebuilts/tools/common/m2:com.android.tools.build.aapt2.4.1.0-6503028_4.1.0-6503028",
     "//prebuilts/tools/common/m2:com.android.tools.build.aaptcompiler.4.1.0",
     "//prebuilts/tools/common/m2:com.android.tools.build.apksig.4.1.0",
