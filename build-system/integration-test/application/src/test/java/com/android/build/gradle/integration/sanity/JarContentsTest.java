@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.sanity;
 
 import com.android.Version;
+import com.android.testutils.RepoLinker;
 import com.android.testutils.TestUtils;
-import com.android.tools.bazel.repolinker.RepoLinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;

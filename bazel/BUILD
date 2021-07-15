@@ -186,27 +186,27 @@ java_binary(
 )
 
 java_library(
-    name = "repo_zipper_lib",
-    srcs = ["src/com/android/tools/binaries/RepoZipper.java"],
+    name = "repo_builder_lib",
+    srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
     deps = [
         ":utils",
-        "//tools/base/bazel/repolinker:repo_linker",
+        "//tools/base/third_party:org.apache.maven_maven-model-builder",
     ],
 )
 
 java_binary(
-    name = "repo_zipper",
-    main_class = "com.android.tools.binaries.RepoZipper",
+    name = "repo_builder",
+    main_class = "com.android.tools.binaries.RepoBuilder",
     visibility = ["//visibility:public"],
-    runtime_deps = [":repo_zipper_lib"],
+    runtime_deps = [":repo_builder_lib"],
 )
 
 java_test(
-    name = "repo_zipper_test",
-    srcs = ["testSrc/com/android/tools/binaries/RepoZipperTest.java"],
-    test_class = "com.android.tools.binaries.RepoZipperTest",
+    name = "repo_builder_test",
+    srcs = ["testSrc/com/android/tools/binaries/RepoBuilderTest.java"],
+    test_class = "com.android.tools.binaries.RepoBuilderTest",
     deps = [
-        ":repo_zipper_lib",
+        ":repo_builder_lib",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
     ],
@@ -314,7 +314,6 @@ java_library(
     deps = [
         ":utils",
         "//tools/base/annotations",
-        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",

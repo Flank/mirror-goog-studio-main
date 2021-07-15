@@ -1,8 +1,8 @@
 package com.android.tools.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.RepoLinker;
 import com.android.testutils.TestUtils;
-import com.android.tools.bazel.repolinker.RepoLinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import java.io.BufferedInputStream;

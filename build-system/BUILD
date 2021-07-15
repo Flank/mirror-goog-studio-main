@@ -332,7 +332,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/analytics-library/tracker:agp_gradle_build_files",
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
-    "//tools/base:agp_artifacts_zip.zip",
+    "//tools/base:agp_artifacts.zip",
     "//tools/base/annotations:agp_gradle_build_files",
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
     "//tools/base/build-system/aapt2-proto:agp_gradle_build_files",

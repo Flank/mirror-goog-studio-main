@@ -5,7 +5,6 @@ java_library(
     srcs = glob(["**/*.java"]),
     deps = [
         "//tools/base/annotations",
-        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/integration-test/framework",
         "//tools/base/common:tools.common",

@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.tools.bazel.repolinker;
+package com.android.tools.binaries;
 
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.maven.model.Dependency;
@@ -39,58 +41,91 @@ import org.apache.maven.model.resolution.ModelResolver;
 import org.apache.maven.model.resolution.UnresolvableModelException;
 
 /** Creates a Maven repository using symlinks. */
-public class RepoLinker {
+public class RepoBuilder {
     /** Resolves Models for building effective POM models. */
     private final RepoResolver modelResolver = new RepoResolver();
 
     /** Builds effective POM models. */
     private final ModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
 
-    /**
-     * Creates a Maven repository using symlinks.
-     *
-     * @param destination The destination directory for the Maven repository.
-     * @param artifacts The list of artifacts that need to be resolved. The artifacts should be
-     *     given in order of POM file, followed by artifacts corresponding to the POM file. If the
-     *     artifact has a classifier, the classifier should be included at the end of the path,
-     *     delimited by a comma.
-     */
-    public void link(Path destination, List<String> artifacts) throws Exception {
-        for (Map.Entry<Path, Path> entry : resolve(artifacts).entrySet()) {
-            Path src = entry.getKey();
-            Path dest = destination.resolve(entry.getValue());
+    /** The root directory to resolve relative paths from */
+    private final File root;
 
-            Files.createDirectories(dest.getParent());
-            if (Files.exists(dest)) {
-                Files.delete(dest);
+    public RepoBuilder(File root) {
+        this.root = root;
+    }
+
+    public RepoBuilder() {
+        // Use the current directory
+        this.root = new File(".");
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length != 3) {
+            System.err.println(
+                    "Usage: RepoBuilder <artifacts_file> <output.manifest> <output.short_manifest>");
+            System.exit(1);
+        }
+
+        Path artifacts = Paths.get(args[0]);
+        Path manifest = Paths.get(args[1]);
+        Path shortManifest = Paths.get(args[2]);
+
+        build(artifacts, manifest, shortManifest);
+    }
+
+    /**
+     * Given a file with a list of artifacts in the form: _path_, _short_path_[, _classifier_],
+     * it writes two manifests files. One mapping the desired path in the maven repo to the artifact's
+     * path and the other mapping it to its short path.
+     */
+    public static void build(Path artifactsFile, Path manifest, Path shortManifest)
+            throws Exception {
+        List<String> artifacts = Files.readAllLines(artifactsFile);
+        Map<String, String> paths = new HashMap<>();
+        Map<String, String> shortPaths = new HashMap<>();
+        new RepoBuilder().resolve(artifacts, paths, shortPaths);
+
+        try (FileWriter fw = new FileWriter(manifest.toFile())) {
+            for (Map.Entry<String, String> entry : paths.entrySet()) {
+                fw.write(String.format("%s=%s\n", entry.getKey(), entry.getValue()));
             }
-            Files.createSymbolicLink(dest, src);
+        }
+
+        try (FileWriter fw = new FileWriter(shortManifest.toFile())) {
+            for (Map.Entry<String, String> entry : shortPaths.entrySet()) {
+                fw.write(String.format("%s=%s\n", entry.getKey(), entry.getValue()));
+            }
         }
     }
 
     /**
      * Resolves artifact paths to relative Maven paths.
      *
-     * @param artifacts A list of artifacts that should be linked.
-     * @return A Map of absolute source paths to relative Maven paths.
+     * @param artifacts A list of artifacts that should be linked. Each artifact is described
+     * as a line of the form: _path_, _short_path_[, _classifier_]
+     # @param paths A map from the path on the repo to the artifact file's path
+     # @param paths A map from the path on the repo to the artifact file's short path
      */
-    public Map<Path, Path> resolve(List<String> artifacts) throws Exception {
-        Map<Path, Path> resolved = Maps.newHashMap();
+    public void resolve(
+            List<String> artifacts, Map<String, String> paths, Map<String, String> shortPaths)
+            throws Exception {
         Model model = null;
 
-        for (String artifact : artifacts) {
+        for (String spec : artifacts) {
             // Extract the classifier from the file name.
+            String[] parts = spec.split(",");
+            String path = parts[0];
+            String shortPath = parts[1];
             String classifier = null;
-            if (artifact.contains(",")) {
-                String[] classified = artifact.split(",");
-                artifact = classified[0];
-                classifier = classified[1];
+            if (2 < parts.length) {
+                classifier = parts[2];
             }
 
-            Path artifactPath = Paths.get(artifact);
+            Path artifactPath = root.toPath().resolve(path);
             Path artifactDest;
 
-            if (artifact.endsWith(".pom")) {
+            if (path.endsWith(".pom")) {
                 // If the artifact is a POM file, update the model.
                 model = getModel(artifactPath);
 
@@ -99,15 +134,17 @@ public class RepoLinker {
             } else {
                 // Otherwise, use the model to determine the artifact path.
                 assert model != null;
-                String extension = artifact.substring(artifact.lastIndexOf(".") + 1);
+                String extension = path.substring(path.lastIndexOf(".") + 1);
                 artifactDest = getPath(model, classifier, extension);
             }
 
-            artifactPath = artifactPath.toAbsolutePath();
-            resolved.put(artifactPath, artifactDest);
-        }
+            // Replace Windows-style path separators (backslash) with forward slashes according
+            // to the zip specification.
+            String dest = artifactDest.toString().replace('\\', '/');
 
-        return resolved;
+            paths.put(dest, path.toString().replace('\\', '/'));
+            shortPaths.put(dest, shortPath.toString().replace('\\', '/'));
+        }
     }
 
     /** Loads a model from a given POM file. */

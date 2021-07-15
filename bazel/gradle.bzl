@@ -1,20 +1,5 @@
 load(":maven.bzl", "MavenRepoInfo")
 
-def _merge_repo_manifests(ctx):
-    """Generates the manifest and collects all necessary input files for maven_repo manifests."""
-    manifest = ctx.actions.declare_file(ctx.label.name + ".repo.manifest")
-    manifest_args = []
-    manifest_inputs = [manifest]
-
-    for repo in ctx.attr.repos:
-        artifacts = repo[MavenRepoInfo].artifacts
-        manifest_args += [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-        manifest_inputs += [artifact for artifact, _ in artifacts]
-
-    ctx.actions.write(manifest, "\n".join(manifest_args))
-
-    return (manifest, manifest_inputs)
-
 def _gradle_build_impl(ctx):
     # TODO (b/182291459) --singlejar is a workaround for the Windows classpath jar bug.
     # This argument should be removed once the underlying problem is fixed.
@@ -34,11 +19,13 @@ def _gradle_build_impl(ctx):
         args += ["--max_workers", str(ctx.attr.max_workers)]
     args += ["-P" + key + "=" + value for key, value in ctx.attr.gradle_properties.items()]
 
-    manifest, manifest_inputs = _merge_repo_manifests(ctx)
-    args += ["--repo", manifest.path]
+    manifest_inputs = []
+    for repo in ctx.attr.repos:
+        args += ["--repo", repo[MavenRepoInfo].build_manifest.path]
+        manifest_inputs += repo[MavenRepoInfo].artifacts + [repo[MavenRepoInfo].build_manifest]
 
     ctx.actions.run(
-        inputs = ctx.files.data + ctx.files.repos + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
+        inputs = ctx.files.data + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
         outputs = outputs,
         mnemonic = "gradlew",
         arguments = args,

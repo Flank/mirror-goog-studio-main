@@ -359,7 +359,8 @@ def maven_aar(name, aar, pom, visibility = None):
     )
 
 MavenRepoInfo = provider(fields = {
-    "artifacts": "A list of tuples (artifact: File, classifier: string) for each artifact in the Maven repo",
+    "artifacts": "The list of files in the repo",
+    "build_manifest": "The repo's manifest file with full paths for build rules",
 })
 
 def _collect_pom_provider(pom, jars, clsjars, include_sources):
@@ -369,6 +370,18 @@ def _collect_pom_provider(pom, jars, clsjars, include_sources):
         if include_sources or classifier != "sources":
             collected += [(jar, classifier) for jar in jars.to_list()]
     return collected
+
+def _zipper(actions, zipper, desc, map_file, files, out):
+    zipper_args = ["c", out.path]
+    zipper_args += ["@" + map_file.path]
+    actions.run(
+        inputs = files + [map_file],
+        outputs = [out],
+        executable = zipper,
+        arguments = zipper_args,
+        progress_message = desc,
+        mnemonic = "zipper",
+    )
 
 # Collects all parent and dependency artifacts for a given list of artifacts.
 # Each artifact is represented as a tuple (artifact, classifier), with classifier = None if there is no classifier.
@@ -412,20 +425,34 @@ def _maven_repo_impl(ctx):
     args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
     inputs = [artifact for artifact, _ in artifacts]
 
-    # Generate unpacked artifact list.
-    # This artifact list contains every artifact in the repository, separated by newlines. The order
-    # of artifacts is [pom1, artifact1, pom2, artifact2, pom3, artifact3, etc].
-    # Classifiers for artifacts are on the same line, delimited by commas (path/to/artifact,classifier).
-    # For example:
-    # p/t/c/m2/repository/com/google/guava/guava/20.0/jar_maven.pom (POM file for the Guava artifact)
-    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0.jar (Guava JAR file)
-    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0-sources.jar,sources (Guava sources with classifier "sources")
-    ctx.actions.write(ctx.outputs.manifest, "\n".join(args))
+    args = [artifact.path + "," + artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
+    artifact_lst = ctx.actions.declare_file(ctx.label.name + ".artifact.lst")
+    ctx.actions.write(artifact_lst, "\n".join(args))
+
+    # Generate manifests of where files should be located in the repository.
+    # The format is the same used by @bazel_tools//tools/zip:zipper, where
+    # each line is"path_to_target_location=path_to_file"
+    build_manifest = ctx.actions.declare_file(ctx.label.name + ".build.manifest")
+    ctx.actions.run(
+        inputs = [artifact_lst] + inputs,
+        outputs = [build_manifest, ctx.outputs.manifest],
+        mnemonic = "mavenrepobuilder",
+        arguments = [artifact_lst.path, build_manifest.path, ctx.outputs.manifest.path],
+        executable = ctx.executable._repo_builder,
+    )
+    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip...", build_manifest, inputs, ctx.outputs.zip)
 
     runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
     return [
-        DefaultInfo(runfiles = runfiles),
-        MavenRepoInfo(artifacts = artifacts),
+        DefaultInfo(
+            # Do not include the zip as a default output (like _deploy.jar)
+            files = depset([ctx.outputs.manifest]),
+            runfiles = runfiles,
+        ),
+        MavenRepoInfo(
+            artifacts = inputs,
+            build_manifest = build_manifest,
+        ),
     ]
 
 _maven_repo = rule(
@@ -433,9 +460,21 @@ _maven_repo = rule(
         "artifacts": attr.label_list(),
         "include_sources": attr.bool(),
         "include_transitive_deps": attr.bool(),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "exec",
+            executable = True,
+        ),
+        "_repo_builder": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//tools/base/bazel:repo_builder"),
+            allow_files = True,
+        ),
     },
     outputs = {
         "manifest": "%{name}.manifest",
+        "zip": "%{name}.zip",
     },
     implementation = _maven_repo_impl,
 )
@@ -462,48 +501,6 @@ def maven_repo(artifacts = [], include_sources = False, include_transitive_deps 
         include_transitive_deps = include_transitive_deps,
         **kwargs
     )
-
-def _maven_repo_zip_impl(ctx):
-    # Generate the manifest.
-    manifest = ctx.actions.declare_file(ctx.label.name + ".repo.manifest")
-    artifacts = ctx.attr.repo[MavenRepoInfo].artifacts
-    manifest_args = [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    manifest_inputs = [artifact for artifact, _ in artifacts]
-    ctx.actions.write(manifest, "\n".join(manifest_args))
-
-    # Run RepoZipper.
-    ctx.actions.run(
-        inputs = [manifest] + manifest_inputs,
-        outputs = [ctx.outputs.zip],
-        mnemonic = "mavenrepozip",
-        arguments = [ctx.outputs.zip.path, manifest.path],
-        executable = ctx.executable._repo_zipper,
-    )
-
-# Creates a zip file containing the artifacts from a maven_repo rule.
-#
-# The output zip file is structured as a Maven repository.
-#
-# Usage:
-# maven_repo_zip(
-#     name = The name of the rule. The output of the rule will be ${name}.zip.
-#     repo = The maven_repo instance to convert to a zip.
-# )
-maven_repo_zip = rule(
-    attrs = {
-        "repo": attr.label(providers = [MavenRepoInfo]),
-        "_repo_zipper": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//tools/base/bazel:repo_zipper"),
-            allow_files = True,
-        ),
-    },
-    outputs = {
-        "zip": "%{name}.zip",
-    },
-    implementation = _maven_repo_zip_impl,
-)
 
 # Rule set that supports both Java and Maven providers, still under development
 

@@ -1,4 +1,4 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo", "maven_repo_zip", "maven_repository")
+load("//tools/base/bazel:maven.bzl", "maven_repo", "maven_repository")
 
 maven_repo(
     name = "gmaven",
@@ -314,15 +314,10 @@ maven_repo(
     visibility = ["//tools/base/build-system:__pkg__"],
 )
 
-maven_repo_zip(
-    name = "agp_artifacts_zip",
-    repo = ":agp_artifacts",
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
 maven_repository(
     name = "agp_artifacts_bzl",
     artifacts = [
         "//tools/base/common:common_bzl",
     ],
+    visibility = ["//tools/base/build-system:__pkg__"],
 )
