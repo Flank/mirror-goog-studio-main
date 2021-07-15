@@ -88,7 +88,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
                     .addMoreInfo("https://issuetracker.google.com/37008268");
 
     // Arbitrary limit suggested in https://code.google.com/p/android/issues/detail?id=235219
-    private static final int MAX_PATH_DATA_LENGTH = 800;
+    static final int MAX_PATH_DATA_LENGTH = 800;
 
     /** Constructs a new {@link VectorPathDetector} */
     public VectorPathDetector() {}
@@ -133,7 +133,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
 
         validatePath(context, attribute, value);
 
-        if (value.length() < MAX_PATH_DATA_LENGTH) {
+        int length = countPathLength(value);
+        if (length < MAX_PATH_DATA_LENGTH) {
             return;
         }
 
@@ -148,10 +149,24 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         "Very long vector path (%1$d characters), which is bad for "
                                 + "performance. Considering reducing precision, removing minor details or "
                                 + "rasterizing vector.",
-                        value.length());
+                        length);
         Incident incident =
                 new Incident(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
         context.report(incident, minSdkLessThan(21));
+    }
+
+    private int countPathLength(String value) {
+        int count = 0;
+        boolean prevSpace = false;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            boolean isSpace = Character.isWhitespace(c);
+            if (!isSpace || !prevSpace) {
+                count++;
+            }
+            prevSpace = isSpace;
+        }
+        return count;
     }
 
     private static boolean isRasterizingVector(XmlContext context) {
