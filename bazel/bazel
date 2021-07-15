@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """Runs the bazel executable for the platform, passing args along."""
 
 import os
