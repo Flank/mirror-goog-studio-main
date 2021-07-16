@@ -16,9 +16,9 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.TestFixtures
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.TestFixtures
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType

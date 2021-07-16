@@ -819,7 +819,7 @@ com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.DslLifecycle.finalizeDsl: void (kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
 com.android.build.api.variant.DslLifecycle.finalizeDsl: void (org.gradle.api.Action<T>)
 com.android.build.api.variant.HasTestFixtures
-com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build.api.component.TestFixtures ()
+com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build.api.variant.TestFixtures ()
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
@@ -827,6 +827,8 @@ com.android.build.api.variant.JavaCompilation
 com.android.build.api.variant.JavaCompilation.getAnnotationProcessor: com.android.build.api.variant.AnnotationProcessor ()
 com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
 com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
+com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
 com.android.build.api.variant.VariantExtensionConfig
 com.android.build.api.variant.VariantExtensionConfig.buildTypeExtension: T (java.lang.Class<T>)

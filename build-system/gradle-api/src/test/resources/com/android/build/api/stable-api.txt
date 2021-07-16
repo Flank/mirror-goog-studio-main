@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4300b002a5f852e0f7f852b96c880d672765230d767c094c57a199686be1cbae
+02d7e31d48b9321ccb437642a82f14b443672d7d76ce4e991bfca8c6de30f5b3
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -94,7 +94,6 @@ com.android.build.api.component.Component implements com.android.build.api.varia
 com.android.build.api.component.ComponentBuilder implements com.android.build.api.variant.ComponentBuilder
 com.android.build.api.component.ComponentIdentity implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component, com.android.build.api.variant.TestComponent
-com.android.build.api.component.TestFixtures implements com.android.build.api.variant.TestFixtures, com.android.build.api.component.Component
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
@@ -511,8 +510,6 @@ com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.TestComponent implements com.android.build.api.variant.Component
-com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
-com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.GeneratesTestApk, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

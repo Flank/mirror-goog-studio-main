@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.component.TestFixtures
 import org.gradle.api.Incubating
 
 /**
