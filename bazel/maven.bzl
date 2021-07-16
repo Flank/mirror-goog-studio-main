@@ -623,7 +623,8 @@ def _maven_repository_impl(ctx):
     for artifact in ctx.attr.artifacts:
         if MavenInfo not in artifact:
             fail("Maven repositories can only contain maven artifacts")
-        for d, f in artifact[MavenInfo].transitive.to_list():
+        artifacts = artifact[MavenInfo].transitive.to_list() if ctx.attr.include_transitive_deps else artifact[MavenInfo].files
+        for d, f in artifacts:
             files.append(f)
             rel_paths.append((d + "/" + f.basename, f))
 
@@ -647,9 +648,10 @@ def _maven_repository_impl(ctx):
         ),
     ]
 
-_maven_repository = rule(
+maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
+        "include_transitive_deps": attr.bool(),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "exec",
@@ -662,12 +664,6 @@ _maven_repository = rule(
     },
     implementation = _maven_repository_impl,
 )
-
-def maven_repository(artifacts = [], **kwargs):
-    _maven_repository(
-        artifacts = artifacts,
-        **kwargs
-    )
 
 def maven_coordinate(coordinate):
     parts = coordinate.split(":")

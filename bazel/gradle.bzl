@@ -77,7 +77,8 @@ def gradle_build(
         tasks = [],
         max_workers = 0,
         gradle_properties = {},
-        tags = []):
+        tags = [],
+        **kwargs):
     output_file_destinations = []
     output_file_sources = []
 
@@ -107,4 +108,5 @@ def gradle_build(
         tags = tags,
         tasks = tasks,
         max_workers = max_workers,
+        **kwargs
     )

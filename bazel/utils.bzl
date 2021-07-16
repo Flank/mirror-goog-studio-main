@@ -265,3 +265,16 @@ replace_manifest = rule(
     fragments = ["java"],
     implementation = _replace_manifest_iml,
 )
+
+def zip_merger(name, srcs = [], **kwargs):
+    native.genrule(
+        name = name,
+        srcs = srcs,
+        outs = [name + ".zip"],
+        tools = ["//tools/base/bazel:zip_merger"],
+        cmd = " ".join([
+            "$(location //tools/base/bazel:zip_merger)",
+            "c '$@'",
+        ] + ["$(location " + src + ")" for src in srcs]),
+        **kwargs
+    )

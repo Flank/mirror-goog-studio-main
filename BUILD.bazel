@@ -1,4 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo", "maven_repository")
+load("//tools/base/bazel:utils.bzl", "zip_merger")
 
 maven_repo(
     name = "gmaven",
@@ -315,7 +316,16 @@ maven_repo(
 maven_repository(
     name = "agp_artifacts",
     artifacts = [
+        "//tools/base/annotations:annotations_bzl",
         "//tools/base/common:common_bzl",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+zip_merger(
+    name = "hybrid_gmaven",
+    srcs = [
+        ":agp_artifacts.zip",
+        "//tools/base/build-system:android_gradle_plugin.zip",
+    ],
 )

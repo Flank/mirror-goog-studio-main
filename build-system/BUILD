@@ -390,4 +390,5 @@ gradle_build(
         "//tools/base:agp_artifacts",
     ],
     tasks = [":zipPlugin"],
+    visibility = ["//visibility:public"],
 )
