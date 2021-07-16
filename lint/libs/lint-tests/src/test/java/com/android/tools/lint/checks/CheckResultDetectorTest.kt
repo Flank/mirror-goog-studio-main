@@ -868,6 +868,59 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testIndirectSuperCallCompiled2() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg.sub
+
+                fun test() {
+                    test.pkg.test()
+                }
+                """
+            ).indented(),
+            compiled(
+                "libs/lib.jar",
+                kotlin(
+                    """
+                    package test.pkg
+
+                    import androidx.annotation.CheckResult
+
+                    @CheckResult
+                    fun test(): String = "hello"
+                    """
+                ).indented(),
+                0x49daf5cf,
+                """
+                test/pkg/TestKt.class:
+                H4sIAAAAAAAAAGWQO0/DMBSFj9OWlvDoA8qjwIBYYMEtYmNCSIiIUCSoWDq5
+                jVXcpDZKnKpjfxIzA+rMj0JcIySQ8HDu43y27vXH59s7gHMcMFStzCx/iUe8
+                R8mtLYMx1MZiKngi9IjfD8ZySN0CQ9GhDJvHJ+Gv/2hTpUcXDIeh0FFqVDTj
+                QmtjhVVG86tnOYwfZJYnlpij0KQjPpZ2kAqlsz9gxrvGdvMkIar0LJPEVLDM
+                UA9jYxOl+Z20IhJWkO1NpgWanjkpMbDYJR71Z8plbcqiDkNzMV/yF3Pfq623
+                KrXFvOW12U3ZmWeMbqPstjmNaaHilYkk/USotOzmk4FMe2KQUGfvIddWTWSg
+                pypT1Lr8nZfBfzR5OpTXyqG7P+jTPxAdeCjCHcJQwhLVO1TtUe1OoeG//pgg
+                k31ri9QnsEyx4vYj3Ok29il2iFqhp1b7KARYC7BOimqAGuoBGtjog2XYRLMP
+                L0Mpw9YXEogmIfMBAAA=
+                """,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcIlx
+                8cDE9IpLk2DiSgxaDACCij4oRAAAAA==
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/sub/test.kt:4: Warning: The result of test is not used [CheckResult]
+                test.pkg.test()
+                ~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testBrackets() {
         // Regression test for b/189970773
         lint().files(

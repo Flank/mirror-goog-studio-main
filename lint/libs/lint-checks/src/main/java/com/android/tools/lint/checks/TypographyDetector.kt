@@ -418,7 +418,7 @@ class TypographyDetector : ResourceXmlDetector() {
         private fun isRtl(string: String) = string.any { char ->
             val directionality = char.directionality
             directionality == RIGHT_TO_LEFT || directionality == RIGHT_TO_LEFT_ARABIC ||
-                    directionality == RIGHT_TO_LEFT_EMBEDDING || directionality == RIGHT_TO_LEFT_OVERRIDE
+                directionality == RIGHT_TO_LEFT_EMBEDDING || directionality == RIGHT_TO_LEFT_OVERRIDE
         }
     }
 }

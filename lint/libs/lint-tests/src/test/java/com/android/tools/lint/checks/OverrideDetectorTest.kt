@@ -62,7 +62,7 @@ class OverrideDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                0x832a33af,
+                0x9fab4e17,
                 "pkg1/Class1.class:" +
                     "H4sIAAAAAAAAAIWQwU7CQBCG/4HSFloBEUVMPJh4QA82KMrFeCExIVE8aLy3" +
                     "sMFiaU1bfC9PJh58AB/KOLs1DYkmbTI7//z77XR3vr4/PgEMsVdDGTsGOgZ2" +
