@@ -504,8 +504,6 @@ def maven_repo(artifacts = [], include_sources = False, include_transitive_deps 
 
 # Rule set that supports both Java and Maven providers, still under development
 
-VERSION = "30.1.0-dev"
-
 MavenInfo = provider(fields = {
     "pom": "A File referencing the pom",
     "repo_path": "A String with the repo relative path",
@@ -675,4 +673,22 @@ def split_coordinates(coordinates):
         artifact_id = parts[1],
         version = parts[2],
         repo_path = "/".join(segments),
+    )
+
+# A bridge between the two maven rule sets.
+# This allows the old rules to import the jars
+# created by the new rules, so we do not need rule
+# duplication. Once all artifacts have been
+# migrated we can delete the old rules and this bridge.
+def import_maven_library(maven_java_library_rule, maven_library_rule):
+    maven_java_import(
+        name = maven_java_library_rule,
+        jars = [":" + maven_library_rule + ".jar"],
+        pom = ":" + maven_java_library_rule + ".pom",
+        visibility = ["//visibility:public"],
+    )
+
+    maven_pom(
+        name = maven_java_library_rule + ".pom",
+        source = ":" + maven_library_rule + ".pom",
     )
