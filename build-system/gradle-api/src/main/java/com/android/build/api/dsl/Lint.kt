@@ -45,7 +45,7 @@ import java.io.File
  *          // turn on the given issue id's
  *          enable += ['RtlHardcoded','RtlCompat', 'RtlEnabled']
  *          // check *only* the given issue id's
- *          check += ['NewApi', 'InlinedApi']
+ *          checkOnly += ['NewApi', 'InlinedApi']
  *          // if true, don't include source code lines in the error output
  *          noLines = true
  *          // if true, show all locations for an error, do not truncate lists, etc.
