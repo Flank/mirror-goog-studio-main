@@ -26,9 +26,11 @@ import java.io.File
 import java.util.Objects
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /** Utility methods for computing class paths to use for compilation.  */
@@ -50,7 +52,9 @@ object BootClasspathBuilder {
      * @return a classpath as a [FileCollection]
      */
     fun computeClasspath(
-        project: Project,
+        projectLayout: ProjectLayout,
+        providerFactory: ProviderFactory,
+        objects: ObjectFactory,
         issueReporter: IssueReporter,
         targetBootClasspath: Provider<List<File>>,
         targetAndroidVersion: Provider<AndroidVersion>,
@@ -65,17 +69,18 @@ object BootClasspathBuilder {
             val target = targetAndroidVersion.get()
             val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
-            project.provider {
+            providerFactory.provider {
                 classpathCache.getOrPut(key) {
-                    val files = project.objects.listProperty(RegularFile::class.java)
+                    val files = objects.listProperty(RegularFile::class.java)
                     files.addAll(bootClasspath.map {
-                        project.objects.fileProperty().fileValue(it).get()
+                        objects.fileProperty().fileValue(it).get()
                     })
 
                     // add additional and requested optional libraries if any
                     files.addAll(
                         computeAdditionalAndRequestedOptionalLibraries(
-                            project,
+                            projectLayout,
+                            providerFactory,
                             additionalLibraries.get(),
                             optionalLibraries.get(),
                             addAllOptionalLibraries,
@@ -87,7 +92,7 @@ object BootClasspathBuilder {
                     // add annotations.jar if needed.
                     if (target.apiLevel <= 15) {
                         files.add(annotationsJar.flatMap { it: File ->
-                            project.layout.buildDirectory.file(it.absolutePath)
+                            projectLayout.buildDirectory.file(it.absolutePath)
                         })
                     }
 
@@ -110,7 +115,8 @@ object BootClasspathBuilder {
      * @return a list of File to add to the classpath.
      */
     fun computeAdditionalAndRequestedOptionalLibraries(
-        project: Project,
+        projectLayout: ProjectLayout,
+        providerFactory: ProviderFactory,
         additionalLibraries: List<OptionalLibrary>,
         optionalLibraries: List<OptionalLibrary>,
         addAllOptionalLibraries: Boolean,
@@ -125,7 +131,7 @@ object BootClasspathBuilder {
         additionalLibraries
             .stream()
             .map<RegularFile> { lib ->
-                project.layout.file(project.provider {
+                projectLayout.file(providerFactory.provider {
                     val jar = lib.jar
                     Verify.verify(
                         jar != null,
@@ -146,7 +152,7 @@ object BootClasspathBuilder {
         optionalLibraries
             .stream()
             .map<RegularFile> { lib ->
-                project.layout.file(project.provider {
+                projectLayout.file(providerFactory.provider {
                     // add to jar and remove from requests
                     val libraryRequested = libraryRequests.contains(lib.name)
                     if (addAllOptionalLibraries || libraryRequested) {

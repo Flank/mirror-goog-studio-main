@@ -24,14 +24,13 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
-import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.Variant;
+import com.android.build.api.variant.VariantBuilder;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -158,9 +157,9 @@ public abstract class BasePlugin<
                 AndroidT extends CommonExtension<?, ?, ?, ?>,
                 AndroidComponentsT extends
                         AndroidComponentsExtension<
-                                ? extends CommonExtension<?, ?, ?, ?>,
-                                ? extends ComponentBuilder,
-                                ? extends Variant>,
+                                        ? extends CommonExtension<?, ?, ?, ?>,
+                                        ? extends VariantBuilder,
+                                        ? extends Variant>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         implements Plugin<Project> {
@@ -169,7 +168,7 @@ public abstract class BasePlugin<
     private BaseExtension extension;
     private AndroidComponentsT androidComponentsExtension;
 
-    private VariantManager<AndroidT, VariantBuilderT, VariantT> variantManager;
+    private VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT> variantManager;
     private LegacyVariantInputManager variantInputModel;
 
     protected Project project;
@@ -256,7 +255,8 @@ public abstract class BasePlugin<
     protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
-    public VariantManager<AndroidT, VariantBuilderT, VariantT> getVariantManager() {
+    public VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT>
+            getVariantManager() {
         return variantManager;
     }
 
@@ -536,6 +536,7 @@ public abstract class BasePlugin<
                         project,
                         projectServices.getProjectOptions(),
                         (CommonExtension<?, ?, ?, ?>) extension,
+                        androidComponentsExtension,
                         variantApiOperations,
                         variantFactory,
                         variantInputModel,

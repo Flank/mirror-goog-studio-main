@@ -176,7 +176,8 @@ public class TestPlugin
                         project.provider(getExtension()::getCompileSdkVersion),
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
-                        project.provider(getExtension()::getNdkPath));
+                        project.provider(getExtension()::getNdkPath),
+                        project.provider(globalScope::getBootClasspath));
 
         // register the same extension under a different name with the deprecated extension type.
         // this will allow plugins that use getByType() API to retrieve the old interface and keep

@@ -645,17 +645,20 @@ class DependencyConfigurator(
                 component
             )
         }
-        if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
-            for (artifactConfiguration in  getDexingArtifactConfigurations(
-                allComponents
-            )) {
-                artifactConfiguration.registerTransform(
-                    projectServices.projectInfo.getProject().name,
-                    dependencies,
-                    project.files(globalScope.bootClasspath),
-                    getDesugarLibConfig(projectServices.projectInfo.getProject()),
-                    SyncOptions.getErrorFormatMode(projectOptions),
-                )
+        if (allComponents.isNotEmpty()) {
+            val bootClasspath = project.files(allComponents.first().sdkComponents.bootClasspath)
+            if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
+                for (artifactConfiguration in getDexingArtifactConfigurations(
+                    allComponents
+                )) {
+                    artifactConfiguration.registerTransform(
+                        projectServices.projectInfo.getProject().name,
+                        dependencies,
+                        bootClasspath,
+                        getDesugarLibConfig(projectServices.projectInfo.getProject()),
+                        SyncOptions.getErrorFormatMode(projectOptions),
+                    )
+                }
             }
         }
         if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]

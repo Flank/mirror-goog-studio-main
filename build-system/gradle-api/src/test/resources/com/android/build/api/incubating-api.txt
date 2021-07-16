@@ -649,6 +649,7 @@ com.android.build.api.dsl.ResourcesPackagingOptions.getMerges: java.util.Set<jav
 com.android.build.api.dsl.ResourcesPackagingOptions.getPickFirsts: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.SdkComponents
 com.android.build.api.dsl.SdkComponents.getAdb: org.gradle.api.provider.Provider<org.gradle.api.file.RegularFile> ()
+com.android.build.api.dsl.SdkComponents.getBootClasspath: org.gradle.api.provider.Provider<java.util.List<org.gradle.api.file.RegularFile>> ()
 com.android.build.api.dsl.SdkComponents.getNdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
 com.android.build.api.dsl.SdkComponents.getSdkDirectory: org.gradle.api.provider.Provider<org.gradle.api.file.Directory> ()
 com.android.build.api.dsl.Shaders

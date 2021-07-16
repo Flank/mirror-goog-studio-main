@@ -18,46 +18,28 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.sdklib.AndroidVersion
-import com.android.testutils.MockitoKt.any
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.Project
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.quality.Strictness
 import java.io.File
-import java.util.concurrent.Callable
 
 class BootClasspathBuilderTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @get:Rule
-    val mockitoJUnit: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
-
-    @Mock
-    val project: Project? = null
+    private val projectLayout: ProjectLayout = ProjectBuilder.builder().build().layout
 
     private val issueReporter = FakeSyncIssueReporter()
-
-    @Before
-    fun setupProject() {
-        `when`(project!!.objects).thenReturn(FakeObjectFactory.factory)
-        `when`(project.provider<Callable<List<RegularFile>>>(any())).then {
-            FakeGradleProvider((it.arguments[0] as Callable<*>).call())
-        }
-    }
 
     @After
     fun checkIssues() {
@@ -84,7 +66,9 @@ class BootClasspathBuilderTest {
         androidJar: File
     ): Provider<List<RegularFile>> {
         return BootClasspathBuilder.computeClasspath(
-            project = project!!,
+            projectLayout = projectLayout,
+            providerFactory = FakeProviderFactory.factory,
+            objects = FakeObjectFactory.factory,
             issueReporter = issueReporter,
             targetBootClasspath = FakeGradleProvider(listOf(androidJar)),
             targetAndroidVersion = FakeGradleProvider(androidVersion),

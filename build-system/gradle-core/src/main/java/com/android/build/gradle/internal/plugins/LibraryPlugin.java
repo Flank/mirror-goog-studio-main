@@ -170,7 +170,8 @@ public class LibraryPlugin
                         project.provider(getExtension()::getCompileSdkVersion),
                         project.provider(getExtension()::getBuildToolsRevision),
                         project.provider(getExtension()::getNdkVersion),
-                        project.provider(getExtension()::getNdkPath));
+                        project.provider(getExtension()::getNdkPath),
+                        project.provider(globalScope::getBootClasspath));
 
         // register under the new interface for kotlin, groovy will find both the old and new
         // interfaces through the implementation class.

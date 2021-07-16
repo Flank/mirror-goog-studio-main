@@ -47,4 +47,12 @@ interface SdkComponents {
      * executable from the Android SDK.
      */
     val adb: Provider<RegularFile>
+
+    /**
+     * The bootclasspath that will be used to compile classes in this project.
+     *
+     * The returned [Provider] can only be used at execution time and therefore must be used as
+     * a [org.gradle.api.Task] input to do so.
+     */
+    val bootClasspath: Provider<List<RegularFile>>
 }

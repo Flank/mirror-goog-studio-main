@@ -23,6 +23,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
 import com.android.build.api.variant.impl.*
@@ -66,6 +67,7 @@ open class AndroidTestImpl @Inject constructor(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
+    sdkComponents: SdkComponents,
     globalScope: GlobalScope
 ) : TestComponentImpl(
     componentIdentity,
@@ -81,6 +83,7 @@ open class AndroidTestImpl @Inject constructor(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), AndroidTest, AndroidTestCreationConfig {
 

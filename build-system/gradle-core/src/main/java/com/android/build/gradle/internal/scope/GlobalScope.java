@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.ide.common.blame.MessageReceiver;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -72,7 +73,7 @@ public class GlobalScope {
 
     @NonNull private final ArtifactsImpl globalArtifacts;
 
-    @Nullable private ListProperty<RegularFile> bootClasspath = null;
+    @Nullable private Provider<List<RegularFile>> bootClasspath = null;
 
     public GlobalScope(
             @NonNull Project project,
@@ -263,17 +264,25 @@ public class GlobalScope {
     @NonNull
     public synchronized Provider<List<RegularFile>> getBootClasspath() {
         if (bootClasspath == null) {
-            bootClasspath = project.getObjects().listProperty(RegularFile.class);
-            bootClasspath.addAll(getFilteredBootClasspath());
+            ListProperty<RegularFile> classpath =
+                    project.getObjects().listProperty(RegularFile.class);
+            classpath.disallowUnsafeRead();
+            classpath.addAll(getFilteredBootClasspath());
             if (extension.getCompileOptions().getTargetCompatibility().isJava8Compatible()) {
-                bootClasspath.add(
+                classpath.add(
                         getVersionedSdkLoader()
                                 .flatMap(
                                         SdkComponentsBuildService.VersionedSdkLoader
                                                 ::getCoreLambdaStubsProvider));
             }
+            bootClasspath = classpath;
         }
         return bootClasspath;
+    }
+
+    @VisibleForTesting
+    public synchronized void setBootClasspath(Provider<List<RegularFile>> classpath) {
+        this.bootClasspath = classpath;
     }
 
     private ListProperty<RegularFile> filteredBootClasspath = null;
@@ -293,7 +302,9 @@ public class GlobalScope {
             filteredBootClasspath = project.getObjects().listProperty(RegularFile.class);
             filteredBootClasspath.addAll(
                     BootClasspathBuilder.INSTANCE.computeClasspath(
-                            project,
+                            project.getLayout(),
+                            project.getProviders(),
+                            project.getObjects(),
                             getDslServices().getIssueReporter(),
                             versionedSdkLoader.flatMap(
                                     SdkComponentsBuildService.VersionedSdkLoader
@@ -348,7 +359,9 @@ public class GlobalScope {
     @NonNull
     public Provider<List<RegularFile>> getFullBootClasspathProvider() {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
-                project,
+                project.getLayout(),
+                project.getProviders(),
+                project.getObjects(),
                 getDslServices().getIssueReporter(),
                 getVersionedSdkLoader()
                         .flatMap(

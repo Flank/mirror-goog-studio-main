@@ -23,6 +23,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVari
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
@@ -62,6 +63,7 @@ open class ApplicationVariantImpl @Inject constructor(
         transformManager: TransformManager,
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
+        sdkComponents: SdkComponents,
         globalScope: GlobalScope
 ) : VariantImpl(
     variantBuilder,
@@ -76,6 +78,7 @@ open class ApplicationVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest, HasTestFixtures {
 

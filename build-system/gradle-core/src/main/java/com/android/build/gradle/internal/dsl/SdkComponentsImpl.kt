@@ -29,7 +29,8 @@ open class SdkComponentsImpl @Inject constructor(
     compileSdkVersion: Provider<String>,
     buildToolsRevision: Provider<Revision>,
     val ndkVersion: Provider<String>,
-    val ndkPath: Provider<String>
+    val ndkPath: Provider<String>,
+    val bootclasspathProvider: Provider<Provider<List<RegularFile>>>
 ) : SdkComponents {
 
     override val sdkDirectory: Provider<Directory> =
@@ -50,4 +51,6 @@ open class SdkComponentsImpl @Inject constructor(
             it.sdkLoader(compileSdkVersion, buildToolsRevision)
                 .adbExecutableProvider
         }
+    override val bootClasspath: Provider<List<RegularFile>>
+        get() = bootclasspathProvider.get()
 }

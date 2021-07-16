@@ -501,7 +501,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                 )
             }
 
-            task.bootClasspath.from(creationConfig.variantScope.bootClasspath)
+            task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
 
             task.runtimeClasspath.from(creationConfig.variantScope.providedOnlyClasspath)
 

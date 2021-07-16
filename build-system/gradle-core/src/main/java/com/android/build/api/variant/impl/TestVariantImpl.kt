@@ -22,6 +22,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -69,6 +70,7 @@ open class TestVariantImpl @Inject constructor(
         transformManager: TransformManager,
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
+        sdkComponents: SdkComponents,
         globalScope: GlobalScope
 ) : VariantImpl(
     variantBuilder,
@@ -83,6 +85,7 @@ open class TestVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), TestVariant, TestVariantCreationConfig {
 

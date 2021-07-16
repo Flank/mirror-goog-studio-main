@@ -22,6 +22,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -63,6 +64,7 @@ open class  LibraryVariantImpl @Inject constructor(
         transformManager: TransformManager,
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
+        sdkComponents: SdkComponents,
         globalScope: GlobalScope
 ) : VariantImpl(
     variantBuilder,
@@ -77,6 +79,7 @@ open class  LibraryVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), LibraryVariant, LibraryCreationConfig, HasAndroidTest, HasTestFixtures {
 

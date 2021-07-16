@@ -25,6 +25,7 @@ import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder
 import com.android.build.api.variant.Variant
@@ -99,11 +100,19 @@ import java.util.stream.Collectors
 
 /** Class to create, manage variants.  */
 @Suppress("UnstableApiUsage")
-class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
+class VariantManager<
+        CommonExtensionT: CommonExtension<*, *, *, *>,
+        AndroidComponentsT: AndroidComponentsExtension<
+                out CommonExtension<*, *, *, *>,
+                out VariantBuilder,
+                out Variant>,
+        VariantBuilderT : VariantBuilderImpl,
+        VariantT : VariantImpl>(
         private val globalScope: GlobalScope,
         private val project: Project,
         private val projectOptions: ProjectOptions,
         private val dslExtension: CommonExtensionT,
+        private val androidComponentsExtension: AndroidComponentsT,
         private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
                 CommonExtension<*, *, *, *>,
                 VariantBuilder,
@@ -406,7 +415,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 variantData,
                 transformManager,
                 variantPropertiesApiServices,
-                taskCreationServices)
+                taskCreationServices,
+                androidComponentsExtension)
 
         return VariantComponentInfo(
                 variantBuilder,
@@ -592,7 +602,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             mainComponentInfo.variant,
             transformManager,
             variantPropertiesApiServices,
-            taskCreationServices
+            taskCreationServices,
+            androidComponentsExtension
         )
 
         val userVisibleVariant =
@@ -778,7 +789,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     testedComponentInfo.variant,
                     transformManager,
                     variantPropertiesApiServices,
-                    taskCreationServices)
+                    taskCreationServices,
+                    androidComponentsExtension)
             androidTest
         } else {
             // this is UNIT_TEST
@@ -795,7 +807,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     testedComponentInfo.variant,
                     transformManager,
                     variantPropertiesApiServices,
-                    taskCreationServices)
+                    taskCreationServices,
+                    androidComponentsExtension)
             unitTest
         }
 

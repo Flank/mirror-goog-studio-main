@@ -54,6 +54,8 @@ import java.util.stream.Collectors;
 import junit.framework.TestCase;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.internal.project.ProjectStateInternal;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Before;
 import org.junit.Rule;
@@ -508,6 +510,7 @@ public class AppPluginInternalTest {
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
+        ((ProjectStateInternal) project.getState()).configured();
 
         JavaCompile compileDebugJavaWithJavac =
                 (JavaCompile) project.getTasks().getByName("compileDebugJavaWithJavac");
@@ -515,7 +518,11 @@ public class AppPluginInternalTest {
                 compileDebugJavaWithJavac.getOptions().getBootstrapClasspath().getFiles();
         assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))
                 .containsExactly("android.jar", "core-lambda-stubs.jar");
-        assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
+        assertThat(bootclasspath)
+                .containsExactlyElementsIn(
+                        plugin.globalScope.getBootClasspath().get().stream()
+                                .map(RegularFile::getAsFile)
+                                .collect(Collectors.toList()));
     }
 
     @Test
@@ -545,7 +552,11 @@ public class AppPluginInternalTest {
 
     public static List<ComponentImpl> getComponents(
             @NonNull
-                    VariantManager<ApplicationExtension, ApplicationVariantBuilderImpl, ApplicationVariantImpl>
+                    VariantManager<
+                                    ApplicationExtension,
+                                    ?,
+                                    ApplicationVariantBuilderImpl,
+                                    ApplicationVariantImpl>
                             variantManager) {
 
         List<VariantImpl> variants =

@@ -22,6 +22,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixtures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
@@ -66,6 +67,7 @@ open class TestFixturesImpl @Inject constructor(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
+    sdkComponents: SdkComponents,
     globalScope: GlobalScope
 ) : ComponentImpl(
     componentIdentity,
@@ -80,6 +82,7 @@ open class TestFixturesImpl @Inject constructor(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), TestFixtures, ComponentCreationConfig, AarCreationConfig {
 
