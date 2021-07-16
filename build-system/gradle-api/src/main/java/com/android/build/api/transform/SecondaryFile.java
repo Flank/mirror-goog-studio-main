@@ -31,6 +31,7 @@ import org.gradle.api.file.FileCollection;
  * call.
  *
  * The collection should only contain one file.
+ * @deprecated
  */
 @Deprecated
 public class SecondaryFile {

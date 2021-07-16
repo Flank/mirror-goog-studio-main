@@ -18,6 +18,7 @@ package com.android.build.api.transform;
 
 /**
  * An exception during the execution of a Transform.
+ * @deprecated
  */
 @Deprecated
 public class TransformException extends Exception {

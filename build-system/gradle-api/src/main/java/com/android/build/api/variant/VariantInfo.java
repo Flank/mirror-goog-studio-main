@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
  * <p>Only the Android Gradle Plugin should create instances of this interface.
  *
  * <p>Immutable, no access to tasks
+ * @deprecated
  */
 @Deprecated
 public interface VariantInfo {

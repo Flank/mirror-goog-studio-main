@@ -22,6 +22,7 @@ import java.util.Set;
 
 /**
  * Represent content qualified with one or more {@link ContentType} and one or more {@link Scope}.
+ * @deprecated
  */
 @Deprecated
 public interface QualifiedContent {

@@ -46,6 +46,7 @@ import java.util.Map;
  * a {@link DirectoryInput} instance for the removed folder, but {@link QualifiedContent#getFile()}
  * will return a directory that does not exist. In this case, the transform should prcess this
  * as a removed input.
+ * @deprecated
  */
 @Deprecated
 public interface DirectoryInput extends QualifiedContent {
