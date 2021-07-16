@@ -20,6 +20,7 @@ import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /**
  * Generic extension for Android Gradle Plugin related components.
@@ -51,6 +52,7 @@ interface AndroidComponentsExtension<
      *
      * @return [SdkComponents] to access Android SDK used by Gradle.
      */
+    @get:Incubating
     val sdkComponents: SdkComponents
 
     /**
@@ -155,6 +157,7 @@ interface AndroidComponentsExtension<
      * @return an sub type of [VariantExtension] instance that will be stored with the [VariantT]
      * instance and can be retrieved by [Variant.getExtension] API.
      */
+    @Incubating
     fun registerExtension(
         dslExtension: DslExtension,
         configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension

@@ -27,6 +27,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtension
 import com.android.build.api.variant.VariantExtensionConfig
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
@@ -72,6 +73,7 @@ interface AndroidComponentsExtension<
      *
      * @return [SdkComponents] to access Android SDK used by Gradle.
      */
+    @get:Incubating
     val sdkComponents: SdkComponents
 
     /**
@@ -177,6 +179,7 @@ interface AndroidComponentsExtension<
      * @return an sub type of [VariantExtension] instance that will be stored with the [VariantT]
      * instance and can be retrieved by [Variant.getExtension] API.
      */
+    @Incubating
     fun registerExtension(
         dslExtension: DslExtension,
         configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension

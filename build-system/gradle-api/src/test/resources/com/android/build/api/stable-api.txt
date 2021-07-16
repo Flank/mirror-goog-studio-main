@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1b4c432694ce67ad0d449541b21397980e5bd50b34ddf3f14bb75a9ffe950bef
+a11641d7b33eb9e0b4a38a8c5848c1f7632a6aadd8332b7ae280572949e44615
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -125,10 +125,8 @@ com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android
 com.android.build.api.dsl.BuildType$DefaultImpls
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
-com.android.build.api.dsl.Bundle.codeTransparency: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleCodeTransparency, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
-com.android.build.api.dsl.Bundle.getCodeTransparency: com.android.build.api.dsl.BundleCodeTransparency ()
 com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
 com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
 com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()
@@ -250,10 +248,8 @@ com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void 
 com.android.build.api.extension.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.extension.AndroidComponentsExtension.finalizeDsl: void (kotlin.jvm.functions.Function1<? super DslExtensionT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
-com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantT>)
-com.android.build.api.extension.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.VariantSelector ()
 com.android.build.api.extension.ApplicationAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.ApplicationAndroidComponentsExtension$DefaultImpls
@@ -372,10 +368,8 @@ com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (c
 com.android.build.api.variant.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.variant.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.variant.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.variant.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
-com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.onVariants: void (com.android.build.api.variant.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.variant.AndroidComponentsExtension.onVariants: void (com.android.build.api.variant.VariantSelector, org.gradle.api.Action<VariantT>)
-com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.variant.AndroidComponentsExtension.selector: com.android.build.api.variant.VariantSelector ()
 com.android.build.api.variant.AndroidResources
 com.android.build.api.variant.AndroidResources.getAaptAdditionalParameters: org.gradle.api.provider.ListProperty<java.lang.String> ()
@@ -420,8 +414,6 @@ com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.v
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.Component implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
-com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
-com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.ComponentBuilder.getEnabled: boolean ()
 com.android.build.api.variant.ComponentBuilder.setEnabled: void (boolean)
