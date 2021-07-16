@@ -326,14 +326,14 @@ private fun TypeParser.parseType(line: String, start: Int): Int {
     }
     val result = flush()
     if (isArray) append('[')
-    if (isObject) {
+    val primitive = PRIMITIVE_MAP[result]
+    if (primitive != null) {
+        append(primitive)
+    } else {
+        isObject = true
         append('L')
         append(result)
         append(';')
-    } else {
-        val primitive = PRIMITIVE_MAP[result]
-        require(primitive != null) { "Expected primitive. Found '$result'"}
-        append(primitive)
     }
     descriptor = flush()
     return i
