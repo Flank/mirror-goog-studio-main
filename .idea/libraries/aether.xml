@@ -23,6 +23,7 @@
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-file/1.0.2.v20150114/aether-transport-file-1.0.2.v20150114.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

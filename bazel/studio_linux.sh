@@ -171,6 +171,7 @@ function run_bazel_test() {
     //tools/vendor/google/game-tools/packaging:packaging-win \
     //tools/base/ddmlib:tools.ddmlib \
     //tools/base/ddmlib:incfs \
+    //tools/base/bazel:local_maven_repository_generator_deploy.jar \
     $(< "${SCRIPT_DIR}/targets")
 }
 

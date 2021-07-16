@@ -562,3 +562,52 @@ java_binary(
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )
+
+java_library(
+    name = "json",
+    srcs = glob(["src/com/android/tools/json/**/*.java"]),
+    deps = [
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-annotations.2.11.1",
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-core.2.11.1",
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-databind.2.11.1",
+    ],
+)
+
+java_binary(
+    name = "local_maven_repository_generator",
+    srcs = [
+        "src/com/android/tools/binaries/LocalMavenRepositoryGenerator.java",
+        "src/com/android/tools/repository_generator/BuildFileWriter.java",
+        "src/com/android/tools/repository_generator/ResolutionResult.java",
+    ],
+    main_class = "com.android.tools.binaries.LocalMavenRepositoryGenerator",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":json",
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
+    ],
+)
+
+coverage_java_test(
+    name = "local_maven_repository_generator_tests",
+    srcs = ["testSrc/com/android/tools/binaries/LocalMavenRepositoryGeneratorTest.java"],
+    data = ["//tools/base/bazel/test:local_maven_repository_generator"],
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.LocalMavenRepositoryGeneratorTest",
+    deps = [
+        ":json",
+        ":local_maven_repository_generator",
+        ":maven",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
+    ],
+)
