@@ -1,6 +1,6 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "explicit_target")
-load(":maven.bzl", "MavenInfo", "generate_pom", "maven_coordinate", "maven_pom")
+load(":maven.bzl", "MavenInfo", "generate_pom", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
@@ -384,7 +384,7 @@ def _maven_library_impl(ctx):
     run_singlejar(
         ctx = ctx,
         jars = jars,
-        out = ctx.outputs.output_jar,
+        out = ctx.outputs.jar,
         manifest_lines = ["@" + manifest_argfile.path] if manifest_argfile else [],
         extra_inputs = [manifest_argfile] if manifest_argfile else [],
         # allow_duplicates = True,  # TODO: Ideally we could be more strict here.
@@ -393,13 +393,13 @@ def _maven_library_impl(ctx):
     # Create an ijar to improve javac compilation avoidance.
     ijar = java_common.run_ijar(
         actions = ctx.actions,
-        jar = ctx.outputs.output_jar,
+        jar = ctx.outputs.jar,
         java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
     )
 
     providers = []
     providers = [JavaInfo(
-        output_jar = ctx.outputs.output_jar,
+        output_jar = ctx.outputs.jar,
         compile_jar = ijar,
         deps = deps,
         runtime_deps = deps,
@@ -408,26 +408,29 @@ def _maven_library_impl(ctx):
     infos = [dep[MavenInfo] for dep in ctx.attr.deps]
     pom_deps = [info.pom for info in infos]
 
-    pom = ctx.actions.declare_file(ctx.attr.artifact_id + "-" + ctx.attr.version + ".pom")
+    coordinates = split_coordinates(ctx.attr.coordinates)
+    basename = coordinates.artifact_id + "-" + coordinates.version
     generate_pom(
         ctx,
-        output_pom = pom,
-        group = ctx.attr.group_id,
-        artifact = ctx.attr.artifact_id,
-        version = ctx.attr.version,
+        output_pom = ctx.outputs.pom,
+        group = coordinates.group_id,
+        artifact = coordinates.artifact_id,
+        version = coordinates.version,
         deps = pom_deps,
     )
-    files = [pom, ctx.outputs.output_jar]
+    repo_files = [
+        (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
+        (coordinates.repo_path + "/" + basename + ".jar", ctx.outputs.jar),
+    ]
     if ctx.file.notice:
-        files.append(ctx.file.notice)
+        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
 
-    repo_files = [(ctx.attr.repo_path, file) for file in files]
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos])
 
     return [
         java_common.merge(providers),
         MavenInfo(
-            pom = pom,
+            pom = ctx.outputs.pom,
             files = repo_files,
             transitive = transitive,
         ),
@@ -454,11 +457,7 @@ _maven_library = rule(
         ),
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
-        "artifact_id": attr.string(),
-        "group_id": attr.string(),
-        "version": attr.string(),
-        "repo_path": attr.string(),
-        "output_jar": attr.output(),
+        "coordinates": attr.string(),
         "kotlin_use_ir": attr.bool(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
@@ -494,6 +493,10 @@ _maven_library = rule(
             allow_files = True,
         ),
     },
+    outputs = {
+        "jar": "%{name}.jar",
+        "pom": "%{name}.pom",
+    },
     fragments = ["java"],
     implementation = _maven_library_impl,
 )
@@ -509,7 +512,7 @@ def maven_library(
         bundled_deps = [],
         friends = [],
         notice = None,
-        artifact = None,
+        coordinates = None,
         exclusions = None,
         lint_baseline = None,
         lint_classpath = [],
@@ -529,7 +532,7 @@ def maven_library(
         bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency (TODO)
         friends: The list of kotlin-friends.
         notice: An optional notice file to be included in the jar.
-        artifact: The maven coordinate of this artifact.
+        coordinates: The maven coordinates of this artifact.
         exclusions: Files to exclude from the generated pom file.
         lint_*: Lint configuration arguments (TODO)
         module_name: The kotlin module name.
@@ -538,7 +541,6 @@ def maven_library(
     javas = [src for src in srcs if src.endswith(".java")]
     final_javacopts = javacopts + ["--release", "8"]
 
-    coord = maven_coordinate(artifact)
     _maven_library(
         name = name,
         java_srcs = javas,
@@ -552,10 +554,6 @@ def maven_library(
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
-        artifact_id = coord.artifact_id,
-        group_id = coord.group_id,
-        version = coord.version,
-        repo_path = coord.repo_path,
-        output_jar = coord.artifact_id + "-" + coord.version + ".jar",
+        coordinates = coordinates,
         **kwargs
     )

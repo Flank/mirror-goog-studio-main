@@ -80,7 +80,7 @@ maven_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    artifact = "com.android.tools:common:" + VERSION,
+    coordinates = "com.android.tools:common:" + VERSION,
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",
     resources = [

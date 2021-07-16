@@ -37,7 +37,7 @@ filegroup(
 maven_library(
     name = "annotations_bzl",
     srcs = glob(["src/main/java/**"]),
-    artifact = "com.android.tools:annotations:" + VERSION,
+    coordinates = "com.android.tools:annotations:" + VERSION,
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/annotations",
     visibility = ["//visibility:public"],

@@ -565,7 +565,7 @@ def _maven_import_impl(ctx):
     runfiles = None
 
     mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
-    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+    files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
     return struct(
         providers = [
@@ -624,9 +624,9 @@ def _maven_repository_impl(ctx):
         if MavenInfo not in artifact:
             fail("Maven repositories can only contain maven artifacts")
         artifacts = artifact[MavenInfo].transitive.to_list() if ctx.attr.include_transitive_deps else artifact[MavenInfo].files
-        for d, f in artifacts:
+        for r, f in artifacts:
             files.append(f)
-            rel_paths.append((d + "/" + f.basename, f))
+            rel_paths.append((r, f))
 
     build_manifest_content = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
     manifest_content = "".join([k + "=" + v.short_path + "\n" for k, v in rel_paths])
@@ -665,10 +665,10 @@ maven_repository = rule(
     implementation = _maven_repository_impl,
 )
 
-def maven_coordinate(coordinate):
-    parts = coordinate.split(":")
+def split_coordinates(coordinates):
+    parts = coordinates.split(":")
     if len(parts) != 3:
-        print("Unsupported coordinate")
+        print("Unsupported coordinates")
     segments = parts[0].split(".") + [parts[1], parts[2]]
     return struct(
         group_id = parts[0],
