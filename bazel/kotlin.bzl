@@ -534,7 +534,7 @@ def maven_library(
         notice: An optional notice file to be included in the jar.
         coordinates: The maven coordinates of this artifact.
         exclusions: Files to exclude from the generated pom file.
-        lint_*: Lint configuration arguments (TODO)
+        lint_*: Lint configuration arguments
         module_name: The kotlin module name.
     """
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -557,3 +557,20 @@ def maven_library(
         coordinates = coordinates,
         **kwargs
     )
+
+    if lint_baseline:
+        # TODO: use srcs once the migration is completed
+        lint_srcs = javas + kotlins
+        if not lint_srcs:
+            fail("lint_baseline set for rule that has no sources")
+
+        lint_test(
+            name = name + "_lint_test",
+            srcs = lint_srcs,
+            baseline = lint_baseline,
+            deps = deps + bundled_deps + lint_classpath,
+            custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
+            tags = ["no_windows"],
+            is_test_sources = lint_is_test_sources,
+            timeout = lint_timeout if lint_timeout else None,
+        )
