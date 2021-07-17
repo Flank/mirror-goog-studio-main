@@ -3859,6 +3859,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "      return this.mActivity;\n"
                                                 + "   }\n"
                                                 + "}"),
+                                0x2f463d75,
                                 "android/support/v4/app/Fragment.class:"
                                         + "H4sIAAAAAAAAAJWQTUvDQBCG303Spvmobf04iugpbaW5CB4UQYSeih4U75tk"
                                         + "CVuaD9JNwH+loAge/AH+KHESLBU9qJd5Z2ffeWaYt/eXVwDH2LFhYGBBx6aJ"
@@ -3876,6 +3877,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "\n"
                                                 + "public class FragmentActivity extends Activity {\n"
                                                 + "}"),
+                                0xcd8cb5db,
                                 "android/support/v4/app/FragmentActivity.class:"
                                         + "H4sIAAAAAAAAADv1b9c+BgYGcwZeLgZmBi52Bm52Bh5GBjabzLzMEjtGBmYN"
                                         + "zTBGBhbn/JRURgZ+n8y8VL/S3KTUopDEpBygCFdwfmlRcqpbJogj6laUmJ6b"
@@ -7066,6 +7068,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "   public static void nonLiteralPackageLintTest() {\n"
                                                 + "   }\n"
                                                 + "}"),
+                                0x68c7c240,
                                 "jar/jar/Binks.class:"
                                         + "H4sIAAAAAAAAAIVOPUsDQRB9k28viYlaBbGwixZeaaEIURACQSUG+02yhEku"
                                         + "u+fe3v0vK8HCH+CPEmcTsDCFA/NmeB/MfH1/fAK4xFGEMrp1HNRxSKhds2F/"

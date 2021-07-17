@@ -405,6 +405,31 @@ public class TestFile {
                     new JarOutputStream(
                             new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
                 Set<String> seen = new HashSet<>();
+
+                Set<String> pathSet = new HashSet<>();
+                for (TestFile file : files) {
+                    String path = this.path.get(file);
+                    if (path == null) {
+                        path = file.targetRelativePath;
+                    }
+                    index = path.lastIndexOf('/');
+                    if (index != -1) {
+                        // +1: Include trailing /; in zip means directory
+                        pathSet.add(path.substring(0, index + 1));
+                    }
+                }
+                pathSet.stream()
+                        .sorted()
+                        .forEach(
+                                s -> {
+                                    try {
+                                        ZipEntry dirEntry = new ZipEntry(s);
+                                        jarOutputStream.putNextEntry(dirEntry);
+                                        jarOutputStream.closeEntry();
+                                    } catch (IOException ignore) {
+                                    }
+                                });
+
                 for (TestFile file : files) {
                     String path = this.path.get(file);
                     if (path == null) {

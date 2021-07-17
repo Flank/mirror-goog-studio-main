@@ -628,7 +628,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                0x624cd40e,
+                0xd5543545,
                 """
                 com/example/Foo.class:
                 H4sIAAAAAAAAAGVOTUvDQBScZ9qkTaut3kQ8ePLjYI4eLIIIgUJR0NL7Jlnr

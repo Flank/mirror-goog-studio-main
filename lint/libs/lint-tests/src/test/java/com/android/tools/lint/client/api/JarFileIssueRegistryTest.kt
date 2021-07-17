@@ -20,9 +20,11 @@ import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.describeApi
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.io.StringWriter
@@ -183,7 +185,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 source(
                     "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
                     "test.pkg.MyIssueRegistry"
-                )
+                ),
+                0x70522285
             ),
             bytecode(
                 "lint.jar",
@@ -205,6 +208,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0x4f058bc1,
                 """
                     test/pkg/MyIssueRegistry.class:
                     H4sIAAAAAAAAAJ1UW08bRxT+Zn1bb0xYHELAhMYkbWKckDX0HhNSAkm7qqEV
@@ -273,7 +277,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 source(
                     "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
                     "androidx.annotation.experimental.lint.ExperimentalIssueRegistry"
-                )
+                ),
+                0x7ca072f0
             ),
             bytecode(
                 "lint.jar",
@@ -291,7 +296,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                0xb12167f,
+                0xb1bcd1d5,
                 """
                 androidx/annotation/experimental/lint/ExperimentalIssueRegistry.class:
                 H4sIAAAAAAAAAHWQv07DMBDGP/dfmlAoFMoESGwtAx4ZWpWhAgkpYqCI3U2s
@@ -327,6 +332,143 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             .expectClean()
     }
 
+    fun testInvalidPackaging() {
+        val root = Files.createTempDirectory("lintjar").toFile()
+
+        lint().files(
+            *lintApiStubs,
+            bytecode(
+                "lint.jar",
+                source(
+                    "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
+                    "test.pkg.MyIssueRegistry"
+                ),
+                0x70522285
+            ),
+            bytecode(
+                "lint.jar",
+                kotlin(
+                    """
+                    package com.android.something
+                    class InReservedPackage {
+                    }
+                    """
+                ).indented(),
+                0x711b4bf6,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AZcylmJyfq5eYl1KUn5miV5Kfn1Os
+                l5OZV6KXnJOZCqQSCzKF+JzB7PjiktKkYu8SJQYtBgDDO/ZuTQAAAA==
+                """,
+                """
+                com/android/something/InReservedPackage.class:
+                H4sIAAAAAAAAAI2RPUsDQRCG39mYi55R43f8wNaPwlOxUwQVhED8QCWN1eZu
+                0TW5XbjdBMv8Fv+BlWAhwdIfJc6ddjZu8TDvO8PM7O7n19s7gH2sEtZjm0bS
+                JJnVSeRsqvyDNvdRw1wrp7K+Sq5k3JH3qgIi1B5lX0ZdyQWX7UcV+wpKhOBQ
+                G+2PCKWNzVYVZQQhRlAhjHAvR9hs/nPGAWG62bG+q010rrxMpJfsibRf4nUp
+                R5lAHbaedK52OEp2CWvDQRiKughFjaPhoD4c7IkdOil/PAeiJvKqPeIOmPsz
+                c7vjedFTmyjCVFMbddFL2yq7le0uOzNNG8tuS2Y6179meGN7WazOdC6WrnvG
+                61S1tNOcPTbGeum1NQ67EPwO+eGl82dhLrKKCs132XrF6AsHAnVmUJgCS8zq
+                TwHGEBbecsEFrBTfRhjnXPUOpQYmGphkYipHrYFpzNyBHGYxx3mH0GHeIfgG
+                eDuJRfMBAAA=
+                """
+            ),
+            bytecode(
+                "lint.jar",
+                kotlin(
+                    """
+                    package test.pkg
+                    import com.android.tools.lint.client.api.*
+                    import com.android.tools.lint.detector.api.*
+                    import java.util.EnumSet
+
+                    class MyIssueRegistry : IssueRegistry() {
+                        override val issues: List<Issue> = emptyList()
+                        override val api: Int = 11
+                        override val vendor: Vendor = Vendor(
+                            vendorName = "Android Open Source Project: Lint Unit Tests",
+                            contact = "/dev/null"
+                        )
+                    }
+                    """
+                ).indented(),
+                0x6017198f,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AZcylmJyfq5eYl1KUn5miV5Kfn1Os
+                l5OZV6KXnJOZCqQSCzKF+JzB7PjiktKkYu8SJQYtBgDDO/ZuTQAAAA==
+                """,
+                """
+                test/pkg/MyIssueRegistry.class:
+                H4sIAAAAAAAAAKVVTW8bRRh+Zm2v147bbNwSXLfAltDguGnHCd91mpKmQrLq
+                pFVSLFBOG3twJ17vWjtji3DKnTs/gDMHkIiKQEJRj/wo1Hdsl6ROK0I57Lzz
+                fn/P/vX3738C+BDrDAUtlOa9Tptv7NeU6ost0ZZKx/tpMAbejLrcD1txJFtc
+                R1GgeCBDzZuBFAT8nuQTSgkGe0WGUq8yJEoLjRxSsLNIIs3gdSJN6mQ0CERT
+                yyhUfP34fl+nkWHIiG5P79fJHkO+tFDf8wc+72sZcEOr5jCFXBZZnCNP0jhX
+                DO5pqWm4GViYoTAoTAZWy+ECLhraGwylf0+sIcJWFKfxJsPi2kjSe9ATobcd
+                9eOm8B7G0R5Ffsurk6L3JaXsPaJaKgeXKAneEgMe9oPAwWWG70qjAAM/bPNt
+                HcuwXX09Sq0+LuLeoMvJsYhDP+D3xDd+P9DrVEUd95s6ijf8uCPi6qgBb2VR
+                wNtUr8EwJ4Zy/az5UyU9XDVVe5chqR9Lqnax/qqhqVLmbaFr47bcOdW+lVc5
+                bgktTNzHM1VdJWtz9Shu8z2hd2Nf0rj4YRhpfzQ6m5HepAKTlE0+10yTaeJq
+                oxAa40wXKYQz58pw+3/GO/O8PRtC+y1f+0SzuoMErRszR4oGsUOkb6XBKnRr
+                LTF8f3RQyloFa/Q59LkOwQRBb0xLPOcVjg6WrQq7m3r6o2251tZFN1G0Ksmv
+                nv5wjyhO9uigmHRSrr1VdNNFJ5/MW5VMxSF28piddadIL0d6515knHenTUjL
+                DEtnqNpk68Fw/T/Ui9Z7YnxudmjnM9uyHfq6HwuGy1v9UMuuqIUDqeRuINaO
+                +0/juB61SGiaFlBs9ru7In7kkwzZrUdNP2j4sTT4mJgd7e0X0iCXxoYbp8xi
+                iWY9Sc1JIG8eEcJWCLNwA7cJ2pRkiWDePCZDSOtBtJO8JMHUEFslrIcM3YD5
+                8hM45d9w/hD5sjt1iNnyHyh8nS8ylr/i2uwJ3jnE3C9DX3eMPOkZm/R00pPn
+                YIbwWZhNzqBIlCsErxH/c5LKjTzgPaKYNswTJTH0zgkzvFT5V+R//se4PSSm
+                TyinxsqjZN9/ISGGBZTH6Zw0OPvThEHnJQZpKLBIUpPKc5PRZF6ifDIKC2vD
+                s4q7BHeIepPk+A4SNVRqWKITy+b4oEb/to9IQOFjfLIDV+GawqcKtsIFhc8U
+                FhTKCtPD+y2FeYWcgqdwVeG6wuIzYkwLpiEHAAA=
+                """
+            )
+        ).testModes(TestMode.DEFAULT).createProjects(root)
+
+        val lintJar = File(root, "app/lint.jar")
+        assertTrue(lintJar.exists())
+
+        lint().files(
+            source(
+                "res/values/strings.xml",
+                """
+                <resources/>
+                """
+            ).indented()
+        )
+            .clientFactory { createGlobalLintJarClient(lintJar) }
+            .testModes(TestMode.DEFAULT)
+            .allowObsoleteLintChecks(false)
+            .issueIds("MyIssueId")
+            .run()
+            .expectContains(
+                """
+                lint.jar: Warning: Lint found an issue registry (test.pkg.MyIssueRegistry)
+                which contains code in some of lint's reserved packages.
+
+                This is usually because the lint jar has accidentally
+                packed in libraries that are part of lint's API surface,
+                such as the Kotlin standard library (kotlin.*), or
+                some of the Android tooling libraries (com.android.*)
+                including lint's own API jars, or some of the third party
+                libraries that lint depends on, such as UAST.
+                If you need these and cannot rely on the ones provided
+                in lint's runtime environment, consider `jarjar`ing your
+                own versions.
+
+                A second reason is one where you've accidentally placed
+                your own detector code into one of these package
+                namespaces, since they are pretty broad (com.android.*).
+                For Android specifically, you can place them under
+                com.android.internal.* which is explicitly allowed.
+
+                The first bundled package that is part of lint's API
+                surface namespace is:
+                com.android.something [ObsoleteLintCustomCheck]
+                0 errors, 1 warnings"""
+            )
+    }
+
     fun testNewerLintBroken() {
         // Tests what happens when the loaded lint rule was compiled with
         // a newer version of the lint apis than the current host, and
@@ -340,7 +482,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 source(
                     "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
                     "test.pkg.MyIssueRegistry"
-                )
+                ),
+                0x70522285
             ),
             bytecode(
                 "lint.jar",
@@ -362,6 +505,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0x4f058bc1,
                 """
                     test/pkg/MyIssueRegistry.class:
                     H4sIAAAAAAAAAJ1UW08bRxT+Zn1bb0xYHELAhMYkbWKckDX0HhNSAkm7qqEV
@@ -402,6 +546,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 }
                 """
                 ).indented(),
+                0x8bb07491,
                 """
                     test/pkg/Helper.class:
                     H4sIAAAAAAAAAJ1Qy04bMRQ9nrxgSJvwDqUUlsACQ4TY8JCgCHWkAFKpsmHl
@@ -452,7 +597,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 of lint.
 
                 Version of Lint API this lint check is using is 10000.
-                The Lint API version currently running is 10 (7.0+). [ObsoleteLintCustomCheck]
+                The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}). [ObsoleteLintCustomCheck]
                 0 errors, 1 warnings"""
             )
     }
@@ -467,7 +612,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 source(
                     "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
                     "test.pkg.MyIssueRegistry"
-                )
+                ),
+                0x70522285
             ),
             bytecode(
                 "lint.jar",
@@ -479,6 +625,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0x3a35c31e,
                 """
                     test/pkg/Incompatible1.class:
                     H4sIAAAAAAAAAJ1QTW8TMRSct5uPsgSaFkhToJQj7aFuIsSFD6kFIa20gFRQ
@@ -535,6 +682,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
+                0xe2369de6,
                 """
                 test/pkg/MyDetector.class:
                 H4sIAAAAAAAAAJ1W6VLbVhT+rgDLFg5xTEIgK00gMSGxDFmaxjQtIRBEDaSY
@@ -666,7 +814,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 if there is a more recent version available.
 
                 Version of Lint API this lint check is using is 9.
-                The Lint API version currently running is 10 (7.0+). [ObsoleteLintCustomCheck]
+                The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}). [ObsoleteLintCustomCheck]
                 0 errors, 1 warnings"""
             )
             .expectMatches(
@@ -824,7 +972,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                     @file:Suppress("unused")
                     package com.android.tools.lint.client.api
                     import com.android.tools.lint.detector.api.*
-                    const val CURRENT_API = 10
+                    const val CURRENT_API = 11
                     data class Vendor
                     @JvmOverloads
                     constructor(

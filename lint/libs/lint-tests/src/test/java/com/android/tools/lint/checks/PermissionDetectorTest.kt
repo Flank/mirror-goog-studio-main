@@ -1208,6 +1208,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "   }\n" +
                         "}"
                 ),
+                0x1c46ed0d,
                 "jar/jar/AnnotationsClass.class:" +
                     "H4sIAAAAAAAAAIVRyUoDQRB9lZhE476iqAcP4nLIHD0owjhEDAwZSaIXD9JJ" +
                     "Wu2QdMfpnoCf5Unw4Af4UWJNFBUXLKj9verq7ueXxycAe1gqIov5AhYKWCTk" +

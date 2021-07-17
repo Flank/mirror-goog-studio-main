@@ -45,7 +45,7 @@ import java.util.jar.JarFile
  * Given a lint jar file, checks to see if the jar file looks compatible
  * with the current version of lint.
  */
-class LintJarVerifier : ClassVisitor(ASM7) {
+class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
     /**
      * Is the class with the given [internal] class name part of an API
      * we want to check for validity?
@@ -53,6 +53,8 @@ class LintJarVerifier : ClassVisitor(ASM7) {
     private fun isRelevantApi(internal: String): Boolean {
         // Libraries unlikely to change: org.w3c.do, org.objectweb.asm, org.xmlpull, etc.
         if (internal.startsWith("com/android/") &&
+            // Reserved for various Android-internal checks such as CallingIdentityTokenDetector in AOSP
+            !internal.startsWith("com/android/internal/") &&
             // We have a few clashes with this namespace which are not part of
             // the API surface; remove these
             !internal.startsWith("com/android/tools/lint/checks/studio/") &&
@@ -69,25 +71,57 @@ class LintJarVerifier : ClassVisitor(ASM7) {
     }
 
     /**
-     * Returns true if the given lintJar does not contain any classes
+     * Returns true if the lintJar does not contain any classes
      * referencing lint APIs that are not valid in the current class
-     * loader
+     * loader.
      */
-    fun isCompatible(lintJar: File): Boolean {
+    fun isCompatible(): Boolean {
+        return incompatibleReference == null
+    }
+
+    /**
+     * Returns true if the lint jar contains classes that conflict with
+     * (or are repackaging) lint's own API surface.
+     */
+    fun hasPackageConflict(): Boolean {
+        return packageConflict != null
+    }
+
+    fun getVerificationThrowable(): Throwable? = verifyProblem
+
+    /**
+     * Performs the actual verification and stores the results into
+     * various result properties
+     */
+    private fun verify(lintJar: File) {
         // Scans through the bytecode for all the classes in lint.jar, and
         // checks any class, method or field reference accessing the Lint API
         // and makes sure that API is found in the bytecode
         JarFile(lintJar).use { jar ->
             jar.entries().also { entries ->
+                var firstInDir = true
                 while (entries.hasMoreElements()) {
                     (entries.nextElement() as java.util.jar.JarEntry).also { entry ->
-                        if (entry.name.endsWith(DOT_CLASS) && !entry.isDirectory) {
+                        val directory = entry.isDirectory
+                        val name = entry.name
+                        if (directory) {
+                            firstInDir = true
+                        } else if (name.endsWith(DOT_CLASS)) {
+                            if (firstInDir) {
+                                if (packageConflict == null) {
+                                    val packageOwner = name.substring(0, name.lastIndexOf('/') + 1)
+                                    if (isRelevantApi(packageOwner)) {
+                                        packageConflict = packageOwner
+                                    }
+                                }
+                                firstInDir = false
+                            }
                             jar.getInputStream(entry).use { stream ->
                                 val bytes = ByteStreams.toByteArray(stream)
                                 val reader = ClassReader(bytes)
                                 reader.accept(this, SKIP_DEBUG or SKIP_FRAMES)
                                 if (incompatibleReference != null) {
-                                    return false
+                                    return
                                 }
                             }
                         }
@@ -95,12 +129,12 @@ class LintJarVerifier : ClassVisitor(ASM7) {
                 }
             }
         }
-        return true
     }
 
     /** Returns a message describing the incompatibility */
     fun describeFirstIncompatibleReference(): String {
-        val reference = incompatibleReference ?: return "Compatible"
+        val reference = incompatibleReference
+            ?: return "Compatible"
         val index = reference.indexOf('#')
         if (index == -1) {
             return Type.getObjectType(reference).className.replace('$', '.')
@@ -130,8 +164,20 @@ class LintJarVerifier : ClassVisitor(ASM7) {
         return sb.toString()
     }
 
+    fun describeFirstPackagedDependency(): String =
+        packageConflict?.replace('/', '.')?.removeSuffix(".") ?: "None"
+
+    /**
+     * An exception thrown if there is some other verification problem
+     * (invalid class file etc)
+     */
+    private var verifyProblem: Throwable? = null
+
     /** The internal name of the invalid reference. */
     private var incompatibleReference: String? = null
+
+    /** The first conflicting package found */
+    private var packageConflict: String? = null
 
     private val methodVisitor = object : MethodVisitor(ASM7) {
         override fun visitMethodInsn(
@@ -283,6 +329,14 @@ class LintJarVerifier : ClassVisitor(ASM7) {
         exceptions: Array<out String>?
     ): MethodVisitor {
         return methodVisitor
+    }
+
+    init {
+        try {
+            verify(jarFile)
+        } catch (throwable: Throwable) {
+            verifyProblem = throwable
+        }
     }
 }
 

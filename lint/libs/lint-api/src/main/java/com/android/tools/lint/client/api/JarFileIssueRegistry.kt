@@ -210,22 +210,16 @@ private constructor(
         }
 
         /**
-         * Verifies that the given issue jar [jarFile] is compatible,
-         * and if so returns null, otherwise returns the description of
-         * at least one invalid symbol.
+         * Verifies that the given issue jar [jarFile] is compatible.
          */
-        private fun verify(client: LintClient, jarFile: File): String? {
-            val verifier = LintJarVerifier()
-            try {
-                if (!verifier.isCompatible(jarFile)) {
-                    return verifier.describeFirstIncompatibleReference()
-                }
-            } catch (verifierBug: Throwable) {
+        private fun verify(client: LintClient, jarFile: File): LintJarVerifier {
+            val verifier = LintJarVerifier(jarFile)
+            verifier.getVerificationThrowable()?.let {
                 if (logJarProblems()) {
-                    client.log(verifierBug, "Error verifying bytecode in $jarFile")
+                    client.log(it, "Error verifying bytecode in $jarFile")
                 }
             }
-            return null
+            return verifier
         }
 
         private fun reportErrors(driver: LintDriver?): Boolean {
@@ -292,11 +286,11 @@ private constructor(
                         // time the library is stable lint will start warning about the lint check
                         // needing to be updated -- and in 99.9% of cases the lint check is only
                         // doing simple things which is unaffected by lint changes.
-                        val verifierError = verify(client, jarFile)
-                        if (verifierError != null) {
+                        val verifier = verify(client, jarFile)
+                        if (!verifier.isCompatible()) {
                             if (reportErrors(driver)) {
                                 val message =
-"""
+                                    """
 Library lint checks out of date.
 
 Lint found an issue registry (`$className`)
@@ -307,7 +301,7 @@ This often works just fine, but some basic verification
 shows that the lint check jar references (for example)
 the following API which is no longer valid in this
 version of lint:
-$verifierError
+${verifier.describeFirstIncompatibleReference()}
 
 Recompile the checks against the latest version, or if
 this is a check bundled with a third-party library, see
@@ -316,6 +310,15 @@ if there is a more recent version available.
 Version of Lint API this lint check is using is $api.
 The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
 """.trim()
+                                LintClient.report(
+                                    client = client, issue = OBSOLETE_LINT_CHECK,
+                                    message = message, file = jarFile, project = currentProject, driver = driver
+                                )
+                            }
+                            return null
+                        } else if (verifier.hasPackageConflict()) {
+                            if (reportErrors(driver)) {
+                                val message = getPackagingConflictMessage(className, verifier)
                                 LintClient.report(
                                     client = client, issue = OBSOLETE_LINT_CHECK,
                                     message = message, file = jarFile, project = currentProject, driver = driver
@@ -340,8 +343,8 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                 }
                                 return null
                             } else if (api >= CURRENT_API) {
-                                val verifierError = verify(client, jarFile)
-                                if (verifierError != null) {
+                                val verifier = verify(client, jarFile)
+                                if (!verifier.isCompatible()) {
                                     if (reportErrors(driver)) {
                                         val message =
                                             """
@@ -355,7 +358,7 @@ This often works just fine, but some basic verification
 shows that the lint check jar references (for example)
 the following API which is not valid in the version of
 lint which is running:
-$verifierError
+${verifier.describeFirstIncompatibleReference()}
 
 To use this lint check, upgrade to a more recent version
 of lint.
@@ -363,6 +366,15 @@ of lint.
 Version of Lint API this lint check is using is $api.
 The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
 """.trim()
+                                        LintClient.report(
+                                            client = client, issue = OBSOLETE_LINT_CHECK,
+                                            message = message, file = jarFile, project = currentProject, driver = driver
+                                        )
+                                    }
+                                    return null
+                                } else if (verifier.hasPackageConflict()) {
+                                    if (reportErrors(driver)) {
+                                        val message = getPackagingConflictMessage(className, verifier)
                                         LintClient.report(
                                             client = client, issue = OBSOLETE_LINT_CHECK,
                                             message = message, file = jarFile, project = currentProject, driver = driver
@@ -436,6 +448,33 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                 }
                 null
             }
+        }
+
+        private fun getPackagingConflictMessage(className: String, verifier: LintJarVerifier): String {
+            return """
+Lint found an issue registry (`$className`)
+which contains code in some of lint's reserved packages.
+
+This is usually because the lint jar has accidentally
+packed in libraries that are part of lint's API surface,
+such as the Kotlin standard library (`kotlin.*`), or
+some of the Android tooling libraries (`com.android.*`)
+including lint's own API jars, or some of the third party
+libraries that lint depends on, such as UAST.
+If you need these and cannot rely on the ones provided
+in lint's runtime environment, consider `jarjar`ing your
+own versions.
+
+A second reason is one where you've accidentally placed
+your own detector code into one of these package
+namespaces, since they are pretty broad (`com.android.*`).
+For Android specifically, you can place them under
+`com.android.internal.*` which is explicitly allowed.
+
+The first bundled package that is part of lint's API
+surface namespace is:
+${verifier.describeFirstPackagedDependency()}
+""".trim()
         }
 
         private fun getVendor(

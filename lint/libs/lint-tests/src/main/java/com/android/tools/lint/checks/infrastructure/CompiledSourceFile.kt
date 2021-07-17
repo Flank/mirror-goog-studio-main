@@ -353,19 +353,18 @@ internal class CompiledSourceFile(
         val binaryFiles = findFiles(classesDir) { _: File, name: String ->
             name.endsWith(DOT_CLASS) ||
                 target.endsWith(DOT_KT) && name.endsWith(".kotlin_module")
-        }.sortedBy { it.path.replace(File.separatorChar, '/') }
+        }
+            .sortedBy { it.path.replace(File.separatorChar, '/') }
+            .map { Pair(it, it.readBytes()) }
+            .filter { isClassForSource(it.first, it.second, target) }
 
-        val checksum = computeCheckSum(source.contents, binaryFiles.map { it.readBytes() }.toList())
+        val checksum = computeCheckSum(source.contents, binaryFiles.map { it.second }.toList())
         val checksumString = "0x" + Integer.toHexString(checksum)
         kotlin.indent(indent).append(checksumString).append(",\n")
         java.indent(indent).append(checksumString).append(",\n")
 
         var first = true
-        for (binaryFile in binaryFiles) {
-            val bytes = binaryFile.readBytes()
-            if (!isClassForSource(binaryFile, bytes, target)) {
-                continue
-            }
+        for ((binaryFile, bytes) in binaryFiles) {
             if (first) {
                 first = false
             } else {
@@ -449,19 +448,19 @@ internal class CompiledSourceFile(
             }
 
             if (checksum != null) {
-                val actualChecksum = computeCheckSum(
+                val expectedCheckSum = computeCheckSum(
                     source.contents,
                     classFiles.sortedBy { it.targetRelativePath }.map {
                         (it as BinaryTestFile).binaryContents
                     }.toList()
                 )
                 // We only create integer checksums to keep the fingerprints short
-                if (checksum.toInt() != actualChecksum) {
+                if (checksum.toInt() != expectedCheckSum) {
                     fail(
                         "The checksum does not match for ${source.targetRelativePath};\n" +
                             "expected " +
-                            "0x${Integer.toHexString(checksum.toInt())} but was " +
-                            "0x${Integer.toHexString(actualChecksum)}.\n" +
+                            "0x${Integer.toHexString(expectedCheckSum)} but was " +
+                            "0x${Integer.toHexString(checksum.toInt())}.\n" +
                             "Has the source file been changed without updating the binaries?\n" +
                             "Don't just update the checksum -- delete the binary file arguments and " +
                             "re-run the test first!"

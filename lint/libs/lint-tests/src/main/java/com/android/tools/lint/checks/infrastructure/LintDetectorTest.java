@@ -557,7 +557,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             @NonNull TestFile source,
             long checksum,
             @NonNull String... encoded) {
-        return TestFiles.bytecode(into, source, encoded);
+        return TestFiles.bytecode(into, source, checksum, encoded);
     }
 
     /**

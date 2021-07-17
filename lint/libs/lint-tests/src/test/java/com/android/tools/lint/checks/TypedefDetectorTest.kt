@@ -1368,6 +1368,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
                 ).indented(),
+                0x1a10084a,
                 "androidx/recyclerview/widget/LinearLayoutManager.class:" +
                     "H4sIAAAAAAAAAH1Qy0rDQBQ907SNTdOH1kfrY+Gu7cK4c6EIpSgWYgu1ZOFu" +
                     "mg5lSjqBOH39kxtBEVz4AX6UeBOKKIibe+Yc5txzOR+fb+8AznBgYsdCBrs5" +
@@ -1409,6 +1410,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
                 ).indented(),
+                0x1f852758,
                 "androidx/recyclerview/widget/RecyclerView.class:" +
                     "H4sIAAAAAAAAAI2QzU7CQBSFz/BXKCAg/oDGhYkx4sKujBtjQhBik9omWFm4" +
                     "MUOZkCF1mrQF5LFcmbjwAXwo422DCe7c3Lnnzpxvbs7X98cngCscatjTsK8j" +
