@@ -56,6 +56,7 @@ function copy_bazel_artifacts() {
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/bazel/local_maven_repository_generator_deploy.jar ${artifacts_dir}/generator.jar
 }
 
 ####################################
