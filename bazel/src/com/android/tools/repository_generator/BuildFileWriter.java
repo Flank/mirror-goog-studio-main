@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.SystemUtils;
+
 /** Utility for generating a BUILD file from a {@link ResolutionResult} object. */
 public class BuildFileWriter {
 
@@ -45,7 +47,7 @@ public class BuildFileWriter {
     private final Set<String> generatedRuleNames = new HashSet<>();
 
     public BuildFileWriter(Path repoPath, String filePath) throws IOException {
-        repoPrefix = Paths.get(".").toAbsolutePath().relativize(repoPath);
+        repoPrefix = Paths.get("").toAbsolutePath().relativize(repoPath);
         fileWriter = new FileWriter(filePath);
     }
 
@@ -101,9 +103,9 @@ public class BuildFileWriter {
                 fileWriter.append("\n");
                 fileWriter.append("maven_artifact(\n");
                 fileWriter.append(String.format("    name = \"%s\",\n", ruleNameWithVersion));
-                fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, dep.pomPath));
-                fileWriter.append(String.format("    repo_root_path = \"%s\",\n", repoPrefix));
-                fileWriter.append(String.format("    repo_path = \"%s\",\n", artifactRepoPath));
+                fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(dep.pomPath)));
+                fileWriter.append(String.format("    repo_root_path = \"%s\",\n", pathToString(repoPrefix)));
+                fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
                 if (dep.parentCoord != null) {
                     String parentRuleName = ruleNameFromCoord(dep.parentCoord, true);
                     fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
@@ -147,7 +149,7 @@ public class BuildFileWriter {
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
             fileWriter.append("    jars = [\n");
-            fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, dep.file));
+            fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
             fileWriter.append("    ],\n");
             String[] depRuleNames =
                     Arrays.stream(dep.directDependencies)
@@ -176,12 +178,12 @@ public class BuildFileWriter {
             } else {
                 fileWriter.append("    original_deps = [],\n");
             }
-            fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, dep.pomPath));
+            fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(dep.pomPath)));
             fileWriter.append(String.format("    repo_root_path = \"%s\",\n", repoPrefix));
-            fileWriter.append(String.format("    repo_path = \"%s\",\n", artifactRepoPath));
+            fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
             if (dep.srcjar != null) {
                 fileWriter.append(
-                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, dep.file));
+                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, pathToString(dep.file)));
             }
             fileWriter.append("    visibility = [\"//visibility:public\"],\n");
             fileWriter.append(")\n");
@@ -199,11 +201,11 @@ public class BuildFileWriter {
         fileWriter.append("\n");
         fileWriter.append("maven_artifact(\n");
         fileWriter.append(String.format("    name = \"%s\",\n", ruleName));
-        fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, parent.pomPath));
+        fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(parent.pomPath)));
         fileWriter.append(String.format("    repo_root_path = \"%s\",\n", repoPrefix));
         // Deduce the repo path of the artifact from the pom file.
         Path artifactRepoPath = Paths.get(parent.pomPath).getParent();
-        fileWriter.append(String.format("    repo_path = \"%s\",\n", artifactRepoPath));
+        fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
         if (parent.parentCoord != null) {
             String parentRuleName = ruleNameFromCoord(parent.parentCoord, true);
             fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
@@ -287,5 +289,19 @@ public class BuildFileWriter {
     /** See ruleNameFromCoord(String,boolean) above. */
     public static String ruleNameFromCoord(String coord) {
         return ruleNameFromCoord(coord, false);
+    }
+
+    /** Converts path to forward slash separated string. */
+    private static String pathToString(Path path) {
+        if (!SystemUtils.IS_OS_WINDOWS) {
+            return path.toString();
+        }
+
+        return path.toString().replaceAll("\\\\", "/");
+    }
+
+    /** Converts a string that represents a path into forward slash separated string. */
+    private static String pathToString(String input) {
+      return pathToString(Paths.get(input));
     }
 }

@@ -312,7 +312,7 @@ public class LocalMavenRepositoryGenerator {
                     new ResolutionResult.Dependency(
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),
-                            null,
+                            repoPath.relativize(model.getPomFile().toPath()).toString(),
                             null,
                             null,
                             new String[0],
