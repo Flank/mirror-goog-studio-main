@@ -42,6 +42,7 @@ import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static java.io.File.separator;
@@ -927,7 +928,19 @@ public class Project {
         if (version != null) {
             buildSdk = version.getFeatureLevel();
         } else {
-            client.log(Severity.WARNING, null, "Unexpected build target format: %1$s", target);
+            // The platform sometimes passes in the wrong target hash; try to account for that
+            if (buildTargetHash.indexOf('-') == -1) {
+                version =
+                        AndroidTargetHash.getPlatformVersion(
+                                PLATFORM_HASH_PREFIX + buildTargetHash);
+            }
+            if (version == null) {
+                client.log(
+                        Severity.WARNING,
+                        null,
+                        "Unexpected build target format: %1$s",
+                        buildTargetHash);
+            }
         }
     }
 

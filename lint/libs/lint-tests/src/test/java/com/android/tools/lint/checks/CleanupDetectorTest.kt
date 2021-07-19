@@ -2196,6 +2196,71 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testValueAnimator() {
+        // Repro scenario from false positive scenario in
+        // frameworks/base/core/java/com/android/internal/app/ChooserActivity.java
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import static android.animation.ObjectAnimator.ofFloat;
+
+                import android.animation.ObjectAnimator;
+                import android.animation.ValueAnimator;
+                import android.view.View;
+
+                @SuppressWarnings("unused")
+                public class FadeTestJava {
+                    public void setViewVisibility1(View v) {
+                        ValueAnimator fadeAnim = ObjectAnimator.ofFloat(v, "alpha", 1.0f, 0f);
+                        fadeAnim.start();
+                    }
+
+                    public void setViewVisibility2(View v) {
+                        ValueAnimator fadeAnim = ofFloat(v, "alpha", 1.0f, 0f);
+                        fadeAnim.start();
+                    }
+
+                    public void setViewVisibility3(View v) {
+                        ValueAnimator fadeAnim;
+                        fadeAnim = ofFloat(v, "alpha", 1.0f, 0f);
+                        fadeAnim.start();
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.animation.ValueAnimator
+                import android.animation.ObjectAnimator
+                import android.animation.ObjectAnimator.ofFloat
+                import android.view.View
+
+                class FadeTestKotlin {
+                    fun setViewVisibility(v: View) {
+                        val fadeAnim: ValueAnimator = ObjectAnimator.ofFloat(v, "alpha", 1.0f, 0f)
+                        fadeAnim.start()
+                    }
+
+                    fun setViewVisibility2(v: View) {
+                        val fadeAnim: ValueAnimator = ofFloat(v, "alpha", 1.0f, 0f)
+                        fadeAnim.start()
+                    }
+
+                    fun setViewVisibility3(v: View) {
+                        val fadeAnim: ValueAnimator
+                        fadeAnim = ofFloat(v, "alpha", 1.0f, 0f)
+                        fadeAnim.start()
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;

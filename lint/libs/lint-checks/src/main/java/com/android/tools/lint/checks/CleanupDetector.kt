@@ -259,8 +259,12 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val resolved = call.resolve()
                 if (resolved != null) {
                     val containingClass = resolved.containingClass
-                    return context.evaluator
-                        .extendsClass(containingClass, recycleType, false)
+                    val targetName = containingClass?.qualifiedName ?: return true
+                    if (targetName == recycleType) {
+                        return true
+                    }
+                    val recycleClass = context.evaluator.findClass(recycleType) ?: return true
+                    return context.evaluator.extendsClass(recycleClass, targetName, false)
                 }
                 return false
             }

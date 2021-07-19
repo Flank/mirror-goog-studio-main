@@ -25,6 +25,7 @@ import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
 import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
 import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toAndroidxAnnotation;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
@@ -85,6 +86,7 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import kotlin.Triple;
 import kotlin.collections.CollectionsKt;
 import kotlin.collections.SetsKt;
 import org.jetbrains.uast.UAnnotation;
@@ -94,6 +96,7 @@ import org.jetbrains.uast.UDeclaration;
 import org.jetbrains.uast.UDeclarationsExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UField;
 import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULiteralExpression;
@@ -106,6 +109,7 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USwitchClauseExpression;
 import org.jetbrains.uast.USwitchExpression;
 import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.UastContextKt;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaUTypeCastExpression;
@@ -354,14 +358,14 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     // Also make sure that from <= to.
                     boolean invalid;
                     if (INT_RANGE_ANNOTATION.isEquals(type)) {
-                        checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                        checkTargetType(annotation, type, TYPE_INT, TYPE_LONG, true);
 
                         long from =
                                 getLongAttribute(mContext, annotation, ATTR_FROM, Long.MIN_VALUE);
                         long to = getLongAttribute(mContext, annotation, ATTR_TO, Long.MAX_VALUE);
                         invalid = from > to;
                     } else {
-                        checkTargetType(annotation, TYPE_FLOAT, TYPE_DOUBLE, true);
+                        checkTargetType(annotation, type, TYPE_FLOAT, TYPE_DOUBLE, true);
 
                         double from =
                                 getDoubleAttribute(
@@ -411,10 +415,11 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     }
                 } else if (COLOR_INT_ANNOTATION.isEquals(type)) {
                     // Check that ColorInt applies to the right type
-                    checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                    checkTargetType(annotation, type, TYPE_INT, TYPE_LONG, true);
                 } else if (DIMENSION_ANNOTATION.isEquals(type) || (PX_ANNOTATION.isEquals(type))) {
                     // Check that @Dimension and @Px applies to the right type
-                    checkTargetType(annotation, TYPE_INT, TYPE_LONG, TYPE_FLOAT, TYPE_DOUBLE, true);
+                    checkTargetType(
+                            annotation, type, TYPE_INT, TYPE_LONG, TYPE_FLOAT, TYPE_DOUBLE, true);
                 } else if (INT_DEF_ANNOTATION.isEquals(type)
                         || LONG_DEF_ANNOTATION.isEquals(type)) {
                     // Make sure IntDef constants are unique
@@ -460,10 +465,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     }
                 } else if (HALF_FLOAT_ANNOTATION.isEquals(type)) {
                     // Check that half floats are on shorts
-                    checkTargetType(annotation, TYPE_SHORT, null, true);
+                    checkTargetType(annotation, type, TYPE_SHORT, null, true);
                 } else if (type.endsWith(RES_SUFFIX)) {
                     // Check that resource type annotations are on ints
-                    checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                    checkTargetType(annotation, type, TYPE_INT, TYPE_LONG, true);
                 } else if (RESTRICT_TO_ANNOTATION.isEquals(type)) {
                     UExpression attributeValue = annotation.findDeclaredAttributeValue(ATTR_VALUE);
                     if (attributeValue == null) {
@@ -502,11 +507,11 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                 name = toAndroidxAnnotation(name);
                             }
                             if (INT_DEF_ANNOTATION.isEquals(name)) {
-                                checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                                checkTargetType(annotation, name, TYPE_INT, null, true);
                             } else if (LONG_DEF_ANNOTATION.isEquals(name)) {
-                                checkTargetType(annotation, TYPE_LONG, null, true);
+                                checkTargetType(annotation, name, TYPE_LONG, null, true);
                             } else if (STRING_DEF_ANNOTATION.isEquals(type)) {
-                                checkTargetType(annotation, TYPE_STRING, null, true);
+                                checkTargetType(annotation, name, TYPE_STRING, null, true);
                             }
                         }
                     }
@@ -519,20 +524,17 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
         }
 
         private void checkTargetType(
-                @NonNull UAnnotation node, @NonNull String type, boolean allowCollection) {
-            checkTargetType(node, type, null, null, null, allowCollection);
-        }
-
-        private void checkTargetType(
                 @NonNull UAnnotation node,
+                @NonNull String name,
                 @NonNull String type1,
                 @Nullable String type2,
                 boolean allowCollection) {
-            checkTargetType(node, type1, type2, null, null, allowCollection);
+            checkTargetType(node, name, type1, type2, null, null, allowCollection);
         }
 
         private void checkTargetType(
                 @NonNull UAnnotation node,
+                @NonNull String name,
                 @NonNull String type1,
                 @Nullable String type2,
                 @Nullable String type3,
@@ -576,21 +578,17 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 return;
             }
 
+            PsiType originalType = type;
+
             if (allowCollection) {
                 if (type instanceof PsiArrayType) {
                     // For example, int[]
                     type = type.getDeepComponentType();
                 } else if (type instanceof PsiClassType) {
-                    // For example, List<Integer>
                     PsiClassType classType = (PsiClassType) type;
-                    if (classType.getParameters().length == 1) {
-                        PsiClass resolved = classType.resolve();
-                        if (resolved != null
-                                && mContext.getEvaluator()
-                                        .implementsInterface(
-                                                resolved, "java.util.Collection", false)) {
-                            type = classType.getParameters()[0];
-                        }
+                    PsiType[] parameters = classType.getParameters();
+                    if (parameters.length >= 1) {
+                        type = parameters[0];
                     }
                 }
             }
@@ -604,6 +602,13 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 // Type not found. Not awesome.
                 // https://youtrack.jetbrains.com/issue/KT-20172
                 return;
+            } else if (typeName.equals("android.util.SparseIntArray")) {
+                typeName = "int";
+            } else if (typeName.equals("android.util.LongSparseArray")
+                    || typeName.equals("android.util.SparseLongArray")) {
+                typeName = "long";
+            } else if (typeName.equals("android.util.SparseBooleanArray")) {
+                typeName = "boolean";
             }
 
             if (!(typeName.equals(type1)
@@ -618,6 +623,28 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     return;
                 }
 
+                // Allow flexibly mixing convertible types here, e.g. we may have int constants
+                // but packed into byte or short arrays.
+                // We're doing custom checks here rather than passing them in as allowed types
+                // since we don't want to suggest them in the error messages.
+                if ((typeName.equals(TYPE_BYTE)
+                                || typeName.equals(getAutoBoxedType(TYPE_BYTE))
+                                || typeName.equals(TYPE_SHORT)
+                                || typeName.equals(getAutoBoxedType(TYPE_SHORT)))
+                        && (type1.equals(TYPE_INT) || type1.equals(TYPE_LONG))) {
+                    return;
+                } else if (type2 == null
+                        && type1.equals(TYPE_INT)
+                        && (typeName.equals(TYPE_LONG)
+                                || typeName.equals(getAutoBoxedType(TYPE_LONG)))) {
+                    return;
+                } else if (type2 == null
+                        && type1.equals(TYPE_LONG)
+                        && (typeName.equals(TYPE_INT)
+                                || typeName.equals(getAutoBoxedType(TYPE_INT)))) {
+                    return;
+                }
+
                 String expectedTypes;
                 if (type4 != null) {
                     expectedTypes = type1 + ", " + type2 + ", " + type3 + ", or " + type4;
@@ -628,13 +655,26 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 } else {
                     expectedTypes = type1;
                 }
-                if (typeName.equals(TYPE_STRING)) {
+
+                // When displaying the incorrect type, use the original type (e.g. "int[]") instead
+                // of the checked inner type (such as the list element or array element type)
+                typeName = originalType.getCanonicalText();
+                boolean isString = typeName.equals(TYPE_STRING);
+                if (isString) {
                     typeName = "String";
                 }
                 String message =
                         String.format(
                                 "This annotation does not apply for type %1$s; expected %2$s",
                                 typeName, expectedTypes);
+
+                if (isString && type1.equals(TYPE_INT) && INT_DEF_ANNOTATION.isEquals(name)) {
+                    message +=
+                            ". Should `"
+                                    + node.asSourceString()
+                                    + "` be annotated with `@StringDef` instead?";
+                }
+
                 Location location = mContext.getLocation(node);
                 mContext.report(ANNOTATION_USAGE, node, location, message);
             }
@@ -776,19 +816,74 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
                         Location location;
                         String message;
+                        String prevLocationLabel;
                         int prevIndex = valueToIndex.get(number);
                         UExpression prevConstant = initializers.get(prevIndex);
-                        message =
-                                String.format(
-                                        "Constants `%1$s` and `%2$s` specify the same exact "
-                                                + "value (%3$s); this is usually a cut & paste or "
-                                                + "merge error",
-                                        expression.asSourceString(),
-                                        prevConstant.asSourceString(),
-                                        repeatedValue.toString());
+                        String constant1 = expression.asSourceString();
+                        String constant2 = prevConstant.asSourceString();
+                        if (constant1.equals(constant2)) {
+                            message =
+                                    String.format(
+                                            "Constant `%1$s` has already been included", constant1);
+                            prevLocationLabel = "Previous occurrence";
+                        } else {
+                            String valueString = repeatedValue.toString();
+
+                            // Try to use the string from the source code if it's available since
+                            // we'd like to use the same number format (e.g. hex or decimal)
+                            if (expression instanceof UReferenceExpression) {
+                                PsiElement resolved = ((UReferenceExpression) expression).resolve();
+                                if (resolved instanceof PsiField) {
+                                    PsiField field = (PsiField) resolved;
+                                    PsiField prevField = null;
+                                    if (prevConstant instanceof UReferenceExpression) {
+                                        PsiElement resolvePrev =
+                                                ((UReferenceExpression) prevConstant).resolve();
+                                        if (resolvePrev instanceof PsiField) {
+                                            prevField = (PsiField) resolvePrev;
+                                            if (field.getName().equals(prevField.getName())) {
+                                                // cls1.FIELD_NAME == cls2.FIELD_NAME; probably
+                                                // setting up aliases.
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    UExpression initializer =
+                                            UastFacade.INSTANCE.getInitializerBody(field);
+                                    if (initializer instanceof ULiteralExpression) {
+                                        PsiElement source = initializer.getSourcePsi();
+                                        if (source != null) {
+                                            valueString = source.getText();
+                                        }
+                                    } else if (initializer instanceof UReferenceExpression
+                                            && prevField != null) {
+                                        PsiElement referencedField =
+                                                ((UReferenceExpression) initializer).resolve();
+                                        if (referencedField != null
+                                                && referencedField.isEquivalentTo(prevField)) {
+                                            // This new reference is deliberately aliased to the
+                                            // same previous reference.
+                                            return;
+                                        }
+                                    }
+                                    if (prevField != null
+                                            && isDeprecated(field) != isDeprecated(prevField)) {
+                                        return;
+                                    }
+                                }
+                            }
+                            message =
+                                    String.format(
+                                            "Constants `%1$s` and `%2$s` specify the same exact "
+                                                    + "value (%3$s); this is usually a cut & paste or "
+                                                    + "merge error",
+                                            constant1, constant2, valueString);
+                            prevLocationLabel = "Previous same value";
+                        }
+
                         location = mContext.getLocation(expression);
                         Location secondary = mContext.getLocation(prevConstant);
-                        secondary.setMessage("Previous same value");
+                        secondary.setMessage(prevLocationLabel);
                         location.setSecondary(secondary);
                         UElement scope = getAnnotationScope(node);
                         mContext.report(UNIQUE, scope, location, message);
@@ -799,11 +894,35 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             }
         }
 
+        private boolean isDeprecated(@NonNull PsiField field) {
+            //noinspection KotlinInternalInJava
+            if (field
+                    instanceof
+                    org.jetbrains.kotlin.asJava.classes.KtUltraLightFieldForSourceDeclaration) {
+                UField uField = (UField) UastContextKt.toUElement(field);
+                if (uField != null) {
+                    //noinspection ExternalAnnotations
+                    List<UAnnotation> annotations = uField.getUAnnotations();
+                    return annotations.stream()
+                            .anyMatch(
+                                    uAnnotation -> {
+                                        String name = uAnnotation.getQualifiedName();
+                                        return name != null
+                                                && (name.equals("java.lang.Deprecated")
+                                                        || name.equals("kotlin.Deprecated"));
+                                    });
+                }
+            }
+            return field.hasAnnotation("java.lang.Deprecated")
+                    || field.hasAnnotation("kotlin.Deprecated");
+        }
+
         private void ensureUsingFlagStyle(@NonNull List<UExpression> constants) {
             if (constants.size() < 3) {
                 return;
             }
 
+            List<Triple<UExpression, PsiElement, Number>> oneBitConstants = new ArrayList<>();
             for (UExpression constant : constants) {
                 if (constant instanceof UReferenceExpression) {
                     PsiElement resolved = ((UReferenceExpression) constant).resolve();
@@ -825,40 +944,53 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             }
                             // Only warn if we're setting a specific bit
                             if (Long.bitCount(value) != 1) {
-                                continue;
-                            }
-                            int shift = Long.numberOfTrailingZeros(value);
-                            if (mWarnedFlags == null) {
-                                mWarnedFlags = Sets.newHashSet();
-                            }
-                            if (!mWarnedFlags.add(resolved)) {
+                                // return rather than continue:
+                                // We have at least one constant which doesn't fit this format;
+                                // don't
+                                // suggest shifting some constants if not all constants can be
+                                // represented that way
                                 return;
                             }
-                            String operator = isKotlin(resolved) ? "shl" : "<<";
-                            String message =
-                                    String.format(
-                                            Locale.US,
-                                            "Consider declaring this constant using 1 %s %d instead",
-                                            operator,
-                                            shift);
-                            String replace =
-                                    String.format(
-                                            Locale.ROOT,
-                                            "1%s %s %d",
-                                            o instanceof Long ? "L" : "",
-                                            operator,
-                                            shift);
-                            LintFix fix =
-                                    fix().replace()
-                                            .sharedName("Change declaration to " + operator)
-                                            .with(replace)
-                                            .autoFix()
-                                            .build();
-                            Location location = mContext.getLocation(initializer);
-                            mContext.report(FLAG_STYLE, initializer, location, message, fix);
+                            oneBitConstants.add(new Triple<>(initializer, resolved, (Number) o));
                         }
                     }
                 }
+            }
+
+            for (Triple<UExpression, PsiElement, Number> triple : oneBitConstants) {
+                UExpression initializer = triple.component1();
+                PsiElement resolved = triple.component2();
+                Number o = triple.component3();
+                long value = o.longValue();
+                int shift = Long.numberOfTrailingZeros(value);
+                if (mWarnedFlags == null) {
+                    mWarnedFlags = Sets.newHashSet();
+                }
+                if (!mWarnedFlags.add(resolved)) {
+                    return;
+                }
+                String operator = isKotlin(resolved) ? "shl" : "<<";
+                String message =
+                        String.format(
+                                Locale.US,
+                                "Consider declaring this constant using 1 %s %d instead",
+                                operator,
+                                shift);
+                String replace =
+                        String.format(
+                                Locale.ROOT,
+                                "1%s %s %d",
+                                o instanceof Long ? "L" : "",
+                                operator,
+                                shift);
+                LintFix fix =
+                        fix().replace()
+                                .sharedName("Change declaration to " + operator)
+                                .with(replace)
+                                .autoFix()
+                                .build();
+                Location location = mContext.getLocation(initializer);
+                mContext.report(FLAG_STYLE, initializer, location, message, fix);
             }
         }
 

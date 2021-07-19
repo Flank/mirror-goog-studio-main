@@ -1,4 +1,4 @@
-<meta charset="utf-8" lang="kotlin">
+<meta charset="utf-8">
 
 **Testing Development Builds**
 
@@ -89,7 +89,7 @@ tools component:
 
 ```ksh
 cd $SRC/tools/base
-export DIST_DIR=/tmp/dist
+export DIST_DIR=/tmp/dist && mkdir -p $DIST_DIR
 ../buildSrc/servers/build_tools.sh
 ```
 
@@ -110,15 +110,10 @@ There is one deliberate change to the tools for platform usage that we need to p
 git reset tools/bin/lint && git restore tools/bin/lint
 ```
 
-That's it; if you have a full Android build environment up and running (and enough diskspace!) you can try running a build locally using
-
-```ksh
-m lint-check
-```
-
-If not, you can also upload to gerrit and have the presubmit machinery
-do a test run (git commit, repo upload, then mark the CL
-Presubmit-Ready).
+That's it. If you don't have a full Android build environment up and
+running (or enough diskspace!) you can upload this to gerrit and have
+the presubmit machinery do a test run: git commit, repo upload, and
+then mark the CL Presubmit-Ready.
 
 Here's an example of a trial balloon CL:
  [](https://android-review.googlesource.com/c/platform/prebuilts/cmdline-tools/+/1769725)
@@ -127,6 +122,57 @@ And here's a sample CL of a real lint upgrade which shows some of the
 other CLs in the topic that were necessary -- updating baselines etc:
 
 [](https://android-review.googlesource.com/c/platform/prebuilts/cmdline-tools/+/1746780)
+
+If you **do** have an Android build environment, which is helpful if
+you actually need to debug to figure out why something is going on, run
+the following target to check lint:
+
+```ksh
+m lint-check
+```
+
+As usual you'll want to run `. build/envsetup.sh` and `lunch sdk-eng`
+first.
+
+If there's a failure, you can look at `out/error.log` where you'll find
+something like this:
+
+```
+...
+The failing command was run inside an sbox sandbox in temporary directory
+out/soong/.temp/sbox/aaa65d9ed8eca15675a35eeb74818d9864690068
+The failing command line was:
+rm -rf ./out/srcjars && mkdir -p ./out/srcjars && ./tools/out/bin/zipsync -d ./out/srcjars -l ./out/srcjars/list -f "*.java" ./out/.intermediates/packages/modules/Permission/PermissionController/PermissionController/android_common_GooglePermissionController_apex30/gen/proto/proto0.srcjar ./out/.intermediates/packages/modules/Permission/PermissionController/PermissionController/android_common_GooglePermissionController_apex30/gen/android/R.srcjar ./out/.intermediates/packages/modules/Permission/PermissionController/PermissionController/android_common_GooglePermissionController_apex30/kapt/kapt-sources.jar
+...truncated...
+```
+
+Note that the real lint command is prefixed by a few other commands on
+the same line so search forwards through `&&` until you get to the line
+which starts with `JAVA_OPTS=` (and lop off the rest after the next
+`&&` or '||').
+
+Here's a typical invocation that we're left with:
+
+```
+JAVA_OPTS="-Xmx3072m --add-opens java.base/java.util=ALL-UNNAMED"
+ANDROID_SDK_HOME=out/soong/.intermediates/packages/modules/Permission/Pe
+rmissionController/PermissionController/android_common/lint/home
+SDK_ANNOTATIONS=./out/lint/annotations.zip
+LINT_OPTS=-DLINT_API_DATABASE=./out/lint/api_versions.xml
+./tools/out/bin/lint --quiet --project ./out/project.xml --config
+./out/lint.xml --html ./out/lint-report.html --text
+./out/lint-report.txt --xml ./out/lint-report.xml --compile-sdk-version
+T --java-language-level 1.9 --kotlin-language-level 1.3 --url
+.=.,out/soong=out --exitcode
+```
+
+This means that you can `cd` to the sandbox directory and rerun the
+given command to repeat just the failing lint invocation, adding some
+debugging flags and attaching with a debugger as necessary.
+
+You can also convert this to a runconfig in IntelliJ for running the
+lint Main class with the right pwd, environment variables and arguments
+inside the IDE.
 
 ## Other Projects
 

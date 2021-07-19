@@ -22,13 +22,18 @@ import com.android.tools.lint.Reporter
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
+import com.intellij.psi.PsiImportStaticReferenceElement
+import com.intellij.psi.PsiModifier
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.kotlin.KotlinUImportStatement
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.io.StringWriter
 
@@ -98,7 +103,37 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
             if (node.isOnDemand || node.resolve() != null || sourcePsi == null || importReference == null) {
                 return super.visitImportStatement(node)
             }
+
+            // Static import? UAST does not correctly resolve these, so do it manually
             val importReferencePsi = importReference.sourcePsi
+            if (importReferencePsi is PsiImportStaticReferenceElement) {
+                val cls = importReferencePsi.classReference
+                val importedClass = cls.resolve()
+                if (importedClass is PsiClass) {
+                    val name = importReferencePsi.referenceName
+                    if (importedClass.methods.any {
+                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+                    }
+                    ) {
+                        return super.visitImportStatement(node)
+                    }
+                }
+            } else if (node is KotlinUImportStatement) {
+                // Static import?
+                val qualifiedExpression = importReferencePsi as? KtDotQualifiedExpression
+                val clsName = qualifiedExpression?.receiverExpression?.text
+                if (clsName != null) {
+                    val name = qualifiedExpression.selectorExpression?.text
+                    val importedClass = evaluator.findClass(clsName)
+                    if (importedClass != null && importedClass.methods.any {
+                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+                    }
+                    ) {
+                        return super.visitImportStatement(node)
+                    }
+                }
+            }
+
             val s = importReferencePsi?.text ?: importReference.asSourceString()
 
             if (!ignoredImport(s)) {
