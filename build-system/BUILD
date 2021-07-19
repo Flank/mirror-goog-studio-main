@@ -416,7 +416,10 @@ gradle_build(
     name = "android_gradle_plugin",
     build_file = "//tools:agp_gradle_build_root_build_file",
     data = ["//prebuilts/studio/jdk"] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
-    gradle_properties = {"hybrid-build-embedded-in-bazel": "true"},
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
     output_file = "android_gradle_plugin.zip",
     output_file_source = "dist/repo.zip",
     repos = [
