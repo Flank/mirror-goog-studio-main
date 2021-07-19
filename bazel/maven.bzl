@@ -643,6 +643,7 @@ def _maven_import_impl(ctx):
         infos.append(JavaInfo(
             output_jar = jar,
             compile_jar = ijar,
+            deps = [dep[JavaInfo] for dep in ctx.attr.deps],
         ))
     runfiles = None
 
