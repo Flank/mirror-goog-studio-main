@@ -41,8 +41,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
-import com.android.tools.lint.client.api.LintDriver.DriverMode.ANALYSIS_ONLY
-import com.android.tools.lint.client.api.LintDriver.DriverMode.MERGE
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
@@ -574,7 +572,7 @@ class LintDriver(
         }
 
         for (project in projects) {
-            if (mode == ANALYSIS_ONLY) {
+            if (mode == DriverMode.ANALYSIS_ONLY) {
                 // Make sure we don't look at lint.xml files outside this project
                 assert(projects.size == 1)
                 client.configurations.rootDir = project.dir
@@ -2521,7 +2519,7 @@ class LintDriver(
             incident.severity = severity
 
             val baseline = baseline
-            if (baseline != null && mode != ANALYSIS_ONLY) {
+            if (baseline != null && mode != DriverMode.ANALYSIS_ONLY) {
                 val filtered = baseline.findAndMark(incident)
                 if (filtered) {
                     if (!allowSuppress && issue.suppressNames != null) {

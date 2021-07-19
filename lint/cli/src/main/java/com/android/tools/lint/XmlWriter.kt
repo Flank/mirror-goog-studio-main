@@ -475,7 +475,7 @@ open class XmlWriter constructor(
 
         val performer = LintFixPerformer(client, false)
         val files = performer.computeEdits(incident, lintFix)
-        if (files != null && files.isNotEmpty()) {
+        if (files.isNotEmpty()) {
             haveChildren = true
             writer.write(">\n")
 

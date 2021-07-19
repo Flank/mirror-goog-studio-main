@@ -914,7 +914,7 @@ class LintUtilsTest : TestCase() {
 
         @JvmStatic
         fun parse(vararg testFiles: TestFile): Pair<JavaContext, Disposable> {
-            return parse(testFiles = *testFiles, javaLanguageLevel = null)
+            return parse(testFiles = testFiles, javaLanguageLevel = null)
         }
 
         @JvmStatic

@@ -272,7 +272,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             // which is not correct
             if (isApi(context, node) && node.typeReference == null) {
                 // Not explicitly setting return type. See if it's a nullable type:
-                val type = node.type ?: return
+                val type = node.type
                 if (type is PsiPrimitiveType) {
                     return
                 }

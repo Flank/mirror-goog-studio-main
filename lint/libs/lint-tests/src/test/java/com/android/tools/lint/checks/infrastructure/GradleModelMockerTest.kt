@@ -36,7 +36,7 @@ class GradleModelMockerTest {
     @get:Rule
     var tempFolder = TemporaryFolder()
     private fun createMocker(@Language("Groovy") gradle: String): GradleModelMocker {
-        return createMocker(gradle, tempFolder)!!
+        return createMocker(gradle, tempFolder)
     }
 
     @Test

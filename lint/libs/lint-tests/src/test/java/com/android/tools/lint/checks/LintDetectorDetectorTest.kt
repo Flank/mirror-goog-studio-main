@@ -512,10 +512,10 @@ class LintDetectorDetectorTest {
             if (name.endsWith(DOT_JAR)) {
                 libs.add(file)
             } else {
-                val path = file.path
-                if (!path.endsWith("android.sdktools.base.lint.checks-base") &&
-                    !path.endsWith("android.sdktools.base.lint.studio-checks") &&
-                    !path.contains("lint-tests")
+                val filePath = file.path
+                if (!filePath.endsWith("android.sdktools.base.lint.checks-base") &&
+                    !filePath.endsWith("android.sdktools.base.lint.studio-checks") &&
+                    !filePath.contains("lint-tests")
                 ) {
                     libs.add(file)
                 }

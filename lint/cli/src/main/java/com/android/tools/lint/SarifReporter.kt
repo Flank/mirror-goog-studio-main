@@ -206,7 +206,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.indent(indent)
             .write("\"fullName\": \"Android Lint (in ${LintClient.clientName})\",\n")
         writer.indent(indent).write("\"version\": \"$displayRevision\",\n")
-        if (revision != null && Revision.safeParseRevision(revision) != Revision.NOT_SPECIFIED) {
+        if (Revision.safeParseRevision(revision) != Revision.NOT_SPECIFIED) {
             writer.indent(indent).write("\"semanticVersion\": \"$revision\",\n")
         }
         writer.indent(indent).write("\"organization\": \"Google\",\n")

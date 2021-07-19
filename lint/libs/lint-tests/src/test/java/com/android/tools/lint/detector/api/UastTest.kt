@@ -46,7 +46,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 // Misc tests to verify type handling in the Kotlin UAST initialization.
 class UastTest : TestCase() {
     private fun check(source: TestFile, check: (UFile) -> Unit) {
-        check(sources = *arrayOf(source), check = check)
+        check(sources = arrayOf(source), check = check)
     }
 
     private fun check(
@@ -58,7 +58,7 @@ class UastTest : TestCase() {
         check: (UFile) -> Unit = {}
     ) {
         val pair = LintUtilsTest.parse(
-            testFiles = *sources, javaLanguageLevel = javaLanguageLevel,
+            testFiles = sources, javaLanguageLevel = javaLanguageLevel,
             kotlinLanguageLevel = kotlinLanguageLevel, android = android, library = library
         )
         val uastFile = pair.first.uastFile

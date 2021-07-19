@@ -1767,7 +1767,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val dependencies = blockedDependencies.getForbiddenDependencies()
         if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
-                val message = getBlockedDependencyMessage(path) ?: continue
+                val message = getBlockedDependencyMessage(path)
                 val projectDir = context.project.dir
                 val gc = LintModelMavenName.parse(path[0].artifactAddress)
                 val location = if (gc != null) {
