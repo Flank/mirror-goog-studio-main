@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSE
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PARTIAL_RESULTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_LINT_MODEL
@@ -247,12 +248,13 @@ class PublishingSpecs {
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
                 runtime(InternalArtifactType.LIBRARY_ART_PROFILE, ArtifactType.ART_PROFILE)
-                // Publish LINT, LINT_MODEL, LINT_PARTIAL_RESULTS, and LOCAL_AAR_FOR_LINT to
-                // API_AND_RUNTIME_ELEMENTS to support compileOnly module dependencies.
+                // Publish lint artifacts to API_AND_RUNTIME_ELEMENTS to support compileOnly module
+                // dependencies.
                 output(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 output(LINT_MODEL, ArtifactType.LINT_MODEL)
                 output(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
                 output(LOCAL_AAR_FOR_LINT, ArtifactType.LOCAL_AAR_FOR_LINT)
+                output(LINT_MODEL_METADATA, ArtifactType.LINT_MODEL_METADATA)
             }
 
             variantSpec(VariantTypeImpl.TEST_FIXTURES) {

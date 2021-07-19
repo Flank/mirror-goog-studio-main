@@ -95,6 +95,7 @@ public class AndroidArtifacts {
             "android-lint-vital-variant-dependencies-partial-results";
     private static final String TYPE_LOCAL_AAR_FOR_LINT = "android-lint-local-aar";
     private static final String TYPE_LOCAL_EXPLODED_AAR_FOR_LINT = "android-lint-exploded-aar";
+    private static final String TYPE_LINT_MODEL_METADATA = "android-lint-model-metadata";
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
@@ -396,6 +397,8 @@ public class AndroidArtifacts {
         // Exploded AARs from library projects for lint to consume when not run with check
         // dependencies.
         LOCAL_EXPLODED_AAR_FOR_LINT(TYPE_LOCAL_EXPLODED_AAR_FOR_LINT),
+        // The lint model metadata file, containing maven groupId e.g.
+        LINT_MODEL_METADATA(AndroidArtifacts.TYPE_LINT_MODEL_METADATA),
 
         APK_MAPPING(TYPE_MAPPING),
         APK_METADATA(TYPE_METADATA),

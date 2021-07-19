@@ -22,7 +22,6 @@ import com.android.SdkConstants.MAVEN_GROUP_ID_PROPERTY
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
-import com.android.build.gradle.internal.tasks.LintModelMetadataTask.Companion.LINT_MODEL_METADATA_ENTRY_PATH
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
@@ -54,7 +53,8 @@ class ExternalLintModelArtifactHandler private constructor(
     mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>,
     private val projectExplodedAarsMap: Map<ProjectKey, File>,
     private val projectJarsMap: Map<ProjectKey, File>,
-    private val baseModuleModelFileMap: Map<ProjectKey, File>
+    private val baseModuleModelFileMap: Map<ProjectKey, File>,
+    private val lintModelMetadataMap: Map<ProjectKey, File>
 ) : ArtifactHandler<LintModelLibrary>(localJarCache, mavenCoordinatesCache) {
 
     override fun handleAndroidLibrary(
@@ -100,6 +100,18 @@ class ExternalLintModelArtifactHandler private constructor(
     ): LintModelLibrary {
         val key = ProjectKey( buildId = buildId, projectPath = projectPath, variantName = variantName)
         val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $key")
+        val resolvedCoordinates: LintModelMavenName =
+            lintModelMetadataMap[key]?.let { file ->
+                val properties = Properties()
+                file.inputStream().use {
+                    properties.load(it)
+                }
+                DefaultLintModelMavenName(
+                    groupId = properties.getProperty(MAVEN_GROUP_ID_PROPERTY),
+                    artifactId = properties.getProperty(MAVEN_ARTIFACT_ID_PROPERTY),
+                    version = "unspecified"
+                )
+            } ?: coordinatesSupplier().toMavenName()
         return DefaultLintModelAndroidLibrary(
             jarFiles = listOf(
                 FileUtils.join(
@@ -119,20 +131,7 @@ class ExternalLintModelArtifactHandler private constructor(
             externalAnnotations = File(folder, SdkConstants.FN_ANNOTATIONS_ZIP),
             proguardRules = File(folder, SdkConstants.FN_PROGUARD_TXT),
             provided = isProvided,
-            resolvedCoordinates =
-                if (File(folder, LINT_MODEL_METADATA_ENTRY_PATH).isFile) {
-                    val properties = Properties()
-                    File(folder, LINT_MODEL_METADATA_ENTRY_PATH).inputStream().use {
-                        properties.load(it)
-                    }
-                    DefaultLintModelMavenName(
-                        groupId = properties.getProperty(MAVEN_GROUP_ID_PROPERTY),
-                        artifactId = properties.getProperty(MAVEN_ARTIFACT_ID_PROPERTY),
-                        version = "unspecified"
-                    )
-                } else {
-                    coordinatesSupplier().toMavenName()
-                }
+            resolvedCoordinates = resolvedCoordinates
         )
     }
 
@@ -166,10 +165,22 @@ class ExternalLintModelArtifactHandler private constructor(
             )
         }
         val jar = getProjectJar(key)
+        val resolvedCoordinates: LintModelMavenName =
+            lintModelMetadataMap[key]?.let { file ->
+                val properties = Properties()
+                file.inputStream().use {
+                    properties.load(it)
+                }
+                DefaultLintModelMavenName(
+                    groupId = properties.getProperty(MAVEN_GROUP_ID_PROPERTY),
+                    artifactId = properties.getProperty(MAVEN_ARTIFACT_ID_PROPERTY),
+                    version = "unspecified"
+                )
+            } ?: LintModelMavenName.NONE
         return DefaultLintModelJavaLibrary(
             artifactAddress = artifactAddress,
             jarFiles = listOf(jar),
-            resolvedCoordinates = LintModelMavenName.NONE,
+            resolvedCoordinates = resolvedCoordinates,
             provided = false
         )
     }
@@ -196,6 +207,8 @@ class ExternalLintModelArtifactHandler private constructor(
             compileProjectJars: ArtifactCollection,
             runtimeProjectJars: ArtifactCollection,
             baseModuleModelFile: ArtifactCollection?,
+            compileLintModelMetadata: ArtifactCollection,
+            runtimeLintModelMetadata: ArtifactCollection,
             buildMapping: BuildMapping
         ): ExternalLintModelArtifactHandler {
             var projectExplodedAarsMap =
@@ -210,12 +223,16 @@ class ExternalLintModelArtifactHandler private constructor(
                 compileProjectJars.asProjectKeyedMap(buildMapping) + runtimeProjectJars.asProjectKeyedMap(buildMapping)
             val baseModuleModelFileMap =
                 baseModuleModelFile?.asProjectKeyedMap(buildMapping) ?: emptyMap()
+            val lintModelMetadataMap =
+                compileLintModelMetadata.asProjectKeyedMap(buildMapping) +
+                        runtimeLintModelMetadata.asProjectKeyedMap(buildMapping)
             return ExternalLintModelArtifactHandler(
                 dependencyCaches.localJarCache,
                 dependencyCaches.mavenCoordinatesCache,
                 Collections.unmodifiableMap(projectExplodedAarsMap),
                 Collections.unmodifiableMap(projectJarsMap),
-                Collections.unmodifiableMap(baseModuleModelFileMap)
+                Collections.unmodifiableMap(baseModuleModelFileMap),
+                Collections.unmodifiableMap(lintModelMetadataMap)
             )
 
         }

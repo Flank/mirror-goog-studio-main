@@ -17,13 +17,17 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.MAVEN_ARTIFACT_ID_PROPERTY
 import com.android.SdkConstants.MAVEN_GROUP_ID_PROPERTY
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import com.google.common.io.Files
+import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -31,7 +35,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
-/** A task that writes the lint model metadata, to be copied into the local aar for lint  */
+/** A task that writes the lint model metadata  */
 @CacheableTask
 abstract class LintModelMetadataTask : NonIncrementalTask() {
 
@@ -63,10 +67,7 @@ abstract class LintModelMetadataTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<LintModelMetadataTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts
-                .setInitialProvider(taskProvider, LintModelMetadataTask::outputFile)
-                .withName(LINT_MODEL_METADATA_FILE_NAME)
-                .on(InternalArtifactType.LINT_MODEL_METADATA)
+            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
         }
 
         override fun configure(task: LintModelMetadataTask) {
@@ -78,10 +79,23 @@ abstract class LintModelMetadataTask : NonIncrementalTask() {
         }
     }
 
+    internal fun configureForStandalone(project: Project) {
+        this.group = JavaBasePlugin.VERIFICATION_GROUP
+        this.variantName = ""
+        this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        this.mavenGroupId.setDisallowChanges(project.group.toString())
+        this.mavenArtifactId.setDisallowChanges(project.name)
+    }
+
     companion object {
-        const val LINT_MODEL_METADATA_FILE_NAME = "lint-model-metadata.properties"
-        const val LINT_MODEL_METADATA_ENTRY_PATH =
-            "META-INF/com/android/build/gradle/$LINT_MODEL_METADATA_FILE_NAME"
+        fun registerOutputArtifacts(
+            taskProvider: TaskProvider<LintModelMetadataTask>,
+            artifacts: ArtifactsImpl
+        ) {
+            artifacts.setInitialProvider(taskProvider, LintModelMetadataTask::outputFile)
+                .withName("lint-model-metadata.properties")
+                .on(InternalArtifactType.LINT_MODEL_METADATA)
+        }
     }
 }
 

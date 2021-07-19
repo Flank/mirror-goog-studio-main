@@ -1090,9 +1090,11 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
-        if (checkDependencies) {
-            initializeProjectDependenciesLintModels(componentImpl.variantDependencies)
-        } else {
+        initializeProjectDependencyLintArtifacts(
+            checkDependencies,
+            componentImpl.variantDependencies
+        )
+        if (!checkDependencies) {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(componentImpl.variantDependencies)
             }
@@ -1154,9 +1156,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             buildMapping = project.gradle.computeBuildMapping(),
             mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
         ))
-        if (checkDependencies) {
-            initializeProjectDependenciesLintModels(variantDependencies)
-        }
+        initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
     }
 
     internal fun toLintModel(dependencyCaches: DependencyCaches): LintModelAndroidArtifact {
@@ -1199,9 +1199,11 @@ abstract class JavaArtifactInput : ArtifactInput() {
         }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
-        if (checkDependencies) {
-            initializeProjectDependenciesLintModels(unitTestImpl.variantDependencies)
-        } else {
+        initializeProjectDependencyLintArtifacts(
+            checkDependencies,
+            unitTestImpl.variantDependencies
+        )
+        if (!checkDependencies) {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(unitTestImpl.variantDependencies)
             }
@@ -1269,9 +1271,7 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
             )
         )
-        if (checkDependencies) {
-            initializeProjectDependenciesLintModels(variantDependencies)
-        }
+        initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
         return this
     }
 
@@ -1337,24 +1337,60 @@ abstract class ArtifactInput {
     @get:Internal
     abstract val baseModuleLintModel: Property<ArtifactCollection>
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val runtimeLintModelMetadataFileCollection: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val runtimeLintModelMetadata: Property<ArtifactCollection>
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val compileLintModelMetadataFileCollection: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val compileLintModelMetadata: Property<ArtifactCollection>
+
     @get:Internal
     abstract val warnIfProjectTreatedAsExternalDependency: Property<Boolean>
 
-    protected fun initializeProjectDependenciesLintModels(variantDependencies: VariantDependencies) {
-        val runtimeArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
-            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.PROJECT,
-            AndroidArtifacts.ArtifactType.LINT_MODEL
-        )
-        projectRuntimeLintModels.setDisallowChanges(runtimeArtifacts)
-        projectRuntimeLintModelsFileCollection.fromDisallowChanges(runtimeArtifacts.artifactFiles)
-        val compileArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
-            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.PROJECT,
-            AndroidArtifacts.ArtifactType.LINT_MODEL
-        )
-        projectCompileLintModels.setDisallowChanges(compileArtifacts)
-        projectCompileLintModelsFileCollection.fromDisallowChanges(compileArtifacts.artifactFiles)
+    protected fun initializeProjectDependencyLintArtifacts(
+        checkDependencies: Boolean,
+        variantDependencies: VariantDependencies
+    ) {
+        if (checkDependencies) {
+            val runtimeArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
+                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.PROJECT,
+                AndroidArtifacts.ArtifactType.LINT_MODEL
+            )
+            projectRuntimeLintModels.setDisallowChanges(runtimeArtifacts)
+            projectRuntimeLintModelsFileCollection.fromDisallowChanges(runtimeArtifacts.artifactFiles)
+            val compileArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.PROJECT,
+                AndroidArtifacts.ArtifactType.LINT_MODEL
+            )
+            projectCompileLintModels.setDisallowChanges(compileArtifacts)
+            projectCompileLintModelsFileCollection.fromDisallowChanges(compileArtifacts.artifactFiles)
+        } else {
+            val runtimeArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
+                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.PROJECT,
+                AndroidArtifacts.ArtifactType.LINT_MODEL_METADATA
+            )
+            runtimeLintModelMetadata.setDisallowChanges(runtimeArtifacts)
+            runtimeLintModelMetadataFileCollection.fromDisallowChanges(runtimeArtifacts.artifactFiles)
+            val compileArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.PROJECT,
+                AndroidArtifacts.ArtifactType.LINT_MODEL_METADATA
+            )
+            compileLintModelMetadata.setDisallowChanges(compileArtifacts)
+            compileLintModelMetadataFileCollection.fromDisallowChanges(compileArtifacts.artifactFiles)
+        }
     }
 
     protected fun initializeBaseModuleLintModel(variantDependencies: VariantDependencies) {
@@ -1401,6 +1437,8 @@ abstract class ArtifactInput {
                     artifactCollectionsInputs.compileClasspath.projectJars,
                     artifactCollectionsInputs.runtimeClasspath!!.projectJars,
                     baseModuleLintModel.orNull,
+                    runtimeLintModelMetadata.get(),
+                    compileLintModelMetadata.get(),
                     buildMapping = artifactCollectionsInputs.buildMapping
                 )
             }
