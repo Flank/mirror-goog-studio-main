@@ -1,0 +1,9 @@
+The generator.jar is built using:
+
+  bazel build //tools/base/bazel:local_maven_repository_generator_deploy.jar
+
+How to update generator.jar
+ - Check-in the changes to the sources for the generator and its BUILD files
+ - Have it be built on ab.
+ - Use the jar built on ab/
+

@@ -502,6 +502,87 @@ def maven_repo(artifacts = [], include_sources = False, include_transitive_deps 
         **kwargs
     )
 
+def _local_maven_repository_impl(repository_ctx):
+    workspace = repository_ctx.path(repository_ctx.attr._this_file).dirname.dirname.dirname.dirname
+    local_repo = str(workspace) + "/" + repository_ctx.attr.path
+
+    # Create a symlink at external/$repo_rule_name/repo and make it point to
+    # to the actual location of the checked-in local maven repository so that
+    # the BUILD file generated under the external repository does not have to
+    # refer back to files in the internal repository.
+    # Example:
+    #  ~/studio-main/bazel-studio-master-dev/external/maven/repo
+    #     -> ~/studio-main/prebuilts/tools/common/m2/repository
+    #
+    # This is needed to avoid the following Bazel bug:
+    #    https://github.com/bazelbuild/bazel/issues/6752
+    repo_path = "repo"
+    repository_ctx.symlink(local_repo, repo_path)
+
+    java_home = repository_ctx.os.environ.get("JAVA_HOME")
+    if not java_home:
+        fail("Cannot find JAVA_HOME")
+    java = repository_ctx.path(java_home + "/bin/java")
+
+    # Invoke build file generator tool.
+    inputs = repository_ctx.attr.artifacts
+    arguments = (
+        [java, "-jar", repository_ctx.path(repository_ctx.attr._generator)] +
+        inputs +
+        ["-o", "BUILD"] +
+        ["--repo-path", repo_path]
+    )
+    result = repository_ctx.execute(
+        arguments,
+    )
+
+    if result.return_code:
+        fail("Failed to generate BUILD file using command:\n" +
+             str(arguments) + "\n" +
+             "Stdout: " + result.stdout + "\n" +
+             "Stderr: " + result.stderr + "\n")
+
+_local_maven_repository = repository_rule(
+    attrs = {
+        "path": attr.string(),
+        "_this_file": attr.label(default = "@//tools/base/bazel:maven.bzl"),
+        "artifacts": attr.string_list(),
+        "_generator": attr.label(default = "@//tools/base/bazel:maven/generator.jar"),
+        "_pom": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
+            allow_files = True,
+        ),
+    },
+    local = True,
+    implementation = _local_maven_repository_impl,
+)
+
+# Resolves artifacts transitively from a local Maven repository,
+#  and generates a BUILD file that contains rules for all the resolved
+# Maven artifacts.
+#
+# Consumers can depend on the listed Maven artifacts using the name
+# of the repository rule, and the Maven coordinates of the artifact
+# they need, without the need to express the version.
+#
+# For instance, to depend on Guava, add the following to deps:
+# "@maven//:com.google.guava.guava"
+#
+# And the repository will provide the version of Guava that is obtained
+# from Maven dependency resolution.
+#
+# Args:
+#   path: Local path to a Maven repository relative to the workspace root
+#   artifacts: Coordinates of the Maven artifacts to resolve
+def local_maven_repository(name, path, artifacts):
+    _local_maven_repository(
+        name = name,
+        path = path,
+        artifacts = artifacts,
+    )
+
 # Rule set that supports both Java and Maven providers, still under development
 
 MavenInfo = provider(fields = {
@@ -529,6 +610,7 @@ _maven_artifact = rule(
         "deps": attr.label_list(),
         "pom": attr.label(allow_single_file = True),
         "repo_path": attr.string(),
+        "repo_root_path": attr.string(),
     },
 )
 
@@ -536,6 +618,7 @@ def maven_artifact(
         name,
         pom,
         repo_path = "",
+        repo_root_path = "",
         parent = None,
         deps = [],
         **kwargs):
@@ -543,7 +626,8 @@ def maven_artifact(
         name = name,
         pom = pom,
         repo_path = repo_path,
-        files = native.glob([repo_path + "/**"]),
+        repo_root_path = repo_root_path,
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
         deps = ([parent] if parent else []) + deps,
         **kwargs
     )
@@ -584,10 +668,13 @@ _maven_import = rule(
         "files": attr.label_list(allow_files = True),
         "deps": attr.label_list(),
         "repo_path": attr.string(),
+        "repo_root_path": attr.string(),
         "parent": attr.label(),
         "pom": attr.label(allow_single_file = True),
         "notice": attr.label(allow_single_file = True),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+        "original_deps": attr.label_list(),
+        "srcjar": attr.label(allow_files = True),
     },
 )
 
@@ -599,6 +686,7 @@ def maven_import(
         visibility = None,
         jars = [],
         repo_path = "",
+        repo_root_path = "",
         parent = None,
         classified_only = False,
         **kwargs):
@@ -608,8 +696,9 @@ def maven_import(
         jars = jars,
         pom = pom,
         repo_path = repo_path,
+        repo_root_path = repo_root_path,
         parent = parent,
-        files = native.glob([repo_path + "/**"]),
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
         notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
         tags = ["require_license"],
         **kwargs

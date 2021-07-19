@@ -1,6 +1,7 @@
 load("//tools/base/bazel:repositories.bzl", "setup_external_repositories")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//tools/base/bazel:maven.bzl", "local_maven_repository")
 
 setup_external_repositories()
 
@@ -98,8 +99,11 @@ local_repository(
     path = "tools/base/yourkit-controller",
 )
 
-new_local_repository(
-    name = "maven",
-    path = "prebuilts/tools/common/m2/repository",
-    build_file = "//tools/base/bazel:BUILD.maven",
+local_maven_repository(
+  name = "maven",
+  path = "prebuilts/tools/common/m2/repository/",
+  artifacts = [
+    "com.google.guava:guava:30.1-jre",
+    "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
+  ]
 )
