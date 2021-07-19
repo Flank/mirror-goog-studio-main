@@ -18,7 +18,7 @@ java_library(
 coverage_java_test(
     name = "tests",
     data = [
-        "//tools/base:gmaven",
+        "//tools/base:gmaven.zip",
     ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
