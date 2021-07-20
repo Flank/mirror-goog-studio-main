@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "import_maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
@@ -69,13 +70,15 @@ java_library(
     ],
 )
 
+import_maven_library("tools.ddmlib", "tools.ddmlib_bzl")
+
 # For now instead of combining ddmlib-base and its add-ons, we recompile all together
 # until we sort out the AGP - ddmlib dependency. This matches what is done in build.gradle.
 # Note that this target is released via go/ab studio_linux, for its usage in the platform.
 # Kotlin is not enabled in ddmlib module but here we use kotlin_library rule
 # for bundled_deps support.
-kotlin_library(
-    name = "tools.ddmlib",
+maven_library(
+    name = "tools.ddmlib_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -84,23 +87,17 @@ kotlin_library(
         ":am-instrumentation-data-proto",
         ":app-processes-proto",
     ],
-    pom = ":pom",
+    coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:net.sf.kxml.kxml2",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "ddmlib",
-    group = "com.android.tools.ddms",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

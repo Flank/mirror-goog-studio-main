@@ -104,6 +104,8 @@ local_maven_repository(
   path = "prebuilts/tools/common/m2/repository/",
   artifacts = [
     "com.google.guava:guava:30.1-jre",
+    "com.google.protobuf:protobuf-java:3.10.0",
+    "net.sf.kxml:kxml2:2.3.0",
     "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
   ]
 )
