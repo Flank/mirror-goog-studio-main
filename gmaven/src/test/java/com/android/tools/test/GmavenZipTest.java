@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.sanity;
+package com.android.tools.test;
 
 import com.android.Version;
-import com.android.testutils.RepoLinker;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
@@ -46,15 +45,15 @@ import java.util.zip.ZipInputStream;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Checks what we distribute in our jars. */
-public class JarContentsTest {
+/** Verifies what we distribute to the Google maven repository */
+public class GmavenZipTest {
 
     private static final Set<String> LICENSE_NAMES =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "LICENSE");
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
-    private static final String GMAVEN_ZIP = "tools/base/gmaven.zip";
+    private static final String GMAVEN_ZIP = "tools/base/gmaven/gmaven.zip";
 
     private static final SetMultimap<String, String> EXPECTED;
 
@@ -1544,7 +1543,7 @@ public class JarContentsTest {
                 Files.walk(androidTools)
                         .filter(path -> path.toString().endsWith(".jar"))
                         .filter(path -> !isIgnored(path.toString()))
-                        .filter(JarContentsTest::isCurrentVersion)
+                        .filter(GmavenZipTest::isCurrentVersion)
                         .collect(Collectors.toList());
 
         for (Path jar : ourJars) {

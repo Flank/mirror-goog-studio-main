@@ -1,54 +1,4 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo", "maven_repository")
-load("//tools/base/bazel:utils.bzl", "zip_merger")
-
-maven_repo(
-    name = "gmaven",
-    artifacts = [
-        "//tools/data-binding:tools.baseLibrarySupport",
-        "//tools/data-binding:tools.baseLibrary",
-        "//tools/data-binding:tools.compilerCommon",
-        "//tools/data-binding:tools.compiler",
-        "//tools/analytics-library/inspector",
-        "//tools/analytics-library/publisher",
-        "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/aapt2",
-        "//tools/base/build-system/aapt2-proto",
-        "//tools/base/lint/libs/lint-tests",
-        "//tools/base/lint:tools.lint-gradle",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/build-system/gradle-api:gradle-api",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/build-system/builder-model:builder-model",
-        "//tools/apkzlib:apkzlib",
-        "//tools/base/build-system/aaptcompiler:aaptcompiler",
-        "//tools/base/build-system/builder:builder",
-        "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system:tools.apksig",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/analytics-library/crash:tools.analytics-crash",
-        "//tools/analytics-library/protos/src/main/proto:proto",
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/analytics-library/tracker:tools.analytics-tracker",
-        "//tools/base/annotations:annotations",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/common:tools.common",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
-        "//tools/base/lint:tools.lint-model",
-        "//tools/base/lint/cli:cli",
-        "//tools/base/device_validator:tools.dvlib",
-        "//tools/base/utp/android-device-provider-gradle-proto:android-device-provider-gradle-proto",
-        "//tools/base/utp/android-test-plugin-host-coverage-proto:android-test-plugin-host-coverage-proto",
-        "//tools/base/utp/android-test-plugin-host-retention-proto:android-test-plugin-host-retention-proto",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto:android-test-plugin-result-listener-gradle-proto",
-    ],
-    include_sources = True,
-    include_transitive_deps = False,
-    visibility = ["//visibility:public"],
-)
 
 # This Maven repository contains artifacts that are built by Bazel, but also needed by
 # AGP build. The AGP build uses this repo so that it does not have to rebuild the same
@@ -319,13 +269,8 @@ maven_repository(
         "//tools/base/annotations:annotations_bzl",
         "//tools/base/common:common_bzl",
     ],
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
-zip_merger(
-    name = "hybrid_gmaven",
-    srcs = [
-        ":agp_artifacts.zip",
-        "//tools/base/build-system:android_gradle_plugin.zip",
+    visibility = [
+        "//tools/base/build-system:__pkg__",
+        "//tools/base/gmaven:__pkg__",
     ],
 )

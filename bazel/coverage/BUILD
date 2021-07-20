@@ -784,7 +784,6 @@ coverage_report(
         "//tools/base/build-system/integration-test/application:testing-tests",
         "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sanity:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
         "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
