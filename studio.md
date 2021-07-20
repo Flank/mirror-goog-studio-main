@@ -3,9 +3,9 @@
 If you haven’t already done so, [download the Android Studio source code](/source.md) so that you
 have a local copy of the following projects:
 
- * Android plugin source code: `<studio-master-dev>/tools/adt/idea`
- * IntelliJ IDE base: `<studio-master-dev>/tools/idea/`
- * Shared library dependencies: `<studio-master-dev>/tools/base/`.
+ * Android plugin source code: `<studio-main>/tools/adt/idea`
+ * IntelliJ IDE base: `<studio-main>/tools/idea/`
+ * Shared library dependencies: `<studio-main>/tools/base/`.
 
 To learn how to build the Android plugin for Gradle from source, read
 [The Android Gradle plugin](/build-system/README.md).
@@ -21,10 +21,10 @@ section if building from AOSP.
 
 In order to successfully build Android Studio from source, you’ll need to make sure that you’re able
 to run the revision-controlled executable of Bazel that's located in the
-`<studio-master-dev>/tools/base/bazel/` directory:
+`<studio-main>/tools/base/bazel/` directory:
 
 ```
-$ cd studio-master-dev/
+$ cd studio-main/
 $ tools/base/bazel/bazel version
   Build label: …
   Build target: …
@@ -34,7 +34,7 @@ $ tools/base/bazel/bazel version
 To make sure Bazel can execute Android Studio build tasks, try running the following command:
 
 ```
-$ bazel build <studio-master-dev>/tools/adt/idea/android:profiler-artifacts
+$ bazel build <studio-main>/tools/adt/idea/android:profiler-artifacts
 ```
 
 To learn more about running Bazel (including running tests), read
@@ -90,7 +90,7 @@ To begin, you need to first configure a new project from the Android Studio sour
 2. Open IntelliJ IDEA and
    [create a new project](https://www.jetbrains.com/help/idea/new-project-wizard.html).
 3. When prompted to select the source directory for your project, select
-   `<studio-master-dev>/tools/idea/` and click __OK__.
+   `<studio-main>/tools/idea/` and click __OK__.
 4. Keep clicking __Next__ until you are prompted to select the project SDK.
 5. Point IntelliJ to your local JDK, as follows:
    1. Select __IDEA jdk__ from the left pane.
@@ -118,7 +118,7 @@ To build Android Studio from the command line, run the bash shell as Administrat
 following commands:
 
 ```
-$ cd studio-master-dev/tools/idea
+$ cd studio-main/tools/idea
 $ ./build_studio.sh
 ```
 
@@ -126,11 +126,11 @@ __Windows users:__ to build Android Studio from the command line from a Windows 
 Command Prompt as Administrator and execute the following commands:
 
 ```
-$ cd studio-master-dev/tools/idea
+$ cd studio-main/tools/idea
 $ ant
 ```
 
-You should find compressed build artifacts in `studio-master-dev/out/artifacts/`.
+You should find compressed build artifacts in `studio-main/out/artifacts/`.
 To run the version of Android Studio you just built, extract the artifact for your OS,
 and then run either `/bin/studio.sh` or `\bin\studio.exe` from the extracted directory.
 

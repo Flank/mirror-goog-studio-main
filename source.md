@@ -21,9 +21,9 @@ to checkout the source of Android Studio.
 
 Check out the latest published source code using the following commands in a shell:
 ```
-$ mkdir studio-master-dev
-$ cd studio-master-dev
-$ repo init -u https://android.googlesource.com/platform/manifest -b studio-master-dev
+$ mkdir studio-main
+$ cd studio-main
+$ repo init -u https://android.googlesource.com/platform/manifest -b studio-main
 $ repo sync -c -j4 -q
 ```
 You can call the top level directory whatever you want.

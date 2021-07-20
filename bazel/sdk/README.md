@@ -128,12 +128,12 @@ please don't do this!).
 
 By default, the repo manifest will only pull down the one SDK repository that matches your host
 machine. To work around this, this folder provides an `all_sdks_manifest.xml` you can copy into your
-`local_manifests` directory. Afterwards, you can `repo sync` into the `studio-master-dev` folder you
+`local_manifests` directory. Afterwards, you can `repo sync` into the `studio-main` folder you
 work out of normally, and it will start pulling down all SDKS, not just the one that matches your
 host OS.
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 
 $ mkdir .repo/local_manifests/
 $ cp tools/base/bazel/sdk/all_sdks_manifest.xml .repo/local_manifests/
@@ -149,7 +149,7 @@ the file from local_manifests.
 ### Start a new branch
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 
 # This branch name will become the topic name for your CLs so choose a unique name.
 # Of course, your branch name will be different... 
@@ -178,7 +178,7 @@ platforms;android-23
 Next, we'll need to run SDK tools to fetch the new data.
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 
 $ bazel run //tools/base/bazel/sdk:dev-sdk-updater
 ```
@@ -226,7 +226,7 @@ Here, `*/build-tools/19.0.3` will match with `darwin/build-tools/19.0.3` on mac,
 To test that you set the rule correctly, manually copy the `BUILD` file yourself and do a query:
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 
 $ cp tools/base/bazel/sdk/prebuilts.studio.sdk.BUILD \
      prebuilts/studio/sdk/BUILD
@@ -238,7 +238,7 @@ See also: [bazel filegroup rule](http://bazel.io/docs/be/general.html#filegroup)
 ### Make sure tests still pass
 
 ```
-$ cd /path/to/studio-master-dev/tools/base/bazel
+$ cd /path/to/studio-main/tools/base/bazel
 
 $ ./bazel test $(<test_targets)
 ```
@@ -246,7 +246,7 @@ $ ./bazel test $(<test_targets)
 ### Upload code review
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 
 $ repo forall \
     prebuilts/studio/sdk/darwin \
@@ -270,7 +270,7 @@ _(Optional)_ Once your CLs are submitted, you can delete local data if you don't
 SDK again any time soon.
 
 ```
-$ cd /path/to/studio-master-dev/
+$ cd /path/to/studio-main/
 $ rm .repo/local_manifests/all_sdks_manifest.xml
 
 # Delete two of the three SDKs
@@ -303,7 +303,7 @@ $ rm -rf prebuilts/studio/sdk/windows # unless you're windows
 
 5. Commit and upload your change
    ```
-   $ cd /path/to/studio-master-dev/
+   $ cd /path/to/studio-main/
 
    $ repo forall \
        tools/base \

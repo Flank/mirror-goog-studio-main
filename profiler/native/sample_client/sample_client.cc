@@ -35,7 +35,7 @@
 //  /data/local/tmp/perfd/transport -config_file=/data/local/tmp/perfd/daemon.config
 // On host
 //  adb forward tcp:2019 localabstract:AndroidStudioTransport
-//  ~/repos/studio-master-dev/bazel-bin/tools/base/profiler/native/sample_client/sample_client --port 2019 --pid <PID>
+//  ~/repos/studio-main/bazel-bin/tools/base/profiler/native/sample_client/sample_client --port 2019 --pid <PID>
 //
 // clang-format on
 

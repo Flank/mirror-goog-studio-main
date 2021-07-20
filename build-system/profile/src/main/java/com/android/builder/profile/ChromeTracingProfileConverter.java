@@ -57,7 +57,7 @@ public class ChromeTracingProfileConverter {
      * (https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU).
      *
      * <p>Other parts of AGP can output trace files into "PROFILE_DIRECTORY/extra_chrome_trace" (see
-     * https://android.googlesource.com/platform/tools/base/+/studio-master-dev/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/profile/ProfilerInitializer.java
+     * https://android.googlesource.com/platform/tools/base/+/studio-main/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/profile/ProfilerInitializer.java
      * ) and they will all be picked up by {@link ChromeTracingProfileConverter}. One should use the
      * helper data class {@link ChromeTraceJson} to generate such a JSON file to ensure
      * compatibility with the merger.

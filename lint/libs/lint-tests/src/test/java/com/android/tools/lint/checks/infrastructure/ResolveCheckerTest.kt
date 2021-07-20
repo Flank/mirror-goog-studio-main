@@ -67,7 +67,7 @@ class ResolveCheckerTest {
                 leave references to the class in the code.)
 
                 For more information, see the "Library Dependencies and Stubs" section in
-                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/docs/api-guide/unit-testing.md.html
+                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
                 e.message?.replace(" \n", "\n")?.trim()
             )
@@ -113,7 +113,7 @@ class ResolveCheckerTest {
                 `allowCompilationErrors()`.
 
                 For more information, see the "Library Dependencies and Stubs" section in
-                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/docs/api-guide/unit-testing.md.html
+                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
                 e.message?.replace(" \n", "\n")?.trim()
             )
@@ -158,7 +158,7 @@ class ResolveCheckerTest {
                 `allowCompilationErrors()`.
 
                 For more information, see the "Library Dependencies and Stubs" section in
-                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev:lint/docs/api-guide/unit-testing.md.html
+                https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:lint/docs/api-guide/unit-testing.md.html
                 """.trimIndent(),
                 e.message?.replace(" \n", "\n")?.trim()
             )

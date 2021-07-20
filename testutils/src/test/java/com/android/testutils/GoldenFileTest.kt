@@ -106,7 +106,7 @@ class GoldenFileTest {
     @Test
     fun testUpdateChanged() {
         Jimfs.newFileSystem(Configuration.unix()).use { fs ->
-            val workspaceRoot = fs.getPath("/studio-master-dev")
+            val workspaceRoot = fs.getPath("/studio-main")
             val underTest = GoldenFile(
                 resourceRootWorkspacePath = "tools/base/testutils/src/test/resources",
                 resourcePath = "com/android/testutils/GoldenFileExample.txt",
@@ -140,7 +140,7 @@ class GoldenFileTest {
     @Test
     fun testUpdateInconsistent() {
         Jimfs.newFileSystem(Configuration.unix()).use { fs ->
-            val workspaceRoot = fs.getPath("/studio-master-dev")
+            val workspaceRoot = fs.getPath("/studio-main")
             val underTest = GoldenFile(
                 resourceRootWorkspacePath = "tools/base/testutils/src/test/resources",
                 resourcePath = "com/android/testutils/GoldenFileExample.txt",

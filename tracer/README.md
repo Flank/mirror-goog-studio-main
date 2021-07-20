@@ -112,7 +112,7 @@ In your gradle project directory, edit gradle.properties file and add:
 org.gradle.jvmargs = "-javaagent:$SRC/bazel-bin/tools/base/tracer/trace_agent.jar"
 ```
 
-Where $SRC is your studio-master-dev full path.
+Where $SRC is your studio-main full path.
 
 In order to use a trace profile:
 

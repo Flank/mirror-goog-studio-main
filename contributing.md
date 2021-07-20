@@ -14,7 +14,7 @@ Instead, the project uses branches matching its release cycles.
 If you are interested in contributing to the project as an external contributor,
 you need to follow these steps:
 1. Make sure you’re able to [download](source.md) and [build the Android Studio from source](studio.md).
-   Use the `studio-master-dev` branch.
+   Use the `studio-main` branch.
 2. Email adt-dev@google.com or post a message on
    [the adt-dev Google group](http://groups.google.com/group/adt-dev) to make sure that:
    * You receive early feedback from the team whether the change is likely to be merged
@@ -35,7 +35,7 @@ you need to follow these steps:
      highlight the changes (required).
 
 After you upload your change, the internal Developer Tools team will review it.
-If they accept your change, they will merge it into `studio-master-dev` for you.
+If they accept your change, they will merge it into `studio-main` for you.
 Your change should then appear in the first or second external release of Android Studio after the
 merge.
 

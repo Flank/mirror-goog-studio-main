@@ -106,12 +106,12 @@ public final class DevSdkUpdater {
         System.out.println("  # Updating a bunch of packages");
         System.out.println("  $ DevSdkUpdater \\");
         System.out.println("    --package-file dev-sdk-packages \\");
-        System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
+        System.out.println("    --dest /path/to/studio-main/prebuilts/studio/sdk");
         System.out.println();
         System.out.println("  # Updating to only the top folder of a single package");
         System.out.println("  $ DevSdkUpdater \\");
         System.out.println("    --package \"build-tools;23.0.1:*\" \\");
-        System.out.println("    --dest /path/to/studio-master-dev/prebuilts/studio/sdk");
+        System.out.println("    --dest /path/to/studio-main/prebuilts/studio/sdk");
         System.out.println();
     }
 
