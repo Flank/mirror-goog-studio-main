@@ -459,8 +459,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             .withName(SdkConstants.FN_PUBLIC_TXT)
                             .on(InternalArtifactType.PUBLIC_RES)
                     }
-                },
-                isLibrary = true
+                }
             )
 
             // This task merges all the resources, including the dependencies of this library.
@@ -1011,7 +1010,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         abstract val outputType: Single<Directory>
     }
 
-    @JvmOverloads
     fun basicCreateMergeResourcesTask(
             creationConfig: ComponentCreationConfig,
             mergeType: MergeType,
@@ -1019,8 +1017,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             processResources: Boolean,
             alsoOutputNotCompiledResources: Boolean,
             flags: ImmutableSet<MergeResources.Flag?>,
-            taskProviderCallback: TaskProviderCallback<MergeResources>?,
-            isLibrary: Boolean = this.isLibrary
+            taskProviderCallback: TaskProviderCallback<MergeResources>?
     ): TaskProvider<MergeResources> {
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
                 creationConfig.services.projectInfo.getIntermediatesDir()
@@ -1034,7 +1031,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         includeDependencies,
                         processResources,
                         flags,
-                        isLibrary),
+                        creationConfig.variantType.isAar),
                 null,
                 null,
                 taskProviderCallback)
@@ -1132,9 +1129,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    protected open val isLibrary: Boolean
-        get() = false
-
     fun createProcessResTask(
             creationConfig: ComponentCreationConfig,
             packageOutputType: Single<Directory>?,
@@ -1207,7 +1201,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
                 // Only generate the keep rules when we need them. We don't need to generate them here
                 // for non-library modules since AAPT2 will generate them from MergeType.MERGE.
-                if (generatesProguardOutputFile(creationConfig) && isLibrary) {
+                if (generatesProguardOutputFile(creationConfig) &&
+                    creationConfig.variantType.isAar) {
                     taskFactory.register(
                             GenerateLibraryProguardRulesTask.CreationAction(creationConfig))
                 }
@@ -1215,9 +1210,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 // Generate the R class for a library using both local symbols and symbols
                 // from dependencies.
                 // TODO: double check this (what about dynamic features?)
-                if (!nonTransitiveRClassInApp || isLibrary) {
-                    taskFactory.register(
-                            GenerateLibraryRFileTask.CreationAction(creationConfig, isLibrary))
+                if (!nonTransitiveRClassInApp || creationConfig.variantType.isAar) {
+                    taskFactory.register(GenerateLibraryRFileTask.CreationAction(
+                        creationConfig,
+                        creationConfig.variantType.isAar
+                    ))
                 }
             }
             MergeType.MERGE -> {
@@ -1228,7 +1225,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                                 mergeType,
                                 baseName,
-                                isLibrary))
+                                creationConfig.variantType.isAar))
                 if (packageOutputType != null) {
                     creationConfig.artifacts.republish(PROCESSED_RES, packageOutputType)
                 }
