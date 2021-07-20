@@ -16,11 +16,16 @@
 
 package android.content.res;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import java.util.Map;
 
 public final class Resources {
-    public static final class NotFoundException extends RuntimeException {}
+    public static final class NotFoundException extends RuntimeException {
+        public NotFoundException(@NonNull String message) {
+            super(message);
+        }
+    }
 
     private final Map<Integer, String> mResourceNames;
     private final Configuration mConfiguration;
@@ -34,7 +39,7 @@ public final class Resources {
 
     public String getResourceName(int resourceId) throws NotFoundException {
         if (!mResourceNames.containsKey(resourceId)) {
-            throw new NotFoundException();
+            throw new NotFoundException("Resource not found: " + resourceId);
         }
         return mResourceNames.get(resourceId);
     }
@@ -48,7 +53,7 @@ public final class Resources {
 
     public String getResourcePackageName(int resourceId) throws NotFoundException {
         String name = getResourceName(resourceId);
-        return name.substring(0, name.indexOf('.'));
+        return name.substring(0, name.lastIndexOf('.'));
     }
 
     public String getResourceEntryName(int resourceId) throws NotFoundException {

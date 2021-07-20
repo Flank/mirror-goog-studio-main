@@ -15,7 +15,9 @@
  */
 package com.android.tools.agent.appinspection.proto.property
 
+import android.view.View
 import com.android.tools.agent.appinspection.proto.StringTable
+import com.android.tools.agent.appinspection.proto.getNamespace
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FlagValue
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
@@ -58,9 +60,10 @@ class PropertyBuilder(val metadata: PropertyMetadata) {
         property.isLayout = isLayout
     }
 
-    fun build(stringTable: StringTable): Property? {
+    fun build(stringTable: StringTable, view: View): Property? {
         return value?.let { value ->
             property.name = stringTable.put(metadata.name)
+            property.namespace = stringTable.put(view.getNamespace(metadata.attributeId))
             property.setValue(stringTable, value)
             return property.build()
         }

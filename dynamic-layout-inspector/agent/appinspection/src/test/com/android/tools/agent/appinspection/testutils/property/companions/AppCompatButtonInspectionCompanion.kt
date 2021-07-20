@@ -16,50 +16,35 @@
 
 package com.android.tools.agent.appinspection.testutils.property.companions
 
-import android.view.ViewGroup
 import android.view.inspector.InspectionCompanion
 import android.view.inspector.PropertyMapper
 import android.view.inspector.PropertyReader
+import androidx.appcompat.widget.AppCompatButton
 import com.android.tools.agent.appinspection.testutils.property.ATTR_OFFSET
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyMapper
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyReader
 
-class ViewGroupLayoutParamsInspectionCompanion : InspectionCompanion<ViewGroup.LayoutParams> {
+class AppCompatButtonInspectionCompanion : InspectionCompanion<AppCompatButton> {
 
     companion object {
-        const val OFFSET = 0 // Start index of layout properties
+        val OFFSET = ButtonInspectionCompanion.OFFSET + ButtonInspectionCompanion.NUM_PROPERTIES
 
-        fun addResourceNames(resourceNames: MutableMap<Int, String>) {
-            resourceNames[ATTR_OFFSET + OFFSET] = "android.attr/layout_width"
-            resourceNames[ATTR_OFFSET + OFFSET + 1] = "android.attr/layout_height"
+        fun addResourceNames(packageName: String, resourceNames: MutableMap<Int, String>) {
+            resourceNames[ATTR_OFFSET + OFFSET] = "$packageName.attr/backgroundTint"
         }
     }
 
-    private val sizeMapping: (Int) -> String? = { value: Int ->
-        when (value) {
-            ViewGroup.LayoutParams.MATCH_PARENT -> "match_parent"
-            ViewGroup.LayoutParams.WRAP_CONTENT -> "wrap_content"
-            else -> null
-        }
-    }
-
-    private enum class Property {
-        WIDTH,
-        HEIGHT
+    internal enum class Property {
+        BACKGROUND_TINT
     }
 
     override fun mapProperties(propertyMapper: PropertyMapper) {
-        val mapper = EnumPropertyMapper<Property>(propertyMapper, OFFSET, namePrefix = "layout_")
-        mapper.mapIntEnum(Property.WIDTH, sizeMapping)
-        mapper.mapIntEnum(Property.HEIGHT, sizeMapping)
+        val mapper = EnumPropertyMapper<Property>(propertyMapper, OFFSET)
+        mapper.mapObject(Property.BACKGROUND_TINT)
     }
 
-    override fun readProperties(
-        layoutParams: ViewGroup.LayoutParams,
-        propertyReader: PropertyReader
-    ) {
+    override fun readProperties(button: AppCompatButton, propertyReader: PropertyReader) {
         val reader = EnumPropertyReader<Property>(propertyReader, OFFSET)
-        reader.readIntEnum(Property.WIDTH, layoutParams.width)
-        reader.readIntEnum(Property.HEIGHT, layoutParams.height)
+        reader.readObject(Property.BACKGROUND_TINT, button.supportBackgroundTint)
     }
 }

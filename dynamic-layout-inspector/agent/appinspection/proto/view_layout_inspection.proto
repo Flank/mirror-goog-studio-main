@@ -179,6 +179,7 @@ message Property {
     Resource source = 3;
     repeated Resource resolution_stack = 4;
     bool is_layout = 5;
+    int32 namespace = 6;
 
     oneof value {
         int32 int32_value = 101;
