@@ -229,13 +229,14 @@ maven_pom = rule(
 # )
 def maven_java_library(
         name,
-        deps = None,
-        runtime_deps = None,
+        deps = [],
+        runtime_deps = [],
         exclusions = None,
         export_artifact = None,
         srcs = None,
         resources = [],
-        exports = None,
+        java_exports = [],
+        exports = [],
         pom = None,
         baseline_coverage = True,
         visibility = None,
@@ -249,7 +250,7 @@ def maven_java_library(
     if srcs and baseline_coverage:
         coverage_baseline(name, srcs)
 
-    java_exports = exports + [export_artifact] if export_artifact else exports
+    java_exports = java_exports + exports + ([export_artifact] if export_artifact else [])
     native.java_library(
         name = name,
         deps = deps,
@@ -263,7 +264,7 @@ def maven_java_library(
     )
 
     # TODO: Properly exclude libraries from the pom instead of using _neverlink hacks.
-    maven_deps = (deps or []) + (exports or []) + (runtime_deps or [])
+    maven_deps = deps + exports + runtime_deps
 
     maven_pom(
         name = name + "_maven",
@@ -650,6 +651,13 @@ def _maven_import_impl(ctx):
     mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
     files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
+    names = []
+    for jar in ctx.files.jars:
+        name = jar.basename
+        if jar.extension:
+            name = jar.basename[:-len(jar.extension) - 1]
+        names.append(name)
+
     return struct(
         providers = [
             DefaultInfo(files = depset(ctx.files.jars), runfiles = runfiles),
@@ -660,6 +668,10 @@ def _maven_import_impl(ctx):
             ),
             java_common.merge(infos),
         ],
+        notice = struct(
+            file = ctx.attr.notice,
+            name = ",".join(names),
+        ),
     )
 
 _maven_import = rule(
@@ -700,7 +712,7 @@ def maven_import(
         repo_root_path = repo_root_path,
         parent = parent,
         files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
-        notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
+        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE",
         tags = ["require_license"],
         **kwargs
     )
@@ -771,11 +783,17 @@ def split_coordinates(coordinates):
 # duplication. Once all artifacts have been
 # migrated we can delete the old rules and this bridge.
 def import_maven_library(maven_java_library_rule, maven_library_rule):
-    maven_java_import(
+    maven_java_library(
         name = maven_java_library_rule,
+        export_artifact = ":" + maven_java_library_rule + ".import",
+        java_exports = [":" + maven_library_rule],
+        visibility = ["//visibility:public"],
+    )
+
+    maven_java_import(
+        name = maven_java_library_rule + ".import",
         jars = [":" + maven_library_rule + ".jar"],
         pom = ":" + maven_java_library_rule + ".pom",
-        visibility = ["//visibility:public"],
     )
 
     maven_pom(
