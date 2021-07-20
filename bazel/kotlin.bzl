@@ -335,7 +335,7 @@ def _maven_library_impl(ctx):
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
-    deps = [dep[JavaInfo] for dep in ctx.attr.deps]
+    deps = [dep[JavaInfo] for dep in ctx.attr.deps] + [dep[JavaInfo] for dep in ctx.attr.bundled_deps]
 
     # Kotlin
     jars = []
@@ -381,6 +381,9 @@ def _maven_library_impl(ctx):
     if ctx.files.manifests:
         manifest_argfile = create_manifest_argfile(ctx, name + ".manifest.lst", ctx.files.manifests)
 
+    for dep in ctx.attr.bundled_deps:
+        jars += [java_output.class_jar for java_output in dep[JavaInfo].outputs.jars]
+
     run_singlejar(
         ctx = ctx,
         jars = jars,
@@ -405,6 +408,7 @@ def _maven_library_impl(ctx):
         runtime_deps = deps,
     )]
 
+    # excludes bundled_deps
     infos = [dep[MavenInfo] for dep in ctx.attr.deps]
     pom_deps = [info.pom for info in infos]
 
@@ -447,6 +451,9 @@ _maven_library = rule(
             allow_files = [".jar"],
         ),
         "deps": attr.label_list(
+            providers = [JavaInfo, MavenInfo],
+        ),
+        "bundled_deps": attr.label_list(
             providers = [JavaInfo],
         ),
         "runtime_deps": attr.label_list(
@@ -529,7 +536,7 @@ def maven_library(
         resources_strip_prefix: The prefix to strip from the resources path.
         deps: The dependencies of this library.
         runtime_deps: The runtime dependencies.
-        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency (TODO)
+        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
         friends: The list of kotlin-friends.
         notice: An optional notice file to be included in the jar.
         coordinates: The maven coordinates of this artifact.
@@ -545,7 +552,8 @@ def maven_library(
         name = name,
         java_srcs = javas,
         kotlin_srcs = kotlins,
-        deps = deps + bundled_deps,
+        deps = deps,
+        bundled_deps = bundled_deps,
         friends = friends,
         notice = notice,
         module_name = module_name,
