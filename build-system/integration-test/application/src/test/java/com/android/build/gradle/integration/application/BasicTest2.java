@@ -34,6 +34,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
@@ -117,6 +118,11 @@ public class BasicTest2 {
 
     @BeforeClass
     public static void getModel() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n\nandroid.testFixtures.enable = true\n"
+                        + "android.testFixtures.androidResources = true\n");
+
         outputModels =
                 project.executeAndReturnOutputModels("clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
@@ -248,6 +254,25 @@ public class BasicTest2 {
         assertThat(androidTestOutputFile).named("test output").isNotNull();
         assertThat(androidTestOutputFile).named("test output file").isNotNull();
         assertThat(androidTestOutputFile).named("test output file").exists();
+
+        AndroidArtifact debugTestFixturesInfo = VariantUtils.getTestFixturesArtifact(debugVariant);
+
+        assertThat(debugTestFixturesInfo.getSourceGenTaskName())
+                .named("test fixtures source gen task name")
+                .isEqualTo("generateDebugTestFixturesSources");
+        assertThat(debugTestFixturesInfo.getCompileTaskName())
+                .named("test fixtures compile task name")
+                .isEqualTo("compileDebugTestFixturesSources");
+
+        Collection<File> generatedTestFixturesResFolders =
+                debugTestFixturesInfo.getGeneratedResourceFolders();
+        assertThat(generatedTestFixturesResFolders)
+                .named("test fixtures generated res folders")
+                .isNotNull();
+        // size 1 = resValue output
+        assertThat(generatedTestFixturesResFolders)
+                .named("test fixtures generated res folders")
+                .hasSize(1);
 
         // test the resValues and buildConfigFields.
         ProductFlavor defaultConfig = model.getDefaultConfig().getProductFlavor();

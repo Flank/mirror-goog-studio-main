@@ -170,10 +170,15 @@ public class HelloWorldApp extends GradleProject {
     }
 
     protected HelloWorldApp(String appId, String plugin) {
-        this(appId, plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
+        this(appId, plugin, "");
     }
 
-    protected HelloWorldApp(String appId, String plugin, int minSdkVersion) {
+    protected HelloWorldApp(String appId, String plugin, String androidBlockConfig) {
+        this(appId, plugin, TestVersions.SUPPORT_LIB_MIN_SDK, androidBlockConfig);
+    }
+
+    protected HelloWorldApp(
+            String appId, String plugin, int minSdkVersion, String androidBlockConfig) {
         this(appId);
 
         TestSourceFile buildFile =
@@ -195,6 +200,7 @@ public class HelloWorldApp extends GradleProject {
                                 + "    defaultConfig {\n"
                                 + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                                 + "    }\n"
+                                + androidBlockConfig
                                 + "}\n"
                                 + "dependencies {\n"
                                 + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
@@ -217,7 +223,12 @@ public class HelloWorldApp extends GradleProject {
     }
 
     public static HelloWorldApp forPluginWithMinSdkVersion(String plugin, int minSdkVersion) {
-        return new HelloWorldApp(APP_ID, plugin, minSdkVersion);
+        return new HelloWorldApp(APP_ID, plugin, minSdkVersion, "");
+    }
+
+    public static HelloWorldApp forPluginWithAndroidConfig(
+            String plugin, String androidBlockConfig) {
+        return new HelloWorldApp(APP_ID, plugin, androidBlockConfig);
     }
 
     @Override

@@ -15,7 +15,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
-import com.android.ide.common.process.ProcessException;
 import com.android.utils.StringHelper;
 import java.io.File;
 import java.io.IOException;
@@ -47,8 +46,8 @@ public class BasicMultiFlavorTest {
                             model.getName(), projectDir, name, pfContainer.getSourceProvider())
                     .test();
 
-            // Unit tests and android tests.
-            assertThat(pfContainer.getExtraSourceProviders()).hasSize(2);
+            // Unit tests, test fixtures and android tests.
+            assertThat(pfContainer.getExtraSourceProviders()).hasSize(3);
             SourceProviderContainer container =
                     SourceSetContainerUtils.getExtraSourceProviderContainer(
                             pfContainer, ARTIFACT_ANDROID_TEST);
@@ -71,7 +70,7 @@ public class BasicMultiFlavorTest {
     }
 
     @Test
-    public void checkResValueAndManifestPlaceholders() throws IOException, InterruptedException {
+    public void checkResValueAndManifestPlaceholders() throws IOException {
         addResValuesAndPlaceholders();
         ModelContainer<AndroidProject> model =
                 project.executeAndReturnModel("assembleFreeBetaDebug");
@@ -87,8 +86,7 @@ public class BasicMultiFlavorTest {
     }
 
     @Test
-    public void checkResourcesResolution()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkResourcesResolution() {
         project.execute("assembleFreeBetaDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
                 .containsResource("drawable/free.png");

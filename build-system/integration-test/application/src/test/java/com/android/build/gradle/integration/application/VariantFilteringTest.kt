@@ -517,10 +517,6 @@ class VariantFilteringTest(private val useModelV2: Boolean)
 
     @Test
     fun `test-fixtures filtering using buildtype callback`() {
-        // TestFixtures feature is not supported in model v1
-        if (!useModelV2) {
-            return
-        }
         given {
             """
                 |    testFixtures {
@@ -599,7 +595,8 @@ class VariantFilteringTest(private val useModelV2: Boolean)
                 VariantInfo(
                     it.name,
                     unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
-                    androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
+                    androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST },
+                    testFixtures = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_TEST_FIXTURES})
             }
         }
     }

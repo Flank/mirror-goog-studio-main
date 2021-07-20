@@ -30,6 +30,10 @@ fun Variant.getAndroidTestArtifact(): AndroidArtifact {
     return getExtraAndroidArtifactByName(AndroidProject.ARTIFACT_ANDROID_TEST)
 }
 
+fun Variant.getTestFixturesArtifact(): AndroidArtifact {
+    return getExtraAndroidArtifactByName(AndroidProject.ARTIFACT_TEST_FIXTURES)
+}
+
 fun Variant.getUnitTestArtifact(): JavaArtifact {
     return getExtraJavaArtifactByName(AndroidProject.ARTIFACT_UNIT_TEST)
 }
