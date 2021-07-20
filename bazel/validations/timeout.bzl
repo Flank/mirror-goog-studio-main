@@ -6,15 +6,7 @@ the allowlisted targets below can use the eternal timeout.
 APPROVED_ETERNAL_TESTS = [
     "//tools/adt/idea/old-agp-tests:intellij.android.old-agp-tests_tests",
     "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__testartifacts",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__other",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__navigator",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__jetbrains",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.structure.model.android",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.structure",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.project.sync.snapshots",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.project.sync",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle",
 ]
 
 FAILURE_MESSAGE = """Test target {} has timeout set to eternal.
