@@ -1,5 +1,6 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_java_library")
+load(":kotlin.bzl", "maven_library")
 load(":utils.bzl", "java_jarjar")
 load(":android.bzl", "select_android")
 
@@ -288,3 +289,62 @@ def cc_grpc_proto_library(
         strip_include_prefix = "",
         include_prefix = include_prefix,
     )
+
+def maven_proto_library(
+        name,
+        srcs = None,
+        proto_deps = [],
+        java_deps = [],
+        coordinates = "",
+        visibility = None,
+        grpc_support = False,
+        protoc_version = PROTOC_VERSION,
+        protoc_grpc_version = None,
+        proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
+        **kwargs):
+    # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.
+    if grpc_support and not protoc_grpc_version:
+        fail("grpc support was requested, but the version of grpc java protoc plugin was not specified")
+
+    if not name.endswith("_bzl"):
+        fail("maven_proto_library rule name must end with '_bzl', found: " + name)
+
+    srcs_name = name[:-len("_bzl")] + "_srcs"
+    outs = [srcs_name + ".srcjar"]
+    _gen_proto_rule(
+        name = srcs_name,
+        srcs = srcs,
+        deps = proto_deps,
+        include = "@//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java." + protoc_version + ".include_include",
+        outs = outs,
+        proto_include_version = protoc_version,
+        protoc = "@//prebuilts/tools/common/m2:com.google.protobuf.protoc." + protoc_version + "_exe",
+        grpc_plugin =
+            "@//prebuilts/tools/common/m2:io.grpc.protoc-gen-grpc-java." + protoc_grpc_version + "_exe" if grpc_support else None,
+        target_language = proto_languages.JAVA,
+        visibility = visibility,
+    )
+
+    grpc_extra_deps = ["@//prebuilts/tools/common/m2:javax.annotation.javax.annotation-api.1.3.2"]
+    java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
+    java_deps += proto_java_runtime_library
+
+    if coordinates:
+        maven_library(
+            name = name,
+            srcs = outs,
+            deps = [],
+            bundled_deps = java_deps,
+            coordinates = coordinates,
+            visibility = visibility,
+            **kwargs
+        )
+    else:
+        native.java_library(
+            name = name,
+            srcs = outs,
+            deps = java_deps,
+            javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
+            visibility = visibility,
+            **kwargs
+        )

@@ -330,9 +330,10 @@ def _resources(ctx, resources, resources_jar):
 def _maven_library_impl(ctx):
     java_srcs = ctx.files.java_srcs
     kotlin_srcs = ctx.files.kotlin_srcs
+    source_jars = ctx.files.source_jars
     name = ctx.label.name
 
-    java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
+    java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs or source_jars else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
     deps = [dep[JavaInfo] for dep in ctx.attr.deps] + [dep[JavaInfo] for dep in ctx.attr.bundled_deps]
@@ -362,12 +363,13 @@ def _maven_library_impl(ctx):
         jars += [resources_jar]
 
     # Java
-    if java_srcs:
+    if java_srcs or source_jars:
         java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
 
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
+            source_jars = source_jars,
             output = java_jar,
             deps = deps + kotlin_providers,
             javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
@@ -444,6 +446,7 @@ _maven_library = rule(
     attrs = {
         "java_srcs": attr.label_list(allow_files = True),
         "kotlin_srcs": attr.label_list(allow_files = True),
+        "source_jars": attr.label_list(allow_files = True),
         "resources": attr.label_list(allow_files = True),
         "notice": attr.label(allow_single_file = True),
         "manifests": attr.label_list(allow_files = True),
@@ -546,12 +549,14 @@ def maven_library(
     """
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
+    source_jars = [src for src in srcs if src.endswith(".srcjar")]
     final_javacopts = javacopts + ["--release", "8"]
 
     _maven_library(
         name = name,
         java_srcs = javas,
         kotlin_srcs = kotlins,
+        source_jars = source_jars,
         deps = deps,
         bundled_deps = bundled_deps,
         friends = friends,
