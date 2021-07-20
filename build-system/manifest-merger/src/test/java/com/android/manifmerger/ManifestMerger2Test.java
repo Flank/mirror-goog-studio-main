@@ -57,8 +57,6 @@ public class ManifestMerger2Test {
             new String[] {
                 "00_noop",
                 "03_inject_attributes.xml",
-                "03b_inject_attributes_warnings.xml",
-                "03c_inject_attributes_warnings.xml",
                 "05_inject_package.xml",
                 "05_inject_package_placeholder.xml",
                 "05_inject_package_with_overlays.xml",
@@ -304,7 +302,7 @@ public class ManifestMerger2Test {
 
                 // next might generate an exception which will make the test fail when we
                 // get unexpected error message.
-                if (!message.isEmpty() && !findLineInRecords(message, records)) {
+                if (!findLineInRecords(message, records)) {
 
                     StringBuilder errorMessage = new StringBuilder();
                     dumpRecords(records, errorMessage);

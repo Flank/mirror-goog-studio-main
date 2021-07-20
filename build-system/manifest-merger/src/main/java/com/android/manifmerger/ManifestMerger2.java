@@ -175,11 +175,20 @@ public class ManifestMerger2 {
                         selectors,
                         mergingReportBuilder);
 
-        // perform all top-level verifications.
-        if (!loadedMainManifestInfo
-                .getXmlDocument()
-                .checkTopLevelDeclarations(
-                        mPlaceHolderValues, mergingReportBuilder, mDocumentType)) {
+        // first do we have a package declaration in the main manifest ?
+        Optional<XmlAttribute> mainPackageAttribute =
+                loadedMainManifestInfo.getXmlDocument().getPackage();
+        if (!mPlaceHolderValues.containsKey(PACKAGE_NAME)
+                && mDocumentType != XmlDocument.Type.OVERLAY
+                && !mainPackageAttribute.isPresent()) {
+            mergingReportBuilder.addMessage(
+                    loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                    MergingReport.Record.Severity.ERROR,
+                    String.format(
+                            "Main AndroidManifest.xml at %1$s manifest:package attribute "
+                                    + "is not declared",
+                            loadedMainManifestInfo.getXmlDocument().getSourceFile()
+                                    .print(true)));
             return mergingReportBuilder.build();
         }
 
@@ -191,8 +200,6 @@ public class ManifestMerger2 {
 
         // load all the libraries xml files early to have a list of all possible node:selector
         // values.
-        Optional<XmlAttribute> mainPackageAttribute =
-                loadedMainManifestInfo.getXmlDocument().getPackage();
         List<LoadedManifestInfo> loadedLibraryDocuments =
                 loadLibraries(
                         selectors,

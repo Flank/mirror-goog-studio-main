@@ -19,7 +19,6 @@ package com.android.manifmerger;
 import static com.android.manifmerger.ManifestModel.NodeTypes.USES_PERMISSION;
 import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -41,7 +40,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -337,14 +335,20 @@ public class XmlDocument {
      */
     @NonNull
     private String getRawMinSdkVersion() {
-        String value = getExplicitVersionAttribute("android:minSdkVersion");
-        return value != null ? value : DEFAULT_SDK_VERSION;
+        Optional<XmlElement> usesSdk = getByTypeAndKey(USES_SDK, null);
+        if (usesSdk.isPresent()) {
+            Optional<XmlAttribute> minSdkVersion = usesSdk.get()
+                    .getAttribute(XmlNode.fromXmlName("android:minSdkVersion"));
+            if (minSdkVersion.isPresent()) {
+                return minSdkVersion.get().getValue();
+            }
+        }
+        return DEFAULT_SDK_VERSION;
     }
 
     /**
      * Returns the minSdk version for this manifest file. It can be injected from the outer
-     * build.gradle or can be expressed in the uses_sdk element (which is now ignored, generates a
-     * warning and will be an error in 8.0).
+     * build.gradle or can be expressed in the uses_sdk element.
      */
     @NonNull
     public String getMinSdkVersion() {
@@ -359,33 +363,15 @@ public class XmlDocument {
     /**
      * Returns the targetSdk version specified in the uses_sdk element if present in the
      * AndroidManifest.xml file, or null if not explicitly specified.
-     *
-     * <p>Note that specifying this value in the AndroidManifest.xml file is now ignored, generates
-     * a warning and will be an error in 8.0).
      */
     @Nullable
     private String getExplicitTargetSdkVersion() {
-        return getExplicitVersionAttribute("android:targetSdkVersion");
-    }
-
-    @Nullable
-    private String getExplicitMaxSdkVersion() {
-        return getExplicitVersionAttribute("android:maxSdkVersion");
-    }
-
-    /**
-     * Returns a version attribute from the uses-sdk xml element.
-     *
-     * @param attributeName the attribute name
-     * @return the value or null if not specified.
-     */
-    private String getExplicitVersionAttribute(String attributeName) {
         Optional<XmlElement> usesSdk = getByTypeAndKey(USES_SDK, null);
         if (usesSdk.isPresent()) {
-            Optional<XmlAttribute> specifiedVersion =
-                    usesSdk.get().getAttribute(XmlNode.fromXmlName(attributeName));
-            if (specifiedVersion.isPresent()) {
-                return specifiedVersion.get().getValue();
+            Optional<XmlAttribute> targetSdkVersion = usesSdk.get()
+                    .getAttribute(XmlNode.fromXmlName("android:targetSdkVersion"));
+            if (targetSdkVersion.isPresent()) {
+                return targetSdkVersion.get().getValue();
             }
         }
         return null;
@@ -418,90 +404,6 @@ public class XmlDocument {
             return injectedTargetVersion;
         }
         return getRawTargetSdkVersion();
-    }
-
-    /**
-     * Returns the maxSdkVersion version for this manifest file. It can be injected from the outer
-     * build.gradle or can be expressed in the uses_sdk element.
-     */
-    @Nullable
-    public String getMaxSdkVersion() {
-
-        // check for system properties.
-        String injectedMaxVersion =
-                mSystemPropertyResolver.getValue(ManifestSystemProperty.MAX_SDK_VERSION);
-        if (injectedMaxVersion != null) {
-            return injectedMaxVersion;
-        }
-        return getExplicitMaxSdkVersion();
-    }
-
-    boolean checkTopLevelDeclarations(
-            Map<String, Object> placeHolderValues,
-            MergingReport.Builder mergingReportBuilder,
-            XmlDocument.Type documentType) {
-        // first do we have a package declaration in the main manifest ?
-        Optional<XmlAttribute> mainPackageAttribute = getPackage();
-        if (!placeHolderValues.containsKey(PACKAGE_NAME)
-                && documentType != XmlDocument.Type.OVERLAY
-                && !mainPackageAttribute.isPresent()) {
-            mergingReportBuilder.addMessage(
-                    getSourceFile(),
-                    MergingReport.Record.Severity.ERROR,
-                    String.format(
-                            "Main AndroidManifest.xml at %1$s manifest:package attribute "
-                                    + "is not declared",
-                            getSourceFile().print(true)));
-            return false;
-        }
-
-        // the version from uses-sdk is ignore, issue a warning if is a different version than
-        // the injected one as it would lead to confusion.
-        Optional<XmlElement> usesSdk = getByTypeAndKey(ManifestModel.NodeTypes.USES_SDK, null);
-        if (usesSdk.isPresent()) {
-            verifyVersion(
-                    usesSdk.get(),
-                    this::getRawMinSdkVersion,
-                    this::getMinSdkVersion,
-                    "minSdkVersion",
-                    mergingReportBuilder);
-
-            verifyVersion(
-                    usesSdk.get(),
-                    this::getExplicitTargetSdkVersion,
-                    this::getTargetSdkVersion,
-                    "targetSdkVersion",
-                    mergingReportBuilder);
-
-            verifyVersion(
-                    usesSdk.get(),
-                    this::getExplicitMaxSdkVersion,
-                    this::getMaxSdkVersion,
-                    "maxSdkVersion",
-                    mergingReportBuilder);
-        }
-        return true;
-    }
-
-    private void verifyVersion(
-            XmlElement usesSdk,
-            Supplier<String> rawValueSupplier,
-            Supplier<String> usedValueSupplier,
-            String propertyName,
-            MergingReport.Builder mergingReportBuilder) {
-        String rawValue = rawValueSupplier.get();
-        if (rawValue != null && !rawValue.equals(usedValueSupplier.get())) {
-            String warning =
-                    String.format(
-                            "uses-sdk:%1$s value (%2$s) specified in the manifest file is ignored. "
-                                    + "It is overridden by the value declared in the DSL or the variant API, or 1 if not declared/present. "
-                                    + "Current value is (%3$s).",
-                            propertyName, rawValueSupplier.get(), usedValueSupplier.get());
-            mergingReportBuilder.addMessage(
-                    new SourceFilePosition(getSourceFile(), usesSdk.getPosition()),
-                    MergingReport.Record.Severity.WARNING,
-                    warning);
-        }
     }
 
     /**
