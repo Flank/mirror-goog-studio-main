@@ -58,7 +58,7 @@ class AndroidLintAnalysisTaskTest {
     @Test
     fun testGenerateCommandLineArguments() {
         task.fatalOnly.set(false)
-        task.javaHome.set("javaHome")
+        task.systemPropertyInputs.javaHome.set("javaHome")
         task.androidSdkHome.set("androidSdkHome")
         task.lintModelDirectory.set(temporaryFolder.newFolder())
         task.printStackTrace.set(false)

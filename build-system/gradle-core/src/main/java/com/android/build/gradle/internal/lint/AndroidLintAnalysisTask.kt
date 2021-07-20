@@ -71,9 +71,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     abstract val partialResultsDirectory: DirectoryProperty
 
     @get:Internal
-    abstract val javaHome: Property<String>
-
-    @get:Internal
     abstract val androidSdkHome: Property<String>
 
     @get:Input
@@ -155,7 +152,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         if (fatalOnly.get()) {
             arguments += "--fatalOnly"
         }
-        arguments += listOf("--jdk-home", javaHome.get())
+        arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
         arguments += listOf("--sdk-home", androidSdkHome.get())
 
         arguments += "--lint-model"
@@ -306,7 +303,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
                 .map { it.asFile.absolutePath }
         )
-        this.javaHome.setDisallowChanges(project.providers.systemProperty("java.home"))
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(

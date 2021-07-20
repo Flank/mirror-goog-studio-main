@@ -428,9 +428,17 @@ abstract class SystemPropertyInputs {
     @get:Optional
     abstract val gradleUserHome: Property<String>
 
+    // Use @get:Internal because javaVendor and javaVersion act as proxy inputs for javaHome
+    @get:Internal
+    abstract val javaHome: Property<String>
+
     @get:Input
     @get:Optional
-    abstract val javaHome: Property<String>
+    abstract val javaVendor: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val javaVersion: Property<String>
 
     @get:Input
     @get:Optional
@@ -493,6 +501,8 @@ abstract class SystemPropertyInputs {
         )
         gradleUserHome.setDisallowChanges(providerFactory.systemProperty("gradle.user.home"))
         javaHome.setDisallowChanges(providerFactory.systemProperty("java.home"))
+        javaVendor.setDisallowChanges(providerFactory.systemProperty("java.vendor"))
+        javaVersion.setDisallowChanges(providerFactory.systemProperty("java.version"))
         lintApiDatabase.setDisallowChanges(providerFactory.systemProperty("LINT_API_DATABASE"))
         lintBinDir.setDisallowChanges(
             providerFactory.systemProperty("com.android.tools.lint.bindir")

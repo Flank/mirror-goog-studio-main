@@ -126,9 +126,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     abstract val textReportToStdOut: Property<Boolean>
 
     @get:Internal
-    abstract val javaHome: Property<String>
-
-    @get:Internal
     abstract val androidSdkHome: Property<String>
 
     @get:Input
@@ -296,7 +293,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         if (reportOnly.get()) {
             arguments += "--report-only"
         }
-        arguments += listOf("--jdk-home", javaHome.get())
+        arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
         arguments += listOf("--sdk-home", androidSdkHome.get())
 
         if (textReportEnabled.get()) {
@@ -746,7 +743,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
         this.androidSdkHome.setDisallowChanges(sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }.map { it.asFile.absolutePath })
-        this.javaHome.setDisallowChanges(project.providers.systemProperty("java.home"))
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
