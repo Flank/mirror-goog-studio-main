@@ -686,4 +686,14 @@ class NamespaceDetectorTest : AbstractCheckTest() {
                 "-         xmlns:android=\"http://schemas.android.com/apk/res/android\""
         )
     }
+
+    fun testSkipsRawResources() {
+        // Regression test for https://issuetracker.google.com/130711188
+        lint().files(
+            xml(
+                "res/raw/wrong_namespace.xml",
+                "<LinearLayout xmlns:abcd=\"invalid-namespace\" />"
+            )
+        ).run().expectClean()
+    }
 }

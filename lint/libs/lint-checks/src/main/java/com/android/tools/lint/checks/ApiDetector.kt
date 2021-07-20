@@ -194,10 +194,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
     // ---- Implements XmlScanner ----
 
-    override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return true
-    }
-
     override fun getApplicableElements(): Collection<String> {
         return XmlScannerConstants.ALL
     }
