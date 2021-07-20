@@ -202,6 +202,11 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:com.google.errorprone.error_prone_annotations.2.3.2",
     "//prebuilts/tools/common/m2:org.checkerframework.checker-qual.2.5.2",
     "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.17.0",
+    # Transitive Maven dependencies of above artifacts that cannot be identified
+    # automatically because they are dependencies of artifacts that use the new
+    # Maven rules via the import_maven_library bridge:
+    "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
+    "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
 ]
 
 maven_repo(

@@ -103,9 +103,14 @@ local_maven_repository(
   name = "maven",
   path = "prebuilts/tools/common/m2/repository/",
   artifacts = [
+    "com.google.code.gson:gson:2.8.6",
     "com.google.guava:guava:30.1-jre",
     "com.google.protobuf:protobuf-java:3.10.0",
+    "net.java.dev.jna:jna:5.6.0",
+    "net.java.dev.jna:jna-platform:5.6.0",
     "net.sf.kxml:kxml2:2.3.0",
     "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
   ]
 )

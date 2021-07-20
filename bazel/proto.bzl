@@ -333,7 +333,6 @@ def maven_proto_library(
         maven_library(
             name = name,
             srcs = outs,
-            deps = [],
             bundled_deps = java_deps,
             coordinates = coordinates,
             visibility = visibility,
