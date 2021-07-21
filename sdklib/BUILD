@@ -294,6 +294,7 @@ filegroup(
     srcs = glob([
         "src/main/**/*.java",
         "src/main/**/*.kt",
+        "src/main/java/com/android/sdklib/devices/*.xml",
         "src/main/resources/**",
     ]) + [
         "build.gradle",

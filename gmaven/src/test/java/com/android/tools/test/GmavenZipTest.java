@@ -19,21 +19,18 @@ package com.android.tools.test;
 import com.android.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.Expect;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -60,13 +57,28 @@ public class GmavenZipTest {
     private static final String R8_NAMESPACE = "com/android/tools/r8/";
     private static final String R8_PACKAGE_PREFIX = "com.android.tools.r8";
 
+    private static final Set<String> MISSING_LICENSE =
+            ImmutableSet.of(
+                    "com/android/tools/emulator/proto",
+                    "com/android/tools/utp/android-test-plugin-host-device-info-proto",
+                    "com/android/tools/utp/android-test-plugin-host-coverage",
+                    "com/android/tools/utp/android-test-plugin-host-additional-test-output",
+                    "com/android/tools/utp/android-test-plugin-result-listener-gradle",
+                    "com/android/tools/utp/android-test-plugin-host-logcat",
+                    "com/android/tools/utp/android-device-provider-ddmlib",
+                    "com/android/tools/utp/android-device-provider-gradle",
+                    "com/android/tools/utp/android-test-plugin-host-device-info",
+                    "com/android/tools/utp/android-test-plugin-host-retention");
+
     static {
         // Useful command for getting these lists:
-        // unzip -l path/to.jar | grep -v ".class$" | tail -n +4 | head -n -2 | cut -c 31- | sort -f | awk '{print "\"" $0 "\"," }'
+        // unzip -l path/to.jar | grep -v ".class$" | tail -n +4 | head -n -2 | cut -c 31- | sort -f
+        // | awk '{print "\"" $0 "\"," }'
 
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
                 "com/android/tools/ddms/ddmlib",
+                "app_processes.proto",
                 "com/",
                 "com/android/",
                 "com/android/commands/",
@@ -89,8 +101,10 @@ public class GmavenZipTest {
                 "com/android/server/",
                 "com/android/server/adb/",
                 "com/android/server/adb/protos/",
+                "instrumentation-data.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/ddmlib.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/testutils",
@@ -127,6 +141,7 @@ public class GmavenZipTest {
                 "com/android/build/gradle/api/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/gradle-api.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/builder-test-api",
@@ -154,6 +169,7 @@ public class GmavenZipTest {
                 "com/android/builder/model/v2/models/ndk/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/builder-model.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/apkzlib",
@@ -199,6 +215,9 @@ public class GmavenZipTest {
                 "com/",
                 "com/android/",
                 "com/android/aapt/", // Resources.proto & Configuration.proto
+                "Configuration.proto",
+                "Resources.proto",
+                "ResourcesInternal.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -212,6 +231,7 @@ public class GmavenZipTest {
                 "com/android/aaptcompiler/proto/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/aaptcompiler.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/builder",
@@ -251,6 +271,9 @@ public class GmavenZipTest {
                 "LICENSE",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/builder.kotlin_module",
+                "META-INF/profile.kotlin_module",
+                "META-INF/services/",
                 "META-INF/services/com.android.tools.r8",
                 "NOTICE",
                 "r8-version.properties");
@@ -260,6 +283,7 @@ public class GmavenZipTest {
                 "com/android/",
                 "com/android/manifmerger/",
                 "META-INF/",
+                "META-INF/manifest-merger.kotlin_module",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
@@ -290,6 +314,7 @@ public class GmavenZipTest {
                 "META-INF/MANIFEST.MF");
         expected.putAll(
                 "com/android/tools/build/gradle",
+                "app_bundle_dependencies_metadata.proto",
                 "com/",
                 "com/android/",
                 "com/android/build/",
@@ -418,8 +443,13 @@ public class GmavenZipTest {
                 "com/android/tools/build/libraries/metadata/",
                 "com/android/tools/mlkit/",
                 "com/android/tools/profgen/",
+                "cxx_attribution.proto",
+                "cxx_caching.proto",
+                "cxx_logging.proto",
+                "cxx_process.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/gradle-core.kotlin_module",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/com.android.internal.application.properties",
                 "META-INF/gradle-plugins/com.android.internal.asset-pack.properties",
@@ -442,6 +472,7 @@ public class GmavenZipTest {
                 "META-INF/gradle-plugins/com.android.library.properties",
                 "META-INF/gradle-plugins/com.android.reporting.properties",
                 "META-INF/gradle-plugins/com.android.test.properties",
+                "META-INF/profgen.kotlin_module",
                 "META-INF/services/",
                 "META-INF/services/com.android.build.api.variant.BuiltArtifactsLoader",
                 "NOTICE");
@@ -480,6 +511,7 @@ public class GmavenZipTest {
                 "com/android/instantapp/sdk/",
                 "com/android/instantapp/utils/",
                 "com/android/projectmodel/",
+                "manifest.proto",
                 "versions-offline/",
                 "versions-offline/android/",
                 "versions-offline/android/arch/",
@@ -919,6 +951,7 @@ public class GmavenZipTest {
                 "wireless/android/instantapps/sdk/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/sdk-common.kotlin_module",
                 "NOTICE",
                 "README.md");
         expected.putAll(
@@ -939,6 +972,7 @@ public class GmavenZipTest {
                 "com/android/tools/analytics/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/shared.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/analytics-library/inspector",
@@ -957,9 +991,11 @@ public class GmavenZipTest {
                 "com/android/tools/analytics/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/tracker.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/analytics-library/protos",
+                "analytics_enums.proto",
                 "com/",
                 "com/android/",
                 "com/android/tools/",
@@ -975,6 +1011,8 @@ public class GmavenZipTest {
                 "com/google/wireless/android/play/playlog/proto/",
                 "com/google/wireless/android/sdk/",
                 "com/google/wireless/android/sdk/stats/",
+                "google_logs_publishing.proto",
+                "studio_stats.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -1045,6 +1083,8 @@ public class GmavenZipTest {
                 "com/android/sdklib/repository/legacy/remote/internal/archives/",
                 "com/android/sdklib/repository/legacy/remote/internal/packages/",
                 "com/android/sdklib/repository/legacy/remote/internal/sources/",
+                "com/android/sdklib/tool/",
+                "com/android/sdklib/tool/sdkmanager/",
                 "xsd/",
                 "xsd/legacy/",
                 "xsd/legacy/sdk-addon-01.xsd",
@@ -1126,6 +1166,7 @@ public class GmavenZipTest {
                 "com/android/xml/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/common.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/repository",
@@ -1166,6 +1207,7 @@ public class GmavenZipTest {
                 "xsd/sources/repo-sites-common-custom-1.xjb",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/repository.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/layoutlib/layoutlib-api",
@@ -1198,6 +1240,7 @@ public class GmavenZipTest {
                 "typos/typos-pt.txt",
                 "typos/typos-tr.txt",
                 "META-INF/",
+                "META-INF/lint-checks.kotlin_module",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
@@ -1213,6 +1256,7 @@ public class GmavenZipTest {
                 "com/android/tools/lint/detector/api/interprocedural/",
                 "com/android/tools/lint/helpers/",
                 "META-INF/",
+                "META-INF/lint-api.kotlin_module",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
@@ -1235,6 +1279,7 @@ public class GmavenZipTest {
                 "com/android/tools/lint/model/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/lint-model.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/lint/lint-tests",
@@ -1246,6 +1291,7 @@ public class GmavenZipTest {
                 "com/android/tools/lint/checks/infrastructure/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/lint-tests.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/lint/lint",
@@ -1255,6 +1301,7 @@ public class GmavenZipTest {
                 "com/android/tools/lint/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/lint-cli.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/dvlib",
@@ -1286,6 +1333,7 @@ public class GmavenZipTest {
                 "data_binding_version_info.properties",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/databinding-compiler-common.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "androidx/databinding/databinding-common",
@@ -1311,6 +1359,7 @@ public class GmavenZipTest {
                 "NOTICE.txt",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/databinding-compiler.kotlin_module",
                 "META-INF/gradle/",
                 "META-INF/services/",
                 "META-INF/gradle/incremental.annotation.processors",
@@ -1438,6 +1487,39 @@ public class GmavenZipTest {
                 "NOTICE");
 
         expected.putAll(
+                "com/android/tools/emulator/proto",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "com/",
+                "com/android/",
+                "com/android/emulator/",
+                "com/android/emulator/control/",
+                "com/android/emulator/snapshot/",
+                "com/google/",
+                "com/google/waterfall/",
+                "emulator_controller.proto",
+                "rtc_service.proto",
+                "snapshot.proto",
+                "snapshot_service.proto",
+                "ui_controller_service.proto",
+                "waterfall.proto");
+
+        expected.putAll(
+                "com/android/tools/utp/android-device-provider-ddmlib",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-device-provider-ddmlib.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.device.DeviceProvider",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/deviceprovider/",
+                "com/android/tools/utp/plugins/deviceprovider/ddmlib/");
+
+        expected.putAll(
                 "com/android/tools/utp/android-device-provider-gradle-proto",
                 "com/",
                 "com/android/",
@@ -1447,12 +1529,91 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/deviceprovider/",
                 "com/android/tools/utp/plugins/deviceprovider/gradle/",
                 "com/android/tools/utp/plugins/deviceprovider/gradle/proto/",
+                "gradle_managed_android_device_provider_config.proto",
+                "gradle_managed_device_config.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
 
         expected.putAll(
+                "com/android/tools/utp/android-device-provider-gradle",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-device-provider-gradle.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.device.DeviceProvider",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/deviceprovider/",
+                "com/android/tools/utp/plugins/deviceprovider/gradle/");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-device-info-proto",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "android_test_device_info.proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/device/",
+                "com/android/tools/utp/plugins/host/device/info/",
+                "com/android/tools/utp/plugins/host/device/info/proto/");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-device-info",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-host-device-info.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/device/",
+                "com/android/tools/utp/plugins/host/device/info/");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-additional-test-output-proto",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE",
+                "android_additional_test_output_config.proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/additionaltestoutput/",
+                "com/android/tools/utp/plugins/host/additionaltestoutput/proto/");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-additional-test-output",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-host-additional-test-output.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/additionaltestoutput/");
+
+        expected.putAll(
                 "com/android/tools/utp/android-test-plugin-host-coverage-proto",
+                "android_test_coverage_config.proto",
                 "com/",
                 "com/android/",
                 "com/android/tools/",
@@ -1466,6 +1627,21 @@ public class GmavenZipTest {
                 "NOTICE");
 
         expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-coverage",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-host-coverage.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/coverage/");
+
+        expected.putAll(
                 "com/android/tools/utp/android-test-plugin-host-retention-proto",
                 "com/",
                 "com/android/",
@@ -1475,9 +1651,27 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/host/",
                 "com/android/tools/utp/plugins/host/icebox/",
                 "com/android/tools/utp/plugins/host/icebox/proto/",
+                "icebox_plugin.proto",
+                "icebox_output.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-retention",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-host-retention.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
+                "com.android.tools.utp.plugins.host.icebox/",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/icebox/");
 
         expected.putAll(
                 "com/android/tools/utp/android-test-plugin-result-listener-gradle-proto",
@@ -1490,53 +1684,85 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/result/listener/",
                 "com/android/tools/utp/plugins/result/listener/gradle/",
                 "com/android/tools/utp/plugins/result/listener/gradle/proto/",
+                "gradle_android_test_result_listener_config.proto",
+                "gradle_android_test_result_listener.proto",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
 
-        if (TestUtils.runningFromBazel()) {
-            // TODO: fix these. (b/64921827)
-            ImmutableSet<String> bazelNotImplementedYet =
-                    ImmutableSet.of(
-                            "com/android/tools/apkparser/binary-resources",
-                            "com/android/tools/apkparser/apkanalyzer",
-                            "com/android/tools/pixelprobe/pixelprobe",
-                            "com/android/tools/draw9patch",
-                            "com/android/tools/ninepatch",
-                            "com/android/tools/fakeadbserver/fakeadbserver",
-                            "com/android/tools/chunkio/chunkio",
-                            "com/android/tools/analytics-library/testing");
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-result-listener-gradle",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-result-listener-gradle.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.result.TestResultListener",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/result/",
+                "com/android/tools/utp/plugins/result/listener/",
+                "com/android/tools/utp/plugins/result/listener/gradle/");
 
-            EXPECTED =
-                    ImmutableSetMultimap.copyOf(
-                            Multimaps.filterEntries(
-                                    expected.build(),
-                                    entry -> !bazelNotImplementedYet.contains(entry.getKey())));
-        } else {
-            EXPECTED = expected.build();
-        }
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-logcat",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/android-test-plugin-host-logcat.kotlin_module",
+                "META-INF/services/",
+                "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/logcat/");
+
+        // TODO: fix these. (b/64921827)
+        ImmutableSet<String> bazelNotImplementedYet =
+                ImmutableSet.of(
+                        "com/android/tools/testutils",
+                        "com/android/tools/analytics-library/publisher",
+                        "com/android/tools/apkparser/binary-resources",
+                        "com/android/tools/apkparser/apkanalyzer",
+                        "com/android/tools/pixelprobe/pixelprobe",
+                        "com/android/tools/draw9patch",
+                        "com/android/tools/ninepatch",
+                        "com/android/tools/fakeadbserver/fakeadbserver",
+                        "com/android/tools/analytics-library/inspector",
+                        "com/android/tools/chunkio/chunkio",
+                        "com/android/tools/analytics-library/testing");
+
+        EXPECTED =
+                ImmutableSetMultimap.copyOf(
+                        Multimaps.filterEntries(
+                                expected.build(),
+                                entry -> !bazelNotImplementedYet.contains(entry.getKey())));
     }
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
     @Test
     public void checkTools() throws Exception {
-        checkGroup("com/android/tools", GMAVEN_ZIP);
+        checkGroup("com/android/tools");
     }
 
     @Test
     public void checkDataBinding() throws Exception {
-        checkGroup("androidx/databinding/databinding-common", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/databinding-compiler-common", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/databinding-compiler", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/databinding-common");
+        checkGroup("androidx/databinding/databinding-compiler-common");
+        checkGroup("androidx/databinding/databinding-compiler");
         // pre-android X
-        checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
+        checkGroup("com/android/databinding/baseLibrary");
     }
 
-    private void checkGroup(String groupPrefix, String zipLocation) throws Exception {
+    private void checkGroup(String groupPrefix) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
-        Path repo = getRepo(zipLocation);
+        Path repo = getRepo();
         Path androidTools = repo.resolve(groupPrefix);
 
         List<Path> ourJars =
@@ -1548,7 +1774,7 @@ public class GmavenZipTest {
 
         for (Path jar : ourJars) {
             if (jar.toString().endsWith("-sources.jar")) {
-                checkSourcesJar(jar);
+                checkSourcesJar(jar, repo);
             } else {
                 checkJar(jar, repo);
                 jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
@@ -1557,9 +1783,9 @@ public class GmavenZipTest {
 
         String groupPrefixThenForwardSlash = groupPrefix + "/";
         List<String> expectedJars =
-                EXPECTED.keySet()
-                        .stream()
-                        // Allow subdirectories and exact matches, but don't conflate databinding/compilerCommon with databinding/compiler
+                EXPECTED.keySet().stream()
+                        // Allow subdirectories and exact matches, but don't conflate
+                        // databinding/compilerCommon with databinding/compiler
                         .filter(
                                 name ->
                                         name.startsWith(groupPrefixThenForwardSlash)
@@ -1572,14 +1798,11 @@ public class GmavenZipTest {
         expect.that(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
     }
 
-    private void checkSourcesJar(Path jarPath) throws IOException {
-        if (TestUtils.runningFromBazel()) {
-            return;
-        }
-        checkLicense(jarPath);
+    private void checkSourcesJar(Path jarPath, Path repo) throws IOException {
+        checkLicense(jarPath, repo);
     }
 
-    private void checkLicense(Path jarPath) throws IOException {
+    private void checkLicense(Path jarPath, Path repo) throws IOException {
         boolean found = false;
         try (ZipInputStream zipInputStream =
                 new ZipInputStream(new BufferedInputStream(Files.newInputStream(jarPath)))) {
@@ -1590,8 +1813,18 @@ public class GmavenZipTest {
                 }
             }
         }
-        if (!found) {
-            expect.fail("No license file in " + jarPath + " from " + jarPath.getFileSystem());
+        String key = jarRelativePathWithoutVersionWithClassifier(jarPath, repo);
+        boolean knownMissing = MISSING_LICENSE.contains(key);
+        if (found && knownMissing) {
+            expect.fail(
+                    "Licence file unexpectedly present in "
+                            + jarPath
+                            + " from "
+                            + repo
+                            + ".\n"
+                            + "Remove it from MISSING_LICENSE");
+        } else if (!found && !knownMissing) {
+            expect.fail("No license file in " + jarPath + " from " + repo);
         }
     }
 
@@ -1636,24 +1869,6 @@ public class GmavenZipTest {
             return false;
         }
 
-        if (fileName.endsWith(".kotlin_module")) {
-            // TODO: Handle kotlin modules in Bazel. (b/64921827)
-            return false;
-        }
-
-        if (fileName.endsWith(".proto")) {
-            // Gradle packages the proto files in jars.
-            // TODO: Can we remove these from the jars? (b/64921827)
-            return false;
-        }
-
-        //noinspection RedundantIfStatement
-        if (fileName.equals("build-data.properties")) {
-            // Bazel packages this file in the deploy jar for desugar.
-            //TODO: Can we remove these from the jars? (b/64921827)
-            return false;
-        }
-
         return true;
     }
 
@@ -1672,11 +1887,9 @@ public class GmavenZipTest {
     }
 
     private void checkJar(Path jar, Path repo) throws Exception {
-        checkLicense(jar);
+        checkLicense(jar, repo);
 
-        String key =
-                FileUtils.toSystemIndependentPath(
-                        jarRelativePathWithoutVersionWithClassifier(jar, repo));
+        String key = jarRelativePathWithoutVersionWithClassifier(jar, repo);
         Set<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();
@@ -1692,8 +1905,7 @@ public class GmavenZipTest {
                         getCheckableFilesFromEntry(
                                 entry, new NonClosingInputStream(zipInputStream), "");
                 actual.addAll(
-                        filesFromEntry
-                                .stream()
+                        filesFromEntry.stream()
                                 // Packages under the R8 namespace are renamed.
                                 .filter(
                                         path ->
@@ -1729,13 +1941,9 @@ public class GmavenZipTest {
         return files;
     }
 
-    private static Path getRepo(String zip) throws IOException {
-        if (!TestUtils.runningFromBazel()) {
-            String customRepo = System.getenv("CUSTOM_REPO");
-            return Paths.get(
-                    Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
-        }
-        return FileSystems.newFileSystem(TestUtils.resolveWorkspacePath(zip), null).getPath("/");
+    private static Path getRepo() throws IOException {
+        return FileSystems.newFileSystem(TestUtils.resolveWorkspacePath(GMAVEN_ZIP), null)
+                .getPath("/");
     }
 
     private static class NonClosingInputStream extends FilterInputStream {

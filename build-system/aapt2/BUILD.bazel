@@ -82,6 +82,6 @@ filegroup(
     ]) + [
         "build.gradle",
         "NOTICE",
-    ],
+    ] + DARWIN_FILES + LINUX_FILES + WINDOWS_FILES,
     visibility = ["//tools/base/build-system:__pkg__"],
 )

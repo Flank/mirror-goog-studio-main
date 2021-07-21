@@ -60,6 +60,7 @@ maven_library(
     ]),
     coordinates = "com.android.tools:common:" + BASE_VERSION,
     legacy_name = "tools.common",
+    module_name = "common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",
     resources = [
