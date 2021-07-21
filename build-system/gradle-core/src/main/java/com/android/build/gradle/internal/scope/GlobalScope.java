@@ -266,7 +266,11 @@ public class GlobalScope {
         if (bootClasspath == null) {
             ListProperty<RegularFile> classpath =
                     project.getObjects().listProperty(RegularFile.class);
-            classpath.disallowUnsafeRead();
+            // This cannot be protected against unsafe reads until BaseExtension::bootClasspath
+            // has been removed. Most users of that method will call it at configuration time which
+            // resolves this collection. Uncomment next line once BaseExtension::bootClasspath is
+            // removed.
+            // classpath.disallowUnsafeRead();
             classpath.addAll(getFilteredBootClasspath());
             if (extension.getCompileOptions().getTargetCompatibility().isJava8Compatible()) {
                 classpath.add(
