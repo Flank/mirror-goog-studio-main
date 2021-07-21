@@ -38,7 +38,13 @@ test {
 
 sourceSets {
     main.resources.srcDir 'src/main/java'
+    main.resources.exclude '**/*.java'
     test.resources.srcDir 'src/test/java'
+    test.resources.exclude '**/*.java'
+}
+
+jar {
+    includeEmptyDirs = false
 }
 
 task sdkManagerStartScripts(type: CreateStartScripts) {
