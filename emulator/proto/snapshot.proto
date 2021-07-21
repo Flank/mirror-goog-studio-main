@@ -18,7 +18,7 @@ syntax = "proto2";
 //    Emulator (branch aosp/emu-master-dev):
 //        external/qemu/android/android-emu/android/snapshot/proto/snapshot.proto
 //
-//    Android Studio (branch goog/studio-main):
+//    Android Studio (branch goog/studio-master-dev):
 //        tools/adt/idea/android/src/com/android/emulator/snapshot.proto
 //
 // If you modify one, please modify the other.
