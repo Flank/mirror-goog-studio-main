@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Scanner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -148,6 +149,7 @@ public class CompositeBuildTest {
                 });
     }
 
+    @Ignore("b/195109976")
     @Test
     public void checkDifferentPluginVersionsCauseFailure()
             throws IOException, InterruptedException {

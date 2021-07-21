@@ -93,7 +93,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.1"
+GRADLE_VERSION = "7.2-rc-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -188,7 +188,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:org.ow2.asm.asm-analysis.8.0.1",
     "//prebuilts/tools/common/m2:com.google.errorprone.error_prone_annotations.2.3.2",
     "//prebuilts/tools/common/m2:org.checkerframework.checker-qual.2.5.2",
-    "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.17.0",
+    "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.18.0",
     # Transitive Maven dependencies of above artifacts that cannot be identified
     # automatically because they are dependencies of artifacts that use the new
     # Maven rules:

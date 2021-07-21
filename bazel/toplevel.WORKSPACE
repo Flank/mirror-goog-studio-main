@@ -154,7 +154,7 @@ local_maven_repository(
     "org.apache.httpcomponents:httpmime:4.5.6",
     "org.bouncycastle:bcpkix-jdk15on:1.56",
     "org.bouncycastle:bcprov-jdk15on:1.56",
-    "org.codehaus.groovy:groovy-all:pom:3.0.7",
+    "org.codehaus.groovy:groovy-all:pom:3.0.8",
     "org.easymock:easymock:3.3",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
     "org.jetbrains.dokka:dokka-core:1.4.32",

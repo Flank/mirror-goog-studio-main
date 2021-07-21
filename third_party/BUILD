@@ -993,7 +993,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "junit_junit",
-    export_artifact = "//prebuilts/tools/common/m2:junit.junit.4.13.1",
+    export_artifact = "//prebuilts/tools/common/m2:junit.junit.4.13.2",
     visibility = ["//visibility:public"],
     exports = [":org.hamcrest_hamcrest-core"],
 )
@@ -1304,7 +1304,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy.3.0.8",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1312,7 +1312,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-all",
-    pom = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-all.3.0.7_pom",
+    pom = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-all.3.0.8_pom",
     visibility = ["//visibility:public"],
     exports = [
         ":org.codehaus.groovy_groovy",
@@ -1343,7 +1343,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-ant",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-ant.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-ant.3.0.8",
     visibility = ["//visibility:public"],
     exports = [
         ":org.apache.ant_ant",
@@ -1360,7 +1360,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-astbuilder",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-astbuilder.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-astbuilder.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1368,7 +1368,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-cli-picocli",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-cli-picocli.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-cli-picocli.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [":info.picocli_picocli"],
@@ -1377,7 +1377,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-console",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-console.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-console.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [
@@ -1389,7 +1389,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-datetime",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-datetime.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-datetime.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1397,7 +1397,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-docgenerator",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-docgenerator.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-docgenerator.3.0.8",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -1410,7 +1410,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-groovydoc",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-groovydoc.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-groovydoc.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [
@@ -1422,7 +1422,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-groovysh",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-groovysh.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-groovysh.3.0.8",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -1437,7 +1437,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-jmx",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-jmx.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-jmx.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1445,7 +1445,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-json",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-json.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-json.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1453,7 +1453,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-jsr223",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-jsr223.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-jsr223.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1461,7 +1461,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-macro",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-macro.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-macro.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1469,7 +1469,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-nio",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-nio.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-nio.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1477,7 +1477,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-servlet",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-servlet.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-servlet.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [
@@ -1489,7 +1489,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-sql",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-sql.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-sql.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1497,7 +1497,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-swing",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-swing.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-swing.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1505,7 +1505,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-templates",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-templates.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-templates.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [":org.codehaus.groovy_groovy-xml"],
@@ -1514,7 +1514,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-test",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-test.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-test.3.0.8",
     visibility = ["//visibility:public"],
     exports = [
         ":junit_junit",
@@ -1525,7 +1525,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-test-junit5",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-test-junit5.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-test-junit5.3.0.8",
     visibility = ["//visibility:public"],
     exports = [
         ":org.codehaus.groovy_groovy",
@@ -1540,7 +1540,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-testng",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-testng.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-testng.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
     runtime_deps = [":org.testng_testng"],
@@ -1549,7 +1549,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-xml",
-    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-xml.3.0.7",
+    export_artifact = "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-xml.3.0.8",
     visibility = ["//visibility:public"],
     exports = [":org.codehaus.groovy_groovy"],
 )
@@ -1746,7 +1746,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2:org.gradle.gradle-tooling-api.7.1",
+    export_artifact = "//prebuilts/tools/common/m2:org.gradle.gradle-tooling-api.7.2-rc-1",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )
@@ -2384,13 +2384,20 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.testng_testng",
-    export_artifact = "//prebuilts/tools/common/m2:org.testng.testng.7.3.0",
+    export_artifact = "//prebuilts/tools/common/m2:org.testng.testng.7.4.0",
     visibility = ["//visibility:public"],
     exports = [
         ":com.beust_jcommander",
-        ":junit_junit",
-        ":org.apache.ant_ant",
+        ":org.webjars_jquery",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.webjars_jquery",
+    export_artifact = "//prebuilts/tools/common/m2:org.webjars.jquery.3.5.1",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
