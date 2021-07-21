@@ -16,19 +16,21 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.base.Joiner
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -55,7 +57,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val mergedAssets: DirectoryProperty
+    abstract val mergedAssetsDirectory: DirectoryProperty
 
     @get:OutputFile
     abstract val apkForUnitTest: RegularFileProperty
@@ -70,8 +72,11 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         val uri = URI.create("jar:" + apkForUnitTest.toURI())
         FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { apkFs ->
             val apkAssetsPath = apkFs.getPath("/assets")
-            val mergedAsset= mergedAssets.get()
-            val mergedAssetsPath = mergedAsset.asFile.toPath()
+            val mergedAssets = mergedAssetsDirectory.get().asFile
+            if (!mergedAssets.exists()) {
+                return
+            }
+            val mergedAssetsPath = mergedAssets.toPath()
             Files.walkFileTree(mergedAssetsPath, object : SimpleFileVisitor<Path>() {
                 @Throws(IOException::class)
                 override fun visitFile(
@@ -148,7 +153,8 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             super.configure(task)
             val artifacts = creationConfig.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
-            artifacts.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
+            task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(
+                InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST))
         }
     }
 }

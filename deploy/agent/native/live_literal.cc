@@ -112,7 +112,6 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
       class_finder_.GetApplicationClassLoader(), helper);
 
   if (klass == nullptr) {
-    jni_->ExceptionClear();
     response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
     response_.set_extra("Cannot find Live Literal helper class: + helper");
     return nullptr;
@@ -146,7 +145,6 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
       "androidx/compose/runtime/internal/LiveLiteralInfo");
 
   if (info_class == nullptr) {
-    jni_->ExceptionClear();
     response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
     response_.set_extra("Cannot find Live LiteralInfo class");
     return nullptr;
@@ -219,7 +217,6 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       class_finder_.GetApplicationClassLoader(),
       "androidx/compose/runtime/internal/LiveLiteralKt");
   if (klass == nullptr) {
-    jni_->ExceptionClear();
     response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
     response_.set_extra("LiveLiteralKt Not found!");
     return response_;
@@ -248,7 +245,6 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jclass helper = class_finder_.FindInClassLoader(
         class_finder_.GetApplicationClassLoader(), update.helper_class());
     if (helper == nullptr) {
-      jni_->ExceptionClear();
       response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
       std::stringstream stream;
       stream << "Helper " << helper << " not found!";
@@ -441,7 +437,6 @@ std::string LiveLiteral::InstrumentHelper(const std::string& helper) {
       class_finder_.GetApplicationClassLoader(), helper);
 
   if (klass == nullptr) {
-    jni_->ExceptionClear();
     return "Live Literal Helper " + helper + " not found";
   }
 

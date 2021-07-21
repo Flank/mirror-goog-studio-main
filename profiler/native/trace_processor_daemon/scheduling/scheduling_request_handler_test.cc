@@ -65,8 +65,8 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByProcessId) {
 
   std::unordered_map<int, long> states_count = {
       {SchedulingEvent::UNKNOWN, 0},
-      {SchedulingEvent::RUNNING, 0},
-      {SchedulingEvent::RUNNING_FOREGROUND, 0},
+      {SchedulingEvent::RUNNABLE, 0},
+      {SchedulingEvent::RUNNABLE_PREEMPTED, 0},
       {SchedulingEvent::SLEEPING, 0},
       {SchedulingEvent::SLEEPING_UNINTERRUPTIBLE, 0},
       {SchedulingEvent::WAKE_KILL, 0},
@@ -82,12 +82,12 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByProcessId) {
     EXPECT_GT(event.duration_nanoseconds(), 0);
     EXPECT_GE(event.priority(), 0);
 
-    states_count[event.state()]++;
+    states_count[event.end_state()]++;
   }
 
   EXPECT_EQ(states_count[SchedulingEvent::UNKNOWN], 0);
-  EXPECT_EQ(states_count[SchedulingEvent::RUNNING], 1556);
-  EXPECT_EQ(states_count[SchedulingEvent::RUNNING_FOREGROUND], 5020);
+  EXPECT_EQ(states_count[SchedulingEvent::RUNNABLE], 1556);
+  EXPECT_EQ(states_count[SchedulingEvent::RUNNABLE_PREEMPTED], 5020);
   EXPECT_EQ(states_count[SchedulingEvent::SLEEPING], 89828);
   EXPECT_EQ(states_count[SchedulingEvent::SLEEPING_UNINTERRUPTIBLE], 5822);
   EXPECT_EQ(states_count[SchedulingEvent::WAKE_KILL], 0);
@@ -110,8 +110,8 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
 
   std::unordered_map<int, long> states_count = {
       {SchedulingEvent::UNKNOWN, 0},
-      {SchedulingEvent::RUNNING, 0},
-      {SchedulingEvent::RUNNING_FOREGROUND, 0},
+      {SchedulingEvent::RUNNABLE, 0},
+      {SchedulingEvent::RUNNABLE_PREEMPTED, 0},
       {SchedulingEvent::SLEEPING, 0},
       {SchedulingEvent::SLEEPING_UNINTERRUPTIBLE, 0},
       {SchedulingEvent::WAKE_KILL, 0},
@@ -128,12 +128,12 @@ TEST(SchedulingRequestHandlerTest, PopulateEventsByThreadId) {
     EXPECT_GT(event.duration_nanoseconds(), 0);
     EXPECT_GE(event.priority(), 0);
 
-    states_count[event.state()]++;
+    states_count[event.end_state()]++;
   }
 
   EXPECT_EQ(states_count[SchedulingEvent::UNKNOWN], 0);
-  EXPECT_EQ(states_count[SchedulingEvent::RUNNING], 599);
-  EXPECT_EQ(states_count[SchedulingEvent::RUNNING_FOREGROUND], 3665);
+  EXPECT_EQ(states_count[SchedulingEvent::RUNNABLE], 599);
+  EXPECT_EQ(states_count[SchedulingEvent::RUNNABLE_PREEMPTED], 3665);
   EXPECT_EQ(states_count[SchedulingEvent::SLEEPING], 3510);
   EXPECT_EQ(states_count[SchedulingEvent::SLEEPING_UNINTERRUPTIBLE], 3231);
   EXPECT_EQ(states_count[SchedulingEvent::WAKE_KILL], 0);

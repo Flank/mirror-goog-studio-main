@@ -23,12 +23,11 @@ import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -161,7 +160,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS)
+            mergedAssets = testedVariant.artifacts.get(MERGED_ASSETS_FOR_UNIT_TEST)
             mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.namespace

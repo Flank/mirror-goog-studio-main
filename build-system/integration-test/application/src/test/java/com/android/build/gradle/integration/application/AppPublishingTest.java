@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -94,9 +93,11 @@ public class AppPublishingTest {
         File apkFile = FileUtils.join(groupIdFolder, "app", "1.0", "app-1.0.zip");
         assertThat(apkFile).isFile();
 
-        try (Zip it = new Zip(apkFile)) {
-            assertThat(it).contains("mapping.txt");
-        }
+        assertThat(
+                apkFile,
+                it -> {
+                    it.contains("mapping.txt");
+                });
     }
 
     @Test
@@ -115,9 +116,11 @@ public class AppPublishingTest {
 
         File aabFile = FileUtils.join(groupIdFolder, "app", "1.0", "app-1.0.zip");
         assertThat(aabFile).isFile();
-        try (Zip it = new Zip(aabFile)) {
-            assertThat(it).doesNotContain("mapping.txt");
-        }
+        assertThat(
+                aabFile,
+                it -> {
+                    it.doesNotContain("mapping.txt");
+                });
     }
 
     @Test

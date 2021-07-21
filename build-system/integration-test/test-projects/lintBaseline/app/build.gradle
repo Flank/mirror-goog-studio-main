@@ -33,12 +33,13 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
-    lintOptions {
-        xmlReport true
-        xmlOutput file("lint-report.xml")
-        error 'SyntheticAccessor'
-        warningsAsErrors true
-        baseline file('lint-baseline.xml')
+
+    lint {
+        xmlReport = true
+        xmlOutput = file("lint-report.xml")
+        error += 'SyntheticAccessor'
+        warningsAsErrors = true
+        baseline = file('lint-baseline.xml')
     }
 }
 

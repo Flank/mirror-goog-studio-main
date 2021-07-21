@@ -22,13 +22,23 @@ import com.android.utils.FileUtils
 import java.io.File
 
 class DependenciesBuilderImpl() : DependenciesBuilder {
-    private val implementation = mutableListOf<Any>()
+    private val dependencies = mutableListOf<Pair<String, Any>>()
 
     val externalLibraries: List<MavenRepoGenerator.Library>
-        get() = implementation.filterIsInstance(MavenRepoGenerator.Library::class.java)
+        get() = dependencies
+            .map { it.second }
+            .filterIsInstance(MavenRepoGenerator.Library::class.java)
 
     override fun implementation(dependency: Any) {
-        implementation.add(dependency)
+        dependencies.add("implementation" to dependency)
+    }
+
+    override fun lintPublish(dependency: Any) {
+        dependencies.add("lintPublish" to dependency)
+    }
+
+    override fun lintChecks(dependency: Any) {
+        dependencies.add("lintChecks" to dependency)
     }
 
     override fun localJar(action: LocalJarBuilder.() -> Unit): LocalJarBuilder =
@@ -39,14 +49,14 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
 
     fun writeBuildFile(sb: StringBuilder, projectDir: File) {
         sb.append("\ndependencies {\n")
-        for (dependency in implementation) {
+        for ((scope, dependency) in dependencies) {
             when (dependency) {
-                is String -> sb.append("implementation '$dependency'\n")
-                is ProjectDependencyBuilder -> sb.append("implementation project('${dependency.path}')\n")
-                is MavenRepoGenerator.Library -> sb.append("implementation '${dependency.mavenCoordinate}'\n")
+                is String -> sb.append("$scope '$dependency'\n")
+                is ProjectDependencyBuilder -> sb.append("$scope project('${dependency.path}')\n")
+                is MavenRepoGenerator.Library -> sb.append("$scope '${dependency.mavenCoordinate}'\n")
                 is LocalJarBuilderImpl -> {
                     val path = createLocalJar(dependency, projectDir)
-                    sb.append("implementation files('$path')\n")
+                    sb.append("$scope files('$path')\n")
                 }
                 else -> throw RuntimeException("unsupported dependency type: ${dependency.javaClass}")
             }

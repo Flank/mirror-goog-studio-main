@@ -43,7 +43,7 @@ class LockableSet<T> @Inject constructor(
     private inline fun <R>check(action: () -> R): R {
         if (locked) {
             throw AgpDslLockedException(
-                "It is too late to modify $name\n" +
+                "It is too late to modify ${name.removePrefix("_")}\n" +
                     "It has already been read to configure this project.\n" +
                     "Consider either moving this call to be during evaluation,\n" +
                     "or using the variant API."

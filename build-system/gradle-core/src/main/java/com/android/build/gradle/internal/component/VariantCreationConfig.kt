@@ -47,8 +47,6 @@ interface VariantCreationConfig: ComponentCreationConfig {
 
     val maxSdkVersion: Int?
 
-    val targetSdkVersion: AndroidVersion
-
     val isMultiDexEnabled: Boolean
 
     val isCoreLibraryDesugaringEnabled: Boolean

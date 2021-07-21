@@ -21,6 +21,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.VariantManager
@@ -206,7 +207,7 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
      *
      * @return the minSdkVersion
      */
-    val minSdkVersion: AndroidVersion
+    val minSdkVersion: MutableAndroidVersion
 
     val maxSdkVersion: Int?
 
@@ -219,7 +220,7 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
      *
      * @return the targetSdkVersion
      */
-    val targetSdkVersion: ApiVersion
+    val targetSdkVersion: MutableAndroidVersion?
 
     val renderscriptTarget: Int
 

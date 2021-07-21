@@ -81,9 +81,10 @@ class MinimalSubProject private constructor(
 
     companion object {
 
-        fun app(packageName: String): MinimalSubProject {
+        @JvmOverloads
+        fun app(packageName: String = "com.example.app", projectPath: String = "app"): MinimalSubProject {
             return MinimalSubProject(
-                path = null,
+                path = projectPath,
                 plugin = "com.android.application",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = true,
@@ -92,9 +93,10 @@ class MinimalSubProject private constructor(
             )
         }
 
-        fun lib(packageName: String): MinimalSubProject {
+        @JvmOverloads
+        fun lib(packageName: String = "com.example.lib", projectPath: String = "lib"): MinimalSubProject {
             return MinimalSubProject(
-                path = null,
+                path = projectPath,
                 plugin = "com.android.library",
                 addCompileAndSdkVersionToBuildFile = true,
                 addVersionCodeToBuildFile = false,

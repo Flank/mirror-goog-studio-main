@@ -263,6 +263,27 @@ class TypographyDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testRTL() {
+        lint().files(
+            xml(
+                "res/values-he/strings.xml",
+                """
+
+                <resources>
+                    <string name="test">מ– 1-2-3</string>
+                </resources>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/values-he/strings.xml:3: Warning: Replace "-" with an "en dash" character (–, &#8211;) ? [TypographyDashes]
+                <string name="test">מ– 1-2-3</string>
+                                    ~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs("")
+    }
+
     fun testDashesInUntranslatable() {
         // Regression test for
         //    https://code.google.com/p/android/issues/detail?id=214088

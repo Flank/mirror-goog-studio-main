@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.FileStatus
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -269,9 +268,9 @@ class MergeJavaResWorkActionTest {
         assertThat(incrementalStateFile).isFile()
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
-        Zip(outputFile).use {
-            assertThat(it).contains("javaRes1")
-            assertThat(it).doesNotContain("javaRes2")
+        assertThat(outputFile) {
+            it.contains("javaRes1")
+            it.doesNotContain("javaRes2")
         }
 
         // Now add a resource to the jar file and merge incrementally
@@ -324,9 +323,9 @@ class MergeJavaResWorkActionTest {
 
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
-        Zip(outputFile).use {
-            assertThat(it).contains("javaRes1")
-            assertThat(it).contains("javaRes2")
+        assertThat(outputFile) {
+            it.contains("javaRes1")
+            it.contains("javaRes2")
         }
     }
 

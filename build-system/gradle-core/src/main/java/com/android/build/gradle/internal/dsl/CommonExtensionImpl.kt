@@ -21,12 +21,10 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.Installation
-import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
@@ -209,8 +207,10 @@ abstract class CommonExtensionImpl<
         action.invoke(jacoco)
     }
 
-    override val lintOptions: LintOptions
-        get() = lint as LintOptions
+    final override val lintOptions: LintOptions by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        dslServices.newInstance(LintOptions::class.java, dslServices, lint)
+    }
+
 
     override fun lintOptions(action: com.android.build.api.dsl.LintOptions.() -> Unit) {
         action.invoke(lintOptions)

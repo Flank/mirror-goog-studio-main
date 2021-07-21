@@ -27,6 +27,7 @@ import java.util.Objects
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import java.util.concurrent.ConcurrentHashMap
 
@@ -60,35 +61,39 @@ object BootClasspathBuilder {
         libraryRequests: List<LibraryRequest>
     ): Provider<List<RegularFile>> {
 
-        return targetBootClasspath.map { bootClasspath ->
+        return targetBootClasspath.flatMap { bootClasspath ->
             val target = targetAndroidVersion.get()
             val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
-            classpathCache.getOrPut(key) {
-                val files = ImmutableList.builder<RegularFile>()
-                files.addAll(bootClasspath.map {
-                    project.objects.fileProperty().fileValue(it).get()
-                })
+            project.provider {
+                classpathCache.getOrPut(key) {
+                    val files = project.objects.listProperty(RegularFile::class.java)
+                    files.addAll(bootClasspath.map {
+                        project.objects.fileProperty().fileValue(it).get()
+                    })
 
-                // add additional and requested optional libraries if any
-                files.addAll(
-                    computeAdditionalAndRequestedOptionalLibraries(
-                        project,
-                        additionalLibraries.get(),
-                        optionalLibraries.get(),
-                        addAllOptionalLibraries,
-                        libraryRequests,
-                        issueReporter
+                    // add additional and requested optional libraries if any
+                    files.addAll(
+                        computeAdditionalAndRequestedOptionalLibraries(
+                            project,
+                            additionalLibraries.get(),
+                            optionalLibraries.get(),
+                            addAllOptionalLibraries,
+                            libraryRequests,
+                            issueReporter
+                        )
                     )
-                )
 
-                // add annotations.jar if needed.
-                if (target.apiLevel <= 15) {
+                    // add annotations.jar if needed.
+                    if (target.apiLevel <= 15) {
+                        files.add(annotationsJar.flatMap { it: File ->
+                            project.layout.buildDirectory.file(it.absolutePath)
+                        })
+                    }
 
-                    files.add(project.layout.file(annotationsJar).get())
+
+                    files.get()
                 }
-
-                files.build()
             }
         }
     }

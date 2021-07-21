@@ -41,18 +41,18 @@ abstract class AndroidComponentsExtensionImpl<
     com.android.build.api.extension.AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT> {
 
     override fun finalizeDsl(callback: (DslExtensionT) -> Unit) {
-        variantApiOperations.dslFinalizationOperations.add {
+        variantApiOperations.add {
             callback.invoke(it)
         }
     }
 
     override fun finalizeDsl(callback: Action<DslExtensionT>) {
-        variantApiOperations.dslFinalizationOperations.add(callback)
+        variantApiOperations.add(callback)
     }
 
     @Suppress("OverridingDeprecatedMember")
     override fun finalizeDSl(callback: Action<DslExtensionT>) {
-        variantApiOperations.dslFinalizationOperations.add(callback)
+        variantApiOperations.add(callback)
     }
 
     override val pluginVersion: AndroidPluginVersion

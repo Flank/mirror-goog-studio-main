@@ -16,16 +16,19 @@
 
 package com.android.build.gradle.internal.attribution
 
+import com.android.SdkConstants
 import com.android.Version
 import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.build.gradle.internal.utils.getBuildscriptDependencies
+import com.android.builder.utils.SynchronizedFile
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.tools.analytics.HostData
+import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -36,7 +39,9 @@ import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
 import java.lang.management.ManagementFactory
 
 abstract class BuildAttributionService : BuildService<BuildAttributionService.Parameters>,
@@ -109,6 +114,31 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
             }
         }
 
+        private fun saveAttributionData(
+            outputDir: File,
+            attributionData: AndroidGradlePluginAttributionData
+        ) {
+            val file = AndroidGradlePluginAttributionData.getAttributionFile(outputDir)
+            file.parentFile.mkdirs()
+            // In case of having different classloaders for different projects when the classpaths
+            // are different (b/154388196), multiple instances of BuildAttributionService will try
+            // to save the attribution data to the same output file. The data produced by the
+            // different services should be identical.
+            // Here we try to acquire an exclusive lock on the output file and write the attribution
+            // data to it. If another BuildAttributionService did already write to the file and
+            // released the lock, we will rewrite the data again which should be identical to the
+            // previously written.
+            SynchronizedFile.getInstanceWithMultiProcessLocking(file).write {
+                BufferedWriter(FileWriter(file)).use {
+                    it.write(
+                        AndroidGradlePluginAttributionData.AttributionDataAdapter.toJson(
+                            attributionData
+                        )
+                    )
+                }
+            }
+        }
+
         private fun getTaskClassName(className: String): String {
             if (className.endsWith("_Decorated")) {
                 return className.substring(0, className.length - "_Decorated".length)
@@ -132,7 +162,7 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                     )
                 }.filter { it.second > 0L }.toMap()
 
-        AndroidGradlePluginAttributionData.save(
+        saveAttributionData(
             File(parameters.attributionFileLocation.get()),
             AndroidGradlePluginAttributionData(
                 taskNameToClassNameMap = parameters.taskNameToClassNameMap.get(),

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.testutils.apk.Zip;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
-import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
@@ -29,11 +28,6 @@ import java.util.function.Consumer;
 /** Truth support for zip files. */
 public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
 
-    @Deprecated
-    private static Subject.Factory<ZipFileSubject, Zip> zips() {
-        return ZipFileSubject::new;
-    }
-
     public ZipFileSubject(@NonNull FailureMetadata failureMetadata, @NonNull Zip subject) {
         super(failureMetadata, subject);
     }
@@ -41,21 +35,15 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
     public static void assertThat(@NonNull File file, @NonNull Consumer<ZipFileSubject> action)
             throws Exception {
         try (Zip it = new Zip(file)) {
-            action.accept(Truth.assertAbout(zips()).that(it));
+            action.accept(Truth.assertAbout(ZipFileSubject::new).that(it));
         }
     }
 
     public static void assertThat(@NonNull Path file, @NonNull Consumer<ZipFileSubject> action)
             throws Exception {
         try (Zip it = new Zip(file)) {
-            action.accept(Truth.assertAbout(zips()).that(it));
+            action.accept(Truth.assertAbout(ZipFileSubject::new).that(it));
         }
-    }
-
-    /** Use {@link ZipFileSubject#assertThat(File, Consumer)} */
-    @Deprecated
-    public static ZipFileSubject assertThat(@NonNull Zip zip) {
-        return Truth.assertAbout(zips()).that(zip);
     }
 
     @Override

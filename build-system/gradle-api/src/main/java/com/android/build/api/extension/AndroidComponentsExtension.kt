@@ -21,6 +21,7 @@ import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.DslExtension
+import com.android.build.api.variant.DslLifecycle
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtension
@@ -37,7 +38,9 @@ import org.gradle.api.Action
 interface AndroidComponentsExtension<
         DslExtensionT: CommonExtension<*, *, *, *>,
         VariantBuilderT: VariantBuilder,
-        VariantT: Variant> {
+        VariantT: Variant>
+    : DslLifecycle<DslExtensionT> {
+
     /**
      * API to customize the DSL Objects programmatically before the [beforeVariants] is called.
      *
@@ -51,7 +54,7 @@ interface AndroidComponentsExtension<
      * The list of variants will be finalized after all finalizeDsl Callbacks and cannot be altered
      * in the other APIs like [beforeVariants] or [onVariants].
      */
-    fun finalizeDsl(callback: (DslExtensionT) -> Unit)
+    override fun finalizeDsl(callback: (DslExtensionT) -> Unit)
 
     /**
      * [Action] based version of [finalizeDsl] above.

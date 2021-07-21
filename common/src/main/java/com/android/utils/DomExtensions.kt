@@ -18,9 +18,9 @@
 
 package com.android.utils
 
+import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import org.w3c.dom.Text
 
 // Extension methods to make operating on DOM more convenient
 
@@ -96,4 +96,34 @@ fun Element.subtagCount(): Int {
 /** Returns the text content of this element */
 fun Element.text(): String {
     return textContent
+}
+
+/**
+ * Visits all the attributes of the given element transitively. The
+ * [visitor] should return false, or true to abort visiting when it has
+ * found what it was looking for. Returns true if any visited attribute
+ * returned true.
+ */
+fun Element.visitAttributes(visitor: (Attr) -> Boolean): Boolean {
+    val attributes = attributes
+    for (i in 0 until attributes.length) {
+        val attr = attributes.item(i)
+        val done = visitor(attr as Attr)
+        if (done) {
+            return true
+        }
+    }
+
+    var child = firstChild
+    while (child != null) {
+        if (child.nodeType == Node.ELEMENT_NODE) {
+            val done = (child as Element).visitAttributes(visitor)
+            if (done) {
+                return true
+            }
+        }
+        child = child.nextSibling
+    }
+
+    return false
 }

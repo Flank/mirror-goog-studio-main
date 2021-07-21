@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.bundle
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import org.junit.Rule
@@ -145,17 +144,17 @@ class DynamicFeatureAndroidTestBuildTest {
         // not contain any libs that the app or feature depend on.
         val androidTestFeatureRJar = project.getSubproject("feature").getIntermediateFile(
             "compile_and_runtime_not_namespaced_r_class_jar", "debugAndroidTest", "R.jar")
-        Zip(androidTestFeatureRJar).use {
-            ZipFileSubject.assertThat(it).contains("com/example/feature/test/R\$raw.class")
-            ZipFileSubject.assertThat(it).contains("com/example/testFeatureLib/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/shared_lib/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/appLib/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/feature_lib/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/baseModule/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/feature/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/middleFeature/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/middleFeatureLib/R\$raw.class")
-            ZipFileSubject.assertThat(it).doesNotContain("com/example/sharedMiddleFeatureLib/R\$raw.class")
+        ZipFileSubject.assertThat(androidTestFeatureRJar) {
+            it.contains("com/example/feature/test/R\$raw.class")
+            it.contains("com/example/testFeatureLib/R\$raw.class")
+            it.doesNotContain("com/example/shared_lib/R\$raw.class")
+            it.doesNotContain("com/example/appLib/R\$raw.class")
+            it.doesNotContain("com/example/feature_lib/R\$raw.class")
+            it.doesNotContain("com/example/baseModule/R\$raw.class")
+            it.doesNotContain("com/example/feature/R\$raw.class")
+            it.doesNotContain("com/example/middleFeature/R\$raw.class")
+            it.doesNotContain("com/example/middleFeatureLib/R\$raw.class")
+            it.doesNotContain("com/example/sharedMiddleFeatureLib/R\$raw.class")
         }
     }
 }

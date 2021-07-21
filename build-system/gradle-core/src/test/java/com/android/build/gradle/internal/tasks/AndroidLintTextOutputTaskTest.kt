@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask
+import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_ERRORS
 import com.google.common.truth.Truth.assertThat
 import junit.framework.Assert.fail
@@ -207,6 +208,26 @@ class AndroidLintTextOutputTaskTest {
         task.android.set(true)
         task.abortOnError.set(false)
         task.taskAction()
+        assertThat((task as TaskForTest).testLogger.lifeCycles).contains("Foo")
+        assertThat((task as TaskForTest).testLogger.errors).isEmpty()
+    }
+
+    @Test
+    fun testNewBaselineFileCreated() {
+        task.textReportInputFile.set(temporaryFolder.newFile().also { it.writeText("Foo") })
+        task.returnValueInputFile.set(
+            temporaryFolder.newFile().also { it.writeText("$ERRNO_CREATED_BASELINE") }
+        )
+        task.outputStream.set(AndroidLintTextOutputTask.OutputStream.STDOUT)
+        task.fatalOnly.set(false)
+        task.android.set(true)
+        task.abortOnError.set(false)
+        try {
+            task.taskAction()
+            fail("expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains("Aborting build since new baseline file was created")
+        }
         assertThat((task as TaskForTest).testLogger.lifeCycles).contains("Foo")
         assertThat((task as TaskForTest).testLogger.errors).isEmpty()
     }

@@ -38,6 +38,10 @@ import org.w3c.dom.Node
 import org.w3c.dom.Node.ELEMENT_NODE
 import org.w3c.dom.Node.TEXT_NODE
 import java.util.regex.Pattern
+import kotlin.text.CharDirectionality.RIGHT_TO_LEFT
+import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_ARABIC
+import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_EMBEDDING
+import kotlin.text.CharDirectionality.RIGHT_TO_LEFT_OVERRIDE
 
 /** Checks for various typographical issues in string definitions. */
 class TypographyDetector : ResourceXmlDetector() {
@@ -122,19 +126,19 @@ class TypographyDetector : ResourceXmlDetector() {
                     if (!isNegativeNumber && !isAnalyticsTrackingId(element)) {
                         context.report(
                             DASHES, element, context.getLocation(textNode), EN_DASH_MESSAGE,
-                            fix().replace().text("-").with("–").build()
+                            if (isRtl(text)) null else fix().replace().text("-").with("–").build()
                         )
                     }
                 }
 
                 // m dash
-                val emdash = text.indexOf("--")
+                val emDash = text.indexOf("--")
                 // Don't suggest replacing -- or "--" with an m dash since these are sometimes
                 // used as digit marker strings
-                if (emdash > 1 && !text.startsWith("-", emdash + 2)) {
+                if (emDash > 1 && !text.startsWith("-", emDash + 2)) {
                     context.report(
                         DASHES, element, context.getLocation(textNode), EM_DASH_MESSAGE,
-                        fix().replace().text("--").with("—").build()
+                        if (isRtl(text)) null else fix().replace().text("--").with("—").build()
                     )
                 }
             }
@@ -409,6 +413,12 @@ class TypographyDetector : ResourceXmlDetector() {
         private fun isAnalyticsTrackingId(element: Element): Boolean {
             val name = element.getAttribute(ATTR_NAME)
             return "ga_trackingId" == name
+        }
+
+        private fun isRtl(string: String) = string.any { char ->
+            val directionality = char.directionality
+            directionality == RIGHT_TO_LEFT || directionality == RIGHT_TO_LEFT_ARABIC ||
+                    directionality == RIGHT_TO_LEFT_EMBEDDING || directionality == RIGHT_TO_LEFT_OVERRIDE
         }
     }
 }

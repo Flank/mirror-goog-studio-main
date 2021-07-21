@@ -331,7 +331,7 @@
             - minSdkVersion:
                - apiLevel = 16
                - codename = (null)
-            - targetSdkVersion:
+            - targetSdkVersionOverride:
                - apiLevel = 16
                - codename = (null)
             - maxSdkVersion                 = (null)
@@ -368,7 +368,7 @@
             - minSdkVersion:
                - apiLevel = 16
                - codename = (null)
-            - targetSdkVersion:
+            - targetSdkVersionOverride:
                - apiLevel = 16
                - codename = (null)
             - maxSdkVersion                 = (null)
@@ -429,7 +429,7 @@
             - minSdkVersion:
                - apiLevel = 16
                - codename = (null)
-            - targetSdkVersion:
+            - targetSdkVersionOverride:
                - apiLevel = 16
                - codename = (null)
             - maxSdkVersion                 = (null)

@@ -36,6 +36,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -83,7 +84,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTR
 import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_JARS
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -92,9 +92,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.scope.getRegularFiles
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AarMetadataTask
@@ -105,6 +105,7 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
+import com.android.build.gradle.internal.tasks.CheckJetifierTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
@@ -130,6 +131,7 @@ import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
+import com.android.build.gradle.internal.tasks.MergeAssetsForUnitTest
 import com.android.build.gradle.internal.tasks.MergeClassesTask
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
@@ -1444,6 +1446,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // process java resources
         createProcessJavaResTask(unitTestCreationConfig)
         if (includeAndroidResources) {
+            // merging task for assets in unit tests.
+            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig))
+
             if (testedVariant.variantType.isAar) {
                 // Add a task to process the manifest
                 createProcessTestManifestTask(unitTestCreationConfig)
@@ -1468,7 +1473,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .copy(PROCESSED_RES, testedVariant.artifacts)
                 unitTestCreationConfig
                         .artifacts
-                        .copy(MERGED_ASSETS, testedVariant.artifacts)
+                        .copy(MultipleArtifact.ASSETS, testedVariant.artifacts)
                 taskFactory.register(PackageForUnitTest.CreationAction(unitTestCreationConfig))
             } else {
                 throw IllegalStateException(
@@ -1478,8 +1483,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 + project.path
                                 + " must be a library or an application to have unit tests.")
             }
+            taskFactory.register(MergeAssetsForUnitTest.CreationAction(unitTestCreationConfig.testedConfig))
             val generateTestConfig = taskFactory.register(
-                    GenerateTestConfig.CreationAction(unitTestCreationConfig))
+                    GenerateTestConfig.
+                    CreationAction(unitTestCreationConfig))
             val compileTask = taskContainer.compileTask
             compileTask.dependsOn(generateTestConfig)
             // The GenerateTestConfig task has 2 types of inputs: direct inputs and indirect inputs.
@@ -2022,8 +2029,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(creationConfig)
         maybeCreateJavaCodeShrinkerTask(creationConfig)
+        maybeCreateResourcesShrinkerTasks(creationConfig)
         if (creationConfig.minifiedEnabled) {
-            maybeCreateResourcesShrinkerTasks(creationConfig)
             maybeCreateDesugarLibTask(creationConfig, false)
             return
         }
@@ -2046,7 +2053,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
         createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
-        maybeCreateResourcesShrinkerTasks(creationConfig)
         maybeCreateDexSplitterTask(creationConfig)
     }
 
@@ -2133,7 +2139,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     DexMergingTask.CreationAction(
                             creationConfig,
                             DexMergingAction.MERGE_EXTERNAL_LIBS,
-                            DexingType.NATIVE_MULTIDEX,
+                            dexingType,
                             dexingUsingArtifactTransforms,
                             separateFileDependenciesDexingTask,
                             if (produceSeparateOutputs)
@@ -2649,10 +2655,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     /**
-     * Checks if [ShrinkResourcesOldShrinkerTask] and [ ] should be added to the build pipeline and creates the
-     * tasks
+     * If resource shrinker is enabled, set-up and register the appropriate tasks.
      */
-    protected fun maybeCreateResourcesShrinkerTasks(
+    private fun maybeCreateResourcesShrinkerTasks(
             creationConfig: ConsumableCreationConfig) {
         if (!creationConfig.useResourceShrinker()) {
             return
@@ -2704,6 +2709,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
         createDependencyAnalyzerTask()
+
+        val checkJetifierBuildService =
+            CheckJetifierBuildService.RegistrationAction(project, projectOptions).execute()
+        taskFactory.register(
+            CheckJetifierTask.CreationAction(globalScope, projectOptions, checkJetifierBuildService)
+        )
     }
 
     protected fun createDependencyAnalyzerTask() {

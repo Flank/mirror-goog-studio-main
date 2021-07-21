@@ -540,6 +540,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant)
+            task.outputs.upToDateWhen {
+                // Workaround for b/193244776
+                // Ensure the task runs if baselineFile is set and the file doesn't exist
+                task.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
+            }
             val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
             val includeDynamicFeatureSourceProviders = !reportOnly && hasDynamicFeatures
             task.variantInputs.initialize(
@@ -806,10 +811,17 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
         this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
+        this.outputs.upToDateWhen {
+            // Workaround for b/193244776
+            // Ensure the task runs if baselineFile is set and the file doesn't exist
+            this.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
+        }
         // Do not support check dependencies in the standalone lint plugin
         this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, checkDependencies=false)
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
-        this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
+        this.lintModelDirectory.setDisallowChanges(
+            project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
+        )
         this.partialResults.setDisallowChanges(partialResults)
         this.lintModelWriterTaskOutputPath.setDisallowChanges(
             lintModelWriterTaskOutputDir.absolutePath

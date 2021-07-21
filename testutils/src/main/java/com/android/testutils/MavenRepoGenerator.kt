@@ -32,6 +32,11 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
             vararg dependencies: String
         ) : this(mavenCoordinate, "jar", jar, *dependencies)
 
+        constructor(
+            mavenCoordinate: String,
+            vararg dependencies: String
+        ) : this(mavenCoordinate, TestInputsGenerator.jarWithEmptyClasses(listOf()), *dependencies)
+
         val mavenCoordinate = MavenCoordinate.parse(mavenCoordinate)
         val dependencies = dependencies.map { MavenCoordinate.parse(it) }
 

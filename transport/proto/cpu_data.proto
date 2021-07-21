@@ -241,7 +241,7 @@ message CpuTraceConfiguration {
   TraceInitiationType initiation_type = 3;
 
   // ABI CPU architecture of the simpleperf/perfetto binary to use. This
-  // should match the arch of the process and should be one the
+  // should match the arch of the device and should be one of the
   // values defined by SdkConstants.CPU_ARCH_*, e.g. 'arm', 'arm64', 'x86'.
   string abi_cpu_arch = 4;
 

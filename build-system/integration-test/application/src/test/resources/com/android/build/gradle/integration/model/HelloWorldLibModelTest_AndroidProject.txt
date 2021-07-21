@@ -331,9 +331,7 @@
             - minSdkVersion:
                - apiLevel = 14
                - codename = (null)
-            - targetSdkVersion:
-               - apiLevel = -1
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
@@ -364,9 +362,7 @@
             - minSdkVersion:
                - apiLevel = 14
                - codename = (null)
-            - targetSdkVersion:
-               - apiLevel = -1
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
@@ -425,9 +421,7 @@
             - minSdkVersion:
                - apiLevel = 14
                - codename = (null)
-            - targetSdkVersion:
-               - apiLevel = -1
-               - codename = (null)
+            - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)

@@ -130,7 +130,7 @@ public class LintDependencyModelTest {
             tasks.forEach(taskName -> assertThat(firstResult.findTask(taskName)).didWork());
             String textReport = readTextReportToString();
             // TODO(b/182859396): There should be 5 warnings; see TODO in checkFindNestedResult().
-            assertThat(textReport).contains("0 errors, 7 warnings");
+            assertThat(textReport).contains("0 errors, 6 warnings");
 
             GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
             tasks.forEach(taskName -> assertThat(secondResult.findTask(taskName)).wasUpToDate());
@@ -139,7 +139,7 @@ public class LintDependencyModelTest {
             GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
             assertThat(firstResult.findTask(":app:lintReportDebug")).didWork();
             String textReport = readTextReportToString();
-            assertThat(textReport).contains("0 errors, 5 warnings");
+            assertThat(textReport).contains("0 errors, 4 warnings");
 
             // The lint task should not be up-to-date if not using partial analysis with
             // checkDependencies because the inputs are not modeled correctly in that case.

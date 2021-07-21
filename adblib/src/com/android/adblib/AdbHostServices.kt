@@ -71,4 +71,25 @@ interface AdbHostServices {
      * Returns a list of mDNS services known to the ADB server ("host:mdns:services" query).
      */
     suspend fun mdnsServices(): MdnsServiceList
+
+    /**
+     * Returns the [DeviceState] of the [device] ("<device-prefix>:get-state" query).
+     */
+    suspend fun getState(device: DeviceSelector): DeviceState
+
+    /**
+     * Returns the serial number of the [device] ("<device-prefix>:get-serialno" query).
+     */
+    suspend fun getSerialNo(device: DeviceSelector): String
+
+    /**
+     * Returns the `dev-path` of the [device] ("<device-prefix>:get-devpath" query).
+     */
+    suspend fun getDevPath(device: DeviceSelector): String
+
+    /**
+     * Returns the list of features of the [device] ("<device-prefix>:features" query).
+     */
+    suspend fun features(device: DeviceSelector): List<String>
+
 }

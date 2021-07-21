@@ -1,0 +1,3 @@
+- AndroidProject:
+   - lintRuleJars:
+      * {PROJECT}/libs/lint-checks.jar{F}{ADDED}

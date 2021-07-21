@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -101,6 +102,31 @@ class LintStandaloneTest(private val runLintInProcess: Boolean) {
         assertThat(project.buildResult.failedTasks).contains(":lint")
         assertThat(project.buildResult.didWorkTasks).contains(":lintReport")
         assertThat(project.buildResult.failedTasks).doesNotContain(":lintReport")
+    }
+
+    @Test
+    fun checkOutputsNotOverlapping() {
+        val lintModelDir =
+            FileUtils.join(project.intermediatesDir, "lintReport", "android-lint-model")
+        val lintFixModelDir =
+            FileUtils.join(project.intermediatesDir, "lintFix", "android-lint-model")
+        val lintVitalModelDir =
+            FileUtils.join(project.intermediatesDir, "lintVitalReport", "android-lint-model")
+
+        getExecutor().run(":lint")
+        assertThat(lintModelDir).exists()
+        assertThat(lintFixModelDir).doesNotExist()
+        assertThat(lintVitalModelDir).doesNotExist()
+
+        getExecutor().expectFailure().run(":cleanLintReport", ":lintFix")
+        assertThat(lintModelDir).doesNotExist()
+        assertThat(lintFixModelDir).exists()
+        assertThat(lintVitalModelDir).doesNotExist()
+
+        getExecutor().run(":cleanLintFix", ":lintVital")
+        assertThat(lintModelDir).doesNotExist()
+        assertThat(lintFixModelDir).doesNotExist()
+        assertThat(lintVitalModelDir).exists()
     }
 
     private fun getExecutor(): GradleTaskExecutor =

@@ -40,7 +40,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.testutils.apk.Zip;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -240,9 +239,11 @@ public class VariantDependencyTest {
         File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
 
-        try (Zip it = new Zip(apk)) {
-            assertThat(it).contains(checkFilePath);
-        }
+        assertThat(
+                apk,
+                it -> {
+                    it.contains(checkFilePath);
+                });
     }
 
     private static void checkApkForMissingContent(
@@ -251,8 +252,10 @@ public class VariantDependencyTest {
         File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
 
-        try (Zip it = new Zip(apk)) {
-            assertThat(it).entries(".*").containsNoneIn(checkFilePath);
-        }
+        assertThat(
+                apk,
+                it -> {
+                    it.entries(".*").containsNoneIn(checkFilePath);
+                });
     }
 }

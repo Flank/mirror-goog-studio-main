@@ -29,8 +29,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.android.testutils.apk.Apk;
-import java.io.IOException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
@@ -86,11 +85,12 @@ public class InjectedAbiSplitTest {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "arm64-v8a")
                 .run("clean", "assembleDebug");
-        Apk arm64Apk = sProject.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG);
+        File arm64Apk = sProject.getApkAsFile("arm64-v8a", GradleTestProject.ApkType.DEBUG);
         checkApkContent(arm64Apk, Abi.ARM64_V8A);
 
-        assertThat(sProject.getApk("universal", GradleTestProject.ApkType.DEBUG)).doesNotExist();
-        assertThat(sProject.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist();
+        assertThat(sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG))
+                .doesNotExist();
+        assertThat(sProject.getApkAsFile("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist();
 
         assertThat(getSoFolderFor(sProject, Abi.ARM64_V8A)).exists();
         assertThat(getSoFolderFor(sProject, Abi.X86)).isNull();
@@ -101,13 +101,13 @@ public class InjectedAbiSplitTest {
     @Test
     public void checkNormalBuild() throws Exception {
         sProject.executor().run("clean", "assembleDebug");
-        Apk universalApk = sProject.getApk("universal", GradleTestProject.ApkType.DEBUG);
+        File universalApk = sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
 
-        Apk arm64Apk = sProject.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG);
+        File arm64Apk = sProject.getApkAsFile("arm64-v8a", GradleTestProject.ApkType.DEBUG);
         checkApkContent(arm64Apk, Abi.ARM64_V8A);
 
-        Apk x86Apk = sProject.getApk("x86", GradleTestProject.ApkType.DEBUG);
+        File x86Apk = sProject.getApkAsFile("x86", GradleTestProject.ApkType.DEBUG);
         checkApkContent(x86Apk, Abi.X86);
 
         assertThat(getSoFolderFor(sProject, Abi.ARM64_V8A)).exists();
@@ -121,7 +121,7 @@ public class InjectedAbiSplitTest {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "")
                 .run("clean", "assembleDebug");
-        Apk universalApk = sProject.getApk("universal", GradleTestProject.ApkType.DEBUG);
+        File universalApk = sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
     }
 
@@ -131,19 +131,23 @@ public class InjectedAbiSplitTest {
                 .with(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
-        Apk universalApk = sProject.getApk("universal", GradleTestProject.ApkType.DEBUG);
+        File universalApk = sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
     }
 
-    private void checkApkContent(Apk apk, Abi... abis) throws IOException {
+    private void checkApkContent(File apk, Abi... abis) throws Exception {
         List<Abi> abiList = Arrays.asList(abis);
         for (Abi abi : NdkHelper.getAbiList(sProject)) {
             String path = "lib/" + abi.getTag() + '/' + "libhello-jni.so";
-            if (abiList.contains(abi)) {
-                assertThat(apk).contains(path);
-            } else {
-                assertThat(apk).doesNotContain(path);
-            }
+            assertThat(
+                    apk,
+                    it -> {
+                        if (abiList.contains(abi)) {
+                            it.contains(path);
+                        } else {
+                            it.doesNotContain(path);
+                        }
+                    });
         }
     }
 }

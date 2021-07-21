@@ -32,7 +32,6 @@ jobject Recompose::GetComposeHotReload() const {
   jclass klass = class_finder_.FindInClassLoader(
       class_finder_.GetApplicationClassLoader(), HOT_RELOADER_CLASS);
   if (klass == nullptr) {
-    jni_->ExceptionClear();
     return nullptr;
   }
   Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");

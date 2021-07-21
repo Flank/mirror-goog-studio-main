@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -33,7 +32,6 @@ import java.io.FileOutputStream
 import java.nio.charset.Charset
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
-import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
@@ -48,7 +46,9 @@ class PerModuleBundleTaskTest {
         val project = ProjectBuilder.builder().withProjectDir(testFolder.newFolder()).build()
 
         task = project.tasks.create("test", PerModuleBundleTask::class.java) {
-            task -> task.assetsFiles.set(testFolder.newFolder("assets"))
+            task -> task.assetsFilesDirectories.add(
+                project.layout.buildDirectory.dir(
+                    testFolder.newFolder("assets").absolutePath))
         }
 
         val resFile = testFolder.newFile("res").also {
@@ -127,8 +127,8 @@ class PerModuleBundleTaskTest {
                 createDex(dexFolder,metadata)
             )
         )
-        val resFile = testFolder.newFile("res2").also {
-            JarOutputStream(BufferedOutputStream(FileOutputStream(it))).use {
+        val resFile = testFolder.newFile("res2").also { file ->
+            JarOutputStream(BufferedOutputStream(FileOutputStream(file))).use {
                 it.putNextEntry(JarEntry(metadata))
                 it.closeEntry()
 
@@ -141,11 +141,10 @@ class PerModuleBundleTaskTest {
         task.resFiles.set(resFile)
         task.doTaskAction()
         val zipFile = task.outputDir.get().asFileTree.singleFile
-        val pattern: Pattern = Pattern.compile("MANIFEST.MF$")
-        Zip(zipFile).use {
-            assertThat(it).contains("dex/classes.dex")
-            assertThat(it).contains("bar")
-            assertThat(it.entries.filter { file -> pattern.matcher(file.fileName.toString()).matches() }).hasSize(0)
+        assertThat(zipFile) {
+            it.contains("dex/classes.dex")
+            it.contains("bar")
+            it.entries("MANIFEST.MF$").hasSize(0)
         }
 
     }
@@ -153,12 +152,12 @@ class PerModuleBundleTaskTest {
     private fun verifyOutputZip(zipFile: File, expectedNumberOfDexFiles: Int) {
         assertThat(expectedNumberOfDexFiles).isGreaterThan(0)
         assertThat(zipFile.exists())
-        Zip(zipFile).use {
-            assertThat(it).contains("dex/classes.dex")
+        assertThat(zipFile) {
+            it.contains("dex/classes.dex")
             for (index in 2..expectedNumberOfDexFiles) {
-                assertThat(it).contains("dex/classes$index.dex")
+                it.contains("dex/classes$index.dex")
             }
-            assertThat(it).doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
+            it.doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
         }
         verifyClassesDexNotRenamed(zipFile)
     }

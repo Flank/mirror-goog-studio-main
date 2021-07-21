@@ -30,7 +30,7 @@ abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
     private val buildServiceClass: Class<ServiceT>,
     private val maxParalleUsages: Int? = null
 ) where ServiceT : BuildService<ParamsT>, ParamsT : BuildServiceParameters {
-    fun execute(): Provider<ServiceT> {
+    open fun execute(): Provider<ServiceT> {
         return project.gradle.sharedServices.registerIfAbsent(
             getBuildServiceName(buildServiceClass),
             buildServiceClass

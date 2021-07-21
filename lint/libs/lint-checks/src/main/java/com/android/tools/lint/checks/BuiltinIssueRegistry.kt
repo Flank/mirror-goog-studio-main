@@ -245,9 +245,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 LogDetector.CONDITIONAL,
                 LogDetector.LONG_TAG,
                 LogDetector.WRONG_TAG,
-                ManifestDetector.ALLOW_BACKUP,
                 ManifestDetector.APP_INDEXING_SERVICE,
                 ManifestDetector.APPLICATION_ICON,
+                ManifestDetector.DATA_EXTRACTION_RULES,
                 ManifestDetector.DEVICE_ADMIN,
                 ManifestDetector.DUPLICATE_ACTIVITY,
                 ManifestDetector.DUPLICATE_USES_FEATURE,
@@ -498,6 +498,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
         // Combined into AppLinksAutoVerify
         "AppLinksAutoVerifyError",
         "AppLinksAutoVerifyWarning",
+
+        // Noisy check which is misleading after recent backup changes
+        "AllowBackup",
 
         // Deleted; no longer needed thanks to d8
         "Assert"

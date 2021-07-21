@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
@@ -56,8 +55,9 @@ class MergeNativeDebugMetadataTaskTest {
     @Test
     fun testBasic() {
         MergeNativeDebugMetadataTask.mergeFiles(listOf(x86NativeLib, armeabiNativeLib), outputFile)
-        ZipFileSubject.assertThat(Zip(outputFile)).containsFileWithContent("x86/foo.so.dbg", "foo")
-        ZipFileSubject.assertThat(Zip(outputFile))
-            .containsFileWithContent("armeabi/bar.so.dbg", "bar")
+        ZipFileSubject.assertThat(outputFile) {
+            it.containsFileWithContent("x86/foo.so.dbg", "foo")
+            it.containsFileWithContent("armeabi/bar.so.dbg", "bar")
+        }
     }
 }

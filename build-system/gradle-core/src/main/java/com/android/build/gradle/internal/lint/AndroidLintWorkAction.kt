@@ -95,7 +95,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         private const val ERRNO_EXISTS = 3
         private const val ERRNO_HELP = 4
         private const val ERRNO_INVALID_ARGS = 5
-        private const val ERRNO_CREATED_BASELINE = 6
+        const val ERRNO_CREATED_BASELINE = 6
         private const val ERRNO_APPLIED_SUGGESTIONS = 7
 
         private var _cachedClassLoader: URLClassLoader? = null

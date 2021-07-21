@@ -131,6 +131,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.NdkTask::setNdkConfig",
                 "com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.PackageRenderscriptTask::setVariantName",
+                "com.android.build.gradle.internal.tasks.MergeAssetsForUnitTest::setVariantName",
                 "com.android.build.gradle.internal.tasks.ProcessJavaResTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.SigningReportTask::setComponents",
                 "com.android.build.gradle.internal.tasks.TestServerTask::setTestServer",

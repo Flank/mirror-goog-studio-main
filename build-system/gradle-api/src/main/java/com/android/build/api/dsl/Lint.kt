@@ -26,36 +26,36 @@ import java.io.File
  * android {
  *    lint {
  *          // set to true to turn off analysis progress reporting by lint
- *          quiet true
+ *          quiet = true
  *          // if true, stop the gradle build if errors are found
- *          abortOnError false
+ *          abortOnError = false
  *          // set to true to have all release builds run lint on issues with severity=fatal
  *          // and abort the build (controlled by abortOnError above) if fatal issues are found
- *          checkReleaseBuilds true
+ *          checkReleaseBuilds = true
  *          // if true, only report errors
- *          ignoreWarnings true
+ *          ignoreWarnings = true
  *          // if true, emit full/absolute paths to files with errors (true by default)
- *          //absolutePaths true
+ *          //absolutePaths = true
  *          // if true, check all issues, including those that are off by default
- *          checkAllWarnings true
+ *          checkAllWarnings = true
  *          // if true, treat all warnings as errors
- *          warningsAsErrors true
+ *          warningsAsErrors = true
  *          // turn off checking the given issue id's
- *          disable 'TypographyFractions','TypographyQuotes'
+ *          disable += ['TypographyFractions', 'TypographyQuotes']
  *          // turn on the given issue id's
- *          enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'
+ *          enable += ['RtlHardcoded','RtlCompat', 'RtlEnabled']
  *          // check *only* the given issue id's
- *          check 'NewApi', 'InlinedApi'
+ *          check += ['NewApi', 'InlinedApi']
  *          // if true, don't include source code lines in the error output
- *          noLines true
+ *          noLines = true
  *          // if true, show all locations for an error, do not truncate lists, etc.
- *          showAll true
+ *          showAll = true
  *          // whether lint should include full issue explanations in the text error output
- *          explainIssues false
+ *          explainIssues = false
  *          // Fallback lint configuration (default severities, etc.)
- *          lintConfig file("default-lint.xml")
+ *          lintConfig = file("default-lint.xml")
  *          // if true, generate a text report of issues (false by default)
- *          textReport true
+ *          textReport = true
  *          // location to write the output; can be a file or 'stdout' or 'stderr'
  *          //textOutput 'stdout'
  *          textOutput file("$reportsDir/lint-results.txt")
@@ -134,7 +134,7 @@ interface Lint {
     /** Whether lint should set the exit code of the process if errors are found */
     @get:Incubating
     @set:Incubating
-    var isAbortOnError: Boolean
+    var abortOnError: Boolean
 
     /**
      * Whether lint should display full paths in the error output. By default the paths are relative
@@ -142,7 +142,7 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isAbsolutePaths: Boolean
+    var absolutePaths: Boolean
 
     /**
      * Whether lint should include the source lines in the output where errors occurred (true by
@@ -150,7 +150,7 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isNoLines: Boolean
+    var noLines: Boolean
 
     /**
      * Whether lint should be quiet (for example, not write informational messages such as paths to
@@ -158,22 +158,22 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isQuiet: Boolean
+    var quiet: Boolean
 
     /** Whether lint should check all warnings, including those off by default */
     @get:Incubating
     @set:Incubating
-    var isCheckAllWarnings: Boolean
+    var checkAllWarnings: Boolean
 
     /** Returns whether lint will only check for errors (ignoring warnings) */
     @get:Incubating
     @set:Incubating
-    var isIgnoreWarnings: Boolean
+    var ignoreWarnings: Boolean
 
     /** Whether lint should treat all warnings as errors */
     @get:Incubating
     @set:Incubating
-    var isWarningsAsErrors: Boolean
+    var warningsAsErrors: Boolean
 
     /**
      * Whether lint should run all checks on test sources, instead of just the lint checks
@@ -182,26 +182,26 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isCheckTestSources: Boolean
+    var checkTestSources: Boolean
 
     /**
-     * Whether lint should ignore all test sources. This is like [isCheckTestSources], but always
+     * Whether lint should ignore all test sources. This is like [checkTestSources], but always
      * skips analyzing tests -- meaning that it also ignores checks that have explicitly asked to
      * look at test sources, such as the unused resource check.
      */
     @get:Incubating
     @set:Incubating
-    var isIgnoreTestSources: Boolean
+    var ignoreTestSources: Boolean
 
     /** Returns whether lint should run checks on generated sources. */
     @get:Incubating
     @set:Incubating
-    var isCheckGeneratedSources: Boolean
+    var checkGeneratedSources: Boolean
 
     /** Whether lint should check all dependencies too as part of its analysis. Default is false. */
     @get:Incubating
     @set:Incubating
-    var isCheckDependencies: Boolean
+    var checkDependencies: Boolean
 
     /**
      * Whether lint should include explanations for issue errors. (Note that HTML and XML reports
@@ -209,7 +209,7 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isExplainIssues: Boolean
+    var explainIssues: Boolean
 
     /**
      * Whether lint should include all output (e.g. include all alternate locations, not truncating
@@ -217,7 +217,7 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isShowAll: Boolean
+    var showAll: Boolean
 
     /**
      * Whether lint should check for fatal errors during release builds. Default is true. If issues
@@ -225,7 +225,7 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var isCheckReleaseBuilds: Boolean
+    var checkReleaseBuilds: Boolean
 
     /**
      * The default config file to use as a fallback. This corresponds to a `lint.xml` file with
@@ -310,123 +310,26 @@ interface Lint {
      */
     @get:Incubating
     @set:Incubating
-    var baselineFile: File?
+    var baseline: File?
 
-    /**
-     * Sets the baseline file to use, if any. The baseline file is an XML report previously created
-     * by lint, and any warnings and errors listed in that report will be ignored from analysis.
-     *
-     * If you have a project with a large number of existing warnings, this lets you set a baseline
-     * and only see newly introduced warnings until you get a chance to go back and address the
-     * "technical debt" of the earlier warnings.
-     */
-    @Incubating
-    fun baseline(baseline: String)
+    /** Issues that have severity overridden to 'informational' */
+    @get:Incubating
+    val informational: MutableSet<String>
 
-    /**
-     * Sets the baseline file to use, if any. The baseline file is an XML report previously created
-     * by lint, and any warnings and errors listed in that report will be ignored from analysis.
-     *
-     * If you have a project with a large number of existing warnings, this lets you set a baseline
-     * and only see newly introduced warnings until you get a chance to go back and address the
-     * "technical debt" of the earlier warnings.
-     */
-    @Incubating
-    fun baseline(baselineFile: File)
+    /** Issues that have severity overridden to 'ignore' */
+    @get:Incubating
+    @Deprecated("Ignore and disable are synonyms", ReplaceWith("disable"))
+    val ignore: MutableSet<String>
 
-    /** Sets the optional path to where a text report should be written */
-    @Incubating
-    fun textOutput(textOutput: String)
+    /** Issues that have severity overridden to 'warning' */
+    @get:Incubating
+    val warning: MutableSet<String>
 
-    /** Sets the optional path to where a text report should be written */
-    @Incubating
-    fun textOutput(textOutput: File)
+    /** Issues that have severity overridden to 'error' */
+    @get:Incubating
+    val error: MutableSet<String>
 
-    /** Adds the id to the set of unique issues to check. */
-    @Deprecated(
-        message = "Use checkOnly instead; check will turn off all other checks so the method " +
-                "has been renamed to be more explicit about this",
-        replaceWith = ReplaceWith("checkOnly(id)")
-    )
-    @Incubating
-    fun check(id: String)
-
-    /** Adds the ids to the set of unique issues to check. */
-    @Deprecated(
-        message = "Use checkOnly instead; check will turn off all other checks so the method " +
-                "has been renamed to be more explicit about this",
-        replaceWith = ReplaceWith("checkOnly(ids)")
-    )
-    @Incubating
-    fun check(vararg ids: String)
-
-    /**
-     * Adds the id to the set of issues to check. Note that when using this, all other checks
-     * are turned off.
-     */
-    @Incubating
-    fun checkOnly(id: String)
-
-    /**
-     * Adds the id to the set of issues to check. Note that when using this, all other checks
-     * are turned off.
-     */
-    @Incubating
-    fun checkOnly(vararg ids: String)
-
-    /** Adds the id to the set of issues to enable. */
-    @Incubating
-    fun enable(id: String)
-
-    /** Adds the ids to the set of issues to enable. */
-    @Incubating
-    fun enable(vararg ids: String)
-
-    /** Adds the id to the set of issues to suppress. */
-    @Incubating
-    fun disable(id: String)
-
-    /** Adds the ids to the set of issues to suppress. */
-    @Incubating
-    fun disable(vararg ids: String)
-
-    /** Adds a severity override for the given issue. */
-    @Incubating
-    fun informational(id: String)
-
-    /** Adds a severity override for the given issues. */
-    @Incubating
-    fun informational(vararg ids: String)
-
-    /** Adds a severity override for the given issue. */
-    @Incubating
-    fun ignore(id: String)
-
-    /** Adds a severity override for the given issues. */
-    @Incubating
-    fun ignore(vararg ids: String)
-
-    /** Adds a severity override for the given issue. */
-    @Incubating
-    fun warning(id: String)
-
-    /** Adds a severity override for the given issues. */
-    @Incubating
-    fun warning(vararg ids: String)
-
-    /** Adds a severity override for the given issue. */
-    @Incubating
-    fun error(id: String)
-
-    /** Adds a severity override for the given issues. */
-    @Incubating
-    fun error(vararg ids: String)
-
-    /** Adds a severity override for the given issue. */
-    @Incubating
-    fun fatal(id: String)
-
-    /** Adds a severity override for the given issues. */
-    @Incubating
-    fun fatal(vararg ids: String)
+    /** Issues that have severity overridden to 'fatal' */
+    @get:Incubating
+    val fatal: MutableSet<String>
 }

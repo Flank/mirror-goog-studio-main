@@ -225,6 +225,14 @@ class ArtifactsImpl(
         storageProvider.getStorage(artifactType.kind).copy(artifactType, artifactContainer)
     }
 
+    fun <FILE_TYPE : FileSystemLocation> copy(
+        artifactType: Multiple<FILE_TYPE>,
+        from: ArtifactsImpl
+    ) {
+        val artifactContainer = from.getArtifactContainer(artifactType)
+        storageProvider.getStorage(artifactType.kind).copy(artifactType, artifactContainer)
+    }
+
     /**
      * Appends a single [Provider] of [T] to a [Artifact.Multiple] of <T>
      *

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dependency
 import com.android.testutils.TestInputsGenerator.jarWithClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyEntries
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -60,10 +59,10 @@ class AarToClassTransformTest {
             )
         }
 
-        Zip(outputJar).use { zip ->
-            assertThat(zip).contains("collidingResource")
-            assertThat(zip).contains("com/example/MyClass.class")
-            assertThat(zip).contains("a/otherResource")
+        assertThat(outputJar) { zip ->
+            zip.contains("collidingResource")
+            zip.contains("com/example/MyClass.class")
+            zip.contains("a/otherResource")
         }
     }
 

@@ -89,18 +89,12 @@ abstract class VariantImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val minSdkVersion: AndroidVersion  by lazy {
-        val apiVersion = variantBuilder.minSdk?.let { DefaultApiVersion(it)}
-            ?: variantBuilder.minSdkPreview?.let { DefaultApiVersion(it) }
-            ?: DefaultApiVersion(1)
-        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    override val minSdkVersion: AndroidVersion by lazy {
+        variantBuilder.minSdkVersion
     }
 
-    override val targetSdkVersion: AndroidVersion  by lazy {
-        val apiVersion = variantBuilder.targetSdk?.let { DefaultApiVersion(it)}
-            ?: variantBuilder.targetSdkPreview?.let { DefaultApiVersion(it) }
-            ?: DefaultApiVersion(1)
-        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    override val targetSdkVersion: AndroidVersion by lazy {
+        variantBuilder.targetSdkVersion
     }
 
     override val maxSdkVersion: Int?
@@ -175,6 +169,9 @@ abstract class VariantImpl(
     val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
     }
+
+    override val targetSdkVersionOverride: AndroidVersion?
+        get() = variantBuilder.mutableTargetSdk?.sanitize()
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         internalServices.mapPropertyOf(

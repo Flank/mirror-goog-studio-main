@@ -217,6 +217,9 @@ open class AndroidTestImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val targetSdkVersionOverride: AndroidVersion?
+        get() = testedVariant.targetSdkVersionOverride
+
     // always false for this type
     override val embedsMicroApp: Boolean
         get() = false

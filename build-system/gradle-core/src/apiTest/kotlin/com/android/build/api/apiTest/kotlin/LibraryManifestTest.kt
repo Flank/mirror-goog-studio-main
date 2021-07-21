@@ -98,7 +98,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
             }
         }
 
-        // post build activity, find the APK, load its meged manifest file and ensure that
+        // post build activity, find the APK, load its merged manifest file and ensure that
         // the manually added permission made to the final merged manifest.
         val apkFolder = File(super.testProjectDir.root,
             "libraryManifestTransformerTest/app/build/"

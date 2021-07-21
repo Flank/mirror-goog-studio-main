@@ -99,6 +99,7 @@ class ArtifactHandlerImpl(
             buildId = buildId,
             projectPath = projectPath,
             variant = variantName,
+            lintJar = lintJar,
 
             // not needed for this dependency type
             artifact = null,
@@ -114,7 +115,6 @@ class ArtifactHandlerImpl(
             proguardRules = null,
             externalAnnotations = null,
             publicResources = null,
-            lintJar = null,
             symbolFile = null
         )
     }

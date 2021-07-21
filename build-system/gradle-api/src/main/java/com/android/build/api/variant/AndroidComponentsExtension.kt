@@ -32,27 +32,8 @@ import org.gradle.api.Action
 interface AndroidComponentsExtension<
         DslExtensionT: CommonExtension<*, *, *, *>,
         VariantBuilderT: VariantBuilder,
-        VariantT: Variant> {
-
-    /**
-     * API to customize the DSL Objects programmatically before the [beforeVariants] is called.
-     *
-     * Example of a build type creation:
-     * ```kotlin
-     * androidComponents.finalizeDsl { extension ->
-     *     extension.buildTypes.create("extra")
-     * }
-     * ```
-     *
-     * The list of variants will be finalized after all finalizeDsl Callbacks and cannot be altered
-     * in the other APIs like [beforeVariants] or [onVariants].
-     */
-    fun finalizeDsl(callback: (DslExtensionT) -> Unit)
-
-    /**
-     * [Action] based version of [finalizeDsl] above.
-     */
-    fun finalizeDsl(callback: Action<DslExtensionT>)
+        VariantT: Variant>
+    : DslLifecycle<DslExtensionT> {
 
     /**
      * [Action] based version of [finalizeDsl] above.

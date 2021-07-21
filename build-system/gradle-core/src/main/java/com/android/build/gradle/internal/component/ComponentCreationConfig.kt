@@ -85,6 +85,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     val androidResourcesEnabled: Boolean
 
     val minSdkVersion: AndroidVersion
+    val targetSdkVersion: AndroidVersion
+    val targetSdkVersionOverride: AndroidVersion?
 
     // ---------------------------------------------------------------------------------------------
     // ---------------------------------------------------------------------------------------------

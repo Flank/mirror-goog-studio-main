@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.lint
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_CREATED_BASELINE
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ERRNO_ERRORS
 import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.maybeThrowException
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStderr
@@ -192,7 +193,6 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     }
 
     companion object {
-        // TODO (b/191897708) Add ERRNO_CREATED_BASELINE after b/190839740 has been fixed.
-        val HANDLED_ERRORS = listOf(ERRNO_ERRORS)
+        val HANDLED_ERRORS = listOf(ERRNO_ERRORS, ERRNO_CREATED_BASELINE)
     }
 }

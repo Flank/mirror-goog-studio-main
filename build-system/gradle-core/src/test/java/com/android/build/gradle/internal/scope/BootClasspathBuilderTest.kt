@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.sdklib.AndroidVersion
+import com.android.testutils.MockitoKt.any
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -35,6 +36,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
 import java.io.File
+import java.util.concurrent.Callable
 
 class BootClasspathBuilderTest {
 
@@ -52,6 +54,9 @@ class BootClasspathBuilderTest {
     @Before
     fun setupProject() {
         `when`(project!!.objects).thenReturn(FakeObjectFactory.factory)
+        `when`(project.provider<Callable<List<RegularFile>>>(any())).then {
+            FakeGradleProvider((it.arguments[0] as Callable<*>).call())
+        }
     }
 
     @After

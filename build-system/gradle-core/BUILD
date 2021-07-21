@@ -40,6 +40,7 @@ kotlin_library(
     ],
     lint_baseline = "lint_baseline.xml",
     lint_timeout = "long",
+    module_name = "gradle_core",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],

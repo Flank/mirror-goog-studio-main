@@ -18,16 +18,12 @@ package com.android.ide.common.attribution
 
 import com.android.SdkConstants
 import com.android.utils.FileUtils
-import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
-import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileReader
-import java.io.FileWriter
 import java.io.Serializable
 
 data class AndroidGradlePluginAttributionData(
@@ -92,26 +88,15 @@ data class AndroidGradlePluginAttributionData(
 
     companion object {
 
-        fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
-            val file = FileUtils.join(
-                outputDir,
-                SdkConstants.FD_BUILD_ATTRIBUTION,
-                SdkConstants.FN_AGP_ATTRIBUTION_DATA
-            )
-            file.parentFile.mkdirs()
-            BufferedWriter(FileWriter(file)).use {
-                it.write(AttributionDataAdapter.toJson(attributionData))
-            }
-        }
+        fun getAttributionFile(outputDir: File) = FileUtils.join(
+            outputDir,
+            SdkConstants.FD_BUILD_ATTRIBUTION,
+            SdkConstants.FN_AGP_ATTRIBUTION_DATA
+        )
 
         fun load(outputDir: File): AndroidGradlePluginAttributionData? {
-            val file = FileUtils.join(
-                outputDir,
-                SdkConstants.FD_BUILD_ATTRIBUTION,
-                SdkConstants.FN_AGP_ATTRIBUTION_DATA
-            )
             try {
-                BufferedReader(FileReader(file)).use {
+                BufferedReader(FileReader(getAttributionFile(outputDir))).use {
                     return AttributionDataAdapter.fromJson(it)
                 }
             } catch (e: Exception) {
@@ -120,7 +105,7 @@ data class AndroidGradlePluginAttributionData(
         }
     }
 
-    internal object AttributionDataAdapter : TypeAdapter<AndroidGradlePluginAttributionData>() {
+    object AttributionDataAdapter : TypeAdapter<AndroidGradlePluginAttributionData>() {
 
         private fun <A> JsonWriter.writeList(name: String, list: Collection<A>, valueWriter: (value: A) -> Unit) {
             name(name).beginArray()

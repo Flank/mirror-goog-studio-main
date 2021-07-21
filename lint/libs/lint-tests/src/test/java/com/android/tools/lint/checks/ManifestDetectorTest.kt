@@ -471,13 +471,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
     }
 
     fun testAllowBackup() {
-        val expected =
-            """
-            AndroidManifest.xml:8: Warning: Should explicitly set android:allowBackup to true or false (it's true by default, and that can have some security implications for the application's data) [AllowBackup]
-                <application
-                 ~~~~~~~~~~~
-            0 errors, 1 warnings
-            """
+        // No longer flagging this; it's noisy and many users just suppress it
         lint().files(
             manifest(
                 """
@@ -497,7 +491,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             strings
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expect(expected)
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testAllowBackupOk() {
@@ -530,7 +524,44 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             strings
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
+    }
+
+    fun testAllowBackupUnnecessary() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+
+                    <uses-sdk android:minSdkVersion="31" />
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name"
+                        android:allowBackup="true" >
+                    </application>
+
+                </manifest>
+                """
+            ).indented(),
+            strings
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:11: Warning: The attribute android:allowBackup is deprecated from Android 12 and the default allows backup [DataExtractionRules]
+                    android:allowBackup="true" >
+                                         ~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 11: Delete allowBackup:
+            @@ -10 +10
+            -         android:allowBackup="true"
+            """
+        )
     }
 
     fun testAllowBackupOk3() {
@@ -539,7 +570,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
             manifest().minSdk(14),
             projectProperties().library(true).compileSdk(14),
             strings
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testAllowIgnore() {
@@ -573,7 +604,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             strings
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testNoApplication() {
@@ -587,7 +618,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
             </manifest>
             """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP, ManifestDetector.APPLICATION_ICON).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES, ManifestDetector.APPLICATION_ICON).run().expectClean()
     }
 
     fun testDuplicatePermissions() {
@@ -1343,12 +1374,12 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).incremental().run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).incremental().run().expectClean()
     }
 
     fun testFullBackupContentMissing() {
         val expected = """
-            AndroidManifest.xml:6: Warning: Missing <full-backup-content> resource [AllowBackup]
+            AndroidManifest.xml:6: Warning: Missing <full-backup-content> resource [DataExtractionRules]
                     android:fullBackupContent="@xml/backup"
                                                ~~~~~~~~~~~
             0 errors, 1 warnings
@@ -1369,7 +1400,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).incremental().run().expect(expected)
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).incremental().run().expect(expected)
     }
 
     fun testFullBackupContentMissingInLibrary() {
@@ -1390,7 +1421,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).incremental("AndroidManifest.xml").run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).incremental("AndroidManifest.xml").run().expectClean()
     }
 
     fun testFullBackupContentOk() {
@@ -1422,7 +1453,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-            .issues(ManifestDetector.ALLOW_BACKUP)
+            .issues(ManifestDetector.DATA_EXTRACTION_RULES)
             .incremental("AndroidManifest.xml")
             .run()
             .expectClean()
@@ -1445,17 +1476,11 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupInTarget23() {
-        val expected =
-            """
-            AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]
-                    android:allowBackup="true"
-                    ~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
-            """
+        // No longer flagging this; it's noisy and many users just suppress it
         lint().files(
             manifest(
                 """
@@ -1471,7 +1496,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expect(expected)
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupInPreTarget23() {
@@ -1490,7 +1515,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupWithoutGcmPreTarget23() {
@@ -1509,17 +1534,10 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupWithoutGcmPostTarget23() {
-        val expected =
-            """
-            AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]
-                    android:allowBackup="true"
-                    ~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
-            """
         lint().files(
             manifest(
                 """
@@ -1535,7 +1553,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expect(expected)
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupWithGcmPreTarget23() {
@@ -1561,17 +1579,11 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testMissingFullContentBackupWithGcmPostTarget23() {
-        val expected =
-            """
-            AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]
-                    android:allowBackup="true"
-                    ~~~~~~~~~~~~~~~~~~~
-            0 errors, 1 warnings
-            """
+        // No longer flagging this; it's noisy and many users just suppress it
         lint().files(
             manifest(
                 """
@@ -1594,7 +1606,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expect(expected)
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testNoMissingFullBackupWithDoNotAllowBackup() {
@@ -1621,7 +1633,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testFullBackupContentMissingIgnored() {
@@ -1634,7 +1646,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                     package="com.example.helloworld" >
 
                     <application
-                        tools:ignore="AllowBackup"
+                        tools:ignore="DataExtractionRules"
                         android:allowBackup="true"
                         android:fullBackupContent="@xml/backup"
                         android:label="@string/app_name"
@@ -1644,7 +1656,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             ).indented()
-        ).issues(ManifestDetector.ALLOW_BACKUP).incremental().run().expectClean()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).incremental().run().expectClean()
     }
 
     fun testBackupAttributeFromMergedManifest() {
@@ -1690,7 +1702,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).dependsOn(library)
-        lint().projects(main, library).issues(ManifestDetector.ALLOW_BACKUP).run().expectClean()
+        lint().projects(main, library).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
     fun testWearableBindListener() {
@@ -1952,6 +1964,336 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
             )
     }
+
+    fun testDataExtractionRules1() {
+        // allowBackup disabled and dataExtractionRules not present
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
+                  <application android:allowBackup="false">
+                  </application>
+                </manifest>
+                """
+            ).indented()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:3: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+              <application android:allowBackup="false">
+                                                ~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testDataExtractionMigrateFullBackupContent() {
+        // fullBackupContent set and dataExtractionRules not present
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
+                  <application
+                      android:allowBackup="true"
+                      android:fullBackupContent="@xml/full_backup_content">
+                  </application>
+                </manifest>
+                """
+            ).indented().indented(),
+            fullBackup
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:5: Warning: The attribute android:fullBackupContent is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+                  android:fullBackupContent="@xml/full_backup_content">
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 5: Create data_extraction_rules:
+            @@ -11 +11
+            +         android:dataExtractionRules="@xml/data_extraction_rules"
+            res/xml/data_extraction_rules:
+            @@ -1 +1
+            + <data-extraction-rules>
+            +     <cloud-backup>
+            +          <include domain="file" path="dd"/>
+            +          <exclude domain="file" path="dd/fo3o.txt"/>
+            +          <exclude domain="file" path="dd/ss/foo.txt"/>
+            +     </cloud-backup>
+            + </data-extraction-rules>
+            """
+        )
+    }
+
+    fun testFullContentMigration() {
+        // fullBackupContent set and dataExtractionRules not present; quickfix should migrate existing rules
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
+                  <application
+                      android:allowBackup="true"
+                      android:fullBackupContent="@xml/full_backup_content">
+                  </application>
+                </manifest>
+                """
+            ).indented().indented(),
+            xml(
+                "res/xml/full_backup_content.xml",
+                """
+                <!-- Our copyright here -->
+                <full-backup-content>
+                     <!-- Some comment -->
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt" requireFlags="deviceToDeviceTransfer"/>
+                     <exclude domain="file" path="dd/fo3o2.txt" requireFlags="clientSideEncryption"/>
+                     <exclude domain="file" path="dd/fo3o3.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt" requireFlags="deviceToDeviceTransfer"/>
+                     <!--<exclude domain="file" path="dd/ss/foo.txt" requireFlags="clientSideEncryption|deviceToDeviceTransfer" />-->
+                     <!-- Final comment -->
+                </full-backup-content>
+                """
+            ).indented()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:5: Warning: The attribute android:fullBackupContent is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+                  android:fullBackupContent="@xml/full_backup_content">
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 5: Create data_extraction_rules:
+            @@ -11 +11
+            +         android:dataExtractionRules="@xml/data_extraction_rules"
+            res/xml/data_extraction_rules:
+            @@ -1 +1
+            + <!-- Our copyright here -->
+            + <data-extraction-rules>
+            +     <cloud-backup disableIfNoEncryptionCapabilities="true">
+            +          <!-- Some comment -->
+            +          <include domain="file" path="dd"/>
+            +          <!-- <exclude domain="file" path="dd/fo3o.txt" requireFlags="deviceToDeviceTransfer"/> -->
+            +          <exclude domain="file" path="dd/fo3o2.txt" requireFlags="clientSideEncryption"/>
+            +          <exclude domain="file" path="dd/fo3o3.txt"/>
+            +          <!-- <exclude domain="file" path="dd/ss/foo.txt" requireFlags="deviceToDeviceTransfer"/> -->
+            +          <!--<exclude domain="file" path="dd/ss/foo.txt" requireFlags="clientSideEncryption|deviceToDeviceTransfer" />-->
+            +          <!-- Final comment -->
+            +     </cloud-backup>
+            + </data-extraction-rules>
+            """
+        )
+    }
+
+    fun testDataExtractionRulesRemove() {
+        // only allowBackup set to false and dataExtractionRules not present; create default contents
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
+                  <application
+                      android:allowBackup="false">
+                  </application>
+                </manifest>
+                """
+            ).indented().indented(),
+            fullBackup
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+                  android:allowBackup="false">
+                                       ~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 4: Create data_extraction_rules:
+            @@ -9 +9
+            -     <application android:allowBackup="false" >
+            +     <application
+            +         android:allowBackup="false"
+            +         android:dataExtractionRules="@xml/data_extraction_rules" >
+            res/xml/data_extraction_rules:
+            @@ -1 +1
+            + <?xml version="1.0" encoding="utf-8"?>
+            + <!--
+            +    Sample data extraction rules file; uncomment and customize as necessary.
+            +    See https://developer.android.com/about/versions/12/features/backup-restore#new-format
+            +    for details.
+            + -->
+            + <data-extraction-rules>
+            +     <cloud-backup>
+            +         <!--
+            +         TODO: Use <include> and <exclude> to control what is backed up.
+            +         The domain can be file, database, sharedpref, external or root.
+            +         Examples:
+            +
+            +         <include domain="file" path="file_to_include"/>
+            +         <exclude domain="file" path="file_to_exclude"/>
+            +         <include domain="file" path="include_folder"/>
+            +         <exclude domain="file" path="include_folder/file_to_exclude"/>
+            +         <exclude domain="file" path="exclude_folder"/>
+            +         <include domain="file" path="exclude_folder/file_to_include"/>
+            +
+            +         <include domain="sharedpref" path="include_shared_pref1.xml"/>
+            +         <include domain="database" path="db_name/file_to_include"/>
+            +         <exclude domain="database" path="db_name/include_folder/file_to_exclude"/>
+            +         <include domain="external" path="file_to_include"/>
+            +         <exclude domain="external" path="file_to_exclude"/>
+            +         <include domain="root" path="file_to_include"/>
+            +         <exclude domain="root" path="file_to_exclude"/>
+            +         -->
+            +     </cloud-backup>
+            +     <!--
+            +     <device-transfer>
+            +         <include .../>
+            +         <exclude .../>
+            +     </device-transfer>
+            +     -->
+            + </data-extraction-rules>
+            """
+        )
+    }
+
+    fun disabled_testDataExtractionRules3() { // See TEMPORARILY DISABLED comment in ManifestDetector: not yet enforced
+        // allowBackup set when min SDK is S+
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="31" />
+                  <application
+                          android:allowBackup="true"
+                          android:dataExtractionRules="@xml/data_extraction_rules">
+                  </application>
+                </manifest>
+                """
+            ).indented(),
+            dataExtractionRules
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: This attribute is unused; dataExtractionRules will take precedence since minSdkVersion is 31 or higher [DataExtractionRules]
+                      android:allowBackup="true"
+                                           ~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun ignored_testDataExtractionRules4() { // See TEMPORARILY DISABLED comment in ManifestDetector: not yet enforced
+        // fullBackupContent set when min SDK is S+
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                  <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="31" />
+                  <application
+                      android:allowBackup="true"
+                      android:fullBackupContent="@xml/full_backup_content"
+                      android:dataExtractionRules="@xml/data_extraction_rules">
+                  </application>
+                </manifest>
+                """
+            ).indented(),
+            fullBackup,
+            dataExtractionRules
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: This attribute is unused; dataExtractionRules will take precedence since minSdkVersion is 31 or higher [DataExtractionRules]
+                  android:allowBackup="true"
+                                       ~~~~
+            AndroidManifest.xml:5: Warning: This attribute is unused; dataExtractionRules will take precedence since minSdkVersion is 31 or higher [DataExtractionRules]
+                  android:fullBackupContent="@xml/full_backup_content"
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testDataExtractionInvalidXmlReference() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                  <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="35" />
+                  <application android:dataExtractionRules="@xml/data_extraction_rules" />
+                </manifest>
+                """
+            ).indented()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: Missing data-extraction-rules resource [DataExtractionRules]
+              <application android:dataExtractionRules="@xml/data_extraction_rules" />
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testDataExtractionWithoutFullBackupContent() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                  <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="35" />
+                  <application android:dataExtractionRules="@xml/data_extraction_rules" />
+                </manifest>
+                """
+            ).indented(),
+            dataExtractionRules
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: The attribute android:dataExtractionRules only applies for Android 12 and higher; since minSdkVersion is API 29 you should also set android:fullBackupContent [DataExtractionRules]
+              <application android:dataExtractionRules="@xml/data_extraction_rules" />
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testNoAllowBackupWithBuildApi31() {
+        // No longer flagging this; it's noisy and many users just suppress it
+        lint().files(
+            projectProperties().compileSdk(35),
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                    <uses-sdk android:minSdkVersion="25" android:targetSdkVersion="29" />
+                    <application>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
+    }
+
+    private val fullBackup = xml(
+        "res/xml/full_backup_content.xml",
+        """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                </full-backup-content>
+                """
+    ).indented()
+
+    private val dataExtractionRules = xml(
+        "res/xml/data_extraction_rules.xml",
+        """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                </full-backup-content>
+                """
+    ).indented()
 
     // Make fake SDK "installation" such that we can predict the set
     // of Maven repositories discovered by this test

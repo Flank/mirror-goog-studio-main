@@ -71,6 +71,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/adt/idea/android-uitests:CreateCppKotlinProjectTest",  # b/185998794
     "//tools/adt/idea/android-uitests:BasicLayoutEditTest",  # b/186225187
     "//tools/adt/idea/android-uitests:NewComposeProjectTest",  # b/186225189
+    "//tools/adt/idea/android-uitests:CreateNewMobileProjectTest",  # b/192613920
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.

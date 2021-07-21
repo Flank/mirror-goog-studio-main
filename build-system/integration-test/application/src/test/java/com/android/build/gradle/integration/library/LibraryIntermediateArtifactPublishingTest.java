@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -97,26 +96,32 @@ public class LibraryIntermediateArtifactPublishingTest {
         GradleBuildResult result = project.executor().run(":app:verify");
         assertThat(result.getTask(":lib:createFullJarDebug")).didWork();
         File fullJar = getJar("full.jar");
-        try (Zip it = new Zip(fullJar)) {
-            assertThat(it).contains("com/example/helloworld/HelloWorld.class");
-            assertThat(it).contains("foo.txt");
-        }
+        assertThat(
+                fullJar,
+                it -> {
+                    it.contains("com/example/helloworld/HelloWorld.class");
+                    it.contains("foo.txt");
+                });
 
         File classesJar =
                 project.getSubproject(":lib")
                         .getIntermediateFile(
                                 RUNTIME_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                                         + "/debug/classes.jar");
-        try (Zip it = new Zip(classesJar)) {
-            assertThat(it).contains("com/example/helloworld/HelloWorld.class");
-            assertThat(it).doesNotContain("foo.txt");
-        }
+        assertThat(
+                classesJar,
+                it -> {
+                    it.contains("com/example/helloworld/HelloWorld.class");
+                    it.doesNotContain("foo.txt");
+                });
 
         File resJar = project.getSubproject(":lib").getIntermediateFile("library_java_res/debug/res.jar");
-        try (Zip it = new Zip(resJar)) {
-            assertThat(it).doesNotContain("com/example/helloworld/HelloWorld.class");
-            assertThat(it).contains("foo.txt");
-        }
+        assertThat(
+                resJar,
+                it -> {
+                    it.doesNotContain("com/example/helloworld/HelloWorld.class");
+                    it.contains("foo.txt");
+                });
     }
 
     private File getJar(String fileName) {

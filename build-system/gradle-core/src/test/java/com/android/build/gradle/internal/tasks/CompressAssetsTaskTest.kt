@@ -85,7 +85,6 @@ class CompressAssetsTaskTest {
             )
         CompressAssetsDelegate(
             workQueue,
-            inputDir.toFile(),
             outputDir.toFile(),
             noCompressPredicate,
             compressionLevel,
@@ -124,7 +123,6 @@ class CompressAssetsTaskTest {
             )
         CompressAssetsDelegate(
             workQueue,
-            inputDir.toFile(),
             outputDir.toFile(),
             noCompressPredicate,
             compressionLevel,

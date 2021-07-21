@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.api.dsl.Lint
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
@@ -68,4 +67,5 @@ interface InternalCommonExtension<
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
     fun defaultConfig(action: Action<DefaultConfig>)
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+    fun lint(action: Action<Lint>)
 }
