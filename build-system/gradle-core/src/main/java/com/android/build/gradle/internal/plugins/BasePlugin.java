@@ -324,7 +324,6 @@ public abstract class BasePlugin<
         DependencyResolutionChecks.registerDependencyCheck(project, projectOptions);
 
         checkPathForErrors();
-        checkModulesForErrors();
 
         AgpVersionChecker.enforceTheSamePluginVersions(project);
 
@@ -867,41 +866,6 @@ public abstract class BasePlugin<
                             Type.GENERIC,
                             "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "
                                     + configApkUrl);
-        }
-    }
-
-    /**
-     * Check the sub-projects structure :
-     * So far, checks that 2 modules do not have the same identification (group+name).
-     */
-    private void checkModulesForErrors() {
-        String CHECKED_MODULES_FLAG = "checked_modules_for_errors";
-        ExtraPropertiesExtension extraProperties =
-                project.getRootProject().getExtensions().getExtraProperties();
-        boolean alreadyChecked = extraProperties.has(CHECKED_MODULES_FLAG);
-
-        if (alreadyChecked) {
-            return;
-        }
-        extraProperties.set(CHECKED_MODULES_FLAG, true);
-
-        Set<Project> allProjects = project.getRootProject().getAllprojects();
-        Map<String, Project> subProjectsById = new HashMap<>(allProjects.size());
-        for (Project subProject : allProjects) {
-            String id = subProject.getGroup().toString() + ":" + subProject.getName();
-            if (subProjectsById.containsKey(id)) {
-                String message =
-                        String.format(
-                                "Your project contains 2 or more modules with the same "
-                                        + "identification %1$s\n"
-                                        + "at \"%2$s\" and \"%3$s\".\n"
-                                        + "You must use different identification (either name or group) for "
-                                        + "each modules.",
-                                id, subProjectsById.get(id).getPath(), subProject.getPath());
-                throw new StopExecutionException(message);
-            } else {
-                subProjectsById.put(id, subProject);
-            }
         }
     }
 

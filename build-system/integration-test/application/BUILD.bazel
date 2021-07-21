@@ -82,7 +82,6 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
     "//tools/base/build-system/integration-test:test-projects/densitySplit",
     "//tools/base/build-system/integration-test:test-projects/dependencies",
-    "//tools/base/build-system/integration-test:test-projects/duplicateNameImport",
     "//tools/base/build-system/integration-test:test-projects/dynamicApp",
     "//tools/base/build-system/integration-test:test-projects/embedded",
     "//tools/base/build-system/integration-test:test-projects/emptyApp",
