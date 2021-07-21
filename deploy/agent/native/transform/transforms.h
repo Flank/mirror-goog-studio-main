@@ -59,6 +59,14 @@ class TransformCache {
   std::string GetCachePath(const std::string& class_name) const;
 };
 
+struct BytecodeConvertingVisitor : public lir::Visitor {
+  lir::Bytecode* out = nullptr;
+  bool Visit(lir::Bytecode* bytecode) {
+    out = bytecode;
+    return true;
+  }
+};
+
 }  // namespace deploy
 
 #endif

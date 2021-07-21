@@ -25,10 +25,10 @@ import android.util.Log;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.function.Predicate;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class InstrumentationHooks {
@@ -51,6 +51,37 @@ public final class InstrumentationHooks {
         mRestart = restart;
     }
 
+    public static String modifyNativeSearchPath(String searchPath) {
+        try {
+            Object activityThread = getActivityThread();
+
+            String packageName = getPackageName(activityThread);
+            Path packagePath = getPackagePath(activityThread);
+
+            // If any files in the list are in the package's installation directory,
+            // include our overlay files in the list as well.
+            if (Arrays.stream(searchPath.split(File.pathSeparator))
+                    .map(Paths::get)
+                    .noneMatch(path -> path.startsWith(packagePath))) {
+                return searchPath;
+            }
+
+            Overlay overlay = new Overlay(packageName);
+
+            StringBuilder builder = new StringBuilder();
+            for (File dir : overlay.getNativeLibraryDirs()) {
+                builder.append(dir.toString());
+                builder.append(File.pathSeparator);
+            }
+
+            builder.append(searchPath);
+            return builder.toString();
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
+        return searchPath;
+    }
+
     public static List<File> handleSplitDexPathExit(List<File> files) {
         try {
             Object activityThread = getActivityThread();
@@ -62,8 +93,7 @@ public final class InstrumentationHooks {
             // replace them with dex overlays. If we don't remove any files,
             // we need to additionally check if we need dex overlays.
             Overlay overlay = new Overlay(packageName);
-            if (files.removeIf(prefixMatch(overlay.getOverlayRoot()))
-                    || files.stream().anyMatch(prefixMatch(packagePath))) {
+            if (files.stream().anyMatch(file -> file.toPath().startsWith(packagePath))) {
                 files.addAll(0, overlay.getDexFiles());
             }
 
@@ -72,30 +102,6 @@ public final class InstrumentationHooks {
         }
 
         return files;
-    }
-
-    public static List<File> handleSplitPathsExit(List<File> files) {
-        try {
-            Object activityThread = getActivityThread();
-
-            String packageName = getPackageName(activityThread);
-            Path packagePath = getPackagePath(activityThread);
-
-            // If any files in the list are in the package's installation directory,
-            // include our overlay files in the list as well.
-            if (files.stream().anyMatch(prefixMatch(packagePath))) {
-                Overlay overlay = new Overlay(packageName);
-                files.addAll(0, overlay.getNativeLibraryDirs());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Exception", e);
-        }
-
-        return files;
-    }
-
-    private static Predicate<File> prefixMatch(Path prefix) {
-        return file -> file.toPath().startsWith(prefix);
     }
 
     public static Resources addResourceOverlays(Resources resources) throws Exception {

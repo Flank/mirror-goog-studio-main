@@ -1889,6 +1889,7 @@ public class DeployerRunnerTest {
         } else {
             assertRetransformed(
                     logcat,
+                    "android.app.ApplicationLoaders",
                     "android.app.ActivityThread",
                     "dalvik.system.DexPathList$Element",
                     "dalvik.system.DexPathList",
@@ -1972,6 +1973,7 @@ public class DeployerRunnerTest {
         // Should only have one retransform of each of these classes.
         assertRetransformed(
                 logcat,
+                "android.app.ApplicationLoaders",
                 "java.lang.Thread",
                 "dalvik.system.DexPathList",
                 "android.app.LoadedApk",
@@ -1979,10 +1981,12 @@ public class DeployerRunnerTest {
         // Should have redefined each of these classes twice, once per restart.
         assertRedefined(
                 logcat,
+                "android.app.ApplicationLoaders",
                 "java.lang.Thread",
                 "dalvik.system.DexPathList",
                 "android.app.LoadedApk",
                 "android.app.ResourcesManager",
+                "android.app.ApplicationLoaders",
                 "java.lang.Thread",
                 "dalvik.system.DexPathList",
                 "android.app.LoadedApk",
@@ -2298,6 +2302,7 @@ public class DeployerRunnerTest {
         } else {
             assertRetransformed(
                     logcat,
+                    "android.app.ApplicationLoaders",
                     "android.app.ActivityThread",
                     "dalvik.system.DexPathList$Element",
                     "dalvik.system.DexPathList",

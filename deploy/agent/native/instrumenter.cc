@@ -32,6 +32,7 @@
 #include "tools/base/deploy/agent/native/native_callbacks.h"
 #include "tools/base/deploy/agent/native/runtime.jar.cc"
 #include "tools/base/deploy/agent/native/transform/hook_transform.h"
+#include "tools/base/deploy/agent/native/transform/modify_parameter_transform.h"
 #include "tools/base/deploy/agent/native/transform/transforms.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
@@ -284,6 +285,16 @@ bool Instrumenter::ApplyTransforms(
 }
 
 bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
+  const ModifyParameterTransform loaders(
+      /* target class */ "android/app/ApplicationLoaders",
+      /* target method */ "getClassLoader",
+      /* target signature */
+      "(Ljava/lang/String;IZLjava/lang/String;Ljava/lang/String;Ljava/lang/"
+      "ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Ljava/"
+      "lang/ClassLoader;",
+      /* parameter index to modify */ 3,
+      /* parameter transform function */ "modifyNativeSearchPath");
+
   const HookTransform thread(
       /* target class */ "java/lang/Thread",
       /* target method */ "dispatchUncaughtException",
@@ -303,20 +314,11 @@ bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
       /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
       "handleFindResourceEntry", MethodHooks::kNoHook);
 
-  const MethodHooks split_paths(
-      /* target method */ "splitPaths",
-      /* target signature */ "(Ljava/lang/String;Z)Ljava/util/List;",
-      MethodHooks::kNoHook, "handleSplitPathsExit");
-
-  const MethodHooks split_dex_paths(
-      /* target method */ "splitDexPath",
-      /* target signature */
-      "(Ljava/lang/String;)Ljava/util/List;", MethodHooks::kNoHook,
-      "handleSplitDexPathExit");
-
   const HookTransform dex_path_list(
       /* target class */ "dalvik/system/DexPathList",
-      /* transforms */ {split_paths, split_dex_paths});
+      /* target method */ "splitDexPath",
+      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
+      MethodHooks::kNoHook, "handleSplitDexPathExit");
 
   const HookTransform res_manager(
       /* target class */ "android/app/ResourcesManager",
@@ -334,7 +336,7 @@ bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
 
   if (overlay_swap) {
     return instrumenter.Instrument(
-        {&thread, &dex_path_list, &loaded_apk, &res_manager});
+        {&loaders, &thread, &dex_path_list, &loaded_apk, &res_manager});
   } else {
     return instrumenter.Instrument({&activity_thread, &dex_path_list_element});
   }
