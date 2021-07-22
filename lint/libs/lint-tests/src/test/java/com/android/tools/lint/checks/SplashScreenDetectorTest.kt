@@ -173,6 +173,27 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testNonActivity() {
+        // Regression test for b/180481539
+        lint().files(
+            kotlin(
+                """
+            package test.pkg
+
+            object SplashScreenUtil
+            """
+            ).indented(),
+            java(
+                """
+            package test.pkg;
+
+            class SplashScreenUtil2 {}
+            """
+            ).indented(),
+            manifest().minSdk(S)
+        ).run().expectClean()
+    }
+
     private val fragmentActivityStub: TestFile = java(
         """
         package androidx.fragment.app;

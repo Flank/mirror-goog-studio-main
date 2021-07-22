@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.CLASS_ACTIVITY
+import com.android.SdkConstants.CLASS_V4_FRAGMENT
+import com.android.SdkConstants.CLASS_VIEW
 import com.android.sdklib.AndroidVersion.VersionCodes.S
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -35,7 +38,9 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
 
     override fun createUastHandler(context: JavaContext) = object : UElementHandler() {
         override fun visitClass(node: UClass) {
-            if (SPLASH_SCREEN_KEYWORDS.any { node.name?.contains(it, ignoreCase = true) == true }) {
+            if (SPLASH_SCREEN_KEYWORDS.any { node.name?.contains(it, ignoreCase = true) == true } &&
+                isActivityOrFragment(context, node)
+            ) {
                 val incident = Incident(
                     ISSUE,
                     context.getNameLocation(node),
@@ -46,8 +51,17 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
         }
     }
 
+    private fun isActivityOrFragment(context: JavaContext, cls: UClass) =
+        PROHIBITED_SUPERCLASSES.any { context.evaluator.extendsClass(cls, it) }
+
     companion object {
         private val SPLASH_SCREEN_KEYWORDS = listOf("SplashScreen", "LaunchScreen", "SplashActivity")
+        private val PROHIBITED_SUPERCLASSES = listOf(
+            CLASS_ACTIVITY,
+            CLASS_V4_FRAGMENT.oldName(),
+            CLASS_V4_FRAGMENT.newName(),
+            CLASS_VIEW
+        )
 
         @JvmField
         val ISSUE = Issue.create(
