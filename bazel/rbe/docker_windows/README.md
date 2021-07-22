@@ -12,7 +12,7 @@ been replaced with values used by Android Studio.
 ```
 INSTANCE_NAME="rbe-windows-toolchain"
 
-gcloud compute instances "${INSTANCE_NAME}" \
+gcloud compute instances create "${INSTANCE_NAME}" \
   --project=android-studio-build \
   --zone="us-east1-b" \
   --machine-type=n1-standard-16 \
@@ -59,15 +59,21 @@ latest: digest: sha256:7c6a3968e02612241a83f750a950d8f26783d167fcd77ecc029d992f5
 ```
 
 Use the digest to update the `container_image` property of the windows platform
-in tools/base/bazel/platforms/BUILD
+in `tools/base/bazel/platforms/BUILD`
 
 
 ## Debugging Docker Containers
 
 After a container has been created, it can be very useful to run commands
 inspecting the container contents. For example, to verify what version of
-Visual Studio is installed, run the following
+Visual Studio is installed, run the following:
 
 ```
 docker run rbe_windows_toolchain dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC"
+```
+
+__OR__ to open an interactive shell:
+
+```
+docker run -it rbe_windows_toolchain "powershell.exe"
 ```

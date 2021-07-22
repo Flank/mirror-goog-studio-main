@@ -7,6 +7,7 @@
 #     packages failed to install. See
 #     https://www.msys2.org/news/#2020-12-26-zstd-exemption-for-core-packages-removed
 #     and RBE Bug on upgrading their msys2 version b/183609916
+# - We install Python 3 as well
 # - We set BAZEL_VC and STUDIO_IMAGE environment variables.
 # - Turn on developer mode.
 # - Install Windows 10 build tools.
@@ -59,19 +60,21 @@ RUN bash.exe -c \"curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b3
 	&& pacman-key --populate msys2 \
 	&& pacman-key --verify msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig \
 	&& pacman --noconfirm -U msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz \
-	&& (pacman-key --refresh-keys || pacman-key --refresh-keys --keyserver=pool.sks-keyservers.net) \
+	&& (pacman-key --refresh-keys || pacman-key --refresh-keys --keyserver=hkps://peegeepee.com) \
 	&& pacman --noconfirm -Syy zstd \
 	&& pacman --noconfirm -Syy git curl zip unzip\"
 
 # Install Visual C++ Redistributable for Visual Studio 2015:
-ADD https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x64.exe C:\\TEMP\\vc_redist.x64.exe RUN C:\TEMP\vc_redist.x64.exe /quiet /install
+ADD https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x64.exe C:\\TEMP\\vc_redist.x64.exe
+RUN C:\TEMP\vc_redist.x64.exe /quiet /install
 
 # Install Python 2.7.
-ADD https://www.python.org/ftp/python/2.7.14/python-2.7.14.amd64.msi C:\\TEMP\\python.msi
+ADD https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi C:\\TEMP\\python.msi
 RUN Start-Process msiexec.exe -ArgumentList \"/i C:\\TEMP\\python.msi /qn /norestart /log C:\\TEMP\\python_install_log.txt\" -wait
-RUN $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path; \
-  $newpath = \"$oldpath;C:\Python27\"; \
-  Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
+
+# Install Python 3
+ADD https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe C:\\TEMP\\python3.exe
+RUN Start-Process C:\TEMP\python3.exe -ArgumentList '/quiet InstallAllUsers=1 TargetDir=C:\\python3 /log C:\\TEMP\\python3_install_log.txt ' -wait
 
 ##### Android Studio Specific Changes #######
 
@@ -88,8 +91,8 @@ SHELL ["cmd.exe", "/s", "/c"]
 
 # Install windows 10 build tools, version 16.6.5
 # See https://docs.microsoft.com/en-us/visualstudio/releases/2019/history
-ADD https://download.visualstudio.microsoft.com/download/pr/067fd8d0-753e-4161-8780-dfa3e577839e/4776935864d08e66183acd5b3647c9616da989c60afbfe100d4afc459f7e5785/vs_BuildTools.exe "C\TEMP\vs_buildtools.exe"
-RUN c:\temp\vs_buildtools.exe --wait --quiet --norestart --nocache \
+ADD https://download.visualstudio.microsoft.com/download/pr/067fd8d0-753e-4161-8780-dfa3e577839e/4776935864d08e66183acd5b3647c9616da989c60afbfe100d4afc459f7e5785/vs_BuildTools.exe "C:\TEMP\vs_buildtools.exe"
+RUN C:\TEMP\vs_buildtools.exe --wait --quiet --norestart --nocache \
     --add Microsoft.VisualStudio.Workload.VCTools \
     --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
     --add Microsoft.VisualStudio.Component.Windows10SDK.18362 \
