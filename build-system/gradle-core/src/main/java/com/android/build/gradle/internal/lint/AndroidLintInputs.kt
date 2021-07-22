@@ -173,8 +173,14 @@ abstract class LintTool {
 
 abstract class ProjectInputs {
 
-    @get:Input
+    @get:Internal
     abstract val projectDirectoryPath: Property<String>
+
+    // projectDirectoryPathInput should either be (1) unset if the project directory is not an input
+    // to the associated task, or (2) set to the same value as projectDirectoryPath otherwise.
+    @get:Input
+    @get:Optional
+    abstract val projectDirectoryPathInput: Property<String>
 
     @get:Input
     abstract val projectGradlePath: Property<String>
@@ -217,11 +223,11 @@ abstract class ProjectInputs {
     @get:Input
     abstract val neverShrinking: Property<Boolean>
 
-    internal fun initialize(variant: VariantWithTests) {
+    internal fun initialize(variant: VariantWithTests, isForAnalysis: Boolean) {
         val creationConfig = variant.main
         val project = creationConfig.services.projectInfo.getProject()
         val extension = creationConfig.globalScope.extension
-        initializeFromProject(project)
+        initializeFromProject(project, isForAnalysis)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
         lintOptions.initialize(extension.lintOptions)
@@ -239,8 +245,13 @@ abstract class ProjectInputs {
         neverShrinking.setDisallowChanges(extension.buildTypes.none { it.isMinifyEnabled })
     }
 
-    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, dslLintOptions: LintOptions) {
-        initializeFromProject(project)
+    internal fun initializeForStandalone(
+        project: Project,
+        javaConvention: JavaPluginConvention,
+        dslLintOptions: LintOptions,
+        isForAnalysis: Boolean
+    ) {
+        initializeFromProject(project, isForAnalysis)
         projectType.setDisallowChanges(LintModelModuleType.JAVA_LIBRARY)
         lintOptions.initialize(dslLintOptions)
         resourcePrefix.setDisallowChanges("")
@@ -256,8 +267,11 @@ abstract class ProjectInputs {
         neverShrinking.setDisallowChanges(true)
     }
 
-    private fun initializeFromProject(project: Project) {
+    private fun initializeFromProject(project: Project, isForAnalysis: Boolean) {
         projectDirectoryPath.setDisallowChanges(project.projectDir.absolutePath)
+        if (!isForAnalysis) {
+            projectDirectoryPathInput.setDisallowChanges(projectDirectoryPath)
+        }
         projectGradlePath.setDisallowChanges(project.path)
         mavenGroupId.setDisallowChanges(project.group.toString())
         mavenArtifactId.setDisallowChanges(project.name)

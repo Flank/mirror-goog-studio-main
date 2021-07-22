@@ -273,7 +273,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     creationConfig.globalScope.extension.lintOptions.checkOnly
                 }
             )
-            task.projectInputs.initialize(variant)
+            task.projectInputs.initialize(variant, isForAnalysis = true)
             task.variantInputs.initialize(
                 variant,
                 checkDependencies = false,
@@ -359,7 +359,13 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.fatalOnly.setDisallowChanges(fatalOnly)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
-        this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
+        this.projectInputs
+            .initializeForStandalone(
+                project,
+                javaPluginConvention,
+                lintOptions,
+                isForAnalysis = true
+            )
         this.variantInputs
             .initializeForStandalone(
                 project,

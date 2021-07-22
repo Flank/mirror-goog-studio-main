@@ -539,7 +539,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.checkOnly.set(creationConfig.services.provider {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
-            task.projectInputs.initialize(variant)
+            task.projectInputs.initialize(variant, isForAnalysis = false)
             task.outputs.upToDateWhen {
                 // Workaround for b/193244776
                 // Ensure the task runs if baselineFile is set and the file doesn't exist
@@ -810,7 +810,13 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.reportOnly.setDisallowChanges(true)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
-        this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
+        this.projectInputs
+            .initializeForStandalone(
+                project,
+                javaPluginConvention,
+                lintOptions,
+                isForAnalysis = false
+            )
         this.outputs.upToDateWhen {
             // Workaround for b/193244776
             // Ensure the task runs if baselineFile is set and the file doesn't exist

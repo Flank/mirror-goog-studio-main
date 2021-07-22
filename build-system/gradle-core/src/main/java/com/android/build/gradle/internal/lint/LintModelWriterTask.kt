@@ -90,7 +90,13 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
-        this.projectInputs.initializeForStandalone(project, javaConvention, lintOptions)
+        this.projectInputs
+            .initializeForStandalone(
+                project,
+                javaConvention,
+                lintOptions,
+                isForAnalysis = false
+            )
         // The artifact produced is only used by lint tasks with checkDependencies=true
         this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, checkDependencies=true)
         this.partialResultsDir = partialResultsDir
@@ -147,7 +153,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             super.configure(task)
             // Do not export test sources between projects
             val variantWithoutTests = VariantWithTests(creationConfig, null, null)
-            task.projectInputs.initialize(variantWithoutTests)
+            task.projectInputs.initialize(variantWithoutTests, isForAnalysis = false)
             task.variantInputs.initialize(
                 variantWithoutTests,
                 checkDependencies = checkDependencies,
