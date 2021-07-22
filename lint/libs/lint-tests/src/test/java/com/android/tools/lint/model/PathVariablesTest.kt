@@ -39,10 +39,11 @@ class PathVariablesTest {
         val home = File(System.getProperty("user.home"))
         val temp = File(System.getProperty("java.io.tmpdir"))
         val underHome = File(home, "sub")
+        val gradleBuildDir = File(temp, "build")
         assertTrue(home.isDirectory)
         assertTrue(temp.isDirectory)
 
-        val desc = "\$SUB=$underHome;\$HOME=$home;\$TEMP=$temp;"
+        val desc = "SUB=$underHome;HOME=$home;TEMP=$temp;{:gradle:path*buildDir}=$gradleBuildDir;"
         val variables = PathVariables.parse(desc)
 
         val inHome = File(home, "dir1" + separator + "dir2")
@@ -53,6 +54,9 @@ class PathVariablesTest {
 
         val inTemp = File(temp, "file")
         check(variables, inTemp, "\$TEMP/file")
+
+        val inGradleBuildDir = File(gradleBuildDir, "file")
+        check(variables, inGradleBuildDir, "\${:gradle:path*buildDir}/file")
 
         check(variables, home, "\$HOME")
         assertEquals("\$HOME", variables.toPathString(home))
@@ -117,17 +121,18 @@ class PathVariablesTest {
     @Test
     fun testNormalize() {
         val tempFile = File.createTempFile("prefix", "suffix")
-        val temp = tempFile.parentFile ?: return
+        val temp = tempFile.parentFile!!
         val alias = File(temp.path + separator + ".." + separator + temp.name)
 
-        val variables = PathVariables()
-        variables.add("TEMP", alias)
-        variables.normalize()
-        val normalizedFile = File(temp.canonicalFile, "test")
-        assertEquals("\$TEMP/test", variables.toPathString(normalizedFile, unix = true))
+        listOf("TEMP", "{:gradle:path*projectDir}").forEach { name ->
+            val variables = PathVariables()
+            variables.add(name, alias)
+            variables.normalize()
+            val normalizedFile = File(temp.canonicalFile, "test")
+            assertEquals("\$$name/test", variables.toPathString(normalizedFile, unix = true))
+        }
     }
 
-    // TODO: Test sorting
     @Test
     fun testSorting() {
         val variables = PathVariables()

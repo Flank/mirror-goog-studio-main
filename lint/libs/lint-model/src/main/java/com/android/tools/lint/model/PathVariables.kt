@@ -35,6 +35,7 @@ class PathVariables {
     /** Adds the given [name] and [dir] pair as a path variable */
     @JvmOverloads
     fun add(name: String, dir: File, sort: Boolean = true) {
+        checkPathVariableName(name)
         val variable = PathVariable(name, dir)
         pathVariables.add(variable)
         if (sort) {
@@ -102,9 +103,10 @@ class PathVariables {
     /** Reverses the path string computed by [toPathString] */
     fun fromPathString(path: String, relativeTo: File? = null): File {
         if (path.startsWith("$")) {
+            val hasBraces = path.length > 1 && path[1] == '{'
             for (i in 1 until path.length) {
                 val c = path[i]
-                if (!c.isJavaIdentifierPart()) {
+                if ((hasBraces && path[i - 1] == '}') || (!hasBraces && !c.isJavaIdentifierPart())) {
                     val varName = path.substring(1, i)
                     val dir = pathVariables.firstOrNull { it.name == varName }?.dir
                         ?: error("Path variable \$$varName referenced in $path not provided to serialization")
@@ -139,6 +141,7 @@ class PathVariables {
     fun add(other: PathVariables) {
         for (variable in other.pathVariables) {
             val name = variable.name
+            checkPathVariableName(name)
             pathVariables.firstOrNull { it.name == name }?.let { pathVariables.remove(it) }
             pathVariables.add(variable)
         }
@@ -214,9 +217,13 @@ class PathVariables {
          * [PathVariables] object. The format of the string is
          * a semi-colon separated list of name=path pairs, such
          * as HOME=/Users/demo;GRADLE_USER=/Users/demo/.gradle;
+         *
+         * If the string contains multiple pairs with the same
+         * name, the first pair takes precedence.
          */
         fun parse(s: String): PathVariables {
             val variables = PathVariables()
+            val names = mutableSetOf<String>()
             for (pair in s.split(';')) {
                 if (pair.isBlank()) {
                     // trailing ;
@@ -226,12 +233,29 @@ class PathVariables {
                 if (index <= 0 || index == pair.length - 1 || pair.startsWith("$$")) {
                     error("Invalid path descriptor $pair, expected name=path-prefix")
                 }
-                val name = pair.substring(1, index).trim()
-                val prefix = File(pair.substring(index + 1).trim())
-                variables.add(name, prefix, sort = false)
+                val name = pair.substring(0, index).trim()
+                if (names.add(name)) {
+                    val prefix = File(pair.substring(index + 1).trim())
+                    variables.add(name, prefix, sort = false)
+                }
             }
             variables.sort()
             return variables
+        }
+
+        /** Check that the path variable name is allowed */
+        private fun checkPathVariableName(name: String) {
+            when {
+                name.startsWith('{') ->
+                    if (!name.endsWith('}') && !name.endsWith("}$CANONICALIZED")) {
+                        error("Invalid path variable name $name, missing ending \"}\".")
+                    }
+                name.asSequence().any { !it.isJavaIdentifierPart() } ->
+                    error(
+                        "Invalid path variable name $name. Contains illegal character \"" +
+                                "${name.asSequence().first { !it.isJavaIdentifierPart() }}\"."
+                    )
+            }
         }
     }
 }

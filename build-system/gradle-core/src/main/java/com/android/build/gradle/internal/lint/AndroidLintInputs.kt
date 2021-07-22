@@ -194,8 +194,14 @@ abstract class ProjectInputs {
     @get:Input
     abstract val mavenArtifactId: Property<String>
 
-    @get:Input
+    @get:Internal
     abstract val buildDirectoryPath: Property<String>
+
+    // buildDirectoryPathInput should either be (1) unset if the build directory is not an input to
+    // the associated task, or (2) set to the same value as buildDirectoryPath otherwise.
+    @get:Input
+    @get:Optional
+    abstract val buildDirectoryPathInput: Property<String>
 
     @get:Nested
     abstract val lintOptions: LintOptionsInput
@@ -269,14 +275,14 @@ abstract class ProjectInputs {
 
     private fun initializeFromProject(project: Project, isForAnalysis: Boolean) {
         projectDirectoryPath.setDisallowChanges(project.projectDir.absolutePath)
-        if (!isForAnalysis) {
-            projectDirectoryPathInput.setDisallowChanges(projectDirectoryPath)
-        }
         projectGradlePath.setDisallowChanges(project.path)
         mavenGroupId.setDisallowChanges(project.group.toString())
         mavenArtifactId.setDisallowChanges(project.name)
         buildDirectoryPath.setDisallowChanges(project.layout.buildDirectory.map { it.asFile.absolutePath })
-
+        if (!isForAnalysis) {
+            projectDirectoryPathInput.setDisallowChanges(projectDirectoryPath)
+            buildDirectoryPathInput.setDisallowChanges(buildDirectoryPath)
+        }
     }
 
     internal fun convertToLintModelModule(): LintModelModule {
