@@ -604,10 +604,7 @@ abstract class DataFlowAnalyzer(
             return
         }
 
-        // TEMPORARILY DISABLED; see testDatabaseCursorReassignment
-        // This can result in some false positives right now. Play it
-        // safe instead.
-        var clearLhs = false
+        var clearLhs = true
 
         val rhs = node.rightOperand
         if (instances.contains(rhs)) {
@@ -634,10 +631,70 @@ abstract class DataFlowAnalyzer(
             // If we reassign one of the variables, clear it out
             val lhs = node.leftOperand.tryResolve()
             if (lhs != null && lhs != initial && references.contains(lhs)) {
-                references.remove(lhs)
+                val block = node.uastParent
+                if (block is UBlockExpression && initial.size == 1) {
+                    val element: UElement = initial.first()
+                    if (element.isBelow(node)) {
+                        return
+                    }
+                    val initialBlock = element.getParentOfType<UElement>(
+                        false,
+                        UBlockExpression::class.java,
+                        UIfExpression::class.java
+                    ) ?: return
+
+                    if (initialBlock === block) {
+                        references.remove(lhs)
+                    } else if (node.isBelow(initialBlock)) {
+                        var referenced = false
+                        val target = node.uastParent
+
+                        initialBlock.accept(object : AbstractUastVisitor() {
+                            private var reachedTarget = false
+
+                            override fun afterVisitElement(node: UElement) {
+                                if (node == target) {
+                                    reachedTarget = true
+                                }
+                                super.afterVisitElement(node)
+                            }
+
+                            override fun afterVisitBinaryExpression(node: UBinaryExpression) {
+                                super.afterVisitBinaryExpression(node)
+                            }
+
+                            override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
+                                if (reachedTarget) {
+                                    val resolved = node.resolve()
+                                    if (lhs.isEquivalentTo(resolved)) {
+                                        referenced = true
+                                        return true
+                                    }
+                                }
+                                return super.visitSimpleNameReferenceExpression(node)
+                            }
+                        })
+                        if (!referenced) {
+                            // The variable is reassigned in a different (deeper) block than the origin but
+                            // it is not referenced further after that
+                            references.remove(lhs)
+                        }
+                    }
+                }
             }
         }
         super.afterVisitBinaryExpression(node)
+    }
+
+    private fun UElement.isBelow(parent: UElement, strict: Boolean = false): Boolean {
+        var curr = if (strict) uastParent else this
+        while (curr != null) {
+            if (curr == parent) {
+                return true
+            }
+            curr = curr.uastParent
+        }
+        return false
     }
 
     override fun afterVisitReturnExpression(node: UReturnExpression) {

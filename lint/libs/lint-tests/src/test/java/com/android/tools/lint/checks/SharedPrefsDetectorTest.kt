@@ -109,4 +109,101 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testReassigned() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.SharedPreferences;
+                import android.util.ArraySet;
+
+                import java.util.Collections;
+                import java.util.Set;
+
+                public class SharedPrefsEditTest {
+                    private SharedPreferences mPreferences;
+
+                    private void setDenied(String roleName, boolean denied, String key) {
+                        Set<String> roleNames = mPreferences.getStringSet(key, Collections.emptySet());
+                        roleNames = new ArraySet<>(roleNames);
+                        if (denied) {
+                            roleNames.add(roleName); // OK 1
+                        }
+                    }
+
+                    private void setDenied2(String roleName, boolean denied, String key) {
+                        Set<String> roleNames = mPreferences.getStringSet(key, Collections.emptySet());
+                        if (true) {
+                            // Assignment in different nested scope but no other usage so we
+                            // conclude we can stop tracking the roleNames array
+                            roleNames = new ArraySet<>(roleNames);
+                            if (denied) {
+                                roleNames.add(roleName); // OK 2
+                            }
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testReassignedStillBroken() {
+        // Test for a couple more scenarios with reassignment which we're not handling
+        // correctly yet
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.SharedPreferences;
+                import android.util.ArraySet;
+
+                import java.util.Collections;
+                import java.util.Set;
+
+                public class SharedPrefsEditTest {
+                    private SharedPreferences mPreferences;
+
+                    private void setDenied3(String roleName, boolean denied, String key) {
+                        Set<String> roleNames = mPreferences.getStringSet(key, Collections.emptySet());
+                        if (true) {
+                            // Like setDenied2 but here there's a later usage so we need to
+                            // keep tracking it
+                            roleNames = new ArraySet<>(roleNames);
+                            if (denied) {
+                                roleNames.add(roleName); // OK (but not yet analyzed correctly)
+                            }
+                        }
+                        boolean x = roleNames.contains("x"); // reference after reassignment that my apply
+                    }
+
+                    private void setDenied4(String roleName, boolean denied, String key) {
+                        Set<String> roleNames = null;
+                        if (true) {
+                            roleNames = mPreferences.getStringSet(key, Collections.emptySet());
+                        } else {
+                            roleNames = new ArraySet<>(roleNames);
+                            if (denied) {
+                                roleNames.add(roleName); // OK (but not yet analyzed correctly)
+                            }
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/SharedPrefsEditTest.java:19: Warning: Do not modify the set returned by SharedPreferences.getStringSet()` [MutatingSharedPrefs]
+                            roleNames.add(roleName); // OK (but not yet analyzed correctly)
+                            ~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/SharedPrefsEditTest.java:32: Warning: Do not modify the set returned by SharedPreferences.getStringSet()` [MutatingSharedPrefs]
+                            roleNames.add(roleName); // OK (but not yet analyzed correctly)
+                            ~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
 }

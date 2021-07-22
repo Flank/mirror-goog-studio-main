@@ -174,6 +174,16 @@ You can also convert this to a runconfig in IntelliJ for running the
 lint Main class with the right pwd, environment variables and arguments
 inside the IDE.
 
+### New Check Fails
+
+The platform obviously isn't a real Android app, and some of the checks
+which apply for apps (such as flagging an import of `android.R` as
+suspicious) do not apply in platform code.
+
+If you've added a new lint check and it's finding false positives in
+the platform, you may consider just adding it to the exclude list in
+`build/soong/java/lint_defaults.txt`.
+
 ## Other Projects
 
 For other projects built with Gradle, you can add a property in your

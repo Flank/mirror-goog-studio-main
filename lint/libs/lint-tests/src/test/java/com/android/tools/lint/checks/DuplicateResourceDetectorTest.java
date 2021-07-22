@@ -113,9 +113,9 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "res/values/duplicate-items.xml:13: Error: contentId has already been defined in this <declare-styleable> [DuplicateDefinition]\n"
                         + "        <attr name=\"contentId\" format=\"integer\" />\n"
                         + "              ~~~~~~~~~~~~~~~~\n"
-                        + "    res/values/duplicate-items.xml:11: Previously defined here\n"
-                        + "        <attr name=\"content\" format=\"reference\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/values/duplicate-items.xml:12: Previously defined here\n"
+                        + "        <attr name=\"contentId\" format=\"reference\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -323,6 +323,31 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                                         + "</resources>\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testDuplicates() {
+        lint().files(
+                        xml(
+                                        "res/values/resources.xml",
+                                        ""
+                                                + "<resources>\n"
+                                                + "    <style name=\"Settings\">\n"
+                                                + "        <item name=\"android:clipToPadding\">false</item>\n"
+                                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                                + "    </style>\n"
+                                                + "</resources>")
+                                .indented())
+                .run()
+                .expect(
+                        ""
+                                + "res/values/resources.xml:5: Error: android:navigationBarColor has already been defined in this <style> [DuplicateDefinition]\n"
+                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "    res/values/resources.xml:4: Previously defined here\n"
+                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void testInvalidXml() {

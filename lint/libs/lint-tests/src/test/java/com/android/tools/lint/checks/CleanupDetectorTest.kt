@@ -278,7 +278,13 @@ class CleanupDetectorTest : AbstractCheckTest() {
             src/test/pkg/CommitTest.java:65: Warning: This transaction should be completed with a commit() call [CommitTransaction]
                     getSupportFragmentManager().beginTransaction(); // ERROR 4
                                                 ~~~~~~~~~~~~~~~~
-            0 errors, 4 warnings
+            src/test/pkg/CommitTest.java:123: Warning: This transaction should be completed with a commit() call [CommitTransaction]
+                    transaction = getFragmentManager().beginTransaction(); // ERROR 5
+                                                       ~~~~~~~~~~~~~~~~
+            src/test/pkg/CommitTest.java:132: Warning: This transaction should be completed with a commit() call [CommitTransaction]
+                    transaction = getFragmentManager().beginTransaction(); // ERROR 6
+                                                       ~~~~~~~~~~~~~~~~
+            0 errors, 6 warnings
             """
 
         lint().files(
@@ -406,7 +412,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
                             temp.commitAllowingStateLoss();
                         }
 
-                        // This error is not yet caught by lint; see clearLhs in DataFlowAnalyzer
                         public void error5(FragmentTransaction unrelated) {
                             FragmentTransaction transaction;
                             // Comment in between variable declaration and assignment
@@ -415,7 +420,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
                             transaction.commit();
                         }
 
-                        // This error is not yet caught by lint; see clearLhs in DataFlowAnalyzer
                         public void error6(FragmentTransaction unrelated) {
                             FragmentTransaction transaction;
                             FragmentTransaction transaction2;
