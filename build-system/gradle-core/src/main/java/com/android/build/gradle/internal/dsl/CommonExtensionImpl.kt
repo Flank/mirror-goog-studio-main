@@ -87,10 +87,18 @@ abstract class CommonExtensionImpl<
         action.invoke(aaptOptions)
     }
 
+    override fun aaptOptions(action: Action<AaptOptions>) {
+        action.execute(aaptOptions)
+    }
+
     override val installation: Installation = dslServices.newInstance(AdbOptions::class.java)
 
     override fun installation(action: Installation.() -> Unit) {
         action.invoke(installation)
+    }
+
+    override fun installation(action: Action<Installation>) {
+        action.execute(installation)
     }
 
     override val adbOptions: AdbOptions get() = installation as AdbOptions
@@ -99,7 +107,11 @@ abstract class CommonExtensionImpl<
         action.invoke(adbOptions)
     }
 
-    fun buildFeatures(action: Action<BuildFeaturesT>) {
+    override fun adbOptions(action: Action<AdbOptions>) {
+        action.execute(adbOptions)
+    }
+
+    override fun buildFeatures(action: Action<BuildFeaturesT>) {
         action.execute(buildFeatures)
     }
 
@@ -152,6 +164,10 @@ abstract class CommonExtensionImpl<
         action.invoke(composeOptions)
     }
 
+    override fun composeOptions(action: Action<ComposeOptions>) {
+        action.execute(composeOptions)
+    }
+
     override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>) {
         action.execute(buildTypes as NamedDomainObjectContainer<BuildType>)
     }
@@ -179,6 +195,10 @@ abstract class CommonExtensionImpl<
         action.invoke(dataBinding)
     }
 
+    override fun dataBinding(action: Action<DataBindingOptions>) {
+        action.execute(dataBinding)
+    }
+
     override fun defaultConfig(action: Action<com.android.build.gradle.internal.dsl.DefaultConfig>) {
         action.execute(defaultConfig as com.android.build.gradle.internal.dsl.DefaultConfig)
     }
@@ -194,10 +214,18 @@ abstract class CommonExtensionImpl<
         action.invoke(externalNativeBuild)
     }
 
+    override fun externalNativeBuild(action: Action<ExternalNativeBuild>) {
+        action.execute(externalNativeBuild)
+    }
+
     override val testCoverage: TestCoverage  = dslServices.newInstance(JacocoOptions::class.java)
 
     override fun testCoverage(action: TestCoverage.() -> Unit) {
         action.invoke(testCoverage)
+    }
+
+    override fun testCoverage(action: Action<TestCoverage>) {
+        action.execute(testCoverage)
     }
 
     override val jacoco: JacocoOptions
@@ -207,6 +235,10 @@ abstract class CommonExtensionImpl<
         action.invoke(jacoco)
     }
 
+    override fun jacoco(action: Action<JacocoOptions>) {
+        action.execute(jacoco)
+    }
+
     final override val lintOptions: LintOptions by lazy(LazyThreadSafetyMode.PUBLICATION) {
         dslServices.newInstance(LintOptions::class.java, dslServices, lint)
     }
@@ -214,6 +246,10 @@ abstract class CommonExtensionImpl<
 
     override fun lintOptions(action: com.android.build.api.dsl.LintOptions.() -> Unit) {
         action.invoke(lintOptions)
+    }
+
+    override fun lintOptions(action: Action<LintOptions>) {
+        action.execute(lintOptions)
     }
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
@@ -239,11 +275,19 @@ abstract class CommonExtensionImpl<
         sourceSetManager.executeAction(action)
     }
 
+    override fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
+        action.execute(sourceSets)
+    }
+
     override val testOptions: TestOptions =
         dslServices.newInstance(TestOptions::class.java, dslServices)
 
     override fun testOptions(action: com.android.build.api.dsl.TestOptions.() -> Unit) {
         action.invoke(testOptions)
+    }
+
+    override fun testOptions(action: Action<TestOptions>) {
+        action.execute(testOptions)
     }
 
     override var buildToolsVersion: String

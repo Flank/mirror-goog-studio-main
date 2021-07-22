@@ -180,15 +180,9 @@ abstract class BaseExtension protected constructor(
         flavorDimensionList.addAll(dimensions)
     }
 
-    fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
-        checkWritability()
-        sourceSetManager.executeAction(action)
-    }
+    abstract fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>)
 
-    fun aaptOptions(action: Action<AaptOptions>) {
-        checkWritability()
-        action.execute(aaptOptions)
-    }
+    abstract fun aaptOptions(action: Action<AaptOptions>)
 
     /**
      * Specifies options for the DEX tool, such as enabling library pre-dexing.
@@ -201,41 +195,23 @@ abstract class BaseExtension protected constructor(
         action.execute(dexOptions)
     }
 
-    fun lintOptions(action: Action<LintOptions>) {
-        checkWritability()
-        action.execute(lintOptions)
-    }
+    abstract fun lintOptions(action: Action<LintOptions>)
 
-    fun externalNativeBuild(action: Action<ExternalNativeBuild>) {
-        checkWritability()
-        action.execute(externalNativeBuild)
-    }
+    abstract fun externalNativeBuild(action: Action<ExternalNativeBuild>)
 
     /**
      * Specifies options for how the Android plugin should run local and instrumented tests.
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
-    fun testOptions(action: Action<TestOptions>) {
-        checkWritability()
-        action.execute(testOptions)
-    }
+    abstract fun testOptions(action: Action<TestOptions>)
 
-    fun compileOptions(action: Action<CompileOptions>) {
-        checkWritability()
-        action.execute(compileOptions)
-    }
+    abstract fun compileOptions(action: Action<CompileOptions>)
 
-    fun packagingOptions(action: Action<PackagingOptions>) {
-        checkWritability()
-        action.execute(packagingOptions)
-    }
+    abstract fun packagingOptions(action: Action<PackagingOptions>)
 
 
-    fun jacoco(action: Action<JacocoOptions>) {
-        checkWritability()
-        action.execute(jacoco)
-    }
+    abstract fun jacoco(action: Action<JacocoOptions>)
 
     /**
      * Specifies options for the
@@ -244,15 +220,9 @@ abstract class BaseExtension protected constructor(
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
-    fun adbOptions(action: Action<AdbOptions>) {
-        checkWritability()
-        action.execute(adbOptions)
-    }
+    abstract fun adbOptions(action: Action<AdbOptions>)
 
-    fun splits(action: Action<Splits>) {
-        checkWritability()
-        action.execute(splits)
-    }
+    abstract fun splits(action: Action<Splits>)
 
     /**
      * Specifies options for the
@@ -260,10 +230,7 @@ abstract class BaseExtension protected constructor(
      *
      * For more information about the properties you can configure in this block, see [DataBindingOptions]
      */
-    fun dataBinding(action: Action<DataBindingOptions>) {
-        checkWritability()
-        action.execute(dataBinding)
-    }
+    abstract fun dataBinding(action: Action<DataBindingOptions>)
 
     /**
      * Specifies options for the View Binding lLibrary.
@@ -466,9 +433,7 @@ abstract class BaseExtension protected constructor(
         get() = isBaseModule
 
     @Incubating
-    fun composeOptions(action: Action<ComposeOptions>) {
-        action.execute(composeOptions)
-    }
+    abstract fun composeOptions(action: Action<ComposeOptions>)
 
     abstract fun compileSdkVersion(version: String)
 

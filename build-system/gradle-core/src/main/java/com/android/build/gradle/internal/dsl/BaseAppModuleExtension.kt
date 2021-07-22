@@ -69,22 +69,7 @@ open class BaseAppModuleExtension(
 
     override val composeOptions: ComposeOptions = publicExtensionImpl.composeOptions
 
-    // this is needed because the impl class needs this but the interface does not,
-    // so CommonExtension does not define it, which means, that even though it's part of
-    // ApplicationExtensionImpl, the implementation by delegate does not bring it.
-    fun buildFeatures(action: Action<ApplicationBuildFeatures>) {
-        publicExtensionImpl.buildFeatures(action)
-    }
-
-    fun dependenciesInfo(action: Action<DependenciesInfo>) {
-        publicExtensionImpl.dependenciesInfo(action)
-    }
-
     override val bundle: BundleOptions = publicExtensionImpl.bundle as BundleOptions
-
-    fun bundle(action: Action<BundleOptions>) {
-        action.execute(bundle)
-    }
 
     override val flavorDimensionList: MutableList<String>
         get() = flavorDimensions
