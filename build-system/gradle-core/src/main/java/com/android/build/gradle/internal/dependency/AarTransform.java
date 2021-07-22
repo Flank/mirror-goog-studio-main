@@ -48,8 +48,10 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Transform that returns the content of an extracted AAR folder. */
+@DisableCachingByDefault
 public abstract class AarTransform implements TransformAction<AarTransform.Parameters> {
 
     public interface Parameters extends GenericTransformParameters {

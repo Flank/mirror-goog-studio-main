@@ -25,11 +25,13 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 /**
  * A base task with stream fields that properly use Gradle's input/output annotations to return the
  * stream's content as input/output.
  */
+@DisableCachingByDefault
 public abstract class StreamBasedTask extends AndroidVariantTask {
 
     /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */

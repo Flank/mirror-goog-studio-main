@@ -71,8 +71,10 @@ import java.io.File
 import java.util.Collections
 import javax.inject.Inject
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.work.DisableCachingByDefault
 
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
+@DisableCachingByDefault
 abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Nested

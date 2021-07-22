@@ -37,6 +37,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -45,6 +46,7 @@ import java.io.File
  * When checkDependencies is used in a consuming project, this serialized [LintModelModule] file is
  * read by Lint in consuming projects to get all the information about this variant in project.
  */
+@DisableCachingByDefault
 abstract class LintModelWriterTask : NonIncrementalTask() {
 
     @get:Nested

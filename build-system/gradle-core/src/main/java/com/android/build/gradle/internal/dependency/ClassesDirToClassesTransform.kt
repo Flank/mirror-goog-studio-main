@@ -27,11 +27,13 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirF
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_CLASS_FILES_ONLY
 import com.android.builder.dexing.isJarFile
 import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Transform from [AndroidArtifacts.ArtifactType.CLASSES_DIR] to
  * [AndroidArtifacts.ArtifactType.CLASSES].
  */
+@DisableCachingByDefault
 abstract class ClassesDirToClassesTransform : TransformAction<GenericTransformParameters> {
 
     @get:Classpath

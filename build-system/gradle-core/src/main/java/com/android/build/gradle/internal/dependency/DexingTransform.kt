@@ -69,6 +69,7 @@ import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
 
+@CacheableTransform
 abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : TransformAction<T> {
 
     interface Parameters : GenericTransformParameters {

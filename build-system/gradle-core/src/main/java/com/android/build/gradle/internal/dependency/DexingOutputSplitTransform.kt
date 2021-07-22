@@ -29,12 +29,14 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Transform dexes & keep rules bundle from dexing artifact transform into dexes or keep rules
  * depending on the [DexingOutputSplitTransform.Parameters]
  */
+@DisableCachingByDefault
 abstract class DexingOutputSplitTransform : TransformAction<DexingOutputSplitTransform.Parameters> {
     interface Parameters: GenericTransformParameters {
         @get:Input

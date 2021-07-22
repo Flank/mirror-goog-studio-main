@@ -26,11 +26,13 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Transform from one artifact type to another artifact type without changing the artifact's
  * contents.
  */
+@DisableCachingByDefault
 abstract class IdentityTransform : TransformAction<IdentityTransform.Parameters> {
 
     interface Parameters : GenericTransformParameters {

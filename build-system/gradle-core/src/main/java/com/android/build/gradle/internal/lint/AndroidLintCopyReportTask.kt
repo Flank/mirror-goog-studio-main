@@ -28,6 +28,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 import java.nio.file.Files
 
 /**
@@ -38,6 +39,7 @@ import java.nio.file.Files
  * Does not declare its inputs because doing so would cause this task to not run when the
  * [AndroidLintTask] fails
  */
+@DisableCachingByDefault
 abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DSL has configured potentially multiple lint tasks to write to the same location, but task should not have overlapping outputs.") {
 
     @get:Internal

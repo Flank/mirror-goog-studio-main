@@ -55,10 +55,12 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.Collections
 
 /** Task to invoke lint with the --analyze-only flag, producing partial results. */
+@DisableCachingByDefault
 abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:Nested

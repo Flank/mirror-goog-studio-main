@@ -46,6 +46,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.ClassLoaderWorkerSpec
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -70,6 +71,7 @@ import java.util.Locale
  * For generating unit test coverage reports using jacoco. Provides separate CreateActions for
  * generating unit test and connected test reports.
  */
+@DisableCachingByDefault
 abstract class JacocoReportTask : NonIncrementalTask() {
 
     // PathSensitivity.NONE since only the contents of the files under the directory matter as input
