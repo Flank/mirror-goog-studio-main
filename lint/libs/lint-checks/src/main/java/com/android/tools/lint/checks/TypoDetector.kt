@@ -13,495 +13,447 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
-
-import static com.android.SdkConstants.ATTR_TRANSLATABLE;
-import static com.android.SdkConstants.TAG_PLURALS;
-import static com.android.SdkConstants.TAG_STRING;
-import static com.android.SdkConstants.TAG_STRING_ARRAY;
-import static com.android.tools.lint.checks.TypoLookup.isLetter;
-import static com.google.common.base.Objects.equal;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ide.common.resources.configuration.LocaleQualifier;
-import com.android.resources.ResourceFolderType;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.StringHelper;
-import com.google.common.base.Charsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import com.android.SdkConstants
+import com.android.SdkConstants.ATTR_TRANSLATABLE
+import com.android.SdkConstants.TAG_PLURALS
+import com.android.SdkConstants.TAG_STRING
+import com.android.SdkConstants.TAG_STRING_ARRAY
+import com.android.resources.ResourceFolderType
+import com.android.tools.lint.checks.TypoLookup.Companion.isLetter
+import com.android.tools.lint.detector.api.*
+import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.Scope.Companion.RESOURCE_FILE_SCOPE
+import com.android.utils.childrenIterator
+import com.android.utils.usLocaleCapitalize
+import com.google.common.base.Charsets
+import org.w3c.dom.Element
+import org.w3c.dom.Node
 
 /**
  * Check which looks for likely typos in Strings.
  *
- * <p>TODO:
  *
- * <ul>
- *   <li>Add check of Java String literals too!
- *   <li>Add support for <b>additional</b> languages. The typo detector is now multilingual and
- *       looks for typos-*locale*.txt files to use. However, we need to seed it with additional typo
- *       databases. I did some searching and came up with some alternatives. Here's the strategy I
- *       used: Used Google Translate to translate "Wikipedia Common Misspellings", and then I went
- *       to google.no, google.fr etc searching with that translation, and came up with what looks
- *       like wikipedia language local lists of typos. This is how I found the Norwegian one for
- *       example: <br>
- *       http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform <br>
- *       Here are some additional possibilities not yet processed:
- *       <ul>
- *         <li>French:
- *             http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
- *             (couldn't find a machine-readable version there?)
- *         <li>Swedish: http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
- *             (couldn't find a machine-readable version there?)
- *         <li>German
- *             http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
- *       </ul>
- *   <li>Consider also digesting files like
- *       http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos See
- *       http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
- * </ul>
+ * TODO:
+ *
+ *
+ *  * Add check of Java String literals too!
+ *  * Add support for **additional** languages. The typo detector is now multilingual and
+ * looks for typos-*locale*.txt files to use. However, we need to seed it with additional typo
+ * databases. I did some searching and came up with some alternatives. Here's the strategy I
+ * used: Used Google Translate to translate "Wikipedia Common Misspellings", and then I went
+ * to google.no, google.fr etc searching with that translation, and came up with what looks
+ * like wikipedia language local lists of typos. This is how I found the Norwegian one for
+ * example: <br></br>
+ * http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform <br></br>
+ * Here are some additional possibilities not yet processed:
+ *
+ *  * French:
+ * http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
+ * (couldn't find a machine-readable version there?)
+ *  * Swedish: http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
+ * (couldn't find a machine-readable version there?)
+ *  * German
+ * http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
+ *
+ *  * Consider also digesting files like
+ * http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos See
+ * http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
+ *
  */
-public class TypoDetector extends ResourceXmlDetector {
-    @Nullable private TypoLookup mLookup;
-    @Nullable private String mLastLanguage;
-    @Nullable private String mLastRegion;
-    @Nullable private String mLanguage;
-    @Nullable private String mRegion;
+class TypoDetector : ResourceXmlDetector() {
+    private var lookup: TypoLookup? = null
+    private var lastLanguage: String? = null
+    private var lastRegion: String? = null
+    private var language: String? = null
+    private var region: String? = null
 
-    /** The main issue discovered by this detector */
-    public static final Issue ISSUE =
-            Issue.create(
-                    "Typos",
-                    "Spelling error",
-                    "This check looks through the string definitions, and if it finds any words "
-                            + "that look like likely misspellings, they are flagged.",
-                    Category.MESSAGES,
-                    7,
-                    Severity.WARNING,
-                    new Implementation(TypoDetector.class, Scope.RESOURCE_FILE_SCOPE));
-
-    /** Constructs a new detector */
-    public TypoDetector() {}
-
-    @Override
-    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        return folderType == ResourceFolderType.VALUES;
+    override fun appliesTo(folderType: ResourceFolderType): Boolean {
+        return folderType == ResourceFolderType.VALUES
     }
 
     /**
-     * Look up the locale and region from the given parent folder name and store it in {@link
-     * #mLanguage} and {@link #mRegion}
+     * Look up the locale and region from the given parent folder name and store it in [language] and [region]
      */
-    private void initLocale(@NonNull XmlContext context) {
-        mLanguage = null;
-        mRegion = null;
-
-        LocaleQualifier locale = Lint.getLocale(context);
-        if (locale != null && locale.hasLanguage()) {
-            mLanguage = locale.getLanguage();
-            mRegion = locale.hasRegion() ? locale.getRegion() : null;
+    private fun initLocale(context: XmlContext) {
+        val locale = getLocale(context)
+        if (locale?.hasLanguage() == true) {
+            language = locale.language
+            region = if (locale.hasRegion()) locale.region else null
         }
     }
 
-    @Override
-    public void beforeCheckFile(@NonNull Context context) {
-        initLocale((XmlContext) context);
-        if (mLanguage == null) {
-            mLanguage = "en";
-        }
-
-        if (!equal(mLastLanguage, mLanguage) || !equal(mLastRegion, mRegion)) {
-            mLookup = TypoLookup.Companion.get(context.getClient(), mLanguage, mRegion);
-            mLastLanguage = mLanguage;
-            mLastRegion = mRegion;
+    override fun beforeCheckFile(context: Context) {
+        initLocale(context as XmlContext)
+        language = language ?: "en"
+        if (lastLanguage == language || (region == null || lastRegion != region)) {
+            lookup = TypoLookup[context.client, language!!, region]
+            lastLanguage = language
+            lastRegion = region
         }
     }
 
-    @Override
-    public Collection<String> getApplicableElements() {
-        return Arrays.asList(TAG_STRING, TAG_STRING_ARRAY, TAG_PLURALS);
-    }
+    override fun getApplicableElements() =
+        listOf(TAG_STRING, TAG_STRING_ARRAY, TAG_PLURALS)
 
-    @Override
-    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (mLookup == null) {
-            return;
+    override fun visitElement(context: XmlContext, element: Element) {
+        if (lookup == null) {
+            return
         }
-
-        visit(context, element, element);
+        visit(context, element, element)
     }
 
-    private void visit(XmlContext context, Element parent, Node node) {
-        if (node.getNodeType() == Node.TEXT_NODE) {
+    private fun visit(context: XmlContext, parent: Element, node: Node) {
+        if (node.nodeType == Node.TEXT_NODE) {
             // TODO: Figure out how to deal with entities
-            check(context, parent, node, node.getNodeValue());
+            check(context, parent, node, node.nodeValue)
         } else {
-            NodeList children = node.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                visit(context, parent, children.item(i));
+            for (child in node.childrenIterator()) {
+                visit(context, parent, child)
             }
         }
     }
 
-    private void check(XmlContext context, Element element, Node node, String text) {
-        int max = text.length();
-        int index = 0;
-        int lastWordBegin = -1;
-        int lastWordEnd = -1;
-        boolean checkedTypos = false;
+    private fun check(context: XmlContext, element: Element, node: Node, text: String) {
+        if (!isTranslatable(element)) return
 
-        for (; index < max; index++) {
-            char c = text.charAt(index);
-            if (!Character.isWhitespace(c)) {
-                if (c == '@' || (c == '?')) {
-                    // Don't look for typos in resource references; they are not
-                    // user visible anyway
-                    return;
-                }
-                break;
-            }
-        }
+        val max = text.length
+        var lastWordBegin = -1
+        var lastWordEnd = -1
+        var checkedTypos = false
+        val wordStart = text.indexOfFirst { !it.isWhitespace() }
+        if (wordStart == -1) return
+        // Don't look for typos in resource references; they are not
+        // user visible anyway
+        if (text[wordStart].let { it == '@' || it == '?' }) return
 
+        var index = wordStart
         while (index < max) {
-            for (; index < max; index++) {
-                char c = text.charAt(index);
+            // Move index to next letter
+            while (index < max) {
+                val c = text[index]
                 if (c == '\\') {
-                    index++;
-                } else if (Character.isLetter(c)) {
-                    break;
+                    index += 2 // Skip escaped character (including the backslash)
+                } else if (c.isLetter()) {
+                    break
+                } else {
+                    index++
                 }
             }
             if (index >= max) {
-                return;
+                return
             }
-            int begin = index;
-            for (; index < max; index++) {
-                char c = text.charAt(index);
+
+            val begin = index
+
+            // Move index to end of word
+            while (index < max) {
+                val c = text[index]
                 if (c == '\\') {
-                    index++;
-                    break;
-                } else if (!Character.isLetter(c) && c != '_') {
+                    index++
+                    break
+                } else if (!c.isLetter() && c != '_') {
                     if ((c == '1' || c == '!') && index > begin + 1) {
-                        checkForExclamation(context, node, text, index, begin);
+                        checkForExclamation(context, node, text, index, begin)
                     }
-                    break;
-                } else if (text.charAt(index) >= 0x80) {
+                    break
+                } else if (text[index].toInt() >= 0x80) {
                     // Switch to UTF-8 handling for this string
                     if (checkedTypos) {
                         // If we've already checked words we may have reported typos
                         // so create a substring from the current word and on.
-                        byte[] utf8Text = text.substring(begin).getBytes(Charsets.UTF_8);
-                        check(context, element, node, utf8Text, 0, utf8Text.length, text, begin);
+                        val utf8Text = text.substring(begin).toByteArray(Charsets.UTF_8)
+                        checkUtf8Text(context, element, node, utf8Text, 0, utf8Text.size, text, begin)
                     } else {
                         // If all we've done so far is skip whitespace (common scenario)
                         // then no need to substring the text, just re-search with the
                         // UTF-8 routines
-                        byte[] utf8Text = text.getBytes(Charsets.UTF_8);
-                        check(context, element, node, utf8Text, 0, utf8Text.length, text, 0);
+                        val utf8Text = text.toByteArray(Charsets.UTF_8)
+                        checkUtf8Text(context, element, node, utf8Text, 0, utf8Text.size, text, 0)
                     }
-                    return;
+                    return
                 }
+                index++
             }
-
-            int end = index;
-            checkedTypos = true;
-            assert mLookup != null;
-            List<String> replacements = mLookup.getTypos(text, begin, end);
-            if (replacements != null && isTranslatable(element)) {
-                reportTypo(context, node, text, begin, replacements);
+            val end = index
+            checkedTypos = true
+            val replacements = lookup!!.getTypos(text, begin, end)
+            if (replacements != null) {
+                reportTypo(context, node, text, begin, replacements)
             }
-
             checkRepeatedWords(
-                    context, element, node, text, lastWordBegin, lastWordEnd, begin, end);
-
-            lastWordBegin = begin;
-            lastWordEnd = end;
-            index = end + 1;
+                context, element, node, text, lastWordBegin, lastWordEnd, begin, end
+            )
+            lastWordBegin = begin
+            lastWordEnd = end
+            index = end + 1
         }
     }
 
-    private void checkForExclamation(
-            XmlContext context, Node node, String text, int index, int begin) {
+    private fun checkForExclamation(
+        context: XmlContext, node: Node, text: String, index: Int, begin: Int
+    ) {
         // Peek ahead: if we find punctuation or lower case letter don't flag it
-        int i = index + 1;
-        boolean problem = true;
-        boolean found1 = text.charAt(index) == '1';
-        int end = index + 1;
-        while (i < text.length()) {
-            char ch = text.charAt(i);
+        var problem = true
+        var found1 = text[index] == '1'
+        var end = index + 1
+        for (ch in text.subSequence(index + 1, text.length)) {
             if (ch == '\n') {
-                break;
+                break
             } else if (ch == '1') {
                 // Allow repeated 1's
-                found1 = true;
+                found1 = true
             } else if (ch == '!') {
                 // Allow repeated 1's or !'s
-            } else if (!Character.isWhitespace(ch)) {
-                if (Character.isLowerCase(ch) || Character.isDigit(ch)) {
-                    problem = false;
+            } else if (!ch.isWhitespace()) {
+                if (ch.isLowerCase()|| ch.isDigit()) {
+                    problem = false
                 } else if (ch == ',' || ch == '.' || ch == ':' || ch == ';') {
-                    problem = false;
+                    problem = false
                 }
-                break;
+                break
             }
-            i++;
-            end++;
+            end++
         }
         if (problem && found1) {
-            String actual = text.substring(begin, end);
-            String intended = actual.replace('1', '!');
-            LintFix fix =
-                    fix().name("Replace with \"" + intended + "\"")
-                            .replace()
-                            .text(actual)
-                            .with(intended)
-                            .range(context.getLocation(node))
-                            .build();
+            val actual = text.substring(begin, end)
+            val intended = actual.replace('1', '!')
+            val fix = fix().name("Replace with \"$intended\"")
+                .replace()
+                .text(actual)
+                .with(intended)
+                .range(context.getLocation(node))
+                .build()
             context.report(
-                    ISSUE,
-                    node,
-                    context.getLocation(node, begin, index),
-                    "Did you mean \"" + intended + "\" instead of \"" + actual + "\" ?",
-                    fix);
+                ISSUE,
+                node,
+                context.getLocation(node, begin, index),
+                "Did you mean \"$intended\" instead of \"$actual\" ?",
+                fix
+            )
         }
     }
 
-    private void checkRepeatedWords(
-            XmlContext context,
-            Element element,
-            Node node,
-            String text,
-            int lastWordBegin,
-            int lastWordEnd,
-            int begin,
-            int end) {
+    private fun checkRepeatedWords(
+        context: XmlContext,
+        element: Element,
+        node: Node,
+        text: String,
+        lastWordBegin: Int,
+        lastWordEnd: Int,
+        begin: Int,
+        end: Int
+    ) {
         if (lastWordBegin != -1 && end - begin == lastWordEnd - lastWordBegin && end - begin > 1) {
             // See whether we have a repeated word
-            boolean different = false;
-            for (int i = lastWordBegin, j = begin; i < lastWordEnd; i++, j++) {
-                if (text.charAt(i) != text.charAt(j)) {
-                    different = true;
-                    break;
+            var different = false
+            var i = lastWordBegin
+            var j = begin
+            while (i < lastWordEnd) {
+                if (text[i] != text[j]) {
+                    different = true
+                    break
                 }
+                i++
+                j++
             }
             if (!different && onlySpace(text, lastWordEnd, begin) && isTranslatable(element)) {
-                reportRepeatedWord(context, node, text, lastWordBegin, begin, end);
+                reportRepeatedWord(context, node, text, lastWordBegin, begin, end)
             }
         }
     }
 
-    private static boolean onlySpace(String text, int fromInclusive, int toExclusive) {
-        for (int i = fromInclusive; i < toExclusive; i++) {
-            if (!Character.isWhitespace(text.charAt(i))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void check(
-            XmlContext context,
-            Element element,
-            Node node,
-            byte[] utf8Text,
-            int byteStart,
-            int byteEnd,
-            String text,
-            int charStart) {
-        int lastWordBegin = -1;
-        int lastWordEnd = -1;
-        int index = byteStart;
+    private fun checkUtf8Text(
+        context: XmlContext,
+        element: Element,
+        node: Node,
+        utf8Text: ByteArray,
+        byteStart: Int,
+        byteEnd: Int,
+        text: String,
+        charStart: Int
+    ) {
+        var charStart = charStart
+        var lastWordBegin = -1
+        var lastWordEnd = -1
+        var index = byteStart
         while (index < byteEnd) {
             // Find beginning of word
             while (index < byteEnd) {
-                byte b = utf8Text[index];
-                if (b == '\\') {
-                    index++;
-                    charStart++;
+                var b = utf8Text[index].toInt()
+                if (b == '\\'.toInt()) {
+                    index++
+                    charStart++
                     if (index < byteEnd) {
-                        b = utf8Text[index];
+                        b = utf8Text[index].toInt()
                     }
-                } else if (isLetter(b)) {
-                    break;
+                } else if (isLetter(b.toByte())) {
+                    break
                 }
-                index++;
-                if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
+                index++
+                if (b and 0x80 == 0 || b and 0xC0 == 0xC0) {
                     // First characters in UTF-8 are always ASCII (0 high bit) or 11XXXXXX
-                    charStart++;
+                    charStart++
                 }
             }
-
             if (index >= byteEnd) {
-                return;
+                return
             }
-            int charEnd = charStart;
-            int begin = index;
+            var charEnd = charStart
+            val begin = index
 
             // Find end of word. Unicode has the nice property that even 2nd, 3rd and 4th
             // bytes won't match these ASCII characters (because the high bit must be set there)
             while (index < byteEnd) {
-                byte b = utf8Text[index];
-                if (b == '\\') {
-                    index++;
-                    charEnd++;
+                var b = utf8Text[index].toInt()
+                if (b == '\\'.toInt()) {
+                    index++
+                    charEnd++
                     if (index < byteEnd) {
-                        b = utf8Text[index++];
-                        if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
-                            charEnd++;
+                        b = utf8Text[index++].toInt()
+                        if (b and 0x80 == 0 || b and 0xC0 == 0xC0) {
+                            charEnd++
                         }
                     }
-                    break;
-                } else if (!isLetter(b)) {
-                    break;
+                    break
+                } else if (!isLetter(b.toByte())) {
+                    break
                 }
-                index++;
-                if ((b & 0x80) == 0 || (b & 0xC0) == 0xC0) {
+                index++
+                if (b and 0x80 == 0 || b and 0xC0 == 0xC0) {
                     // First characters in UTF-8 are always ASCII (0 high bit) or 11XXXXXX
-                    charEnd++;
+                    charEnd++
                 }
             }
-
-            int end = index;
-            List<String> replacements = mLookup.getTypos(utf8Text, begin, end);
+            val end = index
+            val replacements = lookup!!.getTypos(utf8Text, begin, end)
             if (replacements != null && isTranslatable(element)) {
-                reportTypo(context, node, text, charStart, replacements);
+                reportTypo(context, node, text, charStart, replacements)
             }
-
             checkRepeatedWords(
-                    context, element, node, text, lastWordBegin, lastWordEnd, charStart, charEnd);
-
-            lastWordBegin = charStart;
-            lastWordEnd = charEnd;
-            charStart = charEnd;
+                context, element, node, text, lastWordBegin, lastWordEnd, charStart, charEnd
+            )
+            lastWordBegin = charStart
+            lastWordEnd = charEnd
+            charStart = charEnd
         }
     }
 
-    private static boolean isTranslatable(Element element) {
-        Attr translatable = element.getAttributeNode(ATTR_TRANSLATABLE);
-        return translatable == null || Boolean.valueOf(translatable.getValue());
-    }
-
-    /** Report the typo found at the given offset and suggest the given replacements */
-    private void reportTypo(
-            XmlContext context, Node node, String text, int begin, List<String> replacements) {
-        if (replacements.size() < 2) {
-            return;
+    /** Report the typo found at the given offset and suggest the given replacements  */
+    private fun reportTypo(
+        context: XmlContext, node: Node, text: String, begin: Int, replacements: List<String>
+    ) {
+        if (replacements.size < 2) {
+            return
         }
-
-        String typo = replacements.get(0);
-        String word = text.substring(begin, begin + typo.length());
-
-        String first = null;
-        String message;
-
-        LintFix.GroupBuilder fixBuilder = fix().alternatives();
-        boolean isCapitalized = Character.isUpperCase(word.charAt(0));
-        StringBuilder sb = new StringBuilder(40);
-        for (int i = 1, n = replacements.size(); i < n; i++) {
-            String replacement = replacements.get(i);
+        val typo = replacements[0]
+        val word = text.substring(begin, begin + typo.length)
+        var first: String? = null
+        val message: String
+        val fixBuilder = fix().alternatives()
+        val isCapitalized = word[0].isUpperCase()
+        val sb = StringBuilder(40)
+        var i = 1
+        val n = replacements.size
+        while (i < n) {
+            var replacement = replacements[i]
             if (first == null) {
-                first = replacement;
+                first = replacement
             }
-            if (sb.length() > 0) {
-                sb.append(" or ");
+            if (sb.length > 0) {
+                sb.append(" or ")
             }
-            sb.append('"');
-
+            sb.append('"')
             if (isCapitalized) {
-                replacement = StringHelper.usLocaleCapitalize(replacement);
+                replacement = replacement.usLocaleCapitalize()
             }
-            sb.append(replacement);
+            sb.append(replacement)
             fixBuilder.add(
-                    fix().name("Replace with \"" + replacement + "\"")
-                            .replace()
-                            .text(word)
-                            .with(replacement)
-                            .build());
-            sb.append('"');
+                fix().name("Replace with \"$replacement\"")
+                    .replace()
+                    .text(word)
+                    .with(replacement)
+                    .build()
+            )
+            sb.append('"')
+            i++
         }
-        LintFix fix = fixBuilder.build();
-
-        if (first != null && first.equalsIgnoreCase(word)) {
-            if (first.equals(word)) {
-                return;
+        val fix = fixBuilder.build()
+        message = if (first != null && first.equals(word, ignoreCase = true)) {
+            if (first == word) {
+                return
             }
-            message = String.format("\"%1$s\" is usually capitalized as \"%2$s\"", word, first);
+            "\"$word\" is usually capitalized as \"$first\""
         } else {
-            message =
-                    String.format(
-                            "\"%1$s\" is a common misspelling; did you mean %2$s ?",
-                            word, sb.toString());
+            "\"$word\" is a common misspelling; did you mean $sb ?"
         }
-
-        int end = begin + word.length();
-        context.report(ISSUE, node, context.getLocation(node, begin, end), message, fix);
+        val end = begin + word.length
+        context.report(ISSUE, node, context.getLocation(node, begin, end), message, fix)
     }
 
-    /** Reports a repeated word */
-    private void reportRepeatedWord(
-            XmlContext context, Node node, String text, int lastWordBegin, int begin, int end) {
-        String word = text.substring(begin, end);
-
+    /** Reports a repeated word  */
+    private fun reportRepeatedWord(
+        context: XmlContext, node: Node, text: String, lastWordBegin: Int, begin: Int, end: Int
+    ) {
+        val word = text.substring(begin, end)
         if (isAllowed(word)) {
-            return;
+            return
         }
-
-        String message = String.format("Repeated word \"%1$s\" in message: possible typo", word);
-
-        String replace;
-        if (lastWordBegin > 1 && text.charAt(lastWordBegin - 1) == ' ') {
-            replace = ' ' + word;
-        } else if (end < text.length() - 1 && text.charAt(end) == ' ') {
-            replace = word + ' ';
+        val message = "Repeated word \"$word\" in message: possible typo"
+        val replace = if (lastWordBegin > 1 && text[lastWordBegin - 1] == ' ') {
+            " $word"
+        } else if (end < text.length - 1 && text[end] == ' ') {
+            "$word "
         } else {
-            replace = word;
+            word
         }
-        LintFix fix = fix().name("Delete repeated word").replace().text(replace).with("").build();
-
-        Location location = context.getLocation(node, lastWordBegin, end);
-        context.report(ISSUE, node, location, message, fix);
+        val fix = fix().name("Delete repeated word").replace().text(replace).with("").build()
+        val location = context.getLocation(node, lastWordBegin, end)
+        context.report(ISSUE, node, location, message, fix)
     }
 
-    private static boolean isAllowed(@NonNull String word) {
-        // See https://en.wikipedia.org/wiki/Reduplication
+    companion object {
+        @JvmField
+        val ISSUE = create(
+            id = "Typos",
+            briefDescription = "Spelling error",
+            explanation = """
+                This check looks through the string definitions, and if it finds any words \
+                that look like likely misspellings, they are flagged.""",
+            category = Category.MESSAGES,
+            priority = 7,
+            severity = Severity.WARNING,
+            implementation = Implementation(TypoDetector::class.java, RESOURCE_FILE_SCOPE)
+        )
 
-        // Capitalized: names or place names. There are various places
-        // with repeated words, such as Pago Pago
-        // https://en.wikipedia.org/wiki/List_of_reduplicated_place_names
-        if (Character.isUpperCase(word.charAt(0))) {
-            return true;
+        private fun onlySpace(text: String, fromInclusive: Int, toExclusive: Int): Boolean {
+            for (i in fromInclusive until toExclusive) {
+                if (!text[i].isWhitespace()) {
+                    return false
+                }
+            }
+            return true
         }
 
-        // Some known/common-ish exceptions:
-        switch (word) {
-            case "that": // e.g. "I know that that will not work."
-            case "yadda":
-            case "bye":
-            case "choo":
-            case "night":
-            case "dot":
-            case "tsk":
-            case "no":
-                return true;
+        private fun isTranslatable(element: Element): Boolean {
+            val translatable = element.getAttributeNode(ATTR_TRANSLATABLE)
+            return translatable == null || translatable.value == "true"
         }
-        return false;
+
+        private fun isAllowed(word: String): Boolean {
+            // See https://en.wikipedia.org/wiki/Reduplication
+
+            // Capitalized: names or place names. There are various places
+            // with repeated words, such as Pago Pago
+            // https://en.wikipedia.org/wiki/List_of_reduplicated_place_names
+            if (word[0].isUpperCase()) {
+                return true
+            }
+            when (word) {
+                "that", "yadda", "bye", "choo", "night", "dot", "tsk", "no" -> return true
+            }
+            return false
+        }
     }
 }
