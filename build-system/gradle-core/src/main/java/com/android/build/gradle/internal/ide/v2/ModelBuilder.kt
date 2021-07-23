@@ -501,7 +501,7 @@ class ModelBuilder<
 
                 val testOptionsDsl = globalScope.extension.testOptions
 
-                val testTaskName = taskContainer.connectedTask?.name ?: "".also {
+                val testTaskName = taskContainer.connectedTestTask?.name ?: "".also {
                     syncIssueReporter.reportError(
                         IssueReporter.Type.GENERIC,
                         "unable to find connectedCheck task name for ${component.name}"

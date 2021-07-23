@@ -29,6 +29,7 @@ internal class AndroidProjectBuilderImpl(
     override var namespace: String? = null
     override var minSdk: Int? = null
     override var minSdkCodename: String? = null
+    override var targetProjectPath: String? = null
 
     private val buildFeatures = BuildFeaturesBuilderImpl()
     private val testFixtures = TestFixturesBuilderImpl()
@@ -139,6 +140,10 @@ internal class AndroidProjectBuilderImpl(
                 sb.append("    }\n")
             }
             sb.append("  }\n") // FLAVORS
+        }
+
+        targetProjectPath?.let {
+            sb.append("    targetProjectPath = \"$it\"\n")
         }
 
         sb.append("}\n") // ANDROID

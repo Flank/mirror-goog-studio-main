@@ -115,6 +115,7 @@ interface AndroidProjectBuilder {
     var namespace: String?
     var minSdk: Int?
     var minSdkCodename: String?
+    var targetProjectPath: String?
 
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
 
