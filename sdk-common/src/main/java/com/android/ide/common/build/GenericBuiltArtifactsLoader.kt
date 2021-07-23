@@ -20,6 +20,8 @@ import com.android.utils.ILogger
 import com.google.gson.GsonBuilder
 import java.io.File
 import java.io.FileReader
+import java.io.StringReader
+import java.util.Properties
 
 /**
  * Singleton object to load metadata file returned by the model into a [GenericBuiltArtifacts]
@@ -28,17 +30,38 @@ import java.io.FileReader
 object GenericBuiltArtifactsLoader {
 
     /**
+     * Redirect file will have this marker as the first line as comment.
+     */
+    const val RedirectMarker = "- File Locator -"
+
+    /**
+     * Property name in a [Properties] for the metadata file location.
+     */
+    const val RedirectFilePropertyName = "listingFile"
+
+    /**
      * Load a metadata file if it exists or return null otherwise.
      *
-     * @param metadataFile the metadata file location.
+     * The provided [inputFile] can either be the metadata file which is a json file containing the
+     * built artifacts information (pre 7.1 behavior) or can be a redirect file (7.1 and up).
+     *
+     * The function will recognize a redirect file if its first line is a [Properties] comment
+     * [RedirectMarker]. If the first line is anything else, the function will consider the file
+     * to be the metadata file.
+     *
+     * A redirect file is a simple [Properties] serialized with a single property name
+     * [RedirectFilePropertyName] and the [RedirectMarker] comment. The value of that property will
+     * be a relative location of the metadata file
+     *
+     * @param inputFile the metadata file or redirect file location.
      * @param logger logger for errors/warnings, etc...
      */
     @JvmStatic
-    fun loadFromFile(metadataFile: File?, logger: ILogger): GenericBuiltArtifacts? {
-        if (metadataFile == null || !metadataFile.exists()) {
+    fun loadFromFile(inputFile: File?, logger: ILogger): GenericBuiltArtifacts? {
+        if (inputFile == null || !inputFile.exists()) {
             return null
         }
-        val relativePath = metadataFile.parentFile.toPath()
+        val relativePath = inputFile.parentFile.toPath()
         val gsonBuilder = GsonBuilder()
 
         gsonBuilder.registerTypeAdapter(
@@ -46,10 +69,19 @@ object GenericBuiltArtifactsLoader {
             GenericBuiltArtifactTypeAdapter()
         )
 
+        val inputFileContent = inputFile.readText()
+        val listingFileReader = if (inputFileContent.startsWith("#$RedirectMarker")) {
+            val fileLocator = Properties().also {
+                it.load(StringReader(inputFileContent))
+            }
+            FileReader(File(inputFile.parentFile, fileLocator.getProperty(RedirectFilePropertyName)))
+        } else {
+            StringReader(inputFileContent)
+        }
         val gson = gsonBuilder.create()
-        val buildOutputs = FileReader(metadataFile).use {
+        val buildOutputs = listingFileReader.use {
             try {
-                gson.fromJson<GenericBuiltArtifacts>(it, GenericBuiltArtifacts::class.java)
+                gson.fromJson(it, GenericBuiltArtifacts::class.java)
             } catch (e: Exception) {
                 logger.quiet("Cannot parse build output metadata file, please run a clean build")
                 return null
