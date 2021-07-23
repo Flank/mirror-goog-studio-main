@@ -1,6 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -23,26 +25,23 @@ iml_module(
     ],
 )
 
-maven_java_library(
-    name = "tools.layoutlib-api",
-    srcs = glob(["src/main/java/**"]),
-    pom = ":pom",
+maven_library(
+    name = "tools.layoutlib-api_bzl",
+    srcs = glob([
+        "src/main/java/**/*.java",
+    ]),
+    coordinates = "com.android.tools.layoutlib:layoutlib-api:" + BASE_VERSION,
+    legacy_name = "tools.layoutlib-api",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/layoutlib-api",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.jetbrains_annotations",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.annotations",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "layoutlib-api",
-    group = "com.android.tools.layoutlib",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 coverage_java_test(
