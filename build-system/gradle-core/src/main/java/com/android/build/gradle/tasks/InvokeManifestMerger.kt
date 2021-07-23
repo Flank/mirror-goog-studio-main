@@ -32,11 +32,13 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
  * or overlay manifests
  */
+@DisableCachingByDefault
 abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:InputFile

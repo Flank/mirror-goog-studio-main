@@ -35,10 +35,12 @@ import org.gradle.internal.filewatch.FileWatcherFactory
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
 import org.gradle.internal.hash.FileHasher
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task that performs a C/C++ build action or refers to a build from a different task.
  */
+@DisableCachingByDefault
 abstract class ExternalNativeBuildTask :
         UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
 

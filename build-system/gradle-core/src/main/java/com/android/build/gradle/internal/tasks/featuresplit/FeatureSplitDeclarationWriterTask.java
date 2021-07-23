@@ -28,10 +28,12 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 
 /**
  * Task that writes the FeatureSplitDeclaration file and publish it for other modules to consume.
  */
+@DisableCachingByDefault
 public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;

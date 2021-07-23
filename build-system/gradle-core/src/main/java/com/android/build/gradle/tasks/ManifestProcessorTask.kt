@@ -23,10 +23,12 @@ import com.google.common.io.Files
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 
 /** A task that processes the manifest  */
+@DisableCachingByDefault
 abstract class ManifestProcessorTask : IncrementalTask() {
 
     @get:Optional

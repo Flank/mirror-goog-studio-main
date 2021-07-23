@@ -36,6 +36,7 @@ import com.google.common.base.Joiner
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
 import javax.inject.Inject
 
 /**
@@ -44,6 +45,7 @@ import javax.inject.Inject
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
+@DisableCachingByDefault
 abstract class ExternalNativeCleanTask @Inject constructor(private val ops: ExecOperations) : NonIncrementalTask() {
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>

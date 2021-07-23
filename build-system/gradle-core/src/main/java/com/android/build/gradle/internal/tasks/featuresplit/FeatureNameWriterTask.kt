@@ -27,6 +27,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.IOException
 
 /**
@@ -37,6 +38,7 @@ import java.io.IOException
  * FeatureSetMetadata depends on FeatureDeclarations, including the name in the existing
  * FeatureDeclarationWriterTask would create a circular dependency.
  */
+@DisableCachingByDefault
 abstract class FeatureNameWriterTask : NonIncrementalTask() {
 
     @get:Input

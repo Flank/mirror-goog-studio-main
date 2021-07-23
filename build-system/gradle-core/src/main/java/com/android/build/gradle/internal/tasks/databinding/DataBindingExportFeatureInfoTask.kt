@@ -36,6 +36,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -51,6 +52,7 @@ import java.io.File
  * dependency is already a dependency of another feature, its BR class will already have been
  * generated)
  */
+@DisableCachingByDefault
 abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
 
     @get:OutputDirectory abstract val outFolder: DirectoryProperty

@@ -33,9 +33,11 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
 import javax.inject.Inject
 
 /** Task wrapper around [CxxMetadataGenerator].  */
+@DisableCachingByDefault
 abstract class ExternalNativeBuildJsonTask @Inject constructor(
         @get:Internal val ops: ExecOperations) :
         UnsafeOutputsTask("C/C++ Configuration is always run.") {

@@ -30,6 +30,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.lang.RuntimeException
 
 /**
@@ -38,6 +39,7 @@ import java.lang.RuntimeException
  * As of now, we do not merge any files while building an aar, this is a potential future
  * enhancement.
  */
+@DisableCachingByDefault
 abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
 
     @get:[InputFile PathSensitive(PathSensitivity.RELATIVE)]

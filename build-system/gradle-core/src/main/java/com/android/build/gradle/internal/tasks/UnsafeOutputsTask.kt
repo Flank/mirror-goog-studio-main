@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Base class for tasks that don't use gradle's up-to-date checks.
@@ -32,6 +33,7 @@ import org.gradle.api.tasks.TaskAction
  * This means that the task implementation is responsible for ensuring that the outputs are correct
  * in that case.
  */
+@DisableCachingByDefault
 abstract class UnsafeOutputsTask(reasonToLog: String) : AndroidVariantTask() {
 
     init {
