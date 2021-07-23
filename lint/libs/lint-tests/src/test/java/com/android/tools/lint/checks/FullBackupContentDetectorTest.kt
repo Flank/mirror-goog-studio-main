@@ -13,200 +13,197 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-public class FullBackupContentDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new FullBackupContentDetector();
+class FullBackupContentDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return FullBackupContentDetector()
     }
 
-    public void testOk() {
+    fun testOk() {
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"file\" path=\"dd\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expectClean();
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void test20890435() {
-        String expected =
-                ""
-                        + "res/xml/backup.xml:6: Error: foo.xml is not in an included path [FullBackupContent]\n"
-                        + "     <exclude domain=\"sharedpref\" path=\"foo.xml\"/>\n"
-                        + "                                        ~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun test20890435() {
+        val expected = """
+            res/xml/backup.xml:5: Error: foo.xml is not in an included path [FullBackupContent]
+                 <exclude domain="sharedpref" path="foo.xml"/>
+                                                    ~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"file\" path=\"dd\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
-                                        + "     <exclude domain=\"sharedpref\" path=\"foo.xml\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expect(expected);
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                     <exclude domain="sharedpref" path="foo.xml"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testImplicitInclude() {
+    fun testImplicitInclude() {
         // If there is no include, then everything is considered included
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expectClean();
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testImplicitPath() {
+    fun testImplicitPath() {
         // If you specify an include, but no path attribute, that's defined to mean include
         // everything
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"file\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "     <include domain=\"sharedpref\" path=\"something\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expectClean();
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <include domain="sharedpref" path="something"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
     // Regression test for b/118866569
-    public void testCurrentDirectoryPath() {
+    fun testCurrentDirectoryPath() {
         // You can use "." in the path to reference the current directory; see
         // https://developer.android.com/guide/topics/data/autobackup#XMLSyntax
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"file\" path=\".\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "     <include domain=\"sharedpref\" path=\".\"/>\n"
-                                        + "     <exclude domain=\"sharedpref\" path=\"device.xml\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expectClean();
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="."/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <include domain="sharedpref" path="."/>
+                     <exclude domain="sharedpref" path="device.xml"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testSuppressed() {
+    fun testSuppressed() {
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content xmlns:tools=\"http://schemas.android.com/tools\">\n"
-                                        + "     <include domain=\"file\" path=\"dd\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
-                                        + "     <exclude domain=\"file\" path=\"dd/ss/foo.txt\"/>\n"
-                                        + "     <exclude domain=\"sharedpref\" path=\"foo.xml\" tools:ignore=\"FullBackupContent\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expectClean();
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content xmlns:tools="http://schemas.android.com/tools">
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                     <exclude domain="sharedpref" path="foo.xml" tools:ignore="FullBackupContent"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testIncludeWrongDomain() {
+    fun testIncludeWrongDomain() {
         // Ensure that the path prefix check is done independently for each domain
-        String expected =
-                ""
-                        + "res/xml/backup.xml:4: Error: abc/def.txt is not in an included path [FullBackupContent]\n"
-                        + "     <exclude domain=\"external\" path=\"abc/def.txt\"/>\n"
-                        + "                                      ~~~~~~~~~~~\n"
-                        + "res/xml/backup.xml:6: Error: def/ghi.txt is not in an included path [FullBackupContent]\n"
-                        + "     <exclude domain=\"external\" path=\"def/ghi.txt\"/>\n"
-                        + "                                      ~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
+        val expected = """
+            res/xml/backup.xml:3: Error: abc/def.txt is not in an included path [FullBackupContent]
+                 <exclude domain="external" path="abc/def.txt"/>
+                                                  ~~~~~~~~~~~
+            res/xml/backup.xml:5: Error: def/ghi.txt is not in an included path [FullBackupContent]
+                 <exclude domain="external" path="def/ghi.txt"/>
+                                                  ~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"file\" path=\"abc\"/>\n"
-                                        + "     <exclude domain=\"external\" path=\"abc/def.txt\"/>\n"
-                                        + "     <include domain=\"file\" path=\"def\"/>\n"
-                                        + "     <exclude domain=\"external\" path=\"def/ghi.txt\"/>\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expect(expected);
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="abc"/>
+                     <exclude domain="external" path="abc/def.txt"/>
+                     <include domain="file" path="def"/>
+                     <exclude domain="external" path="def/ghi.txt"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testValidation() {
-        String expected =
-                ""
-                        + "res/xml/backup.xml:7: Error: Subdirectories are not allowed for domain sharedpref [FullBackupContent]\n"
-                        + "     <include domain=\"sharedpref\" path=\"dd/subdir\"/>\n"
-                        + "                                        ~~~~~~~~~\n"
-                        + "res/xml/backup.xml:8: Error: Paths are not allowed to contain .. [FullBackupContent]\n"
-                        + "     <include domain=\"file\" path=\"../outside\"/>\n"
-                        + "                                  ~~~~~~~~~~\n"
-                        + "res/xml/backup.xml:9: Error: Paths are not allowed to contain // [FullBackupContent]\n"
-                        + "     <include domain=\"file\" path=\"//wrong\"/>\n"
-                        + "                                  ~~~~~~~\n"
-                        + "res/xml/backup.xml:11: Error: Include dd is also excluded [FullBackupContent]\n"
-                        + "     <exclude domain=\"external\" path=\"dd\"/>\n"
-                        + "                                      ~~\n"
-                        + "    res/xml/backup.xml:10: Unnecessary/conflicting <include>\n"
-                        + "     <include domain=\"external\" path=\"dd\"/>\n"
-                        + "                                ~~~~~~~~~\n"
-                        + "res/xml/backup.xml:12: Error: Unexpected domain unknown-domain, expected one of root, file, database, sharedpref, external [FullBackupContent]\n"
-                        + "     <exclude domain=\"unknown-domain\" path=\"dd\"/>\n"
-                        + "                      ~~~~~~~~~~~~~~\n"
-                        + "res/xml/backup.xml:12: Error: dd is not in an included path [FullBackupContent]\n"
-                        + "     <exclude domain=\"unknown-domain\" path=\"dd\"/>\n"
-                        + "                                            ~~\n"
-                        + "res/xml/backup.xml:13: Error: Missing domain attribute, expected one of root, file, database, sharedpref, external [FullBackupContent]\n"
-                        + "     <include path=\"dd\"/>\n"
-                        + "     ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/xml/backup.xml:15: Error: Unexpected element <wrongtag> [FullBackupContent]\n"
-                        + "     <wrongtag />\n"
-                        + "      ~~~~~~~~\n"
-                        + "8 errors, 0 warnings\n";
+    fun testValidation() {
+        val expected =
+            """
+            res/xml/backup.xml:6: Error: Subdirectories are not allowed for domain sharedpref [FullBackupContent]
+                 <include domain="sharedpref" path="dd/subdir"/>
+                                                    ~~~~~~~~~
+            res/xml/backup.xml:7: Error: Paths are not allowed to contain .. [FullBackupContent]
+                 <include domain="file" path="../outside"/>
+                                              ~~~~~~~~~~
+            res/xml/backup.xml:8: Error: Paths are not allowed to contain // [FullBackupContent]
+                 <include domain="file" path="//wrong"/>
+                                              ~~~~~~~
+            res/xml/backup.xml:10: Error: Include dd is also excluded [FullBackupContent]
+                 <exclude domain="external" path="dd"/>
+                                                  ~~
+                res/xml/backup.xml:9: Unnecessary/conflicting <include>
+                 <include domain="external" path="dd"/>
+                                            ~~~~~~~~~
+            res/xml/backup.xml:11: Error: Unexpected domain unknown-domain, expected one of root, file, database, sharedpref, external [FullBackupContent]
+                 <exclude domain="unknown-domain" path="dd"/>
+                                  ~~~~~~~~~~~~~~
+            res/xml/backup.xml:11: Error: dd is not in an included path [FullBackupContent]
+                 <exclude domain="unknown-domain" path="dd"/>
+                                                        ~~
+            res/xml/backup.xml:12: Error: Missing domain attribute, expected one of root, file, database, sharedpref, external [FullBackupContent]
+                 <include path="dd"/>
+                 ~~~~~~~~~~~~~~~~~~~~
+            res/xml/backup.xml:14: Error: Unexpected element <wrongtag> [FullBackupContent]
+                 <wrongtag />
+                  ~~~~~~~~
+            8 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "res/xml/backup.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<full-backup-content>\n"
-                                        + "     <include domain=\"root\" path=\"dd\"/>\n" // OK
-                                        + "     <include domain=\"file\" path=\"dd\"/>\n" // OK
-                                        + "     <include domain=\"database\" path=\"dd\"/>\n" // OK
-                                        + "     <include domain=\"sharedpref\" path=\"dd\"/>\n" // OK
-                                        + "     <include domain=\"sharedpref\" path=\"dd/subdir\"/>\n"
-                                        // Not allowed
-                                        + "     <include domain=\"file\" path=\"../outside\"/>\n" // Not allowed
-                                        + "     <include domain=\"file\" path=\"//wrong\"/>\n" // Not allowed
-                                        + "     <include domain=\"external\" path=\"dd\"/>\n" // OK
-                                        + "     <exclude domain=\"external\" path=\"dd\"/>\n" // same as included
-                                        + "     <exclude domain=\"unknown-domain\" path=\"dd\"/>\n"
-                                        + "     <include path=\"dd\"/>\n" // No domain
-                                        + "     <include domain=\"root\" />\n" // OK (means include
-                                        // everything
-                                        + "     <wrongtag />\n"
-                                        + "</full-backup-content>"))
-                .run()
-                .expect(expected);
+            xml(
+                "res/xml/backup.xml",
+                """
+                <full-backup-content>
+                     <include domain="root" path="dd"/>
+                     <include domain="file" path="dd"/>
+                     <include domain="database" path="dd"/>
+                     <include domain="sharedpref" path="dd"/>
+                     <include domain="sharedpref" path="dd/subdir"/>
+                     <include domain="file" path="../outside"/>
+                     <include domain="file" path="//wrong"/>
+                     <include domain="external" path="dd"/>
+                     <exclude domain="external" path="dd"/>
+                     <exclude domain="unknown-domain" path="dd"/>
+                     <include path="dd"/>
+                     <include domain="root" />
+                     <wrongtag />
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 }

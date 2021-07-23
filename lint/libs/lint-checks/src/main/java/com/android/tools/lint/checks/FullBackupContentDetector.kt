@@ -13,239 +13,218 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.resources.ResourceFolderType
+import com.android.tools.lint.checks.FullBackupContentDetector
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.ResourceXmlDetector
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.XmlContext
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.Lists
+import com.google.common.collect.Multimap
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.resources.ResourceFolderType;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import java.util.Collection;
-import java.util.List;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-/** Check which makes sure that a full-backup-content descriptor file is valid and logical */
-public class FullBackupContentDetector extends ResourceXmlDetector {
-    /** Validation of {@code <full-backup-content>} XML elements */
-    public static final Issue ISSUE =
-            Issue.create(
-                            "FullBackupContent",
-                            "Valid Full Backup Content File",
-                            "Ensures that a `<full-backup-content>` file, which is pointed to by a "
-                                    + "`android:fullBackupContent attribute` in the manifest file, is valid",
-                            Category.CORRECTNESS,
-                            5,
-                            Severity.FATAL,
-                            new Implementation(
-                                    FullBackupContentDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo(
-                            "https://android-developers.googleblog.com/2015/07/auto-backup-for-apps-made-simple.html");
-
-    @SuppressWarnings("SpellCheckingInspection")
-    private static final String DOMAIN_SHARED_PREF = "sharedpref";
-
-    private static final String DOMAIN_ROOT = "root";
-    private static final String DOMAIN_FILE = "file";
-    private static final String DOMAIN_DATABASE = "database";
-    private static final String DOMAIN_EXTERNAL = "external";
-    private static final String TAG_EXCLUDE = "exclude";
-    private static final String TAG_INCLUDE = "include";
-    private static final String TAG_FULL_BACKUP_CONTENT = "full-backup-content";
-    private static final String ATTR_PATH = "path";
-    private static final String ATTR_DOMAIN = "domain";
-
-    /** Constructs a new {@link FullBackupContentDetector} */
-    public FullBackupContentDetector() {}
-
-    @Override
-    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        return folderType == ResourceFolderType.XML;
+/**
+ * Check which makes sure that a full-backup-content descriptor file is
+ * valid and logical.
+ */
+class FullBackupContentDetector : ResourceXmlDetector() {
+    override fun appliesTo(folderType: ResourceFolderType): Boolean {
+        return folderType == ResourceFolderType.XML
     }
 
-    @Override
-    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        Element root = document.getDocumentElement();
-        if (root == null) {
-            return;
+    override fun visitDocument(context: XmlContext, document: Document) {
+        val root = document.documentElement ?: return
+        if (TAG_FULL_BACKUP_CONTENT != root.tagName) {
+            return
         }
-        if (!TAG_FULL_BACKUP_CONTENT.equals(root.getTagName())) {
-            return;
-        }
-
-        List<Element> includes = Lists.newArrayList();
-        List<Element> excludes = Lists.newArrayList();
-        NodeList children = root.getChildNodes();
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                Element element = (Element) child;
-                String tag = element.getTagName();
-                if (TAG_INCLUDE.equals(tag)) {
-                    includes.add(element);
-                } else if (TAG_EXCLUDE.equals(tag)) {
-                    excludes.add(element);
+        val includes: MutableList<Element> = Lists.newArrayList()
+        val excludes: MutableList<Element> = Lists.newArrayList()
+        val children = root.childNodes
+        var i = 0
+        val n = children.length
+        while (i < n) {
+            val child = children.item(i)
+            if (child.nodeType == Node.ELEMENT_NODE) {
+                val element = child as Element
+                val tag = element.tagName
+                if (TAG_INCLUDE == tag) {
+                    includes.add(element)
+                } else if (TAG_EXCLUDE == tag) {
+                    excludes.add(element)
                 } else {
                     // See FullBackup#validateInnerTagContents
                     context.report(
-                            ISSUE,
-                            element,
-                            context.getNameLocation(element),
-                            String.format("Unexpected element `<%1$s>`", tag));
+                        ISSUE,
+                        element,
+                        context.getNameLocation(element),
+                        "Unexpected element `<$tag>`"
+                    )
                 }
             }
+            i++
         }
-
-        Multimap<String, String> includePaths = ArrayListMultimap.create(includes.size(), 4);
-        for (Element include : includes) {
-            String domain = validateDomain(context, include);
-            String path = validatePath(context, include);
+        val includePaths: Multimap<String, String> = ArrayListMultimap.create(includes.size, 4)
+        for (include in includes) {
+            val domain = validateDomain(context, include)
+            val path = validatePath(context, include)
             if (domain == null) {
-                continue;
+                continue
             }
-            includePaths.put(domain, path);
+            includePaths.put(domain, path)
         }
-
-        for (Element exclude : excludes) {
-            String excludePath = validatePath(context, exclude);
+        for (exclude in excludes) {
+            val excludePath = validatePath(context, exclude)
             if (excludePath.isEmpty()) {
-                continue;
+                continue
             }
-            String domain = validateDomain(context, exclude);
-            if (domain == null) {
-                continue;
-            }
-            if (includePaths.isEmpty()) {
+            val domain = validateDomain(context, exclude) ?: continue
+            if (includePaths.isEmpty) {
                 // There is no <include> anywhere: that means that everything
                 // is considered included and there's no potential prefix mismatch
-                continue;
+                continue
             }
-
-            boolean hasPrefix = false;
-            Collection<String> included = includePaths.get(domain);
-            if (included == null) {
-                continue;
-            }
-            for (String includePath : included) {
-                if (excludePath.startsWith(includePath) || includePath.equals(".")) {
-                    if (excludePath.equals(includePath)) {
-                        Attr pathNode = exclude.getAttributeNode(ATTR_PATH);
-                        assert pathNode != null;
-                        Location location = context.getValueLocation(pathNode);
+            var hasPrefix = false
+            val included = includePaths[domain] ?: continue
+            for (includePath in included) {
+                if (excludePath.startsWith(includePath) || includePath == ".") {
+                    if (excludePath == includePath) {
+                        val pathNode = exclude.getAttributeNode(ATTR_PATH) ?: continue
+                        val location = context.getValueLocation(pathNode)
                         // Find corresponding include path so we can link to it in the
                         // chained location list
-                        for (Element include : includes) {
-                            Attr includePathNode = include.getAttributeNode(ATTR_PATH);
-                            String includeDomain = include.getAttribute(ATTR_DOMAIN);
-                            if (includePathNode != null
-                                    && excludePath.equals(includePathNode.getValue())
-                                    && domain.equals(includeDomain)) {
-                                Location earlier = context.getLocation(includePathNode);
-                                earlier.setMessage("Unnecessary/conflicting <include>");
-                                location.setSecondary(earlier);
+                        for (include in includes) {
+                            val includePathNode = include.getAttributeNode(ATTR_PATH)
+                            val includeDomain = include.getAttribute(ATTR_DOMAIN)
+                            if (includePathNode != null && excludePath == includePathNode.value && domain == includeDomain) {
+                                val earlier = context.getLocation(includePathNode)
+                                earlier.message = "Unnecessary/conflicting <include>"
+                                location.secondary = earlier
                             }
                         }
                         context.report(
-                                ISSUE,
-                                exclude,
-                                location,
-                                String.format("Include `%1$s` is also excluded", excludePath));
+                            ISSUE,
+                            exclude,
+                            location,
+                            "Include `$excludePath` is also excluded"
+                        )
                     }
-                    hasPrefix = true;
-                    break;
+                    hasPrefix = true
+                    break
                 }
             }
             if (!hasPrefix) {
-                Attr pathNode = exclude.getAttributeNode(ATTR_PATH);
-                assert pathNode != null;
+                val pathNode = exclude.getAttributeNode(ATTR_PATH)!!
                 context.report(
-                        ISSUE,
-                        exclude,
-                        context.getValueLocation(pathNode),
-                        String.format("`%1$s` is not in an included path", excludePath));
+                    ISSUE,
+                    exclude,
+                    context.getValueLocation(pathNode),
+                    "`$excludePath` is not in an included path"
+                )
             }
         }
     }
 
-    @NonNull
-    private static String validatePath(@NonNull XmlContext context, @NonNull Element element) {
-        Attr pathNode = element.getAttributeNode(ATTR_PATH);
-        if (pathNode == null) {
-            return "";
-        }
-        String value = pathNode.getValue();
+    private fun validatePath(context: XmlContext, element: Element): String {
+        val pathNode = element.getAttributeNode(ATTR_PATH) ?: return ""
+        val value = pathNode.value
         if (value.contains("//")) {
             context.report(
-                    ISSUE,
-                    element,
-                    context.getValueLocation(pathNode),
-                    "Paths are not allowed to contain `//`");
+                ISSUE,
+                element,
+                context.getValueLocation(pathNode),
+                "Paths are not allowed to contain `//`"
+            )
         } else if (value.contains("..")) {
             context.report(
+                ISSUE,
+                element,
+                context.getValueLocation(pathNode),
+                "Paths are not allowed to contain `..`"
+            )
+        } else if (value.contains("/")) {
+            val domain = element.getAttribute(ATTR_DOMAIN)
+            if (DOMAIN_SHARED_PREF == domain || DOMAIN_DATABASE == domain) {
+                context.report(
                     ISSUE,
                     element,
                     context.getValueLocation(pathNode),
-                    "Paths are not allowed to contain `..`");
-        } else if (value.contains("/")) {
-            String domain = element.getAttribute(ATTR_DOMAIN);
-            if (DOMAIN_SHARED_PREF.equals(domain) || DOMAIN_DATABASE.equals(domain)) {
-                context.report(
-                        ISSUE,
-                        element,
-                        context.getValueLocation(pathNode),
-                        String.format("Subdirectories are not allowed for domain `%1$s`", domain));
+                    "Subdirectories are not allowed for domain `$domain`"
+                )
             }
         }
-        return value;
+        return value
     }
 
-    @Nullable
-    private static String validateDomain(@NonNull XmlContext context, @NonNull Element element) {
-        Attr domainNode = element.getAttributeNode(ATTR_DOMAIN);
+    private fun validateDomain(context: XmlContext, element: Element): String? {
+        val domainNode = element.getAttributeNode(ATTR_DOMAIN)
         if (domainNode == null) {
             context.report(
-                    ISSUE,
-                    element,
-                    context.getElementLocation(element),
-                    String.format(
-                            "Missing domain attribute, expected one of %1$s",
-                            Joiner.on(", ").join(VALID_DOMAINS)));
-            return null;
+                ISSUE,
+                element,
+                context.getElementLocation(element),
+                "Missing domain attribute, expected one of ${VALID_DOMAINS.joinToString(", ")}",
+            )
+            return null
         }
-        String domain = domainNode.getValue();
-        for (String availableDomain : VALID_DOMAINS) {
-            if (availableDomain.equals(domain)) {
-                return domain;
+        val domain = domainNode.value
+        for (availableDomain in VALID_DOMAINS) {
+            if (availableDomain == domain) {
+                return domain
             }
         }
         context.report(
-                ISSUE,
-                element,
-                context.getValueLocation(domainNode),
-                String.format(
-                        "Unexpected domain `%1$s`, expected one of %2$s",
-                        domain, Joiner.on(", ").join(VALID_DOMAINS)));
-
-        return domain;
+            ISSUE,
+            element,
+            context.getValueLocation(domainNode),
+            "Unexpected domain `$domain`, expected one of ${VALID_DOMAINS.joinToString(", ")}"
+        )
+        return domain
     }
 
-    /** Valid domains; see FullBackup#getTokenForXmlDomain for authoritative list */
-    private static final String[] VALID_DOMAINS =
-            new String[] {
-                DOMAIN_ROOT, DOMAIN_FILE, DOMAIN_DATABASE, DOMAIN_SHARED_PREF, DOMAIN_EXTERNAL
-            };
+    companion object {
+        /** Validation of `<full-backup-content>` XML elements. */
+        @JvmField
+        val ISSUE = create(
+            id = "FullBackupContent",
+            briefDescription = "Valid Full Backup Content File",
+            explanation = """
+                Ensures that a `<full-backup-content>` file, which is pointed to by a \
+                `android:fullBackupContent attribute` in the manifest file, is valid
+                """,
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.FATAL,
+            moreInfo = "https://android-developers.googleblog.com/2015/07/auto-backup-for-apps-made-simple.html",
+            implementation = Implementation(
+                FullBackupContentDetector::class.java, Scope.RESOURCE_FILE_SCOPE
+            )
+        )
+
+        private const val DOMAIN_SHARED_PREF = "sharedpref"
+        private const val DOMAIN_ROOT = "root"
+        private const val DOMAIN_FILE = "file"
+        private const val DOMAIN_DATABASE = "database"
+        private const val DOMAIN_EXTERNAL = "external"
+        private const val TAG_EXCLUDE = "exclude"
+        private const val TAG_INCLUDE = "include"
+        private const val TAG_FULL_BACKUP_CONTENT = "full-backup-content"
+        private const val ATTR_PATH = "path"
+        private const val ATTR_DOMAIN = "domain"
+
+        /**
+         * Valid domains; see FullBackup#getTokenForXmlDomain for
+         * authoritative list.
+         */
+        private val VALID_DOMAINS = arrayOf(
+            DOMAIN_ROOT, DOMAIN_FILE, DOMAIN_DATABASE, DOMAIN_SHARED_PREF, DOMAIN_EXTERNAL
+        )
+    }
 }
