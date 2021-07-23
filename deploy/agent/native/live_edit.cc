@@ -17,10 +17,58 @@
 
 #include "tools/base/deploy/agent/native/live_edit.h"
 
+#include <unordered_set>
+
+#include "tools/base/deploy/agent/native/instrumenter.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/recompose.h"
+#include "tools/base/deploy/agent/native/transform/stub_transform.h"
+#include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/log.h"
+
+// TODO: We need some global state that holds all these information
+std::unordered_set<std::string> primed_classes;
+
 namespace deploy {
-proto::LiveEditResponse LiveEdit(const proto::LiveEditRequest&) {
+proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
+                                 const proto::LiveEditRequest& req) {
   proto::LiveEditResponse resp;
-  // Here, the magic happens
+
+  // class_name is in the format of "com.example.Target"
+  if (primed_classes.find(req.class_name()) == primed_classes.end()) {
+    TransformCache cache = TransformCache::Create("BROKEN");
+    Instrumenter instrumenter(jvmti, jni, cache);
+    std::string name = req.class_name();
+
+    // Transform expect class name to be in the formate of "com/example/Target"
+    std::replace(name.begin(), name.end(), '.', '/');
+    const StubTransform stub(name);
+    instrumenter.Instrument(stub);
+    primed_classes.insert(req.class_name());
+    Log::E("Live Edit priming %s", name.c_str());
+  }
+
+  const std::string code = req.class_data();
+  jbyteArray arr = jni->NewByteArray(code.length());
+  jni->SetByteArrayRegion(arr, 0, req.class_data().size(),
+                          (jbyte*)req.class_data().data());
+
+  JniClass stub(jni, "com/android/tools/deploy/instrument/LiveEditStubs");
+
+  const char* key =
+      ((req.class_name() + "->" + req.method_signature()).c_str());
+  Log::E("Live Edit key %s", key);
+  stub.CallStaticVoidMethod("addToCache", "(Ljava/lang/String;[B)V",
+                            jni->NewStringUTF(key), arr);
+
+  Recompose recompose(jvmti, jni);
+  jobject reloader = recompose.GetComposeHotReload();
+  if (reloader == nullptr) {
+    ErrEvent("GetComposeHotReload was not found.");
+  }
+  jobject state = recompose.SaveStateAndDispose(reloader);
+  recompose.LoadStateAndCompose(reloader, state);
+
   return resp;
 }
 }  // namespace deploy

@@ -52,6 +52,11 @@ dex_library(
     name = "runtime",
     dexer = "D8",
     flags = ["--min-api 26"],
-    jars = [":runtime_java"],
+    jars = [
+        ":runtime_java",
+        "lib/asm-all-9.0.jar",
+        "lib/kotlin-eval4j.jar",
+        "lib/kotlin-stdlib.jar",
+    ],
     visibility = ["//visibility:public"],
 )

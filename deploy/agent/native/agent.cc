@@ -174,7 +174,8 @@ jint HandleAgentRequest(jvmtiEnv* jvmti, JNIEnv* jni, char* socket_name) {
         updater.Update(live_literal_request);
     SendResponse(socket, response);
   } else if (request.has_le_request()) {
-    *response.mutable_le_response() = LiveEdit(request.le_request());
+    *response.mutable_le_response() =
+        LiveEdit(jvmti, jni, request.le_request());
     SendResponse(socket, response);
   } else {
     Log::E("Unknown / Empty Agent Request");
