@@ -1,28 +1,31 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
-kotlin_library_legacy(
-    name = "aaptcompiler",
+maven_library(
+    name = "aaptcompiler_bzl",
     srcs = glob([
-        "src/main/java/**/*.java",
         "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.build:aaptcompiler:" + BUILD_VERSION,
+    legacy_name = "aaptcompiler",
     lint_baseline = "lint_baseline.xml",
-    pom = ":pom",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/aaptcompiler",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/analytics-library/tracker:tools.analytics-tracker",
-        "//tools/base/build-system/aapt2-proto",
-        "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        "//tools/analytics-library/shared:tools.analytics-shared_bzl",
+        "//tools/analytics-library/tracker:tools.analytics-tracker_bzl",
+        "//tools/base/build-system/aapt2-proto:aapt2-proto_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.bouncycastle.bcpkix-jdk15on",
+        "@maven//:org.bouncycastle.bcprov-jdk15on",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

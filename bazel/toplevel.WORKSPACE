@@ -103,6 +103,7 @@ local_maven_repository(
   name = "maven",
   path = "prebuilts/tools/common/m2/repository/",
   artifacts = [
+    "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.6",
     "com.google.guava:guava:30.1-jre",
     "com.google.protobuf:protobuf-java:3.10.0",
@@ -111,6 +112,8 @@ local_maven_repository(
     "net.java.dev.jna:jna-platform:5.6.0",
     "net.sf.kxml:kxml2:2.3.0",
     "org.apache.commons:commons-compress:1.20",
+    "org.bouncycastle:bcpkix-jdk15on:1.56",
+    "org.bouncycastle:bcprov-jdk15on:1.56",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
     "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
