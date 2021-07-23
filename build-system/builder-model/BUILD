@@ -1,8 +1,9 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:utils.bzl", "fileset")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
 fileset(
     name = "version.properties",
@@ -31,30 +32,25 @@ iml_module(
     ],
 )
 
-kotlin_library_legacy(
-    name = "builder-model",
+maven_library(
+    name = "builder-model_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.build:builder-model:" + BUILD_VERSION,
     javacopts = [
         "-source 6",
         "-target 6",
     ],
-    pom = ":pom",
+    legacy_name = "builder-model",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/builder-model",
     resources = [":version.properties"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations_bzl",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "builder-model",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 kotlin_test(
