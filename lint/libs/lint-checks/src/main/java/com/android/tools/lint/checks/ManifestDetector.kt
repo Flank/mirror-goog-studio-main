@@ -226,8 +226,7 @@ class ManifestDetector :
                 """,
             category = Category.SECURITY,
             priority = 3,
-            // TODO: Update once Android 12 documentation moves to permanent home
-            moreInfo = "https://developer.android.com/about/versions/12/features/backup-restore#new-format",
+            moreInfo = "https://developer.android.com/about/versions/12/backup-restore#xml-changes",
             implementation = IMPLEMENTATION
         )
 
@@ -758,7 +757,7 @@ class ManifestDetector :
             <?xml version="1.0" encoding="utf-8"?>
             <!--
                Sample data extraction rules file; uncomment and customize as necessary.
-               See https://developer.android.com/about/versions/12/features/backup-restore#new-format
+               See https://developer.android.com/about/versions/12/backup-restore#xml-changes
                for details.
             -->
             <data-extraction-rules>

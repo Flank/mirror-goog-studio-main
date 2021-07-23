@@ -16,7 +16,6 @@
 package com.android.tools.lint.checks
 
 import com.android.resources.ResourceFolderType
-import com.android.tools.lint.checks.FullBackupContentDetector
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
@@ -24,8 +23,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.utils.iterator
 import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -42,11 +41,20 @@ class FullBackupContentDetector : ResourceXmlDetector() {
 
     override fun visitDocument(context: XmlContext, document: Document) {
         val root = document.documentElement ?: return
-        if (TAG_FULL_BACKUP_CONTENT != root.tagName) {
-            return
+        val rootTag = root.tagName
+        if (rootTag == TAG_FULL_BACKUP_CONTENT) {
+            checkSection(context, root)
+        } else if (rootTag == TAG_DATA_EXTRACTION_RULES) {
+            for (child in root) {
+                // <cloud-backup> and <device-transfer> sections
+                checkSection(context, child)
+            }
         }
-        val includes: MutableList<Element> = Lists.newArrayList()
-        val excludes: MutableList<Element> = Lists.newArrayList()
+    }
+
+    private fun checkSection(context: XmlContext, root: Element) {
+        val includes: MutableList<Element> = mutableListOf()
+        val excludes: MutableList<Element> = mutableListOf()
         val children = root.childNodes
         var i = 0
         val n = children.length
@@ -121,7 +129,7 @@ class FullBackupContentDetector : ResourceXmlDetector() {
                 }
             }
             if (!hasPrefix) {
-                val pathNode = exclude.getAttributeNode(ATTR_PATH)!!
+                val pathNode = exclude.getAttributeNode(ATTR_PATH)
                 context.report(
                     ISSUE,
                     exclude,
@@ -190,14 +198,17 @@ class FullBackupContentDetector : ResourceXmlDetector() {
     }
 
     companion object {
-        /** Validation of `<full-backup-content>` XML elements. */
+        /**
+         * Validation of `<data-extraction-rules` and
+         * `<full-backup-content>` XML elements.
+         */
         @JvmField
         val ISSUE = create(
             id = "FullBackupContent",
             briefDescription = "Valid Full Backup Content File",
             explanation = """
-                Ensures that a `<full-backup-content>` file, which is pointed to by a \
-                `android:fullBackupContent attribute` in the manifest file, is valid
+                Ensures that `<data-extraction-rules`> and `<full-backup-content>` files, which configure \
+                backup options, are valid.
                 """,
             category = Category.CORRECTNESS,
             priority = 5,
@@ -216,6 +227,7 @@ class FullBackupContentDetector : ResourceXmlDetector() {
         private const val TAG_EXCLUDE = "exclude"
         private const val TAG_INCLUDE = "include"
         private const val TAG_FULL_BACKUP_CONTENT = "full-backup-content"
+        private const val TAG_DATA_EXTRACTION_RULES = "data-extraction-rules"
         private const val ATTR_PATH = "path"
         private const val ATTR_DOMAIN = "domain"
 

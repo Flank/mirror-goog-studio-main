@@ -22,6 +22,62 @@ class FullBackupContentDetectorTest : AbstractCheckTest() {
         return FullBackupContentDetector()
     }
 
+    fun testDocumentationExample() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.pkg" >
+                    <application
+                        android:fullBackupContent="@xml/full_backup_content">
+                        android:dataExtractionRules="@xml/data_extraction_rules"
+                        android:label="@string/app_name">
+                        ...
+                    </application>
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/xml/data_extraction_rules.xml",
+                """
+                <data-extraction-rules>
+                    <cloud-backup>
+                        <include domain="file" path="dd"/>
+                        <exclude domain="file" path="dd/fo3o.txt"/>
+                        <exclude domain="file" path="dd/ss/foo.txt"/>
+                        <exclude domain="sharedpref" path="foo.xml"/>
+                    </cloud-backup>
+                    <device-transfer>
+                        <include domain="file"/>
+                        <exclude domain="file" path="dd/fo3o.txt"/>
+                        <include domain="sharedpref" path="something"/>
+                    </device-transfer>
+                </data-extraction-rules>
+                """
+            ).indented(),
+            xml(
+                "res/xml/full_backup_content.xml",
+                """
+                <full-backup-content>
+                     <include domain="file" path="dd"/>
+                     <exclude domain="file" path="dd/fo3o.txt"/>
+                     <exclude domain="file" path="dd/ss/foo.txt"/>
+                     <exclude domain="sharedpref" path="foo.xml"/>
+                </full-backup-content>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/xml/data_extraction_rules.xml:6: Error: foo.xml is not in an included path [FullBackupContent]
+                    <exclude domain="sharedpref" path="foo.xml"/>
+                                                       ~~~~~~~
+            res/xml/full_backup_content.xml:5: Error: foo.xml is not in an included path [FullBackupContent]
+                 <exclude domain="sharedpref" path="foo.xml"/>
+                                                    ~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun testOk() {
         lint().files(
             xml(
