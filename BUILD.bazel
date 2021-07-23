@@ -274,3 +274,15 @@ maven_repository(
         "//tools/base/gmaven:__pkg__",
     ],
 )
+
+# The Android Gradle Plugin gradle build invokes this to
+# prepare the repository of artifacts to compile against
+java_binary(
+    name = "agp_artifacts_dir",
+    data = [":agp_artifacts"],
+    jvm_flags = [
+        "-Dartifacts_manifest_file=tools/base/agp_artifacts.manifest",
+    ],
+    main_class = "com.android.testutils.RepoLinker",
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
+)
