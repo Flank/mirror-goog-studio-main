@@ -30,10 +30,12 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.options.Option
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task for clearing the gradle avd folder of avd devices.
  */
+@DisableCachingByDefault
 abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
     @get: Internal
     abstract val avdService: Property<AvdComponentsBuildService>

@@ -54,8 +54,10 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /** Task that publishes the app dependencies proto for each app or dynamic feature module. */
+@DisableCachingByDefault
 abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
 
     private lateinit var runtimeClasspathArtifacts: ArtifactCollection

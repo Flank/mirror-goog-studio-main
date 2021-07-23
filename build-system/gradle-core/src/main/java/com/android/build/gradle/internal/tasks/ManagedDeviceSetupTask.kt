@@ -36,6 +36,7 @@ import com.android.utils.GrabProcessOutput
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
@@ -56,6 +57,7 @@ private val loggerWrapper = LoggerWrapper.getLogger(ManagedDeviceSetupTask::clas
  * This task is required as a dependency for all Unified Testing Platform Tasks that require this
  * device.
  */
+@DisableCachingByDefault
 abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
     @get: Internal

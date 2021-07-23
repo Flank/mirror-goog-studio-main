@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal.tasks
 
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.work.InputChanges
 
 /**
  * Base incremental task using the new input details APIs.
  */
+@DisableCachingByDefault
 abstract class NewIncrementalTask: AndroidVariantTask() {
 
     abstract fun doTaskAction(inputChanges: InputChanges)

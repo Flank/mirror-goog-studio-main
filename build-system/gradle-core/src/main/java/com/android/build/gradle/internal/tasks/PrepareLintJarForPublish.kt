@@ -33,6 +33,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -43,6 +44,7 @@ import javax.inject.Inject
  * publishing is done at config time when we don't know yet what lint.jar file we're going to
  * publish, we have to do this.
  */
+@DisableCachingByDefault
 abstract class PrepareLintJarForPublish : DefaultTask() {
 
     @get:InputFiles

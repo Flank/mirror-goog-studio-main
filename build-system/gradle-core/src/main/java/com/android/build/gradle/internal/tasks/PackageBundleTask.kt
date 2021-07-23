@@ -55,6 +55,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
@@ -62,6 +63,7 @@ import java.nio.file.Path
 /**
  * Task that generates the bundle (.aab) with all the modules.
  */
+@DisableCachingByDefault
 abstract class PackageBundleTask : NonIncrementalTask() {
 
     // Android Gradle plugin supports two kinds of bundle:

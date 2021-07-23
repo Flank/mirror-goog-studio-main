@@ -75,11 +75,13 @@ import org.gradle.api.tasks.options.Option
 import org.gradle.internal.logging.ConsoleRenderer
 import java.io.File
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
 
 /**
  * Runs instrumentation tests of a variant on a device defined in the DSL.
  */
+@DisableCachingByDefault
 abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), AndroidTestTask {
 
     abstract class TestRunnerFactory {

@@ -33,6 +33,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files;
@@ -44,6 +45,7 @@ import java.util.zip.DeflaterOutputStream
  * SDK dependency block is a block in APK signature v2 block that stores SDK dependency information
  * of the APK.
  */
+@DisableCachingByDefault
 abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
   companion object {

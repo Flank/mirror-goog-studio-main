@@ -45,6 +45,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.StringWriter
 import java.util.regex.Pattern
@@ -163,6 +164,7 @@ data class PrefabModuleTaskData(
     val libraryName: String?
 )
 
+@DisableCachingByDefault
 abstract class PrefabPackageTask : NonIncrementalTask() {
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>

@@ -55,6 +55,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -63,6 +64,7 @@ import java.io.File
  * We use this type to configure ProGuard and the R8 consistently, using the same
  * code.
  */
+@DisableCachingByDefault
 abstract class ProguardConfigurableTask(
     private val projectLayout: ProjectLayout
 ) : NonIncrementalTask() {

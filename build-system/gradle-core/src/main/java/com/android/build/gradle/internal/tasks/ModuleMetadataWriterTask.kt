@@ -27,6 +27,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task responsible for publishing this module metadata (like its application ID) for other modules
@@ -40,6 +41,7 @@ import org.gradle.api.tasks.TaskProvider
  * Both dynamic-feature and feature modules consumes it, from the application module and the base
  * feature module respectively.
  */
+@DisableCachingByDefault
 abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
     @get:Input

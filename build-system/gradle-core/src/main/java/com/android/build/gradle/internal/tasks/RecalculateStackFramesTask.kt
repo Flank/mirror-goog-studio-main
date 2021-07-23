@@ -32,6 +32,7 @@ import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 
@@ -42,6 +43,7 @@ import org.gradle.work.InputChanges
  * [com.android.build.gradle.tasks.TransformClassesWithAsmTask], when the stack frames computation
  * mode is [FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES].
  */
+@DisableCachingByDefault
 abstract class RecalculateStackFramesTask : NewIncrementalTask() {
 
     @get:Classpath

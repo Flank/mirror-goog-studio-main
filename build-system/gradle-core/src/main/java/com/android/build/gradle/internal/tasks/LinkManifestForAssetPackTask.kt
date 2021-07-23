@@ -41,12 +41,14 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Task that passes the generated manifest file for the asset pack to AAPT2 for processing,
  * producing a linked manifest file suitable for packaging in the Android App Bundle.
  */
+@DisableCachingByDefault
 abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
 
     /**
