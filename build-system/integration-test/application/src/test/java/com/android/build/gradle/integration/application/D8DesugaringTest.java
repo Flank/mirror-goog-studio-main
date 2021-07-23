@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.DexClassSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
@@ -28,14 +29,19 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.jf.dexlib2.AccessFlags;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.jf.dexlib2.dexbacked.DexBackedMethod;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,12 +57,10 @@ public class D8DesugaringTest {
         return ImmutableList.of(true, false);
     }
 
-    private final boolean withDexingArtifactTransform;
     @Rule
     public GradleTestProject project;
 
     public D8DesugaringTest(boolean withDexingArtifactTransform) {
-        this.withDexingArtifactTransform = withDexingArtifactTransform;
         project = GradleTestProject.builder()
                 .fromTestApp(
                         new MultiModuleTestProject(
@@ -201,7 +205,7 @@ public class D8DesugaringTest {
     }
 
     @Test
-    public void checkDesugaring() throws IOException, InterruptedException {
+    public void checkDesugaring() throws Exception {
         GradleTaskExecutor executor = project.executor();
         executor.run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
         Apk androidTestApk =
@@ -209,10 +213,19 @@ public class D8DesugaringTest {
                         .getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG, "base");
         assertThat(androidTestApk).hasClass("Lcom/example/helloworld/ExampleInstrumentedTest;");
         assertThat(androidTestApk).hasDexVersion(35);
-        Apk androidApk =
-                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base");
-        assertThat(androidApk).hasClass("Lcom/example/helloworld/InterfaceWithDefault;");
-        assertThat(androidApk).hasDexVersion(35);
+        try (Apk androidApk =
+                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base")) {
+            DexBackedClassDef apkClass =
+                    androidApk.getClass("Lcom/example/helloworld/InterfaceWithDefault;");
+            DexBackedMethod staticMethod =
+                    Iterables.find(apkClass.getMethods(), m -> m.getName().equals("convert"));
+            assertThat(AccessFlags.ABSTRACT.isSet(staticMethod.getAccessFlags()))
+                    .named("static method is not abstract")
+                    .isTrue();
+
+            assertThat(apkClass).doesNotHaveMethod("defaultConvert");
+            assertThat(androidApk).hasDexVersion(35);
+        }
     }
 
     @Test
@@ -248,5 +261,25 @@ public class D8DesugaringTest {
             }
         }
         assertThat(foundTheSynthetic).isTrue();
+    }
+
+    @Test
+    public void checkDesugaringWithInjectedDeviceApi() throws Exception {
+        GradleTaskExecutor executor =
+                project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 24);
+        executor.run("assembleBaseDebug");
+        try (Apk androidApk =
+                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base")) {
+            DexBackedClassDef apkClass =
+                    androidApk.getClass("Lcom/example/helloworld/InterfaceWithDefault;");
+            DexBackedMethod staticMethod =
+                    Iterables.find(apkClass.getMethods(), m -> m.getName().equals("convert"));
+            assertThat(AccessFlags.ABSTRACT.isSet(staticMethod.getAccessFlags()))
+                    .named("static method is not abstract")
+                    .isFalse();
+
+            assertThat(apkClass).hasMethod("defaultConvert");
+            assertThat(androidApk).hasDexVersion(37);
+        }
     }
 }

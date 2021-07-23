@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Packaging
@@ -35,15 +36,11 @@ interface VariantCreationConfig: ComponentCreationConfig {
     override val needsMainDexListForBundle: Boolean
 
     /**
-     * Returns the minimum SDK version for which we want to deploy this variant on.
-     * In most cases this will be equal the minSdkVersion, but when the IDE is deploying to a
-     * device running a higher API level than the minSdkVersion this will have that value and
-     * can be used to enable some optimizations to build the APK faster.
-     *
-     * This has no relation with targetSdkVersion from build.gradle/manifest.
+     * Returns the minimum SDK version for which is used for dexing this variant.
+     * See [ApkCreationConfigImpl.minSdkVersionForDexing] for details.
      */
     // TODO: move to ConsumableCreationConfig.
-    val targetDeployApi: AndroidVersion
+    val minSdkVersionForDexing: AndroidVersion
 
     val maxSdkVersion: Int?
 
