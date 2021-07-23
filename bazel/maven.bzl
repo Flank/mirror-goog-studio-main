@@ -782,18 +782,13 @@ def split_coordinates(coordinates):
 # created by the new rules, so we do not need rule
 # duplication. Once all artifacts have been
 # migrated we can delete the old rules and this bridge.
-def import_maven_library(maven_java_library_rule, maven_library_rule):
-    maven_java_library(
-        name = maven_java_library_rule,
-        export_artifact = ":" + maven_java_library_rule + ".import",
-        java_exports = [":" + maven_library_rule],
-        visibility = ["//visibility:public"],
-    )
-
+def import_maven_library(maven_java_library_rule, maven_library_rule, deps = []):
     maven_java_import(
-        name = maven_java_library_rule + ".import",
+        name = maven_java_library_rule,
+        deps = deps,
         jars = [":" + maven_library_rule + ".jar"],
         pom = ":" + maven_java_library_rule + ".pom",
+        visibility = ["//visibility:public"],
     )
 
     maven_pom(

@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "import_maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
@@ -70,8 +70,6 @@ java_library(
     ],
 )
 
-import_maven_library("tools.ddmlib", "tools.ddmlib_bzl")
-
 # For now instead of combining ddmlib-base and its add-ons, we recompile all together
 # until we sort out the AGP - ddmlib dependency. This matches what is done in build.gradle.
 # Note that this target is released via go/ab studio_linux, for its usage in the platform.
@@ -88,6 +86,7 @@ maven_library(
         ":app-processes-proto",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
+    legacy_name = "tools.ddmlib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],

@@ -1,6 +1,6 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "explicit_target")
-load(":maven.bzl", "MavenInfo", "generate_pom", "maven_pom", "split_coordinates")
+load(":maven.bzl", "MavenInfo", "generate_pom", "import_maven_library", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
@@ -529,6 +529,7 @@ def maven_library(
         lint_is_test_sources = False,
         lint_timeout = None,
         module_name = None,
+        legacy_name = "",
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -547,6 +548,10 @@ def maven_library(
         lint_*: Lint configuration arguments
         module_name: The kotlin module name.
     """
+    if legacy_name:
+        # Create legacy rules and make them point to the new rules.
+        import_maven_library(legacy_name, name, deps = deps)
+
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
     source_jars = [src for src in srcs if src.endswith(".srcjar")]

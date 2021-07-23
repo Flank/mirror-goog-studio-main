@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_pom", "import_maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
@@ -51,8 +51,6 @@ fileset(
     mappings = {"//tools/buildSrc/base:": "com/android/"},
 )
 
-import_maven_library("tools.common", "common_bzl")
-
 maven_library(
     name = "common_bzl",
     srcs = glob([
@@ -60,6 +58,7 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:common:" + BASE_VERSION,
+    legacy_name = "tools.common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",
     resources = [
