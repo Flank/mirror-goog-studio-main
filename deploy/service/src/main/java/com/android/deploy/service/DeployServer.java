@@ -22,14 +22,15 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
-import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
+import com.android.deploy.service.proto.Service;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,9 +79,9 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getDevices(
-            Deploy.DeviceRequest request, StreamObserver<Deploy.DeviceResponse> responseObserver) {
+            Service.DeviceRequest request, StreamObserver<Service.DeviceResponse> responseObserver) {
         IDevice[] devices = myActiveBridge.getDevices();
-        Deploy.DeviceResponse.Builder response = Deploy.DeviceResponse.newBuilder();
+        Service.DeviceResponse.Builder response = Service.DeviceResponse.newBuilder();
         for (IDevice device : devices) {
             response.addDevices(ddmDeviceToRpcDevice(device));
         }
@@ -90,8 +91,8 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getClients(
-            Deploy.ClientRequest request, StreamObserver<Deploy.ClientResponse> responseObserver) {
-        Deploy.ClientResponse.Builder response = Deploy.ClientResponse.newBuilder();
+            Service.ClientRequest request, StreamObserver<Service.ClientResponse> responseObserver) {
+        Service.ClientResponse.Builder response = Service.ClientResponse.newBuilder();
         for (IDevice device : myActiveBridge.getDevices()) {
             if (!request.getDeviceId().isEmpty()
                     && !request.getDeviceId().equals(device.getSerialNumber())) {
@@ -108,9 +109,9 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getDebugPort(
-            Deploy.DebugPortRequest request,
-            StreamObserver<Deploy.DebugPortResponse> responseObserver) {
-        Deploy.DebugPortResponse.Builder response = Deploy.DebugPortResponse.newBuilder();
+            Service.DebugPortRequest request,
+            StreamObserver<Service.DebugPortResponse> responseObserver) {
+        Service.DebugPortResponse.Builder response = Service.DebugPortResponse.newBuilder();
         IDevice selectedDevice = getDeviceBySerial(request.getDeviceId());
         Client selectedClient = null;
         if (selectedDevice == null) {
@@ -159,12 +160,12 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void installApk(
-            Deploy.InstallApkRequest request,
-            StreamObserver<Deploy.InstallApkResponse> responseObserver) {
+            Service.InstallApkRequest request,
+            StreamObserver<Service.InstallApkResponse> responseObserver) {
         IDevice device = getDeviceBySerial(request.getDeviceId());
         if (device == null) {
             responseObserver.onNext(
-                    Deploy.InstallApkResponse.newBuilder()
+                    Service.InstallApkResponse.newBuilder()
                             .setExitStatus(-1)
                             .addMessage(
                                     "No device with matching device Id found: "
@@ -184,7 +185,7 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         // Eg. install com.example.myApp c:\Temp\myapp.apk
         int exitCode = myDeployRunner.run(device, arguments.toArray(new String[0]), logger);
         responseObserver.onNext(
-                Deploy.InstallApkResponse.newBuilder()
+                Service.InstallApkResponse.newBuilder()
                         .setExitStatus(exitCode)
                         .addAllMessage(myDeployerInteraction.getMessages())
                         .addAllPrompt(myDeployerInteraction.getPrompts())
@@ -194,11 +195,11 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    private List<Deploy.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {
+    private List<Service.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {
         return metrics.stream()
                 .map(
                         (metric) ->
-                                Deploy.DeployMetric.newBuilder()
+                                Service.DeployMetric.newBuilder()
                                         .setName(metric.getName())
                                         .setStatus(metric.hasStatus() ? metric.getStatus() : "")
                                         .setStartNs(metric.getStartTimeNs())
@@ -218,11 +219,11 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         return selectedDevice;
     }
 
-    private static Deploy.Client ddmClientToRpcClient(Client client) {
+    private static Service.Client ddmClientToRpcClient(Client client) {
         String packageName = client.getClientData().getPackageName();
         String description = client.getClientData().getClientDescription();
 
-        Deploy.Client.Builder builder = Deploy.Client.newBuilder();
+        Service.Client.Builder builder = Service.Client.newBuilder();
 
         builder.setPid(client.getClientData().getPid());
         if (packageName != null) {
@@ -235,10 +236,10 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         return builder.build();
     }
 
-    private Deploy.Device ddmDeviceToRpcDevice(IDevice device) {
+    private Service.Device ddmDeviceToRpcDevice(IDevice device) {
         String avdOrEmpty = Objects.toString(device.getAvdName(), "");
         String modelOrEmpty = Objects.toString(device.getProperty(PROP_DEVICE_MODEL), "");
-        return Deploy.Device.newBuilder()
+        return Service.Device.newBuilder()
                 .addAllAbis(device.getAbis())
                 .setAvd(avdOrEmpty)
                 .setDevice(device.getName())

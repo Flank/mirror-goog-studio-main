@@ -26,7 +26,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
-import com.android.deploy.service.proto.Deploy;
+import com.android.deploy.service.proto.Service;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
 import io.grpc.stub.StreamObserver;
@@ -47,8 +47,8 @@ public class DeployServerTest {
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.DeviceResponse> response = new FakeStreamObserver<>();
-        server.getDevices(Deploy.DeviceRequest.getDefaultInstance(), response);
+        FakeStreamObserver<Service.DeviceResponse> response = new FakeStreamObserver<>();
+        server.getDevices(Service.DeviceRequest.getDefaultInstance(), response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getDevicesCount()).isEqualTo(devices.length);
         assertThat(response.getResponse().getDevices(0).getSerialNumber())
@@ -65,8 +65,8 @@ public class DeployServerTest {
                 };
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
-        Deploy.ClientRequest request = Deploy.ClientRequest.newBuilder().build();
+        FakeStreamObserver<Service.ClientResponse> response = new FakeStreamObserver<>();
+        Service.ClientRequest request = Service.ClientRequest.newBuilder().build();
         server.getClients(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(2);
@@ -88,9 +88,9 @@ public class DeployServerTest {
                 };
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
-        Deploy.ClientRequest request =
-                Deploy.ClientRequest.newBuilder().setDeviceId("1234").build();
+        FakeStreamObserver<Service.ClientResponse> response = new FakeStreamObserver<>();
+        Service.ClientRequest request =
+                Service.ClientRequest.newBuilder().setDeviceId("1234").build();
         server.getClients(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
@@ -108,9 +108,9 @@ public class DeployServerTest {
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.ClientResponse> response = new FakeStreamObserver<>();
-        Deploy.ClientRequest request =
-                Deploy.ClientRequest.newBuilder().setDeviceId("1234").build();
+        FakeStreamObserver<Service.ClientResponse> response = new FakeStreamObserver<>();
+        Service.ClientRequest request =
+                Service.ClientRequest.newBuilder().setDeviceId("1234").build();
         server.getClients(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
@@ -125,9 +125,9 @@ public class DeployServerTest {
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.DebugPortResponse> response = new FakeStreamObserver<>();
-        Deploy.DebugPortRequest request =
-                Deploy.DebugPortRequest.newBuilder().setDeviceId("1234").setPid(1234).build();
+        FakeStreamObserver<Service.DebugPortResponse> response = new FakeStreamObserver<>();
+        Service.DebugPortRequest request =
+                Service.DebugPortRequest.newBuilder().setDeviceId("1234").setPid(1234).build();
         server.getDebugPort(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getPort()).isEqualTo(4321);
@@ -139,9 +139,9 @@ public class DeployServerTest {
         IDevice[] devices = new IDevice[] {mockDevice("1234", IDevice.DeviceState.ONLINE)};
         when(bridge.getDevices()).thenReturn(devices);
         DeployServer server = new DeployServer(bridge, null);
-        FakeStreamObserver<Deploy.InstallApkResponse> response = new FakeStreamObserver<>();
-        Deploy.InstallApkRequest request =
-                Deploy.InstallApkRequest.newBuilder().setDeviceId("4321").build();
+        FakeStreamObserver<Service.InstallApkResponse> response = new FakeStreamObserver<>();
+        Service.InstallApkRequest request =
+                Service.InstallApkRequest.newBuilder().setDeviceId("4321").build();
         server.installApk(request, response);
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getExitStatus()).isEqualTo(-1);
@@ -164,9 +164,9 @@ public class DeployServerTest {
         metrics.add(new DeployMetric("Test", 1, 2));
         when(runner.getMetrics()).thenReturn(metrics);
         DeployServer server = new DeployServer(bridge, runner);
-        FakeStreamObserver<Deploy.InstallApkResponse> response = new FakeStreamObserver<>();
-        Deploy.InstallApkRequest request =
-                Deploy.InstallApkRequest.newBuilder()
+        FakeStreamObserver<Service.InstallApkResponse> response = new FakeStreamObserver<>();
+        Service.InstallApkRequest request =
+                Service.InstallApkRequest.newBuilder()
                         .setDeviceId("1234")
                         .addApk(apkPath)
                         .setPackageName(packageName)
@@ -180,7 +180,7 @@ public class DeployServerTest {
         assertThat(args[1]).isEqualTo(packageName);
         assertThat(args[2]).isEqualTo(apkPath);
         assertThat(response.getResponse().getMetricCount()).isEqualTo(1);
-        Deploy.DeployMetric actualMetric = response.getResponse().getMetric(0);
+        Service.DeployMetric actualMetric = response.getResponse().getMetric(0);
         assertThat(actualMetric.getName()).isEqualTo(metrics.get(0).getName());
         assertThat(actualMetric.getStartNs()).isEqualTo(metrics.get(0).getStartTimeNs());
         assertThat(actualMetric.getEndNs()).isEqualTo(metrics.get(0).getEndTimeNs());
