@@ -34,6 +34,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.util.LinkedList
@@ -41,6 +42,7 @@ import java.util.LinkedList
 /**
  * Task that generates the final bundle dependencies, combining all the module dependencies.
  */
+@DisableCachingByDefault
 abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
     @get:InputFile

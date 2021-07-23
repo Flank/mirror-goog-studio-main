@@ -111,9 +111,11 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.internal.logging.ConsoleRenderer;
 import org.gradle.process.ExecOperations;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.workers.WorkerExecutor;
 
 /** Run instrumentation tests for a given variant */
+@DisableCachingByDefault
 public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTask
         implements AndroidTestTask {
 

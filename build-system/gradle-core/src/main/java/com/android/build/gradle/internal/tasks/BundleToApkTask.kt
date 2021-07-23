@@ -38,12 +38,14 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.concurrent.ForkJoinPool
 
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
+@DisableCachingByDefault
 abstract class BundleToApkTask : NonIncrementalTask() {
 
     @get:InputFiles

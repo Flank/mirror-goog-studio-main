@@ -27,6 +27,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * A helper class to support the writing of tasks that support doing less work if they have already
@@ -62,6 +63,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
  * @deprecate Use [NewIncrementalTask]
  */
 @Deprecated("Use [NewIncrementalTask]")
+@DisableCachingByDefault
 abstract class IncrementalTask : AndroidVariantTask() {
 
     @get:OutputDirectory

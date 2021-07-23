@@ -27,12 +27,14 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task responsible for publishing the application Id.
  *
  * This task is currently used to publish the output as a text resource for others to consume.
  */
+@DisableCachingByDefault
 abstract class ApplicationIdWriterTask : NonIncrementalTask() {
     @get:Input
     @get:Optional

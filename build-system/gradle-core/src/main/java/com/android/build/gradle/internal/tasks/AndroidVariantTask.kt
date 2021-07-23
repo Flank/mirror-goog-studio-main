@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Base Android task with a variant name and support for analytics
@@ -26,6 +27,7 @@ import org.gradle.api.tasks.Internal
  * - [NonIncrementalTask]
  *
  */
+@DisableCachingByDefault
 abstract class AndroidVariantTask : BaseTask(), VariantAwareTask {
 
     @Internal("No influence on output, this is for our build stats reporting mechanism")

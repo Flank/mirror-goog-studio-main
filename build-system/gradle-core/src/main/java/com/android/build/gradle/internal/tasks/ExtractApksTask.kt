@@ -45,6 +45,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Files
@@ -53,6 +54,7 @@ import java.nio.file.Files
  * Task that extract APKs from the apk zip (created with [BundleToApkTask] into a folder. a Device
  * info file indicate which APKs to extract. Only APKs for that particular device are extracted.
  */
+@DisableCachingByDefault
 abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {

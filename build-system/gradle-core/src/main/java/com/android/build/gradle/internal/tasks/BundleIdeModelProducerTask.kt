@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * [org.gradle.api.Task] that produces the IDE listing file that will be passed through the model.
@@ -33,6 +34,7 @@ import org.gradle.api.tasks.*
  * This task is fast-running, so we should not make it `@Cacheable` as the cacheability overhead
  * could outweigh its benefit.
  */
+@DisableCachingByDefault
 abstract class BundleIdeModelProducerTask : NonIncrementalTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NAME_ONLY)

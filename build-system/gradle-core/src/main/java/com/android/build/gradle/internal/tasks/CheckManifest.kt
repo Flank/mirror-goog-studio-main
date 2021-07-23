@@ -24,6 +24,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -32,6 +33,7 @@ import java.io.File
  * REMOVE ME (bug 139855995): This task can be removed when the new variant API is ready, we haven't
  * removed it yet for compatibility reasons.
  */
+@DisableCachingByDefault
 abstract class CheckManifest : NonIncrementalTask() {
 
     /** Whether the manifest file is required to exist. */

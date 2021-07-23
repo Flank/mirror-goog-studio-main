@@ -28,10 +28,12 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * A task merging dex files in dynamic feature modules into a single artifact type.
  */
+@DisableCachingByDefault
 abstract class FeatureDexMergeTask : NonIncrementalTask() {
 
     @get:InputFiles

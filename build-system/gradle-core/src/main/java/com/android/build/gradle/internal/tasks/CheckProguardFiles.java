@@ -34,7 +34,9 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault
 public abstract class CheckProguardFiles extends NonIncrementalTask {
 
     @Override

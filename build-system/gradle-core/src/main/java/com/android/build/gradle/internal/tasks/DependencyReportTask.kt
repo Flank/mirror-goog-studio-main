@@ -23,8 +23,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.gradle.work.DisableCachingByDefault
 import java.io.IOException
 
+@DisableCachingByDefault
 open class DependencyReportTask : DefaultTask() {
 
     private val renderer = AndroidDependenciesRenderer()
