@@ -89,7 +89,7 @@ public class GradleJavaProcessExecutor implements JavaProcessExecutor {
         @Override
         public void execute(JavaExecSpec javaExecSpec) {
             javaExecSpec.classpath(new File(javaProcessInfo.getClasspath()));
-            javaExecSpec.setMain(javaProcessInfo.getMainClass());
+            javaExecSpec.getMainClass().set(javaProcessInfo.getMainClass());
             javaExecSpec.args(javaProcessInfo.getArgs());
             javaExecSpec.jvmArgs(javaProcessInfo.getJvmArgs());
             javaExecSpec.environment(javaProcessInfo.getEnvironment());
