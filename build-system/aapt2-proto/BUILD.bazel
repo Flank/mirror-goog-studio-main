@@ -1,23 +1,20 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_import", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
+load("//prebuilts/tools/common/aapt:aapt2_version.bzl", "AAPT2_VERSION")
 
-maven_pom(
-    name = "pom",
-    artifact = "aapt2-proto",
-    group = "com.android.tools.build",
-    properties_files = [
-        "//tools/buildSrc/base:version.properties",
-        "//prebuilts/tools/common/aapt:aapt2_version.properties",
+maven_library(
+    name = "aapt2-proto_bzl",
+    srcs = [],
+    bundled_deps = [
+        ":aapt2-proto-with-notice",
     ],
-    version_property = "${buildVersion}-${aapt2Version}",
+    coordinates = "com.android.tools.build:aapt2-proto:" + BUILD_VERSION + "-" + AAPT2_VERSION,
+    legacy_name = "aapt2-proto",
     visibility = ["//visibility:public"],
-)
-
-maven_java_import(
-    name = "aapt2-proto",
-    jars = [":libaapt2-proto-with-notice.jar"],
-    pom = ":pom",
-    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:com.google.protobuf.protobuf-java",
+    ],
 )
 
 # This is here just to merge the NOTICE file into the prebuilt proto jar.
