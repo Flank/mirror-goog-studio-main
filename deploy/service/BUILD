@@ -31,3 +31,31 @@ java_binary(
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
     ],
 )
+
+java_test(
+    name = "service_test",
+    srcs = glob([
+        "src/test/java/com/android/deploy/service/*.java",
+    ]),
+    data = [
+    ],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    test_class = "com.android.deploy.service.DeployServerTest",
+    deps = [
+        ":deploy.service",
+        ":deploy-service-proto",
+        "//tools/base/annotations",
+        "//tools/base/bazel:studio-grpc",
+        "//tools/base/bazel:studio-proto",
+        "//tools/base/common:studio.android.sdktools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/deploy/deployer:tools.deployer",
+        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-core",
+    ],
+)
