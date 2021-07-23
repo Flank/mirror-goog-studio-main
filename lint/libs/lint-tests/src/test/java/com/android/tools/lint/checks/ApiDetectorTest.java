@@ -7327,6 +7327,33 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "13 errors, 0 warnings");
     }
 
+    public void testArrayAccess194526870() {
+        // Regression test for https://issuetracker.google.com/194526870
+        lint().files(
+                        manifest().minSdk(18),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "import android.os.Binder\n"
+                                                + "import android.os.Bundle\n"
+                                                + "import android.os.IBinder\n"
+                                                + "\n"
+                                                + "fun bundleOfValidApi18() {\n"
+                                                + "    val binderValue = object : IBinder by Binder() {}\n"
+                                                + "    val bundle = bundleOf(\"binder\" to binderValue)\n"
+                                                + "    val x = bundle[\"binder\"]\n"
+                                                + "    println(\"here\")\n"
+                                                + "}\n"
+                                                + "\n"
+                                                + "fun bundleOf(vararg pairs: Pair<String, Any?>): Bundle = Bundle(pairs.size).apply {\n"
+                                                + "}\n"
+                                                + "\n")
+                                .indented())
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,

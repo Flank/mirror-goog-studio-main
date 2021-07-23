@@ -42,7 +42,6 @@ import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.ATTR_WIDTH
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.CONSTRUCTOR_NAME
-import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.FQCN_FRAME_LAYOUT
 import com.android.SdkConstants.FQCN_TARGET_API
 import com.android.SdkConstants.FRAME_LAYOUT
@@ -1386,6 +1385,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             var fqcn = containingClass.qualifiedName
 
+            val receiver = if (call != null && call.isMethodCall()) {
+                call.receiver
+            } else if (reference is UArrayAccessExpression) {
+                reference.receiver
+            } else {
+                null
+            }
+
             // The lint API database contains two optimizations:
             // First, all members that were available in API 1 are omitted from the database,
             // since that saves about half of the size of the database, and for API check
@@ -1414,13 +1421,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // "-1" and we can't tell if that means "doesn't exist" or "present in API 1", we
             // then check the package prefix to see whether we know it's an API method whose
             // members should all have been inlined.
-            if (call != null && call.isMethodCall()) {
-                val qualifier = call.receiver
-                if (qualifier != null &&
-                    qualifier !is UThisExpression &&
-                    qualifier !is PsiSuperExpression
+            if (call != null && call.isMethodCall() || reference is UArrayAccessExpression) {
+                if (receiver != null &&
+                    receiver !is UThisExpression &&
+                    receiver !is PsiSuperExpression
                 ) {
-                    val receiverType = qualifier.getExpressionType()
+                    val receiverType = receiver.getExpressionType()
                     if (receiverType is PsiClassType) {
                         val containingType = context.evaluator.getClassType(containingClass)
                         val inheritanceChain =
@@ -1456,27 +1462,15 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
                 } else {
                     // Unqualified call; need to search in our super hierarchy
-                    // Unfortunately, expression.getReceiverType() does not work correctly
-                    // in Java; it returns the type of the static binding of the call
-                    // instead of giving the virtual dispatch type, as described in
-                    // https://issuetracker.google.com/64528052 (and covered by
-                    // for example ApiDetectorTest#testListView). Therefore, we continue
-                    // to use the workaround method for Java (which isn't correct, and is
-                    // particularly broken in Kotlin where the dispatch needs to take into
-                    // account top level functions and extension methods), and then we use
-                    // the correct receiver type in Kotlin.
                     var cls: PsiClass? = null
-                    if (context.file.path.endsWith(DOT_JAVA)) {
-                        cls = call.getContainingUClass()?.javaPsi
-                    } else {
-                        val receiverType = call.receiverType
-                        if (receiverType is PsiClassType) {
-                            cls = receiverType.resolve()
-                        }
+                    val receiverType = call?.receiverType
+                        ?: (reference as? UArrayAccessExpression)?.getExpressionType()
+                    if (receiverType is PsiClassType) {
+                        cls = receiverType.resolve()
                     }
 
-                    if (qualifier is UThisExpression || qualifier is USuperExpression) {
-                        val pte = qualifier as UInstanceExpression
+                    if (receiver is UThisExpression || receiver is USuperExpression) {
+                        val pte = receiver as UInstanceExpression
                         val resolved = pte.resolve()
                         if (resolved is PsiClass) {
                             cls = resolved
@@ -1547,9 +1541,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
-            if (call != null && call.isMethodCall()) {
-                val receiver = call.receiver
-
+            if (receiver != null || call != null && call.isMethodCall()) {
                 var target: PsiClass? = null
                 if (!method.isConstructor) {
                     if (receiver != null) {
@@ -1558,7 +1550,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             target = type.resolve()
                         }
                     } else {
-                        target = call.getContainingUClass()?.javaPsi
+                        target = call?.getContainingUClass()?.javaPsi
                     }
                 }
 
@@ -1591,7 +1583,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // API level than the minSdk, we're generally safe; that method should only be
                 // called by the framework on the right API levels. (There is a danger of somebody
                 // calling that method locally in other contexts, but this is hopefully unlikely.)
-                if (receiver is USuperExpression) {
+                if (receiver is USuperExpression && call != null) {
                     val containingMethod = call.getContainingUMethod()?.javaPsi
                     if (containingMethod != null &&
                         name == containingMethod.name &&
