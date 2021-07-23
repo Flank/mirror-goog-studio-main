@@ -102,7 +102,7 @@ public class DeploymentApiOverrideTest {
 
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_21);
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
     }
 
@@ -148,7 +148,7 @@ public class DeploymentApiOverrideTest {
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_21);
         assertDexTask(result, genExpectedTaskStatesFor("IcsRelease", true));
     }
 
@@ -183,7 +183,7 @@ public class DeploymentApiOverrideTest {
         // We skip the getMainDexListFile() assertion here, because since we didn't cleaned the
         // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
         // even if we are executing in Native Multidex now.
-        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+        assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         // because IDE_TARGET_DEVICE_API
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
         // make sure all user classes are still there
@@ -206,7 +206,7 @@ public class DeploymentApiOverrideTest {
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         assertDexTask(result24, genExpectedTaskStatesFor("IcsRelease", true));
 
         // Now we re-run only changing the target to 25 and we should see dex tasks being up-to-date
@@ -219,7 +219,7 @@ public class DeploymentApiOverrideTest {
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         assertDexTask(result25, genExpectedTaskStatesFor("IcsRelease", true, false));
     }
 
@@ -240,7 +240,7 @@ public class DeploymentApiOverrideTest {
         // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
         // even if we are executing in Native Multidex now.
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
-                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
+                .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         // because IDE_TARGET_DEVICE_API
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
     }

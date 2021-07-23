@@ -162,8 +162,8 @@ open class  LibraryVariantImpl @Inject constructor(
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
 
-    override val targetDeployApi: AndroidVersion
-        get() = delegate.targetDeployApi
+    override val minSdkVersionForDexing: AndroidVersion
+        get() = delegate.minSdkVersionForDexing
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled

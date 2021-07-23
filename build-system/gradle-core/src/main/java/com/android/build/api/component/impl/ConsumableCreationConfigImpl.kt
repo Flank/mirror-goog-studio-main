@@ -55,8 +55,13 @@ open class ConsumableCreationConfigImpl(
         val variantDslInfo: VariantDslInfo<*>) {
 
     val dexingType: DexingType
-        get() = variantDslInfo.dexingType ?:  if (config.isMultiDexEnabled) {
-            if (config.minSdkVersion.getFeatureLevel() < 21) DexingType.LEGACY_MULTIDEX else DexingType.NATIVE_MULTIDEX
+        get() = variantDslInfo.dexingType ?: if (config.isMultiDexEnabled) {
+            if (config.minSdkVersion.getFeatureLevel() >= 21 ||
+                variantDslInfo.targetDeployApiFromIDE?.let { it >= 21 } == true
+            ) {
+                // if minSdkVersion is 21+ or we are deploying to 21+ device, use native multidex
+                DexingType.NATIVE_MULTIDEX
+            } else DexingType.LEGACY_MULTIDEX
         } else {
             DexingType.MONO_DEX
         }
@@ -123,7 +128,7 @@ open class ConsumableCreationConfigImpl(
         return libDesugarEnabled
     }
 
-     open val targetDeployApi: AndroidVersion
+     open val minSdkVersionForDexing: AndroidVersion
         get() = config.minSdkVersion
 
     fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {
