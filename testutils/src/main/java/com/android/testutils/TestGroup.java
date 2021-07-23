@@ -19,10 +19,12 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
@@ -41,6 +43,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.junit.Ignore;
@@ -54,11 +57,16 @@ import org.junit.runner.RunWith;
  * <p>This lets test Suite's filter and run a subset of tests.
  */
 public class TestGroup {
+
     private static final String JAVA_CLASS_PATH = "java.class.path";
 
     private final ClassLoader classLoader;
+
     private final boolean includeJUnit3;
+
     private final Set<String> classNamesToExclude;
+
+    private final Class<? extends Annotation> annotationClass;
 
     /** Returns a new TestGroup builder. */
     public static Builder builder() {
@@ -68,6 +76,7 @@ public class TestGroup {
     private TestGroup(Builder builder) {
         this.classLoader = builder.classLoader;
         this.includeJUnit3 = builder.includeJUnit3;
+        this.annotationClass = builder.annotationClass;
         this.classNamesToExclude = firstNonNull(builder.classNamesToExclude, ImmutableSet.of());
     }
 
@@ -145,16 +154,18 @@ public class TestGroup {
                                 File absoluteFile = new File(path);
                                 if (absoluteFile.exists()) {
                                     existingPaths.add(path);
-                                } else {
+                                }
+                                else {
                                     File relFile = new File(file.getParentFile(), path);
                                     if (relFile.exists()) {
                                         existingPaths.add(relFile.getAbsolutePath());
-                                    } else {
+                                    }
+                                    else {
                                         System.err.println(
                                                 "Cannot find class-path jar: "
-                                                        + path
-                                                        + " referenced from "
-                                                        + file.getName());
+                                                + path
+                                                + " referenced from "
+                                                + file.getName());
                                     }
                                 }
                             }
@@ -166,7 +177,7 @@ public class TestGroup {
     }
 
     /** Returns a list of JUnit test classes contained in the JAR file. */
-    private static List<Class<?>> loadClasses(String jar, ClassLoader loader)
+    private List<Class<?>> loadClasses(String jar, ClassLoader loader)
             throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
         File file = new File(jar);
@@ -178,10 +189,14 @@ public class TestGroup {
                         String className =
                                 ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
                         Class<?> aClass = loader.loadClass(className);
-                        testClasses.add(aClass);
+                        if (this.annotationClass == null
+                            || aClass.isAnnotationPresent(this.annotationClass)) {
+                            testClasses.add(aClass);
+                        }
                     }
                 }
-            } catch (ZipException e) {
+            }
+            catch (ZipException e) {
                 System.err.println(
                         "Error while opening jar " + file.getName() + " : " + e.getMessage());
             }
@@ -192,8 +207,8 @@ public class TestGroup {
     private static boolean seemsLikeJUnit3(Class<?> aClass) {
         boolean junit3 =
                 (TestCase.class.isAssignableFrom(aClass)
-                        || TestSuite.class.isAssignableFrom(aClass))
-                        && !Modifier.isAbstract(aClass.getModifiers());
+                 || TestSuite.class.isAssignableFrom(aClass))
+                && !Modifier.isAbstract(aClass.getModifiers());
         if (!junit3) {
             return false;
         }
@@ -223,14 +238,19 @@ public class TestGroup {
         Predicate<Method> hasTestAnnotation = method -> method.isAnnotationPresent(Test.class);
         return (aClass.isAnnotationPresent(RunWith.class)
                 || Arrays.stream(aClass.getMethods()).anyMatch(hasTestAnnotation))
-                && !Modifier.isAbstract(aClass.getModifiers());
+               && !Modifier.isAbstract(aClass.getModifiers());
     }
 
     /** A TestGroup builder. */
     public static class Builder {
+
         ClassLoader classLoader;
+
         boolean includeJUnit3;
+
         Set<String> classNamesToExclude;
+
+        private Class<? extends Annotation> annotationClass;
 
         private Builder() {
             this.classLoader = Thread.currentThread().getContextClassLoader();
@@ -245,6 +265,11 @@ public class TestGroup {
         /** Includes JUnit3 test classes in the TestGroup. */
         public Builder includeJUnit3() {
             this.includeJUnit3 = true;
+            return this;
+        }
+
+        public Builder withAnnotation(Class<? extends Annotation> annotationClass) {
+            this.annotationClass = annotationClass;
             return this;
         }
 
