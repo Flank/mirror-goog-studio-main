@@ -82,6 +82,8 @@ public class SimpleTestRunnableTest {
 
     @NonNull private AndroidVersion minSdkVersion;
 
+    private int apiVersion;
+
     @Before
     public void setUpMocks() throws Exception {
         deviceConnector = Mockito.mock(DeviceConnector.class);
@@ -103,9 +105,14 @@ public class SimpleTestRunnableTest {
         testApk = new File(temporaryFolder.newFolder(), "test.apk");
     }
 
+    private void useApiVersion(int apiVersion) {
+        this.apiVersion = apiVersion;
+        when(deviceConnector.getApiLevel()).thenReturn(apiVersion);
+    }
+
     @Test
     public void checkSplitBehaviorWithPre21() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(19);
+        useApiVersion(19);
         call(1);
         verify(deviceConnector).installPackage(eq(testedApks.get(0)), any(), anyInt(), any());
         verify(deviceConnector).installPackage(eq(testApk), any(), anyInt(), any());
@@ -121,7 +128,7 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void checkNonSplitBehaviorWith21() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(21);
+        useApiVersion(21);
         call(1);
         verify(deviceConnector).installPackage(eq(testedApks.get(0)), any(), anyInt(), any());
         verify(deviceConnector).installPackage(eq(testApk), any(), anyInt(), any());
@@ -130,7 +137,7 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void checkSplitBehaviorWith21() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(21);
+        useApiVersion(21);
         call(2);
         verify(deviceConnector).installPackages(eq(testedApks), any(), anyInt(), any());
         verify(deviceConnector).installPackage(eq(testApk), any(), anyInt(), any());
@@ -142,7 +149,7 @@ public class SimpleTestRunnableTest {
         testedApplicationId = "com.example.app.test";
         instrumentationTargetPackageId = "com.example.app.test";
 
-        when(deviceConnector.getApiLevel()).thenReturn(15);
+        useApiVersion(15);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
 
         File prodApks = temporaryFolder.newFolder();
@@ -175,7 +182,7 @@ public class SimpleTestRunnableTest {
         testedApplicationId = "com.example.app.test";
         instrumentationTargetPackageId = "com.example.app.test";
 
-        when(deviceConnector.getApiLevel()).thenReturn(16);
+        useApiVersion(16);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
 
         Answer<Void> contentQueryAnswer =
@@ -250,7 +257,7 @@ public class SimpleTestRunnableTest {
         testedApplicationId = "com.example.app.test";
         instrumentationTargetPackageId = "com.example.app.test";
 
-        when(deviceConnector.getApiLevel()).thenReturn(29);
+        useApiVersion(29);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
 
         Answer<Void> lsAnswer =
@@ -354,7 +361,7 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void installOptionsForBuddyApkWithPre23() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(22);
+        useApiVersion(22);
 
         File prodApks = temporaryFolder.newFolder();
         testedApks = ImmutableList.of(new File(prodApks, "app.apk"));
@@ -376,14 +383,13 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector)
-                .installPackage(testedApks.get(0), ImmutableList.of("--user 42"), TIMEOUT, logger);
-        verify(deviceConnector)
-                .installPackage(buddyApk, ImmutableList.of("--user 42"), TIMEOUT, logger);
+                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
+        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of(), TIMEOUT, logger);
     }
 
     @Test
     public void installOptionsForBuddyApkWith23() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(23);
+        useApiVersion(23);
 
         File prodApks = temporaryFolder.newFolder();
         testedApks = ImmutableList.of(new File(prodApks, "app.apk"));
@@ -405,14 +411,13 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector)
-                .installPackage(testedApks.get(0), ImmutableList.of("--user 42"), TIMEOUT, logger);
-        verify(deviceConnector)
-                .installPackage(buddyApk, ImmutableList.of("--user 42", "-g"), TIMEOUT, logger);
+                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
+        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of("-g"), TIMEOUT, logger);
     }
 
     @Test
     public void installOptionsForBuddyApkWith30() throws Exception {
-        when(deviceConnector.getApiLevel()).thenReturn(30);
+        useApiVersion(30);
 
         File prodApks = temporaryFolder.newFolder();
         testedApks = ImmutableList.of(new File(prodApks, "app.apk"));
@@ -445,15 +450,14 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void verifyAnimationsDisabled() throws Exception {
+        useApiVersion(21);
+
         animationsDisabled = true;
         call(
                 1,
-                "am instrument -w -r --no_window_animation --user 42"
+                "am instrument -w -r --no_window_animation "
                         + "  -e shardIndex 2 -e numShards 10 "
                         + "com.example.app/android.support.test.runner.AndroidJUnitRunner");
-        verify(deviceConnector).installPackage(eq(testedApks.get(0)), any(), anyInt(), any());
-        verify(deviceConnector).installPackage(eq(testApk), any(), anyInt(), any());
-        verifyNoMoreInteractions(deviceConnector);
     }
 
     private SimpleTestRunnable getSimpleTestRunnable(
@@ -487,8 +491,10 @@ public class SimpleTestRunnableTest {
     private void call(int apkCount) throws Exception {
         call(
                 apkCount,
-                "am instrument -w -r --user 42  -e shardIndex 2 -e numShards 10 "
-                        + "com.example.app/android.support.test.runner.AndroidJUnitRunner");
+                String.format(
+                        "am instrument -w -r %s  -e shardIndex 2 -e numShards 10 "
+                                + "com.example.app/android.support.test.runner.AndroidJUnitRunner",
+                        (apiVersion >= 24 ? "--user 42" : "")));
     }
 
     private void call(int apkCount, String expectedShellCommand) throws Exception {
@@ -503,7 +509,8 @@ public class SimpleTestRunnableTest {
         File resultsDir = temporaryFolder.newFile();
         File additionalTestOutputDir = temporaryFolder.newFolder();
         File coverageDir = temporaryFolder.newFile();
-        List<String> installOptions = ImmutableList.of("--user 42");
+        List<String> installOptions =
+                apiVersion >= 24 ? ImmutableList.of("--user 42") : ImmutableList.of();
         SimpleTestRunnable runnable =
                 getSimpleTestRunnable(
                         buddyApk,
@@ -519,11 +526,11 @@ public class SimpleTestRunnableTest {
         verify(deviceConnector).installPackage(testApk, installOptions, TIMEOUT, logger);
 
         if (apkCount == 1) {
-            verify(deviceConnector).getApiLevel();
+            verify(deviceConnector, times(2)).getApiLevel();
             verify(deviceConnector)
                     .installPackage(testedApks.get(0), installOptions, TIMEOUT, logger);
         } else {
-            verify(deviceConnector, times(2)).getApiLevel();
+            verify(deviceConnector, times(3)).getApiLevel();
             verify(deviceConnector).installPackages(testedApks, installOptions, TIMEOUT, logger);
         }
 
