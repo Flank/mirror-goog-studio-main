@@ -2,6 +2,17 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_test")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
+coverage_java_library(
+    name = "interpreter_common",
+    srcs = glob([
+        "src/main/java/com/android/tools/deploy/interpreter/**/*.java",
+    ]),
+    deps = [
+        "lib/asm-all-9.0.jar",
+        "//tools/base/annotations:annotations_bzl",
+    ],
+)
+
 java_import(
     name = "jetbrains_asm4",
     jars = [
@@ -23,6 +34,7 @@ kotlin_library(
     ]),
     visibility = ["//visibility:private"],
     deps = [
+        ":interpreter_common",
         ":jetbrains_asm4",
     ],
 )
@@ -32,15 +44,18 @@ coverage_java_library(
     srcs = [
         "//tools/base/deploy/sites:Sites.java",
     ] + glob([
-        "src/main/**/*.java",
+        "src/main/java/com/android/tools/deploy/instrument/**/*.java",
+        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+        "//tools/base/annotations:annotations_bzl",
 
         # For prototyping LE, we will check in our own version of the
         # eval4j dependencies.
         ":jetbrains_asm4",
         ":eval4j",
+        ":interpreter_common",
     ],
 )
 

@@ -5,6 +5,13 @@
 
 package org.jetbrains.eval4j
 
+import com.android.tools.deploy.interpreter.Eval
+import com.android.tools.deploy.interpreter.FieldDescription
+import com.android.tools.deploy.interpreter.LabelValue
+import com.android.tools.deploy.interpreter.MethodDescription
+import com.android.tools.deploy.interpreter.ObjectValue
+import com.android.tools.deploy.interpreter.Value
+import com.android.tools.deploy.interpreter.Value.NOT_A_VALUE
 import org.jetbrains.org.objectweb.asm.Handle
 import org.jetbrains.org.objectweb.asm.Opcodes.*
 import org.jetbrains.org.objectweb.asm.Type
@@ -13,27 +20,6 @@ import org.jetbrains.org.objectweb.asm.tree.analysis.AnalyzerException
 import org.jetbrains.org.objectweb.asm.tree.analysis.Interpreter
 
 class UnsupportedByteCodeException(message: String) : RuntimeException(message)
-
-interface Eval {
-    fun loadClass(classType: Type): Value
-    fun loadString(str: String): Value
-    fun newInstance(classType: Type): Value
-    fun isInstanceOf(value: Value, targetType: Type): Boolean
-
-    fun newArray(arrayType: Type, size: Int): Value
-    fun newMultiDimensionalArray(arrayType: Type, dimensionSizes: List<Int>): Value
-    fun getArrayLength(array: Value): Value
-    fun getArrayElement(array: Value, index: Value): Value
-    fun setArrayElement(array: Value, index: Value, newValue: Value)
-
-    fun getStaticField(fieldDesc: FieldDescription): Value
-    fun setStaticField(fieldDesc: FieldDescription, newValue: Value)
-    fun invokeStaticMethod(methodDesc: MethodDescription, arguments: List<Value>): Value
-
-    fun getField(instance: Value, fieldDesc: FieldDescription): Value
-    fun setField(instance: Value, fieldDesc: FieldDescription, newValue: Value)
-    fun invokeMethod(instance: Value, methodDesc: MethodDescription, arguments: List<Value>, invokeSpecial: Boolean = false): Value
-}
 
 class SingleInstructionInterpreter(private val eval: Eval) : Interpreter<Value>(API_VERSION) {
     override fun newValue(type: Type?): Value? {
@@ -171,7 +157,7 @@ class SingleInstructionInterpreter(private val eval: Eval) : Interpreter<Value>(
                 when {
                     value == NULL_VALUE -> NULL_VALUE
                     eval.isInstanceOf(value, targetType) -> ObjectValue(value.obj(), targetType)
-                    else -> throwInterpretingException(
+                    else -> throw Eval4JInterpretingException(
                         ClassCastException(
                             "${value.asmType.className} cannot be cast to ${targetType.className}"
                         )
@@ -205,7 +191,7 @@ class SingleInstructionInterpreter(private val eval: Eval) : Interpreter<Value>(
         }
     }
 
-    private fun divisionByZero(): Nothing = throwInterpretingException(ArithmeticException("Division by zero"))
+    private fun divisionByZero(): Nothing = throw Eval4JInterpretingException(ArithmeticException("Division by zero"))
 
     override fun binaryOperation(insn: AbstractInsnNode, value1: Value, value2: Value): Value? {
         return when (insn.opcode) {
@@ -385,7 +371,7 @@ class SingleInstructionInterpreter(private val eval: Eval) : Interpreter<Value>(
         return when (insn.opcode) {
             MULTIANEWARRAY -> {
                 val node = insn as MultiANewArrayInsnNode
-                eval.newMultiDimensionalArray(Type.getType(node.desc), values.map(Value::int))
+                eval.newMultiDimensionalArray(Type.getType(node.desc), values.map(Value::getInt))
             }
 
             INVOKEVIRTUAL, INVOKESPECIAL, INVOKEINTERFACE -> {

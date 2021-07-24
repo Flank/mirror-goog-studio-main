@@ -5,6 +5,11 @@
 
 package org.jetbrains.eval4j
 
+import com.android.tools.deploy.interpreter.Eval
+import com.android.tools.deploy.interpreter.LabelValue
+import com.android.tools.deploy.interpreter.ObjectValue
+import com.android.tools.deploy.interpreter.Value
+import com.android.tools.deploy.interpreter.Value.VOID_VALUE
 import org.jetbrains.eval4j.ExceptionThrown.ExceptionKind
 import org.jetbrains.org.objectweb.asm.Opcodes.*
 import org.jetbrains.org.objectweb.asm.Type
@@ -235,7 +240,7 @@ fun interpreterLoop(
     }
 }
 
-private fun <T : Value> Frame<T>.getStackTop(i: Int = 0) = this.getStack(this.stackSize - 1 - i) ?: throwBrokenCodeException(
+private fun <T : Value> Frame<T>.getStackTop(i: Int = 0) = this.getStack(this.stackSize - 1 - i) ?: throw BrokenCode(
     IllegalArgumentException("Couldn't get value with index = $i from top of stack")
 )
 
