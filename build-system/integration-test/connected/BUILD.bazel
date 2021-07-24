@@ -1,9 +1,9 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/build-system/integration-test/connected:connected-test.bzl", "gradle_connected_test")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
-kotlin_library_legacy(
+kotlin_library(
     name = "connected",
     srcs = glob([
         "src/main/java/**/*.kt",

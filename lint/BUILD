@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
 
 # managed by go/iml_to_build
@@ -299,7 +299,7 @@ kotlin_test(
     ],
 )
 
-kotlin_library_legacy(
+kotlin_library(
     name = "studio-checks",
     srcs = glob([
         "studio-checks/src/main/java/**/*.kt",

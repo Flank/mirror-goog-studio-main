@@ -128,7 +128,7 @@ maven_java_library(
 
 maven_java_library(
     name = "jetbrains.kotlin-gradle-plugin_neverlink",
-    # TODO fix kotlin_library_legacy rule so neverlink = 1 can be added here
+    # TODO fix kotlin_library rule so neverlink = 1 can be added here
     exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
 )
 

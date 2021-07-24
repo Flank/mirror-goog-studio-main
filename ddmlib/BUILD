@@ -1,7 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test", "maven_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
@@ -37,7 +37,7 @@ iml_module(
 
 # Compile ddmlib without any add-ons to ensure it builds on it's own. Once the AGP - ddmlib
 # dependency is reworked, we can move the code around to properly represent the separation.
-kotlin_library_legacy(
+kotlin_library(
     name = "ddmlib-base",
     srcs = glob([
         "src/main/java/com/android/ddmlib/**/*.java",
@@ -73,7 +73,7 @@ java_library(
 # For now instead of combining ddmlib-base and its add-ons, we recompile all together
 # until we sort out the AGP - ddmlib dependency. This matches what is done in build.gradle.
 # Note that this target is released via go/ab studio_linux, for its usage in the platform.
-# Kotlin is not enabled in ddmlib module but here we use kotlin_library_legacy rule
+# Kotlin is not enabled in ddmlib module but here we use kotlin_library rule
 # for bundled_deps support.
 maven_library(
     name = "tools.ddmlib_bzl",

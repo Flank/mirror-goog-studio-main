@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
 load(
     "//tools/base/bazel:maven.bzl",

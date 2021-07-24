@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
 # managed by go/iml_to_build
@@ -23,7 +23,7 @@ fileset(
     },
 )
 
-kotlin_library_legacy(
+kotlin_library(
     name = "tools.layoutlib-extensions",
     srcs = glob([
         "src/main/java/**/*.kt",

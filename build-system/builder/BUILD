@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
@@ -72,7 +72,7 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-kotlin_library_legacy(
+kotlin_library(
     name = "fixtures",
     srcs = glob([
         "src/testFixtures/java/**/*.kt",

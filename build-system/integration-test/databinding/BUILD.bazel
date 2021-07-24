@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 #keep sorted
@@ -56,7 +56,7 @@ java_library(
     deps = TEST_DEPS,
 )
 
-kotlin_library_legacy(
+kotlin_library(
     name = "kotlin_tests",
     srcs = glob(["src/test/java/**/*.kt"]),
     deps = TEST_DEPS,

@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel/validations:timeout.bzl", "APPROVED_ETERNAL_TESTS")
 
@@ -29,7 +29,7 @@ def gradle_integration_test(
         lint_baseline = None,
         **kwargs):
     lib_name = name + ".testlib"
-    kotlin_library_legacy(
+    kotlin_library(
         name = lib_name,
         srcs = srcs,
         deps = deps,
