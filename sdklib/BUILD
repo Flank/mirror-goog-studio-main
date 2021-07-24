@@ -1,9 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 load("//tools/base/repository:xjc.bzl", "xsd_to_java")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -49,34 +50,41 @@ fileset(
     },
 )
 
-maven_java_library(
-    name = "tools.sdklib",
+maven_library(
+    name = "tools.sdklib_bzl",
     srcs = glob(
         ["src/main/java/**/*.java"],
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
-    pom = ":pom",
+    coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
+    legacy_name = "tools.sdklib",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/device_validator:tools.dvlib",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/device_validator:tools.dvlib_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        # TODO(emrekultursay): These dependency upgrade manipulations should no longer be
+        # necessary, because the @maven repository already does proper Maven dependency
+        # resolution.
         # org.apache.httpcomponents:httpclient:4.2.6 depends on
         # commons-logging:commons-logging:1.1.1, but other targets use a newer version.
         # Include the dependeny explicitly to bump the version in gradle's resolved dependency
         # graph, as the custom maven logic in tools/base resolves everything together.
-        "//tools/base/third_party:commons-logging_commons-logging",
-        "//tools/base/third_party:org.apache.commons_commons-compress",
-        "//tools/base/third_party:org.apache.httpcomponents_httpclient",
+        "@maven//:commons-logging.commons-logging",
+        "@maven//:org.apache.commons.commons-compress",
+        "@maven//:org.apache.httpcomponents.httpclient",
         # Include explicitly in order to depend on httpcore 4.4.5 instead of 4.4.4
-        "//tools/base/third_party:org.apache.httpcomponents_httpcore",
-        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
+        # TODO(emrekultursay): This dependency is required. It being listed here is not
+        # related (or no longer related) to version upgrade.
+        "@maven//:org.apache.httpcomponents.httpcore",
+        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
     ],
 )
 
@@ -85,13 +93,6 @@ maven_pom(
     artifact = "sdklib",
     group = "com.android.tools",
     source = "//tools/buildSrc/base:build_version",
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "sdklib",
-    group = "com.android.tools",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

@@ -208,6 +208,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
     "//tools/base/build-system/aapt2-proto:aapt2-proto",
+    "//tools/base/device_validator:tools.dvlib",
 ]
 
 maven_repo(
