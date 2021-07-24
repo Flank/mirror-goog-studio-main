@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
@@ -25,7 +25,7 @@ java_proto_library(
     visibility = ["//visibility:public"],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "gradle-core",
     srcs = glob([
         "src/fromGradle/java/**/*.kt",
@@ -128,7 +128,7 @@ maven_java_library(
 
 maven_java_library(
     name = "jetbrains.kotlin-gradle-plugin_neverlink",
-    # TODO fix kotlin_library rule so neverlink = 1 can be added here
+    # TODO fix kotlin_library_legacy rule so neverlink = 1 can be added here
     exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
 )
 

@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "maven_library")
@@ -110,7 +110,7 @@ iml_module(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.fixtures",
     srcs = glob([
         "src/testFixtures/java/**/*.kt",

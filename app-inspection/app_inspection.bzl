@@ -1,6 +1,6 @@
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/bazel:android.bzl", "dex_library")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 load("//tools/base/bazel:maven.bzl", "maven_java_import")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library", "java_proto_library")
@@ -103,7 +103,7 @@ def app_inspection_jar(
         out = "",
         d8_flags = [],
         **kwargs):
-    kotlin_library(
+    kotlin_library_legacy(
         name = name + "-sources_undexed",
         **kwargs
     )

@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "maven_repo")
 
 # Test just kotlin
@@ -7,14 +7,14 @@ java_library(
     srcs = ["java0/pkg/J0.java"],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "test_only_kotlin",
     srcs = ["kotlin0/pkg/K0.kt"],
     deps = [":test_only_java"],
 )
 
 # Test circular dependencies with kotlin and java
-kotlin_library(
+kotlin_library_legacy(
     name = "test_kotlin_and_java",
     srcs = [
         "java1_kotlin1/pkg/J1.java",
@@ -48,7 +48,7 @@ maven_pom(
     version = "1.2.3",
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "test_maven_only_kotlin",
     srcs = ["kotlin0/pkg/K0.kt"],
     pom = ":test_maven_only_kotlin_pom",
@@ -63,7 +63,7 @@ maven_pom(
 )
 
 # Test circular dependencies with kotlin and java
-kotlin_library(
+kotlin_library_legacy(
     name = "test_maven_kotlin_and_java",
     srcs = [
         "java1_kotlin1/pkg/J1.java",

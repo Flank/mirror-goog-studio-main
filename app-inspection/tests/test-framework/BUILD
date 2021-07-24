@@ -1,6 +1,6 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 
-kotlin_library(
+kotlin_library_legacy(
     name = "test-framework",
     testonly = True,
     srcs = glob([

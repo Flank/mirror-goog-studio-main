@@ -1,8 +1,8 @@
 load("//tools/base/transport/test-framework:transport_test.bzl", "transport_test")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 
 # Profiler-specific additions to the transport test framework.
-kotlin_library(
+kotlin_library_legacy(
     name = "test-framework",
     srcs = glob([
         "src/main/java/**/*.kt",

@@ -1,6 +1,6 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 
-kotlin_library(
+kotlin_library_legacy(
     name = "profgen",
     srcs = glob([
         "src/main/kotlin/**/*.kt",

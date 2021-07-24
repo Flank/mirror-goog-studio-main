@@ -1,8 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 
-kotlin_library(
+kotlin_library_legacy(
     name = "app-inspection.inspectors.common",
     srcs = glob([
         "src/**/*.kt",

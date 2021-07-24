@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
 
 # managed by go/iml_to_build
@@ -21,7 +21,7 @@ iml_module(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.lint-model",
     srcs = glob([
         "libs/lint-model/src/main/java/**/*.kt",
@@ -86,7 +86,7 @@ iml_module(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.lint-api",
     # TODO: move resources out of java?
     srcs = glob([
@@ -151,7 +151,7 @@ iml_module(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.lint-checks",
     srcs = glob([
         "libs/lint-checks/src/main/java/**/*.kt",
@@ -193,7 +193,7 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.lint-gradle",
     # TODO: move resources out of java?
     srcs = glob([
@@ -299,7 +299,7 @@ kotlin_test(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "studio-checks",
     srcs = glob([
         "studio-checks/src/main/java/**/*.kt",

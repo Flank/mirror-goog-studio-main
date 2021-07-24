@@ -144,7 +144,7 @@ _kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(
+def kotlin_library_legacy(
         name,
         srcs,
         javacopts = [],
@@ -177,7 +177,7 @@ def kotlin_library(
         )
 
     if not kotlins and not javas:
-        fail("No sources found for kotlin_library " + name)
+        fail("No sources found for kotlin_library_legacy " + name)
 
     targets = []
     kdeps = []
@@ -273,7 +273,7 @@ def kotlin_test(
         lint_baseline = None,
         lint_classpath = [],
         **kwargs):
-    kotlin_library(
+    kotlin_library_legacy(
         name = name + ".testlib",
         srcs = srcs,
         deps = deps,

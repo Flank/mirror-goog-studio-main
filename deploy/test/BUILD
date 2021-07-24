@@ -1,5 +1,5 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 load(":swap_test.bzl", "swap_test")
 
 package(default_testonly = True)
@@ -101,7 +101,7 @@ java_binary(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "original_kotlin",
     testonly = True,  # Needed to be explicit for macro to pickup
     srcs = glob([
@@ -134,7 +134,7 @@ java_binary(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "swapped_kotlin",
     testonly = True,  # Needed to be explicit for macro to pickup
     srcs = glob([

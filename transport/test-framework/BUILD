@@ -1,9 +1,9 @@
 load("//tools/base/transport/test-framework:transport_test.bzl", "transport_test")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy")
 
 # A test framework for creating integration tests that communicate across a
 # host / device connection using the Transport API.
-kotlin_library(
+kotlin_library_legacy(
     name = "test-framework",
     srcs = glob([
         "src/main/java/**/*.kt",
