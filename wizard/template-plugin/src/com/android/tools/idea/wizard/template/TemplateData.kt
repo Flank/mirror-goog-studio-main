@@ -76,7 +76,6 @@ data class ProjectTemplateData(
   val sdkDir: File?,
   val language: Language,
   val kotlinVersion: String,
-  val buildToolsVersion: Revision,
   val rootDir: File,
   val applicationPackage: PackageName?,
   val includedFormFactorNames: FormFactorNames,

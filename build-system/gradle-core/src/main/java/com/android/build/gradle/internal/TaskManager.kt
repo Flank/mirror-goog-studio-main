@@ -1201,12 +1201,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             GenerateLibraryProguardRulesTask.CreationAction(creationConfig))
                 }
                 val nonTransitiveRClassInApp = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+                val compileTimeRClassInApp = projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]
                 // Generate the R class for a library using both local symbols and symbols
                 // from dependencies.
                 // TODO: double check this (what about dynamic features?)
-                if (!nonTransitiveRClassInApp || isLibrary) {
-                    taskFactory.register(
-                            GenerateLibraryRFileTask.CreationAction(creationConfig, isLibrary))
+                if (!nonTransitiveRClassInApp || compileTimeRClassInApp || isLibrary) {
+                    taskFactory.register(GenerateLibraryRFileTask.CreationAction(
+                        creationConfig,
+                        isLibrary
+                    ))
                 }
             }
             MergeType.MERGE -> {

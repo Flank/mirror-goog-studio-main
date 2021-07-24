@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
@@ -29,6 +30,7 @@ import org.jf.dexlib2.iface.value.IntEncodedValue
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes
+import java.io.File
 
 class NonNamespacedCompileRClassTest {
 
@@ -85,9 +87,28 @@ class NonNamespacedCompileRClassTest {
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     @Test
-    fun checkBuilds() {
+    fun checkDefaultBuild() {
+        checkBuilds(nonTransitiveRClass = false)
+    }
+
+    @Test
+    fun checkNonTransitiveRClassBuild() {
+        // Fix up the project to work with non-transitive R classes
+        val appJava = project.getSubproject("app").file("src/main/java/com/example/app/Example.java")
+        TestFileUtils.searchAndReplace(appJava, "public static int LIB_RES_AS_LOCAL", "//")
+        TestFileUtils.searchAndReplace(appJava, "public static int DEP_RES_AS_LIB", "//")
+        TestFileUtils.searchAndReplace(appJava, "public static int DEP_RES_AS_LOCAL", "//")
+
+        val libJava = project.getSubproject("lib").file("src/main/java/com/example/lib/Example.java")
+        TestFileUtils.searchAndReplace(libJava, "public static int DEP_RES_AS_LIB", "//")
+
+        checkBuilds(nonTransitiveRClass = true)
+    }
+
+    fun checkBuilds(nonTransitiveRClass: Boolean) {
         val build = project.executor()
             .with(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS, true)
+            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, nonTransitiveRClass)
             .run(":app:assembleDebug")
 
         Truth.assertThat(build.didWorkTasks).containsAtLeastElementsIn(
@@ -117,23 +138,37 @@ class NonNamespacedCompileRClassTest {
         // dependencies, and also they are initialized with the mock value of 0.
         val compileRTxt = app.getIntermediateFile("compile_symbol_list", "debug", "R.txt")
         assertThat(compileRTxt).exists()
-        assertThat(compileRTxt).containsAllOf(
-            "int string app_string 0x0",
-            "int string lib_string 0x0",
-            "int string abc_action_bar_home_description 0x0")
+        if (nonTransitiveRClass) {
+            assertThat(compileRTxt).containsAllOf("int string app_string 0x0")
+        } else {
+            assertThat(compileRTxt).containsAllOf(
+                    "int string app_string 0x0",
+                    "int string lib_string 0x0",
+                    "int string abc_action_bar_home_description 0x0")
+        }
 
         // Check the APK has the correct runtime R class
         val apk = app.getApk(DEBUG)
 
         ApkSubject.assertThat(apk).containsClass("Lcom/example/app/R\$string;")
         val runtimeRStrings = apk.getClass("Lcom/example/app/R\$string;")!!
-        Truth.assertThat(runtimeRStrings.printFields())
-            .containsAtLeastElementsIn(
-                listOf(
-                    // The runtime R has final fields (while compile time R has non-final fields)
-                    "public static final I app_string", // string from app
-                    "public static final I lib_string", // string from lib
-                    "public static final I abc_action_bar_home_description")) // string from transitive dep
+        if (nonTransitiveRClass) {
+            // It should only contain the app string.
+            Truth.assertThat(runtimeRStrings.printFields())
+                    .contains("public static final I app_string")
+            Truth.assertThat(runtimeRStrings.printFields())
+                    .doesNotContain("public static final I lib_string")
+            Truth.assertThat(runtimeRStrings.printFields())
+                    .doesNotContain("public static final I abc_action_bar_home_description")
+        } else {
+            Truth.assertThat(runtimeRStrings.printFields())
+                    .containsAtLeastElementsIn(
+                            listOf(
+                                    // The runtime R has final fields (while compile time R has non-final fields)
+                                    "public static final I app_string", // string from app
+                                    "public static final I lib_string", // string from lib
+                                    "public static final I abc_action_bar_home_description")) // string from transitive dep
+        }
 
         // Make sure all the fields have correct values (the compile R class has fake values of 0).
         val runtimeStringIDs = runtimeRStrings.getValues()
