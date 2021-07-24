@@ -1,7 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -54,8 +55,8 @@ fileset(
     },
 )
 
-kotlin_library_legacy(
-    name = "tools.sdk-common",
+maven_library(
+    name = "tools.sdk-common_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -63,33 +64,36 @@ kotlin_library_legacy(
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
     ],
-    pom = ":pom",
+    coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
+    legacy_name = "tools.sdk-common",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdk-common",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/base/annotations",
-        "//tools/base/build-system/aaptcompiler",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.android.tools.build_aapt2-proto",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
-        "//tools/base/third_party:javax.inject_javax.inject",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
-        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:xerces_xercesImpl",
+        "//tools/analytics-library/shared:tools.analytics-shared_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/aaptcompiler:aaptcompiler_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/ddmlib:tools.ddmlib_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.android.tools.build.aapt2-proto",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
+        "@maven//:javax.inject.javax.inject",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.bouncycastle.bcpkix-jdk15on",
+        "@maven//:org.bouncycastle.bcprov-jdk15on",
+        "@maven//:org.jetbrains.annotations",
+        "@maven//:org.jetbrains.intellij.deps.trove4j",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:xerces.xercesImpl",
     ],
 )
 
@@ -97,13 +101,6 @@ java_binary(
     name = "update_google_maven_repository_cache",
     main_class = "com.android.ide.common.repository.UpdateGoogleMavenRepositoryCache",
     runtime_deps = [":tools.sdk-common"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "sdk-common",
-    group = "com.android.tools",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

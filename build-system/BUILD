@@ -207,6 +207,8 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     # Maven rules via the import_maven_library bridge:
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
+    "//prebuilts/tools/common/m2:xerces.xercesImpl.2.12.0",
+    "//prebuilts/tools/common/m2:xml-apis.xml-apis.1.4.01",
     "//tools/base/build-system/aapt2-proto:aapt2-proto",
     "//tools/base/device_validator:tools.dvlib",
 ]

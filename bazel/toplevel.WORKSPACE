@@ -104,11 +104,13 @@ local_maven_repository(
   path = "prebuilts/tools/common/m2/repository/",
   artifacts = [
     "commons-logging:commons-logging:1.2",
+    "com.android.tools.build:aapt2-proto:7.0.0-beta04-7396180",
     "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.6",
     "com.google.guava:guava:30.1-jre",
     "com.google.protobuf:protobuf-java:3.10.0",
     "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
+    "javax.inject:javax.inject:1",
     "net.java.dev.jna:jna:5.6.0",
     "net.java.dev.jna:jna-platform:5.6.0",
     "net.sf.kxml:kxml2:2.3.0",
@@ -118,8 +120,11 @@ local_maven_repository(
     "org.bouncycastle:bcpkix-jdk15on:1.56",
     "org.bouncycastle:bcprov-jdk15on:1.56",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
+    "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
+    "org.jetbrains.kotlin:kotlin-reflect:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
+    "xerces:xercesImpl:2.12.0",
   ]
 )
