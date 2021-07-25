@@ -273,7 +273,7 @@ def kotlin_test(
         lint_baseline = None,
         lint_classpath = [],
         **kwargs):
-    kotlin_library_legacy(
+    kotlin_library(
         name = name + ".testlib",
         srcs = srcs,
         deps = deps,
