@@ -15,16 +15,17 @@
  */
 package com.android.sdklib;
 
-import static com.android.sdklib.SdkVersionInfo.RECOMMENDED_MIN_SDK_VERSION;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
+import static com.android.sdklib.SdkVersionInfo.RECOMMENDED_MIN_SDK_VERSION;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
 import static com.android.sdklib.SdkVersionInfo.getApiByBuildCode;
 import static com.android.sdklib.SdkVersionInfo.getApiByPreviewName;
 import static com.android.sdklib.SdkVersionInfo.getBuildCode;
 import static com.android.sdklib.SdkVersionInfo.getCodeName;
 import static com.android.sdklib.SdkVersionInfo.getVersion;
+import static com.android.sdklib.SdkVersionInfo.getVersionWithCodename;
 import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
 
 import com.android.testutils.TestUtils;
@@ -47,7 +48,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 28: Android 9.0 (Pie)", SdkVersionInfo.getAndroidName(28));
         assertEquals("API 29: Android 10.0 (Q)", SdkVersionInfo.getAndroidName(29));
         assertEquals("API 30: Android 11.0 (R)", SdkVersionInfo.getAndroidName(30));
-        assertEquals("API 31: Android 12 Preview (S)", SdkVersionInfo.getAndroidName(31));
+        assertEquals("API 31: Android 12.0 (S)", SdkVersionInfo.getAndroidName(31));
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
     }
@@ -143,6 +144,15 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("IceCreamSandwich", getVersion("IceCreamSandwich", null).getCodename());
         assertEquals(HIGHEST_KNOWN_API, getVersion("BackToTheFuture", null).getApiLevel());
         assertEquals("BackToTheFuture", getVersion("BackToTheFuture", null).getCodename());
+    }
+
+    public void testGetVersionWithCodename() {
+        assertEquals("Android 1.0", getVersionWithCodename(new AndroidVersion(1)));
+        assertEquals("Android 2.3.3 (Gingerbread)", getVersionWithCodename(new AndroidVersion(10)));
+        assertEquals("Android API 500", getVersionWithCodename(new AndroidVersion(500)));
+        assertEquals(
+                "Android Codename Preview",
+                getVersionWithCodename(new AndroidVersion(500, "Codename")));
     }
 
     public void testHighestStableApiInTestUtils() throws Exception {
