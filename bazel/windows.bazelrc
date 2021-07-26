@@ -5,10 +5,7 @@ import %workspace%/tools/base/bazel/common.bazelrc
 startup --windows_enable_symlinks
 
 build --enable_runfiles
-# TODO(b/155429121) move to PY3 default, and python toolchain resolution
-build --host_force_python=PY2
 
-build:remote --python_path="C:/Python27/python.exe"
 build:remote --jobs=250
 
 build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl

@@ -29,6 +29,9 @@ local_repository(
     name = "windows_toolchains",
     path = "tools/base/bazel/toolchains/windows",
 )
+# Bazel cannot auto-detect python on Windows yet
+# See: https://github.com/bazelbuild/bazel/issues/7844
+register_toolchains("@windows_toolchains//:python_toolchain")
 
 http_archive(
     name = "bazel_toolchains",
