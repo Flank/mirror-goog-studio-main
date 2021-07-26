@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.component.ComponentIdentity
 import java.util.regex.Pattern
 
 /**
@@ -25,7 +24,7 @@ import java.util.regex.Pattern
  */
 interface VariantSelector {
     /**
-     * Creates a [VariantSelector] of [ComponentIdentity]that includes all the variants for the
+     * Creates a [VariantSelector] of [ComponentIdentity] that includes all the variants for the
      * current module.
      *
      * @return a [VariantSelector] for all variants.

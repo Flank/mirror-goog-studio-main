@@ -24,6 +24,7 @@ interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest, HasTestFixture
      */
     val renderscript: Renderscript?
 
+    @Suppress("DEPRECATION")
     @Deprecated(
         message= "Use the com.android.build.api.variant.AndroidTest",
         replaceWith = ReplaceWith(

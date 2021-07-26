@@ -19,6 +19,7 @@ package com.android.build.api.component
 /**
  * Properties for the unit test variant of a module.
  */
+@Suppress("DEPRECATION")
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
     replaceWith = ReplaceWith(

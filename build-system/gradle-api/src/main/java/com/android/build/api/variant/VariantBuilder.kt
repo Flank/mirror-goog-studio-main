@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentBuilder

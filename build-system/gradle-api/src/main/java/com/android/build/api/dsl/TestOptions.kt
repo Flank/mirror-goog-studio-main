@@ -106,9 +106,11 @@ interface TestOptions {
 
     fun emulatorSnapshots(action: EmulatorSnapshots.() -> Unit)
 
+    @Suppress("DEPRECATION")
     @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     val failureRetention: FailureRetention
 
+    @Suppress("DEPRECATION")
     @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     fun failureRetention(action: FailureRetention.() -> Unit)
 }

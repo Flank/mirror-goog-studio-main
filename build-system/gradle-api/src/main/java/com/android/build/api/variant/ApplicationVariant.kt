@@ -44,6 +44,7 @@ interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFix
      */
     val signingConfig: SigningConfig?
 
+    @Suppress("DEPRECATION")
     @Deprecated(
         message= "Use the com.android.build.api.variant.AndroidTest",
         replaceWith = ReplaceWith(
