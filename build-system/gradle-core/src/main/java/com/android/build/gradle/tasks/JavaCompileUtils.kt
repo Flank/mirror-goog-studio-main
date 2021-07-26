@@ -84,11 +84,11 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         this.classpath = project.files(
             // classes(e.g. android.jar) that were previously passed through bootstrapClasspath need to be provided
             // through classpath
-            creationConfig.variantScope.bootClasspath,
+            creationConfig.sdkComponents.bootClasspath,
             creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
         )
     } else {
-        this.options.bootstrapClasspath = creationConfig.variantScope.bootClasspath
+        this.options.bootstrapClasspath = task.project.files(creationConfig.sdkComponents.bootClasspath)
         this.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
     }
 

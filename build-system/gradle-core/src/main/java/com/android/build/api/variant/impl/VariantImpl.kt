@@ -16,13 +16,14 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
@@ -68,6 +69,7 @@ abstract class VariantImpl(
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
+    sdkComponents: SdkComponents,
     globalScope: GlobalScope
 ) : ComponentImpl(
     variantBuilder,
@@ -82,6 +84,7 @@ abstract class VariantImpl(
     transformManager,
     variantPropertiesApiServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), Variant, ConsumableCreationConfig {
 

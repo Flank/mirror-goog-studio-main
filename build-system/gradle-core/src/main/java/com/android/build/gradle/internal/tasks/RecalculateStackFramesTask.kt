@@ -130,7 +130,7 @@ abstract class RecalculateStackFramesTask : NewIncrementalTask() {
                 task.jarsInputDir
             )
 
-            task.bootClasspath.from(creationConfig.variantScope.bootClasspath)
+            task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
 
             task.referencedClasses.from(creationConfig.variantScope.providedOnlyClasspath)
 

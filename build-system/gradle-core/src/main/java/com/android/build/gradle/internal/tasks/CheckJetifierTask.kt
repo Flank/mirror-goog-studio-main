@@ -106,12 +106,14 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
             logger.quiet(
                 "Project '${project.path}' does not use any legacy support libraries." +
                         " If this is the case for all other projects, you can disable Jetifier" +
-                        " by setting ${BooleanOption.ENABLE_JETIFIER.propertyName}=false in gradle.properties.")
+                        " by setting ${BooleanOption.ENABLE_JETIFIER.propertyName}=false in gradle.properties."
+            )
         } else {
-            logger.quiet("" +
-                    "The following libraries used by project '${project.path}' depend on legacy support libraries." +
-                    " To disable Jetifier, you will need to use AndroidX-supported versions of these libraries.")
-            logger.quiet("\t" + result.getDisplayString().replace("\n","\n\t"))
+            logger.quiet(
+                "The following libraries used by project '${project.path}' depend on legacy support libraries." +
+                        " To disable Jetifier, you will need to use AndroidX-supported versions of these libraries."
+            )
+            logger.quiet("\t" + result.getDisplayString().replace("\n", "\n\t"))
         }
     }
 }

@@ -514,11 +514,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     @Override
-    protected boolean isLibrary() {
-        return true;
-    }
-
-    @Override
     protected void createPrepareLintJarForPublishTask() {
         super.createPrepareLintJarForPublishTask();
 

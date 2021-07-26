@@ -5,6 +5,15 @@ authors: new features, API and behavior changes, and so on. For
 information about user visible changes to lint, see the User
 Guide.
 
+**7.1**
+
+* The computation of checksums for binary test files (e.g. `compiled`
+  and `bytecode`) unfortunately had to change; the old mechamism was
+  not stable. This means that after updating some of the test files
+  will show as having wrong checksums (e.g. “The checksum does not
+  match for test.kt; expected 0x26e3997d but was 0xb76b5946”). In these
+  cases, just drop in the new checksum.
+
 **7.0**
 
 * The API level has bumped to 10.

@@ -22,8 +22,10 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
@@ -34,7 +36,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
@@ -59,8 +60,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract var projectNativeLibs: Provider<Directory>
-        protected set
+    abstract val projectNativeLibs: DirectoryProperty
 
     @get:Classpath
     @get:Optional
@@ -140,13 +140,6 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             ).withName(SdkConstants.FD_JNI)
                 .on(artifactType)
         }
-
-        override fun configure(
-            task: LibraryJniLibsTask
-        ) {
-            super.configure(task)
-            task.projectNativeLibs = creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS)
-        }
     }
 
     class ProjectOnlyCreationAction(
@@ -159,6 +152,13 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
+            // Copy the MERGED_NATIVE_LIBS instead of the STRIPPED_NATIVE_LIBS for inter-project
+            // intermediate publishing to allow native debug symbols to be extracted via the
+            // ExtractNativeDebugMetadataTask in any downstream application or dynamic-feature
+            // modules; see b/187734554.
+            task.projectNativeLibs.setDisallowChanges(
+                creationConfig.artifacts.get(MERGED_NATIVE_LIBS)
+            )
             task.localJarsNativeLibs = null
         }
     }
@@ -173,6 +173,9 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
+            task.projectNativeLibs.setDisallowChanges(
+                creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS)
+            )
             task.localJarsNativeLibs = creationConfig.variantScope.localPackagedJars
         }
     }

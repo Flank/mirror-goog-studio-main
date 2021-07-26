@@ -57,7 +57,7 @@ public class ImlToBazelConsistencyTest {
                         + "iml-to-build tool output:\n  |  "
                         + String.join("\n  |  ", logger.getOutput())
                         + "\n\n"
-                        + "[1]: https://android.googlesource.com/platform/tools/base/+/mirror-goog-studio-master-dev/bazel/#build-files\n"
+                        + "[1]: https://android.googlesource.com/platform/tools/base/+/mirror-goog-studio-main/bazel/#build-files\n"
                         + "",
                 cause);
     }

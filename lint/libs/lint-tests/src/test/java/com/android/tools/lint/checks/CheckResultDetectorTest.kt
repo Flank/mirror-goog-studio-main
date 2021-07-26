@@ -868,6 +868,59 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testIndirectSuperCallCompiled2() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg.sub
+
+                fun test() {
+                    test.pkg.test()
+                }
+                """
+            ).indented(),
+            compiled(
+                "libs/lib.jar",
+                kotlin(
+                    """
+                    package test.pkg
+
+                    import androidx.annotation.CheckResult
+
+                    @CheckResult
+                    fun test(): String = "hello"
+                    """
+                ).indented(),
+                0x49daf5cf,
+                """
+                test/pkg/TestKt.class:
+                H4sIAAAAAAAAAGWQO0/DMBSFj9OWlvDoA8qjwIBYYMEtYmNCSIiIUCSoWDq5
+                jVXcpDZKnKpjfxIzA+rMj0JcIySQ8HDu43y27vXH59s7gHMcMFStzCx/iUe8
+                R8mtLYMx1MZiKngi9IjfD8ZySN0CQ9GhDJvHJ+Gv/2hTpUcXDIeh0FFqVDTj
+                QmtjhVVG86tnOYwfZJYnlpij0KQjPpZ2kAqlsz9gxrvGdvMkIar0LJPEVLDM
+                UA9jYxOl+Z20IhJWkO1NpgWanjkpMbDYJR71Z8plbcqiDkNzMV/yF3Pfq623
+                KrXFvOW12U3ZmWeMbqPstjmNaaHilYkk/USotOzmk4FMe2KQUGfvIddWTWSg
+                pypT1Lr8nZfBfzR5OpTXyqG7P+jTPxAdeCjCHcJQwhLVO1TtUe1OoeG//pgg
+                k31ri9QnsEyx4vYj3Ok29il2iFqhp1b7KARYC7BOimqAGuoBGtjog2XYRLMP
+                L0Mpw9YXEogmIfMBAAA=
+                """,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcIlx
+                8cDE9IpLk2DiSgxaDACCij4oRAAAAA==
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/sub/test.kt:4: Warning: The result of test is not used [CheckResult]
+                test.pkg.test()
+                ~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testBrackets() {
         // Regression test for b/189970773
         lint().files(
@@ -1065,5 +1118,124 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             0 errors, 4 warnings
             """
         )
+    }
+
+    fun testOperatorOverloads() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+                import kotlin.random.Random
+
+                data class Point(val x: Int, val y: Int) {
+                    @CheckResult operator fun unaryMinus() = Point(-x, -y)
+                    @CheckResult operator fun inc() = Point(x + 1, y + 1)
+                }
+
+                @CheckResult
+                operator fun Point.unaryPlus() = Point(+x, +y)
+
+                fun testUnary() {
+                    var point = Point(10, 20)
+                    -point // ERROR 1
+                    +point // ERROR 2
+                    point++ // ERROR 3
+                    println(-point)  // OK 1
+                }
+
+                data class Counter(val dayIndex: Int) {
+                    @CheckResult
+                    operator fun plus(increment: Int): Counter {
+                        return Counter(dayIndex + increment)
+                    }
+
+                    @CheckResult
+                    operator fun plus(other: Counter): Counter {
+                        return Counter(dayIndex + other.dayIndex)
+                    }
+                }
+
+                fun testBinary() {
+                    val counter = Counter(5)
+                    counter + 5 // ERROR 4
+                    val x = counter + 5 // OK 2
+                }
+
+                fun number(): Int = Random(0).nextInt()
+
+                fun testPolyadic() {
+                    val test = number() + number() + number() + number()
+                    val counter = Counter(1)
+                    val counter2 = Counter(2)
+                    val counter3 = Counter(3)
+                    counter + counter2 + counter3 // ERROR 5
+                    val counter4 = counter + counter2 + counter3 // OK 3
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Point.kt:16: Warning: The result of null is not used [CheckResult]
+                -point // ERROR 1
+                ~~~~~~
+            src/test/pkg/Point.kt:17: Warning: The result of null is not used [CheckResult]
+                +point // ERROR 2
+                ~~~~~~
+            src/test/pkg/Point.kt:18: Warning: The result of null is not used [CheckResult]
+                point++ // ERROR 3
+                ~~~~~~~
+            src/test/pkg/Point.kt:36: Warning: The result of null is not used [CheckResult]
+                counter + 5 // ERROR 4
+                ~~~~~~~~~~~
+            src/test/pkg/Point.kt:47: Warning: The result of null is not used [CheckResult]
+                counter + counter2 + counter3 // ERROR 5
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 5 warnings
+            """
+        )
+    }
+
+    fun testOperatorOverloads2() {
+        // Complicated resolve scenario; there's an extension function instead; our resolve utility
+        // won't find this
+
+        lint().files(
+            kotlin(
+                """
+                package test.pkg.other
+
+                import androidx.annotation.CheckResult
+
+                abstract class DataRepository<K, V> {
+                    @CheckResult operator fun get(key: K): V = error("Not implemented")
+                }
+                operator fun <K1, K2, K3, V> DataRepository<Triple<K1, K2, K3>, V>.get(k1: K1, k2: K2, k3: K3): V =
+                    get(Triple(k1, k2, k3))
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import test.pkg.other.DataRepository
+                import test.pkg.other.get
+
+                class AppOpLiveData {
+                    companion object : DataRepository<Triple<String, String, Int>, AppOpLiveData>()
+                }
+
+                fun test(pkg: String, op: String, id: Int) {
+                    val installPackagesAppOpMode2 = AppOpLiveData[pkg, op, id] // OK
+                    // Not reported yet because we don't have resolve of extension methods
+                    // from array access expressions in UAST
+                    AppOpLiveData[pkg, op, id] // ERROR
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean() // until KTIJ-18765 is fixed
     }
 }

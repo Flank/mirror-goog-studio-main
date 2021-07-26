@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.utils.getAndroidTestArtifact
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.model.v2.models.AndroidProject
@@ -129,6 +130,7 @@ class CustomTestedApksTest {
             """
                 package com.example.app.benchmark;
 
+                import static org.junit.Assert.assertEquals;
                 import static org.junit.Assert.assertTrue;
                 import org.junit.runner.RunWith;
                 import org.junit.Test;
@@ -146,6 +148,16 @@ class CustomTestedApksTest {
                                 .getPackageManager()
                                 .getApplicationInfo("com.example.app", 0);
                         assertTrue("com.example.app should be profileable by shell", info.isProfileableByShell());
+                    }
+
+                    @Test
+                    public void checkAdditionalTestOutputDir() throws Exception {
+                        String additionalTestOutputDir =InstrumentationRegistry.getArguments()
+                                .getCharSequence("additionalTestOutputDir")
+                                .toString();
+                        assertEquals(
+                            "/sdcard/Android/media/com.example.app.benchmark/additional_test_output",
+                            additionalTestOutputDir);
                     }
                 }
                 """.trimIndent()

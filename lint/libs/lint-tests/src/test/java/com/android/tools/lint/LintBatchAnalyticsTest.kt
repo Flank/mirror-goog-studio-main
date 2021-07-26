@@ -108,7 +108,6 @@ class LintBatchAnalyticsTest : AbstractCheckTest() {
 
         val issues = session.issueIdsList
         assertEquals(2, issues.size)
-        val issue1 = issues[0]
         with(issues[0]) {
             assertThat(issueId).isEqualTo("SdCardPath")
             assertThat(count).isEqualTo(2)

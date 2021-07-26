@@ -353,7 +353,7 @@ internal class CompiledSourceFile(
         val binaryFiles = findFiles(classesDir) { _: File, name: String ->
             name.endsWith(DOT_CLASS) ||
                 target.endsWith(DOT_KT) && name.endsWith(".kotlin_module")
-        }
+        }.sortedBy { it.path.replace(File.separatorChar, '/') }
 
         val checksum = computeCheckSum(source.contents, binaryFiles.map { it.readBytes() }.toList())
         val checksumString = "0x" + Integer.toHexString(checksum)
@@ -431,7 +431,8 @@ internal class CompiledSourceFile(
     val classFiles: List<TestFile>
         get() {
             val classFiles = ArrayList<TestFile>()
-            for (encoded in encodedFiles) {
+            for (originalEncoded in encodedFiles) {
+                val encoded = originalEncoded.trimIndent()
                 val index = encoded.indexOf(':')
                 assertTrue(
                     "Expected encoded binary file to start with a colon " +
@@ -450,7 +451,7 @@ internal class CompiledSourceFile(
             if (checksum != null) {
                 val actualChecksum = computeCheckSum(
                     source.contents,
-                    classFiles.map {
+                    classFiles.sortedBy { it.targetRelativePath }.map {
                         (it as BinaryTestFile).binaryContents
                     }.toList()
                 )
@@ -483,7 +484,8 @@ internal class CompiledSourceFile(
         ) {
             val paths = HashSet<String>()
             for (testFile in compiled) {
-                for (encodedFile in testFile.encodedFiles) {
+                for (originalEncodedFile in testFile.encodedFiles) {
+                    val encodedFile = originalEncodedFile.trimIndent()
                     val end = encodedFile.indexOf(':')
                     if (end != -1) {
                         val name = encodedFile.substring(0, end)

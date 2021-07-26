@@ -16,14 +16,13 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.TestFixtures
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResourcesPackaging
+import com.android.build.api.variant.TestFixtures
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth

@@ -41,12 +41,7 @@ void OverlayInstallCommand::ParseParameters(
 }
 
 void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
-  // Determine which agent we need to use.
-  std::string agent_filename = kAgent;
-#if defined(__aarch64__) || defined(__x86_64__)
-  agent_filename = kAgentAlt;
-#endif
-  if (!PrepareInteraction(agent_filename)) {
+  if (!PrepareInteraction(request_.arch())) {
     ErrEvent("Unable to prepare interaction");
     return;
   }

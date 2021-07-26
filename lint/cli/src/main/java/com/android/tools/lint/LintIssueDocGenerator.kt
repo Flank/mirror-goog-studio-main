@@ -1644,7 +1644,7 @@ class LintIssueDocGenerator constructor(
 
         @Suppress("SpellCheckingInspection")
         private const val AOSP_CS =
-            "https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-master-dev"
+            "https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main"
 
         private val PACKAGE_PATTERN = Pattern.compile("""package\s+([\S&&[^;]]*)""")
 

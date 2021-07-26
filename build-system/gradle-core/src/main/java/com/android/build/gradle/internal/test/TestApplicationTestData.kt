@@ -47,8 +47,14 @@ class TestApplicationTestData constructor(
 
     override val libraryType = creationConfig.services.provider { false }
 
+    // AbstractTestDataImpl.testedApplicationId relies on creationConfig.testedApplicationId,
+    // which returns the instrumentation target application name. If
+    // ModulePropertyKeys.SELF_INSTRUMENTING is enabled, the instrumentation targets to the test
+    // application instead of tested application. To always return the tested application ID from
+    // this method, we override this method.
     override val testedApplicationId: Provider<String> =
         testedApksDir.elements.map { BuiltArtifactsLoaderImpl().load(it.single())?.applicationId!! }
+
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger

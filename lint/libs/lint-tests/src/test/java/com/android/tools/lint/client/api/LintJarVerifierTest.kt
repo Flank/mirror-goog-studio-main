@@ -98,7 +98,7 @@ class LintJarVerifierTest {
                     }
                     """
                 ).indented(),
-                0xecc2e397,
+                0xb21709d7,
                 """
                 test/pkg/MyDetector.class:
                 H4sIAAAAAAAAAJ1UW08TQRT+ZntluZUiVxURityUhSJeKDHxnpqCpiCJ4cFM

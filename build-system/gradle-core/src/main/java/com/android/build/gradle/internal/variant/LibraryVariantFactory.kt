@@ -30,6 +30,7 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.api.BaseVariantImpl
@@ -73,7 +74,9 @@ class LibraryVariantFactory(
             variantData: BaseVariantData,
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices): LibraryVariantImpl {
+            taskCreationServices: TaskCreationServices,
+            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        ): LibraryVariantImpl {
         val libVariant = projectServices
                 .objectFactory
                 .newInstance(
@@ -90,6 +93,7 @@ class LibraryVariantFactory(
                         transformManager,
                         variantPropertiesApiServices,
                         taskCreationServices,
+                        androidComponentsExtension.sdkComponents,
                         globalScope)
 
         // create default output

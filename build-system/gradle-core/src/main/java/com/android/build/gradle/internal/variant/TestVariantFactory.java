@@ -27,6 +27,7 @@ import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.TestBuildFeatures;
 import com.android.build.api.dsl.TestExtension;
+import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -89,7 +90,7 @@ public class TestVariantFactory
             @NonNull TestVariantBuilderImpl variantBuilder,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -98,7 +99,9 @@ public class TestVariantFactory
             @NonNull BaseVariantData variantData,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
+
         TestVariantImpl variant =
                 projectServices
                         .getObjectFactory()
@@ -116,6 +119,7 @@ public class TestVariantFactory
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
+                                androidComponentsExtension.getSdkComponents(),
                                 globalScope);
 
         // create default output
@@ -169,7 +173,7 @@ public class TestVariantFactory
     public UnitTestImpl createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -179,7 +183,8 @@ public class TestVariantFactory
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
         throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
     }
 
@@ -188,7 +193,7 @@ public class TestVariantFactory
     public AndroidTestImpl createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -198,7 +203,8 @@ public class TestVariantFactory
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
         throw new RuntimeException("cannot instantiate android-test properties in test plugin");
     }
 

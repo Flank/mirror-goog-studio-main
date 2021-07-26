@@ -22,6 +22,8 @@ import com.android.SdkConstants.ABI_INTEL_ATOM64
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
@@ -59,10 +61,48 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         fun params() = listOf(null, NONE, SYMBOL_TABLE, FULL)
     }
 
+    private val app =
+        MinimalSubProject.app("com.example.app")
+            .appendToBuild("\n\nandroid.dynamicFeatures = [':feature']\n\n")
+    private val feature =
+        MinimalSubProject.dynamicFeature("com.example.feature")
+            .withFile(
+                "src/main/AndroidManifest.xml",
+                """
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:dist="http://schemas.android.com/apk/distribution"
+                        package="com.example.feature">
+
+                        <dist:module>
+                            <dist:fusing dist:include="true"/>
+                            <dist:delivery>
+                                <dist:install-time/>
+                            </dist:delivery>
+                        </dist:module>
+
+                        <application />
+                    </manifest>
+                """.trimIndent()
+            )
+    private val appLib = MinimalSubProject.lib("com.example.lib1")
+    private val featureLib = MinimalSubProject.lib("com.example.lib2")
+
+    private val multiModuleTestProject =
+        MultiModuleTestProject.builder()
+            .subproject(":app", app)
+            .subproject(":feature", feature)
+            .subproject(":appLib", appLib)
+            .subproject(":featureLib", featureLib)
+            .dependency(feature, app)
+            .dependency(app, appLib)
+            .dependency(feature, featureLib)
+            .build()
+
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder()
-            .fromTestProject("dynamicApp")
+            .fromTestApp(multiModuleTestProject)
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
@@ -87,8 +127,8 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     @Test
     fun testNativeDebugMetadataInBundle() {
-        // add native libs to app and feature modules
-        listOf("app", "feature1", "feature2").forEach {
+        // add native libs to all modules
+        listOf("app", "feature", "appLib", "featureLib").forEach {
             val subProject = project.getSubproject(":$it")
             createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
             createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
@@ -104,36 +144,45 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
         val expectedFullEntries = listOf(
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.dbg"
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.dbg",
         )
         val expectedSymbolTableEntries = listOf(
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.sym",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.sym",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.sym",
         )
         val expectedNativeLibEntries = listOf(
             "base/lib/$ABI_ARMEABI_V7A/app.so",
-            "feature1/lib/$ABI_ARMEABI_V7A/feature1.so",
-            "feature2/lib/$ABI_ARMEABI_V7A/feature2.so",
+            "feature/lib/$ABI_ARMEABI_V7A/feature.so",
+            "base/lib/$ABI_ARMEABI_V7A/appLib.so",
+            "feature/lib/$ABI_ARMEABI_V7A/featureLib.so",
             "base/lib/$ABI_INTEL_ATOM/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM/feature2.so",
+            "feature/lib/$ABI_INTEL_ATOM/feature.so",
+            "base/lib/$ABI_INTEL_ATOM/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM/featureLib.so",
             "base/lib/$ABI_INTEL_ATOM64/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM64/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
+            "feature/lib/$ABI_INTEL_ATOM64/feature.so",
+            "base/lib/$ABI_INTEL_ATOM64/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM64/featureLib.so",
         )
         val entryMap = ZipArchive.listEntries(bundleFile.toPath())
         assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
@@ -170,8 +219,8 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     @Test
     fun testNativeDebugMetadataInBundleWithAbiFilters() {
-        // add native libs to app and feature modules
-        listOf("app", "feature1", "feature2").forEach {
+        // add native libs to all modules
+        listOf("app", "feature", "appLib", "featureLib").forEach {
             val subProject = project.getSubproject(":$it")
             createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
             createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
@@ -195,42 +244,51 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
         val expectedFullEntries = listOf(
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.dbg",
         )
         val expectedExcludedFullEntries = listOf(
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.dbg"
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.dbg",
         )
         val expectedSymbolTableEntries = listOf(
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.sym",
         )
         val expectedExcludedSymbolTableEntries = listOf(
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.sym",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.sym",
         )
         val expectedNativeLibEntries = listOf(
             "base/lib/$ABI_INTEL_ATOM/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM/feature2.so",
+            "feature/lib/$ABI_INTEL_ATOM/feature.so",
+            "base/lib/$ABI_INTEL_ATOM/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM/featureLib.so",
         )
         val expectedExcludedNativeLibEntries = listOf(
             "base/lib/$ABI_ARMEABI_V7A/app.so",
-            "feature1/lib/$ABI_ARMEABI_V7A/feature1.so",
-            "feature2/lib/$ABI_ARMEABI_V7A/feature2.so",
+            "feature/lib/$ABI_ARMEABI_V7A/feature.so",
+            "base/lib/$ABI_ARMEABI_V7A/appLib.so",
+            "feature/lib/$ABI_ARMEABI_V7A/featureLib.so",
             "base/lib/$ABI_INTEL_ATOM64/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM64/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
+            "feature/lib/$ABI_INTEL_ATOM64/feature.so",
+            "base/lib/$ABI_INTEL_ATOM64/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM64/featureLib.so",
         )
         val entryMap = ZipArchive.listEntries(bundleFile.toPath())
         assertThat(entryMap.keys).containsNoneIn(expectedExcludedFullEntries)
@@ -260,8 +318,8 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     @Test
     fun testNoNativeDebugMetadataInBundleIfAlreadyStripped() {
-        // add native libs to app and feature modules
-        listOf("app", "feature1", "feature2").forEach {
+        // add native libs to all modules
+        listOf("app", "feature", "appLib", "featureLib").forEach {
             val subProject = project.getSubproject(":$it")
             createStrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
             createStrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
@@ -277,34 +335,43 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
         val expectedExcludedEntries = listOf(
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.dbg",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.dbg",
             "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/featureLib.so.sym",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/featureLib.so.sym",
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.sym",
-            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/appLib.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/featureLib.so.sym",
         )
         val expectedNativeLibEntries = listOf(
             "base/lib/$ABI_ARMEABI_V7A/app.so",
-            "feature1/lib/$ABI_ARMEABI_V7A/feature1.so",
-            "feature2/lib/$ABI_ARMEABI_V7A/feature2.so",
+            "feature/lib/$ABI_ARMEABI_V7A/feature.so",
+            "base/lib/$ABI_ARMEABI_V7A/appLib.so",
+            "feature/lib/$ABI_ARMEABI_V7A/featureLib.so",
             "base/lib/$ABI_INTEL_ATOM/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM/feature2.so",
+            "feature/lib/$ABI_INTEL_ATOM/feature.so",
+            "base/lib/$ABI_INTEL_ATOM/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM/featureLib.so",
             "base/lib/$ABI_INTEL_ATOM64/app.so",
-            "feature1/lib/$ABI_INTEL_ATOM64/feature1.so",
-            "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
+            "feature/lib/$ABI_INTEL_ATOM64/feature.so",
+            "base/lib/$ABI_INTEL_ATOM64/appLib.so",
+            "feature/lib/$ABI_INTEL_ATOM64/featureLib.so",
         )
         val entryMap = ZipArchive.listEntries(bundleFile.toPath())
         assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
@@ -315,7 +382,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
     fun testErrorIfCollidingNativeLibs() {
         Assume.assumeTrue(debugSymbolLevel != NONE)
         // add native libs to app and feature modules
-        listOf("app", "feature1").forEach {
+        listOf("app", "feature").forEach {
             val subProject = project.getSubproject(":$it")
             createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "collide.so")
         }
@@ -343,11 +410,9 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             assertThat(result1.tasks).containsNoneIn(
                 listOf(
                     ":app:extractReleaseNativeDebugMetadata",
-                    ":feature1:extractReleaseNativeDebugMetadata",
-                    ":feature2:extractReleaseNativeDebugMetadata",
+                    ":feature:extractReleaseNativeDebugMetadata",
                     ":app:extractReleaseNativeSymbolTables",
-                    ":feature1:extractReleaseNativeSymbolTables",
-                    ":feature2:extractReleaseNativeSymbolTables"
+                    ":feature:extractReleaseNativeSymbolTables",
                 )
             )
             return
@@ -359,16 +424,16 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             "extractReleaseNativeSymbolTables"
         }
         assertThat(result1.skippedTasks).containsAtLeastElementsIn(
-            listOf(":app:$taskName", ":feature1:$taskName", ":feature2:$taskName")
+            listOf(":app:$taskName", ":feature:$taskName")
         )
         // then test that the task only does work for modules with native libraries.
-        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature"), ABI_ARMEABI_V7A, "feature.so")
         val result2 = project.executor().run("app:$bundleTaskName")
         assertThat(result2.skippedTasks).containsAtLeastElementsIn(
-            listOf(":app:$taskName", ":feature2:$taskName")
+            listOf(":app:$taskName")
         )
         assertThat(result2.didWorkTasks).containsAtLeastElementsIn(
-            listOf(":feature1:$taskName")
+            listOf(":feature:$taskName")
         )
     }
 
@@ -397,7 +462,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         // assert that debug build does not have a default debugSymbolLevel
         Assume.assumeTrue(debugSymbolLevel == null)
         val bundleTaskName = getBundleTaskName("debug")
-        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature"), ABI_ARMEABI_V7A, "feature.so")
         val result = project.executor().run("app:$bundleTaskName")
         val bundleFile = getApkFolderOutput("debug").bundleFile
         assertThat(bundleFile).exists()
@@ -406,13 +471,13 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             assertThat(zip.entries.map { it.toString() })
                 .containsNoneIn(
                     listOf(
-                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
-                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym"
+                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.dbg",
+                        "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature.so.sym"
                     )
                 )
         }
-        assertThat(result.didWorkTasks).doesNotContain(":feature1:extractDebugNativeSymbolTables")
-        assertThat(result.didWorkTasks).doesNotContain(":feature1:extractDebugNativeDebugMetadata")
+        assertThat(result.didWorkTasks).doesNotContain(":feature:extractDebugNativeSymbolTables")
+        assertThat(result.didWorkTasks).doesNotContain(":feature:extractDebugNativeDebugMetadata")
     }
 
     private fun getBundleTaskName(name: String): String {

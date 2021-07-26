@@ -109,17 +109,10 @@ public class CheckAll {
                     "ndkSanAngeles",
                     "combinedAbiDensitySplits",
 
-                    // NDK + Renderscript is currently broken, see http://b.android.com/191791.
-                    "ndkRsHelloCompute",
-
                     // Don't work with the version of the NDK that's in ndk-bundle. Enable after
                     // moving all test projects off ndk-bundle and onto ndk.
                     "prefabApp",
                     "prefabPublishing",
-
-                    // Component model is currently disabled.
-                    "ndkSanAngeles2",
-                    "ndkVariants",
 
                     // Data binding projects are tested in
                     // tools/base/build-system/integration-test/databinding

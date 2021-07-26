@@ -18,6 +18,7 @@ package com.android.build.api.transform;
 
 /**
  * Represents a change event for a {@link SecondaryFile} transform input.
+ * @deprecated
  */
 @Deprecated
 public interface SecondaryInput {

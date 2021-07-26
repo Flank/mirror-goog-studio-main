@@ -67,11 +67,14 @@ class LintRestrictedApiTest(
                     package com.example.one;
 
                     import com.example.two.Bar;
+                    import com.example.three.Baz;
 
                     public class Foo {
                         public static void method() {
                             Bar.method1(); // not allowed
+                            Baz.method1(); // not allowed
                             Bar.method2(); // allowed
+                            Baz.method2(); // allowed
                         }
                     }
                 """.trimIndent()
@@ -104,6 +107,35 @@ class LintRestrictedApiTest(
                 """.trimIndent()
             )
 
+    private val javaLib =
+        MinimalSubProject.javaLibrary()
+            .appendToBuild(
+                """
+                    apply plugin: 'com.android.lint'
+
+                    group = 'test.group.three'
+
+                    dependencies {
+                        api 'androidx.annotation:annotation:1.1.0'
+                    }
+                """.trimIndent()
+            ).withFile(
+                "src/main/java/com/example/three/Baz.java",
+                """
+                    package com.example.three;
+
+                    import androidx.annotation.RestrictTo;
+
+                    public class Baz {
+                        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                        public static void method1() {}
+
+                        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+                        public static void method2() {}
+                    }
+                """.trimIndent()
+            )
+
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder()
@@ -111,7 +143,9 @@ class LintRestrictedApiTest(
                 MultiModuleTestProject.builder()
                     .subproject(":lib1", lib1)
                     .subproject(":lib2", lib2)
+                    .subproject(":java-lib", javaLib)
                     .dependency(lib1, lib2)
+                    .dependency(lib1, javaLib)
                     .build()
             )
             .create()
@@ -136,7 +170,10 @@ class LintRestrictedApiTest(
         val reportFile = File(project.getSubproject(":lib1").projectDir, "lint-results.txt")
         PathSubject.assertThat(reportFile).exists()
         PathSubject.assertThat(reportFile).contains(
-            "Foo.java:7: Error: Bar.method1 can only be called from within the same library group (referenced groupId=test.group.two from groupId=test.group.one) [RestrictedApi]"
+            "Foo.java:8: Error: Bar.method1 can only be called from within the same library group (referenced groupId=test.group.two from groupId=test.group.one) [RestrictedApi]"
+        )
+        PathSubject.assertThat(reportFile).contains(
+            "Foo.java:9: Error: Baz.method1 can only be called from within the same library group (referenced groupId=test.group.three from groupId=test.group.one) [RestrictedApi]"
         )
         PathSubject.assertThat(reportFile).doesNotContain(
             "library group prefix"

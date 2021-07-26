@@ -21,6 +21,7 @@ import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.Component
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -102,6 +103,7 @@ abstract class ComponentImpl(
     override val transformManager: TransformManager,
     protected val internalServices: VariantPropertiesApiServices,
     override val services: TaskCreationServices,
+    override val sdkComponents: SdkComponents,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
 ): Component, ComponentCreationConfig, ComponentIdentity by componentIdentity {
@@ -110,7 +112,11 @@ abstract class ComponentImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
     override val namespace: Provider<String> =
-        internalServices.providerOf(String::class.java, variantDslInfo.namespace)
+        internalServices.providerOf(
+            type = String::class.java,
+            value = variantDslInfo.namespace,
+            disallowUnsafeRead = false, // allow unsafe read for KAGP : b/193706116
+        )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
@@ -730,7 +736,7 @@ abstract class ComponentImpl(
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 
-    abstract fun <T: Component> createUserVisibleVariantObject(
+    abstract fun <T: com.android.build.api.variant.Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?

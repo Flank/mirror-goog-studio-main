@@ -77,6 +77,7 @@ import org.gradle.api.provider.Property;
  * <p>These secondary inputs/outputs allow a transform to read but not process any content. This
  * can be achieved by having {@link #getScopes()} return an empty list and use
  * {@link #getReferencedScopes()} to indicate what to read instead.
+ * @deprecated
  */
 @SuppressWarnings("MethodMayBeStatic")
 @Deprecated

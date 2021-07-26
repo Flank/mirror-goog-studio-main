@@ -332,7 +332,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/analytics-library/tracker:agp_gradle_build_files",
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
-    "//tools/base:agp_artifacts_zip.zip",
+    "//tools/base:agp_artifacts.zip",
     "//tools/base/annotations:agp_gradle_build_files",
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
     "//tools/base/build-system/aapt2-proto:agp_gradle_build_files",
@@ -385,6 +385,10 @@ gradle_build(
     gradle_properties = {"hybrid-build-embedded-in-bazel": "true"},
     output_file = "android_gradle_plugin.zip",
     output_file_source = "dist/repo.zip",
-    repos = ["//tools/base:agp_artifacts"],
+    repos = [
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
+    ],
     tasks = [":zipPlugin"],
+    visibility = ["//visibility:public"],
 )

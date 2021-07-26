@@ -95,8 +95,6 @@ import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.ArrayList
-import java.util.HashMap
 
 /**
  * Specialized visitor for running detectors on a Java AST. It operates
@@ -1197,6 +1195,18 @@ internal class UElementVisitor constructor(
             annotationHandler?.visitBinaryExpression(mContext, node)
 
             return super.visitBinaryExpression(node)
+        }
+
+        override fun visitPrefixExpression(node: UPrefixExpression): Boolean {
+            annotationHandler?.visitUnaryExpression(mContext, node)
+
+            return super.visitPrefixExpression(node)
+        }
+
+        override fun visitPostfixExpression(node: UPostfixExpression): Boolean {
+            annotationHandler?.visitUnaryExpression(mContext, node)
+
+            return super.visitPostfixExpression(node)
         }
     }
 

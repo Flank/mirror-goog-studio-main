@@ -44,6 +44,8 @@ class DeviceInfo {
   static constexpr int O_MR1 = 27;
   static constexpr int P = 28;
   static constexpr int Q = 29;  // First API where Statsd is supported.
+  // First API where simpleperf's --log-to-android-buffer flag is supported.
+  static constexpr int R = 30;
 
  private:
   DeviceInfo();

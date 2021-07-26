@@ -17,7 +17,6 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.TestFixtures
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
@@ -27,6 +26,7 @@ import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.VariantOutput
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory

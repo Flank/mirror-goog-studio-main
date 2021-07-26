@@ -19,6 +19,7 @@
       <module fileurl="file://$PROJECT_DIR$/bazel/avd/android.sdktools.base.bazel.avd.iml" filepath="$PROJECT_DIR$/bazel/avd/android.sdktools.base.bazel.avd.iml" />
       <module fileurl="file://$PROJECT_DIR$/build-system/aapt2-proto/android.sdktools.base.build-system.aapt2-proto.iml" filepath="$PROJECT_DIR$/build-system/aapt2-proto/android.sdktools.base.build-system.aapt2-proto.iml" />
       <module fileurl="file://$PROJECT_DIR$/build-system/manifest-merger/android.sdktools.base.build-system.manifest-merger-base.iml" filepath="$PROJECT_DIR$/build-system/manifest-merger/android.sdktools.base.build-system.manifest-merger-base.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmaven/android.sdktools.base.gmaven.iml" filepath="$PROJECT_DIR$/gmaven-test/android.sdktools.base.gmaven-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/jaxb-inheritance-plugin/android.sdktools.base.jaxb-inheritance-plugin.iml" filepath="$PROJECT_DIR$/jaxb-inheritance-plugin/android.sdktools.base.jaxb-inheritance-plugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/layoutlib-api/android.sdktools.base.layoutlib-api-base.iml" filepath="$PROJECT_DIR$/layoutlib-api/android.sdktools.base.layoutlib-api-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-checks/android.sdktools.base.lint.checks-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-checks/android.sdktools.base.lint.checks-base.iml" />

@@ -23,6 +23,7 @@ import java.util.Collection;
  * The input to a Transform.
  * <p>
  * It is mostly composed of a list of {@link JarInput} and a list of {@link DirectoryInput}.
+ * @deprecated
  */
 @Deprecated
 public interface TransformInput {

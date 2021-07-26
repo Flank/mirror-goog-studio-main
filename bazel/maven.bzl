@@ -1,5 +1,64 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
+load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
+
+def generate_pom(
+        ctx,
+        group,
+        artifact,
+        version,
+        output_pom,
+        deps = [],
+        source = None,
+        export = False,
+        properties = None,
+        properties_files = None,
+        version_property = None,
+        exclusions = None):
+    inputs = []
+    args = []
+
+    # Input file to take as base
+    if source:
+        args += ["-i", source.path]
+        inputs += [source]
+
+    # Output file
+    args += ["-o", output_pom.path]
+
+    args += ["-x"] if export else []
+
+    # Overrides
+    if group:
+        args += ["--group", group]
+    if artifact:
+        args += ["--artifact", artifact]
+    if version:
+        args += ["--version", version]
+    if properties:
+        args += ["--properties", properties.path]
+        inputs += [properties]
+    if properties_files:
+        args += ["--properties", ":".join([file.path for file in properties_files])]
+        inputs += properties_files
+    if version_property:
+        args += ["--version_property", version_property]
+
+    # Exclusions
+    if exclusions:
+        for (dependency, exclusions) in exclusions.items():
+            args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
+
+    args += ["--deps", ":".join([dep.path for dep in deps])]
+    inputs += deps
+
+    ctx.actions.run(
+        mnemonic = "GenPom",
+        inputs = inputs,
+        outputs = [output_pom],
+        arguments = args,
+        executable = ctx.executable._pom,
+    )
 
 def _maven_pom_impl(ctx):
     # Contains both *.jar and *.aar files.
@@ -76,48 +135,19 @@ def _maven_pom_impl(ctx):
         deps_jars = ctx.attr.source.maven.deps.jars
         deps_clsjars = ctx.attr.source.maven.deps.clsjars
 
-    inputs = []
-    args = []
-
-    # Input file to take as base
-    if ctx.file.source:
-        args += ["-i", ctx.file.source.path]
-        inputs += [ctx.file.source]
-
-    # Output file
-    args += ["-o", ctx.outputs.pom.path]
-
-    args += ["-x"] if ctx.attr.export_pom else []
-
-    # Overrides
-    if ctx.attr.group:
-        args += ["--group", ctx.attr.group]
-    if ctx.attr.artifact:
-        args += ["--artifact", ctx.attr.artifact]
-    if ctx.attr.version:
-        args += ["--version", ctx.attr.version]
-    if ctx.attr.properties:
-        args += ["--properties", ctx.file.properties.path]
-        inputs += [ctx.file.properties]
-    if ctx.files.properties_files:
-        args += ["--properties", ":".join([file.path for file in ctx.files.properties_files])]
-        inputs += ctx.files.properties_files
-    if ctx.attr.version_property:
-        args += ["--version_property", ctx.attr.version_property]
-
-    # Exclusions
-    for (dependency, exclusions) in ctx.attr.exclusions.items():
-        args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
-
-    args += ["--deps", ":".join([dep.path for dep in ctx.files.deps])]
-    inputs += ctx.files.deps
-
-    ctx.actions.run(
-        mnemonic = "GenPom",
-        inputs = inputs,
-        outputs = [ctx.outputs.pom],
-        arguments = args,
-        executable = ctx.executable._pom,
+    generate_pom(
+        ctx,
+        source = ctx.file.source,
+        output_pom = ctx.outputs.pom,
+        export = ctx.attr.export_pom,
+        group = ctx.attr.group,
+        artifact = ctx.attr.artifact,
+        version = ctx.attr.version,
+        properties = ctx.file.properties if ctx.attr.properties else None,
+        properties_files = ctx.files.properties_files,
+        version_property = ctx.attr.version_property,
+        exclusions = ctx.attr.exclusions,
+        deps = ctx.files.deps,
     )
 
     return struct(maven = struct(
@@ -329,7 +359,8 @@ def maven_aar(name, aar, pom, visibility = None):
     )
 
 MavenRepoInfo = provider(fields = {
-    "artifacts": "A list of tuples (artifact: File, classifier: string) for each artifact in the Maven repo",
+    "artifacts": "The list of files in the repo",
+    "build_manifest": "The repo's manifest file with full paths for build rules",
 })
 
 def _collect_pom_provider(pom, jars, clsjars, include_sources):
@@ -339,6 +370,18 @@ def _collect_pom_provider(pom, jars, clsjars, include_sources):
         if include_sources or classifier != "sources":
             collected += [(jar, classifier) for jar in jars.to_list()]
     return collected
+
+def _zipper(actions, zipper, desc, map_file, files, out):
+    zipper_args = ["c", out.path]
+    zipper_args += ["@" + map_file.path]
+    actions.run(
+        inputs = files + [map_file],
+        outputs = [out],
+        executable = zipper,
+        arguments = zipper_args,
+        progress_message = desc,
+        mnemonic = "zipper",
+    )
 
 # Collects all parent and dependency artifacts for a given list of artifacts.
 # Each artifact is represented as a tuple (artifact, classifier), with classifier = None if there is no classifier.
@@ -382,20 +425,34 @@ def _maven_repo_impl(ctx):
     args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
     inputs = [artifact for artifact, _ in artifacts]
 
-    # Generate unpacked artifact list.
-    # This artifact list contains every artifact in the repository, separated by newlines. The order
-    # of artifacts is [pom1, artifact1, pom2, artifact2, pom3, artifact3, etc].
-    # Classifiers for artifacts are on the same line, delimited by commas (path/to/artifact,classifier).
-    # For example:
-    # p/t/c/m2/repository/com/google/guava/guava/20.0/jar_maven.pom (POM file for the Guava artifact)
-    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0.jar (Guava JAR file)
-    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0-sources.jar,sources (Guava sources with classifier "sources")
-    ctx.actions.write(ctx.outputs.manifest, "\n".join(args))
+    args = [artifact.path + "," + artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
+    artifact_lst = ctx.actions.declare_file(ctx.label.name + ".artifact.lst")
+    ctx.actions.write(artifact_lst, "\n".join(args))
+
+    # Generate manifests of where files should be located in the repository.
+    # The format is the same used by @bazel_tools//tools/zip:zipper, where
+    # each line is"path_to_target_location=path_to_file"
+    build_manifest = ctx.actions.declare_file(ctx.label.name + ".build.manifest")
+    ctx.actions.run(
+        inputs = [artifact_lst] + inputs,
+        outputs = [build_manifest, ctx.outputs.manifest],
+        mnemonic = "mavenrepobuilder",
+        arguments = [artifact_lst.path, build_manifest.path, ctx.outputs.manifest.path],
+        executable = ctx.executable._repo_builder,
+    )
+    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip...", build_manifest, inputs, ctx.outputs.zip)
 
     runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
     return [
-        DefaultInfo(runfiles = runfiles),
-        MavenRepoInfo(artifacts = artifacts),
+        DefaultInfo(
+            # Do not include the zip as a default output (like _deploy.jar)
+            files = depset([ctx.outputs.manifest]),
+            runfiles = runfiles,
+        ),
+        MavenRepoInfo(
+            artifacts = inputs,
+            build_manifest = build_manifest,
+        ),
     ]
 
 _maven_repo = rule(
@@ -403,9 +460,21 @@ _maven_repo = rule(
         "artifacts": attr.label_list(),
         "include_sources": attr.bool(),
         "include_transitive_deps": attr.bool(),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "exec",
+            executable = True,
+        ),
+        "_repo_builder": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//tools/base/bazel:repo_builder"),
+            allow_files = True,
+        ),
     },
     outputs = {
         "manifest": "%{name}.manifest",
+        "zip": "%{name}.zip",
     },
     implementation = _maven_repo_impl,
 )
@@ -433,44 +502,283 @@ def maven_repo(artifacts = [], include_sources = False, include_transitive_deps 
         **kwargs
     )
 
-def _maven_repo_zip_impl(ctx):
-    # Generate the manifest.
-    manifest = ctx.actions.declare_file(ctx.label.name + ".repo.manifest")
-    artifacts = ctx.attr.repo[MavenRepoInfo].artifacts
-    manifest_args = [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    manifest_inputs = [artifact for artifact, _ in artifacts]
-    ctx.actions.write(manifest, "\n".join(manifest_args))
+def _local_maven_repository_impl(repository_ctx):
+    workspace = repository_ctx.path(repository_ctx.attr._this_file).dirname.dirname.dirname.dirname
+    local_repo = str(workspace) + "/" + repository_ctx.attr.path
 
-    # Run RepoZipper.
-    ctx.actions.run(
-        inputs = [manifest] + manifest_inputs,
-        outputs = [ctx.outputs.zip],
-        mnemonic = "mavenrepozip",
-        arguments = [ctx.outputs.zip.path, manifest.path],
-        executable = ctx.executable._repo_zipper,
+    # Create a symlink at external/$repo_rule_name/repo and make it point to
+    # to the actual location of the checked-in local maven repository so that
+    # the BUILD file generated under the external repository does not have to
+    # refer back to files in the internal repository.
+    # Example:
+    #  ~/studio-main/bazel-studio-master-dev/external/maven/repo
+    #     -> ~/studio-main/prebuilts/tools/common/m2/repository
+    #
+    # This is needed to avoid the following Bazel bug:
+    #    https://github.com/bazelbuild/bazel/issues/6752
+    repo_path = "repo"
+    repository_ctx.symlink(local_repo, repo_path)
+
+    java_home = repository_ctx.os.environ.get("JAVA_HOME")
+    if not java_home:
+        fail("Cannot find JAVA_HOME")
+    java = repository_ctx.path(java_home + "/bin/java")
+
+    # Invoke build file generator tool.
+    inputs = repository_ctx.attr.artifacts
+    arguments = (
+        [java, "-jar", repository_ctx.path(repository_ctx.attr._generator)] +
+        inputs +
+        ["-o", "BUILD"] +
+        ["--repo-path", repo_path]
+    )
+    result = repository_ctx.execute(
+        arguments,
     )
 
-# Creates a zip file containing the artifacts from a maven_repo rule.
-#
-# The output zip file is structured as a Maven repository.
-#
-# Usage:
-# maven_repo_zip(
-#     name = The name of the rule. The output of the rule will be ${name}.zip.
-#     repo = The maven_repo instance to convert to a zip.
-# )
-maven_repo_zip = rule(
+    if result.return_code:
+        fail("Failed to generate BUILD file using command:\n" +
+             str(arguments) + "\n" +
+             "Stdout: " + result.stdout + "\n" +
+             "Stderr: " + result.stderr + "\n")
+
+_local_maven_repository = repository_rule(
     attrs = {
-        "repo": attr.label(providers = [MavenRepoInfo]),
-        "_repo_zipper": attr.label(
+        "path": attr.string(),
+        "_this_file": attr.label(default = "@//tools/base/bazel:maven.bzl"),
+        "artifacts": attr.string_list(),
+        "_generator": attr.label(default = "@//tools/base/bazel:maven/generator.jar"),
+        "_pom": attr.label(
             executable = True,
-            cfg = "exec",
-            default = Label("//tools/base/bazel:repo_zipper"),
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
             allow_files = True,
         ),
     },
+    local = True,
+    implementation = _local_maven_repository_impl,
+)
+
+# Resolves artifacts transitively from a local Maven repository,
+#  and generates a BUILD file that contains rules for all the resolved
+# Maven artifacts.
+#
+# Consumers can depend on the listed Maven artifacts using the name
+# of the repository rule, and the Maven coordinates of the artifact
+# they need, without the need to express the version.
+#
+# For instance, to depend on Guava, add the following to deps:
+# "@maven//:com.google.guava.guava"
+#
+# And the repository will provide the version of Guava that is obtained
+# from Maven dependency resolution.
+#
+# Args:
+#   path: Local path to a Maven repository relative to the workspace root
+#   artifacts: Coordinates of the Maven artifacts to resolve
+def local_maven_repository(name, path, artifacts):
+    _local_maven_repository(
+        name = name,
+        path = path,
+        artifacts = artifacts,
+    )
+
+# Rule set that supports both Java and Maven providers, still under development
+
+MavenInfo = provider(fields = {
+    "pom": "A File referencing the pom",
+    "repo_path": "A String with the repo relative path",
+    "files": "The files of this artifact",
+    "transitive": "The transitive files of this artifact",
+})
+
+def _maven_artifact_impl(ctx):
+    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+    return [
+        DefaultInfo(files = depset(ctx.files.files)),
+        MavenInfo(
+            pom = ctx.file.pom,
+            files = ctx.files.files,
+            transitive = depset(direct = files, transitive = [d[MavenInfo].transitive for d in ctx.attr.deps]),
+        ),
+    ]
+
+_maven_artifact = rule(
+    implementation = _maven_artifact_impl,
+    attrs = {
+        "files": attr.label_list(allow_files = True),
+        "deps": attr.label_list(),
+        "pom": attr.label(allow_single_file = True),
+        "repo_path": attr.string(),
+        "repo_root_path": attr.string(),
+    },
+)
+
+def maven_artifact(
+        name,
+        pom,
+        repo_path = "",
+        repo_root_path = "",
+        parent = None,
+        deps = [],
+        **kwargs):
+    _maven_artifact(
+        name = name,
+        pom = pom,
+        repo_path = repo_path,
+        repo_root_path = repo_root_path,
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
+        deps = ([parent] if parent else []) + deps,
+        **kwargs
+    )
+
+def _maven_import_impl(ctx):
+    infos = []
+    for jar in ctx.files.jars:
+        ijar = java_common.run_ijar(
+            actions = ctx.actions,
+            jar = jar,
+            java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+        )
+        infos.append(JavaInfo(
+            output_jar = jar,
+            compile_jar = ijar,
+            deps = [dep[JavaInfo] for dep in ctx.attr.deps],
+        ))
+    runfiles = None
+
+    mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
+    files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
+
+    return struct(
+        providers = [
+            DefaultInfo(files = depset(ctx.files.jars), runfiles = runfiles),
+            MavenInfo(
+                pom = ctx.file.pom,
+                files = ctx.files.files,
+                transitive = depset(direct = files, transitive = [info.transitive for info in mavens]),
+            ),
+            java_common.merge(infos),
+        ],
+    )
+
+_maven_import = rule(
+    implementation = _maven_import_impl,
+    attrs = {
+        "jars": attr.label_list(allow_files = True),
+        "files": attr.label_list(allow_files = True),
+        "deps": attr.label_list(),
+        "repo_path": attr.string(),
+        "repo_root_path": attr.string(),
+        "parent": attr.label(),
+        "pom": attr.label(allow_single_file = True),
+        "notice": attr.label(allow_single_file = True),
+        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+        "original_deps": attr.label_list(),
+        "srcjar": attr.label(allow_files = True),
+    },
+)
+
+# A java_import rule extended with pom and parent attributes for maven libraries.
+def maven_import(
+        name,
+        pom,
+        classifiers = [],
+        visibility = None,
+        jars = [],
+        repo_path = "",
+        repo_root_path = "",
+        parent = None,
+        classified_only = False,
+        **kwargs):
+    _maven_import(
+        name = name,
+        visibility = visibility,
+        jars = jars,
+        pom = pom,
+        repo_path = repo_path,
+        repo_root_path = repo_root_path,
+        parent = parent,
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
+        notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
+        tags = ["require_license"],
+        **kwargs
+    )
+
+def _maven_repository_impl(ctx):
+    rel_paths = []
+    files = []
+    for artifact in ctx.attr.artifacts:
+        if MavenInfo not in artifact:
+            fail("Maven repositories can only contain maven artifacts")
+        artifacts = artifact[MavenInfo].transitive.to_list() if ctx.attr.include_transitive_deps else artifact[MavenInfo].files
+        for r, f in artifacts:
+            files.append(f)
+            rel_paths.append((r, f))
+
+    build_manifest_content = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
+    manifest_content = "".join([k + "=" + v.short_path + "\n" for k, v in rel_paths])
+
+    ctx.actions.write(ctx.outputs.manifest, manifest_content)
+    build_manifest = create_option_file(ctx, ctx.label.name + ".build.manifest", build_manifest_content)
+    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip", build_manifest, files, ctx.outputs.zip)
+
+    runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + files)
+    return [
+        DefaultInfo(
+            # Do not include the zip as a default output (like _deploy.jar)
+            files = depset([ctx.outputs.manifest]),
+            runfiles = runfiles,
+        ),
+        MavenRepoInfo(
+            artifacts = files,
+            build_manifest = build_manifest,
+        ),
+    ]
+
+maven_repository = rule(
+    attrs = {
+        "artifacts": attr.label_list(providers = [MavenInfo]),
+        "include_transitive_deps": attr.bool(),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "exec",
+            executable = True,
+        ),
+    },
     outputs = {
+        "manifest": "%{name}.manifest",
         "zip": "%{name}.zip",
     },
-    implementation = _maven_repo_zip_impl,
+    implementation = _maven_repository_impl,
 )
+
+def split_coordinates(coordinates):
+    parts = coordinates.split(":")
+    if len(parts) != 3:
+        print("Unsupported coordinates")
+    segments = parts[0].split(".") + [parts[1], parts[2]]
+    return struct(
+        group_id = parts[0],
+        artifact_id = parts[1],
+        version = parts[2],
+        repo_path = "/".join(segments),
+    )
+
+# A bridge between the two maven rule sets.
+# This allows the old rules to import the jars
+# created by the new rules, so we do not need rule
+# duplication. Once all artifacts have been
+# migrated we can delete the old rules and this bridge.
+def import_maven_library(maven_java_library_rule, maven_library_rule):
+    maven_java_import(
+        name = maven_java_library_rule,
+        jars = [":" + maven_library_rule + ".jar"],
+        pom = ":" + maven_java_library_rule + ".pom",
+        visibility = ["//visibility:public"],
+    )
+
+    maven_pom(
+        name = maven_java_library_rule + ".pom",
+        source = ":" + maven_library_rule + ".pom",
+    )

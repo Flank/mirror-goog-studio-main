@@ -1,0 +1,7 @@
+# compiler: R8
+# compiler_version: 3.0.52
+# min_api: 21
+# pg_map_id: 29ebecf
+# common_typos_disable
+ProfileInstallReceiver$$ExternalSyntheticLambda0 -> n61:
+    ProfileInstallReceiver$$ExternalSyntheticLambda0 INSTANCE -> k

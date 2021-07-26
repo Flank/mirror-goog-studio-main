@@ -48,14 +48,7 @@ void LiveLiteralUpdateCommand::ParseParameters(
 }
 
 void LiveLiteralUpdateCommand::Run(proto::InstallerResponse* response) {
-  // Determine which agent we need to use.
-  std::string agent_filename = kAgent;
-#if defined(__aarch64__) || defined(__x86_64__)
-  agent_filename =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#endif
-
-  if (!PrepareInteraction(agent_filename)) {
+  if (!PrepareInteraction(request_.arch())) {
     ErrEvent("Unable to prepare interaction");
     return;
   }

@@ -99,9 +99,6 @@ public interface VariantScope {
     }
 
     @NonNull
-    FileCollection getBootClasspath();
-
-    @NonNull
     JarCreatorType getJarCreatorType();
 
     @NonNull

@@ -46,7 +46,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import kotlin.math.max
 
 @CacheableTask
 abstract class DexFileDependenciesTask: NonIncrementalTask() {
@@ -204,7 +203,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.PROCESSED_JAR
                     )
                 )
-                task.bootClasspath.from(creationConfig.globalScope.bootClasspath)
+                task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
             }
 
             task.classpath.disallowChanges()

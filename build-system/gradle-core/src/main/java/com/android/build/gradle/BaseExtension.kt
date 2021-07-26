@@ -405,6 +405,8 @@ abstract class BaseExtension protected constructor(
     }
 
     // do not call this method from within the plugin code as it forces SDK initialization.
+    // once this method is removed, remember to protect the globalScope.bootClasspath against
+    // unsafe read.
     override val bootClasspath: List<File>
         get() = try {
             globalScope.bootClasspath.get().map { it.asFile }

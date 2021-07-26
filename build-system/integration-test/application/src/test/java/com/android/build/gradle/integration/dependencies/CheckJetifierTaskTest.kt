@@ -53,7 +53,7 @@ class CheckJetifierTaskTest {
 
     @Before
     fun setUp() {
-        resultFile = project.buildDir.resolve("result.bin")
+        resultFile = project.buildDir.resolve("result.json")
     }
 
     private fun addMavenRepo() {
@@ -81,7 +81,7 @@ class CheckJetifierTaskTest {
                 maven { url '../mavenRepo' }
             }
             dependencies {
-                implementation 'example:A:1.0' // A transitively depends on a support library
+                implementation 'example:A:1.0' // `A` transitively depends on a support library
                 implementation 'com.android.support:collections:$SUPPORT_LIB_VERSION'
             }
             """.trimIndent()

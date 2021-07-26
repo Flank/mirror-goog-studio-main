@@ -32,6 +32,7 @@ interface Bundle {
     @get:Incubating
     val deviceTier: BundleDeviceTier
 
+    @get:Incubating
     val codeTransparency: BundleCodeTransparency
 
     fun abi(action: BundleAbi.() -> Unit)
@@ -45,5 +46,6 @@ interface Bundle {
     @Incubating
     fun deviceTier(action: BundleDeviceTier.() -> Unit)
 
+    @Incubating
     fun codeTransparency(action: BundleCodeTransparency.() -> Unit)
 }

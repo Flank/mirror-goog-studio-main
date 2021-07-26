@@ -38,11 +38,13 @@ const int kStartupProfilingPid = -12345;
 class Simpleperf {
  public:
   explicit Simpleperf()
-      : Simpleperf(CurrentProcess::dir(), DeviceInfo::is_emulator(),
-                   DeviceInfo::is_user_build()) {}
-  explicit Simpleperf(const std::string& simpleperf_dir, const bool is_emulator,
+      : Simpleperf(CurrentProcess::dir(), DeviceInfo::feature_level(),
+                   DeviceInfo::is_emulator(), DeviceInfo::is_user_build()) {}
+  explicit Simpleperf(const std::string& simpleperf_dir,
+                      const int feature_level, const bool is_emulator,
                       const bool is_user_build)
       : simpleperf_dir_(simpleperf_dir),
+        feature_level_(feature_level),
         is_emulator_(is_emulator),
         is_user_build_(is_user_build) {}
   virtual ~Simpleperf() = default;
@@ -96,6 +98,7 @@ class Simpleperf {
 
  private:
   const std::string simpleperf_dir_;
+  const int feature_level_;
   const bool is_emulator_;
   const bool is_user_build_;
 

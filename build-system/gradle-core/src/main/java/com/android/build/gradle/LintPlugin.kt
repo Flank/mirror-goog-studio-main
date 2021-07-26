@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -234,6 +235,12 @@ abstract class LintPlugin : Plugin<Project> {
                 )
             }
             LintModelWriterTask.BaseCreationAction.registerOutputArtifacts(lintModelWriterTask, artifacts)
+            val lintModelMetadataWriterTask =
+                project.tasks
+                    .register("writeLintModelMetadata", LintModelMetadataTask::class.java) { task ->
+                        task.configureForStandalone(project)
+                    }
+            LintModelMetadataTask.registerOutputArtifacts(lintModelMetadataWriterTask, artifacts)
             if (LintTaskManager.needsCopyReportTask(lintOptions!!)) {
                 val copyLintReportsTask =
                     project.tasks.register(
@@ -264,6 +271,12 @@ abstract class LintPlugin : Plugin<Project> {
                         configuration,
                         artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
                         AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
+                        AndroidAttributes(category = androidLintCategory)
+                    )
+                    publishArtifactToConfiguration(
+                        configuration,
+                        artifacts.get(InternalArtifactType.LINT_MODEL_METADATA),
+                        AndroidArtifacts.ArtifactType.LINT_MODEL_METADATA,
                         AndroidAttributes(category = androidLintCategory)
                     )
                     // We don't want to publish the lint models or partial results to repositories.

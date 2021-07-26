@@ -45,6 +45,8 @@ public class VersionTest {
                 sourceProperties.load(source);
 
                 Assert.assertEquals(sourceProperties, bundledProperties);
+                String baseVersion = System.getProperty("test.version.baseVersion");
+                Assert.assertEquals("Please update tools/base/common/version.bzl", bundledProperties.getProperty("baseVersion"), baseVersion);
             }
         }
     }

@@ -59,7 +59,13 @@ abstract class AbstractTestDataImpl(
 
     override val applicationId = creationConfig.applicationId
 
+    // Note: creationConfig.testedApplicationId returns the instrumentation target application ID.
+    // testedApplicationId and instrumentationTargetPackageID are usually the same value
+    // except for the one case where there are test.apk and app.apk and the self-instrumeting
+    // flag is enabled. See TestApplicationTestData class.
     override val testedApplicationId = creationConfig.testedApplicationId
+
+    override val instrumentationTargetPackageId = creationConfig.testedApplicationId
 
     override val instrumentationRunner = instrumentedTestCreationConfig.instrumentationRunner
 
@@ -100,6 +106,7 @@ abstract class AbstractTestDataImpl(
         return StaticTestData(
                 applicationId.get(),
                 testedApplicationId.orNull,
+                instrumentationTargetPackageId.get(),
                 instrumentationRunner.get(),
                 instrumentationRunnerArguments,
                 animationsDisabled.get(),
@@ -139,7 +146,7 @@ abstract class AbstractTestDataImpl(
                             relativePath !in ignoredPaths &&
                             !regexIgnoredPaths.any { it.matches(relativePath) }
                 }
-                
+
                 for (fileSystemLocation in testClasses) {
                     val jarOrDirectory = fileSystemLocation.asFile
                     if (!jarOrDirectory.exists()) {

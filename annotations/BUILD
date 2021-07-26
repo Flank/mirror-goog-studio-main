@@ -1,5 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_java_import", "maven_java_library", "maven_pom", "import_maven_library")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -12,23 +14,19 @@ iml_module(
     deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )
 
-maven_java_library(
-    name = "annotations",
-    srcs = glob(["src/main/java/**"]),
-    pom = ":pom",
-    resource_strip_prefix = "tools/base/annotations",
-    visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "annotations",
-    group = "com.android.tools",
-    source = "//tools/buildSrc/base:base_version",
-)
+import_maven_library("annotations", "annotations_bzl")
 
 filegroup(
     name = "agp_gradle_build_files",
     srcs = ["build.gradle"],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+maven_library(
+    name = "annotations_bzl",
+    srcs = glob(["src/main/java/**"]),
+    coordinates = "com.android.tools:annotations:" + BASE_VERSION,
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/annotations",
+    visibility = ["//visibility:public"],
 )

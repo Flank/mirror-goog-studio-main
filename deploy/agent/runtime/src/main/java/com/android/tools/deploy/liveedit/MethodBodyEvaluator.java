@@ -29,7 +29,7 @@ import org.jetbrains.org.objectweb.asm.tree.MethodNode;
 import org.jetbrains.org.objectweb.asm.tree.analysis.Frame;
 
 /** Evaluate a method body with Eval4j for the Android environment. */
-class MethodBodyEvaluator {
+public class MethodBodyEvaluator {
 
     // Required but not used yet.
     private static class NoOpInterpretationEventHandler implements InterpretationEventHandler {

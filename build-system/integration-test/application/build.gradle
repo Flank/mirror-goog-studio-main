@@ -11,7 +11,6 @@ dependencies {
     testImplementation project(':base:build-system:integration-test:framework')
     testImplementation project(':analytics-library:protos')
     testImplementation project(':apksig')
-    testImplementation project(':base:bazel:repolinker')
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
     testImplementation project(':base:build-system:gradle-core')
@@ -99,7 +98,6 @@ configure([test, testPrebuilts]) {
     }
 
     exclude "com/android/build/gradle/integration/automatic/**"
-    exclude "com/android/build/gradle/integration/sanity/**"
     exclude "**/BazelIntegrationTestsSuite*"
 }
 
@@ -115,12 +113,6 @@ task automaticTest(type: Test) {
     environment = testEnvironment
 }
 
-task sanityTest(type: Test) {
-    include "com/android/build/gradle/integration/sanity/**"
-    environment = testEnvironment
-    dependsOn ':publishLocal'
-}
-
 task onlineTest(type: Test) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
@@ -132,7 +124,6 @@ task onlineTest(type: Test) {
 }
 
 check.dependsOn automaticTest
-check.dependsOn sanityTest
 
 task connectedIntegrationTest(type: Test) {
     dependsOn ':base:build-system:integration-test:native:publishLocal'

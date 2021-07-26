@@ -19,6 +19,7 @@ package com.android.build.api.transform;
 
 /**
  * The file changed status for incremental execution.
+ * @deprecated
  */
 @Deprecated
 public enum Status {

@@ -410,7 +410,7 @@ public class TestFile {
                     if (path == null) {
                         path = file.targetRelativePath;
                     }
-                    if (seen.add(path)) {
+                    if (!seen.add(path)) {
                         // Duplicate: OK for .kotlin_module files; we include them redundantly in
                         // CompiledSourceFiles
                         if (path.startsWith("META-INF/") && path.endsWith(".kotlin_module")) {

@@ -37,6 +37,8 @@ cc_binary(
         "thread_suspend.h",
         "transform/hook_transform.cc",
         "transform/hook_transform.h",
+        "transform/stub_transform.cc",
+        "transform/stub_transform.h",
         "transform/transforms.cc",
         "transform/transforms.h",
         "variable_reinit.cc",

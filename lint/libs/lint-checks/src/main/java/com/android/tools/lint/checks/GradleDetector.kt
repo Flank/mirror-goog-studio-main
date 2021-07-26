@@ -970,6 +970,14 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                 }
             }
+
+            // TODO: This is a hotfix to suppress Kotlin version warnings in Compose projects (b/194313332)
+            //  and it should be removed eventually.
+            "org.jetbrains.kotlin" -> {
+                if (artifactId == "kotlin-gradle-plugin") {
+                    return
+                }
+            }
         }
 
         checkForKtxExtension(context, groupId, artifactId, version, cookie)
@@ -1767,7 +1775,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val dependencies = blockedDependencies.getForbiddenDependencies()
         if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
-                val message = getBlockedDependencyMessage(path) ?: continue
+                val message = getBlockedDependencyMessage(path)
                 val projectDir = context.project.dir
                 val gc = LintModelMavenName.parse(path[0].artifactAddress)
                 val location = if (gc != null) {

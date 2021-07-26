@@ -625,7 +625,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                     open class Middle : Base()
                     """
                 ).indented(),
-                0x26e3997d,
+                0xb76b5946,
                 """
                 Middle.class:
                 H4sIAAAAAAAAAC1QTUsDMRB9k2237Vrth1rrB4g39WBr8aYIVhAKWw8qvfSU
@@ -654,7 +654,7 @@ class CallSuperDetectorTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                0xe30e5a4b,
+                0xdd7e8dee,
                 """
                 META-INF/main.kotlin_module:
                 H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM2gxKDFAABNj30wGAAAAA==

@@ -1,6 +1,6 @@
 # Building and Testing with Bazel
 
-This directory contains the core files to run studio-master-dev tests using
+This directory contains the core files to run studio-main tests using
 bazel.
 
 *** note

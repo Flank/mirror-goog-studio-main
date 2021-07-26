@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
@@ -98,8 +99,9 @@ class ApplicationVariantFactory(
             variantData: BaseVariantData,
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
-            taskCreationServices: TaskCreationServices
-    ): ApplicationVariantImpl {
+            taskCreationServices: TaskCreationServices,
+            androidComponentsExtension: AndroidComponentsExtension<*, *, *>,
+        ): ApplicationVariantImpl {
         val appVariant = projectServices
             .objectFactory
             .newInstance(
@@ -117,6 +119,7 @@ class ApplicationVariantFactory(
                 transformManager,
                 variantPropertiesApiServices,
                 taskCreationServices,
+                androidComponentsExtension.sdkComponents,
                 globalScope
             )
 

@@ -463,12 +463,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public FileCollection getBootClasspath() {
-        return baseServices.getProjectInfo().getProject().files(globalScope.getBootClasspath());
-    }
-
-    @NonNull
-    @Override
     public JarCreatorType getJarCreatorType() {
         if (baseServices.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
             return JarCreatorType.JAR_FLINGER;

@@ -239,13 +239,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
-
-            task.from(creationConfig.artifacts.get(InternalArtifactType.LINT_MODEL_METADATA)) {
-                it.rename(
-                    LintModelMetadataTask.LINT_MODEL_METADATA_FILE_NAME,
-                    LintModelMetadataTask.LINT_MODEL_METADATA_ENTRY_PATH
-                )
-            }
         }
     }
 
@@ -288,13 +281,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
-
-            task.from(creationConfig.artifacts.get(InternalArtifactType.LINT_MODEL_METADATA)) {
-                it.rename(
-                    LintModelMetadataTask.LINT_MODEL_METADATA_FILE_NAME,
-                    LintModelMetadataTask.LINT_MODEL_METADATA_ENTRY_PATH
-                )
-            }
         }
     }
 

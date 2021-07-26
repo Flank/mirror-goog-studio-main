@@ -186,27 +186,27 @@ java_binary(
 )
 
 java_library(
-    name = "repo_zipper_lib",
-    srcs = ["src/com/android/tools/binaries/RepoZipper.java"],
+    name = "repo_builder_lib",
+    srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
     deps = [
         ":utils",
-        "//tools/base/bazel/repolinker:repo_linker",
+        "//tools/base/third_party:org.apache.maven_maven-model-builder",
     ],
 )
 
 java_binary(
-    name = "repo_zipper",
-    main_class = "com.android.tools.binaries.RepoZipper",
+    name = "repo_builder",
+    main_class = "com.android.tools.binaries.RepoBuilder",
     visibility = ["//visibility:public"],
-    runtime_deps = [":repo_zipper_lib"],
+    runtime_deps = [":repo_builder_lib"],
 )
 
 java_test(
-    name = "repo_zipper_test",
-    srcs = ["testSrc/com/android/tools/binaries/RepoZipperTest.java"],
-    test_class = "com.android.tools.binaries.RepoZipperTest",
+    name = "repo_builder_test",
+    srcs = ["testSrc/com/android/tools/binaries/RepoBuilderTest.java"],
+    test_class = "com.android.tools.binaries.RepoBuilderTest",
     deps = [
-        ":repo_zipper_lib",
+        ":repo_builder_lib",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
     ],
@@ -314,7 +314,6 @@ java_library(
     deps = [
         ":utils",
         "//tools/base/annotations",
-        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
@@ -561,5 +560,54 @@ java_binary(
     deps = [
         "//tools/base/lint/cli",
         "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+java_library(
+    name = "json",
+    srcs = glob(["src/com/android/tools/json/**/*.java"]),
+    deps = [
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-annotations.2.11.1",
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-core.2.11.1",
+        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-databind.2.11.1",
+    ],
+)
+
+java_binary(
+    name = "local_maven_repository_generator",
+    srcs = [
+        "src/com/android/tools/binaries/LocalMavenRepositoryGenerator.java",
+        "src/com/android/tools/repository_generator/BuildFileWriter.java",
+        "src/com/android/tools/repository_generator/ResolutionResult.java",
+    ],
+    main_class = "com.android.tools.binaries.LocalMavenRepositoryGenerator",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":json",
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
+    ],
+)
+
+coverage_java_test(
+    name = "local_maven_repository_generator_tests",
+    srcs = ["testSrc/com/android/tools/binaries/LocalMavenRepositoryGeneratorTest.java"],
+    data = ["//tools/base/bazel/test:local_maven_repository_generator"],
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.LocalMavenRepositoryGeneratorTest",
+    deps = [
+        ":json",
+        ":local_maven_repository_generator",
+        ":maven",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
     ],
 )

@@ -1,17 +1,76 @@
-load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test", "single_gradle_integration_test_per_source")
 load("//tools/base/bazel:maven.bzl", "maven_repo")
+
+#keep sorted
+DATA = [
+    "//prebuilts/studio/sdk:build-tools/latest",
+    "//prebuilts/studio/sdk:platforms/latest_build_only",
+    "//tools/base/build-system:gradle-distrib",
+]
+
+# keep sorted
+DEPS = [
+    "//tools/base/annotations",
+    "//tools/base/build-system:gradle-api",
+    "//tools/base/build-system/builder",
+    "//tools/base/build-system/builder-model",
+    "//tools/base/build-system/builder-test-api:tools.builder-test-api",
+    "//tools/base/build-system/gradle-api",
+    "//tools/base/build-system/gradle-core",
+    "//tools/base/build-system/integration-test/framework",
+    "//tools/base/common:tools.common",
+    "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/repository:tools.repository",
+    "//tools/base/sdk-common:tools.sdk-common",
+    "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/testutils:tools.testutils",
+    "//tools/base/third_party:com.google.guava_guava",
+    "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
+    "//tools/base/third_party:com.google.truth_truth",
+    "//tools/base/third_party:commons-io_commons-io",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+]
+
+MAVEN_REPOS = [
+    "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+    "//tools/base/build-system/integration-test/lint:prebuilts",
+    "//tools/base/build-system/integration-test:support_library_latest",
+    "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
+]
+
+LONG_RUNNING_TESTS = [
+    "src/test/java/com/android/build/gradle/integration/lint/AndroidLintAnalysisTaskTest.kt",
+    "src/test/java/com/android/build/gradle/integration/lint/LintFixTest.java",
+    "src/test/java/com/android/build/gradle/integration/lint/LintSystemPropertiesTest.kt",
+    "src/test/java/com/android/build/gradle/integration/lint/LintWithAnalyticsEnabledTest.kt",
+]
+
+# create a bazel target for some long-running tests
+gradle_integration_test(
+    name = "long-running-tests",
+    timeout = "long",
+    srcs = glob(
+        include = LONG_RUNNING_TESTS,
+    ),
+    data = DATA + [
+        "//tools/base/build-system/integration-test:test-projects/lintKotlin",
+    ],
+    maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
 
 gradle_integration_test(
     name = "tests",
     timeout = "long",
-    srcs = glob([
-        "src/test/java/**/*.java",
-        "src/test/java/**/*.kt",
-    ]),
-    data = [
-        "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/latest_build_only",
-        "//tools/base/build-system:gradle-distrib",
+    srcs = glob(
+        [
+            "src/test/java/**/*.java",
+            "src/test/java/**/*.kt",
+        ],
+        exclude = LONG_RUNNING_TESTS,
+    ),
+    data = DATA + [
         "//tools/base/build-system/integration-test:test-projects/dynamicApp",
         "//tools/base/build-system/integration-test:test-projects/lintBaseline",
         "//tools/base/build-system/integration-test:test-projects/lintCustomLocalAndPublishRules",
@@ -29,36 +88,10 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneVital",
         "//tools/base/build-system/integration-test:test-projects/lintSuppress",
     ],
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test/lint:prebuilts",
-        "//tools/base/build-system/integration-test:support_library_latest",
-        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
-    ],
+    maven_repos = MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
-    shard_count = 7,
-    deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/integration-test/framework",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:commons-io_commons-io",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
-    ],
+    shard_count = 6,
+    deps = DEPS,
 )
 
 maven_repo(

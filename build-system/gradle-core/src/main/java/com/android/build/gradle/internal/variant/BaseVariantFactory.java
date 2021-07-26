@@ -25,6 +25,7 @@ import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
@@ -78,7 +79,7 @@ public abstract class BaseVariantFactory<
     public TestFixturesImpl createTestFixtures(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -88,7 +89,8 @@ public abstract class BaseVariantFactory<
             @NonNull VariantImpl mainVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
         TestFixturesImpl testFixturesComponent =
                 projectServices
                         .getObjectFactory()
@@ -107,6 +109,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
+                                androidComponentsExtension.getSdkComponents(),
                                 globalScope);
         // create default output
         String name =
@@ -125,7 +128,7 @@ public abstract class BaseVariantFactory<
     public UnitTestImpl createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -135,7 +138,8 @@ public abstract class BaseVariantFactory<
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
         UnitTestImpl unitTestProperties =
                 projectServices
                         .getObjectFactory()
@@ -154,6 +158,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
+                                androidComponentsExtension.getSdkComponents(),
                                 globalScope);
 
         unitTestProperties.addVariantOutput(
@@ -167,7 +172,7 @@ public abstract class BaseVariantFactory<
     public AndroidTestImpl createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
@@ -177,7 +182,8 @@ public abstract class BaseVariantFactory<
             @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull TaskCreationServices taskCreationServices) {
+            @NonNull TaskCreationServices taskCreationServices,
+            @NonNull AndroidComponentsExtension<?, ?, ?> androidComponentsExtension) {
         AndroidTestImpl androidTestProperties =
                 projectServices
                         .getObjectFactory()
@@ -196,6 +202,7 @@ public abstract class BaseVariantFactory<
                                 transformManager,
                                 variantPropertiesApiServices,
                                 taskCreationServices,
+                                androidComponentsExtension.getSdkComponents(),
                                 globalScope);
 
         androidTestProperties.addVariantOutput(

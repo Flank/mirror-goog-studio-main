@@ -18,15 +18,16 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
@@ -69,6 +70,7 @@ open class TestVariantImpl @Inject constructor(
         transformManager: TransformManager,
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
+        sdkComponents: SdkComponents,
         globalScope: GlobalScope
 ) : VariantImpl(
     variantBuilder,
@@ -83,6 +85,7 @@ open class TestVariantImpl @Inject constructor(
     transformManager,
     internalServices,
     taskCreationServices,
+    sdkComponents,
     globalScope
 ), TestVariant, TestVariantCreationConfig {
 
@@ -117,10 +120,12 @@ open class TestVariantImpl @Inject constructor(
     // TODO: We should keep this (for the manifest) but just fix the test runner to get the
     //         tested application id from the APK metadata file for uninstalling.
     override val testedApplicationId: Provider<String> by lazy {
-        if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(experimentalProperties.get())) {
-            applicationId
-        } else {
-            calculateTestedApplicationId(variantDependencies)
+        experimentalProperties.flatMap {
+            if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(it)) {
+                applicationId
+            } else {
+                calculateTestedApplicationId(variantDependencies)
+            }
         }
     }
 

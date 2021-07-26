@@ -325,7 +325,13 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                         creationConfig
                                                                 .getServices()
                                                                 .getProjectInfo()
-                                                                .getProject(),
+                                                                .getProject()
+                                                                .getLayout(),
+                                                        creationConfig
+                                                                .getServices()
+                                                                .getProjectInfo()
+                                                                .getProject()
+                                                                .getProviders(),
                                                         versionedSdkLoader
                                                                 .getAdditionalLibrariesProvider()
                                                                 .get(),

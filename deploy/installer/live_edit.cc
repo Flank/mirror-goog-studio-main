@@ -36,14 +36,7 @@ void LiveEditCommand::ParseParameters(const proto::InstallerRequest& request) {
 void LiveEditCommand::Run(proto::InstallerResponse* response) {
   response->set_status(proto::InstallerResponse_Status_ERROR_CMD);
 
-  // Determine which agent we need to use.
-#if defined(__aarch64__) || defined(__x86_64__)
-  std::string agent_filename =
-      request_.arch() == proto::Arch::ARCH_64_BIT ? kAgent : kAgentAlt;
-#else
-  std::string agent_filename = kAgent;
-#endif
-  if (!PrepareInteraction(agent_filename)) {
+  if (!PrepareInteraction(request_.arch())) {
     ErrEvent("Unable to prepare interaction");
     return;
   }

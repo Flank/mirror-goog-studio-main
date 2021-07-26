@@ -26,6 +26,7 @@ import java.util.Set;
  * <p>
  * There is no direct access to a location to write. Instead, Transforms can ask to get the
  * location for given scopes, content-types and a format.
+ * @deprecated
  */
 @Deprecated
 public interface TransformOutputProvider {
@@ -56,6 +57,7 @@ public interface TransformOutputProvider {
      * @param scopes the scopes associated with this content.
      * @param format the format of the content.
      * @return the location of the content.
+     * @deprecated
      */
     @NonNull
     File getContentLocation(

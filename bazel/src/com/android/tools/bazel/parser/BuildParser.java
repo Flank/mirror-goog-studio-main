@@ -204,11 +204,11 @@ public class BuildParser {
     }
 
     /**
-     *  EXPRESSION ::=
-     *      PRIMARY
-     *      PRIMARY * EXPRESSION
-     *      PRIMARY % EXPRESSION
-     *      PRIMARY . IDENT FUNCTION_ARGS
+     * EXPRESSION ::=
+     *     PRIMARY
+     *     PRIMARY * EXPRESSION
+     *     PRIMARY % EXPRESSION
+     *     PRIMARY . IDENT FUNCTION_ARGS
      */
     private Expression parseExpression() {
         while (token.kind == Kind.NEWLINE) consume();
@@ -245,6 +245,7 @@ public class BuildParser {
      *      STRING
      *      IDENT
      *      IDENT FUNCTION_ARGS
+     *      IDENT [PRIMARY]
      *      LIST
      *      DICT
      */
@@ -270,6 +271,11 @@ public class BuildParser {
                     int endLine = consume(Kind.RPAREN).getLine();
                     call.setSingleLine(startLine == endLine || (arguments.size() <= 1 && firstInLine));
                     expression = call;
+                } else if (token.kind == Kind.LSQUARE) {
+                    consume();
+                    expression =
+                            new IndexExpression(new LiteralExpression(ident), parseExpression());
+                    consume(Kind.RSQUARE);
                 } else {
                     expression = new LiteralExpression(ident);
                 }

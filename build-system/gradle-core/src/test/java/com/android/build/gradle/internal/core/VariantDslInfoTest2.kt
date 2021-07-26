@@ -258,7 +258,7 @@ class VariantDslInfoTest2 :
             variantType = VariantTypeImpl.ANDROID_TEST
 
             defaultConfig {
-                minSdkVersion(20)
+                minSdk = 20
                 multiDexEnabled = true
             }
 
@@ -919,7 +919,7 @@ class VariantDslInfoTest2 :
         convertAction = action
     }
 
-    class ParentVariantGivenData() {
+    class ParentVariantGivenData {
         /** Variant type for the test */
         var variantType = VariantTypeImpl.BASE_APK
         var dslNamespace: String? = null

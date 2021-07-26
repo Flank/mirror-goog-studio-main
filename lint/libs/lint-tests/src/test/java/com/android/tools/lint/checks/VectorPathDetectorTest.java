@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.utils.XmlUtils.toXmlAttributeValue;
 
 import com.android.tools.lint.detector.api.Detector;
+import kotlin.text.StringsKt;
 
 public class VectorPathDetectorTest extends AbstractCheckTest {
     private static final String SHORT_PATH =
@@ -123,6 +124,50 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                                 + "        android:pathData=\"M 37.8337860107,-40.3974914551 c 0,0 -35.8077850342,31.5523681641 -35.8077850342,31.5523681641 c 0,0 40.9884796143,40.9278411865 40.9884796143,40.9278411865 c 0,0 -2.61700439453,2.093…\n"
                                 + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
                                 + "0 errors, 2 warnings\n");
+    }
+
+    public void testLineIndentation() {
+        // Regression test for https://issuetracker.google.com/193263957
+
+        // We want a path string which is > 800 characters long when counting indentation
+        // but < 800 when each space is compressed to one
+        String segment = "M 37.8337860107,-40.3974914551 c 0,0 ";
+        int repetitions = VectorPathDetector.MAX_PATH_DATA_LENGTH / segment.length() - 1;
+        String repeated =
+                StringsKt.repeat("\n                          " + segment, repetitions - 1);
+
+        lint().files(
+                        xml(
+                                "res/drawable/my_vector.xml",
+                                ""
+                                        + "<vector\n"
+                                        + "  xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "  android:name=\"root\"\n"
+                                        + "  android:width=\"48dp\"\n"
+                                        + "  android:height=\"48dp\"\n"
+                                        + "  android:tint=\"?attr/colorControlNormal\"\n"
+                                        + "  android:viewportHeight=\"48\"\n"
+                                        + "  android:viewportWidth=\"48\">\n"
+                                        + "\n"
+                                        + "  <group\n"
+                                        + "    android:translateX=\"-1.21595\"\n"
+                                        + "    android:translateY=\"6.86752\">\n"
+                                        + "\n"
+                                        + "    <group\n"
+                                        + "      android:translateX=\"23.481\"\n"
+                                        + "      android:translateY=\"18.71151\">\n"
+                                        + "      <path\n"
+                                        + "        android:fillColor=\"@android:color/white\"\n"
+                                        + "        android:pathData=\""
+                                        + segment
+                                        + repeated
+                                        + "\"/>\n"
+                                        + "    </group>\n"
+                                        + "  </group>\n"
+                                        + "</vector>"))
+                .run()
+                .maxLineLength(210)
+                .expectClean();
     }
 
     public void testNoWarningWhenGradlePluginGeneratedImage() {

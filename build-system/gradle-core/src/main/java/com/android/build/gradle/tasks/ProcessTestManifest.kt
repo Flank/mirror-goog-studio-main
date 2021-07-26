@@ -252,6 +252,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                     .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
                     .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
+                    .withFeatures(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK)
 
                 instrumentationRunner?.let {
                     intermediateInvoker.setPlaceHolderValue(

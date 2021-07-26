@@ -18,7 +18,6 @@ dependencies {
     compileOnly(project(':base:profile'))
     implementation project(':analytics-library:protos')
     implementation project(':apksig')
-    implementation project(':base:bazel:repolinker')
     implementation project(':base:builder')
     implementation project(':base:builder-model')
     implementation project(':base:build-system:gradle-core')

@@ -510,6 +510,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             ) {
                 features.add(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
             }
+            if (creationConfig.services.projectOptions[BooleanOption.DISABLE_MINSDKLIBRARY_CHECK]) {
+                features.add(Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK)
+            }
             return if (features.isEmpty())
                 EnumSet.noneOf(Invoker.Feature::class.java)
             else EnumSet.copyOf(features)

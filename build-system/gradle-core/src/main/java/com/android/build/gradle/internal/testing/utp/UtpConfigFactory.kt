@@ -551,7 +551,7 @@ class UtpConfigFactory {
                 singleCoverageFile = coverageFilePath
             }
             outputDirectoryOnHost = "${coverageOutputDir.absolutePath}/${deviceName}/"
-            runAsPackageName = testData.testedApplicationId
+            runAsPackageName = testData.instrumentationTargetPackageId
         }
     }
 
@@ -563,10 +563,10 @@ class UtpConfigFactory {
                 customCoveragePath
             }
             useOrchestrator -> {
-                "/data/data/${testedApplicationId}/coverage_data/"
+                "/data/data/${instrumentationTargetPackageId}/coverage_data/"
             }
             else -> {
-                "/data/data/${testedApplicationId}/coverage.ec"
+                "/data/data/${instrumentationTargetPackageId}/coverage.ec"
             }
         }
     }

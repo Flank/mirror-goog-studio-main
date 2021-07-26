@@ -1,8 +1,11 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "explicit_target")
-load(":maven.bzl", "maven_pom")
+load(":maven.bzl", "MavenInfo", "generate_pom", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
+load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
+load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
+load(":functions.bzl", "create_option_file")
 
 def test_kotlin_use_ir():
     return select({
@@ -161,6 +164,7 @@ def kotlin_library(
         lint_classpath = [],
         lint_is_test_sources = False,
         lint_timeout = None,
+        manifest_lines = None,
         module_name = None):
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -216,6 +220,7 @@ def kotlin_library(
         name = name + ".singlejar",
         jars = [":lib" + target + ".jar" for target in targets],
         out = jar_name,
+        manifest_lines = manifest_lines,
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
@@ -295,3 +300,285 @@ def kotlin_test(
         name = name,
         tests = [name + ".test"],
     )
+
+# Rule set that supports both Java and Maven providers, still under development
+
+# Creates actions to generate a resources_jar from the given resouces.
+def _resources(ctx, resources, resources_jar):
+    prefix = ctx.attr.resource_strip_prefix
+    rel_paths = []
+    for res in resources:
+        short = res.short_path
+        if short.startswith(prefix):
+            short = short[len(prefix):]
+            if short.startswith("/"):
+                short = short[1:]
+        rel_paths.append((short, res))
+    zipper_args = ["c", resources_jar.path]
+    zipper_files = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
+    zipper_list = create_option_file(ctx, resources_jar.basename + ".res.lst", zipper_files)
+    zipper_args += ["@" + zipper_list.path]
+    ctx.actions.run(
+        inputs = resources + [zipper_list],
+        outputs = [resources_jar],
+        executable = ctx.executable._zipper,
+        arguments = zipper_args,
+        progress_message = "Creating resources zip...",
+        mnemonic = "zipper",
+    )
+
+def _maven_library_impl(ctx):
+    java_srcs = ctx.files.java_srcs
+    kotlin_srcs = ctx.files.kotlin_srcs
+    name = ctx.label.name
+
+    java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
+    kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
+
+    deps = [dep[JavaInfo] for dep in ctx.attr.deps] + [dep[JavaInfo] for dep in ctx.attr.bundled_deps]
+
+    # Kotlin
+    jars = []
+    kotlin_providers = []
+    if kotlin_srcs:
+        deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
+        kotlin_providers += [kotlin_compile(
+            ctx = ctx,
+            name = ctx.attr.module_name,
+            srcs = java_srcs + kotlin_srcs,
+            deps = deps,
+            friends = ctx.files.friends,
+            out = kotlin_jar,
+            jre = ctx.files._bootclasspath,
+            transitive_classpath = True,  # Matches Java rules (sans strict-deps enforcement)
+        )]
+        jars += [kotlin_jar]
+
+    # Resources.
+    resources = ([ctx.file.notice] if ctx.file.notice else []) + ctx.files.resources
+    if resources:
+        resources_jar = ctx.actions.declare_file(name + ".res.jar")
+        _resources(ctx, resources, resources_jar)
+        jars += [resources_jar]
+
+    # Java
+    if java_srcs:
+        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
+
+        java_provider = java_common.compile(
+            ctx,
+            source_files = java_srcs,
+            output = java_jar,
+            deps = deps + kotlin_providers,
+            javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
+            java_toolchain = java_toolchain,
+            host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase),
+        )
+
+        jars += [java_jar]
+
+    manifest_argfile = None
+    if ctx.files.manifests:
+        manifest_argfile = create_manifest_argfile(ctx, name + ".manifest.lst", ctx.files.manifests)
+
+    for dep in ctx.attr.bundled_deps:
+        jars += [java_output.class_jar for java_output in dep[JavaInfo].outputs.jars]
+
+    run_singlejar(
+        ctx = ctx,
+        jars = jars,
+        out = ctx.outputs.jar,
+        manifest_lines = ["@" + manifest_argfile.path] if manifest_argfile else [],
+        extra_inputs = [manifest_argfile] if manifest_argfile else [],
+        # allow_duplicates = True,  # TODO: Ideally we could be more strict here.
+    )
+
+    # Create an ijar to improve javac compilation avoidance.
+    ijar = java_common.run_ijar(
+        actions = ctx.actions,
+        jar = ctx.outputs.jar,
+        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+    )
+
+    providers = []
+    providers = [JavaInfo(
+        output_jar = ctx.outputs.jar,
+        compile_jar = ijar,
+        deps = deps,
+        runtime_deps = deps,
+    )]
+
+    # excludes bundled_deps
+    infos = [dep[MavenInfo] for dep in ctx.attr.deps]
+    pom_deps = [info.pom for info in infos]
+
+    coordinates = split_coordinates(ctx.attr.coordinates)
+    basename = coordinates.artifact_id + "-" + coordinates.version
+    generate_pom(
+        ctx,
+        output_pom = ctx.outputs.pom,
+        group = coordinates.group_id,
+        artifact = coordinates.artifact_id,
+        version = coordinates.version,
+        deps = pom_deps,
+    )
+    repo_files = [
+        (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
+        (coordinates.repo_path + "/" + basename + ".jar", ctx.outputs.jar),
+    ]
+    if ctx.file.notice:
+        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
+
+    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos])
+
+    return [
+        java_common.merge(providers),
+        MavenInfo(
+            pom = ctx.outputs.pom,
+            files = repo_files,
+            transitive = transitive,
+        ),
+    ]
+
+_maven_library = rule(
+    attrs = {
+        "java_srcs": attr.label_list(allow_files = True),
+        "kotlin_srcs": attr.label_list(allow_files = True),
+        "resources": attr.label_list(allow_files = True),
+        "notice": attr.label(allow_single_file = True),
+        "manifests": attr.label_list(allow_files = True),
+        "friends": attr.label_list(
+            allow_files = [".jar"],
+        ),
+        "deps": attr.label_list(
+            providers = [JavaInfo, MavenInfo],
+        ),
+        "bundled_deps": attr.label_list(
+            providers = [JavaInfo],
+        ),
+        "runtime_deps": attr.label_list(
+            providers = [JavaInfo],
+        ),
+        "module_name": attr.string(
+            default = "unnamed",
+        ),
+        "resource_strip_prefix": attr.string(),
+        "javacopts": attr.string_list(),
+        "coordinates": attr.string(),
+        "kotlin_use_ir": attr.bool(),
+        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+        "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
+        "_bootclasspath": attr.label(
+            # Use JDK 8 because AGP still needs to support it (b/166472930).
+            default = Label("//prebuilts/studio/jdk:bootclasspath"),
+            allow_files = [".jar"],
+        ),
+        "_kotlinc": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:kotlinc"),
+            allow_files = True,
+        ),
+        "_kotlin_stdlib": attr.label(
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
+            allow_files = True,
+        ),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_pom": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "jar": "%{name}.jar",
+        "pom": "%{name}.pom",
+    },
+    fragments = ["java"],
+    implementation = _maven_library_impl,
+)
+
+def maven_library(
+        name,
+        srcs,
+        javacopts = [],
+        resources = [],
+        resource_strip_prefix = None,
+        deps = [],
+        runtime_deps = [],
+        bundled_deps = [],
+        friends = [],
+        notice = None,
+        coordinates = None,
+        exclusions = None,
+        lint_baseline = None,
+        lint_classpath = [],
+        lint_is_test_sources = False,
+        lint_timeout = None,
+        module_name = None,
+        **kwargs):
+    """Compiles a library jar from Java and Kotlin sources
+
+    Args:
+        srcs: The sources of the library.
+        javacopts: Additional javac options.
+        resources: Resources to add to the jar.
+        resources_strip_prefix: The prefix to strip from the resources path.
+        deps: The dependencies of this library.
+        runtime_deps: The runtime dependencies.
+        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
+        friends: The list of kotlin-friends.
+        notice: An optional notice file to be included in the jar.
+        coordinates: The maven coordinates of this artifact.
+        exclusions: Files to exclude from the generated pom file.
+        lint_*: Lint configuration arguments
+        module_name: The kotlin module name.
+    """
+    kotlins = [src for src in srcs if src.endswith(".kt")]
+    javas = [src for src in srcs if src.endswith(".java")]
+    final_javacopts = javacopts + ["--release", "8"]
+
+    _maven_library(
+        name = name,
+        java_srcs = javas,
+        kotlin_srcs = kotlins,
+        deps = deps,
+        bundled_deps = bundled_deps,
+        friends = friends,
+        notice = notice,
+        module_name = module_name,
+        kotlin_use_ir = test_kotlin_use_ir(),
+        javacopts = final_javacopts if javas else None,
+        resources = resources,
+        resource_strip_prefix = resource_strip_prefix,
+        runtime_deps = runtime_deps,
+        coordinates = coordinates,
+        **kwargs
+    )
+
+    if lint_baseline:
+        # TODO: use srcs once the migration is completed
+        lint_srcs = javas + kotlins
+        if not lint_srcs:
+            fail("lint_baseline set for rule that has no sources")
+
+        lint_test(
+            name = name + "_lint_test",
+            srcs = lint_srcs,
+            baseline = lint_baseline,
+            deps = deps + bundled_deps + lint_classpath,
+            custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
+            tags = ["no_windows"],
+            is_test_sources = lint_is_test_sources,
+            timeout = lint_timeout if lint_timeout else None,
+        )

@@ -38,7 +38,7 @@ import java.io.File
  */
 interface TestData {
     /**
-     * Returns the application id.
+     * Returns the application ID of the test APK.
      *
      * @return the id
      */
@@ -46,13 +46,28 @@ interface TestData {
     val applicationId: Provider<String>
 
     /**
-     * Returns the tested application id. This can be empty if the test package is self-contained.
+     * Returns the application ID of the APK under the test. This can be empty if the test package
+     * is self-contained (e.g. library module).
+     *
+     * Be aware that this does not always match to [instrumentationTargetPackageId]. If
+     * [ModulePropertyKeys.SELF_INSTRUMENTING] is enabled, it instruments the test process instead
+     * of tested application process.
      *
      * @return the id or null.
      */
     @get:Input
     @get:Optional
     val testedApplicationId: Provider<String>
+
+    /**
+     * Returns the instrument target application id. This returns [applicationId] if
+     * [ModulePropertyKeys.SELF_INSTRUMENTING] is enabled in the module, otherwise
+     * [testedApplicationId].
+     *
+     * @return the id.
+     */
+    @get:Input
+    val instrumentationTargetPackageId: Provider<String>
 
     @get:Input
     val instrumentationRunner: Provider<String>
