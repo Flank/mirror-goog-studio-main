@@ -130,6 +130,7 @@ data class CxxConfigurationParameters(
     val isPrefabEnabled: Boolean,
     val prefabClassPath: FileCollection?,
     val prefabPackageDirectoryList: FileCollection?,
+    val prefabPackageConfigurationList: FileCollection?,
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
@@ -250,6 +251,16 @@ fun tryCreateConfigurationParameters(
         null
     }
 
+    val prefabPackageConfigurationList = if (variant.buildFeatures.prefab) {
+        variant.variantDependencies.getArtifactCollection(
+            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.ALL,
+            AndroidArtifacts.ArtifactType.PREFAB_PACKAGE_CONFIGURATION
+        ).artifactFiles
+    } else {
+        null
+    }
+
     val prefabClassPath = if (variant.buildFeatures.prefab) {
         getPrefabFromMaven(
             projectOptions,
@@ -298,6 +309,7 @@ fun tryCreateConfigurationParameters(
         isPrefabEnabled = variant.buildFeatures.prefab,
         prefabClassPath = prefabClassPath,
         prefabPackageDirectoryList = prefabPackageDirectoryList,
+        prefabPackageConfigurationList = prefabPackageConfigurationList,
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
@@ -306,7 +318,6 @@ fun tryCreateConfigurationParameters(
         outputOptions = outputOptions
     )
 }
-
 
 /**
  * Resolve the CMake or ndk-build path and buildStagingDirectory of native build project.

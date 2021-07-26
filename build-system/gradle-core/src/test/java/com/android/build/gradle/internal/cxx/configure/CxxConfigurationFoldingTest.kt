@@ -25,6 +25,7 @@ import org.junit.Test
 class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that fold`() {
+
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(variantName = "debug")

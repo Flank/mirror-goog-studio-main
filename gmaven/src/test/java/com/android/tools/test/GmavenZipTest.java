@@ -369,6 +369,7 @@ public class GmavenZipTest {
                 "com/android/build/gradle/internal/cxx/logging/",
                 "com/android/build/gradle/internal/cxx/model/",
                 "com/android/build/gradle/internal/cxx/ninja/",
+                "com/android/build/gradle/internal/cxx/prefab/",
                 "com/android/build/gradle/internal/cxx/process/",
                 "com/android/build/gradle/internal/cxx/settings/",
                 "com/android/build/gradle/internal/cxx/string/",

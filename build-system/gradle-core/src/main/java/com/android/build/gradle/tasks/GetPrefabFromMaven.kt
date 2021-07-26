@@ -52,7 +52,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  * 5. Optionally, delete the BUILD modules and prebuilts for the old version of Prefab. This should
  *    be done unless AGP will continue testing both the new and old version (uncommon).
  */
-private const val DEFAULT_PREFAB_VERSION = "2.0.0"
+const val DEFAULT_PREFAB_VERSION = "2.0.0"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
 private fun getPrefabArtifact(configuration: Configuration): FileCollection =

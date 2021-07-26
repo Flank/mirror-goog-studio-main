@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.model.findConfigurati
 import com.android.build.gradle.integration.common.fixture.model.findCxxSegment
 import com.android.build.gradle.integration.common.fixture.model.goldenBuildProducts
 import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
+import com.android.build.gradle.integration.common.fixture.model.minimizeUsingTupleCoverage
 import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.fixture.model.readStructuredLogs
@@ -732,6 +733,9 @@ apply plugin: 'com.android.application'
 
     @Test
     fun `validate some utility functions`() {
+        // TODO move this into a separate NativeUtilsTest and break into distinct tests
+        // As far as I can see it will have to be an integration test since that is
+        // what NativeUtils methods are serving.
         val file = join(File("."), ".cxx", "cmake", "debug","armeabi-v7a","symbol_folder_index.txt")
         val abiSegment = findAbiSegment(file)
         val cxxSegment = findCxxSegment(file)
@@ -739,10 +743,23 @@ apply plugin: 'com.android.application'
         assertThat(abiSegment).named(abiSegment).isEqualTo("armeabi-v7a")
         assertThat(cxxSegment).named(cxxSegment).isEqualTo(".cxx")
         assertThat(configurationSegment).named(configurationSegment).isEqualTo(join("cmake/debug"))
+
+        // [Check cartesianOf(...)]---
         val cartesian = cartesianOf(arrayOf(1,2), arrayOf("b", "c"), arrayOf(1.1, 1.2))
         assertThat(cartesian[0]).isEqualTo(arrayOf(1, "b", 1.1))
         assertThat(cartesian[7]).isEqualTo(arrayOf(2, "c", 1.2))
         assertThat(cartesian).hasLength(8)
+
+        // [Check minimizeUsingTupleCoverage(...)]---
+        val minimized = cartesian
+            .minimizeUsingTupleCoverage(maxTupleSize = 2)
+        assertThat(minimized).hasLength(5) // Smaller than cartesian which is 8
+        // These should be the least needed to cover each pair of argument
+        assertThat(minimized[0]).isEqualTo(arrayOf(1, "b", 1.1))
+        assertThat(minimized[1]).isEqualTo(arrayOf(2, "c", 1.2))
+        assertThat(minimized[2]).isEqualTo(arrayOf(1, "b", 1.2))
+        assertThat(minimized[3]).isEqualTo(arrayOf(1, "c", 1.1))
+        assertThat(minimized[4]).isEqualTo(arrayOf(2, "b", 1.1))
     }
 
     @Test
