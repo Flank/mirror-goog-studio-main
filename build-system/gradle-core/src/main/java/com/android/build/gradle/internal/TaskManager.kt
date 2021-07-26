@@ -32,7 +32,6 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
@@ -222,7 +221,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
-import com.android.sdklib.AndroidVersion
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions
@@ -2037,23 +2035,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
 
         // Code Dexing (MonoDex, Legacy Multidex or Native Multidex)
-
-        // Upgrade from legacy multi-dex to native multi-dex if possible when deploying to device
-        // running L(21)+ from the IDE.
-        var dexingType = creationConfig.dexingType
-        if (dexingType === DexingType.LEGACY_MULTIDEX
-                && creationConfig.targetDeployApi.getFeatureLevel()
-                >= AndroidVersion.VersionCodes.LOLLIPOP) {
-            dexingType = DexingType.NATIVE_MULTIDEX
-        }
-
         if (creationConfig.needsMainDexListForBundle) {
             taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))
         }
         if (creationConfig.variantType.isDynamicFeature) {
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
-        createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
+        createDexTasks(creationConfig, creationConfig.dexingType, registeredLegacyTransform)
         maybeCreateDexSplitterTask(creationConfig)
     }
 

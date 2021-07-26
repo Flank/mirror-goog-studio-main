@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.desugar.resources.ImplOfInterfaceWithDefaultMethod
 import com.android.build.gradle.integration.desugar.resources.InterfaceWithDefaultMethod
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.TestInputsGenerator
 import org.junit.Assume
@@ -92,6 +93,21 @@ class DesugarFileDependencyTest(var tool: Tool) {
         Assume.assumeTrue(tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS)
         project.buildFile.appendText("\nandroid.defaultConfig.minSdkVersion 24")
         executor().run("assembleDebug")
+        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            assertThat(apk)
+                .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
+                .that()
+                .doesNotHaveMethod("myDefaultMethod")
+        }
+    }
+
+    @Test
+    fun checkMinApi21WithInjectedDevice() {
+        Assume.assumeTrue(tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS)
+        project.buildFile.appendText("\nandroid.defaultConfig.minSdkVersion 21")
+        executor()
+            .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
+            .run("assembleDebug")
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             assertThat(apk)
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
