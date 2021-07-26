@@ -16,11 +16,27 @@
 
 package com.android.tools.binaries;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.tools.json.JsonFileWriter;
+import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.repository_generator.BuildFileWriter;
 import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -52,28 +68,13 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
+import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
-
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A tool that generates a virtual Maven repository from a given list of initial artifacts, and
@@ -101,21 +102,34 @@ public class LocalMavenRepositoryGenerator {
     /** If true, also writes the result in JSON format to a file and stdout. */
     private final boolean verbose;
 
+    /** Whether to fetch dependencies from remote repositories. */
+    private final boolean fetch;
+
     @VisibleForTesting
     public LocalMavenRepositoryGenerator(
-            Path repoPath, String outputBuildFile, List<String> coords, boolean verbose) {
+            Path repoPath,
+            String outputBuildFile,
+            List<String> coords,
+            boolean fetch,
+            boolean verbose) {
         this.coords = coords;
         this.outputBuildFile = outputBuildFile;
         this.repoPath = repoPath.toAbsolutePath();
         this.verbose = verbose;
+        this.fetch = fetch;
 
         // This is where the artifacts will be downloaded from. We make it point to our own local
         // maven repo. If an artifact is required for dependency resolution but doesn't exist
         // there, it will be reported as an error.
         RemoteRepository remoteRepository =
-                new RemoteRepository.Builder("prebuilts_repo", "default", "file://" + this.repoPath)
+                new RemoteRepository.Builder("prebuilts", "default", "file://" + this.repoPath)
                         .build();
-        repo = new CustomMavenRepository(this.repoPath.toString(), remoteRepository);
+        List<RemoteRepository> repositories = new ArrayList<>();
+        repositories.add(remoteRepository);
+        if (fetch) {
+            repositories.addAll(AetherUtils.REPOSITORIES);
+        }
+        repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
     }
 
     public void run() throws Exception {
@@ -350,6 +364,7 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
+        boolean fetch = false;
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -364,7 +379,6 @@ public class LocalMavenRepositoryGenerator {
             }
             if (arg.equals("-v")) {
                 verbose = true;
-                i++;
                 continue;
             }
             if (arg.equals("--repo-path")) {
@@ -374,6 +388,10 @@ public class LocalMavenRepositoryGenerator {
                 }
                 repoPath = Paths.get(args[i + 1]);
                 i++;
+                continue;
+            }
+            if (arg.equals("--fetch")) {
+                fetch = true;
                 continue;
             }
 
@@ -390,7 +408,7 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
-        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, verbose).run();
+        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, fetch, verbose).run();
     }
 
     /**
@@ -410,13 +428,13 @@ public class LocalMavenRepositoryGenerator {
 
         private final RepositorySystem system;
         private final DefaultRepositorySystemSession session;
-        private final RemoteRepository remoteRepository;
+        private final List<RemoteRepository> repositories;
         private final ModelBuilder modelBuilder;
 
-        public CustomMavenRepository(String repoPath, RemoteRepository remoteRepository) {
+        public CustomMavenRepository(String repoPath, List<RemoteRepository> repositories) {
             system = CustomAetherUtils.newRepositorySystem();
             session = CustomAetherUtils.newSession(system, repoPath);
-            this.remoteRepository = remoteRepository;
+            this.repositories = repositories;
             modelBuilder = new DefaultModelBuilderFactory().newInstance();
         }
 
@@ -457,8 +475,8 @@ public class LocalMavenRepositoryGenerator {
                             .setCollectRequest(
                                     new CollectRequest()
                                             .setDependencies(deps)
-                                            .setRepositories(
-                                                    Collections.singletonList(remoteRepository)));
+                                            .setRepositories(repositories));
+
             DependencyResult result = system.resolveDependencies(session, request);
 
             return result.getRoot();
@@ -495,9 +513,7 @@ public class LocalMavenRepositoryGenerator {
                             artifact.getArtifactId(),
                             "pom",
                             artifact.getVersion());
-            ArtifactRequest request =
-                    new ArtifactRequest(
-                            pomArtifact, Collections.singletonList(remoteRepository), null);
+            ArtifactRequest request = new ArtifactRequest(pomArtifact, repositories, null);
             pomArtifact = system.resolveArtifact(session, request).getArtifact();
             return pomArtifact.getFile();
         }
@@ -518,7 +534,7 @@ public class LocalMavenRepositoryGenerator {
                             locator.getService(ArtifactResolver.class),
                             locator.getService(VersionRangeResolver.class),
                             locator.getService(RemoteRepositoryManager.class),
-                            Collections.singletonList(remoteRepository));
+                            repositories);
         }
     }
 
@@ -539,6 +555,8 @@ public class LocalMavenRepositoryGenerator {
             locator.addService(
                     RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
             locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+            locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+
             // Note that, if any of the inputs transitively depend on an artifact using a version
             // range, the default version range resolver will not be able to resolve the version,
             // because our prebuilts repository does NOT have any maven-metadata.xml files.

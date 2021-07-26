@@ -591,6 +591,7 @@ java_binary(
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
         "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
         "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
+        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
     ],
 )
 
