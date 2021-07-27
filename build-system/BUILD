@@ -1,7 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
-load("//tools/base/common:version.bzl", "BASE_VERSION")
+load("//tools/base/common:version.bzl", "BASE_VERSION", "BUILD_VERSION")
 load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
@@ -86,18 +86,15 @@ kotlin_test(
     ],
 )
 
-maven_java_import(
-    name = "tools.apksig",
-    jars = ["//tools/apksig:libapksig-all.jar"],
-    pom = ":apksig.pom",
+maven_library(
+    name = "tools.apksig_bzl",
+    srcs = [],
+    bundled_deps = [
+        "//tools/apksig:apksig-all",
+    ],
+    coordinates = "com.android.tools.build:apksig:" + BUILD_VERSION,
+    legacy_name = "tools.apksig",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "apksig.pom",
-    artifact = "apksig",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 # The Gradle APIs to build against and run against.
