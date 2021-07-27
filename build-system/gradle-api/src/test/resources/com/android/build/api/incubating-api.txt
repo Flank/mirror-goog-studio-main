@@ -15,13 +15,11 @@ com.android.build.api.dsl.AndroidResources.additionalParameters: void (java.lang
 com.android.build.api.dsl.AndroidResources.additionalParameters: void (java.lang.String[])
 com.android.build.api.dsl.AndroidResources.getAdditionalParameters: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.AndroidResources.getFailOnMissingConfigEntry: boolean ()
-com.android.build.api.dsl.AndroidResources.getIgnoreAssetsPattern: java.lang.String ()
 com.android.build.api.dsl.AndroidResources.getNamespaced: boolean ()
 com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String[])
 com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)
-com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.setNamespaced: void (boolean)
 com.android.build.api.dsl.AndroidSourceDirectorySet implements org.gradle.api.Named, org.gradle.api.tasks.util.PatternFilterable
 com.android.build.api.dsl.AndroidSourceDirectorySet.getName: java.lang.String ()

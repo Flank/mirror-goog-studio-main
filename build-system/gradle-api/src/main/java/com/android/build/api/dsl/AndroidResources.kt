@@ -25,8 +25,6 @@ interface AndroidResources {
      *
      * See `aapt --help`
      */
-    @get:Incubating
-    @set:Incubating
     var ignoreAssetsPattern: String?
 
     /**
