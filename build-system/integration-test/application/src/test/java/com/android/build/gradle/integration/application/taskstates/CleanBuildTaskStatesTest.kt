@@ -42,6 +42,7 @@ class CleanBuildTaskStatesTest {
                 ":app:compileDebugJavaWithJavac",
                 ":app:compileDebugUnitTestJavaWithJavac",
                 ":app:compressDebugAssets",
+                ":app:createDebugApkListingFileRedirect",
                 ":app:createDebugCompatibleScreenManifests",
                 ":app:desugarDebugFileDependencies",
                 ":app:dexBuilderDebug",

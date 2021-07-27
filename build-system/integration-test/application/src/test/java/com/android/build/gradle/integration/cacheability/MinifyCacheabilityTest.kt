@@ -81,6 +81,7 @@ class MinifyCacheabilityTest {
             }
         ),
         DID_WORK to setOf(
+            ":createMinifiedApkListingFileRedirect",
             ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
             ":mergeMinifiedJavaResource", /* Bug 181142260 */

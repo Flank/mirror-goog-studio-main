@@ -56,6 +56,8 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileReleaseSources",
                 ":compressDebugAndroidTestAssets",
                 ":compressReleaseAssets",
+                ":createDebugAndroidTestApkListingFileRedirect",
+                ":createReleaseApkListingFileRedirect",
                 ":createDebugCompatibleScreenManifests",
                 ":createReleaseCompatibleScreenManifests",
                 ":desugarDebugAndroidTestFileDependencies",

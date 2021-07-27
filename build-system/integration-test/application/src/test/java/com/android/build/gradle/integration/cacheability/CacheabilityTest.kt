@@ -89,6 +89,7 @@ class CacheabilityTest {
              * If you add a task to this list, remember to add an explanation/file a bug for it.
              */
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
+            TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Bug 178810169 */

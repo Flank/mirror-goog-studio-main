@@ -169,16 +169,19 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:createDebugApkListingFileRedirect",
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:writeDebugModuleMetadata",
 
+                    ":feature1:createDebugApkListingFileRedirect",
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
 
+                    ":feature2:createDebugApkListingFileRedirect",
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",

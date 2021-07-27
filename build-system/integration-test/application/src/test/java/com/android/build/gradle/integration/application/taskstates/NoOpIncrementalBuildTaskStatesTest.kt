@@ -47,6 +47,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:preDebugUnitTestBuild",
                 ":app:bundleDebugClasses",
                 ":app:checkDebugDuplicateClasses",
+                ":app:createDebugApkListingFileRedirect",
                 ":app:compileDebugJavaWithJavac",
                 ":app:compileDebugSources",
                 ":app:compileDebugUnitTestJavaWithJavac",

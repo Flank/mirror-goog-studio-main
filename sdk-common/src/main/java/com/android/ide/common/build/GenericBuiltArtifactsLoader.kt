@@ -30,16 +30,6 @@ import java.util.Properties
 object GenericBuiltArtifactsLoader {
 
     /**
-     * Redirect file will have this marker as the first line as comment.
-     */
-    const val RedirectMarker = "- File Locator -"
-
-    /**
-     * Property name in a [Properties] for the metadata file location.
-     */
-    const val RedirectFilePropertyName = "listingFile"
-
-    /**
      * Load a metadata file if it exists or return null otherwise.
      *
      * The provided [inputFile] can either be the metadata file which is a json file containing the
@@ -69,17 +59,13 @@ object GenericBuiltArtifactsLoader {
             GenericBuiltArtifactTypeAdapter()
         )
 
-        val inputFileContent = inputFile.readText()
-        val listingFileReader = if (inputFileContent.startsWith("#$RedirectMarker")) {
-            val fileLocator = Properties().also {
-                it.load(StringReader(inputFileContent))
-            }
-            FileReader(File(inputFile.parentFile, fileLocator.getProperty(RedirectFilePropertyName)))
-        } else {
-            StringReader(inputFileContent)
-        }
         val gson = gsonBuilder.create()
-        val buildOutputs = listingFileReader.use {
+        val redirectFileContent = inputFile.readText()
+        val redirectedFile =
+            ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
+
+        val reader = redirectedFile?.let { FileReader(it) } ?: StringReader(redirectFileContent)
+        val buildOutputs = reader.use {
             try {
                 gson.fromJson(it, GenericBuiltArtifacts::class.java)
             } catch (e: Exception) {

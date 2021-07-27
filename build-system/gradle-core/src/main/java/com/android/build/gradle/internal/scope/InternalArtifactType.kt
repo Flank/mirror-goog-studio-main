@@ -489,6 +489,10 @@ InternalArtifactType<T : FileSystemLocation>(
     object BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
     object APK_FROM_BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    // and the redirect file pointing to the one above.
+    object APK_IDE_REDIRECT_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
+    object BUNDLE_IDE_REDIRECT_FILE : InternalArtifactType<RegularFile>(FILE), Replaceable
+
     object ASSET_PACK_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY)
 
     object LINKED_RES_FOR_ASSET_PACK: InternalArtifactType<Directory>(DIRECTORY), Replaceable

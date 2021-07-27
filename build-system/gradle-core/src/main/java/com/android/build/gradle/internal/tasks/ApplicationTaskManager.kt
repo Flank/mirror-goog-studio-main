@@ -266,6 +266,14 @@ class ApplicationTaskManager(
             }
             taskFactory.register(FinalizeBundleTask.CreationAction(variant))
             taskFactory.register(BundleIdeModelProducerTask.CreationAction(variant))
+            taskFactory.register(
+                ListingFileRedirectTask.CreationAction(
+                    variant,
+                    "Bundle",
+                    InternalArtifactType.BUNDLE_IDE_MODEL,
+                    InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE
+                )
+            )
             taskFactory.register(BundleToApkTask.CreationAction(variant))
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variant))
             taskFactory.register(ExtractApksTask.CreationAction(variant))

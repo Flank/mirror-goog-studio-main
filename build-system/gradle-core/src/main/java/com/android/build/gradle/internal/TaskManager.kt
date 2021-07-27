@@ -122,6 +122,8 @@ import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.build.gradle.internal.tasks.LintCompile
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
+import com.android.build.gradle.internal.tasks.ListingFileRedirectTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
@@ -2339,12 +2341,26 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     }
                 },
                 null)
+
+        // create the listing file redirect
+        val ideRedirectFileTask = taskFactory.register(
+            ListingFileRedirectTask.CreationAction(
+                creationConfig = creationConfig,
+                taskSuffix = "Apk",
+                inputArtifactType = InternalArtifactType.APK_IDE_MODEL,
+                outputArtifactType = InternalArtifactType.APK_IDE_REDIRECT_FILE
+            )
+        )
+
         taskContainer
                 .assembleTask
                 .configure { task: Task ->
                     task.dependsOn(
-                            creationConfig.artifacts.get(SingleArtifact.APK))
+                            creationConfig.artifacts.get(SingleArtifact.APK),
+                            ideRedirectFileTask
+                    )
                 }
+
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2553,6 +2569,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         task.description = "Assembles bundle for variant " + component.name
                         task.dependsOn(component.artifacts.get(SingleArtifact.BUNDLE))
                         task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
+                        task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE))
                     }
                 },
                 object : TaskProviderCallback<Task> {
