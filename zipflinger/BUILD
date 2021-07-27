@@ -1,12 +1,15 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
-maven_java_library(
-    name = "zipflinger",
+maven_library(
+    name = "zipflinger_bzl",
     srcs = glob([
         "src/com/android/zipflinger/**/*.java",
     ]),
-    pom = ":pom",
+    coordinates = "com.android:zipflinger:" + BUILD_VERSION,
+    legacy_name = "zipflinger",
     visibility = [
         "//tools/base/bazel:__subpackages__",
         "//tools/base/build-system:__subpackages__",
@@ -16,15 +19,8 @@ maven_java_library(
         "//tools/base/zipflinger/tools:__subpackages__",
     ],
     deps = [
-        "//tools/base/annotations",
+        "//tools/base/annotations:annotations_bzl",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "zipflinger",
-    group = "com.android",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 java_library(
