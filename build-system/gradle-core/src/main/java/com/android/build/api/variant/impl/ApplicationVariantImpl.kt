@@ -236,8 +236,8 @@ open class ApplicationVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val minSdkVersionForDexing: AndroidVersion
-        get() = delegate.minSdkVersionForDexing
+    override val targetDeployApi: AndroidVersion
+        get() = delegate.targetDeployApi
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

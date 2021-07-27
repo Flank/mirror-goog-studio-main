@@ -68,6 +68,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import java.nio.file.Path
+import kotlin.math.max
 
 /**
  * Task that converts CLASS files to dex archives, [com.android.builder.dexing.DexArchive].
@@ -482,16 +483,17 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.subProjectClasses.from(subProjectsClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
 
-            val minSdkVersionForDexing = creationConfig.minSdkVersionForDexing.getFeatureLevel()
-            task.dexParams.minSdkVersion.set(minSdkVersionForDexing)
+            task.dexParams.minSdkVersion.set(creationConfig.minSdkVersion.getFeatureLevel())
             val languageDesugaring =
                 creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8
             task.dexParams.withDesugaring.set(languageDesugaring)
 
-            // If min sdk version for dexing is >= N(24) then we can avoid adding extra classes to
-            // the desugar classpaths.
-            val languageDesugaringNeeded = languageDesugaring && minSdkVersionForDexing < AndroidVersion.VersionCodes.N
-            if (languageDesugaringNeeded) {
+            // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
+            // the device we're deploying too.
+            // If it's >= N(24) then we can avoid adding extra classes to the desugar classpaths.
+            val targetDeployApi = creationConfig.targetDeployApi.getFeatureLevel()
+
+            if (languageDesugaring && targetDeployApi < AndroidVersion.VersionCodes.N) {
                 // Set classpath only if desugaring with D8 and minSdkVersion < 24
                 task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
                 if (dexExternalLibsInArtifactTransform) {
@@ -501,10 +503,11 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 }
             }
             // Set bootclasspath only for two cases:
-            // 1. language desugaring with D8 and minSdkVersionForDexing < 24
+            // 1. language desugaring with D8 and minSdkVersion < 24
             // 2. library desugaring enabled(required for API conversion)
             val libraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled
-            if (languageDesugaringNeeded || libraryDesugaring) {
+            if ((languageDesugaring && targetDeployApi < AndroidVersion.VersionCodes.N)
+                    || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
                         .from(creationConfig.globalScope.filteredBootClasspath)
             }
