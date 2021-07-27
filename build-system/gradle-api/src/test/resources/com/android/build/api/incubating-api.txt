@@ -59,7 +59,6 @@ com.android.build.api.dsl.AndroidSourceSet.res: void (kotlin.jvm.functions.Funct
 com.android.build.api.dsl.AndroidSourceSet.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidSourceDirectorySet, kotlin.Unit>)
 com.android.build.api.dsl.AndroidSourceSet.setRoot: java.lang.Object (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidSourceDirectorySet, kotlin.Unit>)
-com.android.build.api.dsl.AnnotationProcessorOptions
 com.android.build.api.dsl.AnnotationProcessorOptions.argument: void (java.lang.String, java.lang.String)
 com.android.build.api.dsl.AnnotationProcessorOptions.arguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.AnnotationProcessorOptions.className: void (java.lang.String)
@@ -393,8 +392,6 @@ com.android.build.api.dsl.Installation.setTimeOutInMs: void (int)
 com.android.build.api.dsl.JacocoOptions implements com.android.build.api.dsl.TestCoverage
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
-com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
-com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.JniLibsPackagingOptions
 com.android.build.api.dsl.JniLibsPackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getKeepDebugSymbols: java.util.Set<java.lang.String> ()

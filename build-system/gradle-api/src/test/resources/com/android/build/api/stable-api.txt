@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ac274f54aa0bcde7c7e42dd069eaf77c036baccccade17aa49183b4375001510
+39ba43992c62741501942070ce852b8c83b6cf28b22f3601198fe8496acdef10
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -105,6 +105,7 @@ com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<j
 com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)
 com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
+com.android.build.api.dsl.AnnotationProcessorOptions
 com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
 com.android.build.api.dsl.ApkSigningConfig$DefaultImpls
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
@@ -194,6 +195,8 @@ com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
 com.android.build.api.dsl.JavaCompileOptions
+com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
+com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
