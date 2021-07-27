@@ -29,7 +29,6 @@ interface AnnotationProcessorOptions {
      * annotation processor dependencies to your project, read
      * [Add annotation processors](https://d.android.com/studio/build/dependencies#annotation_processor).
      */
-    @get:Incubating
     val classNames: MutableList<String>
 
     /**
@@ -62,7 +61,6 @@ interface AnnotationProcessorOptions {
      *
      * @see [compilerArgumentProviders]
      */
-    @get:Incubating
     val arguments: MutableMap<String, String>
 
     /**
@@ -99,7 +97,6 @@ interface AnnotationProcessorOptions {
      * pass them to the Android plugin, read
      * [Pass arguments to annotation processors](https://developer.android.com/studio/build/dependencies#processor-arguments).
      */
-    @get:Incubating
     val compilerArgumentProviders: MutableList<CommandLineArgumentProvider>
 
     /**

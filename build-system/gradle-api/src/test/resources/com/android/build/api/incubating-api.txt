@@ -65,9 +65,6 @@ com.android.build.api.dsl.AnnotationProcessorOptions.className: void (java.lang.
 com.android.build.api.dsl.AnnotationProcessorOptions.classNames: void (java.lang.String[])
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProvider: void (org.gradle.process.CommandLineArgumentProvider)
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: void (org.gradle.process.CommandLineArgumentProvider[])
-com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApkSigningConfig.getEnableV1Signing: java.lang.Boolean ()
 com.android.build.api.dsl.ApkSigningConfig.getEnableV2Signing: java.lang.Boolean ()

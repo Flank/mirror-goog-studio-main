@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-39ba43992c62741501942070ce852b8c83b6cf28b22f3601198fe8496acdef10
+89e884f3657730a5ea87f81aa7207cc54df6dee1c261b4ad0f48d898bfa0312b
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -106,6 +106,9 @@ com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (bo
 com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
 com.android.build.api.dsl.AnnotationProcessorOptions
+com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
 com.android.build.api.dsl.ApkSigningConfig$DefaultImpls
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
