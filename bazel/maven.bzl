@@ -307,6 +307,7 @@ def maven_java_import(
         classifiers = [],
         visibility = None,
         jars = [],
+        notice = None,
         repo_path = "",
         classified_only = False,
         **kwargs):
@@ -321,7 +322,7 @@ def maven_java_import(
             name = name,
             visibility = visibility,
             dep = name + "_import",
-            notice = repo_path + "/NOTICE" if repo_path else "NOTICE",
+            notice = notice if notice else (repo_path + "/NOTICE" if repo_path else "NOTICE"),
             tags = ["require_license"],
         )
 
@@ -782,11 +783,12 @@ def split_coordinates(coordinates):
 # created by the new rules, so we do not need rule
 # duplication. Once all artifacts have been
 # migrated we can delete the old rules and this bridge.
-def import_maven_library(maven_java_library_rule, maven_library_rule, deps = []):
+def import_maven_library(maven_java_library_rule, maven_library_rule, deps = [], notice = None):
     maven_java_import(
         name = maven_java_library_rule,
         deps = deps,
         jars = [":" + maven_library_rule + ".jar"],
+        notice = notice,
         pom = ":" + maven_java_library_rule + ".pom",
         visibility = ["//visibility:public"],
     )

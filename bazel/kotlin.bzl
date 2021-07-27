@@ -644,7 +644,7 @@ def maven_library(
     """
     if legacy_name:
         # Create legacy rules and make them point to the new rules.
-        import_maven_library(legacy_name, name, deps = deps)
+        import_maven_library(legacy_name, name, deps = deps, notice = notice)
 
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
