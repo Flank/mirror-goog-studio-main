@@ -16,7 +16,6 @@ com.android.build.api.dsl.AndroidResources.additionalParameters: void (java.lang
 com.android.build.api.dsl.AndroidResources.getAdditionalParameters: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.AndroidResources.getFailOnMissingConfigEntry: boolean ()
 com.android.build.api.dsl.AndroidResources.getNamespaced: boolean ()
-com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String[])
 com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)

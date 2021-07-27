@@ -34,7 +34,6 @@ interface AndroidResources {
      *
      * Equivalent of the -0 flag. See `aapt --help`
      */
-    @get:Incubating
     val noCompress: MutableCollection<String>
 
     /**
