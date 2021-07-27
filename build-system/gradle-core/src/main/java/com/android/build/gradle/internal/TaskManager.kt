@@ -114,7 +114,6 @@ import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
 import com.android.build.gradle.internal.tasks.DexMergingAction
 import com.android.build.gradle.internal.tasks.DexMergingTask
-import com.android.build.gradle.internal.tasks.DexSplitterTask
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles
 import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
@@ -2043,7 +2042,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
         createDexTasks(creationConfig, creationConfig.dexingType, registeredLegacyTransform)
-        maybeCreateDexSplitterTask(creationConfig)
     }
 
     /**
@@ -2611,20 +2609,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         return taskFactory.register(
                 R8Task.CreationAction(creationConfig, isTestApplication, addCompileRClass))
-    }
-
-    private fun maybeCreateDexSplitterTask(creationConfig: ApkCreationConfig) {
-        if (!creationConfig.variantScope.consumesFeatureJars()) {
-            return
-        }
-        taskFactory.register(DexSplitterTask.CreationAction(creationConfig))
-        if (creationConfig is ApplicationCreationConfig) {
-            publishArtifactsToDynamicFeatures(
-                    creationConfig,
-                    FEATURE_DEX,
-                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    null)
-        }
     }
 
     /**
