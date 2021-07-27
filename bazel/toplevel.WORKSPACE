@@ -125,6 +125,8 @@ local_maven_repository(
     "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
+    "org.ow2.asm:asm-tree:9.1",
+    "org.ow2.asm:asm:9.1",
     "xerces:xercesImpl:2.12.0",
   ]
 )
