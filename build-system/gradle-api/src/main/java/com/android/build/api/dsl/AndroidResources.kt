@@ -57,8 +57,6 @@ interface AndroidResources {
      *
      * See `aapt --help`
      */
-    @get:Incubating
-    @set:Incubating
     var failOnMissingConfigEntry: Boolean
 
     /** List of additional parameters to pass to `aapt`. */

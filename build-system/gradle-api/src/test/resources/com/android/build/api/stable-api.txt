@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-374700b2e95579d04b6865ca6da2a19894df8b8d8d479982617d5cd04d7e49f7
+ac274f54aa0bcde7c7e42dd069eaf77c036baccccade17aa49183b4375001510
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -99,8 +99,10 @@ com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
+com.android.build.api.dsl.AndroidResources.getFailOnMissingConfigEntry: boolean ()
 com.android.build.api.dsl.AndroidResources.getIgnoreAssetsPattern: java.lang.String ()
 com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)
 com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
 com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
