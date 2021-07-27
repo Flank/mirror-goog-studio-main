@@ -276,9 +276,6 @@ open class AndroidTestImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
-    override val needsMainDexListForBundle: Boolean
-        get() = false
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>,out VariantBuilder, out Variant>,

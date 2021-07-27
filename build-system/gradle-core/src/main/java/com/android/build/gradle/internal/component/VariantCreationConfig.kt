@@ -33,8 +33,6 @@ interface VariantCreationConfig: ComponentCreationConfig {
 
     val packaging: Packaging
 
-    override val needsMainDexListForBundle: Boolean
-
     /**
      * Returns the minimum SDK version for which is used for dexing this variant.
      * See [ApkCreationConfigImpl.minSdkVersionForDexing] for details.
