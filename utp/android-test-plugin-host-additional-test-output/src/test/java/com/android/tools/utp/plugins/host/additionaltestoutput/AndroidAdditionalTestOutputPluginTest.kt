@@ -108,7 +108,7 @@ class AndroidAdditionalTestOutputPluginTest {
         val deviceDir = "/onDevice/outputDir/"
 
         `when`(mockDeviceController.execute(
-            eq(listOf("shell", "ls -1 \"${deviceDir}\"")),
+            eq(listOf("shell", "ls \"${deviceDir}\"")),
             nullable(Long::class.java)
         )).thenReturn(CommandResult(0, listOf("output1.txt", "output2.txt")))
 
@@ -120,7 +120,7 @@ class AndroidAdditionalTestOutputPluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf("shell", "rm -rf \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
-            verify(mockDeviceController).execute(listOf("shell", "ls -1 \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
             verify(mockDeviceController).pull(createTestArtifact(
                 "${deviceDir}/output1.txt", "${hostDir}/output1.txt"))
             verify(mockDeviceController).pull(createTestArtifact(
@@ -138,7 +138,7 @@ class AndroidAdditionalTestOutputPluginTest {
         val deviceDir = "/onDevice/outputDir/"
 
         `when`(mockDeviceController.execute(
-            eq(listOf("shell", "ls -1 \"${deviceDir}\"")),
+            eq(listOf("shell", "ls \"${deviceDir}\"")),
             nullable(Long::class.java)
         )).thenReturn(CommandResult(0, listOf("output1.txt")))
 
@@ -154,7 +154,7 @@ class AndroidAdditionalTestOutputPluginTest {
         inOrder(mockDeviceController, mockLogger).apply {
             verify(mockDeviceController).execute(listOf("shell", "rm -rf \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
-            verify(mockDeviceController).execute(listOf("shell", "ls -1 \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
             verify(mockDeviceController).pull(createTestArtifact(
                 "${deviceDir}/output1.txt", "${hostDir}/output1.txt"))
             verify(mockLogger).log(eq(Level.WARNING), eq(exception), any())

@@ -103,7 +103,7 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     private fun copyAdditionalTestOutputsFromDeviceToHost(deviceController: DeviceController) {
         val deviceDir = config.additionalOutputDirectoryOnDevice
         val hostDir = File(config.additionalOutputDirectoryOnHost).absolutePath
-        deviceController.deviceShellAndCheckSuccess("ls -1 \"${deviceDir}\"")
+        deviceController.deviceShellAndCheckSuccess("ls \"${deviceDir}\"")
             .output
             .filter(String::isNotBlank)
             .forEach {
