@@ -1,7 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -21,14 +22,16 @@ iml_module(
     ],
 )
 
-kotlin_library_legacy(
-    name = "tools.lint-model",
+maven_library(
+    name = "tools.lint-model_bzl",
     srcs = glob([
         "libs/lint-model/src/main/java/**/*.kt",
         "libs/lint-model/src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.lint:lint-model:" + BASE_VERSION,
+    legacy_name = "tools.lint-model",
     module_name = "lint-model",
-    pom = "lint-model.pom",
+    notice = "libs/lint-model/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-model",
     resources = glob(
         include = ["libs/lint-model/src/main/java/**"],
@@ -36,23 +39,16 @@ kotlin_library_legacy(
             "libs/lint-model/src/main/java/**/*.java",
             "libs/lint-model/src/main/java/**/*.kt",
         ],
-    ) + ["libs/lint-model/NOTICE"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
-)
-
-maven_pom(
-    name = "lint-model.pom",
-    artifact = "lint-model",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 # managed by go/iml_to_build
