@@ -1,27 +1,22 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
-maven_java_library(
-    name = "signflinger",
+maven_library(
+    name = "signflinger_bzl",
     srcs = glob([
         "src/**/*.java",
     ]),
-    pom = ":pom",
+    coordinates = "com.android:signflinger:" + BUILD_VERSION,
+    legacy_name = "signflinger",
     visibility = [
         "//tools/base/build-system:__subpackages__",
         "//tools/base/signflinger/tools:__subpackages__",
     ],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system:tools.apksig",
-        "//tools/base/zipflinger",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system:tools.apksig_bzl",
+        "//tools/base/zipflinger:zipflinger_bzl",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "signflinger",
-    group = "com.android",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 java_library(
