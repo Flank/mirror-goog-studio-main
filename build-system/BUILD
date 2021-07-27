@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
@@ -28,33 +29,27 @@ iml_module(
     ],
 )
 
-kotlin_library_legacy(
-    name = "tools.manifest-merger",
+maven_library(
+    name = "tools.manifest-merger_bzl",
     srcs = glob([
         "manifest-merger/src/main/java/**/*.kt",
         "manifest-merger/src/main/java/**/*.java",
     ]),
-    pom = ":manifest-merger.pom",
+    coordinates = "com.android.tools.build:manifest-merger:" + BASE_VERSION,
+    legacy_name = "tools.manifest-merger",
+    notice = "manifest-merger/NOTICE",
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
-    resources = ["manifest-merger/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
-)
-
-maven_pom(
-    name = "manifest-merger.pom",
-    artifact = "manifest-merger",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(
