@@ -474,7 +474,16 @@ def _kotlin_library_impl(ctx):
         runtime_deps = deps,
     )]
 
-    return [java_common.merge(providers)]
+    transitive_runfiles = depset(transitive = [
+        dep[DefaultInfo].default_runfiles.files
+        for dep in ctx.attr.deps + ctx.attr.bundled_deps
+        if dep[DefaultInfo].default_runfiles
+    ])
+    runfiles = ctx.runfiles(files = ctx.files.data, transitive_files = transitive_runfiles)
+    return [
+        java_common.merge(providers),
+        DefaultInfo(files = depset([ctx.outputs.jar]), runfiles = runfiles),
+    ]
 
 _kotlin_library = rule(
     attrs = {
@@ -484,6 +493,7 @@ _kotlin_library = rule(
         "resources": attr.label_list(allow_files = True),
         "notice": attr.label(allow_single_file = True),
         "manifests": attr.label_list(allow_files = True),
+        "data": attr.label_list(allow_files = True),
         "friends": attr.label_list(
             allow_files = [".jar"],
         ),
