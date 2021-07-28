@@ -650,6 +650,8 @@ def maven_library(
     javas = [src for src in srcs if src.endswith(".java")]
     source_jars = [src for src in srcs if src.endswith(".srcjar")]
     final_javacopts = javacopts + ["--release", "8"]
+    neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink") or dep.endswith("_neverlink_bzl")]
+    bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
 
     _kotlin_library(
         name = name + ".lib",
@@ -657,7 +659,7 @@ def maven_library(
         java_srcs = javas,
         kotlin_srcs = kotlins,
         source_jars = source_jars,
-        deps = deps,
+        deps = deps + neverlink_deps,
         bundled_deps = bundled_deps,
         friends = friends,
         notice = notice,
