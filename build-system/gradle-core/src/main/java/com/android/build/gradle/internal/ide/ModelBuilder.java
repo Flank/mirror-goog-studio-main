@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.tasks.AnchorTaskNames;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
@@ -482,7 +483,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 .getArtifacts()
                                 .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
                                 .getOrNull()),
-                ExtractApksTask.Companion.getTaskName(component),
+                AnchorTaskNames.INSTANCE.getExtractApksAnchorTaskName(component),
                 toAbsolutePath(
                         component
                                 .getArtifacts()

@@ -63,8 +63,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.AnchorTaskNames
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -669,7 +669,7 @@ class ModelBuilder<
         return BundleInfoImpl(
             bundleTaskName = taskContainer.bundleTask?.name ?: error("failed to find bundle task name for ${component.name}"),
             bundleTaskOutputListingFile = artifacts.get(BUNDLE_IDE_MODEL).get().asFile,
-            apkFromBundleTaskName = ExtractApksTask.getTaskName(component),
+            apkFromBundleTaskName = AnchorTaskNames.getExtractApksAnchorTaskName(component),
             apkFromBundleTaskOutputListingFile = artifacts.get(APK_FROM_BUNDLE_IDE_MODEL).get().asFile
         )
     }

@@ -487,11 +487,13 @@ InternalArtifactType<T : FileSystemLocation>(
     // Artifacts privately shared with Android Studio.
     object APK_IDE_MODEL: InternalArtifactType<RegularFile>(FILE), Replaceable
     object BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
-    object APK_FROM_BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE), Replaceable
+    object APK_FROM_BUNDLE_IDE_MODEL : InternalArtifactType<RegularFile>(FILE)
 
-    // and the redirect file pointing to the one above.
-    object APK_IDE_REDIRECT_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
-    object BUNDLE_IDE_REDIRECT_FILE : InternalArtifactType<RegularFile>(FILE), Replaceable
+    // and the redirect file pointing to the one above, these artifacts are final and can not be
+    // replaced as their value is transferred in the IDE model.
+    object APK_IDE_REDIRECT_FILE: InternalArtifactType<RegularFile>(FILE)
+    object BUNDLE_IDE_REDIRECT_FILE : InternalArtifactType<RegularFile>(FILE)
+    object APK_FROM_BUNDLE_IDE_REDIRECT_FILE : InternalArtifactType<RegularFile>(FILE)
 
     object ASSET_PACK_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY)
 

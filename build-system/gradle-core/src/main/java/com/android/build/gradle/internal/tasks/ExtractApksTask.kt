@@ -58,7 +58,7 @@ import java.nio.file.Files
 abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {
-        const val namePrefix = "extractApksFor"
+        const val namePrefix = "extractApksFromBundleFor"
         fun getTaskName(componentImpl: ComponentImpl): String {
             return componentImpl.computeTaskName(namePrefix)
         }
