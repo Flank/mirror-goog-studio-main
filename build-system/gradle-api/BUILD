@@ -1,6 +1,6 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
 fileset(
     name = "resources",
@@ -10,33 +10,30 @@ fileset(
     },
 )
 
-kotlin_library_legacy(
-    name = "gradle-api",
+maven_library(
+    name = "gradle-api_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    bundled_deps = [
+        "//tools/base/build-system:gradle-api_neverlink",
+    ],
+    coordinates = "com.android.tools.build:gradle-api:" + BUILD_VERSION,
+    legacy_name = "gradle-api",
     lint_baseline = "lint_baseline.xml",
-    pom = ":pom",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api_neverlink",
-        "//tools/base/build-system/builder-model",  # Only present for legacy reasons.
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",  # Only present for legacy reasons.
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.ow2.asm.asm",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "gradle-api",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 kotlin_test(
