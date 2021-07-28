@@ -17,6 +17,7 @@
 package com.android;
 
 import com.android.support.AndroidxName;
+
 import java.io.File;
 
 /**
@@ -716,14 +717,28 @@ public final class SdkConstants {
 
     /* Android Class Constants */
     public static final String CLASS_ACTIVITY = "android.app.Activity";
+
+    public static final String CLASS_WATCHFACE_WSL
+            = "android.support.wearable.watchface.WatchFaceService";
+
+    public static final String CLASS_WATCHFACE_ANDROIDX = "androidx.wear.watchface.WatchFaceService";
+
+    public static final String CLASS_TILE_SERVICE = "androidx.wear.tiles.TileService";
+
     public static final String CLASS_APPLICATION = "android.app.Application";
+
     public static final String CLASS_SERVICE = "android.app.Service";
+
     public static final String CLASS_BROADCASTRECEIVER =
             "android.content.BroadcastReceiver";
+
     public static final String CLASS_CONTENTPROVIDER =
             "android.content.ContentProvider";
+
     public static final String CLASS_ATTRIBUTE_SET = "android.util.AttributeSet";
+
     public static final String CLASS_INSTRUMENTATION = "android.app.Instrumentation";
+
     public static final String CLASS_INSTRUMENTATION_RUNNER =
             "android.test.InstrumentationTestRunner";
     public static final String CLASS_BUNDLE = "android.os.Bundle";
