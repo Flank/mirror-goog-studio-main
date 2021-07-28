@@ -21,7 +21,7 @@ import org.gradle.api.Incubating
 /**
  * Shared properties between DSL objects [ProductFlavor] and [DefaultConfig]
  */
-interface BaseFlavor : VariantDimension {
+interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     // TODO(b/140406102)
     /** The name of the flavor. */
     @Incubating
@@ -448,5 +448,5 @@ interface BaseFlavor : VariantDimension {
      * ```
      */
     @Incubating
-    fun initWith(that: BaseFlavor)
+    override fun initWith(that: BaseFlavor)
 }

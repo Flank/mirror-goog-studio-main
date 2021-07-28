@@ -951,6 +951,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.core.DefaultVectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.model.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.initWith: void (com.android.build.api.dsl.BaseFlavor)
+com.android.build.gradle.internal.dsl.BaseFlavor.initWith: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BaseFlavor.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.javaCompileOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.JavaCompileOptions>)
 com.android.build.gradle.internal.dsl.BaseFlavor.maxSdkVersion: void (int)
@@ -1056,6 +1057,7 @@ com.android.build.gradle.internal.dsl.BuildType.initWith: com.android.build.grad
 com.android.build.gradle.internal.dsl.BuildType.initWith: com.android.builder.core.AbstractBuildType (com.android.builder.model.BuildType)
 com.android.build.gradle.internal.dsl.BuildType.initWith: void (com.android.build.api.dsl.BuildType)
 com.android.build.gradle.internal.dsl.BuildType.initWith: void (com.android.build.gradle.internal.dsl.InternalBuildType)
+com.android.build.gradle.internal.dsl.BuildType.initWith: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BuildType.isCrunchPngsDefault: boolean ()
 com.android.build.gradle.internal.dsl.BuildType.isDebuggable: boolean ()
@@ -1433,6 +1435,8 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setCppFlags:
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.InitWithUtilKt
+com.android.build.gradle.internal.dsl.InitWithUtilKt.initExtensions: void (org.gradle.api.plugins.ExtensionAware, org.gradle.api.plugins.ExtensionAware)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.bundle: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptions>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.dependenciesInfo: void (org.gradle.api.Action<com.android.build.api.dsl.DependenciesInfo>)

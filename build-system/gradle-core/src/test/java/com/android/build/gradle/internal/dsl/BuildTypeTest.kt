@@ -15,12 +15,10 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.plugins.AppPlugin
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
@@ -29,6 +27,7 @@ import com.android.testutils.internal.CopyOfTester
 import com.android.testutils.truth.PathSubject
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert

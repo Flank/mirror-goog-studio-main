@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-47effc955d161009a4c38e938c9367522732f2b86b61994e9adc9de28cda2589
+b917a0b77ad113c614dfa94ccc27f2dd7d481d52b9757d2ba3f954c0fc212cf5
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -118,9 +118,9 @@ com.android.build.api.dsl.ApplicationSingleVariant.publishApk: void ()
 com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.AssetPackBundleExtension
 com.android.build.api.dsl.AssetPackExtension
-com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension, com.android.build.api.dsl.HasInitWith
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
-com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension, org.gradle.api.plugins.ExtensionAware
+com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension, org.gradle.api.plugins.ExtensionAware, com.android.build.api.dsl.HasInitWith
 com.android.build.api.dsl.BuildType$DefaultImpls
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
@@ -210,7 +210,7 @@ com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void
 com.android.build.api.dsl.NdkBuild
 com.android.build.api.dsl.PackagingOptions$DefaultImpls
 com.android.build.api.dsl.PostProcessing$DefaultImpls
-com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware
+com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware, com.android.build.api.dsl.HasInitWith
 com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)

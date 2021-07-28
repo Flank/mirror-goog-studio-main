@@ -387,6 +387,8 @@ com.android.build.api.dsl.FailureRetention.getEnable: boolean ()
 com.android.build.api.dsl.FailureRetention.getMaxSnapshots: int ()
 com.android.build.api.dsl.FailureRetention.setEnable: void (boolean)
 com.android.build.api.dsl.FailureRetention.setMaxSnapshots: void (int)
+com.android.build.api.dsl.HasInitWith
+com.android.build.api.dsl.HasInitWith.initWith: void (T)
 com.android.build.api.dsl.Installation.getInstallOptions: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.Installation.getTimeOutInMs: int ()
 com.android.build.api.dsl.Installation.installOptions: void (java.lang.String)

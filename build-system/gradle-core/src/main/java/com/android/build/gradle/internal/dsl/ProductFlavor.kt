@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.BaseConfig
 import com.google.common.collect.ImmutableList
+import org.gradle.api.plugins.ExtensionAware
 import javax.inject.Inject
 import org.gradle.api.provider.Property
 
@@ -101,6 +102,9 @@ abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslS
             isDefault = that.isDefault
             signingConfig = that.signingConfig
             setMatchingFallbacks(that.matchingFallbacks)
+        }
+        if (that is ExtensionAware) {
+            initExtensions(from = that, to = this)
         }
     }
 }

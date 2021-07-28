@@ -17,17 +17,23 @@ package com.android.builder.core
 
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.internal.ClassFieldImpl
 import com.google.common.collect.ImmutableMap
-import junit.framework.TestCase
-import org.gradle.api.plugins.ExtensionContainer
+import com.google.common.truth.Truth.assertThat
+import org.junit.Test
 
-class AbstractProductFlavorTest : TestCase() {
-    private lateinit var custom: ProductFlavorImpl
+class AbstractProductFlavorTest {
 
-    override fun setUp() {
-        custom = ProductFlavorImpl("custom")
+    private val dslServices: DslServices by lazy { createDslServices() }
+
+    private fun productFlavor(name: String): ProductFlavor =
+        dslServices.newDecoratedInstance(ProductFlavor::class.java, name, dslServices)
+
+    @Test
+    fun testInitWith() {
+        val custom = productFlavor("custom")
         custom.setMinSdkVersion(DefaultApiVersion(42))
         custom.setTargetSdkVersion(DefaultApiVersion(43))
         custom.renderscriptTargetApi = 17
@@ -58,20 +64,9 @@ class AbstractProductFlavorTest : TestCase() {
         defaultSigning.storePassword("test")
         custom.setSigningConfig(defaultSigning)
         custom.isDefault = true
-    }
 
-    fun test_initWith() {
-        val flavor = ProductFlavorImpl(custom.name)
+        val flavor = productFlavor(custom.name)
         flavor.initWith(custom)
-        assertEquals(custom.toString(), flavor.toString())
-    }
-
-    private class ProductFlavorImpl(
-        name: String
-    ) : ProductFlavor(name, createDslServices()) {
-
-        override fun getExtensions(): ExtensionContainer {
-            TODO("Not yet implemented")
-        }
+        assertThat(custom.toString()).isEqualTo(flavor.toString())
     }
 }

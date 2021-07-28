@@ -33,7 +33,9 @@ import com.android.builder.model.BaseConfig
 import com.google.common.collect.Iterables
 import org.gradle.api.Action
 import org.gradle.api.Incubating
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.Property
+import org.gradle.api.reflect.TypeOf
 import org.gradle.api.tasks.Internal
 import java.io.File
 import java.io.Serializable
@@ -599,6 +601,9 @@ abstract class BuildType @Inject constructor(
             that.dslChecksEnabled = false
         }
         try {
+            if(that is ExtensionAware) {
+                initExtensions(from=that, to=this)
+            }
             return super.initWith(that) as BuildType
         } finally {
             dslChecksEnabled = true
