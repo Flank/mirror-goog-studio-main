@@ -48,8 +48,6 @@ import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
-import com.android.builder.model.v2.models.BuildMap
-import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.Versions.Version
 import com.android.builder.model.v2.models.VariantDependencies
@@ -508,46 +506,7 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
     dataObject("testFixturesArtifact", VariantDependencies::testFixturesArtifact) {
         snapshotArtifactDependencies()
     }
-}
 
-private fun ModelSnapshotter<ArtifactDependencies>.snapshotArtifactDependencies() {
-    val visited: MutableSet<String> = mutableSetOf()
-    objectList(
-        name = "compileDependencies",
-        propertyAction = ArtifactDependencies::compileDependencies,
-        nameAction =  { it.normalizeArtifactAddress(key) },
-    ) {
-        snapshotGraphItem(visited)
-    }
-
-    objectList(
-        name = "runtimeDependencies",
-        propertyAction = ArtifactDependencies::runtimeDependencies,
-        nameAction =  { it.normalizeArtifactAddress(key) },
-    ) {
-        snapshotGraphItem(visited)
-    }
-}
-
-private fun ModelSnapshotter<GraphItem>.snapshotGraphItem(visited: MutableSet<String>) {
-    val localKey = normalizeArtifactAddress(GraphItem::key)
-
-    if (visited.contains(localKey)) {
-        item("dependencies", { "*visited*" })
-    } else {
-        visited.add(localKey)
-        item("requestedCoordinates", GraphItem::requestedCoordinates)
-        objectList(
-            name = "dependencies",
-            propertyAction = GraphItem::dependencies,
-            nameAction =  { it.normalizeArtifactAddress(key) }
-        ) {
-            snapshotGraphItem(visited)
-        }
-    }
-}
-
-internal fun ModelSnapshotter<GlobalLibraryMap>.snapshotGlobalLibraryMap() {
     objectList(
         name = "libraries",
         propertyAction = { libraries.values },
@@ -605,6 +564,43 @@ internal fun ModelSnapshotter<GlobalLibraryMap>.snapshotGlobalLibraryMap() {
         item("externalAnnotations", Library::externalAnnotations)
         item("publicResources", Library::publicResources)
         item("symbolFile", Library::symbolFile)
+    }
+}
+
+private fun ModelSnapshotter<ArtifactDependencies>.snapshotArtifactDependencies() {
+    val visited: MutableSet<String> = mutableSetOf()
+    objectList(
+        name = "compileDependencies",
+        propertyAction = ArtifactDependencies::compileDependencies,
+        nameAction =  { it.normalizeArtifactAddress(key) },
+    ) {
+        snapshotGraphItem(visited)
+    }
+
+    objectList(
+        name = "runtimeDependencies",
+        propertyAction = ArtifactDependencies::runtimeDependencies,
+        nameAction =  { it.normalizeArtifactAddress(key) },
+    ) {
+        snapshotGraphItem(visited)
+    }
+}
+
+private fun ModelSnapshotter<GraphItem>.snapshotGraphItem(visited: MutableSet<String>) {
+    val localKey = normalizeArtifactAddress(GraphItem::key)
+
+    if (visited.contains(localKey)) {
+        item("dependencies", { "*visited*" })
+    } else {
+        visited.add(localKey)
+        item("requestedCoordinates", GraphItem::requestedCoordinates)
+        objectList(
+            name = "dependencies",
+            propertyAction = GraphItem::dependencies,
+            nameAction =  { it.normalizeArtifactAddress(key) }
+        ) {
+            snapshotGraphItem(visited)
+        }
     }
 }
 

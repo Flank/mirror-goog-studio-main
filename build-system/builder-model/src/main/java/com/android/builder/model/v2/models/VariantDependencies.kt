@@ -18,14 +18,13 @@ package com.android.builder.model.v2.models
 
 import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.ArtifactDependencies
+import com.android.builder.model.v2.ide.Library
 
 /**
  * The dependencies for a given variants.
  *
  * This will contain the dependencies for the variant's main artifact as well as its tests (if
  * applicable)
- *
- * @since 4.2
  */
 interface VariantDependencies: AndroidModel {
     /**
@@ -40,4 +39,12 @@ interface VariantDependencies: AndroidModel {
     val androidTestArtifact: ArtifactDependencies?
     val unitTestArtifact: ArtifactDependencies?
     val testFixturesArtifact: ArtifactDependencies?
+
+    /**
+     * The list of external libraries used by all the variants in the module.
+     *
+     * The key for the map entries is the keys found via [com.android.builder.model.v2.ide.GraphItem.key]
+     * and [Library.key]
+     */
+    val libraries: Map<String, Library>
 }

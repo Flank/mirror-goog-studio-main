@@ -586,7 +586,7 @@ class VariantFilteringTest(private val useModelV2: Boolean)
 
 
         if (useModelV2) {
-            return project.modelV2().fetchModels().container.singleAndroidProject.variants.map {
+            return project.modelV2().fetchModels().container.getProject().androidProject!!.variants.map {
                 VariantInfo(
                     it.name,
                     unitTest = it.unitTestArtifact != null,

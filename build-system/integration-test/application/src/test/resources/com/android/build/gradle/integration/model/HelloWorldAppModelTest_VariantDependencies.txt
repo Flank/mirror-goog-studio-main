@@ -19,8 +19,6 @@
             - requestedCoordinates = (null)
             - dependencies         = []
    - testFixturesArtifact = (null)
-< VariantDependencies
-> GlobalLibraryMap:
    > libraries:
       > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
          - type                = PROJECT
@@ -84,4 +82,4 @@
          - symbolFile          = (null)
       < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
    < libraries
-< GlobalLibraryMap
+< VariantDependencies

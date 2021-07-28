@@ -79,14 +79,14 @@ abstract class ReferenceModelComparator(
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareAndroidProject(
-            modelAction = { getAndroidProject(projectPath) },
+            modelAction =  { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureAndroidProjectDeltaIsEmpty(projectPath: String? = null) {
         Comparator(this, result, referenceResult).ensureAndroidProjectIsEmpty {
-            getAndroidProject(projectPath)
+            getProject(projectPath)
         }
     }
 
@@ -95,14 +95,14 @@ abstract class ReferenceModelComparator(
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareAndroidDsl(
-            modelAction = { getAndroidDsl(projectPath) },
+            modelAction = { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureAndroidDslDeltaIsEmpty(projectPath: String? = null) {
         Comparator(this, result, referenceResult).ensureAndroidDslIsEmpty {
-            getAndroidDsl(projectPath)
+            getProject(projectPath)
         }
     }
 
@@ -111,24 +111,15 @@ abstract class ReferenceModelComparator(
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareVariantDependencies(
-            modelAction = { getVariantDependencies(projectPath) },
+            modelAction = { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
 
     fun ensureVariantDependenciesDeltaIsEmpty(projectPath: String? = null) {
         Comparator(this, result, referenceResult).ensureVariantDependenciesIsEmpty {
-            getVariantDependencies(projectPath)
+            getProject(projectPath)
         }
-    }
-
-    fun compareGlobalLibrary(
-        goldenFileSuffix: String = ""
-    ) {
-        Comparator(this, result, referenceResult).compareGlobalLibraryMap(
-            modelAction = { container.globalLibraryMap!! },
-            goldenFile = goldenFileSuffix
-        )
     }
 
     companion object {

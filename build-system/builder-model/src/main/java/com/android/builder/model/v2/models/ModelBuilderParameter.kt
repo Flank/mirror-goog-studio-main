@@ -20,8 +20,6 @@ package com.android.builder.model.v2.models
  *
  * This interface is implemented and instantiated on the fly by Gradle when using
  * [org.gradle.tooling.BuildController.findModel]
- *
- * @since 4.2
  */
 interface ModelBuilderParameter {
 
