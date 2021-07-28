@@ -63,7 +63,6 @@ import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -189,13 +188,9 @@ public class VariantScopeImpl implements VariantScope {
                             configType == PublishedConfigType.JAVA_DOC_PUBLICATION;
                     if (configSpec.isClassifierRequired()) {
                         if (isSourcePublication) {
-                            classifier =
-                                    componentIdentity.getName()
-                                            + StringHelper.usLocaleCapitalize(DocsType.SOURCES);
+                            classifier = componentIdentity.getName() + "-" + DocsType.SOURCES;
                         } else if (isJavaDocPublication) {
-                            classifier =
-                                    componentIdentity.getName()
-                                            + StringHelper.usLocaleCapitalize(DocsType.JAVADOC);
+                            classifier = componentIdentity.getName() + "-" + DocsType.JAVADOC;
                         } else {
                             classifier = componentIdentity.getName();
                         }

@@ -100,7 +100,7 @@ class JavaDocPublishingTest {
         library.execute("publish")
 
         val docJar =
-            project.projectDir.resolve("$DOC_JAR_DIR/library-1.1-releaseJavadoc.jar")
+            project.projectDir.resolve("$DOC_JAR_DIR/library-1.1-release-javadoc.jar")
         assertThat(docJar).exists()
     }
 

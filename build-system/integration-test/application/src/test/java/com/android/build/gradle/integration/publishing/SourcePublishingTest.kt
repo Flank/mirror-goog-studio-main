@@ -130,7 +130,7 @@ class SourcePublishingTest {
         library.execute("publish")
 
         val sourceJar =
-            project.projectDir.resolve("$SOURCE_JAR_DIR/library-1.1-releaseSources.jar")
+            project.projectDir.resolve("$SOURCE_JAR_DIR/library-1.1-release-sources.jar")
         checkSourceJarContent(sourceJar)
     }
 
