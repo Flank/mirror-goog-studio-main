@@ -51,7 +51,7 @@ class ArtifactCollectionsInputs constructor(
     @get:Input val variantName: String,
     @get:Input val runtimeType: RuntimeType,
     @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>,
-    @get:Input val buildMapping: ImmutableMap<String, String>
+    @get:Internal val buildMapping: ImmutableMap<String, String>
 ) {
     enum class RuntimeType { FULL, PARTIAL }
 
