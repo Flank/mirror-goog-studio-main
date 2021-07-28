@@ -76,6 +76,12 @@ public class AdbInitOptions {
     public final boolean useJdwpProxyService;
 
     /**
+     * Enable ddmlib command service allowing for external processes to issue commands to ddmlib.
+     */
+    public final boolean useDdmlibCommandService;
+
+
+    /**
      * Any jdwp packets detected larger than this size will throw a {@link
      * java.nio.BufferOverflowException}
      */
@@ -93,12 +99,14 @@ public class AdbInitOptions {
             int userManagedAdbPort,
             ImmutableMap<String, String> adbEnvVars,
             boolean useJdwpService,
+            boolean useDdmlibCommandService,
             int maxJdwpPacketSize) {
         this.clientSupport = clientSupport;
         this.userManagedAdbMode = userManagedAdbMode;
         this.userManagedAdbPort = userManagedAdbPort;
         this.adbEnvVars = adbEnvVars;
         this.useJdwpProxyService = useJdwpService;
+        this.useDdmlibCommandService = useDdmlibCommandService;
         this.maxJdwpPacketSize = maxJdwpPacketSize;
     }
 
@@ -117,6 +125,7 @@ public class AdbInitOptions {
         boolean userManagedAdbMode = false;
         // Default to DDMLIB_JDWP_PROXY_ENABLED environment variable.
         boolean useJdwpProxyService = DdmPreferences.isJdwpProxyEnabled();
+        boolean useDdmlibCommandService = DdmPreferences.isDdmlibCommandServiceEnabled();
         int jdwpMaxPacketSize = DdmPreferences.getJdwpMaxPacketSize();
         int userManagedAdbPort = 0;
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
@@ -130,6 +139,12 @@ public class AdbInitOptions {
         /** See {@link AdbInitOptions#useJdwpProxyService}. */
         public Builder useJdwpProxyService(boolean enabled) {
             useJdwpProxyService = enabled;
+            return this;
+        }
+
+        /** See {@link AdbInitOptions#useDdmlibCommandService}. */
+        public Builder useDdmlibCommandService(boolean enabled) {
+            useDdmlibCommandService = enabled;
             return this;
         }
 
@@ -175,6 +190,7 @@ public class AdbInitOptions {
                     userManagedAdbPort,
                     envVarBuilder.build(),
                     useJdwpProxyService,
+                    useDdmlibCommandService,
                     jdwpMaxPacketSize);
         }
 

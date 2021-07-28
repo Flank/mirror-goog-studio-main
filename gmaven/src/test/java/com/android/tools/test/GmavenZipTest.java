@@ -102,6 +102,7 @@ public class GmavenZipTest {
                 "com/android/ddmlib/testrunner/",
                 "com/android/ddmlib/utils/",
                 "com/android/ddmlib/internal/",
+                "com/android/ddmlib/internal/commands/",
                 "com/android/ddmlib/internal/jdwp/",
                 "com/android/ddmlib/internal/jdwp/chunkhandler/",
                 "com/android/ddmlib/internal/jdwp/interceptor/",

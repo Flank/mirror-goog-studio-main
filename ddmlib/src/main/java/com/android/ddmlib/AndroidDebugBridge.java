@@ -272,6 +272,7 @@ public class AndroidDebugBridge {
         sUserManagedAdbMode = options.userManagedAdbMode;
         sLastKnownGoodAddress = null;
         DdmPreferences.enableJdwpProxyService(options.useJdwpProxyService);
+        DdmPreferences.enableDdmlibCommandService(options.useDdmlibCommandService);
         DdmPreferences.setsJdwpMaxPacketSize(options.maxJdwpPacketSize);
 
         // Determine port and instantiate socket address.

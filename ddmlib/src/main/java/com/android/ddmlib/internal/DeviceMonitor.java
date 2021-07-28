@@ -59,6 +59,7 @@ public final class DeviceMonitor implements ClientTracker {
     @Nullable
     private DeviceClientMonitorTask myDeviceClientMonitorTask;
     private JdwpProxyServer mJdwpProxy;
+    private CommandService mDdmlibCommandService;
     private final Object mDevicesGuard = new Object();
 
     @GuardedBy("mDevicesGuard")
@@ -82,6 +83,9 @@ public final class DeviceMonitor implements ClientTracker {
                         new JdwpProxyServer(
                                 DdmPreferences.getJdwpProxyPort(), this::jdwpProxyChangedState);
                 mJdwpProxy.start();
+            }
+            if (DdmPreferences.isDdmlibCommandServiceEnabled()) {
+                mDdmlibCommandService = new CommandService(DdmPreferences.getDdmCommandPort());
             }
 
             // To terminate thread call stop on each respective task.
