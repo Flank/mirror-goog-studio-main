@@ -439,6 +439,7 @@ def _kotlin_library_impl(ctx):
             javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
             java_toolchain = java_toolchain,
             host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase),
+            plugins = [plugin[JavaInfo] for plugin in ctx.attr.plugins],
         )
 
         jars += [java_jar]
@@ -511,6 +512,9 @@ _kotlin_library = rule(
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
         "kotlin_use_ir": attr.bool(),
+        "plugins": attr.label_list(
+            providers = [JavaInfo],
+        ),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_bootclasspath": attr.label(
@@ -624,6 +628,7 @@ def maven_library(
         lint_timeout = None,
         module_name = None,
         legacy_name = "",
+        plugins = [],
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -669,6 +674,7 @@ def maven_library(
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
+        plugins = plugins,
         **kwargs
     )
 
