@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -46,39 +46,34 @@ iml_module(
     ],
 )
 
-kotlin_library_legacy(
-    name = "tools.testutils",
+maven_library(
+    name = "tools.testutils_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools:testutils:" + BASE_VERSION,
     data = [
         # For TestUtils.getKotlinVersionForTests.
         "//tools/buildSrc/base:dependencies.properties",
     ],
+    legacy_name = "tools.testutils",
     lint_baseline = "lint_baseline.xml",
-    pom = ":pom",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.easymock_easymock",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.smali_dexlib2",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.easymock.easymock",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.smali.dexlib2",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "testutils",
-    group = "com.android.tools",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

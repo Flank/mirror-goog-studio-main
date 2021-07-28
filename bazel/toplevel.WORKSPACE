@@ -113,7 +113,9 @@ local_maven_repository(
     "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.6",
     "com.google.guava:guava:30.1-jre",
+    "com.google.jimfs:jimfs:1.1",
     "com.google.protobuf:protobuf-java:3.10.0",
+    "com.google.truth:truth:0.44",
     "com.squareup:javawriter:2.5.0",
     "it.unimi.dsi:fastutil:8.4.0",
     "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
@@ -129,6 +131,7 @@ local_maven_repository(
     "org.bouncycastle:bcpkix-jdk15on:1.56",
     "org.bouncycastle:bcprov-jdk15on:1.56",
     "org.codehaus.groovy:groovy-all:pom:3.0.7",
+    "org.easymock:easymock:3.3",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
     "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
     "org.jetbrains.kotlin:kotlin-reflect:1.4.32",
@@ -141,6 +144,7 @@ local_maven_repository(
     "org.ow2.asm:asm-tree:9.1",
     "org.ow2.asm:asm-util:9.1",
     "org.ow2.asm:asm:9.1",
+    "org.smali:dexlib2:2.2.4",
     "xerces:xercesImpl:2.12.0",
   ]
 )
