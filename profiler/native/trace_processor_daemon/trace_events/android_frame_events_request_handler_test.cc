@@ -35,7 +35,8 @@ typedef ::perfetto::trace_processor::TraceProcessor TraceProcessor;
 typedef ::perfetto::trace_processor::Config Config;
 
 const std::string TESTDATA_PATH(
-    "tools/base/profiler/native/trace_processor_daemon/testdata/frame.trace");
+    "tools/base/profiler/native/trace_processor_daemon/testdata/"
+    "frame-lifecycle.trace");
 
 std::unique_ptr<TraceProcessor> LoadTrace(std::string trace_path) {
   Config config;
