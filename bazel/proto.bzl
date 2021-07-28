@@ -300,7 +300,7 @@ def maven_proto_library(
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
         protoc_grpc_version = None,
-        proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
+        proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
         legacy_name = "",
         **kwargs):
     # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.
@@ -334,7 +334,7 @@ def maven_proto_library(
         maven_library(
             name = name,
             srcs = outs,
-            bundled_deps = java_deps,
+            deps = java_deps,
             coordinates = coordinates,
             legacy_name = legacy_name,
             visibility = visibility,
