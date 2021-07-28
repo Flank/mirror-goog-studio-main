@@ -196,15 +196,22 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.17.0",
     # Transitive Maven dependencies of above artifacts that cannot be identified
     # automatically because they are dependencies of artifacts that use the new
-    # Maven rules via the import_maven_library bridge:
+    # Maven rules:
+    "//prebuilts/tools/common/m2:com.googlecode.json-simple.json-simple.1.1",
+    "//prebuilts/tools/common/m2:it.unimi.dsi.fastutil.8.4.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
     "//prebuilts/tools/common/m2:net.sf.kxml.kxml2.2.3.0",
     "//prebuilts/tools/common/m2:org.jetbrains.intellij.deps.trove4j.1.0.20181211",
+    "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk7.1.4.32",
+    "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk8.1.4.32",
     "//prebuilts/tools/common/m2:xerces.xercesImpl.2.12.0",
     "//prebuilts/tools/common/m2:xml-apis.xml-apis.1.4.01",
+    "//tools/analytics-library/tracker:tools.analytics-tracker",
     "//tools/base/build-system/aapt2-proto:aapt2-proto",
+    "//tools/base/build-system:tools.apksig",
     "//tools/base/device_validator:tools.dvlib",
+    "//tools/base/signflinger:signflinger",
 ]
 
 maven_repo(
