@@ -400,7 +400,7 @@ def _kotlin_library_impl(ctx):
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs or source_jars else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
-    deps = [dep[JavaInfo] for dep in ctx.attr.deps] + [dep[JavaInfo] for dep in ctx.attr.bundled_deps]
+    deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.bundled_deps + ctx.attr.exports]
 
     # Kotlin
     jars = []
@@ -467,13 +467,13 @@ def _kotlin_library_impl(ctx):
         java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
     )
 
-    providers = []
     providers = [JavaInfo(
         output_jar = ctx.outputs.jar,
         compile_jar = ijar,
         deps = deps,
         runtime_deps = deps,
     )]
+    providers += [dep[JavaInfo] for dep in ctx.attr.exports]
 
     transitive_runfiles = depset(transitive = [
         dep[DefaultInfo].default_runfiles.files
@@ -500,6 +500,7 @@ _kotlin_library = rule(
         ),
         "jar": attr.output(mandatory = True),
         "deps": attr.label_list(providers = [JavaInfo]),
+        "exports": attr.label_list(providers = [JavaInfo]),
         "bundled_deps": attr.label_list(
             providers = [JavaInfo],
         ),
@@ -548,7 +549,8 @@ _kotlin_library = rule(
 )
 
 def _maven_library_impl(ctx):
-    infos = [dep[MavenInfo] for dep in ctx.attr.deps]
+    # TODO support different scopes
+    infos = [dep[MavenInfo] for dep in ctx.attr.deps + ctx.attr.exports]
     pom_deps = [info.pom for info in infos]
 
     coordinates = split_coordinates(ctx.attr.coordinates)
@@ -585,6 +587,7 @@ _maven_library = rule(
         "library": attr.label(providers = [JavaInfo], allow_single_file = True),
         "coordinates": attr.string(),
         "deps": attr.label_list(providers = [MavenInfo]),
+        "exports": attr.label_list(providers = [MavenInfo]),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
@@ -616,6 +619,7 @@ def maven_library(
         resources = [],
         resource_strip_prefix = None,
         deps = [],
+        exports = [],
         runtime_deps = [],
         bundled_deps = [],
         friends = [],
@@ -638,6 +642,7 @@ def maven_library(
         resources: Resources to add to the jar.
         resources_strip_prefix: The prefix to strip from the resources path.
         deps: The dependencies of this library.
+        exports: The exported dependencies of this library.
         runtime_deps: The runtime dependencies.
         bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
         friends: The list of kotlin-friends.
@@ -649,7 +654,7 @@ def maven_library(
     """
     if legacy_name:
         # Create legacy rules and make them point to the new rules.
-        import_maven_library(legacy_name, name, deps = deps, notice = notice)
+        import_maven_library(legacy_name, name, notice = notice)
 
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
@@ -665,6 +670,7 @@ def maven_library(
         kotlin_srcs = kotlins,
         source_jars = source_jars,
         deps = deps + neverlink_deps,
+        exports = exports,
         bundled_deps = bundled_deps,
         friends = friends,
         notice = notice,
@@ -682,6 +688,7 @@ def maven_library(
         name = name,
         notice = notice,
         deps = deps,
+        exports = exports,
         coordinates = coordinates,
         library = ":" + name + ".lib",
         **kwargs

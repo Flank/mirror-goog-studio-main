@@ -295,6 +295,7 @@ def maven_proto_library(
         srcs = None,
         proto_deps = [],
         java_deps = [],
+        java_exports = [],
         coordinates = "",
         visibility = None,
         grpc_support = False,
@@ -335,6 +336,7 @@ def maven_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
+            exports = java_exports,
             coordinates = coordinates,
             legacy_name = legacy_name,
             visibility = visibility,
@@ -345,6 +347,7 @@ def maven_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
+            exports = java_exports,
             javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
             visibility = visibility,
             **kwargs

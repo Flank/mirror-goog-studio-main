@@ -645,10 +645,10 @@ def _maven_import_impl(ctx):
         infos.append(JavaInfo(
             output_jar = jar,
             compile_jar = ijar,
-            deps = [dep[JavaInfo] for dep in ctx.attr.deps],
+            deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.exports],
         ))
-    runfiles = None
 
+    infos += [dep[JavaInfo] for dep in ctx.attr.exports]
     mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
     files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
@@ -661,7 +661,7 @@ def _maven_import_impl(ctx):
 
     return struct(
         providers = [
-            DefaultInfo(files = depset(ctx.files.jars), runfiles = runfiles),
+            DefaultInfo(files = depset(ctx.files.jars)),
             MavenInfo(
                 pom = ctx.file.pom,
                 files = ctx.files.files,
@@ -680,7 +680,8 @@ _maven_import = rule(
     attrs = {
         "jars": attr.label_list(allow_files = True),
         "files": attr.label_list(allow_files = True),
-        "deps": attr.label_list(),
+        "deps": attr.label_list(providers = [MavenInfo]),
+        "exports": attr.label_list(providers = [MavenInfo]),
         "repo_path": attr.string(),
         "repo_root_path": attr.string(),
         "parent": attr.label(),
@@ -783,10 +784,10 @@ def split_coordinates(coordinates):
 # created by the new rules, so we do not need rule
 # duplication. Once all artifacts have been
 # migrated we can delete the old rules and this bridge.
-def import_maven_library(maven_java_library_rule, maven_library_rule, deps = [], notice = None):
+def import_maven_library(maven_java_library_rule, maven_library_rule, notice = None):
     maven_java_import(
         name = maven_java_library_rule,
-        deps = deps,
+        exports = [":" + maven_library_rule],
         jars = [":" + maven_library_rule + ".jar"],
         notice = notice,
         pom = ":" + maven_java_library_rule + ".pom",
