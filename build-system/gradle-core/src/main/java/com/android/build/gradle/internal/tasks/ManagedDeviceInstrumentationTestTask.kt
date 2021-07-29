@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.testing.utp.resolveDependencies
 import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.BuilderConstants.FD_FLAVORS
 import com.android.builder.core.BuilderConstants.FD_REPORTS
@@ -99,6 +100,10 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
         @get: Input
         abstract val buildToolsRevision: Property<Revision>
+
+        @get: Input
+        @get: Optional
+        abstract val testShardsSize: Property<Int>
 
         @get: Internal
         abstract val sdkBuildService: Property<SdkComponentsBuildService>
@@ -338,6 +343,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                     getBuildService(
                             creationConfig.services.buildServiceRegistry,
                             SdkComponentsBuildService::class.java))
+            task.testRunnerFactory.testShardsSize.setDisallowChanges(
+                projectOptions.get(IntegerOption.MANAGED_DEVICE_SHARD_POOL_SIZE)
+            )
 
             val executionEnum = extension.testOptions.getExecutionEnum()
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)

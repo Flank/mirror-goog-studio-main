@@ -78,6 +78,11 @@ enum class IntegerOption(
      */
     TEST_FAILURE_RETENTION("android.experimental.testOptions.emulatorSnapshots.maxSnapshotsForTestFailures", ApiStage.Experimental),
 
+    /**
+     * The number of shards ran on Managed Devices during testing.
+     */
+    MANAGED_DEVICE_SHARD_POOL_SIZE("android.experimental.androidTesting.numManagedDeviceShards", ApiStage.Experimental),
+
     /* ------------
      * REMOVED APIS
      */
