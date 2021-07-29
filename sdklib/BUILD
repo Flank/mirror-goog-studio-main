@@ -1,6 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 load("//tools/base/repository:xjc.bzl", "xsd_to_java")
@@ -88,13 +87,6 @@ maven_library(
     ],
 )
 
-maven_pom(
-    name = "tools_pom",
-    artifact = "sdklib",
-    group = "com.android.tools",
-    source = "//tools/buildSrc/base:build_version",
-)
-
 kotlin_test(
     name = "tools.tests",
     # TODO: Why are the xml files not under resources?
@@ -135,10 +127,9 @@ kotlin_test(
     ],
 )
 
-maven_java_library(
+java_library(
     name = "avdmanager_lib",
     srcs = glob(["src/main/java/**/tool/AvdManagerCli.java"]),
-    pom = ":tools_pom",
     deps = [
         ":tools.sdklib",
         "//tools/base/annotations",
@@ -149,10 +140,9 @@ maven_java_library(
     ],
 )
 
-maven_java_library(
+java_library(
     name = "sdkmanager_lib",
     srcs = glob(["src/main/java/**/tool/sdkmanager/*.java"]),
-    pom = ":tools_pom",
     deps = [
         ":tools.sdklib",
         "//tools/base/annotations",
