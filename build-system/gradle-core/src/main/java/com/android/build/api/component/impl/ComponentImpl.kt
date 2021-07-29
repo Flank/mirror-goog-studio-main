@@ -774,6 +774,7 @@ abstract class ComponentImpl(
     companion object {
         // String to
         final val ENABLE_LEGACY_API: String =
-            "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'"
+            "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'\n" +
+                    "Using this deprecated API may still fail, depending on usage of the new Variant API, like computing applicationId via a task output."
     }
 }
