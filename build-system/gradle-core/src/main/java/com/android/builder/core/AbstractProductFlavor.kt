@@ -40,7 +40,7 @@ abstract class AbstractProductFlavor(
 
     override fun getName(): String = name
 
-    override var dimension: String? = null
+    abstract override var dimension: String?
 
     // For kotlin script source compatibility.
     @Deprecated("Replaced with the dimension property", replaceWith = ReplaceWith("dimension(dimension)"))
@@ -53,7 +53,7 @@ abstract class AbstractProductFlavor(
         this.dimension = dimension
     }
 
-    override var applicationId: String? = null
+    abstract override var applicationId: String?
 
     open fun setApplicationId(applicationId: String?): ProductFlavor {
         this.applicationId = applicationId
@@ -68,7 +68,7 @@ abstract class AbstractProductFlavor(
      * Implemented as a separate property to make versionCode read-only in MergedFlavor,
      * but still allow [mergeWithHigherPriorityFlavor] to set it.
      */
-    private var _versionCode: Int? = null
+    protected abstract var _versionCode: Int?
 
     override var versionCode: Int?
         get() = _versionCode
@@ -87,7 +87,7 @@ abstract class AbstractProductFlavor(
      * Implemented as a separate property to make versionName read-only in MergedFlavor,
      * but still allow [mergeWithHigherPriorityFlavor] to set it.
      */
-    private var _versionName: String? = null
+    protected abstract var _versionName: String?
 
     override var versionName: String?
         get() = _versionName
@@ -128,7 +128,7 @@ abstract class AbstractProductFlavor(
 
     override var renderscriptTargetApi: Int? = null
 
-    override var renderscriptSupportModeEnabled: Boolean? = null
+    abstract override var renderscriptSupportModeEnabled: Boolean?
 
     fun setRenderscriptSupportModeEnabled(renderscriptSupportMode: Boolean?): ProductFlavor {
         renderscriptSupportModeBlasEnabled = renderscriptSupportMode
@@ -139,7 +139,7 @@ abstract class AbstractProductFlavor(
         this.renderscriptSupportModeEnabled = renderscriptSupportModeEnabled
     }
 
-    override var renderscriptSupportModeBlasEnabled: Boolean? = null
+    abstract override var renderscriptSupportModeBlasEnabled: Boolean?
 
     fun setRenderscriptSupportModeBlasEnabled(renderscriptSupportModeBlas: Boolean?): ProductFlavor {
         this.renderscriptSupportModeBlasEnabled = renderscriptSupportModeBlas
@@ -150,7 +150,7 @@ abstract class AbstractProductFlavor(
         this.renderscriptSupportModeBlasEnabled = renderscriptSupportModeBlas
     }
 
-    override var renderscriptNdkModeEnabled: Boolean? = null
+    abstract override var renderscriptNdkModeEnabled: Boolean?
 
     fun setRenderscriptNdkModeEnabled(renderscriptNdkMode: Boolean?): ProductFlavor {
         this.renderscriptNdkModeEnabled = renderscriptNdkMode
@@ -161,7 +161,7 @@ abstract class AbstractProductFlavor(
         this.renderscriptNdkModeEnabled = renderscriptNdkModeEnabled
     }
 
-    override var testApplicationId: String? = null
+    abstract override var testApplicationId: String?
 
     fun setTestApplicationId(applicationId: String?): ProductFlavor {
         testApplicationId = applicationId
@@ -172,7 +172,7 @@ abstract class AbstractProductFlavor(
         testApplicationId = applicationId
     }
 
-    override var testInstrumentationRunner: String? = null
+    abstract override var testInstrumentationRunner: String?
 
     fun setTestInstrumentationRunner(testInstrumentationRunner: String?): ProductFlavor {
         this.testInstrumentationRunner = testInstrumentationRunner
@@ -193,14 +193,14 @@ abstract class AbstractProductFlavor(
         return this
     }
 
-    override var testHandleProfiling: Boolean? = null
+    abstract override var testHandleProfiling: Boolean?
 
     fun setTestHandleProfiling(handleProfiling: Boolean): ProductFlavor {
         testHandleProfiling = handleProfiling
         return this
     }
 
-    override var testFunctionalTest: Boolean? = null
+    abstract override var testFunctionalTest: Boolean?
 
     fun setTestFunctionalTest(functionalTest: Boolean): ProductFlavor {
         testFunctionalTest = functionalTest
@@ -219,9 +219,9 @@ abstract class AbstractProductFlavor(
      */
     abstract override val vectorDrawables: DefaultVectorDrawablesOptions
 
-    override var wearAppUnbundled: Boolean? = null
+    abstract override var wearAppUnbundled: Boolean?
 
-    override val resourceConfigurations: MutableSet<String> = Sets.newHashSet()
+    abstract override val resourceConfigurations: MutableSet<String>
 
     fun setResourceConfigurations(newContents: Iterable<String>) {
         val newArray = Iterables.toArray(newContents, String::class.java)

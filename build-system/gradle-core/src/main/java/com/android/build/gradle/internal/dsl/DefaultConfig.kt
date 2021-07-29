@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 /** DSL object for the defaultConfig object.  */
 // Exposed in the DSL.
-open class DefaultConfig @Inject constructor(name: String, dslServices: DslServices) :
+abstract class DefaultConfig @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
     ApplicationDefaultConfig,
     DynamicFeatureDefaultConfig,

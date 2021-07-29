@@ -36,17 +36,17 @@ fun AndroidLocationsProvider.getDefaultDebugKeystoreLocation(): File = try {
 
 @Throws(IOException::class)
 fun createDefaultDebugStore(defaultDebugKeystoreLocation: File, logger: Logger) {
-    val signingConfig = DefaultSigningConfig.debugSigningConfig(defaultDebugKeystoreLocation)
+    val signingConfig = DefaultSigningConfig.DebugSigningConfig(defaultDebugKeystoreLocation)
     logger.info(
             "Creating default debug keystore at {}",
             defaultDebugKeystoreLocation.absolutePath)
     try {
         if (!KeystoreHelper.createDebugStore(
                 signingConfig.storeType,
-                signingConfig.storeFile!!,
-                signingConfig.storePassword!!,
-                signingConfig.keyPassword!!,
-                signingConfig.keyAlias!!,
+                signingConfig.storeFile,
+                signingConfig.storePassword,
+                signingConfig.keyPassword,
+                signingConfig.keyAlias,
                 LoggerWrapper(logger))) {
             throw IOException("Unable to create missing debug keystore.")
         }

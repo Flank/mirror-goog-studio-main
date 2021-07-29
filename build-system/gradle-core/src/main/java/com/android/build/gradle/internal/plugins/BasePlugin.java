@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension;
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension;
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl;
+import com.android.build.gradle.internal.dsl.Lockable;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
@@ -723,6 +724,7 @@ public abstract class BasePlugin<
                 (AndroidT) extension
         );
 
+        variantInputModel.lock();
         extension.disableWrite();
 
         GradleBuildProject.Builder projectBuilder =

@@ -95,5 +95,4 @@ interface InternalCommonExtension<
     fun testCoverage(action: Action<TestCoverage>)
     fun testOptions(action: Action<TestOptionsImpl>)
     fun setFlavorDimensions(flavorDimensions: List<String>)
-
 }

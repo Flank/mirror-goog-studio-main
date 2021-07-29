@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -86,6 +87,11 @@ public class CopyOfTester {
                     Method method = invocation.getMethod();
                     if (GETTER_NAME.matcher(method.getName()).matches()) {
                         gettersCalled.add(method.getName());
+                    }
+                    // Support abstract methods on the given class as implemented by the AGP decorator
+                    if (Modifier.isAbstract(method.getModifiers())) {
+                        method.setAccessible(true);
+                        return method.invoke(object, invocation.getArguments());
                     }
                     return invocation.callRealMethod();
                 };

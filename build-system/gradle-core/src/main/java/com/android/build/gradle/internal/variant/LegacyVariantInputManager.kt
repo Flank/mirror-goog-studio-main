@@ -71,7 +71,7 @@ class LegacyVariantInputManager(
             )
         )
 
-    override val defaultConfig: DefaultConfig = dslServices.newInstance(
+    override val defaultConfig: DefaultConfig = dslServices.newDecoratedInstance(
         DefaultConfig::class.java,
         BuilderConstants.MAIN,
         dslServices

@@ -37,10 +37,9 @@ public class SigningConfigFactory implements NamedDomainObjectFactory<SigningCon
     @Override
     @NonNull
     public SigningConfig create(@NonNull String name) {
-        SigningConfig signingConfig = dslServices.newInstance(SigningConfig.class, name);
+        SigningConfig signingConfig = dslServices.newDecoratedInstance(SigningConfig.class, name, dslServices);
         if (BuilderConstants.DEBUG.equals(name)) {
-            signingConfig.initWith(
-                    DefaultSigningConfig.debugSigningConfig(defaultDebugKeystoreLocation));
+            new DefaultSigningConfig.DebugSigningConfig(defaultDebugKeystoreLocation).copyToSigningConfig(signingConfig);
         }
         return signingConfig;
     }

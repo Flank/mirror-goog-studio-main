@@ -60,7 +60,10 @@ class AbstractProductFlavorTest {
         custom.setApplicationIdSuffix("custom")
         custom.vectorDrawables.useSupportLibrary = true
 
-        val defaultSigning = SigningConfig("defaultConfig")
+        val defaultSigning = createDslServices().let { services ->
+            services.newDecoratedInstance(SigningConfig::class.java, "defaultConfig", services)
+        }
+
         defaultSigning.storePassword("test")
         custom.setSigningConfig(defaultSigning)
         custom.isDefault = true

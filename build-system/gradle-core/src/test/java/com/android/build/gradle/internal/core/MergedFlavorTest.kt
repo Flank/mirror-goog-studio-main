@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.gradle.internal.dsl.BaseFlavor
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
@@ -26,63 +28,61 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
-import org.junit.Before
 import org.junit.Test
 
 @Suppress("DEPRECATION")
 class MergedFlavorTest {
 
-    private lateinit var defaultFlavor: AbstractProductFlavor
-    private lateinit var defaultFlavor2: AbstractProductFlavor
-    private lateinit var custom: AbstractProductFlavor
-    private lateinit var custom2: AbstractProductFlavor
+    private fun productFlavor(name: String): ProductFlavor =
+        dslServices.newDecoratedInstance(ProductFlavor::class.java, name, dslServices)
+
+    private val defaultFlavor: AbstractProductFlavor by lazy { productFlavor("default") }
+    private val custom: AbstractProductFlavor by lazy {
+        productFlavor("custom").also { custom ->
+            custom.minSdkVersion = DefaultApiVersion(42)
+            custom.targetSdkVersion = DefaultApiVersion(43)
+            custom.renderscriptTargetApi = 17
+            custom.versionCode = 44
+            custom.versionName = "42.0"
+            custom.applicationId = "com.forty.two"
+            custom.testApplicationId = "com.forty.two.test"
+            custom.testInstrumentationRunner = "com.forty.two.test.Runner"
+            custom.setTestHandleProfiling(true)
+            custom.setTestFunctionalTest(true)
+            custom.addResourceConfiguration("hdpi")
+            custom.addManifestPlaceholders(
+                ImmutableMap.of<String, Any>("one", "oneValue", "two", "twoValue")
+            )
+            custom.addResValue(ClassFieldImpl("foo", "one", "oneValue"))
+            custom.addResValue(ClassFieldImpl("foo", "two", "twoValue"))
+            custom.addBuildConfigField(ClassFieldImpl("foo", "one", "oneValue"))
+            custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
+            custom.versionNameSuffix = "custom"
+            custom.applicationIdSuffix = "custom"
+        }
+    }
+    private val custom2: AbstractProductFlavor by lazy {
+        productFlavor("custom2").also { custom2 ->
+            custom2.addResourceConfigurations("ldpi", "hdpi")
+            custom2.addManifestPlaceholders(
+                ImmutableMap.of<String, Any>("two", "twoValueBis", "three", "threeValue"))
+            custom2.addResValue(ClassFieldImpl("foo", "two", "twoValueBis"))
+            custom2.addResValue(ClassFieldImpl("foo", "three", "threeValue"))
+            custom2.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValueBis"))
+            custom2.addBuildConfigField(ClassFieldImpl("foo", "three", "threeValue"))
+            custom2.applicationIdSuffix = "custom2"
+            custom2.versionNameSuffix = "custom2"
+            custom2.applicationId = "com.custom2.app"
+        }
+    }
     private lateinit var dslServices: DslServices
 
-    @Before
-    fun setUp() {
-        defaultFlavor = ProductFlavorImpl("default")
-        defaultFlavor2 = ProductFlavorImpl("default2")
-
-        custom = ProductFlavorImpl("custom")
-        custom.minSdkVersion = DefaultApiVersion(42)
-        custom.targetSdkVersion = DefaultApiVersion(43)
-        custom.renderscriptTargetApi = 17
-        custom.versionCode = 44
-        custom.versionName = "42.0"
-        custom.applicationId = "com.forty.two"
-        custom.testApplicationId = "com.forty.two.test"
-        custom.testInstrumentationRunner = "com.forty.two.test.Runner"
-        custom.setTestHandleProfiling(true)
-        custom.setTestFunctionalTest(true)
-        custom.addResourceConfiguration("hdpi")
-        custom.addManifestPlaceholders(
-                ImmutableMap.of<String, Any>("one", "oneValue", "two", "twoValue"))
-        custom.addResValue(ClassFieldImpl("foo", "one", "oneValue"))
-        custom.addResValue(ClassFieldImpl("foo", "two", "twoValue"))
-        custom.addBuildConfigField(ClassFieldImpl("foo", "one", "oneValue"))
-        custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
-        custom.versionNameSuffix = "custom"
-        custom.applicationIdSuffix = "custom"
-
-        custom2 = ProductFlavorImpl("custom2")
-        custom2.addResourceConfigurations("ldpi", "hdpi")
-        custom2.addManifestPlaceholders(
-                ImmutableMap.of<String, Any>("two", "twoValueBis", "three", "threeValue"))
-        custom2.addResValue(ClassFieldImpl("foo", "two", "twoValueBis"))
-        custom2.addResValue(ClassFieldImpl("foo", "three", "threeValue"))
-        custom2.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValueBis"))
-        custom2.addBuildConfigField(ClassFieldImpl("foo", "three", "threeValue"))
-        custom2.applicationIdSuffix = "custom2"
-        custom2.versionNameSuffix = "custom2"
-        custom2.applicationId = "com.custom2.app"
-    }
 
     private fun initDslServices(enableLegacyApi: Boolean, throwOnError: Boolean = !enableLegacyApi) {
         val properties =
@@ -109,10 +109,9 @@ class MergedFlavorTest {
         val flavor = MergedFlavor.clone(custom, FakeGradleProperty("com.forty.two"), dslServices)
         assertThat(flavor.toString().substringAfter("{"))
                 .isEqualTo(custom.toString().substringAfter("{"))
-
         CopyOfTester.assertAllGettersCalled(
-            ProductFlavorImpl::class.java,
-            custom as ProductFlavorImpl,
+            MergedFlavor::class.java,
+            flavor,
             listOf("getApplicationId")
         ) { MergedFlavor.clone(it, FakeGradleProperty("com.forty.two"), dslServices) }
     }
@@ -157,6 +156,7 @@ class MergedFlavorTest {
     @Test
     fun testMergeDefaultOnDefault() {
         initDslServices(enableLegacyApi = false, throwOnError = false)
+        val defaultFlavor2 = productFlavor("default2")
 
         val flavor =
                 MergedFlavor
@@ -223,7 +223,7 @@ class MergedFlavorTest {
     fun testMergeMultiple() {
         initDslServices(true)
 
-        val custom3 = ProductFlavorImpl("custom3")
+        val custom3 = productFlavor("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
         custom3.applicationIdSuffix = "custom3"
         custom3.versionNameSuffix = "custom3"
@@ -244,7 +244,7 @@ class MergedFlavorTest {
     fun testSecondDimensionOverwritesDefault() {
         initDslServices(true)
 
-        val custom3 = ProductFlavorImpl("custom3")
+        val custom3 = productFlavor("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
 
         val flavor =
@@ -301,9 +301,5 @@ class MergedFlavorTest {
             """.trimMargin())
         }
     }
-}
 
-private class ProductFlavorImpl(
-    name: String,
-    override val vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
-) : AbstractProductFlavor(name)
+}

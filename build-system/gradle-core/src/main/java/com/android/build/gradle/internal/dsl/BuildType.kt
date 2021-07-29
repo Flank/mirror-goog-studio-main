@@ -23,6 +23,7 @@ import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.PostProcessing
 import com.android.build.api.dsl.Shaders
 import com.android.build.api.dsl.TestBuildType
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
@@ -42,7 +43,7 @@ import java.io.Serializable
 import javax.inject.Inject
 
 /** DSL object to configure build types.  */
-abstract class BuildType @Inject constructor(
+abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") constructor(
     private val name: String,
     private val dslServices: DslServices
 ) :
@@ -54,6 +55,11 @@ abstract class BuildType @Inject constructor(
     TestBuildType,
     InternalBuildType {
 
+    fun lazyInit() {
+        renderscriptOptimLevel = 3
+        isEmbedMicroApp = true
+    }
+
     /**
      * Name of this build type.
      */
@@ -61,22 +67,27 @@ abstract class BuildType @Inject constructor(
         return name
     }
 
-    override var isDebuggable: Boolean = false
+    abstract var _isDebuggable: Boolean
+
+    override var isDebuggable: Boolean
         get() = // Accessing coverage data requires a debuggable package.
-            field || isTestCoverageEnabled
+            _isDebuggable || isTestCoverageEnabled
+        set(value) { _isDebuggable = value }
 
-    override var isTestCoverageEnabled: Boolean = false
+    abstract override var isTestCoverageEnabled: Boolean
 
-    override var isPseudoLocalesEnabled: Boolean = false
+    abstract override var isPseudoLocalesEnabled: Boolean
 
-    override var isJniDebuggable: Boolean = false
+    abstract override var isJniDebuggable: Boolean
 
-    override var isRenderscriptDebuggable: Boolean = false
+    abstract override var isRenderscriptDebuggable: Boolean
 
-    override var renderscriptOptimLevel = 3
+    abstract override var renderscriptOptimLevel: Int
 
     @Deprecated("This property is deprecated. Changing its value has no effect.")
-    override var isZipAlignEnabled: Boolean = true
+    override var isZipAlignEnabled: Boolean
+        get() = true
+        set(_) { }
 
     /**
      * Whether to enable the checks that the both the old and new way of configuring
@@ -123,13 +134,9 @@ abstract class BuildType @Inject constructor(
     private val _isDefaultProperty: Property<Boolean> =
         dslServices.property(Boolean::class.java).convention(false)
 
-    override val matchingFallbacks: MutableList<String> = mutableListOf()
+    abstract override val matchingFallbacks: MutableList<String>
 
-    override fun setMatchingFallbacks(fallbacks: List<String>) {
-        val newFallbacks = ArrayList(fallbacks)
-        matchingFallbacks.clear()
-        matchingFallbacks.addAll(newFallbacks)
-    }
+    abstract override fun setMatchingFallbacks(fallbacks: List<String>)
 
     override fun setMatchingFallbacks(vararg fallbacks: String) {
         matchingFallbacks.clear()
@@ -206,7 +213,7 @@ abstract class BuildType @Inject constructor(
         return signingConfig
     }
 
-    override var isEmbedMicroApp: Boolean = true
+    abstract override var isEmbedMicroApp: Boolean
 
     override fun getIsDefault(): Property<Boolean> {
         return _isDefaultProperty
@@ -512,7 +519,7 @@ abstract class BuildType @Inject constructor(
             return false
         }
 
-    override var isCrunchPngs: Boolean? = null
+    abstract override var isCrunchPngs: Boolean?
 
     /** This DSL is incubating and subject to change.  */
     @get:Internal

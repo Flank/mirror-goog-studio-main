@@ -65,8 +65,8 @@ class InitWithExtensionTest {
 
     @Test
     fun testBuildTypeInitWithExtension() {
-        val debugBuildType = dslServices.newInstance(BuildType::class.java, "debug", dslServices)
-        val qaBuildType = dslServices.newInstance(BuildType::class.java, "qa", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "debug", dslServices)
+        val qaBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "qa", dslServices)
         for (buildType in listOf(debugBuildType, qaBuildType)) {
             buildType.extensions.create(MyExtension::class.java, "my", MyExtensionImpl::class.java)
         }

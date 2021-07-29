@@ -19,41 +19,42 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.builder.core.BuilderConstants
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-internal class BaseFlavorTest {
+internal class DefaultConfigTest {
     private val dslServices = createDslServices()
 
     @Test
     fun buildConfigFieldOverride() {
-        val someFlavor = object: BaseFlavor("someFlavor", dslServices) {}
+        val someFlavor = defaultConfig()
 
-        Truth.assertThat(someFlavor).isNotNull()
+        assertThat(someFlavor).isNotNull()
         someFlavor.buildConfigField("String", "name", "sensitiveValue")
         someFlavor.buildConfigField("String", "name", "sensitiveValue")
         val messages = (dslServices.logger as FakeLogger).infos
-        Truth.assertThat(messages).hasSize(1)
-        Truth.assertThat(messages[0]).doesNotContain("sensitiveValue")
+        assertThat(messages).hasSize(1)
+        assertThat(messages[0]).doesNotContain("sensitiveValue")
     }
 
     @Test
     fun resValueOverride() {
-        val someFlavor = object: BaseFlavor("someFlavor", dslServices) {}
+        val someFlavor = defaultConfig()
 
-        Truth.assertThat(someFlavor).isNotNull()
+        assertThat(someFlavor).isNotNull()
         someFlavor.resValue("String", "name", "sensitiveValue")
         someFlavor.resValue("String", "name", "sensitiveValue")
         val messages = (dslServices.logger as FakeLogger).infos
-        Truth.assertThat(messages).hasSize(1)
-        Truth.assertThat(messages[0]).doesNotContain("sensitiveValue")
+        assertThat(messages).hasSize(1)
+        assertThat(messages[0]).doesNotContain("sensitiveValue")
     }
 
     @Test
     fun setProguardFilesTest() {
-        val flavor: ApplicationBaseFlavor = object : BaseFlavor("someFlavor", dslServices) {}
+        val flavor: ApplicationBaseFlavor = defaultConfig()
         flavor.apply {
             // Check set replaces
             proguardFiles += dslServices.file("replaced")
@@ -65,4 +66,7 @@ internal class BaseFlavorTest {
             assertThat(proguardFiles.single()).hasName("test")
         }
     }
+
+    private fun defaultConfig() =
+        dslServices.newDecoratedInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)
 }

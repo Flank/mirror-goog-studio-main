@@ -21,6 +21,9 @@ import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.LintOptions
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.internal.utils.toImmutableMap
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.model.TestOptions
 import com.android.builder.model.v2.dsl.ClassField
 import com.android.builder.model.v2.ide.AaptOptions.Namespacing.DISABLED
@@ -57,7 +60,7 @@ internal fun DslDefaultConfig.convert(features: BuildFeatureValues) = ProductFla
     testInstrumentationRunnerArguments = testInstrumentationRunnerArguments,
     testHandleProfiling = testHandleProfiling,
     testFunctionalTest = testFunctionalTest,
-    resourceConfigurations = resourceConfigurations,
+    resourceConfigurations = resourceConfigurations.toImmutableList(),
     signingConfig = signingConfig?.name,
     vectorDrawables = vectorDrawables.convert(),
     wearAppUnbundled = wearAppUnbundled,
@@ -65,10 +68,10 @@ internal fun DslDefaultConfig.convert(features: BuildFeatureValues) = ProductFla
     versionNameSuffix = versionNameSuffix,
     buildConfigFields = buildConfigFields.convertBuildConfig(features),
     resValues = resValues.convertResValues(features),
-    proguardFiles = proguardFiles,
-    consumerProguardFiles = consumerProguardFiles,
-    testProguardFiles = testProguardFiles,
-    manifestPlaceholders = manifestPlaceholders,
+    proguardFiles = proguardFiles.toImmutableList(),
+    consumerProguardFiles = consumerProguardFiles.toImmutableList(),
+    testProguardFiles = testProguardFiles.toImmutableList(),
+    manifestPlaceholders = manifestPlaceholders.toImmutableMap(),
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
     multiDexKeepProguard = multiDexKeepProguard,
@@ -89,10 +92,10 @@ internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFla
     renderscriptNdkModeEnabled = renderscriptNdkModeEnabled,
     testApplicationId = testApplicationId,
     testInstrumentationRunner = testInstrumentationRunner,
-    testInstrumentationRunnerArguments = testInstrumentationRunnerArguments,
+    testInstrumentationRunnerArguments = testInstrumentationRunnerArguments.toImmutableMap(),
     testHandleProfiling = testHandleProfiling,
     testFunctionalTest = testFunctionalTest,
-    resourceConfigurations = resourceConfigurations,
+    resourceConfigurations = resourceConfigurations.toImmutableList(),
     signingConfig = signingConfig?.name,
     vectorDrawables = vectorDrawables.convert(),
     wearAppUnbundled = wearAppUnbundled,
@@ -103,7 +106,7 @@ internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFla
     proguardFiles = proguardFiles,
     consumerProguardFiles = consumerProguardFiles,
     testProguardFiles = testProguardFiles,
-    manifestPlaceholders = manifestPlaceholders,
+    manifestPlaceholders = manifestPlaceholders.toImmutableMap(),
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
     multiDexKeepProguard = multiDexKeepProguard,
@@ -126,10 +129,10 @@ internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     versionNameSuffix = versionNameSuffix,
     buildConfigFields = buildConfigFields.convertBuildConfig(features),
     resValues = resValues.convertResValues(features),
-    proguardFiles = proguardFiles,
-    consumerProguardFiles = consumerProguardFiles,
-    testProguardFiles = testProguardFiles,
-    manifestPlaceholders = manifestPlaceholders,
+    proguardFiles = proguardFiles.toImmutableList(),
+    consumerProguardFiles = consumerProguardFiles.toImmutableList(),
+    testProguardFiles = testProguardFiles.toImmutableList(),
+    manifestPlaceholders = manifestPlaceholders.toImmutableMap(),
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
     multiDexKeepProguard = multiDexKeepProguard,

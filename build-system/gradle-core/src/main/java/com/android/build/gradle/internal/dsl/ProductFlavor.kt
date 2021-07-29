@@ -81,6 +81,23 @@ abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslS
         return signingConfig
     }
 
+    abstract var _dimension: String?
+
+    // The DimensionCombinator initializes the flavor dimension in cases where it is unset,
+    // as later configuration expects it to always be non-null, but it does this after the DSL is
+    // locked, so if it sets it directly it will fail, so this indirection is added to support
+    // overriding a null value after the DSL is locked.
+    // Once the use of DSL objects is cleaned up a bit more this might be able to be removed.
+    internal var internalDimensionDefault: String? = null
+        set(value) {
+            check(dimension == null) { "Default should only be set if the dimension is unset" }
+            field = value
+        }
+
+    override var dimension: String?
+        get() = _dimension ?: internalDimensionDefault
+        set(value) { _dimension = value }
+
     override fun computeRequestedAndFallBacks(requestedValues: List<String>): DimensionRequest { // in order to have different fallbacks per variant for missing dimensions, we are
         // going to actually have the flavor request itself (in the other dimension), with
         // a modified name (in order to not have collision in case 2 dimensions have the same

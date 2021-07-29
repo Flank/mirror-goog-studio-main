@@ -24,7 +24,7 @@ import org.gradle.api.model.ObjectFactory;
 /** Factory to create BuildType object using an {@link ObjectFactory} to add the DSL methods. */
 public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
 
-    @NonNull private DslServices dslServices;
+    @NonNull private final DslServices dslServices;
 
     public BuildTypeFactory(@NonNull DslServices dslServices) {
         this.dslServices = dslServices;
@@ -33,6 +33,6 @@ public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
     @NonNull
     @Override
     public BuildType create(@NonNull String name) {
-        return dslServices.newInstance(BuildType.class, name, dslServices);
+        return dslServices.newDecoratedInstance(BuildType.class, name, dslServices);
     }
 }
