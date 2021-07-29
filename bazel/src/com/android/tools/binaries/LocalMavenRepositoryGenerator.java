@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -289,8 +290,8 @@ public class LocalMavenRepositoryGenerator {
         // involved in a conflict, then this will map requested dependency artifact
         // to its reconciled dependency artifact.
         Map<String, String> conflictResolution = new HashMap<>();
-        // The dependencies after resolution.
-        List<String> resolvedDeps = new ArrayList<>();
+        // The dependencies after resolution grouped by scope.
+        Map<String, List<String>> resolvedDeps = new TreeMap<>();
         // The dependencies that were involved in a conflict and got upgraded.
         List<String> originalDeps = new ArrayList<>();
 
@@ -309,13 +310,18 @@ public class LocalMavenRepositoryGenerator {
                                 .equals(child.getArtifact().toString())) {
                     // Winner doesn't exist, does not have an artifact, or is identical
                     // to the child node. This is a dependency that was not upgraded.
-                    resolvedDeps.add(child.getArtifact().toString());
+                    String scope = child.getDependency().getScope();
+                    resolvedDeps.putIfAbsent(scope, new ArrayList<>());
+                    resolvedDeps.get(scope).add(child.getArtifact().toString());
                 } else {
                     // This dependency was in a conflict, and got upgraded.
                     conflictResolution.put(
                             child.getArtifact().toString(),
                             winnerChildNode.getArtifact().toString());
-                    resolvedDeps.add(winnerChildNode.getArtifact().toString());
+                    // We still maintain the original dependency scope.
+                    String scope = child.getDependency().getScope();
+                    resolvedDeps.putIfAbsent(scope, new ArrayList<>());
+                    resolvedDeps.get(scope).add(winnerChildNode.getArtifact().toString());
                     originalDeps.add(child.getArtifact().toString());
                 }
             }
@@ -329,10 +335,10 @@ public class LocalMavenRepositoryGenerator {
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
                             null,
                             null,
-                            new String[0],
                             node.getChildren().stream()
                                     .map(d -> d.getArtifact().toString())
                                     .toArray(String[]::new),
+                            null,
                             null));
         } else {
             result.dependencies.add(
@@ -342,8 +348,8 @@ public class LocalMavenRepositoryGenerator {
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
                             parentCoord,
                             sourcesJarPath,
-                            resolvedDeps.toArray(new String[0]),
                             originalDeps.toArray(new String[0]),
+                            resolvedDeps,
                             conflictResolution));
         }
     }

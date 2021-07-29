@@ -23,9 +23,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.lang3.SystemUtils;
 
 /** Utility for generating a BUILD file from a {@link ResolutionResult} object. */
@@ -151,18 +151,25 @@ public class BuildFileWriter {
             fileWriter.append("    jars = [\n");
             fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
             fileWriter.append("    ],\n");
-            String[] depRuleNames =
-                    Arrays.stream(dep.directDependencies)
-                            .map(BuildFileWriter::ruleNameFromCoord)
-                            .toArray(String[]::new);
-            if (depRuleNames.length != 0) {
-                fileWriter.append("    deps = [\n");
-                for (String directDependency : depRuleNames) {
-                    fileWriter.append(String.format("        \"%s\",\n", directDependency));
+            for (Map.Entry<String, List<String>> scopedDeps : dep.directDependencies.entrySet()) {
+                String scope = scopedDeps.getKey();
+                List<String> deps = scopedDeps.getValue();
+                if (!deps.isEmpty()) {
+                    switch (scope) {
+                        case "compile":
+                            fileWriter.append("    exports = [\n");
+                            break;
+                        case "runtime":
+                            fileWriter.append("    deps = [\n");
+                            break;
+                        default:
+                            throw new IllegalStateException("Scope " + scope + " is not supported");
+                    }
+                    for (String d : deps) {
+                        fileWriter.append(String.format("        \"%s\",\n", ruleNameFromCoord(d)));
+                    }
+                    fileWriter.append("    ],\n");
                 }
-                fileWriter.append("    ],\n");
-            } else {
-                fileWriter.append("    deps = [],\n");
             }
             // Original dependencies use version numbers in their rule names.
             String[] originalDepRuleNames =

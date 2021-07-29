@@ -607,6 +607,7 @@ coverage_java_test(
         ":json",
         ":local_maven_repository_generator",
         ":maven",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
         "//tools/base/third_party:org.eclipse.aether_aether-transport-file",

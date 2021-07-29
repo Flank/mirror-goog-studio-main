@@ -8,7 +8,7 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/1/a-1.jar"
     ],
-    deps = [
+    exports = [
         "com.google.example.c",
     ],
     original_deps = [
@@ -26,7 +26,7 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/b/1/b-1.jar"
     ],
-    deps = [
+    exports = [
         "com.google.example.c",
     ],
     original_deps = [],
@@ -42,7 +42,7 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/2/c-2.jar"
     ],
-    deps = [
+    exports = [
         "com.google.example.d",
     ],
     original_deps = [],
@@ -59,7 +59,7 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/2/d-2.jar"
     ],
-    deps = [
+    exports = [
         "com.google.example.e",
         "com.google.example.f",
         "com.google.example.g",
@@ -79,7 +79,6 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/e/1/e-1.jar"
     ],
-    deps = [],
     original_deps = [],
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/e/1/e-1.pom",
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
@@ -93,7 +92,6 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/2/f-2.jar"
     ],
-    deps = [],
     original_deps = [],
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/f/2/f-2.pom",
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
@@ -107,7 +105,7 @@ maven_import(
     jars = [
         "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/g/1/g-1.jar"
     ],
-    deps = [
+    exports = [
         "com.google.example.f",
     ],
     original_deps = [],

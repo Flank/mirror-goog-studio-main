@@ -16,16 +16,16 @@
 
 package com.android.tools.binaries;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.android.testutils.TestUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 public class LocalMavenRepositoryGeneratorTest {
 
@@ -42,8 +42,11 @@ public class LocalMavenRepositoryGeneratorTest {
         Path generated = Paths.get(outputBuildFile);
 
         assertTrue(generated.toFile().exists());
-        assertEquals("The files differ!",
-                Files.readString(golden),
-                Files.readString(generated));
+        String goldenString = Files.readString(golden);
+        String generatedString = Files.readString(generated);
+        if (!goldenString.equals(generatedString)) {
+            Files.copy(generated, TestUtils.getTestOutputDir().resolve(outputBuildFile));
+        }
+        assertEquals("The files differ!", goldenString, generatedString);
     }
 }

@@ -38,8 +38,8 @@ public class ResolutionResult {
         public String pomPath;
         public String parentCoord;
         public String srcjar;
-        public String[] directDependencies;
         public String[] originalDependencies;
+        public Map<String, List<String>> directDependencies;
         public Map<String, String> conflictResolution;
 
         public Dependency(
@@ -48,16 +48,16 @@ public class ResolutionResult {
                 String pomPath,
                 String parentCoord,
                 String srcjar,
-                String[] directDependencies,
                 String[] originalDependencies,
+                Map<String, List<String>> directDependencies,
                 Map<String, String> conflictResolution) {
             this.coord = coord;
             this.file = file;
             this.pomPath = pomPath;
             this.parentCoord = parentCoord;
             this.srcjar = srcjar;
-            this.directDependencies = directDependencies;
             this.originalDependencies = originalDependencies;
+            this.directDependencies = directDependencies;
             this.conflictResolution = conflictResolution;
         }
     }
