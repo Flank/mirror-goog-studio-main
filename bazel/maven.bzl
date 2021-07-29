@@ -521,10 +521,21 @@ def _local_maven_repository_impl(repository_ctx):
     repo_path = "repo"
     repository_ctx.symlink(local_repo, repo_path)
 
-    java_home = repository_ctx.os.environ.get("JAVA_HOME")
-    if not java_home:
-        fail("Cannot find JAVA_HOME")
-    java = repository_ctx.path(java_home + "/bin/java")
+    jdk11 = workspace.get_child("prebuilts").get_child("studio").get_child("jdk").get_child("jdk11")
+    os_name = repository_ctx.os.name.lower()
+    if os_name.startswith("mac os"):
+        # Ignore mac-arm64, it's OK to use x86 version of java.
+        osdir = "mac"
+    elif os_name.find("windows") != -1:
+        osdir = "win"
+    else:
+        osdir = "linux"
+
+    java_exe = "java.exe" if os_name.find("windows") != -1 else "java"
+    java = jdk11.get_child(osdir).get_child("bin").get_child(java_exe)
+
+    if not java.exists:
+        fail("Failed to find java binary at: " + str(java))
 
     # Invoke build file generator tool.
     inputs = repository_ctx.attr.artifacts
