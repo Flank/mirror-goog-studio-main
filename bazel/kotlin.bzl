@@ -444,10 +444,6 @@ def _kotlin_library_impl(ctx):
 
         jars += [java_jar]
 
-    manifest_argfile = None
-    if ctx.files.manifests:
-        manifest_argfile = create_manifest_argfile(ctx, name + ".manifest.lst", ctx.files.manifests)
-
     for dep in ctx.attr.bundled_deps:
         jars += [java_output.class_jar for java_output in dep[JavaInfo].outputs.jars]
 
@@ -455,8 +451,7 @@ def _kotlin_library_impl(ctx):
         ctx = ctx,
         jars = jars,
         out = ctx.outputs.jar,
-        manifest_lines = ["@" + manifest_argfile.path] if manifest_argfile else [],
-        extra_inputs = [manifest_argfile] if manifest_argfile else [],
+        manifest_lines = ctx.attr.manifest_lines,
         # allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
@@ -493,7 +488,7 @@ _kotlin_library = rule(
         "source_jars": attr.label_list(allow_files = True),
         "resources": attr.label_list(allow_files = True),
         "notice": attr.label(allow_single_file = True),
-        "manifests": attr.label_list(allow_files = True),
+        "manifest_lines": attr.string_list(),
         "data": attr.label_list(allow_files = True),
         "friends": attr.label_list(
             allow_files = [".jar"],
@@ -650,6 +645,7 @@ def maven_library(
         module_name = None,
         legacy_name = "",
         plugins = [],
+        manifest_lines = None,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -699,6 +695,7 @@ def maven_library(
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
         plugins = plugins,
+        manifest_lines = manifest_lines,
         **kwargs
     )
 

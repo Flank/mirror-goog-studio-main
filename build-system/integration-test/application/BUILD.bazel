@@ -30,6 +30,7 @@ TEST_DEPS = [
     "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
     "//tools/base/third_party:org.apache.commons_commons-compress",
     "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
+    "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",

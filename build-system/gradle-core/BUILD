@@ -1,7 +1,7 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
+load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
 fileset(
     name = "resources",
@@ -25,8 +25,8 @@ java_proto_library(
     visibility = ["//visibility:public"],
 )
 
-kotlin_library_legacy(
-    name = "gradle-core",
+maven_library(
+    name = "gradle-core_bzl",
     srcs = glob([
         "src/fromGradle/java/**/*.kt",
         "src/fromGradle/java/**/*.java",
@@ -37,107 +37,101 @@ kotlin_library_legacy(
         ":proto",
         "//tools/base/mlkit-common:tools.mlkit-common",
         "//tools/base/profgen/profgen",
+        ":jacoco.core_neverlink",
+        ":jacoco.report_neverlink",
+        ":jetbrains.kotlin-gradle-plugin_neverlink",
+        "//tools/base/build-system:gradle-api_neverlink",
     ],
+    coordinates = "com.android.tools.build:gradle:" + BUILD_VERSION,
+    legacy_name = "gradle-core",
     lint_baseline = "lint_baseline.xml",
     lint_timeout = "long",
     manifest_lines = ["Plugin-Version: unspecified"],
     module_name = "gradle_core",
-    pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        ":jacoco.core_neverlink",
-        ":jacoco.report_neverlink",
-        ":jetbrains.kotlin-gradle-plugin_neverlink",
-        "//tools/analytics-library/crash:tools.analytics-crash",
-        "//tools/analytics-library/protos/src/main/proto",
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api_neverlink",
-        "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/aaptcompiler",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-model",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
+        "//tools/analytics-library/crash:tools.analytics-crash_bzl",
+        "//tools/analytics-library/protos/src/main/proto:proto_bzl",
+        "//tools/analytics-library/shared:tools.analytics-shared_bzl",
+        "//tools/apkzlib:apkzlib_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system:tools.manifest-merger_bzl",
+        "//tools/base/build-system/aaptcompiler:aaptcompiler_bzl",
+        "//tools/base/build-system/builder:builder_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api_bzl",
+        "//tools/base/build-system/gradle-api:gradle-api_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/ddmlib:tools.ddmlib_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/lint:tools.lint-model_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "//tools/base/utp/android-device-provider-gradle-proto:android-device-provider-gradle-proto_bzl",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto:android-test-plugin-host-additional-test-output-proto_bzl",
+        "//tools/base/utp/android-test-plugin-host-coverage-proto:android-test-plugin-host-coverage-proto_bzl",
+        "//tools/base/utp/android-test-plugin-host-retention-proto:android-test-plugin-host-retention-proto_bzl",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto:android-test-plugin-result-listener-gradle-proto_bzl",
+        "//tools/base/zipflinger:zipflinger_bzl",
+        "//tools/data-binding:tools.compilerCommon_bzl",
         # Note: This auto-value dependency is not actually used. Bundletool depends on an
         # older version of auto-value which is then not copied into a maven_repo for building
         # data binding's runtime libraries. This forces the newer version until bundletool
         # can be updated once https://github.com/google/bundletool/pull/76 is released.
-        "//tools/base/third_party:com.google.auto.value_auto-value",
-        "//tools/base/third_party:com.google.auto.value_auto-value-annotations",
-        "//tools/base/third_party:com.google.crypto.tink_tink",
-        "//tools/base/third_party:com.google.testing.platform_core-proto",
-        "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
-        "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
-        "//tools/base/third_party:com.android.tools.build_aapt2-proto",
-        "//tools/base/third_party:com.android.tools.build_bundletool",
-        "//tools/base/third_party:com.android.tools.build_transform-api",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-        "//tools/base/third_party:com.squareup_javapoet",
-        "//tools/base/third_party:com.squareup_javawriter",
-        "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
-        "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-        "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
-        "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
-        "//tools/base/third_party:org.apache.httpcomponents_httpmime",
-        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains_annotations",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-analysis",
-        "//tools/base/third_party:org.ow2.asm_asm-commons",
-        "//tools/base/third_party:org.ow2.asm_asm-util",
-        "//tools/base/utp/android-device-provider-gradle-proto",
-        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
-        "//tools/base/utp/android-test-plugin-host-coverage-proto",
-        "//tools/base/utp/android-test-plugin-host-retention-proto",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
-        "//tools/base/zipflinger",
-        "//tools/data-binding:tools.compilerCommon",
-        "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
-        "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",  # For mlkit-common
-        "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
-        "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
+        "@maven//:com.google.auto.value.auto-value",
+        "@maven//:com.google.auto.value.auto-value-annotations",
+        "@maven//:com.google.crypto.tink.tink",
+        "@maven//:com.google.testing.platform.core-proto",
+        "@maven//:com.android.tools.build.jetifier.jetifier-core",
+        "@maven//:com.android.tools.build.jetifier.jetifier-processor",
+        "@maven//:com.android.tools.build.aapt2-proto",
+        "@maven//:com.android.tools.build.bundletool",
+        "@maven//:com.android.tools.build.transform-api",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.protobuf.protobuf-java-util",
+        "@maven//:com.squareup.javapoet",
+        "@maven//:com.squareup.javawriter",
+        "@maven//:com.sun.istack.istack-commons-runtime",
+        "@maven//:commons-io.commons-io",  # TODO: remove?
+        "@maven//:net.sf.jopt-simple.jopt-simple",
+        "@maven//:org.apache.commons.commons-compress",  # TODO: remove?
+        "@maven//:org.apache.httpcomponents.httpmime",
+        "@maven//:org.bouncycastle.bcpkix-jdk15on",
+        "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.annotations",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-analysis",
+        "@maven//:org.ow2.asm.asm-commons",
+        "@maven//:org.ow2.asm.asm-util",
+        "@maven//:org.tensorflow.tensorflow-lite-metadata",  # For mlkit-common
+        "@maven//:com.google.flatbuffers.flatbuffers-java",  # For mlkit-common
+        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
+        "@maven//:org.jetbrains.dokka.dokka-core",
     ],
 )
 
-maven_java_library(
+java_library(
     name = "jacoco.core_neverlink",
     neverlink = 1,
     exports = ["//tools/base/third_party:org.jacoco_org.jacoco.core"],
 )
 
-maven_java_library(
+java_library(
     name = "jacoco.report_neverlink",
     neverlink = 1,
     exports = ["//tools/base/third_party:org.jacoco_org.jacoco.report"],
 )
 
-maven_java_library(
+java_library(
     name = "jetbrains.kotlin-gradle-plugin_neverlink",
-    # TODO fix kotlin_library rule so neverlink = 1 can be added here
+    #neverlink = 1,
     exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "gradle",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 fileset(
