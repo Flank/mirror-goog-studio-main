@@ -1,7 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -19,27 +19,22 @@ iml_module(
     ],
 )
 
-kotlin_library_legacy(
-    name = "tools.fakeadbserver",
+maven_library(
+    name = "tools.fakeadbserver_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    pom = ":pom",
+    coordinates = "com.android.tools.fakeadbserver:fakeadbserver:" + BASE_VERSION,
+    legacy_name = "tools.fakeadbserver",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "@maven//:com.google.guava.guava",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "fakeadbserver",
-    group = "com.android.tools.fakeadbserver",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 coverage_java_test(
