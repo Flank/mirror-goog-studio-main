@@ -128,7 +128,7 @@ local_maven_repository(
     "org.apache.httpcomponents:httpcore:4.4.10",
     "org.bouncycastle:bcpkix-jdk15on:1.56",
     "org.bouncycastle:bcprov-jdk15on:1.56",
-    "org.codehaus.groovy:groovy-all:2.4.15",
+    "org.codehaus.groovy:groovy-all:pom:3.0.7",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
     "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
     "org.jetbrains.kotlin:kotlin-reflect:1.4.32",

@@ -197,11 +197,15 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     # Transitive Maven dependencies of above artifacts that cannot be identified
     # automatically because they are dependencies of artifacts that use the new
     # Maven rules:
+    "//prebuilts/tools/common/lint-psi/intellij-core:intellij-core",
+    "//prebuilts/tools/common/lint-psi/kotlin-compiler:kotlin-compiler",
+    "//prebuilts/tools/common/lint-psi/uast:uast",
     "//prebuilts/tools/common/m2:com.googlecode.json-simple.json-simple.1.1",
     "//prebuilts/tools/common/m2:it.unimi.dsi.fastutil.8.4.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
     "//prebuilts/tools/common/m2:net.sf.kxml.kxml2.2.3.0",
+    "//prebuilts/tools/common/m2:org.codehaus.groovy.groovy-all.2.4.15",
     "//prebuilts/tools/common/m2:org.jetbrains.intellij.deps.trove4j.1.0.20181211",
     "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk7.1.4.32",
     "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk8.1.4.32",
@@ -211,6 +215,9 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/build-system/aapt2-proto:aapt2-proto",
     "//tools/base/build-system:tools.apksig",
     "//tools/base/device_validator:tools.dvlib",
+    "//tools/base/lint/cli:cli",
+    "//tools/base/lint:tools.lint-api",
+    "//tools/base/lint:tools.lint-checks",
     "//tools/base/signflinger:signflinger",
 ]
 
