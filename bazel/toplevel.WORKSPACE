@@ -134,6 +134,7 @@ local_maven_repository(
     "org.apache.commons:commons-compress:1.20",
     "org.apache.httpcomponents:httpclient:4.5.6",
     "org.apache.httpcomponents:httpcore:4.4.10",
+    "org.apache.httpcomponents:httpmime:4.5.6",
     "org.bouncycastle:bcpkix-jdk15on:1.56",
     "org.bouncycastle:bcprov-jdk15on:1.56",
     "org.codehaus.groovy:groovy-all:pom:3.0.7",
