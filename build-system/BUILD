@@ -234,6 +234,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/data-binding:tools.baseLibrary",
     "//tools/data-binding:tools.baseLibrarySupport",
     "//tools/base/third_party:io.grpc_grpc-all",
+    "//tools/base/emulator/proto:proto",
 ]
 
 maven_repo(
