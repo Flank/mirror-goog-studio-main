@@ -81,7 +81,7 @@ public class BuildFileWriter {
             throws IOException {
         if (dep.file == null) return;
 
-        if (!dep.file.endsWith(".jar")) {
+        if (!dep.file.endsWith(".jar") && !dep.file.endsWith(".pom")) {
             throw new RuntimeException("Unsupported file: " + dep.file);
         }
 
@@ -149,7 +149,9 @@ public class BuildFileWriter {
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
             fileWriter.append("    jars = [\n");
-            fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
+            if (dep.file.endsWith(".jar")) {
+                fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
+            }
             fileWriter.append("    ],\n");
             for (Map.Entry<String, List<String>> scopedDeps : dep.directDependencies.entrySet()) {
                 String scope = scopedDeps.getKey();
@@ -190,7 +192,7 @@ public class BuildFileWriter {
             fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
             if (dep.srcjar != null) {
                 fileWriter.append(
-                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, pathToString(dep.file)));
+                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, pathToString(dep.srcjar)));
             }
             fileWriter.append("    visibility = [\"//visibility:public\"],\n");
             fileWriter.append(")\n");

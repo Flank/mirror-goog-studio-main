@@ -176,7 +176,7 @@ public class PomGenerator {
      * from the original file, or if the {@code export} flag is forced, then the file input file is
      * copied as-is.
      */
-    private void generatePom(
+    public void generatePom(
             File in,
             File out,
             List<File> pomDependencies,
@@ -221,6 +221,11 @@ public class PomGenerator {
                 MavenCoordinates coordinates;
                 Model dependent = pomToModel(pom.getAbsolutePath());
                 coordinates = new MavenCoordinates(dependent);
+                if (dependent.getPackaging().equals("pom")) {
+                  // If the target has "pom" packaging, then the dependency
+                  // must also be declared as a pom type dependency.
+                  dependency.setType("pom");
+                }
 
                 dependency.setGroupId(coordinates.groupId);
                 dependency.setArtifactId(coordinates.artifactId);

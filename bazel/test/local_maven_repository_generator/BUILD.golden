@@ -115,6 +115,34 @@ maven_import(
     visibility = ["//visibility:public"],
 )
 
+maven_import(
+    name = "com.google.example.h",
+    classifiers = [],
+    jars = [
+    ],
+    exports = [
+        "com.google.example.i",
+    ],
+    original_deps = [],
+    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/h/1/h-1.pom",
+    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    repo_path = "com/google/example/h/1",
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.example.i",
+    classifiers = [],
+    jars = [
+        "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/i/1/i-1.jar"
+    ],
+    original_deps = [],
+    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/i/1/i-1.pom",
+    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    repo_path = "com/google/example/i/1",
+    visibility = ["//visibility:public"],
+)
+
 maven_artifact(
     name = "com.google.example.c_1",
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/1/c-1.pom",

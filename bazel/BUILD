@@ -185,6 +185,21 @@ java_binary(
     ],
 )
 
+coverage_java_test(
+    name = "pom_generator_test",
+    srcs = ["testSrc/com/android/tools/binaries/PomGeneratorTest.java"],
+    data = ["//tools/base/bazel/test:pom_generator"],
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.PomGeneratorTest",
+    deps = [
+        ":maven",
+        ":pom_generator",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
 java_library(
     name = "repo_builder_lib",
     srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
