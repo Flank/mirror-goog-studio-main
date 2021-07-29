@@ -1,5 +1,5 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "maven_repo")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_repo")
 
 # Test just kotlin
 java_library(
@@ -35,72 +35,41 @@ java_library(
 ### Maven version:
 
 # Test just kotlin
-maven_java_library(
-    name = "test_maven_only_java",
+maven_library(
+    name = "test_maven_only_java_bzl",
     srcs = ["java0/pkg/J0.java"],
-    pom = ":test_maven_only_java_pom",
+    coordinates = "test_group:test_maven_only_java:1.2.3",
+    legacy_name = "test_maven_only_java",
 )
 
-maven_pom(
-    name = "test_maven_only_java_pom",
-    artifact = "test_maven_only_java",
-    group = "test_group",
-    version = "1.2.3",
-)
-
-kotlin_library_legacy(
-    name = "test_maven_only_kotlin",
+maven_library(
+    name = "test_maven_only_kotlin_bzl",
     srcs = ["kotlin0/pkg/K0.kt"],
-    pom = ":test_maven_only_kotlin_pom",
-    deps = [":test_maven_only_java"],
-)
-
-maven_pom(
-    name = "test_maven_only_kotlin_pom",
-    artifact = "test_maven_only_kotlin",
-    group = "test_group",
-    version = "1.2.3",
+    coordinates = "test_group:test_maven_only_kotlin:1.2.3",
+    legacy_name = "test_maven_only_kotlin",
+    deps = [":test_maven_only_java_bzl"],
 )
 
 # Test circular dependencies with kotlin and java
-kotlin_library_legacy(
-    name = "test_maven_kotlin_and_java",
+maven_library(
+    name = "test_maven_kotlin_and_java_bzl",
     srcs = [
         "java1_kotlin1/pkg/J1.java",
         "java1_kotlin1/pkg/K1.kt",
     ],
-    pom = ":test_maven_kotlin_and_java_pom",
-    deps = [":test_maven_only_java"],
+    coordinates = "test_group:test_maven_kotlin_and_java:1.2.3",
+    legacy_name = "test_maven_kotlin_and_java",
+    deps = [":test_maven_only_java_bzl"],
 )
 
-maven_pom(
-    name = "test_maven_kotlin_and_java_pom",
-    artifact = "test_maven_kotlin_and_java",
-    group = "test_group",
-    version = "1.2.3",
-)
-
-maven_java_library(
-    name = "test_maven_java_to_kotlin",
+maven_library(
+    name = "test_maven_java_to_kotlin_bzl",
     srcs = ["java2/pkg/J2.java"],
-    pom = ":test_maven_java_to_kotlin_pom",
+    coordinates = "test_group:test_maven_java_to_kotlin:1.2.3",
+    legacy_name = "test_maven_java_to_kotlin",
     deps = [
-        ":test_maven_kotlin_and_java",
-        ":test_maven_only_kotlin",
-    ],
-)
-
-maven_pom(
-    name = "test_maven_java_to_kotlin_pom",
-    artifact = "test_maven_java_to_kotlin",
-    group = "test_group",
-    version = "1.2.3",
-)
-
-maven_repo(
-    name = "test_repo",
-    artifacts = [
-        ":test_maven_java_to_kotlin",
+        ":test_maven_kotlin_and_java_bzl",
+        ":test_maven_only_kotlin_bzl",
     ],
 )
 
