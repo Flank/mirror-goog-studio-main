@@ -1314,6 +1314,7 @@ public final class SdkConstants {
     public static final String CONSTRAINT_REFERENCED_IDS = "constraint_referenced_ids";
 
     // Tags: Drawables
+    public static final String TAG_ANIMATION_LIST = "animation-list";
     public static final String TAG_ANIMATED_SELECTOR = "animated-selector";
     public static final String TAG_ANIMATED_VECTOR = "animated-vector";
     public static final String TAG_BITMAP = "bitmap";
