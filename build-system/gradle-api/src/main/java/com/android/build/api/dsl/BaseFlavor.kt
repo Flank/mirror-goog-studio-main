@@ -184,7 +184,7 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * AppCompat or Google Play Services), then your APK includes all translated language strings
      * for the messages in those libraries whether the rest of your app is translated to the same
      * languages or not. If you'd like to keep only the languages that your app officially supports,
-     * you can specify those languages using the `resConfigs` property, as shown in the
+     * you can specify those languages using the `resourceConfigurations` property, as shown in the
      * sample below. Any resources for languages not specified are removed.
      *
      * ````
@@ -192,7 +192,7 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *     defaultConfig {
      *         ...
      *         // Keeps language resources for only the locales specified below.
-     *         resConfigs "en", "fr"
+     *         resourceConfigurations += ["en", "fr"]
      *     }
      * }
      * ````

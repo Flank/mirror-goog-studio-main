@@ -45,8 +45,8 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
      * The version of Jacoco can be configured with:
      * ```
      * android {
-     *     jacoco {
-     *         version = '0.6.2.201302030002'
+     *     testCoverage {
+     *         jacocoVersion = '0.6.2.201302030002'
      *     }
      * }
      * ```
@@ -80,7 +80,7 @@ interface BuildType : Named, VariantDimension, ExtensionAware, HasInitWith<Build
      * When you build your app, the plugin includes the pseudolocale resources in your APK. If
      * you notice that your APK does not include those locale resources, make sure your build
      * configuration isn't limiting which locale resources are packaged with your APK, such as using
-     * the `resConfigs` property to
+     * the `resourceConfigurations` property to
      * [remove unused locale resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      *
      * To learn more, read
