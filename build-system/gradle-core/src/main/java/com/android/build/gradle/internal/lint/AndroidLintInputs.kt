@@ -761,7 +761,9 @@ abstract class VariantInputs {
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
                         // analyzing test bytecode is expensive, without much benefit
-                        includeClassesOutputDirectories = false
+                        includeClassesOutputDirectories = false,
+                        // analyzing test generated sources is expensive, without much benefit
+                        includeGeneratedSourceFolders = false
                     )
         })
         mergedManifest.setDisallowChanges(
@@ -1177,8 +1179,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:Input
     abstract val applicationId: Property<String>
 
-    @get:Internal
-    abstract val generatedSourceFolders: ListProperty<File>
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val generatedSourceFolders: ConfigurableFileCollection
 
     @get:Internal
     abstract val generatedResourceFolders: ListProperty<File>
@@ -1194,10 +1197,16 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         checkDependencies: Boolean,
         addBaseModuleLintModel: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
-        includeClassesOutputDirectories: Boolean = true
+        includeClassesOutputDirectories: Boolean = true,
+        includeGeneratedSourceFolders: Boolean = true
     ): AndroidArtifactInput {
         applicationId.setDisallowChanges(componentImpl.applicationId)
-        generatedSourceFolders.setDisallowChanges(ModelBuilder.getGeneratedSourceFolders(componentImpl))
+        if (includeGeneratedSourceFolders) {
+            generatedSourceFolders.from(
+                ModelBuilder.getGeneratedSourceFoldersFileCollection(componentImpl)
+            )
+        }
+        generatedSourceFolders.disallowChanges()
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
         shrinkable.setDisallowChanges(
             componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
@@ -1257,7 +1266,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
 
     fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet, checkDependencies: Boolean) {
         applicationId.setDisallowChanges("")
-        generatedSourceFolders.setDisallowChanges(listOf())
+        generatedSourceFolders.disallowChanges()
         generatedResourceFolders.setDisallowChanges(listOf())
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
@@ -1296,7 +1305,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         return DefaultLintModelAndroidArtifact(
             applicationId.get(),
             generatedResourceFolders.get(),
-            generatedSourceFolders.get(),
+            generatedSourceFolders.toList(),
             classesOutputDirectories.files.toList(),
             computeDependencies(dependencyCaches)
         )
