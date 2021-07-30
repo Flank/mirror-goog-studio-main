@@ -90,6 +90,7 @@ class UtpConnectedTest {
             subProject.buildFile,
             """
             android.buildTypes.debug.testCoverageEnabled true
+            android.defaultConfig.testInstrumentationRunnerArguments useTestStorageService: 'true'
             """.trimIndent())
     }
 

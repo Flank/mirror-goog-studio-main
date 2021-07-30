@@ -356,6 +356,31 @@ class UtpConfigFactoryTest {
     }
 
     @Test
+    fun createRunnerConfigProtoForLocalDeviceWithTestCoverageAndTestStorageService() {
+        val runnerConfigProto = createForLocalDevice(
+            testData = testData.copy(
+                isTestCoverageEnabled = true,
+                instrumentationRunnerArguments = mapOf("useTestStorageService" to "true"))
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            useTestStorageService = true,
+            instrumentationArgs = mapOf(
+                "useTestStorageService" to "true",
+                "coverage" to "true",
+                "coverageFile" to "/data/data/com.example.application/coverage.ec",
+            ),
+            testCoverageConfig = """
+                single_coverage_file: "/data/data/com.example.application/coverage.ec"
+                run_as_package_name: "com.example.application"
+                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+                use_test_storage_service: true
+            """
+        )
+    }
+
+    @Test
     fun createRunnerConfigProtoForManagedDeviceWithTestCoverage() {
         val runnerConfigProto = createForManagedDevice(
             testData = testData.copy(isTestCoverageEnabled = true)

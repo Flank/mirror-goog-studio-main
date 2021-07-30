@@ -450,6 +450,9 @@ class UtpConfigFactory {
                 instrumentationArgsBuilder.apply {
                     putAllArgsMap(testData.instrumentationRunnerArguments)
 
+                    useTestStorageService = testData.instrumentationRunnerArguments.getOrDefault(
+                        "useTestStorageService", "false").toBoolean()
+
                     if (testData.isTestCoverageEnabled) {
                         putArgsMap("coverage", "true")
                         val testCoverageArgName = if (useOrchestrator) {
@@ -552,6 +555,8 @@ class UtpConfigFactory {
             }
             outputDirectoryOnHost = "${coverageOutputDir.absolutePath}/${deviceName}/"
             runAsPackageName = testData.instrumentationTargetPackageId
+            useTestStorageService = testData.instrumentationRunnerArguments.getOrDefault(
+                "useTestStorageService", "false").toBoolean()
         }
     }
 
