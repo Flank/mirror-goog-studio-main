@@ -22,13 +22,8 @@ import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.ProjectBuildOutput
 import com.android.builder.model.VariantBuildInformation
-import com.android.builder.model.VariantBuildOutput
-import com.google.common.collect.Iterables
-import com.google.common.truth.Truth
 import org.junit.Assert
-import org.junit.Assert.fail
 import java.io.File
 import java.lang.RuntimeException
 

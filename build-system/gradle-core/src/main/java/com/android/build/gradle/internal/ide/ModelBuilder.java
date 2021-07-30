@@ -74,7 +74,6 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.AnchorTaskNames;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
-import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
@@ -473,7 +472,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 toAbsolutePath(
                         component
                                 .getArtifacts()
-                                .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
+                                .get(InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE)
                                 .getOrNull()),
                 component.getTaskContainer().getBundleTask() == null
                         ? component.computeTaskName("bundle")
@@ -481,13 +480,15 @@ public class ModelBuilder<Extension extends BaseExtension>
                 toAbsolutePath(
                         component
                                 .getArtifacts()
-                                .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
+                                .get(InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE.INSTANCE)
                                 .getOrNull()),
                 AnchorTaskNames.INSTANCE.getExtractApksAnchorTaskName(component),
                 toAbsolutePath(
                         component
                                 .getArtifacts()
-                                .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
+                                .get(
+                                        InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE
+                                                .INSTANCE)
                                 .getOrNull()));
     }
 
@@ -984,7 +985,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 name,
                 projectInfo.getProjectBaseName() + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
-                artifacts.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
+                artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE).getOrNull(),
                 isSigningReady || component.getVariantData().outputsAreSigned,
                 signingConfigName,
                 taskContainer.getSourceGenTask().getName(),
@@ -1008,9 +1009,11 @@ public class ModelBuilder<Extension extends BaseExtension>
                 taskContainer.getBundleTask() == null
                         ? component.computeTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),
-                artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
-                ExtractApksTask.Companion.getTaskName(component),
-                artifacts.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
+                artifacts.get(InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE.INSTANCE).getOrNull(),
+                AnchorTaskNames.INSTANCE.getExtractApksAnchorTaskName(component),
+                artifacts
+                        .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE.INSTANCE)
+                        .getOrNull(),
                 codeShrinker);
     }
 

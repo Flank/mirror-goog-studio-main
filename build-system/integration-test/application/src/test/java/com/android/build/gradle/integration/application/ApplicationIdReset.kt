@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.ide.common.build.ListingFileRedirect
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
@@ -73,10 +74,10 @@ class ApplicationIdReset {
             |           break
             |         case "app2Free":
             |           applicationId += '.app2.free'
-            |           break 
+            |           break
             |         case "app2Paid":
             |           applicationId += '.app2.paid'
-            |           break 
+            |           break
             |       }
             |       variant.mergedFlavor.setApplicationId(applicationId)
             |    }
@@ -88,9 +89,12 @@ class ApplicationIdReset {
     @Test
     fun checkApplicationIdDebug() {
         val model = project.executeAndReturnModel("assembleApp1FreeDebug")
-        val listingFile = model.onlyModel.getVariantByName("app1FreeDebug")
-            .mainArtifact.assembleTaskOutputListingFile
-        Truth.assertThat(File(listingFile).readText(Charsets.UTF_8)).contains(
+        val listingFile = ListingFileRedirect.getListingFile(
+            File(model.onlyModel
+                .getVariantByName("app1FreeDebug")
+                .mainArtifact.assembleTaskOutputListingFile)
+        )
+        Truth.assertThat(listingFile.readText(Charsets.UTF_8)).contains(
             "  \"applicationId\": \"com.flavors.app1.free\""
         )
     }

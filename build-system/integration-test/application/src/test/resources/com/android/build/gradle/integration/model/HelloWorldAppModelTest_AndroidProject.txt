@@ -340,13 +340,13 @@
                * {PROJECT}/build/generated/res/resValues/debug{!}
                * {PROJECT}/build/generated/res/rs/debug{!}
             - abiFilters                    = []
-            - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/debug/output-metadata.json{!}
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/debug/redirect.txt{!}
             - testInfo                      = (null)
             - bundleInfo:
                - bundleTaskName                     = "bundleDebug"
-               - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/debug/output-metadata.json{!}
+               - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_redirect_file/debug/redirect.txt{!}
                - apkFromBundleTaskName              = "extractApksForDebug"
-               - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/debug/output-metadata.json{!}
+               - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/debug/redirect.txt{!}
             - codeShrinker                  = (null)
          < mainArtifact
          > androidTestArtifact:
@@ -375,7 +375,7 @@
                * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}
                * {PROJECT}/build/generated/res/rs/androidTest/debug{!}
             - abiFilters                    = []
-            - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/androidTest/debug/output-metadata.json{!}
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/debugAndroidTest/redirect.txt{!}
             - testInfo:
                - animationsDisabled       = false
                - execution                = HOST
@@ -434,13 +434,13 @@
                * {PROJECT}/build/generated/res/resValues/release{!}
                * {PROJECT}/build/generated/res/rs/release{!}
             - abiFilters                    = []
-            - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/release/output-metadata.json{!}
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/release/redirect.txt{!}
             - testInfo                      = (null)
             - bundleInfo:
                - bundleTaskName                     = "bundleRelease"
-               - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/release/output-metadata.json{!}
+               - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_redirect_file/release/redirect.txt{!}
                - apkFromBundleTaskName              = "extractApksForRelease"
-               - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/release/output-metadata.json{!}
+               - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/release/redirect.txt{!}
             - codeShrinker                  = (null)
          < mainArtifact
          - androidTestArtifact    = (null)

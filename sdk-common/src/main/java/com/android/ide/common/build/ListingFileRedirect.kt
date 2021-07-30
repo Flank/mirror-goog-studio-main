@@ -16,9 +16,7 @@
 package com.android.ide.common.build
 
 import java.io.File
-import java.io.FileReader
 import java.io.PrintWriter
-import java.io.Reader
 import java.io.StringReader
 import java.util.Properties
 
@@ -59,4 +57,7 @@ object ListingFileRedirect {
             )
         } else null
     }
+
+    fun getListingFile(inputFile: File) =
+        maybeExtractRedirectedFile(inputFile) ?: inputFile
 }

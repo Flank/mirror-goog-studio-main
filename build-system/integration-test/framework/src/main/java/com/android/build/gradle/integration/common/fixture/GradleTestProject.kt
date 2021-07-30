@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.plugins.VersionCheckPlugin
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.VariantBuildInformation
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.internal.project.ProjectProperties
 import com.android.testutils.MavenRepoGenerator
@@ -1259,8 +1258,7 @@ allprojects { proj ->
         for (variant in onlyModel.variants) {
             val postModelFile = variant.mainArtifact.assembleTaskOutputListingFile
             val builtArtifacts: BuiltArtifacts? = loadFromFile(
-                File(postModelFile),
-                File(postModelFile).parentFile.toPath()
+                File(postModelFile)
             )
             if (builtArtifacts != null) {
                 mapOfVariantOutputs.put(variant.name, builtArtifacts)
@@ -1271,7 +1269,6 @@ allprojects { proj ->
                     val extraBuiltArtifacts: BuiltArtifacts? =
                         loadFromFile(
                             File(postModelFile),
-                            File(postModelFile).parentFile.toPath()
                         )
                     if (extraBuiltArtifacts != null) {
                         mapOfVariantOutputs.put(

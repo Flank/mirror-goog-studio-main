@@ -203,9 +203,7 @@ public class BasicTest {
             assertThat(variantBuildOutput.getAssembleTaskName()).contains("assemble");
             assertThat(variantBuildOutput.getAssembleTaskOutputListingFile()).isNotNull();
             File listingFile = new File(variantBuildOutput.getAssembleTaskOutputListingFile());
-            BuiltArtifactsImpl builtArtifacts =
-                    BuiltArtifactsLoaderImpl.loadFromFile(
-                            listingFile, listingFile.getParentFile().toPath());
+            BuiltArtifactsImpl builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(listingFile);
 
             assertThat(builtArtifacts).isNotNull();
             assertThat(builtArtifacts.getElements()).hasSize(1);

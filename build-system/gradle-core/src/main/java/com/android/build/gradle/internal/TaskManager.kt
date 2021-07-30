@@ -2833,9 +2833,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskContainer.compileTask = taskFactory.register(
                 creationConfig.computeTaskName("compile", "Sources")
         ) { task: Task -> task.group = BUILD_GROUP }
-
-        // FIXME is that really needed?
-        taskContainer.assembleTask.dependsOn(taskContainer.compileTask)
     }
 
     private fun addBindingDependenciesIfNecessary(dataBindingOptions: DataBindingOptions) {

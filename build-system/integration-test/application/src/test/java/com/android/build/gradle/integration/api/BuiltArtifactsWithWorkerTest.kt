@@ -243,18 +243,19 @@ androidComponents.onVariants(androidComponents.selector().all(), {
         val model = project.executeAndReturnModel("clean")
         val debugVariant = model.onlyModel.variants.filter { it.name == "debug" }.single()
         val assembleTaskOutputListingFile = debugVariant.mainArtifact.assembleTaskOutputListingFile
-        // assert that the listing file location produced by the new task has been recorded in the
-        // model.
-        Truth.assertThat(assembleTaskOutputListingFile).contains("acme_apks")
+        // assert that the listing file location produced by the new task has not been recorded in
+        // the model, only the content of the redirect file should change.
+        Truth.assertThat(assembleTaskOutputListingFile).doesNotContain("acme_apks")
 
-        val result = project.executor().run("debugVerifier")
+        // now executes assemble to make sure the redirect file is created.
+        val result = project.executor().run(debugVariant.mainArtifact.assembleTaskName, "debugVerifier")
         Truth.assertThat(result.didWorkTasks).containsExactly(
-            ":debugProducerTask", ":debugConsumerTask", ":debugVerifier")
+            ":createDebugApkListingFileRedirect", ":debugProducerTask", ":debugConsumerTask", ":debugVerifier")
 
         // and check the listing file content.
         val listingFile = File(assembleTaskOutputListingFile)
         val updatedApks =
-                BuiltArtifactsLoaderImpl.loadFromFile(listingFile, listingFile.parentFile.toPath())
+                BuiltArtifactsLoaderImpl.loadFromFile(listingFile)
         assertNotNull(updatedApks)
         Truth.assertThat(updatedApks.elements).hasSize(3)
         updatedApks.elements.forEach { builtArtifact ->

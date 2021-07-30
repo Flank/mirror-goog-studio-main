@@ -51,7 +51,6 @@ object GenericBuiltArtifactsLoader {
         if (inputFile == null || !inputFile.exists()) {
             return null
         }
-        val relativePath = inputFile.parentFile.toPath()
         val gsonBuilder = GsonBuilder()
 
         gsonBuilder.registerTypeAdapter(
@@ -63,6 +62,11 @@ object GenericBuiltArtifactsLoader {
         val redirectFileContent = inputFile.readText()
         val redirectedFile =
             ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
+        val relativePathToUse = if (redirectedFile != null) {
+            redirectedFile.parentFile.toPath()
+        } else {
+            inputFile.parentFile.toPath()
+        }
 
         val reader = redirectedFile?.let { FileReader(it) } ?: StringReader(redirectFileContent)
         val buildOutputs = reader.use {
@@ -83,7 +87,7 @@ object GenericBuiltArtifactsLoader {
                 .asSequence()
                 .map { builtArtifact ->
                     GenericBuiltArtifact(
-                        outputFile = relativePath.resolve(builtArtifact.outputFile).toString(),
+                        outputFile = relativePathToUse.resolve(builtArtifact.outputFile).normalize().toString(),
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         outputType = builtArtifact.outputType,

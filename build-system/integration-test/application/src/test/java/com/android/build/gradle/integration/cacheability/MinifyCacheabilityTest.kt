@@ -46,7 +46,6 @@ class MinifyCacheabilityTest {
         // Sort by alphabetical order for easier searching
         UP_TO_DATE to setOf(
             ":clean",
-            ":compileMinifiedSources",
             ":generateMinifiedAssets",
             ":generateMinifiedResources",
             ":preBuild",

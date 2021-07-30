@@ -115,7 +115,6 @@ class CacheabilityTest {
             TaskInfo(SKIPPED, "compile", "Aidl", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "compile", "Renderscript", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "compile", "Shaders", listOf("Debug", "Release")),
-            TaskInfo(SKIPPED, "compile", "Sources", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "extract", "NativeSymbolTables", listOf("Release")),
             TaskInfo(SKIPPED, "merge", "NativeDebugMetadata", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "merge", "NativeLibs", listOf("Debug", "Release")),

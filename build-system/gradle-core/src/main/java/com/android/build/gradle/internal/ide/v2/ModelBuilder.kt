@@ -56,9 +56,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
-import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE_IDE_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -558,7 +556,7 @@ class ModelBuilder<
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
             assembleTaskOutputListingFile = if (component.variantType.isApk)
-                component.artifacts.get(APK_IDE_MODEL).get().asFile
+                component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
                 null
         )
@@ -668,9 +666,9 @@ class ModelBuilder<
 
         return BundleInfoImpl(
             bundleTaskName = taskContainer.bundleTask?.name ?: error("failed to find bundle task name for ${component.name}"),
-            bundleTaskOutputListingFile = artifacts.get(BUNDLE_IDE_MODEL).get().asFile,
+            bundleTaskOutputListingFile = artifacts.get(InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE).get().asFile,
             apkFromBundleTaskName = AnchorTaskNames.getExtractApksAnchorTaskName(component),
-            apkFromBundleTaskOutputListingFile = artifacts.get(APK_FROM_BUNDLE_IDE_MODEL).get().asFile
+            apkFromBundleTaskOutputListingFile = artifacts.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE).get().asFile
         )
     }
 
