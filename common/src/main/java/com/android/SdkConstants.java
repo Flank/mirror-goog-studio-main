@@ -1526,6 +1526,13 @@ public final class SdkConstants {
     public static final String ATTR_PATH_DATA = "pathData";
     public static final String ATTR_FILL_COLOR = "fillColor";
 
+    // Attributes: AnimationDrawable
+    public static final String ATTR_ONESHOT = "oneshot";
+
+    // Attributes: AnimatedStateListDrawable
+    public static final String ATTR_FROM_ID = "fromId";
+    public static final String ATTR_TO_ID = "toId";
+
     // Attributes: Gradients
     public static final String ATTR_END_X = "endX";
     public static final String ATTR_END_Y = "endY";
