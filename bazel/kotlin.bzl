@@ -549,19 +549,25 @@ _kotlin_library = rule(
 )
 
 def _maven_library_impl(ctx):
-    # TODO support different scopes
-    infos = [dep[MavenInfo] for dep in ctx.attr.deps + ctx.attr.exports]
-    pom_deps = [info.pom for info in infos]
+    infos_deps = [dep[MavenInfo] for dep in ctx.attr.deps]
+    infos_exports = [dep[MavenInfo] for dep in ctx.attr.exports]
+    pom_deps = [info.pom for info in infos_deps]
+    pom_exports = [info.pom for info in infos_exports]
 
     coordinates = split_coordinates(ctx.attr.coordinates)
     basename = coordinates.artifact_id + "-" + coordinates.version
+    pom_name = ctx.attr.pom_name if ctx.attr.pom_name else coordinates.group_id + "." + coordinates.artifact_id
     generate_pom(
         ctx,
+        source = ctx.file.template_pom,
         output_pom = ctx.outputs.pom,
         group = coordinates.group_id,
         artifact = coordinates.artifact_id,
         version = coordinates.version,
+        description = ctx.attr.description,
+        pom_name = pom_name,
         deps = pom_deps,
+        exports = pom_exports,
     )
     repo_files = [
         (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
@@ -570,7 +576,7 @@ def _maven_library_impl(ctx):
     if ctx.file.notice:
         repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
 
-    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos])
+    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
 
     return [
         ctx.attr.library[JavaInfo],
@@ -586,6 +592,12 @@ _maven_library = rule(
         "notice": attr.label(allow_single_file = True),
         "library": attr.label(providers = [JavaInfo], allow_single_file = True),
         "coordinates": attr.string(),
+        "description": attr.string(),
+        "pom_name": attr.string(),
+        "template_pom": attr.label(
+            default = Label("//tools/base/bazel:maven/android.pom"),
+            allow_single_file = True,
+        ),
         "deps": attr.label_list(providers = [MavenInfo]),
         "exports": attr.label_list(providers = [MavenInfo]),
         "_zipper": attr.label(
@@ -618,14 +630,17 @@ def maven_library(
         javacopts = [],
         resources = [],
         resource_strip_prefix = None,
-        deps = [],
         data = [],
+        deps = [],
         exports = [],
+        enable_scopes = False,
         runtime_deps = [],
         bundled_deps = [],
         friends = [],
         notice = None,
         coordinates = None,
+        description = None,
+        pom_name = None,
         exclusions = None,
         lint_baseline = None,
         lint_classpath = [],
@@ -689,9 +704,11 @@ def maven_library(
     _maven_library(
         name = name,
         notice = notice,
-        deps = deps,
-        exports = exports,
+        deps = deps if enable_scopes else [],
+        exports = ([] if enable_scopes else deps) + exports,
         coordinates = coordinates,
+        description = description,
+        pom_name = pom_name,
         library = ":" + name + ".lib",
         **kwargs
     )

@@ -59,6 +59,8 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:common:" + BASE_VERSION,
+    description = "common library used by other Android tools libraries.",
+    enable_scopes = True,
     legacy_name = "tools.common",
     module_name = "common",
     notice = "NOTICE",
@@ -68,10 +70,12 @@ maven_library(
         ":version.properties",
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    exports = [
         "//tools/base/annotations:annotations_bzl",
         "@maven//:com.google.guava.guava",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    ],
+    deps = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

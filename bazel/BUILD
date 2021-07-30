@@ -169,6 +169,8 @@ java_binary(
     visibility = ["//visibility:public"],
 )
 
+exports_files(["maven/android.pom"])
+
 java_binary(
     name = "pom_generator",
     srcs = ["src/com/android/tools/binaries/PomGenerator.java"],

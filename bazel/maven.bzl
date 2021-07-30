@@ -9,6 +9,9 @@ def generate_pom(
         version,
         output_pom,
         deps = [],
+        exports = [],
+        description = None,
+        pom_name = None,
         source = None,
         export = False,
         properties = None,
@@ -35,6 +38,10 @@ def generate_pom(
         args += ["--artifact", artifact]
     if version:
         args += ["--version", version]
+    if description:
+        args += ["--description", description]
+    if pom_name:
+        args += ["--pom_name", pom_name]
     if properties:
         args += ["--properties", properties.path]
         inputs += [properties]
@@ -50,7 +57,8 @@ def generate_pom(
             args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
 
     args += ["--deps", ":".join([dep.path for dep in deps])]
-    inputs += deps
+    args += ["--exports", ":".join([dep.path for dep in exports])]
+    inputs += deps + exports
 
     ctx.actions.run(
         mnemonic = "GenPom",
@@ -147,7 +155,7 @@ def _maven_pom_impl(ctx):
         properties_files = ctx.files.properties_files,
         version_property = ctx.attr.version_property,
         exclusions = ctx.attr.exclusions,
-        deps = ctx.files.deps,
+        exports = ctx.files.deps,  # deps are compile dependencies in the legacy rule
     )
 
     return struct(maven = struct(

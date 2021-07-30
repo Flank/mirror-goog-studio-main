@@ -83,9 +83,12 @@ public class PomGenerator {
         File in = null;
         File out = null;
         List<File> deps = null;
+        List<File> exports = null;
         String group = null;
         String artifact = null;
         String version = null;
+        String description = null;
+        String name = null;
         String version_property = null;
         List<File> properties_files = null;
         boolean export = false;
@@ -103,12 +106,24 @@ public class PomGenerator {
                             .map(File::new)
                             .collect(Collectors.toList());
                 }
+            } else if (arg.equals("--exports") && it.hasNext()) {
+                String val = it.next();
+                if (!val.isEmpty()) {
+                    exports =
+                            Arrays.stream(val.split(":"))
+                                    .map(File::new)
+                                    .collect(Collectors.toList());
+                }
             } else if (arg.equals("--group") && it.hasNext()) {
                 group = it.next();
             } else if (arg.equals("--artifact") && it.hasNext()) {
                 artifact = it.next();
             } else if (arg.equals("--version") && it.hasNext()) {
                 version = it.next();
+            } else if (arg.equals("--description") && it.hasNext()) {
+                description = it.next();
+            } else if (arg.equals("--pom_name") && it.hasNext()) {
+                name = it.next();
             } else if (arg.equals("--version_property") && it.hasNext()) {
                 version_property = it.next();
             } else if (arg.equals("--properties") && it.hasNext()) {
@@ -140,7 +155,7 @@ public class PomGenerator {
             }
             version = getVersionFromPropertiesFiles(properties_files, version_property);
         }
-        generatePom(in, out, deps, group, artifact, version, export);
+        generatePom(in, out, deps, exports, group, artifact, version, description, name, export);
     }
 
     private static String getVersionFromPropertiesFiles(
@@ -180,17 +195,23 @@ public class PomGenerator {
             File in,
             File out,
             List<File> pomDependencies,
+            List<File> pomExports,
             String group,
             String artifact,
             String version,
+            String description,
+            String name,
             boolean export)
             throws Exception {
         // Avoid any manipulation if it is an export:
         if ((in != null
                         && out != null
                         && pomDependencies == null
+                        && pomExports == null
                         && group == null
                         && artifact == null
+                        && description == null
+                        && name == null
                         && version == null)
                 || export) {
             Files.copy(in.toPath(), out.toPath());
@@ -214,39 +235,55 @@ public class PomGenerator {
         if (version != null) {
             model.setVersion(version);
         }
-        if (pomDependencies != null) {
-            List<Dependency> deps = new LinkedList<>();
-            for (File pom : pomDependencies) {
-                Dependency dependency = new Dependency();
-                MavenCoordinates coordinates;
-                Model dependent = pomToModel(pom.getAbsolutePath());
-                coordinates = new MavenCoordinates(dependent);
-                if (dependent.getPackaging().equals("pom")) {
-                  // If the target has "pom" packaging, then the dependency
-                  // must also be declared as a pom type dependency.
-                  dependency.setType("pom");
-                }
-
-                dependency.setGroupId(coordinates.groupId);
-                dependency.setArtifactId(coordinates.artifactId);
-                dependency.setVersion(coordinates.version);
-
-                Collection<String> exclusionStrings =
-                        exclusions.get(coordinates.groupId + ":" + coordinates.artifactId);
-                if (exclusionStrings != null) {
-                    for (String exclusionString : exclusionStrings) {
-                        List<String> parts = Splitter.on(':').splitToList(exclusionString);
-                        Exclusion exclusion = new Exclusion();
-                        exclusion.setGroupId(parts.get(0));
-                        exclusion.setArtifactId(parts.get(1));
-                        dependency.addExclusion(exclusion);
-                    }
-                }
-
-                deps.add(dependency);
-            }
-            model.setDependencies(deps);
+        if (description != null) {
+            model.setDescription(description);
         }
+        if (name != null) {
+            model.setName(name);
+        }
+        List<Dependency> deps = new LinkedList<>();
+        if (pomExports != null) {
+            for (File pom : pomExports) {
+                addDependencyTo(pom, "compile", deps);
+            }
+        }
+        if (pomDependencies != null) {
+            for (File pom : pomDependencies) {
+                addDependencyTo(pom, "runtime", deps);
+            }
+        }
+        model.setDependencies(deps);
         modelToPom(model, out);
+    }
+
+    private void addDependencyTo(File pom, String scope, List<Dependency> deps) throws Exception {
+        Dependency dependency = new Dependency();
+        MavenCoordinates coordinates;
+        Model dependent = pomToModel(pom.getAbsolutePath());
+        coordinates = new MavenCoordinates(dependent);
+        if (dependent.getPackaging().equals("pom")) {
+            // If the target has "pom" packaging, then the dependency
+            // must also be declared as a pom type dependency.
+            dependency.setType("pom");
+        }
+
+        dependency.setGroupId(coordinates.groupId);
+        dependency.setArtifactId(coordinates.artifactId);
+        dependency.setVersion(coordinates.version);
+        dependency.setScope(scope);
+
+        Collection<String> exclusionStrings =
+                exclusions.get(coordinates.groupId + ":" + coordinates.artifactId);
+        if (exclusionStrings != null) {
+            for (String exclusionString : exclusionStrings) {
+                List<String> parts = Splitter.on(':').splitToList(exclusionString);
+                Exclusion exclusion = new Exclusion();
+                exclusion.setGroupId(parts.get(0));
+                exclusion.setArtifactId(parts.get(1));
+                dependency.addExclusion(exclusion);
+            }
+        }
+
+        deps.add(dependency);
     }
 }

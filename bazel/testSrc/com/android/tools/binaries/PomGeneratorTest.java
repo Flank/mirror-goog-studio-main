@@ -16,8 +16,6 @@
 
 package com.android.tools.binaries;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -26,8 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.Assert;
 import org.junit.Test;
 
 public class PomGeneratorTest {
@@ -39,20 +35,30 @@ public class PomGeneratorTest {
         File outputPom = new File("output.pom");
 
         Path testDataDir = Paths.get("tools/base/bazel/test/pom_generator/");
-        List<File> pomDependencies = new ArrayList<File>() {{
-            add(testDataDir.resolve("groovy-all-3.0.7.pom").toFile());
-            add(testDataDir.resolve("guava-30.1-jre.pom").toFile());
-        }};
+        List<File> pomDependencies =
+                new ArrayList<File>() {
+                    {
+                        add(testDataDir.resolve("groovy-all-3.0.7.pom").toFile());
+                    }
+                };
+        List<File> pomExports =
+                new ArrayList<File>() {
+                    {
+                        add(testDataDir.resolve("guava-30.1-jre.pom").toFile());
+                    }
+                };
 
         generator.generatePom(
                 null,
                 outputPom,
                 pomDependencies,
+                pomExports,
                 "group",
                 "artifact",
                 "version",
-                false
-        );
+                "description",
+                "name",
+                false);
 
         String goldenFileContents = Files.readString(testDataDir.resolve("golden.pom"));
         String generatedFileContents = Files.readString(outputPom.toPath());
