@@ -1888,6 +1888,7 @@ com.android.builder.core.AbstractProductFlavor.setRenderscriptSupportModeBlasEna
 com.android.builder.core.AbstractProductFlavor.setRenderscriptSupportModeEnabled: com.android.builder.model.ProductFlavor (java.lang.Boolean)
 com.android.builder.core.AbstractProductFlavor.setRenderscriptSupportModeEnabled: void (java.lang.Boolean)
 com.android.builder.core.AbstractProductFlavor.setRenderscriptTargetApi: void (java.lang.Integer)
+com.android.builder.core.AbstractProductFlavor.setResourceConfigurations: void (java.lang.Iterable<java.lang.String>)
 com.android.builder.core.AbstractProductFlavor.setSigningConfig: com.android.builder.model.ProductFlavor (com.android.builder.model.SigningConfig)
 com.android.builder.core.AbstractProductFlavor.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
 com.android.builder.core.AbstractProductFlavor.setTargetSdkVersion: com.android.builder.model.ProductFlavor (com.android.builder.model.ApiVersion)

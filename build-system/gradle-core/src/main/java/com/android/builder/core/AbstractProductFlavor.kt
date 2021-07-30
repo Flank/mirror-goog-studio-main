@@ -23,10 +23,7 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SigningConfig
 import com.google.common.base.MoreObjects
 import com.google.common.base.Strings
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Maps
-import com.google.common.collect.Sets
+import com.google.common.collect.*
 
 /**
  * Builder-level implementation of ProductFlavor.
@@ -225,6 +222,12 @@ abstract class AbstractProductFlavor(
     override var wearAppUnbundled: Boolean? = null
 
     override val resourceConfigurations: MutableSet<String> = Sets.newHashSet()
+
+    fun setResourceConfigurations(newContents: Iterable<String>) {
+        val newArray = Iterables.toArray(newContents, String::class.java)
+        resourceConfigurations.clear()
+        resourceConfigurations.addAll(newArray)
+    }
 
     /**
      * Adds a res config filter (for instance 'hdpi')
