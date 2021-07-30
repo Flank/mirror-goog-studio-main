@@ -296,9 +296,9 @@ maven_repo(
     # keep sorted
     artifacts = [
         "//prebuilts/tools/common/m2:com.google.code.gson.gson.2.7",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-driver-instrumentation.0.0.8-alpha06",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-test-plugin.0.0.8-alpha06",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.core.0.0.8-alpha06",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.android-driver-instrumentation.0.0.8-alpha07",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.android-test-plugin.0.0.8-alpha07",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.core.0.0.8-alpha07",
         "//tools/base/utp/android-device-provider-ddmlib",
         "//tools/base/utp/android-device-provider-gradle",
         "//tools/base/utp/android-device-provider-gradle-proto",
@@ -315,8 +315,8 @@ maven_repo(
         "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
         # These can be removed once the repo rules are migrated
         "//tools/base/emulator/proto:proto",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-device-provider-local.0.0.8-alpha06",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha06",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.android-device-provider-local.0.0.8-alpha07",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
     ],
     visibility = ["__subpackages__"],
 )
