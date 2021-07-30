@@ -468,6 +468,8 @@ class UtpConfigFactory {
                     if (additionalTestOutputOnDeviceDir != null) {
                         putArgsMap("additionalTestOutputDir", additionalTestOutputOnDeviceDir)
                     }
+
+                    noWindowAnimation = testData.animationsDisabled
                 }
             }
             this.useOrchestrator = useOrchestrator

@@ -201,6 +201,19 @@ class UtpConfigFactoryTest {
     }
 
     @Test
+    fun createRunnerConfigProtoForLocalDeviceWithNoAnimation() {
+        val runnerConfigProto = createForLocalDevice(
+            testData = testData.copy(
+                animationsDisabled = true
+            )
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            noWindowAnimation = true)
+    }
+
+    @Test
     fun createRunnerConfigProtoWithIcebox() {
         `when`(mockRetentionConfig.enabled).thenReturn(true)
         `when`(mockRetentionConfig.retainAll).thenReturn(true)
