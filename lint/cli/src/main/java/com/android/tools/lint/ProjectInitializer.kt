@@ -46,6 +46,7 @@ import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import com.android.utils.usLocaleCapitalize
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteStreams
@@ -65,16 +66,10 @@ import java.io.File.separatorChar
 import java.io.IOException
 import java.util.EnumSet
 import java.util.HashSet
-import java.util.regex.Pattern
 import java.util.zip.ZipException
 import java.util.zip.ZipFile
 import kotlin.math.max
 
-/**
- * Regular expression used to match package statements with
- * [ProjectInitializer.findPackage]
- */
-private val PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)")
 private const val TAG_PROJECT = "project"
 private const val TAG_MODULE = "module"
 private const val TAG_CLASSES = "classes"
@@ -998,8 +993,10 @@ private class ProjectInitializer(
                 dir.canonicalPath.replace(separator, "\\\\")
             else dir.canonicalPath
             reportError(
-                "$path ${if (!File(path).isAbsolute) "(relative to " +
-                    relativePath + ") " else ""}does not exist",
+                "$path ${
+                if (!File(path).isAbsolute) "(relative to " +
+                    relativePath + ") " else ""
+                }does not exist",
                 element
             )
         }
@@ -1051,26 +1048,101 @@ private class ProjectInitializer(
         return true
     }
 
-    /**
-     * Finds the package of the given Java/Kotlin source file, if
-     * possible.
-     */
     private fun findPackage(file: File): String? {
-        // Don't use LintClient.readFile; this will attempt to use VFS in some cases
-        // (for example, when encountering Windows file line endings, in order to make
-        // sure that lint's text offsets matches PSI's text offsets), but since this
-        // is still early in the initialization sequence and we haven't set up the
-        // IntelliJ environment yet, we're not ready. And for the purposes of this file
-        // read, we don't actually care about line offsets at all.
-        val source = file.readText()
-        val matcher = PACKAGE_PATTERN.matcher(source)
-        val foundPackage = matcher.find()
-        return if (foundPackage) {
-            matcher.group(1).trim { it <= ' ' }
-        } else {
-            null
-        }
+        return findPackage(file.readText(), file)
     }
+}
+
+/**
+ * Finds the package of the given Java/Kotlin source file, if possible.
+ */
+@VisibleForTesting
+@Suppress("LocalVariableName")
+fun findPackage(source: String, file: File): String? {
+    // Don't use LintClient.readFile; this will attempt to use VFS in some cases
+    // (for example, when encountering Windows file line endings, in order to make
+    // sure that lint's text offsets matches PSI's text offsets), but since this
+    // is still early in the initialization sequence and we haven't set up the
+    // IntelliJ environment yet, we're not ready. And for the purposes of this file
+    // read, we don't actually care about line offsets at all.
+
+    var offset = 0
+    val STATE_INIT = 0
+    val STATE_SLASH = 1
+    val STATE_LINE_COMMENT = 2
+    val STATE_BLOCK_COMMENT = 3
+    val STATE_BLOCK_COMMENT_STAR = 4
+    val STATE_BLOCK_COMMENT_SLASH = 5
+    var blockCommentDepth = 0
+    var state = STATE_INIT
+    val isKotlin = file.path.endsWith(DOT_KT)
+    while (offset < source.length) {
+        val c = source[offset]
+        when (state) {
+            STATE_INIT -> {
+                if (c == '/')
+                    state = STATE_SLASH
+                else if (c == 'p' && source.startsWith("package", offset)) {
+                    val pkg = StringBuilder()
+                    offset += "package".length
+                    while (offset < source.length) {
+                        val p = source[offset++]
+                        if (p.isJavaIdentifierPart() || p == '.') {
+                            pkg.append(p)
+                        } else if (p == ';' || p == '\n' && isKotlin) {
+                            break
+                        }
+                    }
+                    return pkg.toString()
+                }
+            }
+            STATE_SLASH -> when (c) {
+                '/' -> {
+                    state = STATE_LINE_COMMENT
+                }
+                '*' -> {
+                    state = STATE_BLOCK_COMMENT
+                    blockCommentDepth++
+                }
+                else -> {
+                    state = STATE_INIT
+                }
+            }
+            STATE_LINE_COMMENT -> if (c == '\n') state = STATE_INIT
+            STATE_BLOCK_COMMENT -> {
+                when {
+                    c == '*' -> state = STATE_BLOCK_COMMENT_STAR
+                    c == '/' && isKotlin -> state = STATE_BLOCK_COMMENT_SLASH
+                }
+            }
+            STATE_BLOCK_COMMENT_STAR -> {
+                when {
+                    c == '/' -> {
+                        blockCommentDepth--
+                        state = if (blockCommentDepth == 0) {
+                            STATE_INIT
+                        } else {
+                            STATE_BLOCK_COMMENT
+                        }
+                    }
+                    c != '*' -> {
+                        state = STATE_BLOCK_COMMENT
+                    }
+                }
+            }
+            STATE_BLOCK_COMMENT_SLASH -> {
+                if (c == '*') {
+                    blockCommentDepth++
+                }
+                if (c != '/') {
+                    state = STATE_BLOCK_COMMENT
+                }
+            }
+        }
+
+        offset++
+    }
+    return null
 }
 
 /**

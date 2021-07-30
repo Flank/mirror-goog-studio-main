@@ -1636,6 +1636,49 @@ class ProjectInitializerTest {
         )
     }
 
+    @Test
+    fun testFindPackage() {
+        assertEquals(
+            "foo.bar",
+            findPackage("package foo.bar;\n", File("Test.java"))
+        )
+        assertEquals(
+            "foo.bar",
+            findPackage("// Copyright 2021\npackage foo.bar;\n", File("Test.java"))
+        )
+        assertEquals(
+            "foo.bar",
+            findPackage("// package wrong; /*\npackage  foo. bar ;\n", File("Test.java"))
+        )
+        assertEquals(
+            "foo.bar",
+            findPackage("/* package wrong; */\npackage  foo .bar ;\n", File("Test.java"))
+        )
+        assertEquals(
+            "foo.bar",
+            findPackage("/* /* nested comment */ package wrong */\npackage foo.bar \n", File("x.kt"))
+        )
+        // Regression test for 195004772
+        @Language("java")
+        val source =
+            """
+            // Copyright 2007, Google Inc.
+            /** The classes in this is package provide a variety of utility services. */
+            @CheckReturnValue
+            @ParametersAreNonnullByDefault
+            @NullMarked
+            package com.google.common.util;
+
+            import javax.annotation.CheckReturnValue;
+            import javax.annotation.ParametersAreNonnullByDefault;
+            import org.jspecify.nullness.NullMarked;
+            """.trimIndent()
+        assertEquals(
+            "com.google.common.util",
+            findPackage(source, File("package-info.java"))
+        )
+    }
+
     companion object {
         @ClassRule
         @JvmField

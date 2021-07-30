@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
 import junit.framework.TestCase.assertEquals
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
@@ -154,9 +156,29 @@ class ClassNameTest {
                 """
                 /** Comment */
                 // Line comment
-                public class MyClass { String s = "/* This comment is \"in\" a string */" }"""
-            )
-                .trimIndent().trim()
+                public class MyClass { String s = "/* This comment is \"in\" a string */" }""",
+                DOT_JAVA
+            ).trimIndent().trim()
+        )
+    }
+
+    @Test
+    fun testStripCommentsNesting() {
+        assertEquals(
+            """
+            fun test1() { }
+
+            fun test2() { }
+            """.trimIndent().trim(),
+            stripComments(
+                """
+                // Line comment /*
+                /**/ /***/ fun test1() { }
+                /* /* */ fun wrong() { } */
+                fun test2() { }
+                """,
+                DOT_KT
+            ).trimIndent().trim()
         )
     }
 
@@ -170,5 +192,24 @@ class ClassNameTest {
             """.trimIndent()
         assertEquals("com.android.tools.lint.detector.api", ClassName(source).packageName)
         assertEquals("Severity", ClassName(source).className)
+    }
+
+    @Test
+    fun test195004772() {
+        @Language("java")
+        val source =
+            """
+            // Copyright 2007, Google Inc.
+            /** The classes in this is package provide a variety of utility services. */
+            @CheckReturnValue
+            @ParametersAreNonnullByDefault
+            @NullMarked
+            package com.google.common.util;
+
+            import javax.annotation.ParametersAreNonnullByDefault;
+            import org.jspecify.nullness.NullMarked;
+            """.trimIndent()
+        assertEquals("com.google.common.util", ClassName(source).packageName)
+        assertNull(ClassName(source).className)
     }
 }

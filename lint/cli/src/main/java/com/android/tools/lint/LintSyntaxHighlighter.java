@@ -88,13 +88,13 @@ public class LintSyntaxHighlighter {
         if (endsWithIgnoreCase(fileName, DOT_XML)) {
             tokenizeXml();
         } else if (endsWithIgnoreCase(fileName, DOT_JAVA)) {
-            tokenizeJavaLikeLanguage(Lint::isJavaKeyword);
+            tokenizeJavaLikeLanguage(Lint::isJavaKeyword, false);
         } else if (endsWithIgnoreCase(fileName, DOT_GRADLE)) {
-            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isGroovyKeyword);
+            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isGroovyKeyword, false);
         } else if (endsWithIgnoreCase(fileName, ".kt")) {
-            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isKotlinKeyword);
+            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isKotlinKeyword, true);
         } else if (endsWithIgnoreCase(fileName, DOT_AIDL)) {
-            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isAidlKeyword);
+            tokenizeJavaLikeLanguage(LintSyntaxHighlighter::isAidlKeyword, false);
         } // else: plaintext: no need to tokenize
 
         updateSortedOffsets();
@@ -148,8 +148,9 @@ public class LintSyntaxHighlighter {
         boolean isKeyword(@NonNull String keyword);
     }
 
-    private void tokenizeJavaLikeLanguage(KeywordChecker keywordLookup) {
-        // Simple HTML tokenizer
+    private void tokenizeJavaLikeLanguage(
+            KeywordChecker keywordLookup, boolean allowNestedComments) {
+        // Simple Java/Kotlin/Groovy tokenizer
         int length = source.length();
         final int STATE_INITIAL = 1;
         final int STATE_SLASH = 2;
@@ -165,6 +166,7 @@ public class LintSyntaxHighlighter {
         int state = STATE_INITIAL;
         int offset = 0;
         int identifierStart = -1;
+        int blockCommentDepth = 0;
         while (offset < length) {
             char c = source.charAt(offset);
             switch (state) {
@@ -252,6 +254,7 @@ public class LintSyntaxHighlighter {
                             styles.put(offset - 1, STYLE_COMMENT);
                         } else if (c == '*') {
                             state = STATE_BLOCK_COMMENT;
+                            blockCommentDepth++;
                             if (offset < source.length() - 1 && source.charAt(offset + 1) == '*') {
                                 styles.put(offset - 1, STYLE_JAVADOC_COMMENT);
                                 offset++;
@@ -281,10 +284,19 @@ public class LintSyntaxHighlighter {
                         if (c == '*'
                                 && offset < source.length() - 1
                                 && source.charAt(offset + 1) == '/') {
-                            state = STATE_INITIAL;
-                            offset += 2;
-                            styles.put(offset, STYLE_PLAIN_TEXT);
-                            continue;
+                            blockCommentDepth--;
+                            if (blockCommentDepth == 0) {
+                                state = STATE_INITIAL;
+                                offset += 2;
+                                styles.put(offset, STYLE_PLAIN_TEXT);
+                                continue;
+                            }
+                        } else if (c == '/'
+                                && offset < source.length() - 1
+                                && source.charAt(offset + 1) == '*'
+                                && allowNestedComments) {
+                            offset++;
+                            blockCommentDepth++;
                         }
                         offset++;
                         continue;
@@ -973,7 +985,7 @@ public class LintSyntaxHighlighter {
 
     /**
      * Returns a style class for a given style that matches the styles available in {@link
-     * HtmlReporter#CSS_STYLES}
+     * HtmlReporter.Companion#getCssStyles()}
      */
     @Nullable
     private static String getStyleClass(int style) {

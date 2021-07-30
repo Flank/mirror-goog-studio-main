@@ -60,7 +60,7 @@ class DiscouragedDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    fun testDiscouraged() {
+    fun testDocumentationExample() {
         val expected =
             """
             src/test/pkg/Test1.java:9: Warning: Use of this function is discouraged. It is more efficient to retrieve resources by identifier than by name.

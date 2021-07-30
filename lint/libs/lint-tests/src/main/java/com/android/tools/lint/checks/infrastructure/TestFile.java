@@ -202,7 +202,7 @@ public class TestFile {
         @NonNull
         public static TestFile create(@NonNull @Language("JAVA") String source) {
             // Figure out the "to" path: the package plus class name + java in the src/ folder
-            ClassName name = new ClassName(source);
+            ClassName name = new ClassName(source, DOT_JAVA);
             String pkg = name.packageNameWithDefault();
             String cls = name.getClassName();
             String to;
@@ -233,7 +233,7 @@ public class TestFile {
         @NonNull
         public static TestFile create(@NonNull @Language("kotlin") String source) {
             // Figure out the "to" path: the package plus class name + kt in the src/ folder
-            ClassName name = new ClassName(source);
+            ClassName name = new ClassName(source, DOT_KT);
             String pkg = name.packageNameWithDefault();
             String cls = name.getClassName();
             if (cls == null) {
