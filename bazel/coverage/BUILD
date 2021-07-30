@@ -166,16 +166,6 @@ coverage_report(
 )
 
 coverage_report(
-    name = "database-inspector",
-    srcpath_include = [
-        "tools/adt/idea/app-inspection/inspectors/database",
-    ],
-    tests = [
-        "//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
-    ],
-)
-
-coverage_report(
     name = "workmanager-inspector",
     srcpath_include = [
         "tools/adt/idea/app-inspection/inspectors/workmanager",
@@ -649,7 +639,6 @@ combine_report_definitions(
         "compose-ide-plugin",
         "custom-views-preview",
         "dagger-editing",
-        "database-inspector",
         "databinding",
         "designtools",
         "dsl",
@@ -701,7 +690,8 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
+        # TODO(b/182573662) too flaky for coverage
+        #"//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
