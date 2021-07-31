@@ -15,10 +15,6 @@
  */
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
-import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
-import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
-import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -51,13 +47,18 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
 
         val zipCache = KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey)
         val cacheUpdates = mutableListOf<Runnable>()
-        val scopeMap = mutableMapOf<IncrementalFileMergerInput, ScopeType>()
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        val scopeMap = mutableMapOf<IncrementalFileMergerInput, com.android.build.api.transform.QualifiedContent.ScopeType>()
 
-        val inputMap = mutableMapOf<File, ScopeType>()
-        parameters.projectJavaRes.forEach { inputMap[it] = PROJECT}
-        parameters.subProjectJavaRes.forEach { inputMap[it] = SUB_PROJECTS}
-        parameters.externalLibJavaRes.forEach { inputMap[it] = EXTERNAL_LIBRARIES}
-        parameters.featureJavaRes.forEach { inputMap[it] = InternalScope.FEATURES}
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        val inputMap = mutableMapOf<File, com.android.build.api.transform.QualifiedContent.ScopeType>()
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        run {
+            parameters.projectJavaRes.forEach { inputMap[it] = com.android.build.api.transform.QualifiedContent.Scope.PROJECT }
+            parameters.subProjectJavaRes.forEach { inputMap[it] = com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS }
+            parameters.externalLibJavaRes.forEach { inputMap[it] = com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES }
+        }
+        parameters.featureJavaRes.forEach { inputMap[it] = InternalScope.FEATURES }
 
         val inputs =
             toInputs(

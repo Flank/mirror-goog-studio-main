@@ -28,8 +28,6 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
@@ -629,6 +627,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
     }
 
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
         if (!component.androidResourcesEnabled) {
             return
@@ -641,7 +640,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             .addStream(
                 OriginalStream.builder("compile-only-r-class")
                     .addContentTypes(TransformManager.CONTENT_CLASS)
-                    .addScope(QualifiedContent.Scope.PROVIDED_ONLY)
+                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
                     .setFileCollection(compileRClass)
                     .build()
             )
@@ -797,6 +796,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected open fun createDependencyStreams(creationConfig: ComponentCreationConfig) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -808,7 +808,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         transformManager.addStream(
                 OriginalStream.builder("ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
-                        .addScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(
                                 creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
                                         ArtifactScope.EXTERNAL))
@@ -816,12 +816,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
         // merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, DefaultContentType.RESOURCES)
-                        .contains(QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
+        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                        .contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
                     OriginalStream.builder("ext-libs-java-res")
-                            .addContentTypes(DefaultContentType.RESOURCES)
-                            .addScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                            .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                            .addScope(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
                                     creationConfig
                                             .variantDependencies
@@ -835,19 +835,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         transformManager.addStream(
                 OriginalStream.builder("sub-projects-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
-                        .addScope(QualifiedContent.Scope.SUB_PROJECTS)
+                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
                         .setFileCollection(
                                 creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
                                         ArtifactScope.PROJECT))
                         .build())
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, DefaultContentType.RESOURCES).contains(
-                        QualifiedContent.Scope.SUB_PROJECTS)) {
+        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES).contains(
+                com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)) {
             transformManager.addStream(
                     OriginalStream.builder("sub-projects-java-res")
-                            .addContentTypes(DefaultContentType.RESOURCES)
-                            .addScope(QualifiedContent.Scope.SUB_PROJECTS)
+                            .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                            .addScope(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
                             .setArtifactCollection(
                                     creationConfig
                                             .variantDependencies
@@ -880,7 +880,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         transformManager.addStream(
                 OriginalStream.builder("provided-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
-                        .addScope(QualifiedContent.Scope.PROVIDED_ONLY)
+                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
                         .setFileCollection(variantScope.providedOnlyClasspath)
                         .build())
         creationConfig.onTestedConfig<Any?> { testedConfig: VariantCreationConfig ->
@@ -902,8 +902,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
             transformManager.addStream(
                     OriginalStream.builder("tested-code-deps")
-                            .addContentTypes(DefaultContentType.CLASSES)
-                            .addScope(QualifiedContent.Scope.TESTED_CODE)
+                            .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                            .addScope(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
                             .setFileCollection(testedCodeDeps)
                             .build())
             null
@@ -1152,14 +1152,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             useAaptToGenerateLegacyMultidexMainDexProguardRules)
             val rFiles: FileCollection = project.files(
                     creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             creationConfig
                     .transformManager
                     .addStream(
                             OriginalStream.builder("final-r-classes")
                                     .addContentTypes(
-                                            if (scope.needsJavaResStreams) TransformManager.CONTENT_JARS else ImmutableSet.of<QualifiedContent.ContentType>(
-                                                    DefaultContentType.CLASSES))
-                                    .addScope(QualifiedContent.Scope.PROJECT)
+                                            if (scope.needsJavaResStreams) TransformManager.CONTENT_JARS else setOf(
+                                                com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
+                                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(rFiles)
                                     .build())
             creationConfig
@@ -1257,9 +1258,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      * @param contentType the contentType of java resources, must be RESOURCES or NATIVE_LIBS
      * @return the list of scopes for which to merge the java resources.
      */
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected abstract fun getJavaResMergingScopes(
             creationConfig: ComponentCreationConfig,
-            contentType: QualifiedContent.ContentType): Set<QualifiedContent.ScopeType>
+            contentType: com.android.build.api.transform.QualifiedContent.ContentType): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
 
     /**
      * Creates the java resources processing tasks.
@@ -1284,12 +1286,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // create the stream generated from this task, but only if a library with custom transforms,
         // in which case the custom transforms must be applied before java res merging.
         if (creationConfig.variantScope.needsJavaResStreams) {
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             creationConfig
                     .transformManager
                     .addStream(
                             OriginalStream.builder("processed-java-res")
-                                    .addContentType(DefaultContentType.RESOURCES)
-                                    .addScope(QualifiedContent.Scope.PROJECT)
+                                    .addContentType(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(
                                             creationConfig
                                                     .services
@@ -1311,7 +1314,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val transformManager = creationConfig.transformManager
 
         // Compute the scopes that need to be merged.
-        val mergeScopes = getJavaResMergingScopes(creationConfig, DefaultContentType.RESOURCES)
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        val mergeScopes = getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
         taskFactory.register(MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig))
 
         // also add a new merged java res stream if needed.
@@ -1409,6 +1413,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      *
      * This should not be called for classes that will also be compiled from source by jack.
      */
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun addJavacClassesStream(creationConfig: ComponentCreationConfig) {
         // create separate streams for all the classes coming from javac, pre/post hooks and R.
         val transformManager = creationConfig.transformManager
@@ -1417,9 +1422,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 OriginalStream.builder("all-classes") // Need both classes and resources because some annotation
                         // processors generate resources
                         .addContentTypes(
-                                if (needsJavaResStreams) TransformManager.CONTENT_JARS else ImmutableSet.of<QualifiedContent.ContentType>(
-                                        DefaultContentType.CLASSES))
-                        .addScope(QualifiedContent.Scope.PROJECT)
+                                if (needsJavaResStreams) TransformManager.CONTENT_JARS else setOf(
+                                    com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
+                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                         .setFileCollection(creationConfig.artifacts.getAllClasses())
                         .build())
     }
@@ -2214,11 +2219,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
 
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
         creationConfig
             .transformManager
             .consumeStreams(
-                ImmutableSet.of(QualifiedContent.Scope.PROJECT),
-                ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES)
+                mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT),
+                setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
             )
         val jacocoTransformEnabled =
             projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
@@ -2238,12 +2244,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     project.files(creationConfig.artifacts.get(JACOCO_INSTRUMENTED_JARS)).asFileTree
                 )
             }
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
         creationConfig
             .transformManager
             .addStream(
                 OriginalStream.builder("jacoco-instrumented-classes")
-                    .addContentTypes(DefaultContentType.CLASSES)
-                    .addScope(QualifiedContent.Scope.PROJECT)
+                    .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                     .setFileCollection(instrumentedClasses)
                     .build())
     }
@@ -3090,14 +3097,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun maybeCreateTransformClassesWithAsmTask(
             creationConfig: ComponentCreationConfig, isTestCoverageEnabled: Boolean) {
         if (creationConfig.projectClassesAreInstrumented) {
             creationConfig
                     .transformManager
                     .consumeStreams(
-                            ImmutableSet.of(QualifiedContent.Scope.PROJECT),
-                            ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES))
+                            mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT),
+                            setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
             taskFactory.register(
                     TransformClassesWithAsmTask.CreationAction(
                             creationConfig,
@@ -3112,8 +3120,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .transformManager
                     .addStream(
                             OriginalStream.builder("asm-instrumented-classes")
-                                    .addContentTypes(DefaultContentType.CLASSES)
-                                    .addScope(QualifiedContent.Scope.PROJECT)
+                                    .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(
                                             creationConfig
                                                     .allProjectClassesPostAsmInstrumentation)
