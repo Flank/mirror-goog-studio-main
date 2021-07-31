@@ -20,13 +20,16 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
+import java.util.Locale
+import kotlin.math.floor
+import kotlin.math.log10
 
 /**
  * Returns a [NumberFormat] of sufficient precision to use for formatting coordinate
  * values given the maximum viewport dimension.
  */
 fun getCoordinateFormat(maxViewportSize: Float): NumberFormat {
-  val exponent = Math.floor(Math.log10(maxViewportSize.toDouble())).toInt()
+  val exponent = floor(log10(maxViewportSize.toDouble())).toInt()
   var fractionalDigits = 5 - exponent
   val formatBuilder = StringBuilder("#")
   if (fractionalDigits > 0) {
@@ -39,11 +42,9 @@ fun getCoordinateFormat(maxViewportSize: Float): NumberFormat {
       formatBuilder.append('#')
     }
   }
-  val fractionSeparator = DecimalFormatSymbols()
-  fractionSeparator.decimalSeparator = '.'
-  val format = DecimalFormat(formatBuilder.toString(), fractionSeparator)
-  format.roundingMode = RoundingMode.HALF_UP
-  return format
+  return DecimalFormat(formatBuilder.toString(), DecimalFormatSymbols(Locale.ROOT)).apply {
+    roundingMode = RoundingMode.HALF_UP
+  }
 }
 
 // Workaround for https://youtrack.jetbrains.com/issue/KT-4749

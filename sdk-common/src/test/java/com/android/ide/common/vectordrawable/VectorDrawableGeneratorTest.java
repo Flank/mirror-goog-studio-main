@@ -993,6 +993,16 @@ public class VectorDrawableGeneratorTest extends TestCase {
         }
     }
 
+    public void testLocaleWithDashAsMinus() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(new Locale("SE", "sv"));
+        try {
+            checkSvgConversion("test_locale_with_dash_as_minus");
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
     public void testClipPathOrder() throws Exception {
         checkSvgConversion("ic_clip_path_ordering");
     }

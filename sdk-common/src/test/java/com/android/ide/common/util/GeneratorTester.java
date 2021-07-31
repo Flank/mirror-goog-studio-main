@@ -20,11 +20,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.testutils.TestUtils;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 /**
@@ -49,12 +51,8 @@ public class GeneratorTester {
           String filePath) throws IOException {
     File file = new File(missingFilePath);
     if (!file.isAbsolute()) {
-      File targetDir = getTargetDir();
-      if (targetDir == null) {
-        fail("Did not find " + missingFilePath
-                + ". Set $ANDROID_SRC to have it created automatically");
-      }
-      file = new File(targetDir, filePath);
+      Path targetDir = TestUtils.getWorkspaceRoot().resolve(mTestDataRelPath);
+      file = targetDir.resolve(filePath).toFile();
     }
     assertFalse(file.exists());
     if (!file.getParentFile().exists()) {
@@ -172,24 +170,5 @@ public class GeneratorTester {
     }
 
     return new File(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
-  }
-
-  /**
-   * Returns the location to write missing golden files to.
-   */
-  private File getTargetDir() {
-    // Set $ANDROID_SRC to point to your git AOSP working tree
-    String sdk = System.getenv("ANDROID_SRC");
-    if (sdk != null) {
-      File root = new File(sdk);
-      if (root.exists()) {
-        File testData = new File(root, mTestDataRelPath.replace('/', File.separatorChar));
-        if (testData.exists()) {
-          return testData;
-        }
-      }
-    }
-
-    return null;
   }
 }
