@@ -20,9 +20,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -57,9 +59,23 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
         .fromTestApp(
             MinimalSubProject.app("com.example.test")
                 .appendToBuild(
-                    "android.aaptOptions.noCompress = " +
-                            "['.no', '.Test', 'end', '.a(b)c', 'space name.txt', '.KoŃcówka']")
-                .appendToBuild("android.defaultConfig.versionCode 1")
+                    """
+
+                        android {
+                            defaultConfig {
+                                versionCode 1
+                            }
+                            aaptOptions {
+                                noCompress = ['.no', '.Test', 'end', '.a(b)c', 'space name.txt', '.KoŃcówka']
+                            }
+                            testOptions {
+                                unitTests {
+                                    includeAndroidResources true
+                                }
+                            }
+                        }
+                    """.trimIndent()
+                )
                 .withFile("src/main/resources/jres.yes", content)
                 .withFile("src/main/resources/jres.no", content)
                 .withFile("src/main/resources/jres.variantApiNo", content)
@@ -105,6 +121,18 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk).exists()
         verifyCompression(apk.file.toFile())
+
+        project.execute(":packageDebugUnitTestForUnitTest")
+        val unitTestApk =
+            FileUtils.join(
+                project.getIntermediateFile(
+                    InternalArtifactType.APK_FOR_LOCAL_TEST.getFolderName()
+                ),
+                "debugUnitTest",
+                "apk-for-local-test.ap_"
+            )
+        assertThat(unitTestApk).exists()
+        verifyCompression(unitTestApk, checkJavaResources = false)
     }
 
     @Test
@@ -121,12 +149,14 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
         verifyCompression(extracted)
     }
 
-    private fun verifyCompression(apk: File) {
+    private fun verifyCompression(apk: File, checkJavaResources: Boolean = true) {
         ZFile.openReadOnly(apk).use { zf ->
-            zf.expectCompressionMethodOf("jres.yes").isEqualTo(CompressionMethod.DEFLATE)
-            zf.expectCompressionMethodOf("jres.no").isEqualTo(CompressionMethod.STORE)
-            zf.expectCompressionMethodOf("jres.jpg").isEqualTo(CompressionMethod.STORE)
-            zf.expectCompressionMethodOf("jres.tflite").isEqualTo(CompressionMethod.STORE)
+            if (checkJavaResources) {
+                zf.expectCompressionMethodOf("jres.yes").isEqualTo(CompressionMethod.DEFLATE)
+                zf.expectCompressionMethodOf("jres.no").isEqualTo(CompressionMethod.STORE)
+                zf.expectCompressionMethodOf("jres.jpg").isEqualTo(CompressionMethod.STORE)
+                zf.expectCompressionMethodOf("jres.tflite").isEqualTo(CompressionMethod.STORE)
+            }
             zf.expectCompressionMethodOf("assets/a.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("assets/a.no").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a_matching.Test").isEqualTo(CompressionMethod.STORE)

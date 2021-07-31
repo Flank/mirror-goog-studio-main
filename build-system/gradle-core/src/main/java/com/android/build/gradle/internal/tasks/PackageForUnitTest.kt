@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -24,6 +23,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.internal.packaging.ApkFlinger
+import com.android.builder.packaging.PackagingUtils
+import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
+import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.base.Joiner
@@ -33,6 +36,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -40,13 +44,13 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.net.URI
-import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.zip.Deflater.BEST_SPEED
 
 @CacheableTask
 abstract class PackageForUnitTest : NonIncrementalTask() {
@@ -59,6 +63,9 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val mergedAssetsDirectory: DirectoryProperty
 
+    @get:Input
+    abstract val noCompress: ListProperty<String>
+
     @get:OutputFile
     abstract val apkForUnitTest: RegularFileProperty
 
@@ -69,14 +76,22 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         val apkForUnitTest = apkForUnitTest.get().asFile
         FileUtils.copyFile(apkFrom(resApk), apkForUnitTest)
 
-        val uri = URI.create("jar:" + apkForUnitTest.toURI())
-        FileSystems.newFileSystem(uri, emptyMap<String, Any>()).use { apkFs ->
-            val apkAssetsPath = apkFs.getPath("/assets")
-            val mergedAssets = mergedAssetsDirectory.get().asFile
-            if (!mergedAssets.exists()) {
-                return
-            }
-            val mergedAssetsPath = mergedAssets.toPath()
+        val creationData =
+            ApkCreatorFactory.CreationData.builder()
+                .setApkPath(apkForUnitTest)
+                .setNativeLibrariesPackagingMode(NativeLibrariesPackagingMode.COMPRESSED)
+                .setNoCompressPredicate(
+                    PackagingUtils.getNoCompressPredicateForJavaRes(noCompress.get())::test
+                )
+                .build()
+
+        val apkAssetsPath = Paths.get("assets")
+        val mergedAssets = mergedAssetsDirectory.get().asFile
+        if (!mergedAssets.exists()) {
+            return
+        }
+        val mergedAssetsPath = mergedAssets.toPath()
+        ApkFlinger(creationData, BEST_SPEED).use { apkCreator ->
             Files.walkFileTree(mergedAssetsPath, object : SimpleFileVisitor<Path>() {
                 @Throws(IOException::class)
                 override fun visitFile(
@@ -86,9 +101,10 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
                     val relativePath = PathUtils.toSystemIndependentPath(
                         mergedAssetsPath.relativize(path)
                     )
-                    val destPath = apkAssetsPath.resolve(relativePath)
-                    Files.createDirectories(destPath.parent)
-                    FileUtils.copyFile(path, destPath)
+                    val destPath = PathUtils.toSystemIndependentPath(
+                        apkAssetsPath.resolve(relativePath)
+                    )
+                    apkCreator.writeFile(path.toFile(), destPath)
                     return FileVisitResult.CONTINUE
                 }
             })
@@ -155,6 +171,9 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
             task.mergedAssetsDirectory.setDisallowChanges(artifacts.get(
                 InternalArtifactType.MERGED_ASSETS_FOR_UNIT_TEST))
+            task.noCompress.setDisallowChanges(
+                creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress
+            )
         }
     }
 }
