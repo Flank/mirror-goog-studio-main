@@ -533,14 +533,14 @@ def _local_maven_repository_impl(repository_ctx):
     os_name = repository_ctx.os.name.lower()
     if os_name.startswith("mac os"):
         # Ignore mac-arm64, it's OK to use x86 version of java.
-        osdir = "mac"
+        jdk11_os = jdk11.get_child("mac").get_child("Contents").get_child("Home")
     elif os_name.find("windows") != -1:
-        osdir = "win"
+        jdk11_os = jdk11.get_child("win")
     else:
-        osdir = "linux"
+        jdk11_os = jdk11.get_child("linux")
 
     java_exe = "java.exe" if os_name.find("windows") != -1 else "java"
-    java = jdk11.get_child(osdir).get_child("bin").get_child(java_exe)
+    java = jdk11_os.get_child("bin").get_child(java_exe)
 
     if not java.exists:
         fail("Failed to find java binary at: " + str(java))
