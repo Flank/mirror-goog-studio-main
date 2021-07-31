@@ -327,7 +327,7 @@ def maven_proto_library(
         visibility = visibility,
     )
 
-    grpc_extra_deps = ["@//prebuilts/tools/common/m2:javax.annotation.javax.annotation-api.1.3.2"]
+    grpc_extra_deps = ["@maven//:javax.annotation.javax.annotation-api"]
     java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
     java_deps += proto_java_runtime_library
 

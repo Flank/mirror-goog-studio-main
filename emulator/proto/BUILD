@@ -1,21 +1,17 @@
-load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:proto.bzl", "maven_proto_library", "android_java_proto_library", "java_proto_library")
+load("//tools/base/bazel:maven.bzl", "import_maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-java_proto_library(
-    name = "proto",
+import_maven_library("proto", "proto_bzl")
+
+maven_proto_library(
+    name = "proto_bzl",
     srcs = glob(["*.proto"]),
+    coordinates = "com.android.tools.emulator:proto:" + BASE_VERSION,
     grpc_support = 1,
-    java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
-    pom = ":pom",
+    java_deps = ["@maven//:io.grpc.grpc-all"],
     protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "proto",
-    group = "com.android.tools.emulator",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 android_java_proto_library(
