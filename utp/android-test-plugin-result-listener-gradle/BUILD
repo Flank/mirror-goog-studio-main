@@ -1,38 +1,33 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-kotlin_library_legacy(
-    name = "android-test-plugin-result-listener-gradle",
+maven_library(
+    name = "android-test-plugin-result-listener-gradle_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    pom = ":pom",
+    coordinates = "com.android.tools.utp:android-test-plugin-result-listener-gradle:" + BASE_VERSION,
+    legacy_name = "android-test-plugin-result-listener-gradle",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:io.grpc_grpc-core",
-        "//tools/base/third_party:io.grpc_grpc-netty",
-        "//tools/base/third_party:io.grpc_grpc-stub",
-        "//tools/base/third_party:io.grpc_grpc-protobuf",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
+        "//tools/base/common:common_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:io.grpc.grpc-core",
+        "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-stub",
+        "@maven//:io.grpc.grpc-protobuf",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto:android-test-plugin-result-listener-gradle-proto_bzl",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
-        "//tools/base/third_party:com.google.testing.platform_android-device-provider-local",
-        "//tools/base/third_party:com.google.testing.platform_core-proto",
-        "//tools/base/third_party:com.google.testing.platform_launcher",
+        "@maven//:com.google.testing.platform.android-device-provider-local",
+        "@maven//:com.google.testing.platform.core-proto",
+        "@maven//:com.google.testing.platform.launcher",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "android-test-plugin-result-listener-gradle",
-    group = "com.android.tools.utp",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

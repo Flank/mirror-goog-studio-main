@@ -207,6 +207,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:com.google.errorprone.error_prone_annotations.2.0.18",
     "//prebuilts/tools/common/m2:com.sun.xml.fastinfoset.FastInfoset.1.2.16",
     "//prebuilts/tools/common/m2:it.unimi.dsi.fastutil.8.4.0",
+    "//prebuilts/tools/common/m2:javax.annotation.javax.annotation-api.1.3.2",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
     "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
     "//prebuilts/tools/common/m2:net.sf.kxml.kxml2.2.3.0",
@@ -232,6 +233,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/signflinger:signflinger",
     "//tools/data-binding:tools.baseLibrary",
     "//tools/data-binding:tools.baseLibrarySupport",
+    "//tools/base/third_party:io.grpc_grpc-all",
 ]
 
 maven_repo(

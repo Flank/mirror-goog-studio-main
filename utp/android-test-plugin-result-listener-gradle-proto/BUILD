@@ -1,27 +1,23 @@
-load("//tools/base/bazel:proto.bzl", "java_proto_library")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
+load("//tools/base/bazel:maven.bzl", "import_maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-java_proto_library(
-    name = "android-test-plugin-result-listener-gradle-proto",
+import_maven_library("android-test-plugin-result-listener-gradle-proto", "android-test-plugin-result-listener-gradle-proto_bzl")
+
+maven_proto_library(
+    name = "android-test-plugin-result-listener-gradle-proto_bzl",
     srcs = glob(["src/main/proto/*.proto"]),
+    coordinates = "com.android.tools.utp:android-test-plugin-result-listener-gradle-proto:" + BASE_VERSION,
     grpc_support = 1,
-    java_deps = [
-        "//tools/base/third_party:io.grpc_grpc-core",
-        "//tools/base/third_party:io.grpc_grpc-netty",
-        "//tools/base/third_party:io.grpc_grpc-stub",
-        "//tools/base/third_party:io.grpc_grpc-protobuf",
+    java_exports = [
+        "@maven//:io.grpc.grpc-core",
+        "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-protobuf",
+        "@maven//:io.grpc.grpc-stub",
     ],
-    pom = ":pom",
     protoc_grpc_version = "1.21.1",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle-proto",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "android-test-plugin-result-listener-gradle-proto",
-    group = "com.android.tools.utp",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 # Android Studio only needs protobuf message without gRPC services.
