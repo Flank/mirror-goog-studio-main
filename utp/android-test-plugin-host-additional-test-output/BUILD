@@ -10,6 +10,7 @@ maven_library(
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-additional-test-output:" + BASE_VERSION,
     legacy_name = "android-test-plugin-host-additional-test-output",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-additional-test-output/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
