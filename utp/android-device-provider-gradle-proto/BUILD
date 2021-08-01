@@ -1,19 +1,15 @@
-load("//tools/base/bazel:proto.bzl", "java_proto_library")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
+load("//tools/base/bazel:maven.bzl", "import_maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-java_proto_library(
-    name = "android-device-provider-gradle-proto",
+import_maven_library("android-device-provider-gradle-proto", "android-device-provider-gradle-proto_bzl")
+
+maven_proto_library(
+    name = "android-device-provider-gradle-proto_bzl",
     srcs = glob(["*.proto"]),
-    pom = ":pom",
+    coordinates = "com.android.tools.utp:android-device-provider-gradle-proto:" + BASE_VERSION,
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "android-device-provider-gradle-proto",
-    group = "com.android.tools.utp",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 java_proto_library(
