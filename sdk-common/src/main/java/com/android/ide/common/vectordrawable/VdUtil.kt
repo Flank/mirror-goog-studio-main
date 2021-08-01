@@ -47,8 +47,7 @@ fun getCoordinateFormat(maxViewportSize: Float): NumberFormat {
   }
 }
 
-// Workaround for https://youtrack.jetbrains.com/issue/KT-4749
-private const val ALPHA_MASK = 0xFF000000.toInt()
+private const val ALPHA_MASK = 0xFF shl 24
 
 /**
  * Parses a color value in #AARRGGBB format.
