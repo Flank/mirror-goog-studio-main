@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.tools.json.JsonFileWriter;
 import com.android.tools.maven.AetherUtils;
+import com.android.tools.maven.HandleAarDescriptorReaderDelegate;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.repository_generator.BuildFileWriter;
 import com.android.tools.repository_generator.ResolutionResult;
@@ -46,6 +47,7 @@ import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.apache.maven.model.resolution.ModelResolver;
+import org.apache.maven.repository.internal.ArtifactDescriptorReaderDelegate;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -587,6 +589,9 @@ public class LocalMavenRepositoryGenerator {
             // When this flag is true, these nodes are kept in the dependency graph, but have a
             // special marker (NODE_DATA_WINNER).
             session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+            session.setConfigProperty(
+                    ArtifactDescriptorReaderDelegate.class.getName(),
+                    new HandleAarDescriptorReaderDelegate());
 
             return session;
         }
