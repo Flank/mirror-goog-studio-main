@@ -58,8 +58,6 @@ public class AdditionalTestOutputConnectedTest {
                         .with(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT, true)
                         .run("connectedCheck");
 
-        ScannerSubject.assertThat(result.getStdout()).contains("fetching test data data.json");
-
         File additionalTestOutputDir =
                 new File(
                         project.getOutputDir().getAbsolutePath(),

@@ -113,7 +113,6 @@ enum class BooleanOption(
     ENABLE_PROFILE_JSON("android.enableProfileJson", false, FeatureStage.Experimental),
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn", false, FeatureStage.Experimental),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow", false, FeatureStage.Experimental),
-    ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM("android.experimental.androidTest.useUnifiedTestPlatform", false, FeatureStage.Experimental),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices", false, FeatureStage.Experimental),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck", false, FeatureStage.Experimental),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck", false, FeatureStage.Experimental),
@@ -196,6 +195,8 @@ enum class BooleanOption(
     INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_ART_PROFILES("android.enableArtProfiles", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM("android.experimental.androidTest.useUnifiedTestPlatform", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     /* -------------------
      * DEPRECATED FEATURES
