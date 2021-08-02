@@ -579,6 +579,7 @@ def _maven_library_impl(ctx):
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
 
     return [
+        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = [ctx.attr.library[DefaultInfo].files])),
         ctx.attr.library[JavaInfo],
         MavenInfo(
             pom = ctx.outputs.pom,
