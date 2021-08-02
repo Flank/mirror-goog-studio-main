@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 
 # Test just kotlin
