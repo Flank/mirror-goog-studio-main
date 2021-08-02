@@ -1,4 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 load("//tools/base/common:version.bzl", "BASE_VERSION")

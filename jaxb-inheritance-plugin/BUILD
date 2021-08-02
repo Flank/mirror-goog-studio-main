@@ -1,5 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library")
-
 java_library(
     name = "jaxb-inheritance-plugin",
     srcs = glob(["src/main/java/**"]),

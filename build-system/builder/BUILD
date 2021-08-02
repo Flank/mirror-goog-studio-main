@@ -1,5 +1,4 @@
 load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
@@ -67,13 +66,6 @@ maven_library(
         "@maven//:org.ow2.asm.asm-tree",
         "@maven//:org.ow2.asm.asm-util",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "builder",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 kotlin_library(

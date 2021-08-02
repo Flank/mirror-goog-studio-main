@@ -1,5 +1,4 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
 maven_library(
@@ -43,13 +42,6 @@ kotlin_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "aaptcompiler",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 filegroup(
