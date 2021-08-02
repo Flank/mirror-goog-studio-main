@@ -72,7 +72,7 @@ interface InternalCommonExtension<
 
     var compileSdkVersion: String?
 
-    // See GroovyBlockInExtensionsTest
+    // See GroovyExtensionsTest
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
     fun defaultConfig(action: Action<DefaultConfig>)
@@ -94,5 +94,6 @@ interface InternalCommonExtension<
     fun splits(action: Action<SplitsImpl>)
     fun testCoverage(action: Action<TestCoverage>)
     fun testOptions(action: Action<TestOptionsImpl>)
+    fun setFlavorDimensions(flavorDimensions: List<String>)
 
 }

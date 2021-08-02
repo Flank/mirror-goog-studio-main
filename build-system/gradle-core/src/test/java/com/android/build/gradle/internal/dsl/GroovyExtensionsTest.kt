@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
+import com.android.utils.usLocaleCapitalize
+import com.android.utils.usLocaleDecapitalize
 import com.google.common.truth.Expect
 import com.google.common.truth.Truth.assertWithMessage
 import org.gradle.api.Action
+import org.gradle.api.DomainObjectCollection
 import org.junit.Rule
 import org.junit.Test
 import java.lang.reflect.Method
@@ -40,7 +43,7 @@ import java.lang.reflect.WildcardType
  * Adding it to InternalCommonExtension, makes the Kotlin compiler generate
  * a delegate method, and causes Gradle to generate the appropriate method,
  */
-class GroovyBlockInExtensionsTest {
+class GroovyExtensionsTest {
 
     @get:Rule
     val expect: Expect = Expect.create()
@@ -54,6 +57,7 @@ class GroovyBlockInExtensionsTest {
     fun testApplicationExtension() {
         validate(InternalApplicationExtension::class.java, ApplicationExtensionImpl::class.java)
     }
+
     @Test
     fun testLibraryExtension() {
         validate(InternalLibraryExtension::class.java, LibraryExtensionImpl::class.java)
@@ -151,5 +155,39 @@ class GroovyBlockInExtensionsTest {
                 .named("Method $name on $implClass is abstract")
                 .isFalse()
         }
+
+        val expectedSetters = extensionClass.methods.filter { isCollectionGetter(it) }
+            .map {
+                val name = it.name.removePrefix("get")
+                "set$name(${name.usLocaleDecapitalize()}: ${it.genericReturnType})" }
+        val actualSetters = extensionClass.methods.filter { isCollectionSetter(it) }
+            .map { val name = it.name.removePrefix("set")
+                "set$name(${name.usLocaleDecapitalize()}: ${it.genericParameterTypes[0]})"
+             }
+
+        assertWithMessage(
+            "All collections defined in the AGP DSL " +
+                    extensionClass.simpleName.removePrefix("Internal") +
+                    " need corresponding setters for groovy in " +
+                    extensionClass.simpleName +
+                    "\n" +
+                    "e.g. CommonExtension has\n" +
+                    "    val flavorDimensions: MutableList<String>\n\n" +
+                    "so internalCommonExtension has\n" +
+                    "    fun setFlavorDimensions(flavorDimensions: List<String>)\n"
+        )
+            .that(actualSetters)
+            .named("Setters for Groovy DSL")
+            .containsExactlyElementsIn(expectedSetters)
     }
+
+    private fun isCollectionGetter(it: Method) =
+        it.parameterCount == 0 && it.name.startsWith("get") && isDslCollectionType(it.returnType)
+
+    private fun isCollectionSetter(it: Method) =
+        it.parameterCount == 1 && it.name.startsWith("set") && isDslCollectionType(it.parameterTypes[0])
+
+    private fun isDslCollectionType(type: Class<*>) =
+        Collection::class.java.isAssignableFrom(type) &&
+                !DomainObjectCollection::class.java.isAssignableFrom(type)
 }
