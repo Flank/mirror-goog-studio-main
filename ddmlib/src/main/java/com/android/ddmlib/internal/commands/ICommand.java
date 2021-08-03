@@ -20,5 +20,11 @@ package com.android.ddmlib.internal.commands;
  * the action of the command.
  */
 public interface ICommand {
-    // TODO (194901500): define command interface
+
+    /**
+     * Action to perform when running the command.
+     *
+     * @param argsString optional arguments passed to command.
+     */
+    void run(String argsString);
 }

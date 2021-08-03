@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AvdData;
+import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientTracker;
 import com.android.ddmlib.CommandFailedException;
 import com.android.ddmlib.DdmPreferences;
@@ -28,6 +29,7 @@ import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.internal.commands.DisconnectCommand;
 import com.android.ddmlib.internal.jdwp.JdwpProxyServer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -89,6 +91,9 @@ public final class DeviceMonitor implements ClientTracker {
             }
             if (DdmPreferences.isDdmlibCommandServiceEnabled()) {
                 mDdmlibCommandService = new CommandService(DdmPreferences.getDdmCommandPort());
+                mDdmlibCommandService.addCommand(
+                        DisconnectCommand.COMMAND, new DisconnectCommand(this));
+                mDdmlibCommandService.start();
             }
 
             // To terminate thread call stop on each respective task.
@@ -151,6 +156,10 @@ public final class DeviceMonitor implements ClientTracker {
                 Log.e("DeviceMonitor.stop", ex);
             }
         }
+
+        if (mDdmlibCommandService != null) {
+            mDdmlibCommandService.stop();
+        }
     }
 
     /** Returns whether the monitor is currently connected to the debug bridge server. */
@@ -181,6 +190,20 @@ public final class DeviceMonitor implements ClientTracker {
         }
         //noinspection ToArrayCallWithZeroLengthArrayArgument
         return devices.toArray(new IDevice[0]);
+    }
+
+    public void disconnectClient(IDevice device, int pid) {
+        if (isMonitoring()) {
+            for (Client client : device.getClients()) {
+                if (client.getClientData().getPid() == pid) {
+                    assert myDeviceClientMonitorTask != null;
+                    myDeviceClientMonitorTask.disconnectClient((ClientImpl) client);
+                    return;
+                }
+            }
+        } else {
+            Log.w("ddms", "Client disconnect ignored, not currently monitoring");
+        }
     }
 
     @NonNull

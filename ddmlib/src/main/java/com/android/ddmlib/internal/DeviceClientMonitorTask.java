@@ -196,6 +196,13 @@ class DeviceClientMonitorTask implements Runnable {
         }
     }
 
+    void disconnectClient(ClientImpl client) {
+        MonitorThread monitorThread = MonitorThread.getInstance();
+        if (monitorThread != null) {
+            monitorThread.dropClient(client, true);
+        }
+    }
+
     @Override
     public void run() {
         do {
