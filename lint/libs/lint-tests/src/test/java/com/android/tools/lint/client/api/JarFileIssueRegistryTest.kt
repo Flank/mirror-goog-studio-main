@@ -29,7 +29,6 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.io.StringWriter
 import java.nio.file.Files
-import java.util.Arrays
 
 class JarFileIssueRegistryTest : AbstractCheckTest() {
     override fun lint(): TestLintTask = TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
@@ -49,7 +48,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             "lint.jar",
             CustomRuleTest.LINT_JAR_BASE64_GZIP
         ).createFile(targetDir)
-        val file2 = jar("unsupported.jar").createFile(targetDir)
+        val file2 = jar("unsupported/lint.jar").createFile(targetDir)
+        val file3 = jar("unsupported.jar").createFile(targetDir)
         assertTrue(file1.path, file1.exists())
         val loggedWarnings = StringWriter()
         val client = createClient(loggedWarnings)
@@ -58,6 +58,8 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertSame(registry1, registry2)
         val registry3 = getSingleRegistry(client, file2)
         assertThat(registry3).isNull()
+        val registry4 = getSingleRegistry(client, file3)
+        assertThat(registry4).isNull()
 
         assertEquals(1, registry1.issues.size)
         assertEquals("UnitTestAppCompatMethod", registry1.issues[0].id)
@@ -78,9 +80,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         )
 
         // Make sure we handle up to date checks properly too
-        val composite = CompositeIssueRegistry(
-            Arrays.asList<IssueRegistry>(registry1, registry2)
-        )
+        val composite = CompositeIssueRegistry(listOf(registry1, registry2))
         assertThat(composite.isUpToDate).isTrue()
 
         assertThat(registry1.isUpToDate).isTrue()

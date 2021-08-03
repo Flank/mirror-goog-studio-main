@@ -589,7 +589,7 @@ ${verifier.describeFirstPackagedDependency()}
                                 }
                             }
                         } else {
-                            if (logJarProblems()) {
+                            if (logJarProblems() && jarFile.name == "lint.jar") {
                                 client.log(
                                     Severity.ERROR, null,
                                     "Custom lint rule jar %1\$s does not contain a valid " +
