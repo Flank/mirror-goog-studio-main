@@ -615,12 +615,12 @@ MavenInfo = provider(fields = {
 })
 
 def _maven_artifact_impl(ctx):
-    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+    files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
     return [
         DefaultInfo(files = depset(ctx.files.files)),
         MavenInfo(
             pom = ctx.file.pom,
-            files = ctx.files.files,
+            files = files,
             transitive = depset(direct = files, transitive = [d[MavenInfo].transitive for d in ctx.attr.deps]),
         ),
     ]
@@ -669,7 +669,14 @@ def _maven_import_impl(ctx):
         ))
 
     infos += [dep[JavaInfo] for dep in ctx.attr.exports]
-    mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
+
+    data_deps = []
+    data_deps += ctx.attr.deps if ctx.attr.deps else []
+    data_deps += ctx.attr.exports if ctx.attr.exports else []
+    data_deps += ctx.attr.original_deps if ctx.attr.original_deps else []
+    data_deps += [ctx.attr.parent] if ctx.attr.parent else []
+
+    mavens = [dep[MavenInfo] for dep in data_deps]
     files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
     names = []
@@ -684,7 +691,7 @@ def _maven_import_impl(ctx):
             DefaultInfo(files = depset(ctx.files.jars)),
             MavenInfo(
                 pom = ctx.file.pom,
-                files = ctx.files.files,
+                files = files,
                 transitive = depset(direct = files, transitive = [info.transitive for info in mavens]),
             ),
             java_common.merge(infos),
@@ -742,13 +749,13 @@ def maven_import(
 def _maven_repository_impl(ctx):
     rel_paths = []
     files = []
-    for artifact in ctx.attr.artifacts:
-        if MavenInfo not in artifact:
-            fail("Maven repositories can only contain maven artifacts")
-        artifacts = artifact[MavenInfo].transitive.to_list() if ctx.attr.include_transitive_deps else artifact[MavenInfo].files
-        for r, f in artifacts:
-            files.append(f)
-            rel_paths.append((r, f))
+    artifacts = depset(
+        direct = [f for artifact in ctx.attr.artifacts for f in artifact[MavenInfo].files],
+        transitive = [artifact[MavenInfo].transitive for artifact in ctx.attr.artifacts] if ctx.attr.include_transitive_deps else [],
+    )
+    for r, f in artifacts.to_list():
+        files.append(f)
+        rel_paths.append((r, f))
 
     build_manifest_content = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
     manifest_content = "".join([k + "=" + v.short_path + "\n" for k, v in rel_paths])
@@ -773,7 +780,7 @@ def _maven_repository_impl(ctx):
 maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
-        "include_transitive_deps": attr.bool(),
+        "include_transitive_deps": attr.bool(default = True),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "exec",

@@ -270,6 +270,7 @@ maven_repository(
         "//tools/base/annotations:annotations_bzl",
         "//tools/base/common:common_bzl",
     ],
+    include_transitive_deps = False,
     visibility = [
         "//tools/base/build-system:__pkg__",
         "//tools/base/gmaven:__pkg__",
