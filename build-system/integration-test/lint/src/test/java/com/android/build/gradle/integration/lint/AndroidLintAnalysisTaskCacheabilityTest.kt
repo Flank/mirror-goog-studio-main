@@ -115,106 +115,117 @@ class AndroidLintAnalysisTaskCacheabilityTest {
             }
         }
     }
+}
 
-    private fun createGradleTestProject(name: String): GradleTestProject {
-        val app =
-            MinimalSubProject.app("com.example.test")
-                .addLintIssues()
-                .appendToBuild(
-                    """
+/**
+ * Creates a multi-module android project, including an app module, a dynamic-feature module, an
+ * android library module, and a java library module, with lint issues scattered throughout.
+ *
+ * @param name the name of the project
+ * @param heapSize the max heap size of the project
+ */
+fun createGradleTestProject(name: String, heapSize: String = "2048M"): GradleTestProject {
+    val app =
+        MinimalSubProject.app("com.example.test")
+            .addLintIssues()
+            .appendToBuild(
+                """
 
-                        android {
-                            dynamicFeatures =  [':feature']
-                            buildTypes {
-                                debug {
-                                    // this triggers ByteOrderMarkDetector in build directory
-                                    buildConfigField "String", "FOO", "\"\uFEFF\""
-                                }
-                            }
-                            lint {
-                                abortOnError = false
-                                checkDependencies = true
-                                textOutput = file("lint-report.txt")
-                                checkGeneratedSources = true
-                                checkAllWarnings = true
-                                checkTestSources = true
-                            }
-                        }
-                    """.trimIndent()
-                )
-        val feature =
-            MinimalSubProject.dynamicFeature("com.example.test")
-                .addLintIssues()
-                .appendToBuild(
-                    """
-
-                        android {
-                            buildTypes {
-                                debug {
-                                    // this triggers ByteOrderMarkDetector in build directory
-                                    buildConfigField "String", "FOO", "\"\uFEFF\""
-                                }
-                            }
-                            lint {
-                                checkGeneratedSources = true
-                                checkAllWarnings = true
-                                checkTestSources = true
+                    android {
+                        dynamicFeatures =  [':feature']
+                        buildTypes {
+                            debug {
+                                // this triggers ByteOrderMarkDetector in build directory
+                                buildConfigField "String", "FOO", "\"\uFEFF\""
                             }
                         }
-                    """.trimIndent()
-                )
-        val lib =
-            MinimalSubProject.lib("com.example.lib")
-                .addLintIssues()
-                .appendToBuild(
-                    """
-
-                        android {
-                            buildTypes {
-                                debug {
-                                    // this triggers ByteOrderMarkDetector in build directory
-                                    buildConfigField "String", "FOO", "\"\uFEFF\""
-                                }
-                            }
-                            lint {
-                                checkGeneratedSources = true
-                                checkAllWarnings = true
-                                checkTestSources = true
-                            }
-                        }
-                    """.trimIndent()
-                )
-        val javaLib =
-            MinimalSubProject.javaLibrary()
-                .addLintIssues(isAndroid = false)
-                .appendToBuild(
-                    """
-
-                        apply plugin: 'com.android.lint'
-
                         lint {
+                            abortOnError = false
+                            checkDependencies = true
+                            textOutput = file("lint-report.txt")
                             checkGeneratedSources = true
                             checkAllWarnings = true
                             checkTestSources = true
                         }
-                    """.trimIndent()
-                )
-
-        return GradleTestProject.builder()
-            .withName(name)
-            .fromTestApp(
-                MultiModuleTestProject.builder()
-                    .subproject(":app", app)
-                    .subproject(":feature", feature)
-                    .subproject(":lib", lib)
-                    .subproject(":java-lib", javaLib)
-                    .dependency(feature, app)
-                    .dependency(app, lib)
-                    .dependency(app, javaLib)
-                    .build()
+                    }
+                """.trimIndent()
             )
-            .create()
-    }
+    val feature =
+        MinimalSubProject.dynamicFeature("com.example.test")
+            .addLintIssues()
+            .appendToBuild(
+                """
+
+                    android {
+                        buildTypes {
+                            debug {
+                                // this triggers ByteOrderMarkDetector in build directory
+                                buildConfigField "String", "FOO", "\"\uFEFF\""
+                            }
+                        }
+                        lint {
+                            abortOnError = false
+                            checkGeneratedSources = true
+                            checkAllWarnings = true
+                            checkTestSources = true
+                        }
+                    }
+                """.trimIndent()
+            )
+    val lib =
+        MinimalSubProject.lib("com.example.lib")
+            .addLintIssues()
+            .appendToBuild(
+                """
+
+                    android {
+                        buildTypes {
+                            debug {
+                                // this triggers ByteOrderMarkDetector in build directory
+                                buildConfigField "String", "FOO", "\"\uFEFF\""
+                            }
+                        }
+                        lint {
+                            abortOnError = false
+                            checkGeneratedSources = true
+                            checkAllWarnings = true
+                            checkTestSources = true
+                        }
+                    }
+                """.trimIndent()
+            )
+    val javaLib =
+        MinimalSubProject.javaLibrary()
+            .addLintIssues(isAndroid = false)
+            .appendToBuild(
+                """
+
+                    apply plugin: 'com.android.lint'
+
+                    lint {
+                        abortOnError = false
+                        checkGeneratedSources = true
+                        checkAllWarnings = true
+                        checkTestSources = true
+                    }
+                """.trimIndent()
+            )
+
+    return GradleTestProject.builder()
+        .withName(name)
+        .fromTestApp(
+            MultiModuleTestProject.builder()
+                .subproject(":app", app)
+                .subproject(":feature", feature)
+                .subproject(":lib", lib)
+                .subproject(":java-lib", javaLib)
+                .dependency(feature, app)
+                .dependency(app, lib)
+                .dependency(app, javaLib)
+                .build()
+        )
+        .withHeap(heapSize)
+        .create()
 }
 
 private fun MinimalSubProject.addLintIssues(isAndroid: Boolean = true): MinimalSubProject {

@@ -112,6 +112,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         }
 
         private fun createClassLoader(classpath: List<URI>): URLClassLoader {
+            Logging.getLogger(AndroidLintWorkAction::class.java).info("Creating lint class loader.")
             val classpathUrls = classpath.map { it.toURL() }.toTypedArray()
             return URLClassLoader(classpathUrls, getPlatformClassLoader())
         }
