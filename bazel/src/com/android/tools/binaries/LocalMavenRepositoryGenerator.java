@@ -297,11 +297,11 @@ public class LocalMavenRepositoryGenerator {
         // The dependencies that were involved in a conflict and got upgraded.
         List<String> originalDeps = new ArrayList<>();
 
-        if (isConflictLoser) {
-            for (DependencyNode child : node.getChildren()) {
-                originalDeps.add(child.getArtifact().toString());
-            }
-        } else {
+        for (DependencyNode child : node.getChildren()) {
+            originalDeps.add(child.getArtifact().toString());
+        }
+
+        if (!isConflictLoser) {
             for (DependencyNode child : node.getChildren()) {
                 DependencyNode winnerChildNode = getWinner(child);
                 if (winnerChildNode == null
@@ -324,7 +324,6 @@ public class LocalMavenRepositoryGenerator {
                     String scope = child.getDependency().getScope();
                     resolvedDeps.putIfAbsent(scope, new ArrayList<>());
                     resolvedDeps.get(scope).add(winnerChildNode.getArtifact().toString());
-                    originalDeps.add(child.getArtifact().toString());
                 }
             }
         }
