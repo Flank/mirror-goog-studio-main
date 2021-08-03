@@ -756,7 +756,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     // which are "b.contains(a)"
                     val text = operator.text
                     val operand =
-                        if (text == "in" || text == "!in") {
+                        if (context.evaluator.isInfix(method) || text == "in" || text == "!in") {
                             call.leftOperand
                         } else {
                             call.rightOperand

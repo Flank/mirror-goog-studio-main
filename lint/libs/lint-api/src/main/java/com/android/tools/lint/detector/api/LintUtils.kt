@@ -2175,16 +2175,22 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
         for (parameter in call.valueArguments) {
             elementMap[parameter.psi ?: continue] = parameter
         }
-        if (valueArguments.isNotEmpty()) {
+        if (parameters.isNotEmpty()) {
+            val mapping = mutableMapOf<UExpression, PsiParameter>()
+
             var firstParameterIndex = 0
+
             // Kotlin extension method? Not included in valueArguments indices.
             // check if "$self" for UltraLightParameter
-            val first = parameters.firstOrNull()?.name
-            if (first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) {
+            val firstParameter = parameters.first()
+            if (firstParameter.isReceiver()) {
+                val callReceiver = call.receiver
+                if (callReceiver != null) {
+                    mapping[callReceiver] = firstParameter
+                }
                 firstParameterIndex++
             }
 
-            val mapping = mutableMapOf<UExpression, PsiParameter>()
             for ((parameterDescriptor, valueArgument) in valueArguments) {
                 for (argument in valueArgument.arguments) {
                     val expression = argument.getArgumentExpression() ?: continue

@@ -2139,4 +2139,40 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             """
         )
     }
+
+    fun testAnnotationReceiver() {
+        // Regression test for b/195014464
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.ColorRes
+                import androidx.annotation.DrawableRes
+                import androidx.annotation.StringRes
+
+                fun @receiver:StringRes Int.colorize1(o: Int) { }
+                infix fun @receiver:StringRes Int.colorize2(o: Int) { }
+
+                fun testExtensionFunction1(@DrawableRes panel: Int, c: Int) {
+                    panel.colorize1(c) // ERROR 1
+                }
+                fun testExtensionFunction2(@DrawableRes panel: Int, c: Int) {
+                    panel colorize2 c // ERROR 2
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:11: Error: Expected resource of type string [ResourceType]
+                panel.colorize1(c) // ERROR 1
+                ~~~~~
+            src/test/pkg/test.kt:14: Error: Expected resource of type string [ResourceType]
+                panel colorize2 c // ERROR 2
+                ~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
 }
