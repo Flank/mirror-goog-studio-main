@@ -39,6 +39,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -50,6 +51,7 @@ import java.util.zip.ZipInputStream
 /**
  * Task that generates the standalone from a bundle.
  */
+@DisableCachingByDefault
 abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
 
     @get:InputFiles

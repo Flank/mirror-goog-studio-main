@@ -597,6 +597,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        // override global appliesTo to check unused resources in the RAW folder
         return true;
     }
 

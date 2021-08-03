@@ -35,6 +35,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
 import org.gradle.internal.deprecation.DeprecatableConfiguration
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task to check whether Jetifier is needed for the current project. This is done by checking
@@ -44,6 +45,7 @@ import org.gradle.internal.deprecation.DeprecatableConfiguration
  * dependency graphs and as of version 7.1 Gradle does not yet support that use case
  * (https://github.com/gradle/gradle/issues/12871).
  */
+@DisableCachingByDefault
 abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
 
     @get:Internal // This task always runs

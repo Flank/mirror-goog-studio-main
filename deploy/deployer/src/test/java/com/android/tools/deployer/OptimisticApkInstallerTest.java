@@ -15,7 +15,7 @@
  */
 package com.android.tools.deployer;
 
-import static com.google.common.truth.Truth.*;
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.ddmlib.IDevice;
@@ -303,8 +303,7 @@ public class OptimisticApkInstallerTest {
                         .setPath(apkFile.toAbsolutePath().toString())
                         .addLibraryAbi(TEST_ABI)
                         .setPackageName(TEST_PACKAGE)
-                        .setTargetPackages(targetPackages)
-                        .setIsolatedServices(ImmutableList.of());
+                        .setTargetPackages(targetPackages);
 
         ByteBuffer buffer = ByteBuffer.wrap(Files.readAllBytes(apkFile));
         buffer.position((int) info.cd.first);

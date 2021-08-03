@@ -56,4 +56,11 @@ interface PrefabPackagingOptions {
      * If this option is null, the default convention of lib<name> will be used.
      */
     var libraryName: String?
+
+    /**
+     * True if the library is header only and contains no library files.
+     *
+     * This value defaults to false.
+     */
+    var headerOnly: Boolean
 }

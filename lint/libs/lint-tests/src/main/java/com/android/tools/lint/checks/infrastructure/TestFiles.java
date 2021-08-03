@@ -410,16 +410,20 @@ public class TestFiles {
                     || name.startsWith("intellij-core")
                     || name.endsWith(".lint-api-base") // IJ
                     || name.endsWith("lint-api.jar") // blaze
+                    || name.endsWith("lint-api_bzl.jar") // blaze (using maven_library)
                     || name.endsWith(".lint.checks-base") // IJ
-                    || name.endsWith("lint-checks.jar")
+                    || name.endsWith("lint-checks.jar")  // blaze
+                    || name.endsWith("lint-checks_bzl.jar")  // blaze (using maven_library)
                     || name.endsWith(".lint-model-base") // IJ
                     || name.endsWith("lint-model.jar") // blaze
+                    || name.endsWith("lint-model_bzl.jar") // blaze (using maven_library)
                     || name.startsWith("lint-model") // Gradle
                     || name.endsWith(".testutils")
                     || name.endsWith("testutils.jar")
                     || name.startsWith("testutils-")
                     || name.endsWith(".lint.tests")
                     || name.endsWith("lint-tests.jar") // blaze
+                    || name.endsWith("lint-tests_bzl.jar") // blaze (using maven_library)
                     || (name.equals("main") && path.contains("lint-tests")) // Gradle
                     || name.endsWith(".lint.cli")) {
                 TestFile testFile = new LibraryReferenceTestFile(file);

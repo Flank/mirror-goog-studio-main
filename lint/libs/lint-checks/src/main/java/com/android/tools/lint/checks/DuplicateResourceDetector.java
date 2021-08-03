@@ -274,7 +274,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     if (names.contains(name) && context.isEnabled(ISSUE)) {
                         Location location = context.getLocation(nameNode);
                         for (Element prevItem : items) {
-                            Attr attribute = item.getAttributeNode(ATTR_NAME);
+                            Attr attribute = prevItem.getAttributeNode(ATTR_NAME);
                             if (attribute != null && name.equals(attribute.getValue())) {
                                 assert prevItem != item;
                                 Location prev = context.getLocation(prevItem);

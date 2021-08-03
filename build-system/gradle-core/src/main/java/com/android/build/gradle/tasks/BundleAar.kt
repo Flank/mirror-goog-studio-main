@@ -42,9 +42,11 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.bundling.ZipEntryCompression
+import org.gradle.work.DisableCachingByDefault
 import java.util.Locale
 
 /** Custom Zip task to allow archive name to be set lazily. */
+@DisableCachingByDefault
 abstract class BundleAar : Zip(), VariantAwareTask {
 
     @Internal

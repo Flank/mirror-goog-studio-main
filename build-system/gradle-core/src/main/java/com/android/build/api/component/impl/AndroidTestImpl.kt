@@ -261,8 +261,8 @@ open class AndroidTestImpl @Inject constructor(
             else -> testedConfig.variantType.isBaseModule && needsShrinkDesugarLibrary
         }
 
-    override val targetDeployApi: AndroidVersion =
-        testedVariant.targetDeployApi
+    override val minSdkVersionForDexing: AndroidVersion =
+        testedVariant.minSdkVersionForDexing
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled
@@ -275,9 +275,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dexingType: DexingType
         get() = delegate.dexingType
-
-    override val needsMainDexListForBundle: Boolean
-        get() = false
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

@@ -24,12 +24,14 @@ import java.io.File;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 /**
  * This is a stub task.
  *
  * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
+@DisableCachingByDefault
 public class LintCompile extends DefaultTask {
 
     private File outputDirectory;

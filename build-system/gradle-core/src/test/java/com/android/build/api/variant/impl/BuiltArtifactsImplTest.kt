@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.VariantOutput
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
@@ -30,7 +29,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileWriter
 import java.io.ObjectOutputStream
+import java.util.Properties
 import kotlin.test.fail
 
 /**
@@ -571,6 +572,45 @@ class BuiltArtifactsImplTest {
             isUniversal = true),
         )
         Truth.assertThat(updatedArtifact?.outputFile).endsWith("main2b.apk")
+    }
+
+    /**
+     * Test that passing a redirect file to the [GenericBuiltArtifactsLoader] is functional.
+     */
+    @Test
+    fun testRedirect() {
+        val outputFolder = tmpFolder.newFolder("some_folder")
+        BuiltArtifactsImpl(
+            artifactType = SingleArtifact.APK,
+            applicationId = "com.android.test",
+            variantName = "debug",
+            elements = listOf(
+                BuiltArtifactImpl.make(
+                    outputFile = createOutputFile(outputFolder, "file1.apk").absolutePath,
+                    versionCode = 123,
+                    versionName = "version_name"
+                )
+            )
+        ).save(FakeGradleDirectory(outputFolder))
+        val listingFile = File(outputFolder, BuiltArtifactsImpl.METADATA_FILE_NAME)
+
+        // now writes the file redirect.
+        val redirectFolder = tmpFolder.newFolder("redirect_folder")
+        val redirectFile = File(redirectFolder, BuiltArtifactsImpl.REDIRECT_FILE_NAME)
+        Properties().also {
+            it.setProperty(GenericBuiltArtifactsLoader.RedirectFilePropertyName,
+                listingFile.relativeTo(redirectFolder).path)
+            it.store(FileWriter(redirectFile), GenericBuiltArtifactsLoader.RedirectMarker)
+        }
+
+        Truth.assertThat(redirectFile.exists()).isTrue()
+        val loadedFromFile = GenericBuiltArtifactsLoader.loadFromFile(redirectFile, NullLogger())
+        // perform some sanity that json file got loaded correctly.
+        Truth.assertThat(loadedFromFile).isNotNull()
+        Truth.assertThat(loadedFromFile?.artifactType?.type).isEqualTo( SingleArtifact.APK.name())
+        Truth.assertThat(loadedFromFile?.applicationId).isEqualTo("com.android.test")
+        Truth.assertThat(loadedFromFile?.elements?.size).isEqualTo(1)
+
     }
 
     private fun createBuiltArtifact(

@@ -31,8 +31,8 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -95,7 +95,6 @@ import org.gradle.tooling.BuildException
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
-import java.util.ArrayList
 import javax.inject.Inject
 
 @CacheableTask
@@ -863,13 +862,22 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setUseConditionalKeepRules(parameters.useConditionalKeepRules.get())
                         .setUseMinimalKeepRules(parameters.useMinimalKeepRules.get())
                         .setUseFinalIds(parameters.useFinalIds.get())
-                        .addResourceDirectories(parameters.compiledDependenciesResources.files.reversed()
-                            .toImmutableList())
                         .setEmitStableIdsFile(parameters.outputStableIdsFile.orNull?.asFile)
                         .setConsumeStableIdsFile(stableIdsInputFile)
                         .setLocalSymbolTableFile(parameters.localResourcesFile.orNull?.asFile)
                         .setMergeBlameDirectory(parameters.mergeBlameDirectory.get().asFile)
                         .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.orNull?.asFile)
+                        .apply {
+                            val compiledDependencyResourceFiles =
+                                parameters.compiledDependenciesResources.files
+                            // In the event of running process[variant]AndroidTestResources
+                            // on a module that depends on a module with no precompiled resources,
+                            // we must avoid passing the compiled resource directory to AAPT link.
+                            if (compiledDependencyResourceFiles.all(File::exists)) {
+                                addResourceDirectories(
+                                    compiledDependencyResourceFiles.reversed().toImmutableList())
+                            }
+                        }
 
                     if (parameters.namespaced.get()) {
                         configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(parameters.dependencies.files))

@@ -21,6 +21,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.File
@@ -29,6 +30,7 @@ import java.io.File
  * Task responsible for creating the asset pack's manifest file from the settings in the module's
  * build.gradle file, as well as the base package name of the project.
  */
+@DisableCachingByDefault
 abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
     /**
      * The generated manifest file for the asset pack module.

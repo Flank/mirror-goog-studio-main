@@ -18,7 +18,7 @@ package com.android.deploy.service;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.deploy.service.proto.Deploy;
+import com.android.deploy.service.proto.Service;
 import com.android.utils.ILogger;
 
 /**
@@ -38,7 +38,7 @@ public class DeployLogger implements ILogger {
         VERBOSE
     }
 
-    private final Deploy.DeployLog.Builder myLog = Deploy.DeployLog.newBuilder();
+    private final Service.DeployLog.Builder myLog = Service.DeployLog.newBuilder();
     private final Level myLevel;
 
     public DeployLogger(Level level) {
@@ -73,7 +73,7 @@ public class DeployLogger implements ILogger {
         }
     }
 
-    public Deploy.DeployLog toProto() {
+    public Service.DeployLog toProto() {
         return myLog.build();
     }
 }

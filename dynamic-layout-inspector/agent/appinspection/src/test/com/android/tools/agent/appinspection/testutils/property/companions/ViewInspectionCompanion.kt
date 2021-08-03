@@ -20,13 +20,19 @@ import android.view.View
 import android.view.inspector.InspectionCompanion
 import android.view.inspector.PropertyMapper
 import android.view.inspector.PropertyReader
+import com.android.tools.agent.appinspection.testutils.property.ATTR_OFFSET
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyMapper
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyReader
 
 class ViewInspectionCompanion : InspectionCompanion<View> {
 
     companion object {
+        const val OFFSET = 0 // Start index of view properties
         val NUM_PROPERTIES = Property.values().size
+
+        fun addResourceNames(resourceNames: MutableMap<Int, String>) {
+            resourceNames[ATTR_OFFSET + OFFSET] = "android.attr/visibility"
+        }
     }
 
     private val visibilityMapper: (Int) -> String? = { value ->
@@ -44,13 +50,12 @@ class ViewInspectionCompanion : InspectionCompanion<View> {
     }
 
     override fun mapProperties(mapper: PropertyMapper) {
-        val enumMapper = EnumPropertyMapper<Property>(mapper)
+        val enumMapper = EnumPropertyMapper<Property>(mapper, OFFSET)
         enumMapper.mapIntEnum(Property.VISIBILITY, visibilityMapper)
     }
 
     override fun readProperties(view: View, reader: PropertyReader) {
-        val enumReader = EnumPropertyReader<Property>(reader)
+        val enumReader = EnumPropertyReader<Property>(reader, OFFSET)
         enumReader.readIntEnum(Property.VISIBILITY, view.visibility)
     }
 }
-

@@ -48,8 +48,10 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Task doing test report aggregation. */
+@DisableCachingByDefault
 public abstract class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private final transient List<AndroidTestTask> subTasks = Lists.newArrayList();

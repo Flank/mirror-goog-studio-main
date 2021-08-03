@@ -456,7 +456,6 @@ public class ManifestMergingTest {
     @Test
     public void checkUseIgnoreWarning() throws Exception {
         File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
-        System.out.println(appManifest.getAbsolutePath());
         TestFileUtils.searchAndReplace(
                 appManifest,
                 "package=\"com.android.tests.flavors\">",

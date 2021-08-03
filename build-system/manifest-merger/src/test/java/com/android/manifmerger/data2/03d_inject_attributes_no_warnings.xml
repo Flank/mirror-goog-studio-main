@@ -1,0 +1,59 @@
+#
+# Test:
+# do no specify minSdkVersion and other sdk versions in this uses-sdk, this
+# ensure we do not warn to user necessarily.
+#
+
+@inject
+minSdkVersion=10
+targetSdkVersion=14
+
+@main
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+
+    <uses-sdk
+            tools:overrideLibrary="androidx.leanback.preference, androidx.leanback"/>
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/app_icon"
+        android:backupAgent="com.example.app.BackupAgentClass"
+        android:restoreAnyVersion="true"
+        android:allowBackup="true"
+        android:killAfterRestore="true"
+        android:name="com.example.TheApp" >
+    </application>
+
+</manifest>
+
+@result
+
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app1"
+    android:versionCode="100"
+    android:versionName="1.0.0">
+    <uses-sdk
+        android:minSdkVersion="10"
+        android:targetSdkVersion="14">
+    </uses-sdk>
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/app_icon"
+        android:backupAgent="com.example.app.BackupAgentClass"
+        android:restoreAnyVersion="true"
+        android:allowBackup="true"
+        android:killAfterRestore="true"
+        android:name="com.example.TheApp" >
+    </application>
+
+</manifest>
+
+@errors

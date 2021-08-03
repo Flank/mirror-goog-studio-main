@@ -1,6 +1,6 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "explicit_target")
-load(":maven.bzl", "MavenInfo", "generate_pom", "maven_pom", "split_coordinates")
+load(":maven.bzl", "MavenInfo", "generate_pom", "import_maven_library", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
@@ -144,7 +144,7 @@ _kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(
+def kotlin_library_legacy(
         name,
         srcs,
         javacopts = [],
@@ -177,7 +177,7 @@ def kotlin_library(
         )
 
     if not kotlins and not javas:
-        fail("No sources found for kotlin_library " + name)
+        fail("No sources found for kotlin_library_legacy " + name)
 
     targets = []
     kdeps = []
@@ -327,12 +327,77 @@ def _resources(ctx, resources, resources_jar):
         mnemonic = "zipper",
     )
 
-def _maven_library_impl(ctx):
+def kotlin_library(
+        name,
+        srcs,
+        deps = None,
+        javacopts = [],
+        jar_name = None,
+        lint_baseline = None,
+        lint_classpath = [],
+        lint_is_test_sources = False,
+        lint_timeout = None,
+        **kwargs):
+    """Compiles a library jar from Java and Kotlin sources
+
+    Args:
+        srcs: The sources of the library.
+        javacopts: Additional javac options.
+        resources: Resources to add to the jar.
+        resources_strip_prefix: The prefix to strip from the resources path.
+        deps: The dependencies of this library.
+        runtime_deps: The runtime dependencies.
+        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
+        friends: The list of kotlin-friends.
+        notice: An optional notice file to be included in the jar.
+        coordinates: The maven coordinates of this artifact.
+        exclusions: Files to exclude from the generated pom file.
+        lint_*: Lint configuration arguments
+        module_name: The kotlin module name.
+    """
+
+    kotlins = [src for src in srcs if src.endswith(".kt")]
+    javas = [src for src in srcs if src.endswith(".java")]
+    source_jars = [src for src in srcs if src.endswith(".srcjar")]
+    final_javacopts = javacopts + ["--release", "8"]
+
+    _kotlin_library(
+        name = name,
+        jar = jar_name if jar_name else "lib" + name + ".jar",
+        java_srcs = javas,
+        deps = deps,
+        kotlin_srcs = kotlins,
+        source_jars = source_jars,
+        kotlin_use_ir = test_kotlin_use_ir(),
+        javacopts = final_javacopts if javas else None,
+        **kwargs
+    )
+
+    # TODO move lint tests out of here
+    if lint_baseline:
+        # TODO: use srcs once the migration is completed
+        lint_srcs = javas + kotlins
+        if not lint_srcs:
+            fail("lint_baseline set for rule that has no sources")
+
+        lint_test(
+            name = name + "_lint_test",
+            srcs = lint_srcs,
+            baseline = lint_baseline,
+            deps = deps + lint_classpath,
+            custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
+            tags = ["no_windows"],
+            is_test_sources = lint_is_test_sources,
+            timeout = lint_timeout if lint_timeout else None,
+        )
+
+def _kotlin_library_impl(ctx):
     java_srcs = ctx.files.java_srcs
     kotlin_srcs = ctx.files.kotlin_srcs
+    source_jars = ctx.files.source_jars
     name = ctx.label.name
 
-    java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
+    java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs or source_jars else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
     deps = [dep[JavaInfo] for dep in ctx.attr.deps] + [dep[JavaInfo] for dep in ctx.attr.bundled_deps]
@@ -362,12 +427,13 @@ def _maven_library_impl(ctx):
         jars += [resources_jar]
 
     # Java
-    if java_srcs:
+    if java_srcs or source_jars:
         java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
 
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
+            source_jars = source_jars,
             output = java_jar,
             deps = deps + kotlin_providers,
             javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
@@ -408,51 +474,31 @@ def _maven_library_impl(ctx):
         runtime_deps = deps,
     )]
 
-    # excludes bundled_deps
-    infos = [dep[MavenInfo] for dep in ctx.attr.deps]
-    pom_deps = [info.pom for info in infos]
-
-    coordinates = split_coordinates(ctx.attr.coordinates)
-    basename = coordinates.artifact_id + "-" + coordinates.version
-    generate_pom(
-        ctx,
-        output_pom = ctx.outputs.pom,
-        group = coordinates.group_id,
-        artifact = coordinates.artifact_id,
-        version = coordinates.version,
-        deps = pom_deps,
-    )
-    repo_files = [
-        (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
-        (coordinates.repo_path + "/" + basename + ".jar", ctx.outputs.jar),
-    ]
-    if ctx.file.notice:
-        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
-
-    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos])
-
+    transitive_runfiles = depset(transitive = [
+        dep[DefaultInfo].default_runfiles.files
+        for dep in ctx.attr.deps + ctx.attr.bundled_deps
+        if dep[DefaultInfo].default_runfiles
+    ])
+    runfiles = ctx.runfiles(files = ctx.files.data, transitive_files = transitive_runfiles)
     return [
         java_common.merge(providers),
-        MavenInfo(
-            pom = ctx.outputs.pom,
-            files = repo_files,
-            transitive = transitive,
-        ),
+        DefaultInfo(files = depset([ctx.outputs.jar]), runfiles = runfiles),
     ]
 
-_maven_library = rule(
+_kotlin_library = rule(
     attrs = {
         "java_srcs": attr.label_list(allow_files = True),
         "kotlin_srcs": attr.label_list(allow_files = True),
+        "source_jars": attr.label_list(allow_files = True),
         "resources": attr.label_list(allow_files = True),
         "notice": attr.label(allow_single_file = True),
         "manifests": attr.label_list(allow_files = True),
+        "data": attr.label_list(allow_files = True),
         "friends": attr.label_list(
             allow_files = [".jar"],
         ),
-        "deps": attr.label_list(
-            providers = [JavaInfo, MavenInfo],
-        ),
+        "jar": attr.output(mandatory = True),
+        "deps": attr.label_list(providers = [JavaInfo]),
         "bundled_deps": attr.label_list(
             providers = [JavaInfo],
         ),
@@ -464,7 +510,6 @@ _maven_library = rule(
         ),
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
-        "coordinates": attr.string(),
         "kotlin_use_ir": attr.bool(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
@@ -493,6 +538,59 @@ _maven_library = rule(
             cfg = "host",
             executable = True,
         ),
+    },
+    fragments = ["java"],
+    implementation = _kotlin_library_impl,
+)
+
+def _maven_library_impl(ctx):
+    infos = [dep[MavenInfo] for dep in ctx.attr.deps]
+    pom_deps = [info.pom for info in infos]
+
+    coordinates = split_coordinates(ctx.attr.coordinates)
+    basename = coordinates.artifact_id + "-" + coordinates.version
+    generate_pom(
+        ctx,
+        output_pom = ctx.outputs.pom,
+        group = coordinates.group_id,
+        artifact = coordinates.artifact_id,
+        version = coordinates.version,
+        deps = pom_deps,
+    )
+    repo_files = [
+        (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
+        (coordinates.repo_path + "/" + basename + ".jar", ctx.file.library),
+    ]
+    if ctx.file.notice:
+        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
+
+    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos])
+
+    return [
+        ctx.attr.library[JavaInfo],
+        MavenInfo(
+            pom = ctx.outputs.pom,
+            files = repo_files,
+            transitive = transitive,
+        ),
+    ]
+
+_maven_library = rule(
+    attrs = {
+        "notice": attr.label(allow_single_file = True),
+        "library": attr.label(providers = [JavaInfo], allow_single_file = True),
+        "coordinates": attr.string(),
+        "deps": attr.label_list(providers = [MavenInfo]),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
         "_pom": attr.label(
             executable = True,
             cfg = "host",
@@ -501,7 +599,6 @@ _maven_library = rule(
         ),
     },
     outputs = {
-        "jar": "%{name}.jar",
         "pom": "%{name}.pom",
     },
     fragments = ["java"],
@@ -526,6 +623,7 @@ def maven_library(
         lint_is_test_sources = False,
         lint_timeout = None,
         module_name = None,
+        legacy_name = "",
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -544,14 +642,21 @@ def maven_library(
         lint_*: Lint configuration arguments
         module_name: The kotlin module name.
     """
+    if legacy_name:
+        # Create legacy rules and make them point to the new rules.
+        import_maven_library(legacy_name, name, deps = deps, notice = notice)
+
     kotlins = [src for src in srcs if src.endswith(".kt")]
     javas = [src for src in srcs if src.endswith(".java")]
+    source_jars = [src for src in srcs if src.endswith(".srcjar")]
     final_javacopts = javacopts + ["--release", "8"]
 
-    _maven_library(
-        name = name,
+    _kotlin_library(
+        name = name + ".lib",
+        jar = name + ".jar",
         java_srcs = javas,
         kotlin_srcs = kotlins,
+        source_jars = source_jars,
         deps = deps,
         bundled_deps = bundled_deps,
         friends = friends,
@@ -562,7 +667,15 @@ def maven_library(
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
+        **kwargs
+    )
+
+    _maven_library(
+        name = name,
+        notice = notice,
+        deps = deps,
         coordinates = coordinates,
+        library = ":" + name + ".lib",
         **kwargs
     )
 

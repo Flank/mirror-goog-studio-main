@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
 fileset(
@@ -10,7 +10,7 @@ fileset(
     },
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "gradle-api",
     srcs = glob([
         "src/main/java/**/*.kt",
@@ -74,6 +74,9 @@ filegroup(
         "src/main/**/*.java",
         "src/main/**/*.kt",
         "src/main/resources/**",
-    ]) + ["build.gradle"],
+    ]) + [
+        "build.gradle",
+        "NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

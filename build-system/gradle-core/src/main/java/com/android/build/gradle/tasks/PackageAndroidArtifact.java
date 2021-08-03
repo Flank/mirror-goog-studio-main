@@ -141,11 +141,13 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.work.FileChange;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
 
 /** Abstract task to package an Android artifact. */
+@DisableCachingByDefault
 public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @InputFiles

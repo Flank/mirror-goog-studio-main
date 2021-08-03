@@ -19,7 +19,6 @@ package com.android.tools.agent.appinspection.proto
 import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.Point
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -31,7 +30,6 @@ import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import com.android.tools.agent.appinspection.proto.resource.convert
 import com.android.tools.agent.appinspection.util.ThreadUtils
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
@@ -182,6 +180,9 @@ fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     }
 }
 
+fun View.getNamespace(attributeId: Int): String =
+    if (attributeId != 0) resources.getResourcePackageName(attributeId) else ""
+
 fun View.createAppContext(stringTable: StringTable): AppContext {
     return AppContext.newBuilder().apply {
         createResource(stringTable, context.themeResId)?.let { themeResource ->
@@ -252,7 +253,7 @@ private fun View.createPropertyGroupImpl(stringTable: StringTable): PropertyGrou
         }
 
         (viewProperties + layoutProperties)
-            .mapNotNull { property -> property.build(stringTable) }
+            .mapNotNull { property -> property.build(stringTable, view) }
             .forEach { property -> this.addProperty(property) }
     }.build()
 }

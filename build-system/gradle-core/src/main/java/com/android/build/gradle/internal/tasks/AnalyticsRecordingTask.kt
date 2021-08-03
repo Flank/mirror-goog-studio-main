@@ -23,6 +23,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Currently, the only function of this task is to invoke Analytics build service to record raw
@@ -30,6 +31,7 @@ import org.gradle.api.tasks.PathSensitivity
  * those which should not be computed at configuration time. This task does not use gradle's
  * up-to-date check and always runs for release artifacts.
  */
+@DisableCachingByDefault
 abstract class AnalyticsRecordingTask :
     UnsafeOutputsTask("AnalyticsRecordingTask always runs to record raw application id for release artifacts") {
 

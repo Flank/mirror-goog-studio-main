@@ -64,8 +64,11 @@ public class Merger {
                 usage();
                 return 0;
             }
-            // no value for --remove-tools-declarations flag
+            // no value for --remove-tools-declarations and --disable-minSdkLibrary-check flag
             if ("--remove-tools-declarations".equals(selector)) {
+                continue;
+            }
+            if ("--disable-minSdkLibrary-check".equals(selector)) {
                 continue;
             }
             if (!arguments.hasNext()) {
@@ -102,6 +105,11 @@ public class Merger {
             String selector = arguments.next();
             if ("--remove-tools-declarations".equals(selector)) {
                 invoker.withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+                continue;
+            }
+            // Unsafely disables minSdkVersion check in libraries
+            if ("--disable-minSdkLibrary-check".equals(selector)) {
+                invoker.withFeatures(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK);
                 continue;
             }
             String value = arguments.next();
@@ -204,7 +212,6 @@ public class Merger {
         System.out.println("\t--out [path of the output file]");
         System.out.println("\t--remove-tools-declarations");
     }
-
 
     @VisibleForTesting
     protected File checkPath(@NonNull String path) throws FileNotFoundException {

@@ -71,6 +71,12 @@ if [[ -z "$postsubmit" && -d "${dist_dir}" ]]; then
   if [[ $bazelrc ]]; then bazelrc_flags+=("--bazelrc=${bazelrc}"); fi
 fi
 
+declare -a extra_test_flags
+if [[ $postsubmit ]]; then
+    extra_test_flags+=(--nocache_test_results)
+    extra_test_flags+=(--flaky_test_attempts=2)
+fi
+
 # Generate baseline coverage file lists
 "${script_dir}/bazel" \
   build \
@@ -93,6 +99,7 @@ fi
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \
+  "${extra_test_flags[@]}" \
   -- \
   @cov//:all.suite \
   @baseline//... \

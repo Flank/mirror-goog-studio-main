@@ -29,11 +29,13 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 
 /** Task to package an Android application (APK).  */
+@DisableCachingByDefault
 abstract class PackageApplication : PackageAndroidArtifact() {
     private lateinit var transformationRequest: ArtifactTransformationRequest<PackageApplication>
 

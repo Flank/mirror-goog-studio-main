@@ -24,9 +24,11 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /** task packaging the rs headers */
+@DisableCachingByDefault
 abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
 
     @get:OutputDirectory

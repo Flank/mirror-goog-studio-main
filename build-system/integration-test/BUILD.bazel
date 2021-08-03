@@ -296,9 +296,9 @@ maven_repo(
     # keep sorted
     artifacts = [
         "//prebuilts/tools/common/m2:com.google.code.gson.gson.2.7",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-driver-instrumentation.0.0.8-alpha05",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-test-plugin.0.0.8-alpha05",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.core.0.0.8-alpha05",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.android-driver-instrumentation.0.0.8-alpha06",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.android-test-plugin.0.0.8-alpha06",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.core.0.0.8-alpha06",
         "//tools/base/utp/android-device-provider-ddmlib",
         "//tools/base/utp/android-device-provider-gradle",
         "//tools/base/utp/android-device-provider-gradle-proto",

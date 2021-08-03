@@ -276,9 +276,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
-    override val needsMainDexListForBundle: Boolean
-        get() = false
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
@@ -294,8 +291,8 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val targetDeployApi: AndroidVersion
-        get() = delegate.targetDeployApi
+    override val minSdkVersionForDexing: AndroidVersion
+        get() = delegate.minSdkVersionForDexing
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

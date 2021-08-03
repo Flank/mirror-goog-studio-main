@@ -29,8 +29,10 @@ import org.gradle.api.tasks.diagnostics.ProjectBasedReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Prints out the DSL names and directory names of available source sets. */
+@DisableCachingByDefault
 public class SourceSetsTask extends ProjectBasedReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();

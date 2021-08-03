@@ -42,6 +42,7 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
 
     companion object {
         const val METADATA_FILE_NAME = "output-metadata.json"
+        const val REDIRECT_FILE_NAME = "redirect.props"
 
         private fun initFileType(elements: Collection<BuiltArtifactImpl>): String? {
             val (files, directories)  = elements

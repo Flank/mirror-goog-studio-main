@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package com.android.build.api.extension
 
 import com.android.build.api.AndroidPluginVersion

@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
+import com.android.sdklib.AndroidVersion.VersionCodes
+import kotlin.math.max
 
 open class ApkCreationConfigImpl(
     override val config: ApkCreationConfig,
@@ -44,20 +46,24 @@ open class ApkCreationConfigImpl(
         }
 
     /**
-     * Returns the minimum SDK version for which we want to deploy this variant on.
-     * In most cases this will be equal the minSdkVersion, but when the IDE is deploying to a
-     * device running a higher API level than the minSdkVersion this will have that value and
-     * can be used to enable some optimizations to build the APK faster.
+     * Returns the minimum SDK version which we want to use for dexing.
+     * In most cases this will be equal the minSdkVersion, but when the IDE is deploying to:
+     * - device running API 24+, the min sdk version for dexing is max(24, minSdkVersion)
+     * - device running API 23-, the min sdk version for dexing is minSdkVersion
+     * - there is no device, the min sdk version for dexing is minSdkVersion
+     * It is used to enable some optimizations to build the APK faster.
      *
      * This has no relation with targetSdkVersion from build.gradle/manifest.
      */
-    override val targetDeployApi: AndroidVersion
+    override val minSdkVersionForDexing: AndroidVersion
         get() {
             val targetDeployApiFromIDE = variantDslInfo.targetDeployApiFromIDE ?: 1
-            return if (targetDeployApiFromIDE > config.minSdkVersion.getFeatureLevel()) {
-                AndroidVersionImpl(targetDeployApiFromIDE)
-            } else {
-                config.minSdkVersion
-            }
+
+            val minForDexing = if (targetDeployApiFromIDE >= VersionCodes.N) {
+                    max(24, config.minSdkVersion.getFeatureLevel())
+                } else {
+                    config.minSdkVersion.getFeatureLevel()
+                }
+            return AndroidVersionImpl(minForDexing)
         }
 }

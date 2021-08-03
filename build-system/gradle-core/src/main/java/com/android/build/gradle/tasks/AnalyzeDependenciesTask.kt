@@ -41,11 +41,13 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Function
 
 // TODO: Make incremental
+@DisableCachingByDefault
 abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     @get:InputFiles

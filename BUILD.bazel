@@ -204,6 +204,7 @@ maven_repo(
         "//tools/base/third_party:org.jdom_jdom2",
         "//tools/base/third_party:org.jetbrains.dokka_dokka-android-gradle-plugin",
         "//tools/base/third_party:org.jetbrains.dokka_dokka-gradle-plugin",
+        "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
         "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
         "//tools/base/third_party:org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions",
@@ -273,4 +274,16 @@ maven_repository(
         "//tools/base/build-system:__pkg__",
         "//tools/base/gmaven:__pkg__",
     ],
+)
+
+# The Android Gradle Plugin gradle build invokes this to
+# prepare the repository of artifacts to compile against
+java_binary(
+    name = "agp_artifacts_dir",
+    data = [":agp_artifacts"],
+    jvm_flags = [
+        "-Dartifacts_manifest_file=tools/base/agp_artifacts.manifest",
+    ],
+    main_class = "com.android.testutils.RepoLinker",
+    runtime_deps = ["//tools/base/testutils:tools.testutils"],
 )

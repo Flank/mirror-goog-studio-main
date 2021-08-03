@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import com.android.utils.PathUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +24,18 @@ import java.util.List;
 
 /** Creates a Maven repository using symlinks. */
 public class RepoLinker {
+
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            System.err.println("Usage RepoLinkerMain <destination_directory>");
+            System.exit(1);
+        }
+        Path destination = Paths.get(args[0]);
+        PathUtils.deleteRecursivelyIfExists(destination);
+        List<String> artifacts =
+                Files.readAllLines(Paths.get(System.getProperty("artifacts_manifest_file")));
+        new RepoLinker().link(destination, artifacts);
+    }
 
     /**
      * Creates a Maven repository using symlinks.

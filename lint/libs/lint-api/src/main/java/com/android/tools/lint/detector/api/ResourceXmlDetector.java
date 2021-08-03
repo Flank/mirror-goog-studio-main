@@ -33,14 +33,15 @@ public abstract class ResourceXmlDetector extends Detector implements XmlScanner
     /**
      * Returns whether this detector applies to the given folder type. This allows the detectors to
      * be pruned from iteration, so for example when we are analyzing a string value file we don't
-     * need to look up detectors related to layout.
+     * need to look up detectors related to layout. Doesn't run checks in res/raw folder unless
+     * there is an explicit override.
      *
      * @param folderType the folder type to be visited
      * @return true if this detector can apply to resources in folders of the given type
      */
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        return true;
+        return folderType != ResourceFolderType.RAW;
     }
 
     @Override

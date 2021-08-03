@@ -20,12 +20,14 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Anchor task for the new lint integration.
  *
  * Eventually will do report aggregation, but for now, just depends on the variant-specific task.
  */
+@DisableCachingByDefault
 abstract class AndroidLintGlobalTask: BaseTask() {
 
     class GlobalCreationAction(globalScope: GlobalScope) : BaseGlobalCreationAction(globalScope) {

@@ -84,6 +84,7 @@ message QueryParameters {
     CpuCoreCountersParameters cpu_core_counters_request = 106;
     AndroidFrameEventsParameters android_frame_events_request = 107;
     TraceMetadataParameters trace_metadata_request = 108;
+    AndroidFrameTimelineParameters android_frame_timeline_request = 109;
   }
 
   // Returns metadata information for a process of the provided id.
@@ -136,11 +137,21 @@ message QueryParameters {
 
   // Returns data from the Perfetto data source: android.surfaceflinger.frame.
   // See https://perfetto.dev/docs/analysis/sql-tables#frame_slice.
-  // Only avaialbe from Android R.
+  // Only available from Android R.
   message AndroidFrameEventsParameters {
     // String hint to filter frame_slices by layer name. For apps, use the
     // process name. If empty, the response will not return any events.
     string layer_name_hint = 1;
+  }
+
+  // Returns data from the Perfetto data source:
+  // android.surfaceflinger.frametimeline. See
+  // https://perfetto.dev/docs/analysis/sql-tables#expected_frame_timeline_slice
+  // and
+  // https://perfetto.dev/docs/analysis/sql-tables#actual_frame_timeline_slice
+  // Only available from Android S.
+  message AndroidFrameTimelineParameters {
+    int64 process_id = 1;
   }
 }
 
@@ -171,6 +182,7 @@ message QueryResult {
     CpuCoreCountersResult cpu_core_counters_result = 106;
     AndroidFrameEventsResult android_frame_events_result = 107;
     TraceMetadataResult trace_metadata_result = 108;
+    AndroidFrameTimelineResult android_frame_timeline_result = 109;
   }
 
   enum QueryFailureReason {
@@ -279,7 +291,8 @@ message SchedulingEventsResult {
     int32 priority = 7;
 
     // The RUNNING state is implied as the start state so it's not encoded here.
-    // See https://perfetto.dev/docs/data-sources/cpu-scheduling#decoding-code-end_state-code-
+    // See
+    // https://perfetto.dev/docs/data-sources/cpu-scheduling#decoding-code-end_state-code-
     enum SchedulingState {
       UNKNOWN = 0;
       RUNNABLE = 1;
@@ -361,5 +374,49 @@ message AndroidFrameEventsResult {
     // Depth of the event along the vertical axis, useful for laying out async
     // slices.
     int32 depth = 5;
+  }
+}
+
+message AndroidFrameTimelineResult {
+  // Represents the time given to the app for rendering the frame.
+  repeated ExpectedSlice expected_slice = 1;
+  // Represents the actual time an app took to complete the frame.
+  repeated ActualSlice actual_slice = 2;
+
+  message ExpectedSlice {
+    // Expected start time of the frame.
+    int64 timestamp_nanoseconds = 1;
+    // Expected duration of the frame.
+    int64 duration_nanoseconds = 2;
+    // Token number of the DisplayFrame: a single frame-on-screen.
+    int64 display_frame_token = 3;
+    // Token number of the SurfaceFrame: a frame from a Surface.
+    int64 surface_frame_token = 4;
+    // Name of the layer (Surface) to which the frame was presented.
+    string layer_name = 5;
+  }
+
+  message ActualSlice {
+    // Actual start time of the frame.
+    int64 timestamp_nanoseconds = 1;
+    // Actual duration of the frame.
+    int64 duration_nanoseconds = 2;
+    // Token number of the DisplayFrame: a single frame-on-screen.
+    int64 display_frame_token = 3;
+    // Token number of the SurfaceFrame: a frame from a Surface.
+    int64 surface_frame_token = 4;
+    // Name of the layer (Surface) to which the frame was presented.
+    string layer_name = 5;
+    // One of "Early Present", "On-time Present", "Late Present".
+    string present_type = 6;
+    // Name of the jank type, e.g. "App Deadline Missed".
+    // Comma-delimited if multiple jank types are present, e.g. "Buffer
+    // Stuffing, SurfaceFlinger Stuffing".
+    // "None" if no jank was observed with this frame.
+    string jank_type = 7;
+    // Whether the application finished its work for the frame on time.
+    bool on_time_finish = 8;
+    // Whether the frame was composited by the GPU or not.
+    bool gpu_composition = 9;
   }
 }

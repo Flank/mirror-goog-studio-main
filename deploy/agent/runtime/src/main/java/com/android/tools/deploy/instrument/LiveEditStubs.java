@@ -18,12 +18,8 @@ package com.android.tools.deploy.instrument;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
+import android.util.Log;
 import com.android.tools.deploy.liveedit.MethodBodyEvaluator;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
@@ -43,6 +39,10 @@ public final class LiveEditStubs {
         methodCache.put(key, data);
     }
 
+    public static void addToCache(String key, byte[] data) {
+        methodCache.put(key, data);
+    }
+
     // Everything in the following section is called from the dex prologue created by StubTransform.
     // None of this code is or should be called from any other context.
 
@@ -50,7 +50,13 @@ public final class LiveEditStubs {
     // The format can be found in tools/slicer/instrumentation.cc in the MethodLabel method.
     // TODO: We do have the ability to change this, if we want; we don't need a full signature, for example; return type suffices.
     public static boolean hasMethodBytecode(String key) {
-        return methodCache.containsKey(key);
+        boolean result = methodCache.containsKey(key);
+
+        // TODO: This is a super helpful message as it tells us rather or not
+        // we actually trampoline to AndroidEval. Remove this later once when
+        // we are more confident that this always WAI.
+        Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
+        return result;
     }
 
     public static Object stubL(Object[] parameters) {

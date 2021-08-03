@@ -86,13 +86,6 @@ open class LibraryExtension(
             dslServices
         )
 
-    // this is needed because the impl class needs this but the interface does not,
-    // so CommonExtension does not define it, which means, that even though it's part of
-    // LibraryExtensionImpl, the implementation by delegate does not bring it.
-    fun buildFeatures(action: Action<LibraryBuildFeatures>) {
-        publicExtensionImpl.buildFeatures(action)
-    }
-
     /**
      * Returns a collection of
      * [build variants](https://developer.android.com/studio/build/build-variants.html)

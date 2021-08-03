@@ -23,8 +23,10 @@ import java.util.Set;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Base task for tasks that require an NdkConfig */
+@DisableCachingByDefault
 public abstract class NdkTask extends NonIncrementalTask {
 
     @Nullable

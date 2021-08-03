@@ -17,8 +17,9 @@ package com.android.tools.deployer;
 
 import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
+import com.android.tools.manifest.parser.ManifestInfo;
 import com.android.tools.tracer.Trace;
-import com.google.devrel.gmscore.tools.apk.arsc.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +29,9 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -49,27 +52,6 @@ public class ApkParser {
         long signatureBlockSize = UNINITIALIZED;
     }
 
-    public static class ApkDetails {
-        public final int versionCode;
-        public final String fileName;
-        public final String packageName;
-        public final List<String> targetPackages;
-        public final List<String> isolatedServices;
-
-        private ApkDetails(
-                String fileName,
-                String packageName,
-                int versionCode,
-                List<String> targetPackages,
-                List<String> isolatedServices) {
-            this.fileName = fileName;
-            this.packageName = packageName;
-            this.versionCode = versionCode;
-            this.targetPackages = targetPackages;
-            this.isolatedServices = isolatedServices;
-        }
-    }
-
     /** A class to manipulate .apk files. */
     public ApkParser() {}
 
@@ -85,8 +67,8 @@ public class ApkParser {
         }
     }
 
-    public ApkDetails getApkDetails(String path) throws IOException {
-        ApkDetails apkDetails;
+    public ManifestInfo getApkDetails(String path) throws IOException {
+        ManifestInfo manifestInfo;
         try (ZipFile zipFile = new ZipFile(path)) {
             ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
             if (manifestEntry == null) {
@@ -96,9 +78,12 @@ public class ApkParser {
                 throw new IOException(msg.toString());
             }
             InputStream stream = zipFile.getInputStream(manifestEntry);
-            apkDetails = parseManifest(stream);
+            manifestInfo = ManifestInfo.parseBinaryFromStream(stream);
         }
-        return apkDetails;
+        if (manifestInfo.getApplicationId() == null) {
+            throw new IllegalArgumentException("Package name was not found in manifest");
+        }
+        return manifestInfo;
     }
 
     Apk parse(String apkPath) throws IOException, DeployerException {
@@ -107,22 +92,26 @@ public class ApkParser {
         String digest;
         List<ZipUtils.ZipEntry> zipEntries;
         try (RandomAccessFile raf = new RandomAccessFile(absolutePath, "r");
-                FileChannel fileChannel = raf.getChannel()) {
+             FileChannel fileChannel = raf.getChannel()) {
             ApkArchiveMap map = new ApkArchiveMap();
             findCDLocation(fileChannel, map);
             findSignatureLocation(fileChannel, map);
             digest = generateDigest(raf, map);
             zipEntries = readZipEntries(raf, map);
         }
-        ApkDetails apkDetails = getApkDetails(absolutePath);
+        ManifestInfo manifest = getApkDetails(absolutePath);
+        String apkFileName = manifest.getSplitName() == null
+                             ? "base.apk"
+                             : "split_" + manifest.getSplitName() + ".apk";
         Apk.Builder builder =
                 Apk.builder()
-                        .setName(apkDetails.fileName)
+                        .setName(apkFileName)
                         .setChecksum(digest)
                         .setPath(absolutePath)
-                        .setPackageName(apkDetails.packageName)
-                        .setTargetPackages(apkDetails.targetPackages)
-                        .setIsolatedServices(apkDetails.isolatedServices);
+                        .setPackageName(manifest.getApplicationId())
+                        .setTargetPackages(manifest.getInstrumentationTargetPackages())
+                        .setActivities(manifest.activities())
+                        .setServices(manifest.services());
 
         for (ZipUtils.ZipEntry entry : zipEntries) {
             Path path = Paths.get(entry.name);
@@ -251,83 +240,5 @@ public class ApkParser {
         }
         ByteBuffer buffer = ByteBuffer.wrap(sigContent);
         return ZipUtils.digest(buffer);
-    }
-
-    private ApkDetails parseManifest(InputStream decompressedManifest) throws IOException {
-        BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
-        List<Chunk> chunks = file.getChunks();
-
-        if (chunks.isEmpty()) {
-            throw new IllegalArgumentException("Invalid APK, empty manifest");
-        }
-
-        if (!(chunks.get(0) instanceof XmlChunk)) {
-            throw new IllegalArgumentException("APK manifest chunk[0] != XmlChunk");
-        }
-
-        String packageName = null;
-        String splitName = null;
-        int versionCode = 0;
-        List<String> targetPackages = new ArrayList<>();
-        List<String> isolatedServices = new ArrayList<>();
-
-        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
-        for (Chunk chunk : xmlChunk.getChunks().values()) {
-            if (!(chunk instanceof XmlStartElementChunk)) {
-                continue;
-            }
-
-            XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
-            if (startChunk.getName().equals("manifest")) {
-                for (XmlAttribute attribute : startChunk.getAttributes()) {
-                    if (attribute.name().equals("split")) {
-                        splitName = attribute.rawValue();
-                    }
-
-                    if (attribute.name().equals("package")) {
-                        packageName = attribute.rawValue();
-                    }
-
-                    if (attribute.name().equals("versionCode")) {
-                        BinaryResourceValue value = attribute.typedValue();
-                        if (value != null) {
-                            versionCode = value.data();
-                        }
-                    }
-                }
-            }
-
-            if (startChunk.getName().equals("instrumentation")) {
-                for (XmlAttribute attribute : startChunk.getAttributes()) {
-                    if (attribute.name().equals("targetPackage")) {
-                        targetPackages.add(attribute.rawValue());
-                    }
-                }
-            }
-
-            if (startChunk.getName().equals("service")) {
-                String name = "";
-                boolean isolatedProcess = false;
-                for (XmlAttribute attribute : startChunk.getAttributes()) {
-                    if (attribute.name().equals("name")) {
-                        name = attribute.rawValue();
-                    } else if (attribute.name().equals("isolatedProcess")) {
-                        isolatedProcess = attribute.typedValue().data() != 0;
-                    }
-                }
-
-                if (isolatedProcess) {
-                    isolatedServices.add(name);
-                }
-            }
-        }
-
-        if (packageName == null) {
-            throw new IllegalArgumentException("Package name was not found in manifest");
-        }
-
-        String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
-        return new ApkDetails(
-                apkFileName, packageName, versionCode, targetPackages, isolatedServices);
     }
 }

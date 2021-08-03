@@ -41,6 +41,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -51,6 +52,7 @@ import javax.xml.parsers.ParserConfigurationException
  *
  * Enabled when android.experimental.enableNewResourceShrinker=false.
  */
+@DisableCachingByDefault
 abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile

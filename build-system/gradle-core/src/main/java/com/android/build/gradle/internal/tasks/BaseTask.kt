@@ -21,6 +21,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -32,6 +33,7 @@ import javax.inject.Inject
  * - [NonIncrementalTask] -- variant aware task
  * - [NonIncrementalGlobalTask] -- non variant aware task
  */
+@DisableCachingByDefault
 abstract class BaseTask : DefaultTask() {
     @get:Internal
     val projectName: String = project.name

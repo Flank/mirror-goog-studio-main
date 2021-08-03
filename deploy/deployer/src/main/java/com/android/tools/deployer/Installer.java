@@ -50,4 +50,6 @@ public interface Installer {
             throws IOException;
 
     Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException;
+
+    Deploy.NetworkTestResponse networkTest(Deploy.NetworkTestRequest request) throws IOException;
 }

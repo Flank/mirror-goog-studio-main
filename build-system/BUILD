@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
+load("//tools/base/common:version.bzl", "BASE_VERSION", "BUILD_VERSION")
 load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
@@ -28,33 +29,27 @@ iml_module(
     ],
 )
 
-kotlin_library(
-    name = "tools.manifest-merger",
+maven_library(
+    name = "tools.manifest-merger_bzl",
     srcs = glob([
         "manifest-merger/src/main/java/**/*.kt",
         "manifest-merger/src/main/java/**/*.java",
     ]),
-    pom = ":manifest-merger.pom",
+    coordinates = "com.android.tools.build:manifest-merger:" + BASE_VERSION,
+    legacy_name = "tools.manifest-merger",
+    notice = "manifest-merger/NOTICE",
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
-    resources = ["manifest-merger/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
-)
-
-maven_pom(
-    name = "manifest-merger.pom",
-    artifact = "manifest-merger",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(
@@ -91,18 +86,15 @@ kotlin_test(
     ],
 )
 
-maven_java_import(
-    name = "tools.apksig",
-    jars = ["//tools/apksig:libapksig-all.jar"],
-    pom = ":apksig.pom",
+maven_library(
+    name = "tools.apksig_bzl",
+    srcs = [],
+    bundled_deps = [
+        "//tools/apksig:apksig-all",
+    ],
+    coordinates = "com.android.tools.build:apksig:" + BUILD_VERSION,
+    legacy_name = "tools.apksig",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "apksig.pom",
-    artifact = "apksig",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
 )
 
 # The Gradle APIs to build against and run against.
@@ -202,6 +194,17 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:com.google.errorprone.error_prone_annotations.2.3.2",
     "//prebuilts/tools/common/m2:org.checkerframework.checker-qual.2.5.2",
     "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.17.0",
+    # Transitive Maven dependencies of above artifacts that cannot be identified
+    # automatically because they are dependencies of artifacts that use the new
+    # Maven rules via the import_maven_library bridge:
+    "//prebuilts/tools/common/m2:net.java.dev.jna.jna.5.6.0",
+    "//prebuilts/tools/common/m2:net.java.dev.jna.jna-platform.5.6.0",
+    "//prebuilts/tools/common/m2:net.sf.kxml.kxml2.2.3.0",
+    "//prebuilts/tools/common/m2:org.jetbrains.intellij.deps.trove4j.1.0.20181211",
+    "//prebuilts/tools/common/m2:xerces.xercesImpl.2.12.0",
+    "//prebuilts/tools/common/m2:xml-apis.xml-apis.1.4.01",
+    "//tools/base/build-system/aapt2-proto:aapt2-proto",
+    "//tools/base/device_validator:tools.dvlib",
 ]
 
 maven_repo(
@@ -313,6 +316,7 @@ filegroup(
     ]) + [
         "artifacts-built-with-bazel.properties",
         "manifest-merger/build.gradle",
+        "manifest-merger/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

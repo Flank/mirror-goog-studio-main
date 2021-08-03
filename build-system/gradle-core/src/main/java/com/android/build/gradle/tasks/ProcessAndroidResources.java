@@ -32,8 +32,10 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Base class for process resources / create R class task, to satisfy existing variants API. */
+@DisableCachingByDefault
 public abstract class ProcessAndroidResources extends IncrementalTask {
 
     protected VariantOutputImpl mainSplit;

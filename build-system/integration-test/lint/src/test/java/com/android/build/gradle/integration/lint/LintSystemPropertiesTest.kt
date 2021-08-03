@@ -48,6 +48,8 @@ class LintSystemPropertiesTest {
                 "android.lint.log-jar-problems",
                 "gradle.user.home",
                 "LINT_API_DATABASE",
+                "java.vendor",
+                "java.version",
                 "com.android.tools.lint.bindir",
                 "lint.configuration.override",
                 "lint.nullness.ignore-deprecated",

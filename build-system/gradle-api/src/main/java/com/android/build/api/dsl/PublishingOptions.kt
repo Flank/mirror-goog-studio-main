@@ -43,4 +43,10 @@ interface PublishingOptions {
      * Publish java & kotlin sources jar as a secondary artifact to a Maven repository.
      */
     fun withSourcesJar()
+
+    /**
+     * Publish javadoc jar generated from java & kotlin source as a secondary artifact to a Maven
+     * repository.
+     */
+    fun withJavadocJar()
 }

@@ -1001,9 +1001,9 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantDslInfo.getSupportedAbis(),
                 instantRun,
                 testOptions,
-                taskContainer.getConnectedTask() == null
+                taskContainer.getConnectedTestTask() == null
                         ? null
-                        : taskContainer.getConnectedTask().getName(),
+                        : taskContainer.getConnectedTestTask().getName(),
                 taskContainer.getBundleTask() == null
                         ? component.computeTaskName("bundle")
                         : taskContainer.getBundleTask().getName(),

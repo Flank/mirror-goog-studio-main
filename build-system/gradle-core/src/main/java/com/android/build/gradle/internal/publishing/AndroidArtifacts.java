@@ -169,6 +169,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_PUBLISHED_DEX = "android-feature-published-dex";
 
     private static final String TYPE_SOURCES_JAR = "android-sources-jar";
+    private static final String TYPE_JAVA_DOC_JAR = "android-java-doc-jar";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -225,7 +226,8 @@ public class AndroidArtifacts {
         APK_PUBLICATION(true), // Maven/SoftwareComponent APK publishing
         AAB_PUBLICATION(true), // Maven/SoftwareComponent AAB publishing
 
-        SOURCE_PUBLICATION(true);
+        SOURCE_PUBLICATION(true),
+        JAVA_DOC_PUBLICATION(true);
 
         private boolean isPublicationConfig;
 
@@ -271,6 +273,9 @@ public class AndroidArtifacts {
 
         /** A jar containing source files. */
         SOURCES_JAR(TYPE_SOURCES_JAR),
+
+        /** A jar containing java doc files. */
+        JAVA_DOC_JAR(TYPE_JAVA_DOC_JAR),
 
         /**
          * A directory containing classes.

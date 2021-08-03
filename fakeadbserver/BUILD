@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
@@ -19,7 +19,7 @@ iml_module(
     ],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.fakeadbserver",
     srcs = glob([
         "src/main/java/**/*.kt",

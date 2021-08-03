@@ -17,10 +17,15 @@
 #ifndef DEPLOY_LIVE_EDIT_H
 #define DEPLOY_LIVE_EDIT_H
 
+#include <jni.h>
+#include <jvmti.h>
+
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
-proto::LiveEditResponse LiveEdit(const proto::LiveEditRequest&);
+
+proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
+                                 const proto::LiveEditRequest&);
 }
 
 #endif  // DEPLOY_LIVE_EDIT_H

@@ -55,10 +55,12 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.Collections
 
 /** Task to invoke lint with the --analyze-only flag, producing partial results. */
+@DisableCachingByDefault
 abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:Nested
@@ -69,9 +71,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     abstract val partialResultsDirectory: DirectoryProperty
-
-    @get:Internal
-    abstract val javaHome: Property<String>
 
     @get:Internal
     abstract val androidSdkHome: Property<String>
@@ -155,7 +154,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         if (fatalOnly.get()) {
             arguments += "--fatalOnly"
         }
-        arguments += listOf("--jdk-home", javaHome.get())
+        arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
         arguments += listOf("--sdk-home", androidSdkHome.get())
 
         arguments += "--lint-model"
@@ -273,7 +272,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                     creationConfig.globalScope.extension.lintOptions.checkOnly
                 }
             )
-            task.projectInputs.initialize(variant)
+            task.projectInputs.initialize(variant, isForAnalysis = true)
             task.variantInputs.initialize(
                 variant,
                 checkDependencies = false,
@@ -306,7 +305,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }
                 .map { it.asFile.absolutePath }
         )
-        this.javaHome.setDisallowChanges(project.providers.systemProperty("java.home"))
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
@@ -359,7 +357,13 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.fatalOnly.setDisallowChanges(fatalOnly)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
-        this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
+        this.projectInputs
+            .initializeForStandalone(
+                project,
+                javaPluginConvention,
+                lintOptions,
+                isForAnalysis = true
+            )
         this.variantInputs
             .initializeForStandalone(
                 project,

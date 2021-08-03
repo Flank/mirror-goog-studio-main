@@ -20,11 +20,13 @@ import com.android.utils.FileUtils
 import org.gradle.api.Task
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.lang.RuntimeException
 
 /**
  * Base variant-aware non-incremental task
  */
+@DisableCachingByDefault
 abstract class NonIncrementalTask : AndroidVariantTask() {
 
     @Throws(Exception::class)
@@ -48,6 +50,7 @@ abstract class NonIncrementalTask : AndroidVariantTask() {
  *
  * TODO figure out a better mechanism that does not require global tasks to have a variant name
  */
+@DisableCachingByDefault
 abstract class NonIncrementalGlobalTask : BaseTask(), VariantAwareTask {
 
     // FIXME should be final once LintPerVariantTask is changed to not inherit from this.

@@ -41,11 +41,9 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
 import java.util.List;
-import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
@@ -127,12 +125,7 @@ public class TestApplicationTaskManager
                             }
                         });
 
-        Task connectedAndroidTest =
-                taskFactory.findByName(
-                        BuilderConstants.CONNECTED + VariantType.ANDROID_TEST_SUFFIX);
-        if (connectedAndroidTest != null) {
-            connectedAndroidTest.dependsOn(instrumentTestTask.getName());
-        }
+        taskFactory.configure(CONNECTED_ANDROID_TEST, task -> task.dependsOn(instrumentTestTask));
     }
 
     @Override

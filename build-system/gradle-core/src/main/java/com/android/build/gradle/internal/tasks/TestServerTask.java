@@ -36,8 +36,10 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 /** Task sending APKs out to a {@link TestServer} */
+@DisableCachingByDefault
 public abstract class TestServerTask extends NonIncrementalTask {
 
     TestServer testServer;

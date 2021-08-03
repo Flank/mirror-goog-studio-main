@@ -193,6 +193,15 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
+    @Override
+    public Deploy.NetworkTestResponse networkTest(Deploy.NetworkTestRequest testParams)
+            throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("networktest");
+        request.setNetworkTestRequest(testParams);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        return installerResponse.getNetworkTestResponse();
+    }
+
     private static Deploy.OverlayIdPush createOidPushRequest(
             String packageName, String prevOid, String nextOid, boolean wipeOverlays) {
         return Deploy.OverlayIdPush.newBuilder()

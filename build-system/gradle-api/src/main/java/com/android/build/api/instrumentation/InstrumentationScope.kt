@@ -16,9 +16,6 @@
 
 package com.android.build.api.instrumentation
 
-import org.gradle.api.Incubating
-
-@Incubating
 enum class InstrumentationScope {
     /**
      * Instrument the classes of the current project only.

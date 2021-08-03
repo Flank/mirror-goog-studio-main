@@ -68,8 +68,8 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
-import kotlin.math.max
 
+@CacheableTransform
 abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : TransformAction<T> {
 
     interface Parameters : GenericTransformParameters {
@@ -325,8 +325,7 @@ fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConf
 
 fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = creationConfig.minSdkVersion.getFeatureLevel(),
-        targetDeploySdk = creationConfig.targetDeployApi.getFeatureLevel(),
+        minSdk = creationConfig.minSdkVersionForDexing.getFeatureLevel(),
         isDebuggable = creationConfig.debuggable,
         enableDesugaring =
             creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
@@ -343,7 +342,6 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
 
 data class DexingArtifactConfiguration(
     private val minSdk: Int,
-    private val targetDeploySdk: Int,
     private val isDebuggable: Boolean,
     private val enableDesugaring: Boolean,
     private val enableCoreLibraryDesugaring: Boolean,
@@ -355,7 +353,7 @@ data class DexingArtifactConfiguration(
 
     // If we want to do desugaring and our minSdk (or the API level of the device we're deploying
     // to) is lower than N then we need additional classpaths in order to proper do the desugaring.
-    private val needsClasspath = enableDesugaring && targetDeploySdk < AndroidVersion.VersionCodes.N
+    private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
 
     fun registerTransform(
         projectName: String,

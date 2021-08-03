@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
@@ -25,7 +25,7 @@ java_proto_library(
     visibility = ["//visibility:public"],
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "gradle-core",
     srcs = glob([
         "src/fromGradle/java/**/*.kt",
@@ -111,6 +111,7 @@ kotlin_library(
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",  # For mlkit-common
         "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
+        "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
     ],
 )
 
@@ -230,9 +231,13 @@ filegroup(
     srcs = glob([
         "src/main/**/*.java",
         "src/fromGradle/**/*.java",
+        "src/fromGradle/resources/**",
         "src/main/**/*.kt",
         "src/main/proto/**/*.proto",
         "src/main/resources/**",
-    ]) + ["build.gradle"],
+    ]) + [
+        "build.gradle",
+        "NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

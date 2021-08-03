@@ -126,6 +126,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DeletedProviderDetector.ISSUE,
                 DeprecationDetector.ISSUE,
                 DiffUtilDetector.ISSUE,
+                DiscouragedDetector.ISSUE,
                 DosLineEndingDetector.ISSUE,
                 DuplicateIdDetector.CROSS_LAYOUT,
                 DuplicateIdDetector.WITHIN_LAYOUT,

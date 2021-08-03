@@ -164,6 +164,7 @@ dependencies {
     implementation libs.grpc_stub
     implementation libs.tink
     implementation libs.unified_test_platform
+    implementation libs.dokka_core
 
     compileOnly libs.kotlin_gradle_plugin
     compileOnly libs.jacoco_core

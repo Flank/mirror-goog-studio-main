@@ -57,7 +57,7 @@ abstract class ApplicationExtensionImpl @Inject constructor(
         action.invoke(dependenciesInfo)
     }
 
-    fun dependenciesInfo(action: Action<DependenciesInfo>) {
+    override fun dependenciesInfo(action: Action<DependenciesInfo>) {
         action.execute(dependenciesInfo)
     }
 }

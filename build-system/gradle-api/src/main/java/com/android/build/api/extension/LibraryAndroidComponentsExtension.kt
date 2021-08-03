@@ -20,6 +20,7 @@ import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantBuilder
 
+@Suppress("DEPRECATION")
 @Deprecated(
     message= "Use the com.android.build.api.variant package",
     replaceWith = ReplaceWith(

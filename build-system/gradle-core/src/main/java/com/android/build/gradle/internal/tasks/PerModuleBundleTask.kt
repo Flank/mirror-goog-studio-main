@@ -57,6 +57,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
@@ -70,6 +71,7 @@ import javax.inject.Inject
  * so that the base app can package into the bundle.
  *
  */
+@DisableCachingByDefault
 abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package com.android.build.api.extension
 
 import com.android.build.api.component.ComponentIdentity
@@ -28,7 +30,7 @@ import java.util.regex.Pattern
 )
 interface VariantSelector: com.android.build.api.variant.VariantSelector {
     /**
-     * Creates a [VariantSelector] of [ComponentIdentity]that includes all the variants for the
+     * Creates a [VariantSelector] of [ComponentIdentity] that includes all the variants for the
      * current module.
      *
      * @return a [VariantSelector] for all variants.

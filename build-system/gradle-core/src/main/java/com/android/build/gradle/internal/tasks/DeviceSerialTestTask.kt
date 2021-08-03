@@ -20,10 +20,12 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.options.Option
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Runs instrumentation tests of a variant on a device defined in the DSL.
  */
+@DisableCachingByDefault
 abstract class DeviceSerialTestTask: DefaultTask() {
     @Option(
         option = "serial",

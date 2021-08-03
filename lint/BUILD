@@ -1,7 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -21,14 +22,16 @@ iml_module(
     ],
 )
 
-kotlin_library(
-    name = "tools.lint-model",
+maven_library(
+    name = "tools.lint-model_bzl",
     srcs = glob([
         "libs/lint-model/src/main/java/**/*.kt",
         "libs/lint-model/src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.lint:lint-model:" + BASE_VERSION,
+    legacy_name = "tools.lint-model",
     module_name = "lint-model",
-    pom = "lint-model.pom",
+    notice = "libs/lint-model/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-model",
     resources = glob(
         include = ["libs/lint-model/src/main/java/**"],
@@ -36,23 +39,16 @@ kotlin_library(
             "libs/lint-model/src/main/java/**/*.java",
             "libs/lint-model/src/main/java/**/*.kt",
         ],
-    ) + ["libs/lint-model/NOTICE"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
-)
-
-maven_pom(
-    name = "lint-model.pom",
-    artifact = "lint-model",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 # managed by go/iml_to_build
@@ -86,15 +82,17 @@ iml_module(
     ],
 )
 
-kotlin_library(
-    name = "tools.lint-api",
+maven_library(
+    name = "tools.lint-api_bzl",
     # TODO: move resources out of java?
     srcs = glob([
         "libs/lint-api/src/main/java/**/*.kt",
         "libs/lint-api/src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.lint:lint-api:" + BASE_VERSION,
+    legacy_name = "tools.lint-api",
     module_name = "lint-api",
-    pom = "lint-api.pom",
+    notice = "libs/lint-api/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
     resources = glob(
         include = ["libs/lint-api/src/main/java/**"],
@@ -102,28 +100,28 @@ kotlin_library(
             "libs/lint-api/src/main/java/**/*.java",
             "libs/lint-api/src/main/java/**/*.kt",
         ],
-    ) + ["libs/lint-api/NOTICE"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
-        ":tools.lint-model",
-        "//prebuilts/tools/common/lint-psi/intellij-core",
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
-        "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/annotations",
-        "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
+        ":tools.lint-model_bzl",
+        "//prebuilts/tools/common/lint-psi/intellij-core:intellij-core_bzl",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler:kotlin-compiler_bzl",
+        "//prebuilts/tools/common/lint-psi/uast:uast_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system:tools.manifest-merger_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.intellij.deps.trove4j",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-tree",
     ],
 )
 
@@ -151,49 +149,49 @@ iml_module(
     ],
 )
 
-kotlin_library(
-    name = "tools.lint-checks",
+maven_library(
+    name = "tools.lint-checks_bzl",
     srcs = glob([
         "libs/lint-checks/src/main/java/**/*.kt",
         "libs/lint-checks/src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.lint:lint-checks:" + BASE_VERSION,
+    legacy_name = "tools.lint-checks",
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
     module_name = "lint-checks",
-    pom = "lint-checks.pom",
+    notice = "libs/lint-checks/src/main/resources/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/resources",
-    resources = glob(["libs/lint-checks/src/main/resources/**"]),
+    resources = glob(
+        include = ["libs/lint-checks/src/main/resources/**"],
+        exclude = ["libs/lint-checks/src/main/resources/NOTICE"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
-        ":tools.lint-api",
-        ":tools.lint-model",
-        "//prebuilts/tools/common/lint-psi/intellij-core",
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
-        "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
-        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.ow2.asm_asm-analysis",
+        ":tools.lint-api_bzl",
+        ":tools.lint-model_bzl",
+        "//prebuilts/tools/common/lint-psi/intellij-core:intellij-core_bzl",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler:kotlin-compiler_bzl",
+        "//prebuilts/tools/common/lint-psi/uast:uast_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.intellij.deps.trove4j",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-analysis",
+        "@maven//:org.ow2.asm.asm-tree",
     ],
 )
 
-maven_pom(
-    name = "lint-checks.pom",
-    artifact = "lint-checks",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
-)
-
-kotlin_library(
+kotlin_library_legacy(
     name = "tools.lint-gradle",
     # TODO: move resources out of java?
     srcs = glob([
@@ -369,12 +367,18 @@ filegroup(
         "libs/lint-checks/src/main/resources/**",
     ]) + [
         "libs/lint-model/build.gradle",
+        "libs/lint-model/NOTICE",
         "libs/lint-api/build.gradle",
+        "libs/lint-api/NOTICE",
         "libs/lint-gradle/build.gradle",
+        "libs/lint-gradle/NOTICE",
         "libs/lint-checks/build.gradle",
         "libs/intellij-core/build.gradle",
+        "libs/intellij-core/NOTICE",
         "libs/kotlin-compiler/build.gradle",
+        "libs/kotlin-compiler/NOTICE",
         "libs/uast/build.gradle",
+        "libs/uast/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

@@ -27,6 +27,9 @@ java_proto_library(
 
 filegroup(
     name = "agp_gradle_build_files",
-    srcs = glob(["*.proto"]) + ["build.gradle"],
+    srcs = glob(["*.proto"]) + [
+        "build.gradle",
+        "NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

@@ -266,7 +266,8 @@ public class MergerTest extends TestCase {
             "max_sdk_version=21",
             "--out",
             outFile.getAbsolutePath(),
-            "--remove-tools-declarations"
+            "--remove-tools-declarations",
+            "--disable-minSdkLibrary-check"
         };
         Merger merger =
                 new MergerWithMock() {
@@ -289,6 +290,7 @@ public class MergerTest extends TestCase {
                 };
         merger.process(args);
         verify(mInvoker).withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+        verify(mInvoker).withFeatures(ManifestMerger2.Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK);
         verify(mInvoker).addLibraryManifest(new File("src/lib1/AndroidManifest.xml"));
         verify(mInvoker).addLibraryManifest(new File("src/lib2/AndroidManifest.xml"));
         verify(mInvoker).addLibraryManifest(new File("src/lib3/AndroidManifest.xml"));

@@ -51,8 +51,12 @@ class ValidateTaskPropertiesTest {
                 .map { it.load() }
         TestInputsGenerator.pathWithClasses(classes.toPath(), classesList)
 
-        val classpath =
-            System.getProperty("java.class.path").split(System.getProperty("path.separator"))
+        val classpath = System.getProperty("java.class.path")
+                .split(System.getProperty("path.separator"))
+                // The validatePlugins task fails when the java class path contains more than
+                // 250 parts. As a workaround, we remove the class path parts that are irrelevant.
+                // Such as the @maven repo artifacts.
+                .filterNot { it.contains("/maven/repo/") || it.contains("\\maven\\repo\\") }
                 .joinToString {
                     "'" + File(it).invariantSeparatorsPath + "'"
                 }

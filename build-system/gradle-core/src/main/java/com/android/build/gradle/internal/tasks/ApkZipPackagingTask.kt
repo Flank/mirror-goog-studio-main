@@ -32,11 +32,13 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Package all the APKs and mapping file into a zip for publishing to a repo.
  */
+@DisableCachingByDefault
 abstract class ApkZipPackagingTask : NonIncrementalTask() {
 
     @get:InputDirectory

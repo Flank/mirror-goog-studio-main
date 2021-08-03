@@ -56,11 +56,13 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.work.DisableCachingByDefault;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
+@DisableCachingByDefault
 public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private int timeOutInMs = 0;

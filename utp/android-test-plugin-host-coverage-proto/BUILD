@@ -19,6 +19,9 @@ maven_pom(
 
 filegroup(
     name = "agp_gradle_build_files",
-    srcs = glob(["src/main/proto/*.proto"]) + ["build.gradle"],
+    srcs = glob(["src/main/proto/*.proto"]) + [
+        "build.gradle",
+        "NOTICE",
+    ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

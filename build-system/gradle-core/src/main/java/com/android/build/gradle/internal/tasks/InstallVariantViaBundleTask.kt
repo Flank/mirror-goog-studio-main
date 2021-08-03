@@ -43,12 +43,14 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.nio.file.Path
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
+@DisableCachingByDefault
 abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
 
     private var minSdkVersion = 0

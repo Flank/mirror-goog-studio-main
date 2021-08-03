@@ -49,6 +49,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
      * SDK version codes mirroring ones found in Build#VERSION_CODES on Android.
      */
     public static class VersionCodes {
+        public static final int UNDEFINED = 0;
         public static final int BASE = 1;
         public static final int BASE_1_1 = 2;
         public static final int CUPCAKE = 3;

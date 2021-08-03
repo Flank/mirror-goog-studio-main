@@ -20,10 +20,20 @@ import android.view.ViewGroup
 import android.view.inspector.InspectionCompanion
 import android.view.inspector.PropertyMapper
 import android.view.inspector.PropertyReader
+import com.android.tools.agent.appinspection.testutils.property.ATTR_OFFSET
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyMapper
 import com.android.tools.agent.appinspection.testutils.property.EnumPropertyReader
 
 class ViewGroupLayoutParamsInspectionCompanion : InspectionCompanion<ViewGroup.LayoutParams> {
+
+    companion object {
+        const val OFFSET = 0 // Start index of layout properties
+
+        fun addResourceNames(resourceNames: MutableMap<Int, String>) {
+            resourceNames[ATTR_OFFSET + OFFSET] = "android.attr/layout_width"
+            resourceNames[ATTR_OFFSET + OFFSET + 1] = "android.attr/layout_height"
+        }
+    }
 
     private val sizeMapping: (Int) -> String? = { value: Int ->
         when (value) {
@@ -39,7 +49,7 @@ class ViewGroupLayoutParamsInspectionCompanion : InspectionCompanion<ViewGroup.L
     }
 
     override fun mapProperties(propertyMapper: PropertyMapper) {
-        val mapper = EnumPropertyMapper<Property>(propertyMapper, namePrefix = "layout_")
+        val mapper = EnumPropertyMapper<Property>(propertyMapper, OFFSET, namePrefix = "layout_")
         mapper.mapIntEnum(Property.WIDTH, sizeMapping)
         mapper.mapIntEnum(Property.HEIGHT, sizeMapping)
     }
@@ -48,9 +58,8 @@ class ViewGroupLayoutParamsInspectionCompanion : InspectionCompanion<ViewGroup.L
         layoutParams: ViewGroup.LayoutParams,
         propertyReader: PropertyReader
     ) {
-        val reader = EnumPropertyReader<Property>(propertyReader)
+        val reader = EnumPropertyReader<Property>(propertyReader, OFFSET)
         reader.readIntEnum(Property.WIDTH, layoutParams.width)
         reader.readIntEnum(Property.HEIGHT, layoutParams.height)
     }
 }
-

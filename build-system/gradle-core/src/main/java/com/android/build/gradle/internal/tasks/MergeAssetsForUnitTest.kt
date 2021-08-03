@@ -25,11 +25,13 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
  * Task to merge all public assets folders into a single one to be fed to robo-electric.
  */
+@DisableCachingByDefault
 abstract class MergeAssetsForUnitTest: Sync(), VariantAwareTask {
 
     @get:OutputDirectory

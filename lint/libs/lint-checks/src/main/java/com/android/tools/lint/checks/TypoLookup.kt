@@ -32,7 +32,6 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel.MapMode
-import java.util.ArrayList
 import java.util.Arrays
 import java.util.Random
 import java.util.WeakHashMap
@@ -588,6 +587,7 @@ class TypoLookup private constructor(
             // This helps in scenarios where multiple simultaneous Gradle
             // threads are attempting to access the file before it's ready.
             val tmp = File(file.path + "." + Random().nextInt())
+            tmp.parentFile?.let { if (it.exists()) it.mkdirs() }
             Files.asByteSink(tmp).write(b)
             if (!tmp.renameTo(file)) {
                 tmp.delete()

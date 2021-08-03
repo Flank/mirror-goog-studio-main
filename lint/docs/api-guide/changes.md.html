@@ -7,6 +7,10 @@ Guide.
 
 **7.1**
 
+* The default behaviour of ResourceXmlDetector will change.
+  It will skip res/raw folder and you have to override appliesTo method
+  if you want your Lint checks to run there.
+
 * The computation of checksums for binary test files (e.g. `compiled`
   and `bytecode`) unfortunately had to change; the old mechamism was
   not stable. This means that after updating some of the test files

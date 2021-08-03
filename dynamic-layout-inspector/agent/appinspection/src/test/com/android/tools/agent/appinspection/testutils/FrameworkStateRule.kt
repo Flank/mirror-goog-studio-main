@@ -20,7 +20,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManagerGlobal
 import android.view.inspector.StaticInspectionCompanionProvider
+import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatButton
+import com.android.tools.agent.appinspection.testutils.property.companions.AppCompatButtonInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ButtonInspectionCompanion
 import com.android.tools.agent.appinspection.testutils.property.companions.TextViewInspectionCompanion
 import com.android.tools.agent.appinspection.testutils.property.companions.ViewGroupLayoutParamsInspectionCompanion
 import com.android.tools.agent.appinspection.testutils.property.companions.ViewInspectionCompanion
@@ -30,6 +34,7 @@ import org.junit.rules.ExternalResource
  * Simple rule for setting up / clearing global framework state between tests.
  */
 class FrameworkStateRule : ExternalResource() {
+
     public override fun before() {
         StaticInspectionCompanionProvider.register(View::class.java, ViewInspectionCompanion())
         StaticInspectionCompanionProvider.register(
@@ -39,6 +44,11 @@ class FrameworkStateRule : ExternalResource() {
         StaticInspectionCompanionProvider.register(
             ViewGroup.LayoutParams::class.java,
             ViewGroupLayoutParamsInspectionCompanion()
+        )
+        StaticInspectionCompanionProvider.register(Button::class.java, ButtonInspectionCompanion())
+        StaticInspectionCompanionProvider.register(
+            AppCompatButton::class.java,
+            AppCompatButtonInspectionCompanion()
         )
     }
 

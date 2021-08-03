@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
@@ -12,7 +12,7 @@ fileset(
     },
 )
 
-kotlin_library(
+kotlin_library_legacy(
     name = "builder",
     srcs = glob([
         "src/main/java/**/*.kt",
@@ -249,6 +249,7 @@ filegroup(
         "src/main/resources/**",
     ]) + [
         "build.gradle",
+        "NOTICE",
         "//prebuilts/r8",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],

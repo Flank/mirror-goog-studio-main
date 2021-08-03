@@ -71,8 +71,10 @@ import java.io.File
 import java.util.Collections
 import javax.inject.Inject
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.work.DisableCachingByDefault
 
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
+@DisableCachingByDefault
 abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Nested
@@ -124,9 +126,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Input
     abstract val textReportToStdOut: Property<Boolean>
-
-    @get:Internal
-    abstract val javaHome: Property<String>
 
     @get:Internal
     abstract val androidSdkHome: Property<String>
@@ -296,7 +295,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         if (reportOnly.get()) {
             arguments += "--report-only"
         }
-        arguments += listOf("--jdk-home", javaHome.get())
+        arguments += listOf("--jdk-home", systemPropertyInputs.javaHome.get())
         arguments += listOf("--sdk-home", androidSdkHome.get())
 
         if (textReportEnabled.get()) {
@@ -539,7 +538,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.checkOnly.set(creationConfig.services.provider {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
-            task.projectInputs.initialize(variant)
+            task.projectInputs.initialize(variant, isForAnalysis = false)
             task.outputs.upToDateWhen {
                 // Workaround for b/193244776
                 // Ensure the task runs if baselineFile is set and the file doesn't exist
@@ -746,7 +745,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
         this.androidSdkHome.setDisallowChanges(sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }.map { it.asFile.absolutePath })
-        this.javaHome.setDisallowChanges(project.providers.systemProperty("java.home"))
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
@@ -810,7 +808,13 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.reportOnly.setDisallowChanges(true)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
-        this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
+        this.projectInputs
+            .initializeForStandalone(
+                project,
+                javaPluginConvention,
+                lintOptions,
+                isForAnalysis = false
+            )
         this.outputs.upToDateWhen {
             // Workaround for b/193244776
             // Ensure the task runs if baselineFile is set and the file doesn't exist

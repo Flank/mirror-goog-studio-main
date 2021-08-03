@@ -20,10 +20,12 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Produces a file which lists project resource source set directories with an identifier.
  */
+@DisableCachingByDefault
 abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input

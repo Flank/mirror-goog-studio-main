@@ -22,23 +22,31 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.IDevice;
-import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
+import com.android.deploy.service.proto.Service;
+import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.AdbClient;
+import com.android.tools.deployer.AdbInstaller;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
+import com.android.tools.deployer.Installer;
+import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
+    public static final int MAX_BUFFER_SIZE = 1024 * 1024;
     private static final int GET_DEBUG_PORT_RETRY_LIMIT = 10;
     private AndroidDebugBridge myActiveBridge;
     private Server myServer;
@@ -78,9 +86,9 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getDevices(
-            Deploy.DeviceRequest request, StreamObserver<Deploy.DeviceResponse> responseObserver) {
+            Service.DeviceRequest request, StreamObserver<Service.DeviceResponse> responseObserver) {
         IDevice[] devices = myActiveBridge.getDevices();
-        Deploy.DeviceResponse.Builder response = Deploy.DeviceResponse.newBuilder();
+        Service.DeviceResponse.Builder response = Service.DeviceResponse.newBuilder();
         for (IDevice device : devices) {
             response.addDevices(ddmDeviceToRpcDevice(device));
         }
@@ -90,8 +98,8 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getClients(
-            Deploy.ClientRequest request, StreamObserver<Deploy.ClientResponse> responseObserver) {
-        Deploy.ClientResponse.Builder response = Deploy.ClientResponse.newBuilder();
+            Service.ClientRequest request, StreamObserver<Service.ClientResponse> responseObserver) {
+        Service.ClientResponse.Builder response = Service.ClientResponse.newBuilder();
         for (IDevice device : myActiveBridge.getDevices()) {
             if (!request.getDeviceId().isEmpty()
                     && !request.getDeviceId().equals(device.getSerialNumber())) {
@@ -108,9 +116,9 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void getDebugPort(
-            Deploy.DebugPortRequest request,
-            StreamObserver<Deploy.DebugPortResponse> responseObserver) {
-        Deploy.DebugPortResponse.Builder response = Deploy.DebugPortResponse.newBuilder();
+            Service.DebugPortRequest request,
+            StreamObserver<Service.DebugPortResponse> responseObserver) {
+        Service.DebugPortResponse.Builder response = Service.DebugPortResponse.newBuilder();
         IDevice selectedDevice = getDeviceBySerial(request.getDeviceId());
         Client selectedClient = null;
         if (selectedDevice == null) {
@@ -159,12 +167,12 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     @Override
     public void installApk(
-            Deploy.InstallApkRequest request,
-            StreamObserver<Deploy.InstallApkResponse> responseObserver) {
+            Service.InstallApkRequest request,
+            StreamObserver<Service.InstallApkResponse> responseObserver) {
         IDevice device = getDeviceBySerial(request.getDeviceId());
         if (device == null) {
             responseObserver.onNext(
-                    Deploy.InstallApkResponse.newBuilder()
+                    Service.InstallApkResponse.newBuilder()
                             .setExitStatus(-1)
                             .addMessage(
                                     "No device with matching device Id found: "
@@ -184,7 +192,7 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         // Eg. install com.example.myApp c:\Temp\myapp.apk
         int exitCode = myDeployRunner.run(device, arguments.toArray(new String[0]), logger);
         responseObserver.onNext(
-                Deploy.InstallApkResponse.newBuilder()
+                Service.InstallApkResponse.newBuilder()
                         .setExitStatus(exitCode)
                         .addAllMessage(myDeployerInteraction.getMessages())
                         .addAllPrompt(myDeployerInteraction.getPrompts())
@@ -194,11 +202,117 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    private List<Deploy.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {
+    @Override
+    public void runNetworkTest(
+            Service.NetworkTestRequest request,
+            StreamObserver<Service.NetworkTestResponse> responseObserver) {
+        IDevice device = getDeviceBySerial(request.getDeviceId());
+        DeployLogger logger = new DeployLogger(DeployLogger.Level.ERROR);
+        AdbClient adb = new AdbClient(device, logger);
+        List<DeployMetric> metrics = new ArrayList<>();
+        Installer installer =
+                new AdbInstaller(null, adb, metrics, logger, AdbInstaller.Mode.DAEMON);
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        switch (request.getTest().getType()) {
+            case BANDWIDTH:
+                response = doBandwidthTest(installer, request.getTest());
+                break;
+            case PING:
+                response = doPingTest(installer, request.getTest());
+                break;
+            case UNKNOWN:
+            case UNRECOGNIZED:
+                break;
+        }
+
+        responseObserver.onNext(response.setTest(request.getTest()).build());
+        responseObserver.onCompleted();
+    }
+
+    @VisibleForTesting
+    public Service.NetworkTestResponse.Builder doBandwidthTest(
+            Installer installer, Service.NetworkTest testParams) {
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        try {
+            int testSizeInBytes = testParams.getNumberOfBytes();
+            int bufferSize = Math.min(MAX_BUFFER_SIZE, testSizeInBytes);
+            int bytesSent = 0;
+            int bytesReceived = 0;
+            if (testParams.getHostToDevice()) {
+                // Fill the buffer with random data making it harder to compress if compression is
+                // enabled in grpc.
+                ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+                Random random = new Random();
+                random.nextBytes(buffer.array());
+                ByteString data = ByteString.copyFrom(buffer);
+                long startTime = System.nanoTime();
+                while (bytesSent < testSizeInBytes) {
+                    Deploy.NetworkTestRequest testRequest =
+                            Deploy.NetworkTestRequest.newBuilder()
+                                    .setData(data)
+                                    .setCurrentTimeNs(System.nanoTime())
+                                    .build();
+                    Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                    bytesSent += testRequest.getSerializedSize();
+                    bytesReceived += testResponse.getSerializedSize();
+                }
+                response.setDurationNs(System.nanoTime() - startTime);
+            } else {
+                long startTime = System.nanoTime();
+                while (bytesReceived < testSizeInBytes) {
+                    Deploy.NetworkTestRequest testRequest =
+                            Deploy.NetworkTestRequest.newBuilder()
+                                    .setResponseDataSize(bufferSize)
+                                    .setCurrentTimeNs(System.nanoTime())
+                                    .build();
+                    Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                    startTime += testResponse.getProcessingDurationNs();
+                    bytesSent += testRequest.getSerializedSize();
+                    bytesReceived += testResponse.getSerializedSize();
+                }
+                response.setDurationNs(System.nanoTime() - startTime);
+            }
+            response.setSentBytes(bytesSent);
+            response.setReceivedBytes(bytesReceived);
+        } catch (IOException ex) {
+            response.setError(ex.getMessage());
+        }
+        return response;
+    }
+
+    @VisibleForTesting
+    public Service.NetworkTestResponse.Builder doPingTest(
+            Installer installer, Service.NetworkTest testParams) {
+        Service.NetworkTestResponse.Builder response = Service.NetworkTestResponse.newBuilder();
+        try {
+            if (testParams.getHostToDevice()) {
+                Deploy.NetworkTestRequest testRequest =
+                        Deploy.NetworkTestRequest.newBuilder().build();
+                long startTime = System.nanoTime();
+                Deploy.NetworkTestResponse testResponse = installer.networkTest(testRequest);
+                startTime += testResponse.getProcessingDurationNs();
+                response.setDurationNs(System.nanoTime() - startTime);
+            } else {
+                Deploy.NetworkTestRequest testRequest =
+                        Deploy.NetworkTestRequest.getDefaultInstance();
+                Deploy.NetworkTestResponse startPingResponse = installer.networkTest(testRequest);
+                Deploy.NetworkTestResponse endPingResponse = installer.networkTest(testRequest);
+                long startTime =
+                        startPingResponse.getProcessingDurationNs()
+                                + startPingResponse.getCurrentTimeNs();
+                response.setDurationNs(endPingResponse.getCurrentTimeNs() - startTime);
+            }
+        } catch (IOException ex) {
+            response.setError(ex.getMessage());
+        }
+        return response;
+    }
+
+    private List<Service.DeployMetric> convertToMetricsProto(List<DeployMetric> metrics) {
         return metrics.stream()
                 .map(
                         (metric) ->
-                                Deploy.DeployMetric.newBuilder()
+                                Service.DeployMetric.newBuilder()
                                         .setName(metric.getName())
                                         .setStatus(metric.hasStatus() ? metric.getStatus() : "")
                                         .setStartNs(metric.getStartTimeNs())
@@ -218,11 +332,11 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         return selectedDevice;
     }
 
-    private static Deploy.Client ddmClientToRpcClient(Client client) {
+    private static Service.Client ddmClientToRpcClient(Client client) {
         String packageName = client.getClientData().getPackageName();
         String description = client.getClientData().getClientDescription();
 
-        Deploy.Client.Builder builder = Deploy.Client.newBuilder();
+        Service.Client.Builder builder = Service.Client.newBuilder();
 
         builder.setPid(client.getClientData().getPid());
         if (packageName != null) {
@@ -235,10 +349,10 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         return builder.build();
     }
 
-    private Deploy.Device ddmDeviceToRpcDevice(IDevice device) {
+    private Service.Device ddmDeviceToRpcDevice(IDevice device) {
         String avdOrEmpty = Objects.toString(device.getAvdName(), "");
         String modelOrEmpty = Objects.toString(device.getProperty(PROP_DEVICE_MODEL), "");
-        return Deploy.Device.newBuilder()
+        return Service.Device.newBuilder()
                 .addAllAbis(device.getAbis())
                 .setAvd(avdOrEmpty)
                 .setDevice(device.getName())

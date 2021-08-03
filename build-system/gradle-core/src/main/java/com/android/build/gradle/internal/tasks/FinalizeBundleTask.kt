@@ -54,6 +54,7 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task that copies the bundle file (.aab) to it's final destination and do final touches like:
@@ -61,6 +62,7 @@ import org.gradle.api.tasks.Internal
  *     <li>Signing the bundle if credentials are available and it's not a debuggable variant.
  * </ul>
  */
+@DisableCachingByDefault
 abstract class FinalizeBundleTask : NonIncrementalTask() {
 
     @get:InputFiles

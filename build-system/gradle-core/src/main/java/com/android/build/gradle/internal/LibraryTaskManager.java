@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.JAVA_DOC_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.SOURCE_PUBLICATION;
 
@@ -42,6 +43,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.ComponentPublishingInfo;
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo;
 import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
@@ -70,6 +72,8 @@ import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
+import com.android.build.gradle.tasks.JavaDocGenerationTask;
+import com.android.build.gradle.tasks.JavaDocJarTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessLibraryArtProfileTask;
@@ -346,7 +350,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     private void createBundleTask(@NonNull VariantImpl variant) {
         taskFactory.register(new BundleAar.LibraryCreationAction(variant));
-        taskFactory.register(new SourceJarTask.CreationAction(variant));
 
         variant.getTaskContainer()
                 .getAssembleTask()
@@ -355,9 +358,20 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                             task.dependsOn(variant.getArtifacts().get(SingleArtifact.AAR.INSTANCE));
                         });
 
-        if (variant.getVariantDslInfo().getPublishInfo() != null) {
-            List<ComponentPublishingInfo> components =
-                    variant.getVariantDslInfo().getPublishInfo().getComponents();
+        VariantPublishingInfo publishInfo = variant.getVariantDslInfo().getPublishInfo();
+        if (publishInfo != null) {
+            List<ComponentPublishingInfo> components = publishInfo.getComponents();
+
+            // Checks all components which the current variant is published to and see if there is
+            // any component that is configured to publish source or javadoc.
+            if (components.stream().anyMatch(ComponentPublishingInfo::getWithSourcesJar)) {
+                taskFactory.register(new SourceJarTask.CreationAction(variant));
+            }
+            if (components.stream().anyMatch(ComponentPublishingInfo::getWithJavadocJar)) {
+                taskFactory.register(new JavaDocGenerationTask.CreationAction(variant));
+                taskFactory.register(new JavaDocJarTask.CreationAction(variant));
+            }
+
             for (ComponentPublishingInfo component : components) {
                 createComponent(
                         variant, component.getComponentName(), component.isClassifierRequired());
@@ -391,6 +405,11 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                         new PublishedConfigSpec(
                                 SOURCE_PUBLICATION, componentName, isClassifierRequired));
 
+        final Configuration javaDocPub =
+                variantDependencies.getElements(
+                        new PublishedConfigSpec(
+                                JAVA_DOC_PUBLICATION, componentName, isClassifierRequired));
+
         component.addVariantsFromConfiguration(
                 apiPub, new ConfigurationVariantMapping("compile", isClassifierRequired));
         component.addVariantsFromConfiguration(
@@ -399,6 +418,11 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         if (sourcePub != null) {
             component.addVariantsFromConfiguration(
                     sourcePub, new ConfigurationVariantMapping("runtime", true));
+        }
+
+        if (javaDocPub != null) {
+            component.addVariantsFromConfiguration(
+                    javaDocPub, new ConfigurationVariantMapping("runtime", true));
         }
     }
 

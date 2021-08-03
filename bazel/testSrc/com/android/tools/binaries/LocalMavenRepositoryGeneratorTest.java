@@ -35,7 +35,7 @@ public class LocalMavenRepositoryGeneratorTest {
         List<String> coords = Arrays.asList("com.google.example:a:1", "com.google.example:b:1");
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
-                new LocalMavenRepositoryGenerator(repoPath, outputBuildFile, coords, false);
+                new LocalMavenRepositoryGenerator(repoPath, outputBuildFile, coords, false, false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.golden");

@@ -16,8 +16,17 @@
 
 package com.android.build.gradle.internal.dsl
 
+
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.CompileOptions
+import com.android.build.api.dsl.ComposeOptions
+import com.android.build.api.dsl.DataBinding
+import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.Lint
+import com.android.build.api.dsl.Splits
+import com.android.build.api.dsl.TestCoverage
+import com.android.build.api.dsl.TestOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
@@ -63,9 +72,27 @@ interface InternalCommonExtension<
 
     var compileSdkVersion: String?
 
+    // See GroovyBlockInExtensionsTest
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
     fun defaultConfig(action: Action<DefaultConfig>)
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+    fun aaptOptions(action: Action<AaptOptionsImpl>)
+    fun adbOptions(action: Action<AdbOptionsImpl>)
+    fun androidResources(action: Action<AndroidResources>)
+    fun buildFeatures(action: Action<BuildFeaturesT>)
+    fun compileOptions(action: Action<CompileOptionsImpl>)
+    fun composeOptions(action: Action<ComposeOptions>)
+    fun dataBinding(action: Action<DataBindingOptionsImpl>)
+    fun externalNativeBuild(action: Action<ExternalNativeBuildImpl>)
+    fun installation(action: Action<Installation>)
+    fun jacoco(action: Action<JacocoOptionsImpl>)
     fun lint(action: Action<Lint>)
+    fun lintOptions(action: Action<LintOptionsImpl>)
+    fun packagingOptions(action: Action<PackagingOptionsImpl>)
+    fun sourceSets(action: Action<NamedDomainObjectContainer<com.android.build.gradle.api.AndroidSourceSet>>)
+    fun splits(action: Action<SplitsImpl>)
+    fun testCoverage(action: Action<TestCoverage>)
+    fun testOptions(action: Action<TestOptionsImpl>)
+
 }

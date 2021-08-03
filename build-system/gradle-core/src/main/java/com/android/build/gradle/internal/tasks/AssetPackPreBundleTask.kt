@@ -37,6 +37,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.nio.file.Paths
 import java.util.function.Predicate
@@ -47,6 +48,7 @@ import java.util.zip.Deflater
  * included and uses a JarCreator to package them together for the base app to include in the
  * Android App Bundle.
  */
+@DisableCachingByDefault
 abstract class AssetPackPreBundleTask : NonIncrementalTask() {
     /**
      * Where to put the final archive containing all the files for the asset pack, to be included

@@ -27,10 +27,16 @@ import android.view.ViewRootImpl
 import android.view.WindowManagerGlobal
 import android.webkit.WebView
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatButton
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.testutils.inspection.InspectorRule
+import com.android.tools.agent.appinspection.testutils.property.companions.AppCompatButtonInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ButtonInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.TextViewInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ViewGroupLayoutParamsInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ViewInspectionCompanion
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.decompress
 import com.android.tools.layoutinspector.BITMAP_HEADER_SIZE
@@ -105,9 +111,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val root = View(context).apply { setAttachInfo(View.AttachInfo() )}
         val fakePicture = Picture(byteArrayOf(1, 2, 3))
         WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
@@ -210,9 +216,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val tree1 = View(context).apply { setAttachInfo(View.AttachInfo() )}
         val tree2 = View(context).apply { setAttachInfo(View.AttachInfo() )}
         val tree3 = View(context).apply { setAttachInfo(View.AttachInfo() )}
@@ -374,9 +380,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val tree1 = View(context).apply { setAttachInfo(View.AttachInfo()) }
         val tree2 = View(context).apply { setAttachInfo(View.AttachInfo()) }
         val tree3 = View(context).apply { setAttachInfo(View.AttachInfo()) }
@@ -432,9 +438,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val mainScreen = ViewGroup(context).apply {
             setAttachInfo(View.AttachInfo())
             width = 400
@@ -639,9 +645,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val mainScreen = ViewGroup(context).apply {
             setAttachInfo(View.AttachInfo())
             width = 400
@@ -750,13 +756,14 @@ class ViewLayoutInspectorTest {
             responseQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val root = ViewGroup(context).apply {
             setAttachInfo(View.AttachInfo())
             addView(View(context))
             addView(TextView(context, "Placeholder Text"))
+            addView(AppCompatButton(context, "Button", 0xFF0000, 0x00FF88))
         }
 
         WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
@@ -816,6 +823,42 @@ class ViewLayoutInspectorTest {
                 }
             }
         }
+
+        run { // Search for properties for AppCompatButton
+            val button = root.getChildAt(2)
+
+            val getPropertiesCommand = Command.newBuilder().apply {
+                getPropertiesCommandBuilder.apply {
+                    rootViewId = root.uniqueDrawingId
+                    viewId = button.uniqueDrawingId
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                getPropertiesCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.GET_PROPERTIES_RESPONSE)
+                response.getPropertiesResponse.let { propertiesResponse ->
+                    val strings = StringTable.fromStringEntries(propertiesResponse.stringsList)
+                    val propertyGroup = propertiesResponse.propertyGroup
+                    val props = propertyGroup.propertyList.map {
+                        "${strings[it.namespace]}.${strings[it.name]}"
+                    }
+                    assertThat(propertyGroup.viewId).isEqualTo(button.uniqueDrawingId)
+                    assertThat(props).containsExactly(
+                        "android.text",
+                        "android.visibility",
+                        "android.layout_width",
+                        "android.layout_height",
+                        "android.backgroundTint",
+                        "$packageName.backgroundTint"
+                    )
+                }
+            }
+        }
     }
 
     // WebView trampolines onto a different thread when reading properties, so just make sure things
@@ -827,9 +870,9 @@ class ViewLayoutInspectorTest {
             responseQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val root = ViewGroup(context).apply {
             setAttachInfo(View.AttachInfo())
             addView(View(context))
@@ -884,9 +927,9 @@ class ViewLayoutInspectorTest {
         val fakePicture1 = Picture(byteArrayOf(2, 1)) // Will be ignored because of BITMAP mode
         val fakePicture2 = Picture(byteArrayOf(2, 2))
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val scale = 0.5
         val scale2 = 0.2
         val root = ViewGroup(context).apply {
@@ -1094,9 +1137,9 @@ class ViewLayoutInspectorTest {
             eventQueue.add(bytes)
         }
 
-        val resourceNames = mutableMapOf<Int, String>()
-        val resources = Resources(resourceNames)
-        val context = Context("view.inspector.test", resources)
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
         val scale = 0.5
         val root = ViewGroup(context).apply {
             width = 100
@@ -1187,5 +1230,16 @@ class ViewLayoutInspectorTest {
         Looper.getLoopers().keys
             .filter { !initialThreads.contains(it) }
             .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }
+    }
+
+    @Suppress("SameParameterValue")
+    private fun createResources(packageName: String): Resources {
+        val resourceNames = mutableMapOf<Int, String>()
+        ViewInspectionCompanion.addResourceNames(resourceNames)
+        ViewGroupLayoutParamsInspectionCompanion.addResourceNames(resourceNames)
+        TextViewInspectionCompanion.addResourceNames(resourceNames)
+        ButtonInspectionCompanion.addResourceNames(resourceNames)
+        AppCompatButtonInspectionCompanion.addResourceNames(packageName, resourceNames)
+        return Resources(resourceNames)
     }
 }

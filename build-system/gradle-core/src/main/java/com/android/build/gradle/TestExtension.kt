@@ -62,13 +62,6 @@ open class TestExtension(
             dslServices
         )
 
-    // this is needed because the impl class needs this but the interface does not,
-    // so CommonExtension does not define it, which means, that even though it's part of
-    // TestExtensionImpl, the implementation by delegate does not bring it.
-    fun buildFeatures(action: Action<TestBuildFeatures>) {
-        publicExtensionImpl.buildFeatures(action)
-    }
-
     /**
      * The list of Application variants. Since the collections is built after evaluation, it
      * should be used with Gradle's `all` iterator to process future items.

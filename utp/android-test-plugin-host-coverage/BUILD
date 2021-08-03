@@ -1,7 +1,7 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
 
-kotlin_library(
+kotlin_library_legacy(
     name = "android-test-plugin-host-coverage",
     srcs = glob([
         "src/main/java/**/*.kt",
@@ -42,7 +42,7 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha05",
+        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha06",
         # Test dependencies.
         ":android-test-plugin-host-coverage",
         "//tools/base/common:tools.common",

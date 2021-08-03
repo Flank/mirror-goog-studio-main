@@ -122,6 +122,10 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                     @Retention(RetentionPolicy.SOURCE)
                     private @interface Flags {}
 
+                    @IntDef({FLAG1, FLAG2, FLAG1})
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface Flags1 {}
+
                 }
                 """
             ).indented(),
@@ -134,13 +138,19 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                     src/test/pkg/IntDefTest.java:9: Previous same value
                     @IntDef({STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT})
                                                            ~~~~~~~~~~~~~~
-                src/test/pkg/IntDefTest.java:28: Error: Constants FLAG3 and FLAG2 specify the same exact value (562949953421312); this is usually a cut & paste or merge error [UniqueConstants]
+                src/test/pkg/IntDefTest.java:28: Error: Constants FLAG3 and FLAG2 specify the same exact value (0x2000000000000L); this is usually a cut & paste or merge error [UniqueConstants]
                     @IntDef({FLAG2, FLAG3, FLAG1})
                                     ~~~~~
                     src/test/pkg/IntDefTest.java:28: Previous same value
                     @IntDef({FLAG2, FLAG3, FLAG1})
                              ~~~~~
-                2 errors, 0 warnings
+                src/test/pkg/IntDefTest.java:32: Error: Constant FLAG1 has already been included [UniqueConstants]
+                    @IntDef({FLAG1, FLAG2, FLAG1})
+                                           ~~~~~
+                    src/test/pkg/IntDefTest.java:32: Previous occurrence
+                    @IntDef({FLAG1, FLAG2, FLAG1})
+                             ~~~~~
+                3 errors, 0 warnings
                 """
         )
     }
@@ -177,29 +187,17 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                     @Retention(RetentionPolicy.SOURCE)
                     private @interface Flags1 {}
 
-                    @IntDef(flag = true, value={FLAG1, FLAG2})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags2 {}
-
-                    @IntDef(flag = true, value={FLAG9, FLAG10, FLAG11})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags3 {}
-
-                    @IntDef(flag = true, value={FLAG1, FLAG3, FLAG4})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags4 {}
-
-                    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags5 {}
-
-                    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags6 {}
-
-                    @IntDef(flag = true, value={FLAG12, FLAG13, FLAG14})
-                    @Retention(RetentionPolicy.SOURCE)
-                    private @interface Flags7 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG3}) private @interface Flags1 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG4}) private @interface Flags4 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG5}) private @interface Flags5 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG6}) private @interface Flags6 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG7}) private @interface Flags7 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG8}) private @interface Flags8 {}
+                    @IntDef(flag = true, value={FLAG11,FLAG9,FLAG10}) private @interface Flags10 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG11}) private @interface Flags11 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG12}) private @interface Flags12 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG13}) private @interface Flags13 {}
+                    @IntDef(flag = true, value={FLAG1,FLAG9,FLAG14}) private @interface Flags14 {}
                 }"""
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
@@ -710,53 +708,251 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                     public int[] okSize() {
                         return null;
                     }
+
+                    @DialogStyle public Pair<Integer, Integer> getFlags1() { return null; } // OK
+                    @DialogStyle public List<Integer> getFlags2() { return null; } // OK
+                    @DialogStyle public java.util.Map<Integer, String> getFlags2() { return null; } // OK
+                    @DialogStyle public List<String> getFlags2() { return null; } // ERROR
+
+                    private class Pair<S,T> { }
+
+
+                    @androidx.annotation.LongDef({1L,2L,3L})
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface LongDialogStyle {}
+
+                    @LongDialogStyle // OK
+                    public int okWithLong() {
+                        return 0;
+                    }
                 }
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-                src/test/pkg/WrongUsages.java:34: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
-                    @DialogStyle
-                    ~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:39: Error: Invalid range: the from attribute must be less than the to attribute [SupportAnnotationUsage]
-                    @IntRange(from = 1, to = 0)
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:39: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
-                    @IntRange(from = 1, to = 0)
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:40: Error: Invalid size range: the min attribute must be less than the max attribute [SupportAnnotationUsage]
-                    @Size(min=10, max = 8)
-                    ~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:45: Error: Invalid range: the from attribute must be less than the to attribute [SupportAnnotationUsage]
-                    @FloatRange(from = 1.0, to = 0.0)
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:45: Error: This annotation does not apply for type String; expected float or double [SupportAnnotationUsage]
-                    @FloatRange(from = 1.0, to = 0.0)
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:46: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
-                    @ColorInt
-                    ~~~~~~~~~
-                src/test/pkg/WrongUsages.java:47: Error: The size multiple must be at least 1 [SupportAnnotationUsage]
-                    @Size(multiple=0)
-                    ~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:48: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
-                    @DrawableRes
-                    ~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:53: Error: The size can't be negative [SupportAnnotationUsage]
-                    @Size(-5)
-                    ~~~~~~~~~
-                src/test/pkg/WrongUsages.java:58: Error: For methods, permission annotation should specify one of value, anyOf or allOf [SupportAnnotationUsage]
-                    @RequiresPermission
-                    ~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:63: Error: Only specify one of value, anyOf or allOf [SupportAnnotationUsage]
-                    @RequiresPermission(allOf = {"my.permission.PERM1","my.permission.PERM2"},anyOf = {"my.permission.PERM1","my.permission.PERM2"})
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/WrongUsages.java:64: Error: @CheckResult should not be specified on void methods [SupportAnnotationUsage]
-                    @CheckResult // Error on void methods
-                    ~~~~~~~~~~~~
-                13 errors, 0 warnings
+            src/test/pkg/WrongUsages.java:34: Error: This annotation does not apply for type String; expected int. Should @DialogStyle be annotated with @StringDef instead? [SupportAnnotationUsage]
+                @DialogStyle
+                ~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:39: Error: Invalid range: the from attribute must be less than the to attribute [SupportAnnotationUsage]
+                @IntRange(from = 1, to = 0)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:39: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
+                @IntRange(from = 1, to = 0)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:40: Error: Invalid size range: the min attribute must be less than the max attribute [SupportAnnotationUsage]
+                @Size(min=10, max = 8)
+                ~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:45: Error: Invalid range: the from attribute must be less than the to attribute [SupportAnnotationUsage]
+                @FloatRange(from = 1.0, to = 0.0)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:45: Error: This annotation does not apply for type String; expected float or double [SupportAnnotationUsage]
+                @FloatRange(from = 1.0, to = 0.0)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:46: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
+                @ColorInt
+                ~~~~~~~~~
+            src/test/pkg/WrongUsages.java:47: Error: The size multiple must be at least 1 [SupportAnnotationUsage]
+                @Size(multiple=0)
+                ~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:48: Error: This annotation does not apply for type String; expected int or long [SupportAnnotationUsage]
+                @DrawableRes
+                ~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:53: Error: The size can't be negative [SupportAnnotationUsage]
+                @Size(-5)
+                ~~~~~~~~~
+            src/test/pkg/WrongUsages.java:58: Error: For methods, permission annotation should specify one of value, anyOf or allOf [SupportAnnotationUsage]
+                @RequiresPermission
+                ~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:63: Error: Only specify one of value, anyOf or allOf [SupportAnnotationUsage]
+                @RequiresPermission(allOf = {"my.permission.PERM1","my.permission.PERM2"},anyOf = {"my.permission.PERM1","my.permission.PERM2"})
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:64: Error: @CheckResult should not be specified on void methods [SupportAnnotationUsage]
+                @CheckResult // Error on void methods
+                ~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:82: Error: This annotation does not apply for type java.util.List<java.lang.String>; expected int [SupportAnnotationUsage]
+                @DialogStyle public List<String> getFlags2() { return null; } // ERROR
+                ~~~~~~~~~~~~
+            14 errors, 0 warnings
                 """
+        )
+    }
+
+    fun testAdditionalFlagScenarios() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.util.SparseIntArray;
+                import androidx.annotation.IntDef;
+                import androidx.annotation.LongDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                import java.util.function.Consumer;
+
+                @SuppressWarnings("DeprecatedIsStillUsed")
+                public class TypedefWarnings {
+                    @IntDef({STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT})
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface DialogStyle {}
+                    public static final int STYLE_NORMAL = 0;
+                    public static final int STYLE_NO_TITLE = 1;
+                    public static final int STYLE_NO_FRAME = 2;
+                    public static final int STYLE_NO_INPUT = 3;
+                    @Deprecated public static final int STYLE_NO_INPUT_OLD = 3;
+
+                    // Allow collections holding typedefs, similar to resource type convention
+                    public void test(@DialogStyle Consumer<Integer> consumer) { } // OK 2
+                    public void test(@DialogStyle SparseIntArray array) { } // OK 3
+                    public void test(@DialogStyle byte id) { } // OK 4
+                    private static final @DialogStyle byte[] sAppOpsToNote = new byte[5]; // OK 4
+                    private static final @DialogStyle short[] sAppOpsToNote2 = new short[5]; // OK 5
+
+                    // Repeated values are okay if exactly one of them is deprecated
+                    @IntDef({STYLE_NORMAL, STYLE_NO_INPUT, STYLE_NO_INPUT_OLD}) // OK 6
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface DialogStyle2 {}
+
+                    // Repeated values are okay if scoped in different classes and same name
+                    class Atsc3FrontendSettings {
+                        public static final int MODULATION_UNDEFINED = 512;
+                    }
+                    class AtscFrontendSettings {
+                        public static final int MODULATION_UNDEFINED = 512;
+                    }
+                    @IntDef({Atsc3FrontendSettings.MODULATION_UNDEFINED, AtscFrontendSettings.MODULATION_UNDEFINED}) // OK 7
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface DialogStyle3 {}
+
+                    // Allow ints holding long typedef
+                    @LongDef(flag = true, value = {STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT})
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface LongDialogStyle {}
+                    @LongDialogStyle private int mBearerBitmask; // OK 8
+
+                    // Error; message should ask if you meant to use @StringDef?
+                    public static @DialogStyle String EXTRA_AUDIO_CODEC; // ERROR 1
+
+                    // Make sure constant value is printed in source format (e.g. hex 0x840 instead of 2112)
+                    public static final int VALUE_1 = 0x840;
+                    public static final int VALUE_2 = 0x840;
+                    @IntDef({VALUE_1, VALUE_2}) // ERROR 2
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface DialogStyle4 {}
+
+                    // Allow explicit aliasing
+                    public static final int VALUE_3 = 0x840;
+                    public static final int VALUE_4 = VALUE_3;
+                    @IntDef({VALUE_3, VALUE_4}) // OK 9
+                    @Retention(RetentionPolicy.SOURCE)
+                    private @interface DialogStyle5 {}
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.util.SparseIntArray
+                import androidx.annotation.IntDef
+                import androidx.annotation.LongDef
+                import java.util.function.Consumer
+
+                const val STYLE_NORMAL = 0
+                const val STYLE_NO_TITLE = 1
+                const val STYLE_NO_FRAME = 2
+                const val STYLE_NO_INPUT = 3
+                @Deprecated("blah blah") const val STYLE_NO_INPUT_OLD = 3
+
+                // Make sure constant value is printed in source format (e.g. hex 0x840 instead of 2112)
+                const val VALUE_1 = 0x840
+                const val VALUE_2 = 0x840
+
+                // Allow explicit aliasing
+                const val VALUE_3 = 0x840
+                const val VALUE_4 = VALUE_3
+
+                class TypedefWarnings {
+                    @IntDef(STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT)
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class DialogStyle
+
+                    // Allow collections holding typedefs, similar to resource type convention
+                    fun test(@DialogStyle consumer: Consumer<Int?>?) {} // OK 10
+                    fun test(@DialogStyle array: SparseIntArray?) {} // OK 11
+                    fun test(@DialogStyle id: Byte) {} // OK 12
+
+                    // Repeated values are okay if exactly one of them is deprecated
+                    @IntDef(STYLE_NORMAL, STYLE_NO_INPUT, STYLE_NO_INPUT_OLD) // OK 13
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class DialogStyle2
+
+                    // Repeated values are okay if scoped in different classes and same name
+                    internal object Atsc3FrontendSettings {
+                        const val MODULATION_UNDEFINED = 512
+                    }
+
+                    internal object AtscFrontendSettings {
+                        const val MODULATION_UNDEFINED = 512
+                    }
+
+                    @IntDef(Atsc3FrontendSettings.MODULATION_UNDEFINED, AtscFrontendSettings.MODULATION_UNDEFINED) // OK 14
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class DialogStyle3
+
+                    // Allow ints holding long typedef
+                    @LongDef(
+                        flag = true,
+                        value = [STYLE_NORMAL.toLong(), STYLE_NO_TITLE.toLong()]
+                    )
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class LongDialogStyle
+
+                    @LongDialogStyle private val mBearerBitmask = 0 // OK 15
+
+                    @IntDef(VALUE_1, VALUE_2) // ERROR 3
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class DialogStyle4
+
+                    @IntDef(VALUE_3, VALUE_4) // OK 16
+                    @Retention(AnnotationRetention.SOURCE)
+                    private annotation class DialogStyle5
+
+                    @DialogStyle
+                    private val sAppOpsToNote = ByteArray(5) // OK 17
+
+                    @DialogStyle
+                    private val sAppOpsToNote2 = ShortArray(5) // OK 18
+
+                    // Error; message should ask if you meant to use @StringDef?
+                    @DialogStyle var EXTRA_AUDIO_CODEC : String? = null // ERROR 4
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/TypedefWarnings.java:56: Error: Constants VALUE_2 and VALUE_1 specify the same exact value (0x840); this is usually a cut & paste or merge error [UniqueConstants]
+                @IntDef({VALUE_1, VALUE_2}) // ERROR 2
+                                  ~~~~~~~
+                src/test/pkg/TypedefWarnings.java:56: Previous same value
+                @IntDef({VALUE_1, VALUE_2}) // ERROR 2
+                         ~~~~~~~
+            src/test/pkg/TypedefWarnings.kt:61: Error: Constants VALUE_2 and VALUE_1 specify the same exact value (0x840); this is usually a cut & paste or merge error [UniqueConstants]
+                                @IntDef(VALUE_1, VALUE_2) // ERROR 3
+                                                 ~~~~~~~
+                src/test/pkg/TypedefWarnings.kt:61: Previous same value
+                                @IntDef(VALUE_1, VALUE_2) // ERROR 3
+                                        ~~~~~~~
+            src/test/pkg/TypedefWarnings.java:51: Error: This annotation does not apply for type String; expected int. Should @DialogStyle be annotated with @StringDef instead? [SupportAnnotationUsage]
+                public static @DialogStyle String EXTRA_AUDIO_CODEC; // ERROR 1
+                              ~~~~~~~~~~~~
+            src/test/pkg/TypedefWarnings.kt:76: Error: This annotation does not apply for type String; expected int. Should @test.pkg.TypedefWarnings.DialogStyle be annotated with @StringDef instead? [SupportAnnotationUsage]
+                                @DialogStyle var EXTRA_AUDIO_CODEC : String? = null // ERROR 4
+                                ~~~~~~~~~~~~
+            4 errors, 0 warnings
+            """
         )
     }
 

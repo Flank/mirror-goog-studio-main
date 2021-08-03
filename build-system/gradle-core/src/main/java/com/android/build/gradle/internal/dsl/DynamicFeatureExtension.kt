@@ -61,13 +61,6 @@ abstract class DynamicFeatureExtension(
             dslServices
         )
 
-    // this is needed because the impl class needs this but the interface does not,
-    // so CommonExtension does not define it, which means, that even though it's part of
-    // DynamicFeatureExtensionImpl, the implementation by delegate does not bring it.
-    fun buildFeatures(action: Action<DynamicFeatureBuildFeatures>) {
-        publicExtensionImpl.buildFeatures(action)
-    }
-
     override val flavorDimensionList: MutableList<String>
         get() = flavorDimensions
 
