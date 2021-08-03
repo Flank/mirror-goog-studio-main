@@ -164,13 +164,17 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     //////////////////////////////////////////////////////////
-    // Tests starts here:
+    // Tests start here:
     public void testSvgFillAlpha() throws Exception {
         checkSvgConversion("ic_add_to_notepad_black");
     }
 
     public void testSvgArcto1() throws Exception {
         checkSvgConversion("test_arcto_1");
+    }
+
+    public void testSvgArcto2() throws Exception {
+        checkSvgConversion("test_arcto_2");
     }
 
     public void testSvgControlPoints01() throws Exception {

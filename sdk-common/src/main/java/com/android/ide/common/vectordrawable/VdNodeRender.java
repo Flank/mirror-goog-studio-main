@@ -239,8 +239,8 @@ class VdNodeRender {
                 case 'a':
                     // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
                     drawArc(path, cx, cy, val[k + 5] + cx, val[k + 6] + cy,
-                            val[k], val[k + 1], val[k + 2], val[k + 3] != 0,
-                            val[k + 4] != 0);
+                            Math.abs(val[k]), Math.abs(val[k + 1]), val[k + 2],
+                            val[k + 3] != 0, val[k + 4] != 0);
                     cx += val[k + 5];
                     cy += val[k + 6];
                     cpx = cx;
@@ -248,8 +248,9 @@ class VdNodeRender {
                     break;
 
                 case 'A':
-                    drawArc(path, cx, cy, val[k + 5], val[k + 6], val[k], val[k + 1],
-                            val[k + 2], val[k + 3] != 0, val[k + 4] != 0);
+                    drawArc(path, cx, cy, val[k + 5], val[k + 6],
+                            Math.abs(val[k]), Math.abs(val[k + 1]), val[k + 2],
+                            val[k + 3] != 0, val[k + 4] != 0);
                     cx = val[k + 5];
                     cy = val[k + 6];
                     cpx = cx;
