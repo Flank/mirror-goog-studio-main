@@ -128,10 +128,10 @@ public class LocalMavenRepositoryGenerator {
                 new RemoteRepository.Builder("prebuilts", "default", "file://" + this.repoPath)
                         .build();
         List<RemoteRepository> repositories = new ArrayList<>();
-        repositories.add(remoteRepository);
         if (fetch) {
             repositories.addAll(AetherUtils.REPOSITORIES);
         }
+        repositories.add(remoteRepository);
         repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
     }
 
@@ -372,7 +372,7 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
-        boolean fetch = false;
+        boolean fetch = System.getenv("MAVEN_FETCH") != null;
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];

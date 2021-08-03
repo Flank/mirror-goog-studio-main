@@ -37,6 +37,7 @@ def main():
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
   env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', config, 'ndk', '20.1.5948944')
   env['TERM'] = os.environ.get('TERM', '')
+  env['MAVEN_FETCH'] = os.environ.get('MAVEN_FETCH', '')
   env['SHELL'] = os.environ.get('SHELL', '')
   env['HOME'] = os.environ.get('HOME', '')
   env['DISPLAY'] = os.environ.get('DISPLAY', '')

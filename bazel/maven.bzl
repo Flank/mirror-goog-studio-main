@@ -576,6 +576,7 @@ _local_maven_repository = repository_rule(
             allow_files = True,
         ),
     },
+    environ = ["MAVEN_FETCH"],
     local = True,
     implementation = _local_maven_repository_impl,
 )
