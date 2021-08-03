@@ -97,7 +97,7 @@ public class PathParser {
      * Parses the floats in the string this is an optimized version of parseFloat(s.split(",|\\s"));
      *
      * @param s the string containing a command and list of floats
-     * @param parseMode
+     * @param parseMode indicated whether the path belongs to an either SVG or a vector drawable
      * @return array of floats
      */
     @NonNull
@@ -138,6 +138,15 @@ public class PathParser {
                     startPosition = endPosition + 1;
                 } else {
                     startPosition = endPosition;
+                }
+            }
+            if (arcCommand) {
+                // https://www.w3.org/TR/SVG/paths.html#ArcOutOfRangeParameters:
+                // If either rx or ry have negative signs, these are dropped;
+                // the absolute value is used instead.
+                for (int i = 0; i < count - 1; i += 7) {
+                    results[i] = Math.abs(results[i]);
+                    results[i + 1] = Math.abs(results[i + 1]);
                 }
             }
             return Arrays.copyOfRange(results, 0, count);
