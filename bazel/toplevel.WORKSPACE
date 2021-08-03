@@ -176,3 +176,20 @@ local_maven_repository(
     "xerces:xercesImpl:2.12.0",
   ]
 )
+
+local_maven_repository(
+  name = "maven_tests",
+  path = "prebuilts/tools/common/m2/repository/",
+  artifacts = [
+        "android.arch.navigation:navigation-common:1.0.0",
+        "android.arch.navigation:navigation-fragment:1.0.0",
+        "androidx.fragment:fragment:1.3.4",
+        "androidx.navigation:navigation-fragment:2.3.5",
+        "com.google.jimfs:jimfs:1.1",
+        "com.sun.activation:javax.activation:1.2.0",
+        "javax.inject:javax.inject:1",
+        "junit:junit:4.12",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
+        "xmlpull:xmlpull:1.1.3.1",
+  ]
+)
