@@ -269,7 +269,11 @@ public class D8DesugaringTest {
                 project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 24);
         executor.run("assembleBaseDebug");
         try (Apk androidApk =
-                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base")) {
+                project.getSubproject(":app")
+                        .getApk(
+                                GradleTestProject.ApkType.DEBUG,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "base")) {
             DexBackedClassDef apkClass =
                     androidApk.getClass("Lcom/example/helloworld/InterfaceWithDefault;");
             DexBackedMethod staticMethod =

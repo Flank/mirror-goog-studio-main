@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
@@ -79,12 +81,16 @@ class VariantPathHelper(
     val apkLocation: File
             by lazy {
                 val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
-                val baseDirectory =
-                    if (override != null) {
-                        dslServices.file(override)
-                    } else {
-                        defaultApkLocation.get().asFile
-                    }
+                val customBuild =
+                        dslServices.projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY) != null ||
+                        dslServices.projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI) != null ||
+                        dslServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null ||
+                                dslServices.projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)
+                val baseDirectory =when {
+                    override != null -> dslServices.file(override)
+                    customBuild ->  deploymentApkLocation.get().asFile
+                    else -> defaultApkLocation.get().asFile
+                }
                 File(baseDirectory, variantDslInfo.dirName)
             }
 
@@ -93,6 +99,18 @@ class VariantPathHelper(
      */
     private val defaultApkLocation: Provider<Directory>
             by lazy { outputDir("apk") }
+
+    /**
+     * Obtains the location for APKs that target a specific device.
+     *
+     * APKs built for a specific device are put in intermediates/ in order to
+     * distinguish them from other APKs
+     *
+     * @return the location for targeted APKs
+     */
+    private val deploymentApkLocation: Provider<Directory> by lazy {
+        intermediatesDir("apk")
+    }
 
     val aarLocation: Provider<Directory>
             by lazy { outputDir(BuilderConstants.EXT_LIB_ARCHIVE) }

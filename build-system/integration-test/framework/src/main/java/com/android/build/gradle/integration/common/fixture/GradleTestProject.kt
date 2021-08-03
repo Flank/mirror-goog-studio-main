@@ -677,6 +677,11 @@ allprojects { proj ->
             .join(projectDir, "build", AndroidProject.FD_INTERMEDIATES)
 
     /** Return a File under the output directory from Android plugins.  */
+    fun getOutputFile(apkLocation: ApkLocation, vararg paths: String?): File {
+        return FileUtils.join(apkLocation.getDir(this), *paths)
+    }
+
+    /** Return a File under the output directory from Android plugins.  */
     fun getOutputFile(vararg paths: String?): File {
         return FileUtils.join(outputDir, *paths)
     }
@@ -844,14 +849,35 @@ allprojects { proj ->
         }
     }
 
+    enum class ApkLocation {
+        Output {
+            override fun getDir(testProject: GradleTestProject): File = testProject.outputDir
+        },
+        Intermediates {
+            override fun getDir(testProject: GradleTestProject): File = testProject.intermediatesDir
+        };
+
+        abstract fun getDir(testProject: GradleTestProject): File
+    }
+
     /**
      * Return the output apk File from the application plugin for the given dimension as a File.
      *
      *
      * Expected dimensions orders are: - product flavors -
      */
-    fun getApkAsFile(apk: ApkType, vararg dimensions: String): File {
-        return getApkAsFile(null /* filterName */, apk, *dimensions)
+    @JvmOverloads
+    fun getApkAsFile(
+        apk: ApkType,
+        apkLocation: ApkLocation = ApkLocation.Output,
+        vararg dimensions: String,
+    ): File {
+        return getApkAsFile(
+            apkLocation = apkLocation,
+            filterName = null /* filterName */,
+            apkType = apk,
+            dimensions = *dimensions
+        )
     }
 
     /**
@@ -860,8 +886,30 @@ allprojects { proj ->
      *
      * Expected dimensions orders are: - product flavors -
      */
-    fun getApk(apk: ApkType, vararg dimensions: String): Apk {
-        return getApk(null /* filterName */, apk, *dimensions)
+    fun getApk(
+        apk: ApkType,
+        vararg dimensions: String,
+    ): Apk {
+        return getApk(
+            filterName = null,
+            apkType = apk,
+            dimensions = *dimensions,
+            apkLocation = ApkLocation.Output,
+        )
+    }
+
+
+    fun getApk(
+        apk: ApkType,
+        apkLocation: ApkLocation,
+        vararg dimensions: String,
+    ): Apk {
+        return getApk(
+            filterName = null,
+            apkType = apk,
+            dimensions = *dimensions,
+            apkLocation = apkLocation
+        )
     }
 
     /**
@@ -873,6 +921,7 @@ allprojects { proj ->
      */
     fun getBundleUniversalApk(apk: ApkType): Apk {
         return getOutputApk(
+            ApkLocation.Output,
             "universal_apk",
             null,
             apk,
@@ -888,17 +937,20 @@ allprojects { proj ->
      *
      * Expected dimensions orders are: - product flavors -
      */
+    @JvmOverloads
     fun getApkAsFile(
         filterName: String?,
         apkType: ApkType,
+        apkLocation: ApkLocation = ApkLocation.Output,
         vararg dimensions: String
     ): File {
         return getOutputApkFile(
-            "apk",
-            filterName,
-            apkType,
-            ImmutableList.copyOf(dimensions),
-            null
+            apkLocation = apkLocation,
+            pathPrefix = "apk",
+            filterName = filterName,
+            apkType = apkType,
+            dimensions = ImmutableList.copyOf(dimensions),
+            suffix = null
         )
     }
 
@@ -908,12 +960,15 @@ allprojects { proj ->
      *
      * Expected dimensions orders are: - product flavors -
      */
+    @JvmOverloads
     fun getApk(
         filterName: String?,
         apkType: ApkType,
+        apkLocation: ApkLocation = ApkLocation.Output,
         vararg dimensions: String
     ): Apk {
         return getOutputApk(
+            apkLocation,
             "apk",
             filterName,
             apkType,
@@ -923,12 +978,14 @@ allprojects { proj ->
     }
 
     private fun getOutputApkFile(
+        apkLocation: ApkLocation,
         pathPrefix: String,
         filterName: String?,
         apkType: ApkType,
         dimensions: ImmutableList<String>,
         suffix: String?): File {
         return getOutputFile(
+            apkLocation,
             pathPrefix
                     + (if (apkType.testName != null) File.separatorChar
                 .toString() + apkType.testName else "")
@@ -945,6 +1002,7 @@ allprojects { proj ->
     }
 
     private fun getOutputApk(
+        apkLocation: ApkLocation,
         pathPrefix: String,
         filterName: String?,
         apkType: ApkType,
@@ -952,7 +1010,7 @@ allprojects { proj ->
         suffix: String?
     ): Apk {
         return _getApk(
-            getOutputApkFile(pathPrefix, filterName, apkType, dimensions, suffix)
+            getOutputApkFile(apkLocation, pathPrefix, filterName, apkType, dimensions, suffix)
         )
     }
 
@@ -1247,12 +1305,14 @@ allprojects { proj ->
      * failure.
      *
      * @param tasks Variadic list of tasks to execute.
+     * @param setupBlock Setup function for the GradleTaskExecutor and ModelBuilder
      * @return the output models for the project as map of output model name (variant name +
      * artifact name) to the associated [BuiltArtifacts]
      */
-    fun executeAndReturnOutputModels(vararg tasks: String): Map<String, BuiltArtifacts> {
-        executor().run(*tasks)
-        val androidProjectModelContainer = model().ignoreSyncIssues().fetchAndroidProjects()
+    @JvmOverloads
+    fun executeAndReturnOutputModels(setupBlock: (BaseGradleExecutor<*>) -> Unit = {}, vararg tasks: String): Map<String, BuiltArtifacts> {
+        executor().also(setupBlock).run(*tasks)
+        val androidProjectModelContainer = model().also(setupBlock).ignoreSyncIssues().fetchAndroidProjects()
         val onlyModel = androidProjectModelContainer.onlyModel
         val mapOfVariantOutputs = ImmutableMap.builder<String, BuiltArtifacts>()
         for (variant in onlyModel.variants) {

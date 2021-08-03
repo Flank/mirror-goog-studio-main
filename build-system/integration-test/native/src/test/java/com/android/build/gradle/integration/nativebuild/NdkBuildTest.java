@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
@@ -132,7 +133,7 @@ public class NdkBuildTest {
         project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "invalid-abi,arm64-v8a,armeabi")
                 .run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/arm64-v8a/libhello-jni.so");

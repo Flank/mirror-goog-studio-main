@@ -77,13 +77,21 @@ class DeterministicApkTest(
 
         // First we build the APK as-is
         getExecutor().run(getAssembleTask())
-        val apk1 = project.getApk(getApkType())
+        val apk1 = project.getApk(
+                getApkType(),
+                if (fromIde) GradleTestProject.ApkLocation.Intermediates
+                else GradleTestProject.ApkLocation.Output
+        )
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
 
         // Then clean, build again, and assert that the APK is the same as the original
         getExecutor().run("clean", getAssembleTask())
-        val apk2 = project.getApk(getApkType())
+        val apk2 = project.getApk(
+                getApkType(),
+                if (fromIde) GradleTestProject.ApkLocation.Intermediates
+                else GradleTestProject.ApkLocation.Output
+        )
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
         assertThat(byteArray2).isEqualTo(byteArray1)
@@ -93,7 +101,11 @@ class DeterministicApkTest(
     fun incrementalBuildDeterministicApkTest() {
         // First we build the APK as-is
         getExecutor().run(getAssembleTask())
-        val apk1 = project.getApk(getApkType())
+        val apk1 = project.getApk(
+                getApkType(),
+                if (fromIde) GradleTestProject.ApkLocation.Intermediates
+                else GradleTestProject.ApkLocation.Output
+        )
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
 
@@ -106,7 +118,11 @@ class DeterministicApkTest(
         // different because it will have a virtual entry.
         TestFileUtils.replaceLine(project.file("src/main/resources/foo.txt"), 1, "foo")
         getExecutor().run(getAssembleTask())
-        val apk2 = project.getApk(getApkType())
+        val apk2 = project.getApk(
+                getApkType(),
+                if (fromIde) GradleTestProject.ApkLocation.Intermediates
+                else GradleTestProject.ApkLocation.Output
+        )
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
         if (debuggable && !forceDeterministicApk) {

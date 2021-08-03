@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -394,7 +395,7 @@ class CmakeBasicProjectTest(
         project.executor()
             .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64")
             .run("clean", "assembleDebug")
-        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates)
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
         assertThatApk(apk).contains("lib/x86_64/libhello-jni.so")
 

@@ -23,6 +23,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -85,7 +86,9 @@ public class InjectedAbiSplitTest {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "arm64-v8a")
                 .run("clean", "assembleDebug");
-        File arm64Apk = sProject.getApkAsFile("arm64-v8a", GradleTestProject.ApkType.DEBUG);
+        File arm64Apk =
+                sProject.getApkAsFile(
+                        "arm64-v8a", GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
         checkApkContent(arm64Apk, Abi.ARM64_V8A);
 
         assertThat(sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG))
@@ -121,7 +124,9 @@ public class InjectedAbiSplitTest {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "")
                 .run("clean", "assembleDebug");
-        File universalApk = sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG);
+        File universalApk =
+                sProject.getApkAsFile(
+                        "universal", GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
     }
 
@@ -131,7 +136,9 @@ public class InjectedAbiSplitTest {
                 .with(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
-        File universalApk = sProject.getApkAsFile("universal", GradleTestProject.ApkType.DEBUG);
+        File universalApk =
+                sProject.getApkAsFile(
+                        "universal", GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
     }
 
