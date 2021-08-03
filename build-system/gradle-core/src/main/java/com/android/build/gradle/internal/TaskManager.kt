@@ -2224,7 +2224,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(JacocoTask.CreationAction(creationConfig))
 
         val instrumentedClasses: FileCollection =
-            if (jacocoTransformEnabled && creationConfig.variantDslInfo.isTestCoverageEnabled) {
+            if (jacocoTransformEnabled &&
+                creationConfig.variantDslInfo.isTestCoverageEnabled &&
+                    creationConfig !is ApplicationCreationConfig) {
                 // For libraries that can be published,avoid publishing classes
                 // with runtime dependencies on Jacoco.
                 creationConfig.artifacts.getAllClasses()
