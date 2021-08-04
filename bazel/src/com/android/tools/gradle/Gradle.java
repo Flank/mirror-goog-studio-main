@@ -338,6 +338,7 @@ public class Gradle implements Closeable {
         }
     }
 
+    /** Unzips archive to the specified location. Existing files are overwritten. */
     public static void unzip(File zip, File out) throws IOException {
         byte[] buffer = new byte[1024];
         try (FileInputStream fis = new FileInputStream(zip);
@@ -348,6 +349,9 @@ public class Gradle implements Closeable {
                 String fileName = zipEntry.getName();
                 File newFile = new File(out, fileName);
                 if (!fileName.endsWith("/")) {
+                    if (newFile.exists()) {
+                        newFile.delete();
+                    }
                     newFile.getParentFile().mkdirs();
                     try (FileOutputStream fos = new FileOutputStream(newFile)) {
                         int len;
