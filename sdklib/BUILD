@@ -267,6 +267,83 @@ xsd_to_java(
     ],
 )
 
+xsd_to_java(
+    name = "sdk-common-3",
+    binding_deps = ["//tools/base/repository:repo-common-02.xjb"],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    custom_binding = "src/main/resources/xsd/sdk-common-custom-03.xjb",
+    episode = "sdk-common-03.xjb",
+    package = "com.android.sdklib.repository.generated.common.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-common-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-repository-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        "//tools/base/repository:generic-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.repository.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-repository-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-addon-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.addon.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-addon-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-sysimg-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.sysimg.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-sys-img-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-sites-list-5",
+    binding_deps = ["//tools/base/repository:sources/repo-sites-common-1.xjb"],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.sources.generated.v5",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sources/sdk-sites-list-5.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
 filegroup(
     name = "agp_gradle_build_files",
     srcs = glob([
