@@ -19,13 +19,18 @@ package com.android.build.gradle.integration.lint
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.nio.file.Files
 import java.util.Scanner
 import java.util.regex.Pattern
 
 /**
- * Integration test to check that AGP isn't leaking lint class loaders.
+ * Integration test to check that AGP isn't leaking lint class loaders, even when buildSrc changes.
  */
 class LintClassLoaderTest {
+
+    companion object {
+        const val CREATING_LINT_CLASS_LOADER_LOG_LINE = "Android Lint: Creating lint class loader.*"
+    }
 
     // Set a unique heapSize for each test to ensure each test uses a fresh gradle daemon without an
     // existing lint class loader.
@@ -34,11 +39,32 @@ class LintClassLoaderTest {
 
     @Test
     fun testForSingleLintClassLoader() {
+        val buildSrcBuildGradle = project.file("buildSrc/build.gradle")
+        Files.createDirectory(buildSrcBuildGradle.toPath().parent)
+        buildSrcBuildGradle.writeText(//language=groovy
+            """
+            plugins {
+                id('java')
+            }
+        """.trimIndent())
+        val buildSrcClass = project.file("buildSrc/src/main/java/com/example/MyPlugin.java")
+        Files.createDirectories(buildSrcClass.toPath().parent)
+        buildSrcClass.writeText(//language=java
+            """
+            package com.example;
+
+            public class MyPlugin {
+                public static int myConstant = 1;
+            }
+        """.trimIndent())
+
         // Check that we create exactly one lint class loader when running several lint tasks with
         // a new gradle daemon.
-        project.executor().withArgument("--info").run("lintDebug", "lintRelease")
-        assertThat(project.buildResult.stdout.countMatches("Creating lint class loader."))
-            .isEqualTo(1)
+        val result = project.executor().withArgument("--info").run("lintDebug", "lintRelease")
+        assertThat(result.stdout.countMatches(CREATING_LINT_CLASS_LOADER_LOG_LINE)).isEqualTo(1)
+        buildSrcClass.writeText(buildSrcClass.readText().replace('1', '2'))
+        val result2 = project.executor().withArgument("--info").run("clean","lintDebug")
+        assertThat(result2.stdout.countMatches(CREATING_LINT_CLASS_LOADER_LOG_LINE)).isEqualTo(0)
     }
 }
 

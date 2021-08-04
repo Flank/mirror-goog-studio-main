@@ -110,6 +110,9 @@ abstract class LintTool {
     abstract val classpath: ConfigurableFileCollection
 
     @get:Input
+    abstract val version: Property<String>
+
+    @get:Input
     abstract val runInProcess: Property<Boolean>
 
     @get:Input
@@ -119,6 +122,7 @@ abstract class LintTool {
     fun initialize(taskCreationServices: TaskCreationServices) {
         classpath.fromDisallowChanges(taskCreationServices.lintFromMaven.files)
         val projectOptions = taskCreationServices.projectOptions
+        version.setDisallowChanges(getLintMavenArtifactVersion(projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(), null))
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
@@ -158,6 +162,7 @@ abstract class LintTool {
             parameters.mainClass.set(mainClass)
             parameters.arguments.set(arguments)
             parameters.classpath.from(classpath)
+            parameters.version.set(version)
             parameters.android.set(android)
             parameters.fatalOnly.set(fatalOnly)
             parameters.runInProcess.set(runInProcess.get())
@@ -1643,7 +1648,7 @@ class LintFromMaven(val files: FileCollection, val version: String) {
 
 internal fun getLintMavenArtifactVersion(
     versionOverride: String?,
-    reporter: IssueReporter,
+    reporter: IssueReporter?,
     defaultVersion: String = Version.ANDROID_TOOLS_BASE_VERSION,
     agpVersion: String = Version.ANDROID_GRADLE_PLUGIN_VERSION
 ): String {
@@ -1653,7 +1658,7 @@ internal fun getLintMavenArtifactVersion(
     // Only verify versions that parse. If it is not valid, it will fail later anyway.
     val parsed = GradleVersion.tryParseAndroidGradlePluginVersion(versionOverride)
     if (parsed == null) {
-        reporter.reportError(
+        reporter?.reportError(
             IssueReporter.Type.GENERIC,
             """
                     Could not parse lint version override '$versionOverride'
@@ -1673,7 +1678,7 @@ internal fun getLintMavenArtifactVersion(
     // e.g. if the default lint version is 31.1.0 (as will be for AGP 8.1.0), fail is specifying
     // lint 30.2.0, but only warn if specifying lint 31.0.0
     if (normalizedParsed.major < default.major) {
-        reporter.reportError(
+        reporter?.reportError(
             IssueReporter.Type.GENERIC,
             """
                     Lint must be at least version ${agpVersion.substringBefore(".")}.0.0, and is recommended to be at least $agpVersion
@@ -1683,7 +1688,7 @@ internal fun getLintMavenArtifactVersion(
         return defaultVersion
     }
     if (normalizedParsed < default) {
-        reporter.reportWarning(
+        reporter?.reportWarning(
             IssueReporter.Type.GENERIC,
             """
                     The build will use lint version $versionOverride which is older than the default.
