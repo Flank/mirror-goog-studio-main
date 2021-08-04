@@ -57,9 +57,13 @@
             <xsd:extension base="common:typeDetails">
                 <xsd:sequence>
                     <!-- api revision number for released android versions -->
-                    <xsd:element name="api-level" type="xsd:int"/>
+                    <xsd:element name="api-level" type="xsd:string"/>
                     <!-- codename for pre-release android versions -->
                     <xsd:element name="codename" type="xsd:string" minOccurs="0"/>
+                    <!-- The extension level for the current package -->
+                    <xsd:element name="extension-level" type="xsd:int" minOccurs="0"/>
+                    <!-- Whether the package is the base sdk for the current Api level -->
+                    <xsd:element name="base-extension" type="xsd:boolean"/>
                 </xsd:sequence>
             </xsd:extension>
         </xsd:complexContent>

@@ -30,5 +30,8 @@
         <bindings node="//xsd:complexType[@name='libraryType']">
             <plugin:super name="com.android.sdklib.repository.meta.Library"/>
         </bindings>
+        <bindings node="//xsd:element[@name='api-level']">
+            <property name="apiLevelString"/>
+        </bindings>
     </bindings>
 </bindings>
