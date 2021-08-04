@@ -128,11 +128,8 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -144,7 +141,6 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
@@ -777,7 +773,7 @@ public abstract class BasePlugin<
                 .configureDependencySubstitutions()
                 .configureDependencyChecks()
                 .configureGeneralTransforms()
-                .configureVariantTransforms(variants, variantManager.getTestComponents())
+                .configureVariantTransforms(variants, variantManager.getNestedComponents())
                 .configureAttributeMatchingStrategies();
 
         // Run the old Variant API, after the variants and tasks have been created.

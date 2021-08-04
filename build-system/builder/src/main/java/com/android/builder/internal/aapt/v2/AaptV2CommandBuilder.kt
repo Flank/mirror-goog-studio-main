@@ -201,7 +201,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
     }
 
     // options controlled by build variants
-    if (!config.variantType.isTestComponent && config.customPackageForR != null) {
+    if (!config.variantType.isNestedComponent && config.customPackageForR != null) {
         builder.add("--custom-package", config.customPackageForR)
     }
 

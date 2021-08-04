@@ -825,29 +825,30 @@ class VariantDslInfoTest2 :
             given.flavors
         )
 
-        val parentVariant = if (given.variantType.isTestComponent && given.parentVariantGivenData != null) {
-            val parentData = given.parentVariantGivenData!!
+        val parentVariant =
+            if (given.variantType.isNestedComponent && given.parentVariantGivenData != null) {
+                val parentData = given.parentVariantGivenData!!
 
-            VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
-                componentIdentity = componentIdentity,
-                variantType = parentData.variantType,
-                defaultConfig = given.defaultConfig,
-                buildTypeObj = given.buildType,
-                productFlavorList = given.flavors,
-                signingConfigOverride = null,
-                productionVariant = null,
-                dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
-                dslServices = dslServices,
-                services = services,
-                buildDirectory = buildDirectory,
-                dslNamespace = parentData.dslNamespace,
-                nativeBuildSystem = null,
-                publishingInfo = null,
-                experimentalProperties = mapOf(),
-                enableTestFixtures = false,
-                inconsistentTestAppId = false
-            )
-        } else { null }
+                VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
+                    componentIdentity = componentIdentity,
+                    variantType = parentData.variantType,
+                    defaultConfig = given.defaultConfig,
+                    buildTypeObj = given.buildType,
+                    productFlavorList = given.flavors,
+                    signingConfigOverride = null,
+                    productionVariant = null,
+                    dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+                    dslServices = dslServices,
+                    services = services,
+                    buildDirectory = buildDirectory,
+                    dslNamespace = parentData.dslNamespace,
+                    nativeBuildSystem = null,
+                    publishingInfo = null,
+                    experimentalProperties = mapOf(),
+                    enableTestFixtures = false,
+                    inconsistentTestAppId = false
+                )
+            } else { null }
 
         val variantDslInfo = VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
             componentIdentity = componentIdentity,

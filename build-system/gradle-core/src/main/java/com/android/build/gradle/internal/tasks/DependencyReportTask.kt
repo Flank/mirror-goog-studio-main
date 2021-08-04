@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.AndroidDependenciesRenderer
 import org.gradle.api.DefaultTask
@@ -34,7 +34,7 @@ open class DependencyReportTask : DefaultTask() {
     @get:Internal
     lateinit var variants: List<VariantImpl>
     @get:Internal
-    lateinit var testComponents: List<TestComponentImpl>
+    lateinit var nestedComponents: List<ComponentImpl>
 
     @TaskAction
     @Throws(IOException::class)
@@ -47,11 +47,11 @@ open class DependencyReportTask : DefaultTask() {
             renderer.render(variant)
         }
 
-        val sortedTestComponents = testComponents.sortedWith(compareBy { it.name })
+        val sortedNestedComponents = nestedComponents.sortedWith(compareBy { it.name })
 
-        for (testComponent in sortedTestComponents) {
-            renderer.startComponent(testComponent)
-            renderer.render(testComponent)
+        for (component in sortedNestedComponents) {
+            renderer.startComponent(component)
+            renderer.render(component)
         }
     }
 }

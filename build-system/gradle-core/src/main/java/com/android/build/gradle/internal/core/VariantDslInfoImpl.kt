@@ -198,7 +198,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
         }
         sb.append(splitName).append('-')
         sb.append(buildTypeObj.name)
-        if (variantType.isTestComponent) {
+        if (variantType.isNestedComponent) {
             sb.append('-').append(variantType.prefix)
         }
         return sb.toString()
@@ -226,7 +226,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     override val directorySegments: Collection<String?> by lazy {
         val builder =
             ImmutableList.builder<String>()
-        if (variantType.isTestComponent || variantType.isTestFixturesComponent) {
+        if (variantType.isNestedComponent) {
             builder.add(variantType.prefix)
         }
         if (productFlavorList.isNotEmpty()) {
@@ -251,7 +251,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
      */
     override fun computeDirNameWithSplits(vararg splitNames: String): String {
         val sb = StringBuilder()
-        if (variantType.isTestComponent) {
+        if (variantType.isNestedComponent) {
             sb.append(variantType.prefix).append("/")
         }
         if (productFlavorList.isNotEmpty()) {

@@ -18,11 +18,9 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.getFeatureLevel
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
@@ -625,10 +623,10 @@ class DependencyConfigurator(
     fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        testComponents: List<TestComponentImpl>
+        nestedComponents: List<ComponentImpl>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
-            variants.map { it.variant }.plus(testComponents)
+            variants.map { it.variant }.plus(nestedComponents)
 
         val dependencies = project.dependencies
 

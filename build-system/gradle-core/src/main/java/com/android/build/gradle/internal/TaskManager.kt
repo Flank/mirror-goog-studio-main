@@ -288,8 +288,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     @JvmField
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
+    private val nestedComponents: List<ComponentImpl> =
+        testComponents + testFixturesComponents
     private val allPropertiesList: List<ComponentCreationConfig> =
-            variantPropertiesList + testComponents + testFixturesComponents
+            variantPropertiesList + nestedComponents
 
 
     /**
@@ -401,18 +403,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         if (variantType.isBaseModule) {
             createBundleTask(variantProperties)
         }
-        doCreateTasksForVariant(variant, variants)
+        doCreateTasksForVariant(variant)
     }
 
     /**
      * Entry point for each specialized TaskManager to create the tasks for a given VariantT
      *
      * @param variantInfo the variantInfo for which to create the tasks
-     * @param allVariants all the other variants. This is needed for lint.
      */
     protected abstract fun doCreateTasksForVariant(
-            variantInfo: ComponentInfo<VariantBuilderT, VariantT>,
-            allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>)
+            variantInfo: ComponentInfo<VariantBuilderT, VariantT>)
 
     /** Create tasks for the specified test fixtures component.  */
     private fun createTasksForTestFixtures(testFixturesComponent: TestFixturesImpl) {
@@ -2432,7 +2432,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     ArrayListMultimap.create()
             for (creationConfig in allPropertiesList) {
                 val variantType = creationConfig.variantType
-                if (!variantType.isTestComponent) {
+                if (!variantType.isNestedComponent) {
                     val taskContainer = creationConfig.taskContainer
                     val variantDslInfo = creationConfig.variantDslInfo
                     val buildType = creationConfig.buildType
@@ -2505,7 +2505,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // Case #2
             for (creationConfig in allPropertiesList) {
                 val variantType = creationConfig.variantType
-                if (!variantType.isTestComponent) {
+                if (!variantType.isNestedComponent) {
                     val taskContainer = creationConfig.taskContainer
                     subAssembleTasks.add(taskContainer.assembleTask)
                     if (variantType.isBaseModule) {
@@ -2715,7 +2715,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         ) { task: DependencyReportTask ->
             task.description = "Displays the Android dependencies of the project."
             task.variants = variantPropertiesList
-            task.testComponents = testComponents
+            task.nestedComponents = nestedComponents
             task.group = ANDROID_GROUP
         }
         val signingReportComponents = allPropertiesList.stream()
@@ -2743,12 +2743,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         )
     }
 
-    protected fun createDependencyAnalyzerTask() {
+    private fun createDependencyAnalyzerTask() {
         for (variant in variantPropertiesList) {
             taskFactory.register(AnalyzeDependenciesTask.CreationAction(variant))
         }
-        for (testComponent in testComponents) {
-            taskFactory.register(AnalyzeDependenciesTask.CreationAction(testComponent))
+        for (component in nestedComponents) {
+            taskFactory.register(AnalyzeDependenciesTask.CreationAction(component))
         }
     }
 
