@@ -37,6 +37,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Answers
+import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -78,8 +79,20 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
-                any(), any(), any(), any(), any(), any(), any(),
-                any(), any(), any(), any(), any(), any())).then {
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                nullable(ShardConfig::class.java))).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())

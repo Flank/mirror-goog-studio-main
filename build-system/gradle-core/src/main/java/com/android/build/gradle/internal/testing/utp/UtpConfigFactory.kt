@@ -108,7 +108,8 @@ class UtpConfigFactory {
         testResultListenerServerPort: Int,
         resultListenerClientCert: File,
         resultListenerClientPrivateKey: File,
-        trustCertCollection: File
+        trustCertCollection: File,
+        shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         val additionalTestOutputOnDeviceDir = if (additionalTestOutputDir != null) {
             findAdditionalTestOutputDirectoryOnDevice(device, testData)
@@ -138,7 +139,7 @@ class UtpConfigFactory {
                     coverageOutputDir
                 )
             )
-            singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
+            singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber, shardConfig)
             addTestResultListener(
                     createTestResultListener(
                             utpDependencies,
@@ -187,6 +188,7 @@ class UtpConfigFactory {
         coverageOutputDir: File,
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
+        shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createGradleManagedDevice(device, utpDependencies))
@@ -201,7 +203,7 @@ class UtpConfigFactory {
                     device.deviceName, coverageOutputDir
                 )
             )
-            singleDeviceExecutor = createSingleDeviceExecutor(device.id)
+            singleDeviceExecutor = createSingleDeviceExecutor(device.id, shardConfig)
             addTestResultListener(
                     createTestResultListener(
                             utpDependencies,
@@ -597,7 +599,9 @@ class UtpConfigFactory {
         return ANDROID_TEST_LOGCAT_PLUGIN.toExtensionProto(utpDependencies)
     }
 
-    private fun createSingleDeviceExecutor(identifier: String): ExecutorProto.SingleDeviceExecutor {
+    private fun createSingleDeviceExecutor(
+        identifier: String,
+        shardConfig: ShardConfig?): ExecutorProto.SingleDeviceExecutor {
         return ExecutorProto.SingleDeviceExecutor.newBuilder().apply {
             deviceExecutionBuilder.apply {
                 deviceIdBuilder.apply {
@@ -605,6 +609,12 @@ class UtpConfigFactory {
                 }
                 testFixtureIdBuilder.apply {
                     id = UTP_TEST_FIXTURE_ID
+                }
+            }
+            shardConfig?.let {
+                shardingConfigBuilder.apply {
+                    shardCount = it.totalCount
+                    shardIndex = it.index
                 }
             }
         }.build()
