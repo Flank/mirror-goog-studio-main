@@ -70,7 +70,7 @@ abstract class PlatformAttrTransform : TransformAction<GenericTransformParameter
 
 data class AttributeValue(val name: String, val value: Int)
 
-class CustomClassVisitor : ClassVisitor(Opcodes.ASM5) {
+class CustomClassVisitor : ClassVisitor(Opcodes.ASM7) {
 
     val attributes: MutableList<AttributeValue> = Lists.newArrayList()
 

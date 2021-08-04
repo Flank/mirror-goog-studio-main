@@ -166,6 +166,8 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
      */
     public static final boolean REPLACE_DELETED_WITH_EMPTY = true;
 
+    private static final int ASM_VERSION = Opcodes.ASM7;
+
     /**
      Whether we support running aapt twice, to regenerate the resources.arsc file
      such that we can strip out value resources as well. We don't do this yet, for
@@ -1649,7 +1651,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
             byte[] classData, String owner, ResourceType resourceType) {
         ClassReader classReader = new ClassReader(classData);
         ClassVisitor fieldVisitor =
-                new ClassVisitor(Opcodes.ASM5) {
+                new ClassVisitor(ASM_VERSION) {
                     @Override
                     public FieldVisitor visitField(
                             int access, String name, String desc, String signature, Object value) {
@@ -1813,7 +1815,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
         private final String mCurrentClass;
 
         public UsageVisitor(File jarFile, String name) {
-            super(Opcodes.ASM5);
+            super(ASM_VERSION);
             mJarFile = jarFile;
             mCurrentClass = name;
         }
@@ -1821,7 +1823,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
         @Override
         public MethodVisitor visitMethod(int access, final String name,
                 String desc, String signature, String[] exceptions) {
-            return new MethodVisitor(Opcodes.ASM5) {
+            return new MethodVisitor(api) {
                 @Override
                 public void visitLdcInsn(Object cst) {
                     handleCodeConstant(cst, "ldc");
@@ -1871,7 +1873,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
         public FieldVisitor visitField(int access, String name, String desc, String signature,
                 Object value) {
             handleCodeConstant(value, "field");
-            return new FieldVisitor(Opcodes.ASM5) {
+            return new FieldVisitor(api) {
                 @Override
                 public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
                     return new AnnotationUsageVisitor();
@@ -1881,7 +1883,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
 
         private class AnnotationUsageVisitor extends AnnotationVisitor {
             public AnnotationUsageVisitor() {
-                super(Opcodes.ASM5);
+                super(ASM_VERSION);
             }
 
             @Override
