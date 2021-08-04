@@ -287,6 +287,14 @@ you want to remove the easy possibility of just silencing the check.
 This is possible as part of the issue registration. After creating your
 `Issue`, set the `suppressNames` property to an **empty** collection.
 
+### Why are overloaded operators not handled?
+
+Kotlin supports overloaded operators, but these are not handled as
+calls in the AST - instead, an implicit `get` or `set` method from an
+array access will show up as a `UArrayAccessExpression`. Lint has
+specific support to help handling these scenarios; see the “Implicit
+Calls” section in the [basics chapter](basics.md.html).
+
 ### How do I check out the current lint source code?
 
 ```shell

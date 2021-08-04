@@ -93,6 +93,7 @@ import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.CommonClassNames
@@ -112,8 +113,11 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
+import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -586,12 +590,33 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     // No UAST accessor method to find the corresponding get/set methods; see
     // https://youtrack.jetbrains.com/issue/KTIJ-18765
     // Instead we'll search ourselves.
+
+    // First try Kotlin resolving service
+    val ktElement = this.sourcePsi as? KtElement ?: return null
+    val service = ServiceManager.getService(ktElement.project, KotlinUastResolveProviderService::class.java)
+        ?: return null
+    val bindingContext = service.getBindingContext(ktElement)
+    val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
+    val source = resolvedCall.resultingDescriptor.toSource()
+    if (source is PsiMethod) {
+        return source
+    } // else can be KtFunction which is referenced by methods; see light member check below
+
     val clz = type.resolve() ?: return null
     val parent = this.uastParent as? UBinaryExpression
     val isSetter = parent != null && parent.isAssignment()
     val indices = this.indices
     val parameterCount = indices.size
     val methods = clz.findMethodsByName(if (isSetter) "set" else "get", true)
+
+    if (source != null) {
+        for (method in methods) {
+            if (method is KtLightMemberImpl<*> && method.lightMemberOrigin?.originalElement === source) {
+                return method
+            }
+        }
+    }
+
     val expectedCount = if (isSetter) parameterCount + 1 else parameterCount
     if (methods.isEmpty()) {
         // Should not happen (if the code compiles)
@@ -665,6 +690,20 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     }
 
     return typeMatch
+}
+
+// See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
+private fun DeclarationDescriptor.toSource(): PsiElement? {
+    return try {
+        DescriptorToSourceUtils.getEffectiveReferencedDescriptors(this)
+            .asSequence()
+            .mapNotNull { DescriptorToSourceUtils.getSourceFromDescriptor(it) }
+            .firstOrNull()
+    } catch (e: ProcessCanceledException) {
+        throw e
+    } catch (e: Exception) {
+        null
+    }
 }
 
 private fun sameType(type1: PsiType?, type2: PsiType?, equalsOnly: Boolean): Boolean {
@@ -1767,7 +1806,10 @@ fun isFalseLiteral(element: PsiElement?): Boolean {
     message = "This method is ambiguous. To move up/out in the AST, use skipParenthesizedExprUp instead " +
         "(and from Java, import static method in UastUtils). " +
         "To go inside the parentheses, instead use skipParenthesizedExprUp()",
-    replaceWith = ReplaceWith("skipParenthesizedExprUp(element)", "com.intellij.psi.util.PsiUtil.skipParenthesizedExprUp")
+    replaceWith = ReplaceWith(
+        "skipParenthesizedExprUp(element)",
+        "com.intellij.psi.util.PsiUtil.skipParenthesizedExprUp"
+    )
 )
 fun skipParentheses(element: PsiElement?): PsiElement? {
     return PsiUtil.skipParenthesizedExprUp(element)

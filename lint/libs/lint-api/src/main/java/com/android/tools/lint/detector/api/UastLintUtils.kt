@@ -46,7 +46,6 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.getUastContext
 import org.jetbrains.uast.toUElementOfType
 
 class UastLintUtils {
@@ -179,8 +178,7 @@ class UastLintUtils {
                     lastAssignment = finder.lastAssignment
                 }
             } else {
-                val context = call.getUastContext()
-                lastAssignment = context.getInitializerBody(currVariable)
+                lastAssignment = UastFacade.getInitializerBody(currVariable)
             }
 
             return if (lastAssignment is UExpression) lastAssignment

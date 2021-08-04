@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.XmlContext
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
@@ -40,6 +41,8 @@ import org.junit.Assert.fail
 import org.junit.rules.TemporaryFolder
 import org.w3c.dom.Document
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.EnumSet
 
 // Misc utilities to help writing lint tests
@@ -251,8 +254,8 @@ fun parseFirst(
     library: Boolean = false,
     android: Boolean = true,
     temporaryFolder: TemporaryFolder,
+    sdkHome: File? = null,
     vararg testFiles: TestFile = emptyArray(),
-    sdkHome: File? = null
 ): Pair<JavaContext, Disposable> {
     val (contexts, disposable) = parse(javaLanguageLevel, kotlinLanguageLevel, library, sdkHome, android, temporaryFolder, *testFiles)
     val first = contexts.firstOrNull { it.file.path.endsWith(testFiles[0].targetRelativePath) } ?: contexts.first()
@@ -313,4 +316,25 @@ fun parse(
         client.disposeProjects(listOf(project))
     }
     return Pair(contexts, disposable)
+}
+
+fun List<TestFile>.use(
+    temporaryFolder: TemporaryFolder? = null,
+    sdkHome: File? = null,
+    block: (JavaContext) -> Unit
+) {
+    var dir: Path? = null
+    val folder = temporaryFolder ?: run {
+        dir = Files.createTempDirectory("lint-test")
+        TemporaryFolder(dir?.toFile()).apply { create() }
+    }
+    val (context, disposable) = parseFirst(
+        null, null, false, sdkHome != null, folder, sdkHome, *this.toTypedArray()
+    )
+    try {
+        block(context)
+    } finally {
+        dir?.toFile()?.walkBottomUp()?.forEach { it.delete() }
+        Disposer.dispose(disposable)
+    }
 }

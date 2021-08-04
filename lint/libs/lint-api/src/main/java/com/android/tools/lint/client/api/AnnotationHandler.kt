@@ -23,6 +23,7 @@ import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.is
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.resolveOperator
 import com.google.common.collect.Multimap
 import com.intellij.psi.JavaPsiFacade
@@ -225,7 +226,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 return
             }
 
-            checkCall(context, method, node)
+            val call = node.asCall(method)
+            checkCall(context, method, call)
         }
     }
 
@@ -233,7 +235,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         // Overloaded operators
         val method = node.resolveOperator()
         if (method != null) {
-            checkCall(context, method, node)
+            val call = node.asCall(method)
+            checkCall(context, method, call)
         }
     }
 
@@ -573,7 +576,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         // Operator overload?
         val method = expression.resolveOperator() ?: return
-        checkCall(context, method, expression)
+        val call = expression.asCall(method)
+        checkCall(context, method, call)
     }
 
     fun visitVariable(context: JavaContext, variable: UVariable) {

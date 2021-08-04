@@ -5637,8 +5637,23 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "                    Log.i(\"tag\", it.toString())\n"
                                         + "                }\n"
                                         + "    }\n"
-                                        + "}"))
-                .allowCompilationErrors() // missing symbols for the realm example
+                                        + "}"),
+                        kotlin(
+                                ""
+                                        + "package io.realm\n"
+                                        + "class Realm\n"
+                                        + "class RealmModel\n"
+                                        + "class RealmQuery {\n"
+                                        + "    fun findAll(): List<Number> {\n"
+                                        + "        return emptyList()\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package io.realm.kotlin\n"
+                                        + "import io.realm.Realm\n"
+                                        + "import io.realm.RealmQuery\n"
+                                        + "fun <T> Realm.where(): RealmQuery = TODO()\n"))
                 .run()
                 .expectClean();
     }
@@ -7231,12 +7246,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "@RequiresApi(31)\n"
                                         + "operator fun Point.minus(other: Point): Point {\n"
                                         + "    return Point(x + other.x, y + other.y)\n"
-                                        + "}\n"
-                                // TODO: Plain arrays (make sure no resolve)
-                                // TODO: Get and set methods with the wrong signatures - as well as
-                                // mixed in any order with one that has both
-                                //    Especially one with the wrong value parameter type
-                                ),
+                                        + "}\n"),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -7262,7 +7272,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    @RequiresApi(30) // Wrong signature\n"
+                                        + "    @RequiresApi(30)\n"
                                         + "    public void set(long key, E value) {\n"
                                         + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
@@ -7300,7 +7310,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Point.kt:10: Error: Call requires API level S (current min is 21): get [NewApi]\n"
                                 + "    val y = array[1] // ERROR\n"
                                 + "            ~~~~~~~~\n"
-                                + "src/test/pkg/Point.kt:11: Error: Call requires API level S (current min is 21): set [NewApi]\n"
+                                + "src/test/pkg/Point.kt:11: Error: Call requires API level 30 (current min is 21): set [NewApi]\n"
                                 + "    array[1L] = \"three\" // ERROR\n"
                                 + "    ~~~~~~~~~\n"
                                 + "src/test/pkg/Point.kt:16: Error: Call requires API level S (current min is 21): set [NewApi]\n"

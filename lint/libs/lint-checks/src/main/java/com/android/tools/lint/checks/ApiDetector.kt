@@ -97,6 +97,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScannerConstants
+import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.getChildren
 import com.android.tools.lint.detector.api.getInternalMethodName
 import com.android.tools.lint.detector.api.isKotlin
@@ -149,6 +150,7 @@ import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UTryExpression
 import org.jetbrains.uast.UTypeReferenceExpression
+import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.expressions.UInjectionHost
@@ -635,6 +637,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             UTryExpression::class.java,
             UBinaryExpressionWithType::class.java,
             UBinaryExpression::class.java,
+            UUnaryExpression::class.java,
             UCallExpression::class.java,
             UClass::class.java,
             UMethod::class.java,
@@ -1289,7 +1292,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private fun visitCall(
             method: PsiMethod,
-            call: UCallExpression?,
+            call: UCallExpression,
             reference: UElement
         ) {
             val apiDatabase = apiDatabase ?: return
@@ -1301,7 +1304,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             val parameterList = method.parameterList
-            if (parameterList.parametersCount > 0 && call != null) {
+            if (parameterList.parametersCount > 0) {
                 val parameters = parameterList.parameters
                 val arguments = call.valueArguments
                 for (i in parameters.indices) {
@@ -1357,14 +1360,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // failure to resolve parameter types
                 ?: return
 
-            if (call != null &&
-                startsWithEquivalentPrefix(owner, "java/text/SimpleDateFormat") &&
+            if (startsWithEquivalentPrefix(owner, "java/text/SimpleDateFormat") &&
                 name == CONSTRUCTOR_NAME &&
                 desc != "()V"
             ) {
                 checkSimpleDateFormat(context, call, getMinSdk(context))
-            } else if (call != null &&
-                name == "loadAnimator" &&
+            } else if (name == "loadAnimator" &&
                 owner == "android.animation.AnimatorInflater" &&
                 desc == "(Landroid.content.Context;I)"
             ) {
@@ -1382,10 +1383,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             var fqcn = containingClass.qualifiedName
 
-            val receiver = if (call != null && call.isMethodCall()) {
+            val receiver = if (call.isMethodCall()) {
                 call.receiver
-            } else if (reference is UArrayAccessExpression) {
-                reference.receiver
             } else {
                 null
             }
@@ -1418,7 +1417,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // "-1" and we can't tell if that means "doesn't exist" or "present in API 1", we
             // then check the package prefix to see whether we know it's an API method whose
             // members should all have been inlined.
-            if (call != null && call.isMethodCall() || reference is UArrayAccessExpression) {
+            if (call.isMethodCall()) {
                 if (receiver != null &&
                     receiver !is UThisExpression &&
                     receiver !is PsiSuperExpression
@@ -1460,8 +1459,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 } else {
                     // Unqualified call; need to search in our super hierarchy
                     var cls: PsiClass? = null
-                    val receiverType = call?.receiverType
-                        ?: (reference as? UArrayAccessExpression)?.getExpressionType()
+                    val receiverType = call.receiverType
                     if (receiverType is PsiClassType) {
                         cls = receiverType.resolve()
                     }
@@ -1538,7 +1536,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
-            if (receiver != null || call != null && call.isMethodCall()) {
+            if (receiver != null || call.isMethodCall()) {
                 var target: PsiClass? = null
                 if (!method.isConstructor) {
                     if (receiver != null) {
@@ -1547,7 +1545,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             target = type.resolve()
                         }
                     } else {
-                        target = call?.getContainingUClass()?.javaPsi
+                        target = call.getContainingUClass()?.javaPsi
                     }
                 }
 
@@ -1580,7 +1578,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // API level than the minSdk, we're generally safe; that method should only be
                 // called by the framework on the right API levels. (There is a danger of somebody
                 // calling that method locally in other contexts, but this is hopefully unlikely.)
-                if (receiver is USuperExpression && call != null) {
+                if (receiver is USuperExpression) {
                     val containingMethod = call.getContainingUMethod()?.javaPsi
                     if (containingMethod != null &&
                         name == containingMethod.name &&
@@ -1663,12 +1661,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     "$fqcn${'#'}$name"
                 }
 
-            val nameIdentifier = if (call != null) call.methodIdentifier else reference
-
-            val location = if (call != null &&
-                call.isConstructorCall() &&
-                call.classReference != null
-            ) {
+            val nameIdentifier = call.methodIdentifier
+            val location = if (call.isConstructorCall() && call.classReference != null) {
                 context.getRangeLocation(call, 0, call.classReference!!, 0)
             } else if (nameIdentifier != null) {
                 context.getLocation(nameIdentifier)
@@ -1906,14 +1900,25 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         override fun visitArrayAccessExpression(node: UArrayAccessExpression) {
             val method = node.resolveOperator() ?: return
-            visitCall(method, null, node)
+            val call = node.asCall(method)
+            visitCall(method, call, node)
+        }
+
+        override fun visitUnaryExpression(node: UUnaryExpression) {
+            // Overloaded operators
+            val method = node.resolveOperator()
+            if (method != null) {
+                val call = node.asCall(method)
+                visitCall(method, call, node)
+            }
         }
 
         override fun visitBinaryExpression(node: UBinaryExpression) {
             // Overloaded operators
             val method = node.resolveOperator()
             if (method != null) {
-                visitCall(method, null, node)
+                val call = node.asCall(method)
+                visitCall(method, call, node)
             }
 
             val operator = node.operator

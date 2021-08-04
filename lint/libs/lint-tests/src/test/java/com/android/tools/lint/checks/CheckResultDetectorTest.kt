@@ -1178,19 +1178,19 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/test/pkg/Point.kt:16: Warning: The result of null is not used [CheckResult]
+            src/test/pkg/Point.kt:16: Warning: The result of unaryMinus is not used [CheckResult]
                 -point // ERROR 1
                 ~~~~~~
-            src/test/pkg/Point.kt:17: Warning: The result of null is not used [CheckResult]
+            src/test/pkg/Point.kt:17: Warning: The result of unaryPlus is not used [CheckResult]
                 +point // ERROR 2
                 ~~~~~~
-            src/test/pkg/Point.kt:18: Warning: The result of null is not used [CheckResult]
+            src/test/pkg/Point.kt:18: Warning: The result of inc is not used [CheckResult]
                 point++ // ERROR 3
                 ~~~~~~~
-            src/test/pkg/Point.kt:36: Warning: The result of null is not used [CheckResult]
+            src/test/pkg/Point.kt:36: Warning: The result of plus is not used [CheckResult]
                 counter + 5 // ERROR 4
                 ~~~~~~~~~~~
-            src/test/pkg/Point.kt:47: Warning: The result of null is not used [CheckResult]
+            src/test/pkg/Point.kt:47: Warning: The result of plus is not used [CheckResult]
                 counter + counter2 + counter3 // ERROR 5
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 5 warnings

@@ -26,6 +26,25 @@ Guide.
   making sure the same results are reported. More information about
   this is available in [](test-modes.md.html).
 
+* The support for Kotlin's overloaded operators is significantly
+  improved. While these are method calls, in the AST they do not show
+  up as `UCallExpressions` (instead, you'll find them as
+  `UBinaryExpression`, `UPrefixExpression`, `UArrayAccessExpression`
+  and so on), which meant various call-specific checks ignored them.
+
+  Now, in addition to the built-in checks all applying to these
+  implicit calls as well, lint can present these expressions as call
+  expressions. This means that the `getApplicableMethodNames` machinery
+  for call callbacks will now also work for overloaded functions, and
+  code which is iterating through calls can use the new
+  `UastCallVisitor` (or directly construct `UImplicitCallExpression`
+  wrappers) to simplify processing of all these types of calls.
+
+  Finally, lint now provides a way to resolve operators for array
+  access expressions (which is missing in UAST) via the
+  UArrayAccessExpression.resolveOperator extension method, which is
+  also used by the above machinery.
+
 **7.0**
 
 * The API level has bumped to 10.

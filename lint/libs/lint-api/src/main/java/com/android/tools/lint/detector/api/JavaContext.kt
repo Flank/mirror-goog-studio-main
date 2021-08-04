@@ -44,8 +44,6 @@ import org.jetbrains.uast.UField
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.USwitchExpression
-import org.jetbrains.uast.UastContext
-import org.jetbrains.uast.getUastContext
 import java.io.File
 
 /**
@@ -428,10 +426,6 @@ open class JavaContext(
         val psi = scope.psi
         return psi != null && isSuppressedWithComment(psi, issue)
     }
-
-    @Deprecated("Use UastFacade instead", ReplaceWith("org.jetbrains.uast.UastFacade"))
-    val uastContext: UastContext
-        get() = uastFile?.getUastContext()!!
 
     companion object {
         // TODO: Move to LintUtils etc

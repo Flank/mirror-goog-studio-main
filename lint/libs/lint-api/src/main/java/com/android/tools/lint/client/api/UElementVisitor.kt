@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlScannerConstants
+import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
 import com.android.tools.lint.detector.api.interprocedural.CallGraphVisitor
 import com.android.tools.lint.detector.api.interprocedural.ClassHierarchyVisitor
@@ -1189,6 +1190,7 @@ internal class UElementVisitor constructor(
         }
 
         override fun visitArrayAccessExpression(node: UArrayAccessExpression): Boolean {
+            node.asCall()?.let(::visitMethodCallExpression)
             annotationHandler?.visitArrayAccessExpression(mContext, node)
 
             return super.visitArrayAccessExpression(node)
@@ -1207,18 +1209,21 @@ internal class UElementVisitor constructor(
         }
 
         override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
+            node.asCall()?.let(::visitMethodCallExpression)
             annotationHandler?.visitBinaryExpression(mContext, node)
 
             return super.visitBinaryExpression(node)
         }
 
         override fun visitPrefixExpression(node: UPrefixExpression): Boolean {
+            node.asCall()?.let(::visitMethodCallExpression)
             annotationHandler?.visitUnaryExpression(mContext, node)
 
             return super.visitPrefixExpression(node)
         }
 
         override fun visitPostfixExpression(node: UPostfixExpression): Boolean {
+            node.asCall()?.let(::visitMethodCallExpression)
             annotationHandler?.visitUnaryExpression(mContext, node)
 
             return super.visitPostfixExpression(node)
