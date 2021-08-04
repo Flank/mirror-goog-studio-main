@@ -17,6 +17,11 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask.Companion.HANDLED_ERRORS
+import com.android.utils.JvmWideVariable
+import com.google.common.hash.HashCode
+import com.google.common.hash.Hashing
+import com.google.common.io.Files
+import com.google.common.reflect.TypeToken
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -25,8 +30,10 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.lang.ref.SoftReference
 import java.net.URI
 import java.net.URLClassLoader
+import javax.annotation.concurrent.GuardedBy
 
 @Suppress("UnstableApiUsage")
 abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWorkActionParameters> {
@@ -35,6 +42,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val mainClass: Property<String>
         abstract val arguments: ListProperty<String>
         abstract val classpath: ConfigurableFileCollection
+        abstract val version: Property<String>
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
         abstract val runInProcess: Property<Boolean>
@@ -66,8 +74,14 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
     }
 
     private fun runLint(arguments: List<String>): Int {
-        val classLoader = getClassloader(parameters.classpath)
-        return invokeLintMainRunMethod(classLoader, arguments)
+        val classLoader = getClassloader(parameters.version.get(), parameters.classpath)
+        val currentContextClassLoader = Thread.currentThread().contextClassLoader
+        try {
+            Thread.currentThread().contextClassLoader = null
+            return invokeLintMainRunMethod(classLoader, arguments)
+        } finally {
+            Thread.currentThread().contextClassLoader = currentContextClassLoader
+        }
     }
 
     private fun invokeLintMainRunMethod(classLoader: ClassLoader, arguments: List<String>): Int {
@@ -98,21 +112,94 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         const val ERRNO_CREATED_BASELINE = 6
         private const val ERRNO_APPLIED_SUGGESTIONS = 7
 
-        private var _cachedClassLoader: URLClassLoader? = null
-        private var cachedClassLoaderUris: List<URI> = listOf()
+        /**
+         * Cache the classloaders across the daemon, even if the buildscipt classpath changes
+         *
+         * Use a soft reference so the cache doesn't end up keeping a classloader that isn't
+         * actually reachable.
+         *
+         * JvmWideVariable must only use built in types to avoid leaking the current classloader.
+         */
+        private val cachedClassloader: JvmWideVariable<MutableMap<String, SoftReference<URLClassLoader>>> = JvmWideVariable(
+            AndroidLintWorkAction::class.java,
+            "cachedClassloader",
+            object: TypeToken<MutableMap<String, SoftReference<URLClassLoader>>>() {}
+        ) { HashMap() }
+
+        /**
+         * Cache of jar hashes during a build, to avoid rehashing the jars repeatedly
+         *
+         * This is cleared at the end of each build
+         */
+        @GuardedBy("this")
+        private val jarsToHashCode : MutableMap<List<URI>, HashCode> = mutableMapOf()
+
+        /**
+         * Classloaders used during this build that will have disposeApplicationEnvironment called
+         * at the end of the build.
+         *
+         * This is cleared at the end of each build
+         */
+        @GuardedBy("this")
+        private val toDispose = mutableMapOf<String, URLClassLoader>()
+
+        private val logger get() = Logging.getLogger(AndroidLintWorkAction::class.java)
 
         @Synchronized
-        private fun getClassloader(classpath: FileCollection): ClassLoader {
-            val uris = classpath.files.map { it.toURI() }
-            if (uris != cachedClassLoaderUris) {
-                cachedClassLoaderUris = uris
-                _cachedClassLoader = createClassLoader(uris)
+        private fun getClassloader(version: String, classpath: FileCollection): ClassLoader {
+            // When using development versions also hash the jar contents to avoid reusing
+            // the classloader when the jars might change
+            val key = when {
+                version.endsWith("-dev") || version.endsWith("SNAPSHOT") -> "${version}_${hashJars(classpath)}"
+                else -> version
             }
-            return _cachedClassLoader!!
+            val uris = classpath.files.map { it.toURI() }
+            return cachedClassloader.executeCallableSynchronously {
+                val map = cachedClassloader.get()
+                val classloader = map[key]?.get()?.also {
+                    logger.info("Android Lint: Reusing lint classloader {}", key)
+                } ?: createClassLoader(key, uris).also { map[key] = SoftReference(it) }
+                toDispose[key] = classloader
+                maintainClassloaders(map)
+                classloader
+            }
         }
 
-        private fun createClassLoader(classpath: List<URI>): URLClassLoader {
-            Logging.getLogger(AndroidLintWorkAction::class.java).info("Creating lint class loader.")
+        @Synchronized
+        private fun maintainClassloaders(map: MutableMap<String, SoftReference<URLClassLoader>>) {
+            if (map.size <= 1) return
+            for (otherKey in ArrayList(map.keys)) {
+                if (map[otherKey]?.get() == null) {
+                    logger.info("Android Lint: Classloader was garbage collected {}", otherKey)
+                    map.remove(otherKey)
+                }
+            }
+            if (map.size <= 1) return
+            logger.info(
+                "Android Lint: There are multiple lint class loaders in this gradle daemon, " +
+                        "which can lead to jvm metaspace pressure.\n" +
+                        "This be caused when developing lint (usually by using a -dev version) " +
+                        "or switching lint versions.\n" +
+                        "   Classloaders used in this build: {}\n" +
+                        "   Classloaders in this daemon: {}",
+                        toDispose.keys.joinToString(", "),
+                        map.keys.joinToString(", ")
+            )
+        }
+
+        //** Hash the contents of the given file collection */
+        private fun hashJars(classpath: FileCollection): HashCode {
+            val uris = classpath.files.map { it.toURI() }
+            val hashCode = jarsToHashCode.getOrPut(uris) {
+                Hashing.combineOrdered(classpath.files.map {
+                    Files.asByteSource(it).hash(Hashing.murmur3_128())
+                })
+            }
+            return hashCode
+        }
+
+        private fun createClassLoader(key: String, classpath: List<URI>): URLClassLoader {
+            logger.info("Android Lint: Creating lint class loader {}", key)
             val classpathUrls = classpath.map { it.toURL() }.toTypedArray()
             return URLClassLoader(classpathUrls, getPlatformClassLoader())
         }
@@ -124,9 +211,23 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
 
         @Synchronized
         fun dispose() {
-            _cachedClassLoader?.loadClass("com.android.tools.lint.UastEnvironment")
-                ?.getDeclaredMethod("disposeApplicationEnvironment")
-                ?.invoke(null)
+            jarsToHashCode.clear()
+
+            if (toDispose.isNotEmpty()) {
+                logger.info(
+                    "Android Lint: Disposing Uast application environment in lint classloader{} [{}]",
+                    if (toDispose.size == 1) "" else "s",
+                    toDispose.keys.joinToString(", "))
+                try {
+                    toDispose.values.forEach { classloader ->
+                        classloader.loadClass("com.android.tools.lint.UastEnvironment")
+                            .getDeclaredMethod("disposeApplicationEnvironment")
+                            .invoke(null)
+                    }
+                } finally {
+                    toDispose.clear()
+                }
+            }
         }
 
         @JvmStatic
