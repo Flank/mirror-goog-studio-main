@@ -26,6 +26,8 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
+import com.android.build.api.variant.HasAndroidTest
+import com.android.build.api.variant.HasTestFixtures
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
@@ -45,7 +47,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -237,4 +238,19 @@ abstract class VariantImpl(
                     String::class.java,
                     Any::class.java,
                     variantDslInfo.experimentalProperties)
+
+    override val nestedComponents: List<Component>
+        get() = listOfNotNull(
+            unitTest,
+            if (this is HasAndroidTest) {
+                androidTest
+            } else {
+                null
+            },
+            if (this is HasTestFixtures) {
+                testFixtures
+            } else {
+                null
+            }
+        )
 }

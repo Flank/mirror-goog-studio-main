@@ -810,6 +810,7 @@ com.android.build.api.variant.SigningConfig.setConfig: void (com.android.build.a
 com.android.build.api.variant.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.variant.Component
 com.android.build.api.variant.TestFixtures.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
+com.android.build.api.variant.Variant.getNestedComponents: java.util.List<com.android.build.api.variant.Component> ()
 com.android.build.api.variant.VariantExtensionConfig
 com.android.build.api.variant.VariantExtensionConfig.buildTypeExtension: T (java.lang.Class<T>)
 com.android.build.api.variant.VariantExtensionConfig.getVariant: VariantT ()

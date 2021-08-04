@@ -109,4 +109,31 @@ interface Variant : Component, HasAndroidResources {
      */
     @get:Incubating
     val experimentalProperties: MapProperty<String, Any>
+
+    /**
+     * List of the components nested in this variant, the returned list will contain:
+     *
+     * * [UnitTest] component if the unit tests for this variant are enabled,
+     * * [AndroidTest] component if this variant [HasAndroidTest] and android tests for this variant
+     * are enabled,
+     * * [TestFixtures] component if this variant [HasTestFixtures] and test fixtures for this
+     * variant are enabled.
+     *
+     * Use this list to do operations on all nested components of this variant without having to
+     * manually check whether the variant has each component.
+     *
+     * Example:
+     *
+     * ```kotlin
+     *  androidComponents.onVariants(selector().withName("debug")) {
+     *      // will return unitTests, androidTests, testFixtures for the debug variant (if enabled).
+     *      nestedComponents.forEach { component ->
+     *          component.transformClassesWith(NestedComponentsClassVisitorFactory::class.java,
+     *                                         InstrumentationScope.Project) {}
+     *      }
+     *  }
+     *  ```
+     */
+    @get:Incubating
+    val nestedComponents: List<com.android.build.api.variant.Component>
 }

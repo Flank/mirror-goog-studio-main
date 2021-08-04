@@ -22,6 +22,7 @@ import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.ResourcesPackaging
+import com.android.build.api.variant.UnitTest
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -195,5 +196,21 @@ class AnalyticsEnabledVariantTest {
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.PROGUARD_FILES_VALUE)
+    }
+
+    @Test
+    fun testNestedComponents() {
+        Mockito.`when`(delegate.nestedComponents)
+            .thenReturn(listOf(Mockito.mock(UnitTest::class.java)))
+        val nestedComponents = proxy.nestedComponents
+        Truth.assertThat(nestedComponents).hasSize(1)
+        Truth.assertThat(nestedComponents.first()).isInstanceOf(UnitTest::class.java)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.NESTED_COMPONENTS_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .nestedComponents
     }
 }
