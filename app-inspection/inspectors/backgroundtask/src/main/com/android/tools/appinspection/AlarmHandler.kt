@@ -58,35 +58,37 @@ internal class AlarmHandler(
             }
 
             var taskId = -1L
-            connection.sendBackgroundTaskEvent(taskId) {
-                alarmSetBuilder.apply {
-                    this.type = AlarmSet.Type.forNumber(type)
-                    triggerMs = args[1] as Long
-                    windowMs = args[2] as Long
-                    intervalMs = args[3] as Long
-                    val operation = args[5] as PendingIntent?
-                    val listener = args[6] as OnAlarmListener?
-                    val listenerTag = args[7] as String?
-                    when {
-                        operation != null -> {
-                            taskId =
-                                operationIdMap.getOrPut(operation) { BackgroundTaskUtil.nextId() }
-                            this.operation =
-                                BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
-                                    .setCreatorPackage(operation.creatorPackage)
-                                    .setCreatorUid(operation.creatorUid)
-                                    .build()
-                        }
-                        listener != null -> {
-                            taskId =
-                                listenerIdMap.getOrPut(listener) { BackgroundTaskUtil.nextId() }
-                            this.listener = AlarmListener.newBuilder()
-                                .setTag(listenerTag)
+            val builder = AlarmSet.newBuilder().apply {
+                this.type = AlarmSet.Type.forNumber(type)
+                triggerMs = args[1] as Long
+                windowMs = args[2] as Long
+                intervalMs = args[3] as Long
+                val operation = args[5] as PendingIntent?
+                val listener = args[6] as OnAlarmListener?
+                val listenerTag = args[7] as String?
+                when {
+                    operation != null -> {
+                        taskId =
+                            operationIdMap.getOrPut(operation) { BackgroundTaskUtil.nextId() }
+                        this.operation =
+                            BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
+                                .setCreatorPackage(operation.creatorPackage)
+                                .setCreatorUid(operation.creatorUid)
                                 .build()
-                        }
-                        else -> throw IllegalStateException("Invalid alarm: neither operation or listener is set.")
                     }
+                    listener != null -> {
+                        taskId =
+                            listenerIdMap.getOrPut(listener) { BackgroundTaskUtil.nextId() }
+                        this.listener = AlarmListener.newBuilder()
+                            .setTag(listenerTag)
+                            .build()
+                    }
+                    else -> throw IllegalStateException("Invalid alarm: neither operation or listener is set.")
                 }
+            }
+
+            connection.sendBackgroundTaskEvent(taskId) {
+                alarmSet = builder.build()
             }
         }
 
