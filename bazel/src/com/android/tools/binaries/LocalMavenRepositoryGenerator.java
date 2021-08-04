@@ -371,7 +371,7 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
-        boolean fetch = System.getenv("MAVEN_FETCH") != null;
+        boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
