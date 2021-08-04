@@ -38,6 +38,7 @@ message Response {
 message TrackBackgroundTaskResponse {}
 
 message Event {
+    // Timestamp of the event in milliseconds.
     int64 timestamp = 1;
     oneof specialized {
         BackgroundTaskEvent background_task_event = 2;
