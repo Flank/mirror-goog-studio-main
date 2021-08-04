@@ -136,7 +136,7 @@ java_library(
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -148,7 +148,7 @@ java_library(
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/repository:tools.repository",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 

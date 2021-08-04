@@ -142,7 +142,7 @@ def java_proto_library(
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
         protoc_grpc_version = None,
-        proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
+        proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
         **kwargs):
     """Compiles protobuf into a .jar file and optionally creates a maven artifact.
 
