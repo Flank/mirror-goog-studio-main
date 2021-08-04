@@ -756,6 +756,8 @@ def _maven_repository_impl(ctx):
 
     # Redundancy check:
     if not ctx.attr.allow_duplicates:
+        has_duplicates = False
+        rem = {a: True for a in ctx.attr.artifacts}
         for b in ctx.attr.artifacts:
             b_items = {e: None for e in b[MavenInfo].transitive.to_list()}
             for a in ctx.attr.artifacts:
@@ -766,7 +768,12 @@ def _maven_repository_impl(ctx):
                             included = False
                             break
                     if included:
-                        fail("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+                        rem[a] = False
+                        print("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+                        has_duplicates = True
+        if has_duplicates:
+            print("The minimum set of dependencies is:\n" + ",\n".join(["\"%s\"" % str(a.label) for a, v in rem.items() if v]))
+            fail("Duplicated/Redundant dependencies found.")
 
     for r, f in artifacts.to_list():
         files.append(f)

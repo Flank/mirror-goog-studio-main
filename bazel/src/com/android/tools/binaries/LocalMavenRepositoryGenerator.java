@@ -27,8 +27,11 @@ import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +65,8 @@ import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -150,6 +155,29 @@ public class LocalMavenRepositoryGenerator {
         // Compute dependency graph with version resolution, but without conflict resolution.
         List<DependencyNode> unresolvedNodes =
                 collectNodes(repo.resolveDependencies(coords, false));
+
+        // "Fetch" the metadata from the locally downloaded files
+        if (this.fetch) {
+            for (DependencyNode node : unresolvedNodes) {
+                Artifact artifact = node.getArtifact();
+                DefaultMetadata metadata = new DefaultMetadata(artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        "maven-metadata.xml",
+                        Metadata.Nature.RELEASE_OR_SNAPSHOT);
+
+                for (RemoteRepository repository : AetherUtils.REPOSITORIES) {
+                    String path = repo.session.getLocalRepositoryManager()
+                            .getPathForRemoteMetadata(metadata, repository, "");
+                    File source = new File(repo.session.getLocalRepository().getBasedir(), path);
+                    if (source.exists()) {
+                        File target = new File(source.getParentFile(), "maven-metadata.xml");
+                        Files.copy(source.toPath(), target.toPath(),
+                                StandardCopyOption.REPLACE_EXISTING);
+                        break;
+                    }
+                }
+            }
+        }
 
         // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved graph
         // into the |conflictLosers| section of |result|.
