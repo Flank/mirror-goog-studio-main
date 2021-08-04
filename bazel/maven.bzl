@@ -753,6 +753,21 @@ def _maven_repository_impl(ctx):
         direct = [f for artifact in ctx.attr.artifacts for f in artifact[MavenInfo].files],
         transitive = [artifact[MavenInfo].transitive for artifact in ctx.attr.artifacts] if ctx.attr.include_transitive_deps else [],
     )
+
+    # Redundancy check:
+    if not ctx.attr.allow_duplicates:
+        for b in ctx.attr.artifacts:
+            b_items = {e: None for e in b[MavenInfo].transitive.to_list()}
+            for a in ctx.attr.artifacts:
+                if a != b:
+                    included = True
+                    for e in a[MavenInfo].files:
+                        if e not in b_items:
+                            included = False
+                            break
+                    if included:
+                        fail("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+
     for r, f in artifacts.to_list():
         files.append(f)
         rel_paths.append((r, f))
@@ -781,6 +796,7 @@ maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
         "include_transitive_deps": attr.bool(default = True),
+        "allow_duplicates": attr.bool(default = True),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "exec",
