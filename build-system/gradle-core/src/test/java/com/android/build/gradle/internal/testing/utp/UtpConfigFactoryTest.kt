@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.TextFormat.escapeDoubleQuotesAndBackslashes
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
 import org.gradle.api.file.RegularFile
@@ -332,6 +333,7 @@ class UtpConfigFactoryTest {
             testData = testData.copy(isTestCoverageEnabled = true)
         )
 
+        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             instrumentationArgs = mapOf(
@@ -341,7 +343,7 @@ class UtpConfigFactoryTest {
             testCoverageConfig = """
                 single_coverage_file: "/data/data/com.example.application/coverage.ec"
                 run_as_package_name: "com.example.application"
-                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+                output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(outputOnHost)}"
             """
         )
     }
@@ -353,6 +355,7 @@ class UtpConfigFactoryTest {
             useOrchestrator = true
         )
 
+        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             useOrchestrator = true,
@@ -363,7 +366,7 @@ class UtpConfigFactoryTest {
             testCoverageConfig = """
                 multiple_coverage_files_in_directory: "/data/data/com.example.application/coverage_data/"
                 run_as_package_name: "com.example.application"
-                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+                output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(outputOnHost)}"
             """
         )
     }
@@ -376,6 +379,7 @@ class UtpConfigFactoryTest {
                 instrumentationRunnerArguments = mapOf("useTestStorageService" to "true"))
         )
 
+        val outputOnHost = "mockCoverageOutputDir${File.separator}mockDeviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             useTestStorageService = true,
@@ -387,7 +391,7 @@ class UtpConfigFactoryTest {
             testCoverageConfig = """
                 single_coverage_file: "/data/data/com.example.application/coverage.ec"
                 run_as_package_name: "com.example.application"
-                output_directory_on_host: "mockCoverageOutputDir/mockDeviceName/"
+                output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(outputOnHost)}"
                 use_test_storage_service: true
             """
         )
@@ -399,6 +403,7 @@ class UtpConfigFactoryTest {
             testData = testData.copy(isTestCoverageEnabled = true)
         )
 
+        val outputOnHost = "mockCoverageOutputDir${File.separator}deviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             deviceId = ":app:deviceNameDebugAndroidTest",
@@ -410,7 +415,7 @@ class UtpConfigFactoryTest {
             testCoverageConfig = """
                 single_coverage_file: "/data/data/com.example.application/coverage.ec"
                 run_as_package_name: "com.example.application"
-                output_directory_on_host: "mockCoverageOutputDir/deviceName/"
+                output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(outputOnHost)}"
             """
         )
     }
@@ -422,6 +427,7 @@ class UtpConfigFactoryTest {
         )
 
         val onDeviceDir = "/sdcard/Android/media/com.example.application/additional_test_output"
+        val onHostDir = "additionalTestOutputDir${File.separator}mockDeviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
             instrumentationArgs = mapOf(
@@ -429,7 +435,7 @@ class UtpConfigFactoryTest {
             ),
             additionalTestOutputConfig = """
                additional_output_directory_on_device: "${onDeviceDir}"
-               additional_output_directory_on_host: "additionalTestOutputDir"
+               additional_output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(onHostDir)}"
             """
         )
     }
