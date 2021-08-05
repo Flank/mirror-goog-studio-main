@@ -29,13 +29,15 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  *
  * 1. Update this version string.
  * 2. Run bazel run //tools/base/bazel:add_dependency com.google.prefab:cli:jar:all:$VERSION
- * 3. Add the following block to
- *    //prebuilts/tools/common/m2/repository/com/google/prefab/cli/$VERSION/BUILD:
+ * 3. Add the following block to //prebuilts/tools/common/m2/BUILD:
  *
  *    maven_java_import(
  *        name = "jar",
- *        jars = ["cli-$VERSION-all.jar"],
- *        pom = ":pom",
+ *        classified_only = True,
+ *        classifiers = ["all"],
+ *        jars = ["repository/com/google/prefab/cli/$VERSION/cli-$VERSION-all.jar"],
+ *        pom = ":com.google.prefab.cli.$VERSION_pom",
+ *        repo_path = "repository/com/google/prefab/cli/$VERSION",
  *        visibility = ["//visibility:public"],
  *    )
  *
@@ -46,8 +48,11 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  *
  * 4. Update the "prebuilts" maven_repo target in
  *    //tools/base/build-system/integration-test/BUILD.bazel with the new version number.
+ *
+ * 5. Optionally, delete the BUILD modules and prebuilts for the old version of Prefab. This should
+ *    be done unless AGP will continue testing both the new and old version (uncommon).
  */
-private const val DEFAULT_PREFAB_VERSION = "1.1.3"
+private const val DEFAULT_PREFAB_VERSION = "2.0.0"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
 private fun getPrefabArtifact(configuration: Configuration): FileCollection =
