@@ -263,6 +263,7 @@ maven_artifact(
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/d/1/d-1.pom",
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
     repo_path = "com/google/example/d/1",
+    parent = "com.google.example.d-parent_1",
     deps = [
         "com.google.example.e",
     ],

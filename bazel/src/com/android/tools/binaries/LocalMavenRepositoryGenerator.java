@@ -362,7 +362,7 @@ public class LocalMavenRepositoryGenerator {
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
-                            null,
+                            parentCoord,
                             null,
                             node.getChildren().stream()
                                     .map(d -> d.getArtifact().toString())
