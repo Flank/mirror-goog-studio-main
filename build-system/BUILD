@@ -72,12 +72,12 @@ kotlin_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 
@@ -140,8 +140,8 @@ filegroup(
 java_library(
     name = "gradle-tooling-api",
     visibility = ["//tools/base/bazel:__subpackages__"],
-    exports = ["//tools/base/third_party:org.gradle_gradle-tooling-api"],
-    runtime_deps = ["//tools/base/third_party:org.slf4j_slf4j-api"],
+    exports = ["@maven//:org.gradle.gradle-tooling-api"],
+    runtime_deps = ["@maven//:org.slf4j.slf4j-api"],
 )
 
 gradle_build(

@@ -119,19 +119,19 @@ maven_library(
 java_library(
     name = "jacoco.core_neverlink",
     neverlink = 1,
-    exports = ["//tools/base/third_party:org.jacoco_org.jacoco.core"],
+    exports = ["@maven//:org.jacoco.org.jacoco.core"],
 )
 
 java_library(
     name = "jacoco.report_neverlink",
     neverlink = 1,
-    exports = ["//tools/base/third_party:org.jacoco_org.jacoco.report"],
+    exports = ["@maven//:org.jacoco.org.jacoco.report"],
 )
 
 java_library(
     name = "jetbrains.kotlin-gradle-plugin_neverlink",
     #neverlink = 1,
-    exports = ["//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin"],
+    exports = ["@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin"],
 )
 
 fileset(
@@ -196,27 +196,27 @@ kotlin_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-        "//tools/base/third_party:io.grpc_grpc-testing",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
-        "//tools/base/third_party:org.jacoco_org.jacoco.core",
-        "//tools/base/third_party:org.jacoco_org.jacoco.report",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
-        "//tools/base/third_party:org.jsoup_jsoup",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/base/zipflinger",
         "//tools/data-binding:tools.compilerCommon",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.truth.truth",
+        "@maven//:commons-io.commons-io",  # TODO: remove?
+        "@maven//:io.grpc.grpc-testing",
+        "@maven//:junit.junit",
+        "@maven//:nl.jqno.equalsverifier.equalsverifier",
+        "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
+        "@maven//:org.jacoco.org.jacoco.core",
+        "@maven//:org.jacoco.org.jacoco.report",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
+        "@maven//:org.jsoup.jsoup",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-tree",
+        "@maven//:org.ow2.asm.asm-util",
     ],
 )
 

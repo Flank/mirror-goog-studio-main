@@ -7,8 +7,8 @@ TEST_DEPS = [
     "//tools/base/build-system:gradle-api",
     "//tools/base/common:tools.common",
     "//tools/base/testutils:tools.testutils",
-    "//tools/base/third_party:com.google.guava_guava",
-    "//tools/base/third_party:com.google.truth_truth",
+    "@maven//:com.google.guava.guava",
+    "@maven//:com.google.truth.truth",
 ]
 
 # An old version of Gradle used by an integration test to prevent

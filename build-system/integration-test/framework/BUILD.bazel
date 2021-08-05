@@ -29,22 +29,26 @@ kotlin_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testing-infrastructure/device-pool/device-provider",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.apis_google-api-services-storage",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-        "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-        "//tools/base/third_party:commons-lang_commons-lang",  # TODO: remove?
-        "//tools/base/third_party:org.jacoco_org.jacoco.agent",
-        "//tools/base/third_party:org.jacoco_org.jacoco.core",
-        "//tools/base/third_party:org.jacoco_org.jacoco.report",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk7",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:org.smali_dexlib2",
+        # Do not change order. jacoco-core depends on old version of ASM, which
+        # should not come before this ASM in the classpath, or it will cause build
+        # errors (Cannot find symbol: Opcodes.ASM7).
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-tree",
+        # You can change order after this line:
+        "@maven//:com.google.apis.google-api-services-storage",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.protobuf.protobuf-java-util",
+        "@maven//:com.google.truth.extensions.truth-java8-extension",
+        "@maven//:com.google.truth.truth",
+        "@maven//:commons-io.commons-io",  # TODO: remove?
+        "@maven//:commons-lang.commons-lang",  # TODO: remove?
+        "@maven//:org.jacoco.org.jacoco.agent",
+        "@maven//:org.jacoco.org.jacoco.core",
+        "@maven//:org.jacoco.org.jacoco.report",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "@maven//:org.smali.dexlib2",
     ],
 )
 
@@ -79,14 +83,14 @@ kotlin_test(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testing-infrastructure/device-pool/device-provider",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.apis_google-api-services-storage",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-        "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:org.smali_dexlib2",
+        "@maven//:com.google.apis.google-api-services-storage",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.protobuf.protobuf-java-util",
+        "@maven//:com.google.truth.extensions.truth-java8-extension",
+        "@maven//:com.google.truth.truth",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-tree",
+        "@maven//:org.smali.dexlib2",
     ],
 )

@@ -22,23 +22,23 @@ TEST_DEPS = [
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
     "//tools/base/testutils:tools.testutils",
-    "//tools/base/third_party:com.google.guava_guava",
-    "//tools/base/third_party:com.google.protobuf_protobuf-java",
-    "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-    "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
-    "//tools/base/third_party:com.google.truth_truth",
-    "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-    "//tools/base/third_party:org.apache.commons_commons-compress",
-    "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
-    "//tools/base/third_party:org.jetbrains.dokka_dokka-core",
-    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
-    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
-    "//tools/base/third_party:org.mockito_mockito-core",
-    "//tools/base/third_party:org.ow2.asm_asm",
-    "//tools/base/third_party:org.ow2.asm_asm-tree",
-    "//tools/base/third_party:org.smali_dexlib2",
     "//tools/base/zipflinger",
+    "@maven//:com.google.guava.guava",
+    "@maven//:com.google.protobuf.protobuf-java",
+    "@maven//:com.google.protobuf.protobuf-java-util",
+    "@maven//:com.google.truth.extensions.truth-java8-extension",
+    "@maven//:com.google.truth.truth",
+    "@maven//:commons-io.commons-io",  # TODO: remove?
+    "@maven//:org.apache.commons.commons-compress",
+    "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
+    "@maven//:org.jetbrains.dokka.dokka-core",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    "@maven//:org.jetbrains.kotlin.kotlin-test",
+    "@maven//:org.mockito.mockito-core",
+    "@maven//:org.ow2.asm.asm",
+    "@maven//:org.ow2.asm.asm-tree",
+    "@maven//:org.smali.dexlib2",
 ]
 
 OLD_SDKS = [

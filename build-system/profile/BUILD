@@ -13,10 +13,10 @@ kotlin_library(
         "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 
@@ -33,11 +33,11 @@ kotlin_test(
         ":profile",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 

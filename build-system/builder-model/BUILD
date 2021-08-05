@@ -68,8 +68,8 @@ kotlin_test(
     deps = [
         ":builder-model",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 

@@ -39,8 +39,8 @@ kotlin_test(
     deps = [
         ":aaptcompiler",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )
 
