@@ -215,13 +215,18 @@ class PermissionDataGenerator {
         val sb = StringBuilder()
         sb.append("private static int getLastNonSignatureApiLevel(@NonNull String name) {\n")
         sb.append("    switch (name) {\n")
-        for (permission in getPermissionsMarkedAsSignatureLater()) {
+        val permissions = getPermissionsMarkedAsSignatureLater()
+        for ((index, permission) in permissions.withIndex()) {
             // Ignore really old news
             if (permission.signatureIn < 15) {
                 continue
             }
-            sb.append("        case \"").append(permission.name).append("\": return ")
-                .append(permission.signatureIn - 1).append(";\n")
+            sb.append("        case \"").append(permission.name).append("\":")
+            if (index + 1 == permissions.size || permission.signatureIn < permissions[index + 1].signatureIn) {
+                sb.append(" return ${permission.signatureIn - 1};\n")
+            } else {
+                sb.append("\n")
+            }
         }
         sb.append("        default: return -1;\n")
         sb.append("    }\n")
@@ -485,7 +490,7 @@ class PermissionDataGenerator {
      * not found/valid.
      */
     private fun findSdkJar(top: String, apiLevel: Int): File? {
-        var jar = File(top, "prebuilts/sdk/$apiLevel/current/android.jar")
+        var jar = File(top, "prebuilts/sdk/$apiLevel/public/android.jar")
         if (!jar.exists()) {
             jar = File(
                 top, // API levels 1, 2 and 3

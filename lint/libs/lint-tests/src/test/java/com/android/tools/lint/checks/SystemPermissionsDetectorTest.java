@@ -21,7 +21,6 @@ import static com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PER
 import com.android.tools.lint.detector.api.Detector;
 import java.util.List;
 
-@SuppressWarnings("javadoc")
 public class SystemPermissionsDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -503,6 +502,12 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
         generator.assertSamePermissions(SYSTEM_PERMISSIONS, names);
 
         /*
+        When updating, also check the following -- that the first generated switch
+        below matches SystemPermissionsDetector#getLastNonSignatureApiLevel,
+        and that the second switch cases continue to have just one case,
+        which is currently checked in visitElement -- if there are additional cases,
+        insert actual switch.
+
         System.out.println("Switch statement for handling signature permissions that " +
                 "weren't signature permissions until a given API level:");
         System.out.println(generator.getLastNonSignatureApiLevelSwitch());

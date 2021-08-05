@@ -22,6 +22,7 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
+import com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
@@ -2889,7 +2890,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         try {
             val calendar = Calendar.getInstance()
             GradleDetector.calendar = calendar
-            calendar.set(Calendar.YEAR, 2020)
+            calendar.set(Calendar.YEAR, 2021)
             calendar.set(Calendar.MONTH, 6)
 
             lint().files(
@@ -2909,7 +2910,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play requires that apps target API level 28 or higher.
+                    build.gradle:5: Error: Google Play requires that apps target API level 29 or higher.
                      [ExpiredTargetSdkVersion]
                             targetSdkVersion 17
                             ~~~~~~~~~~~~~~~~~~~
@@ -2918,10 +2919,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to $HIGHEST_KNOWN_STABLE_API:
                     @@ -5 +5
                     -         targetSdkVersion 17
-                    +         targetSdkVersion 30
+                    +         targetSdkVersion $HIGHEST_KNOWN_STABLE_API
                     """
                 )
         } finally {
@@ -2934,7 +2935,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         try {
             val calendar = Calendar.getInstance()
             GradleDetector.calendar = calendar
-            calendar.set(Calendar.YEAR, 2020)
+            calendar.set(Calendar.YEAR, 2021)
             calendar.set(Calendar.MONTH, 6)
 
             lint().files(
@@ -2944,8 +2945,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "android {\n" +
                         "    defaultConfig {\n" +
-                        "        targetSdkVersion 28\n" +
-                        "        targetSdkVersion 30 // OK\n" +
+                        "        targetSdkVersion 29\n" +
+                        "        targetSdkVersion 31 // OK\n" +
                         "    }\n" +
                         "}\n"
                 )
@@ -2955,18 +2956,18 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play will soon require that apps target API level 29 or higher. This will be required for new apps in August 2020, and for updates to existing apps in November 2020. [ExpiringTargetSdkVersion]
-                            targetSdkVersion 28
+                    build.gradle:5: Error: Google Play will soon require that apps target API level 30 or higher. This will be required for new apps in August 2021, and for updates to existing apps in November 2021. [ExpiringTargetSdkVersion]
+                            targetSdkVersion 29
                             ~~~~~~~~~~~~~~~~~~~
                     1 errors, 0 warnings
                     """
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to $HIGHEST_KNOWN_STABLE_API:
                     @@ -5 +5
-                    -         targetSdkVersion 28
-                    +         targetSdkVersion 30
+                    -         targetSdkVersion 29
+                    +         targetSdkVersion $HIGHEST_KNOWN_STABLE_API
                     """
                 )
         } finally {
@@ -2998,7 +2999,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play requires that apps target API level 29 or higher.
+                    build.gradle:5: Error: Google Play requires that apps target API level 30 or higher.
                      [ExpiredTargetSdkVersion]
                             targetSdkVersion 17
                             ~~~~~~~~~~~~~~~~~~~
@@ -3042,7 +3043,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 .run()
                 .expect(
                     """
-                    build.gradle:5: Error: Google Play requires that apps target API level 29 or higher.
+                    build.gradle:5: Error: Google Play requires that apps target API level 30 or higher.
                      [ExpiredTargetSdkVersion]
                             targetSdkVersion 'O'
                             ~~~~~~~~~~~~~~~~~~~~

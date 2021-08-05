@@ -230,7 +230,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
                     var warned = false
-                    if (version < 29) {
+                    if (version < 30) {
                         val now = calendar ?: Calendar.getInstance()
                         val year = now.get(Calendar.YEAR)
                         val month = now.get(Calendar.MONTH)
@@ -240,18 +240,18 @@ open class GradleDetector : Detector(), GradleScanner {
                         // https://developer.android.com/distribute/play-policies
                         val required: Int
                         val issue: Issue
-                        if (year > 2020 || month >= 10) {
+                        if (year > 2021 || month >= 10) {
+                            required = 30
+                            issue = EXPIRED_TARGET_SDK_VERSION
+                        } else if (version < 29 && year > 2019) {
                             required = 29
                             issue = EXPIRED_TARGET_SDK_VERSION
-                        } else if (version < 28 && year > 2018) {
-                            required = 28
-                            issue = EXPIRED_TARGET_SDK_VERSION
-                        } else if (year == 2020) {
+                        } else if (year == 2021) {
                             // Meets last year's requirement but not yet the upcoming one.
                             // Start warning 6 months in advance.
-                            // (Check for 2020 here: no, we don't have a time machine, but let's
+                            // (Check for 2021 here: no, we don't have a time machine, but let's
                             // allow developers to go back in time.)
-                            required = 29
+                            required = 30
                             issue = EXPIRING_TARGET_SDK_VERSION
                         } else {
                             required = -1
@@ -262,9 +262,9 @@ open class GradleDetector : Detector(), GradleScanner {
                                 "Google Play requires that apps target API level $required or higher.\n"
                             else
                                 "Google Play will soon require that apps target API " +
-                                    "level 29 or higher. This will be required for new apps " +
-                                    "in August 2020, and for updates to existing apps in " +
-                                    "November 2020."
+                                    "level 30 or higher. This will be required for new apps " +
+                                    "in August 2021, and for updates to existing apps in " +
+                                    "November 2021."
 
                             val highest = context.client.highestKnownApiLevel
                             val label = "Update targetSdkVersion to $highest"
