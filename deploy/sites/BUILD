@@ -40,6 +40,6 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

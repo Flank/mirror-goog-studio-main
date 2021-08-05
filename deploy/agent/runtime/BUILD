@@ -61,7 +61,7 @@ coverage_java_test(
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 

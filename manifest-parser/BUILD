@@ -40,6 +40,6 @@ coverage_java_test(
         ":tools.manifest-parser",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

@@ -15,8 +15,8 @@ kotlin_library(
         "//tools/base/bazel:studio-grpc",
         "//tools/base/bazel:studio-proto",
         "//tools/base/fakeandroid",
-        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/transport/proto:transport_java_proto",
         "//tools/base/transport/test-framework",
+        "@maven//:com.google.guava.guava",
     ],
 )

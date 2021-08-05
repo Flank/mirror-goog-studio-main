@@ -33,6 +33,6 @@ kotlin_test(
         "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
         "//prebuilts/tools/common/m2:junit.junit.4.12",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
 )

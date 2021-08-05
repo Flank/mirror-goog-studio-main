@@ -84,7 +84,7 @@ kotlin_test(
     test_class = "pkg.J0Test",
     deps = [
         ":test_only_java",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -94,7 +94,7 @@ kotlin_test(
     test_class = "pkg.K0Test",
     deps = [
         ":test_only_kotlin",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -109,6 +109,6 @@ kotlin_test(
         ":test_kotlin_and_java",
         ":test_only_java",
         ":test_only_kotlin",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

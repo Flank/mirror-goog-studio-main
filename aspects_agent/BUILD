@@ -14,9 +14,9 @@ java_binary(
     main_class = "com.android.tools.checker.agent.Agent",
     deps = [
         "//tools/base/annotations",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
     ],
 )
 
@@ -30,11 +30,11 @@ coverage_java_test(
     deps = [
         ":agent_binary",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
     ],
 )
 

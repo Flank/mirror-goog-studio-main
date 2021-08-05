@@ -16,8 +16,8 @@ java_binary(
     ],
     main_class = "com.android.tools.tracer.agent.TraceAgent",
     deps = [
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
     ],
 )
 

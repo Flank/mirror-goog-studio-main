@@ -91,8 +91,8 @@ java_binary(
     main_class = "com.android.tools.binaries.ZipMerger",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -102,9 +102,9 @@ coverage_java_test(
     test_class = "com.android.tools.binaries.ZipMergerTest",
     deps = [
         ":zip_merger",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -131,7 +131,7 @@ java_test(
         ":bazel_generator",
         ":iml_to_build",
         ":utils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -140,7 +140,7 @@ java_binary(
     srcs = ["src/com/android/tools/binaries/Bin2C.java"],
     main_class = "com.android.tools.binaries.Bin2C",
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/third_party:com.google.guava_guava"],
+    deps = ["@maven//:com.google.guava.guava"],
 )
 
 java_binary(
@@ -154,11 +154,11 @@ java_library(
     name = "maven",
     srcs = glob(["src/com/android/tools/maven/**/*.java"]),
     deps = [
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
-        "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
-        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
+        "@maven//:org.eclipse.aether.aether-connector-basic",
+        "@maven//:org.eclipse.aether.aether-transport-http",
     ],
 )
 
@@ -182,8 +182,8 @@ java_binary(
     ],
     deps = [
         ":maven",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
@@ -198,7 +198,7 @@ coverage_java_test(
     deps = [
         ":maven",
         ":pom_generator",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -207,7 +207,7 @@ java_library(
     srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
     deps = [
         ":utils",
-        "//tools/base/third_party:org.apache.maven_maven-model-builder",
+        "@maven//:org.apache.maven.maven-model-builder",
     ],
 )
 
@@ -224,8 +224,8 @@ java_test(
     test_class = "com.android.tools.binaries.RepoBuilderTest",
     deps = [
         ":repo_builder_lib",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -242,9 +242,9 @@ java_binary(
         ":bazel_generator",
         ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
@@ -264,9 +264,9 @@ java_binary(
         ":bazel_generator",
         ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
@@ -286,9 +286,9 @@ java_binary(
         ":bazel_generator",
         ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
@@ -334,7 +334,7 @@ java_library(
         "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -351,8 +351,8 @@ java_library(
         "//tools/base/common:tools.common",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -519,7 +519,7 @@ coverage_java_test(
         ":bazel_generator",
         ":iml_to_build",
         ":utils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -529,8 +529,8 @@ coverage_java_test(
     test_class = "com.android.tools.binaries.Bin2CTest",
     deps = [
         ":bin2c",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -551,9 +551,9 @@ coverage_java_test(
         ":third_party_build_generator",
         ":utils",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
+        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
@@ -564,7 +564,7 @@ java_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/lint/cli",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -591,12 +591,12 @@ java_binary(
         ":json",
         ":maven",
         ":utils",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
-        "//tools/base/third_party:org.eclipse.aether_aether-connector-basic",
-        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
-        "//tools/base/third_party:org.eclipse.aether_aether-transport-http",
+        "@maven//:com.google.code.findbugs.jsr305",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.apache.maven.maven-aether-provider",
+        "@maven//:org.eclipse.aether.aether-connector-basic",
+        "@maven//:org.eclipse.aether.aether-transport-file",
+        "@maven//:org.eclipse.aether.aether-transport-http",
     ],
 )
 
@@ -613,8 +613,8 @@ coverage_java_test(
         ":local_maven_repository_generator",
         ":maven",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
-        "//tools/base/third_party:org.eclipse.aether_aether-transport-file",
+        "@maven//:junit.junit",
+        "@maven//:org.apache.maven.maven-aether-provider",
+        "@maven//:org.eclipse.aether.aether-transport-file",
     ],
 )

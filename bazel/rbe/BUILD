@@ -16,7 +16,7 @@ java_test(
     ],
     test_class = "DockerImageTest",
     deps = [
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -33,6 +33,6 @@ java_test(
     test_class = "PerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

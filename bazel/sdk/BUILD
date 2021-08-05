@@ -18,7 +18,7 @@ java_binary(
         "//tools/base/common:tools.common",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -41,7 +41,7 @@ java_test(
     deps = [
         ":combine_notices_lib",
         "//prebuilts/tools/common/m2:com.google.jimfs.jimfs.1.1",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )

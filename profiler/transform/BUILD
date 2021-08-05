@@ -39,6 +39,6 @@ java_test(
     deps = [
         ":transform",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

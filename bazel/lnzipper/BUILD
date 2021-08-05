@@ -18,8 +18,8 @@ java_test(
         "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
         "//prebuilts/tools/common/m2:commons-cli.commons-cli.1.4",
         "//prebuilts/tools/common/m2:junit.junit.4.12",
-        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
     ],
 )
 

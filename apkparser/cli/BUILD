@@ -29,8 +29,8 @@ coverage_java_test(
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 

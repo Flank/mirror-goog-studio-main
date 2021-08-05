@@ -9,7 +9,7 @@ android_java_proto_library(
     name = "network_inspector_java_proto",
     srcs = ["resources/proto/network-inspector.proto"],
     grpc_support = 1,
-    java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
+    java_deps = ["@maven//:io.grpc.grpc-all"],
     protoc_grpc_version = "1.21.1",
 )
 
@@ -58,9 +58,9 @@ kotlin_test(
         ":agent-sources_undexed",
         "//tools/base/app-inspection/inspectors/network/fake-android:fake_android",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )
 

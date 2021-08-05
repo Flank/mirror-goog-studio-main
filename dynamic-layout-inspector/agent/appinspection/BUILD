@@ -48,9 +48,9 @@ kotlin_test(
     deps = [
         ":agent-sources_undexed",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )
 

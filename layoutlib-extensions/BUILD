@@ -32,6 +32,6 @@ kotlin_library(
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
     ],
 )

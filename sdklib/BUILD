@@ -119,11 +119,11 @@ kotlin_test(
         "//tools/base/repository:tools.repository",
         "//tools/base/repository:tools.testlib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava-testlib",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.apache.httpcomponents_httpcore",
+        "@maven//:com.google.guava.guava-testlib",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.apache.httpcomponents.httpcore",
     ],
 )
 

@@ -139,10 +139,10 @@ coverage_java_test(
         "//tools/base/manifest-parser:tools.manifest-parser",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 
