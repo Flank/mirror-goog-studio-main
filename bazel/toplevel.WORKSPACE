@@ -166,6 +166,7 @@ local_maven_repository(
     "org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0",
     "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8",
     "org.mockito:mockito-core:3.4.6",
+    "org.mockito:mockito-all:1.9.5",
     "org.ow2.asm:asm-analysis:9.1",
     "org.ow2.asm:asm-commons:9.1",
     "org.ow2.asm:asm-tree:9.1",
