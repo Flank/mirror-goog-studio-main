@@ -358,6 +358,9 @@ open class TestMode(
         val WHITESPACE: TestMode = WhitespaceTestMode()
 
         @JvmField
+        val IF_TO_WHEN: TestMode = IfToWhenTestMode()
+
+        @JvmField
         val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
@@ -365,6 +368,7 @@ open class TestMode(
             BODY_REMOVAL,
             TYPE_ALIAS,
             IMPORT_ALIAS,
+            IF_TO_WHEN,
             WHITESPACE
         )
 

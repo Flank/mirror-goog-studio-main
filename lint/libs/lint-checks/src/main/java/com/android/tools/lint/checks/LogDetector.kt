@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.findSelector
 import com.android.tools.lint.detector.api.minSdkLessThan
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
@@ -47,6 +48,7 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.evaluateString
 import org.jetbrains.uast.tryResolveNamed
 import java.util.Locale
@@ -252,26 +254,13 @@ class LogDetector : Detector(), SourceCodeScanner {
         var curr = start
         while (curr != null) {
             if (curr is UIfExpression) {
-
-                var condition = curr.condition
-                if (condition is UQualifiedReferenceExpression) {
-                    condition = getLastInQualifiedChain(condition)
+                return checkLoggingCondition(curr.condition, context, logCall)
+            } else if (curr is USwitchClauseExpression) {
+                var within = false
+                for (case in curr.caseValues) {
+                    within = checkLoggingCondition(case, context, logCall) || within
                 }
-
-                if (condition is UCallExpression) {
-                    if (IS_LOGGABLE == condition.methodName) {
-                        checkTagConsistent(context, logCall, condition)
-                    }
-                }
-
-                if (condition is ULiteralExpression) {
-                    val value = condition.value
-                    if (value == true) {
-                        return false
-                    }
-                }
-
-                return true
+                return within
             } else if (curr is UCallExpression ||
                 curr is UMethod ||
                 curr is UClassInitializer ||
@@ -283,6 +272,26 @@ class LogDetector : Detector(), SourceCodeScanner {
             curr = curr.uastParent
         }
         return false
+    }
+
+    private fun checkLoggingCondition(
+        expression: UExpression,
+        context: JavaContext,
+        logCall: UCallExpression
+    ): Boolean {
+        val condition = expression.findSelector()
+        if (condition is UCallExpression) {
+            if (IS_LOGGABLE == condition.methodName) {
+                checkTagConsistent(context, logCall, condition)
+            }
+        } else if (condition is ULiteralExpression) {
+            val value = condition.value
+            if (value == true) {
+                return false
+            }
+        }
+
+        return true
     }
 
     /**

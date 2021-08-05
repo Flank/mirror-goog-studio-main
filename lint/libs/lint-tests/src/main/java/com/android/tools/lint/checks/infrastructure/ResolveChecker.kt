@@ -24,6 +24,7 @@ import com.android.tools.lint.Reporter
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.getErrorLines
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
@@ -48,7 +49,19 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         PsiErrorElement::class.java
     )
     if (error != null) {
-        error("Found error element $error in ${file.name} with text \"${error.text}\" inside \"${error.parent.text}\"")
+        val line = getLocation(error).start?.line ?: -1
+
+        val sb = StringBuilder()
+        val location = getLocation(error)
+        val source = root.sourcePsi.text.toString() ?: ""
+        val lines = location.getErrorLines { source }
+        sb.append(
+            "Found error element $error in ${file.name}:${line + 1} with text " +
+                "\"${error.text}\" inside \"${error.parent.text}\"\n" +
+                "$lines\n" +
+                listFile(file.name, source)
+        )
+        error(sb.toString())
     }
 
     val detectors = task.issues?.asSequence()

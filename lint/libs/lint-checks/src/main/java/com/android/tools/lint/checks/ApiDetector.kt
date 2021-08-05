@@ -146,6 +146,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USuperExpression
 import org.jetbrains.uast.USwitchClauseExpression
+import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UTryExpression
@@ -986,18 +987,37 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // Also see if this cast has been explicitly checked for
             var curr = node
             while (true) {
-                val check = curr.getParentOfType(UIfExpression::class.java, true, UMethod::class.java)
-                    ?: break
-                val condition = check.condition.skipParenthesizedExprDown()
-                if (condition is UBinaryExpressionWithType) {
-                    val type = condition.type
-                    // Explicitly checked with surrounding instanceof check
-                    if (type == interfaceType) {
-                        return
+                when (curr) {
+                    is UIfExpression -> {
+                        if (node.isUastChildOf(curr.thenExpression, true)) {
+                            val condition = curr.condition.skipParenthesizedExprDown()
+                            if (condition is UBinaryExpressionWithType) {
+                                val type = condition.type
+                                // Explicitly checked with surrounding instanceof check
+                                if (type == interfaceType) {
+                                    return
+                                }
+                            }
+                        }
+                    }
+                    is USwitchClauseExpressionWithBody -> {
+                        if (node.isUastChildOf(curr.body, true)) {
+                            for (case in curr.caseValues) {
+                                val condition = case.skipParenthesizedExprDown()
+                                if (condition is UBinaryExpressionWithType) {
+                                    val type = condition.type
+                                    if (type == interfaceType) {
+                                        return
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    is UMethod -> {
+                        break
                     }
                 }
-
-                curr = check
+                curr = curr.uastParent ?: break
             }
 
             val location = context.getLocation(node)

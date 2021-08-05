@@ -88,7 +88,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ),
+            ).indented(),
             kotlin(
                 """
                 package test.pkg

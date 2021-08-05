@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.findLastAssignment
+import com.android.tools.lint.detector.api.findSelector
 import com.android.tools.lint.detector.api.getMethodName
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiBinaryFile
@@ -40,7 +41,6 @@ import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
-import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
@@ -421,16 +421,4 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
         location.secondary = secondary
         context.report(ACTIVITY, setPendingIntent, location, message)
     }
-}
-
-fun UElement.findSelector(): UElement {
-    var curr = this
-    while (true) {
-        curr = when (curr) {
-            is UQualifiedReferenceExpression -> curr.selector
-            is UParenthesizedExpression -> curr.expression
-            else -> break
-        }
-    }
-    return curr
 }

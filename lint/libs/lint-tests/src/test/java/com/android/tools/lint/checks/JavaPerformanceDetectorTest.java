@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.USE_VALUE_OF;
 
 import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -669,6 +670,8 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "            bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)\n"
                                         + "    }\n"
                                         + "}\n"))
+                // lazy initialization in onDraw using a when statement is unlikely
+                .skipTestModes(TestMode.IF_TO_WHEN)
                 .run()
                 .expectClean();
     }

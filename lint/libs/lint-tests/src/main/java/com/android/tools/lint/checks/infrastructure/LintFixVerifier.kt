@@ -392,6 +392,16 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
          * output.)
          */
         fun bumpFixLineNumbers(output: String): String {
+            return adjustLineNumbers(output) { it + 1 }
+        }
+
+        /**
+         * Given fix-delta output, increases the line numbers by one
+         * (needed to gracefully handle older fix diffs where the line
+         * numbers were 0-based instead of 1-based like the error
+         * output.)
+         */
+        fun adjustLineNumbers(output: String, adjust: (Int) -> Int): String {
             val sb = StringBuilder(output.length)
             for (line in output.split("\n").toTypedArray()) {
                 val matcher = FIX_PATTERN.matcher(line)
@@ -400,7 +410,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
                     val lineNumber = matcher.group(3)
                     val suffix = matcher.group(4)
                     sb.append(prefix)
-                    sb.append(lineNumber.toInt() + 1)
+                    sb.append(adjust(lineNumber.toInt()))
                     sb.append(suffix)
                 } else {
                     sb.append(line)

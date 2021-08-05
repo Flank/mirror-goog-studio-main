@@ -35,6 +35,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
@@ -435,4 +436,20 @@ fun PsiParameter.isReceiver(): Boolean {
     // Fully qualified names here because we can't suppress usage in import list
     val name = name
     return name.startsWith("\$this") || name.startsWith("\$self")
+}
+
+/**
+ * For a qualified or parenthesized expression, returns the selector, or
+ * otherwise returns self.
+ */
+fun UElement.findSelector(): UElement {
+    var curr = this
+    while (true) {
+        curr = when (curr) {
+            is UQualifiedReferenceExpression -> curr.selector
+            is UParenthesizedExpression -> curr.expression
+            else -> break
+        }
+    }
+    return curr
 }

@@ -54,9 +54,13 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
+import org.jetbrains.uast.USwitchClauseExpressionWithBody
+import org.jetbrains.uast.USwitchExpression
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
@@ -168,30 +172,58 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                     else -> return
                 }
 
-                val parentParent = skipParenthesizedExprUp(parent.uastParent)
-                val method: UMethod = if (parentParent is UReturnExpression) {
+                val parentParent = skipParenthesizedExprUp(parent.uastParent) ?: return
+                checkMethod(parentParent, context, receiver, comparison, isGreaterOrEquals)
+            } else if (parent is USwitchClauseExpressionWithBody && parent.body.expressions.size == 1) {
+                var then = parent.body.expressions[0].skipParenthesizedExprDown() ?: return
+                @Suppress("UnstableApiUsage")
+                if (then is UYieldExpression) {
+                    // used by UAST to handle some when statements:
+                    then = then.expression?.skipParenthesizedExprDown() ?: return
+                }
+                val receiver = when (then) {
+                    is UQualifiedReferenceExpression -> then.receiver.skipParenthesizedExprDown() ?: return
+                    is UCallExpression -> then.receiver?.skipParenthesizedExprDown() ?: return
+                    else -> return
+                }
+                val switchExpression = parent.getParentOfType(USwitchExpression::class.java)
+                val parentParent = skipParenthesizedExprUp(switchExpression?.uastParent) ?: return
+                if (!parent.caseValues.any { it.isUastChildOf(comparison) }) {
+                    return
+                }
+                checkMethod(parentParent, context, receiver, comparison, isGreaterOrEquals)
+            }
+        }
+
+        private fun checkMethod(
+            parentParent: UElement,
+            context: JavaContext,
+            receiver: UExpression,
+            comparison: UBinaryExpression,
+            isGreaterOrEquals: Boolean
+        ) {
+            val method: UMethod = if (parentParent is UReturnExpression) {
+                parentParent.uastParent as? UMethod
+                    ?: parentParent.uastParent?.uastParent as? UMethod
+                    ?: return
+            } else if (parentParent is UBlockExpression &&
+                parentParent.uastParent is UMethod
+            ) {
+                val expressions = parentParent.expressions
+                if (expressions.size == 1 ||
+                    expressions.size == 2 && expressions[1].skipParenthesizedExprDown() is UReturnExpression
+                ) {
                     parentParent.uastParent as? UMethod
                         ?: parentParent.uastParent?.uastParent as? UMethod
                         ?: return
-                } else if (parentParent is UBlockExpression &&
-                    parentParent.uastParent is UMethod
-                ) {
-                    val expressions = parentParent.expressions
-                    if (expressions.size == 1 ||
-                        expressions.size == 2 && expressions[1].skipParenthesizedExprDown() is UReturnExpression
-                    ) {
-                        parentParent.uastParent as? UMethod
-                            ?: parentParent.uastParent?.uastParent as? UMethod
-                            ?: return
-                    } else {
-                        return
-                    }
                 } else {
                     return
                 }
-
-                checkMethod(context, method, receiver, comparison, isGreaterOrEquals)
+            } else {
+                return
             }
+
+            checkMethod(context, method, receiver, comparison, isGreaterOrEquals)
         }
 
         private fun checkMethod(

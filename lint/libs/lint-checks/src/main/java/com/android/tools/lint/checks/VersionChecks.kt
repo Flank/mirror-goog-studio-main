@@ -37,6 +37,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULiteralExpression
@@ -49,9 +50,12 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchClauseExpressionWithBody
+import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.UUnaryExpression
+import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
@@ -271,25 +275,33 @@ class VersionChecks(
     }
 
     private fun isUnconditionalReturn(statement: UExpression): Boolean {
+
+        @Suppress("UnstableApiUsage") // UYieldExpression not yet stable
         if (statement is UBlockExpression) {
-            val expressions = statement.expressions
-            val statements = expressions.size
-            if (statements > 0) {
-                val last = expressions[statements - 1]
-                if (last is UReturnExpression || last is UThrowExpression) {
-                    return true
-                } else if (last is UCallExpression) {
-                    val methodName = getMethodName(last)
-                    // Look for Kotlin runtime library methods that unconditionally exit
-                    if ("error" == methodName || "TODO" == methodName) {
-                        return true
-                    }
-                }
+            statement.expressions.lastOrNull()?.let { return isUnconditionalReturn(it) }
+        } else if (statement is UExpressionList) {
+            statement.expressions.lastOrNull()?.let { return isUnconditionalReturn(it) }
+        } else if (statement is UYieldExpression) {
+            // (Kotlin when statements will sometimes be represented using yields in the UAST representation)
+            val yieldExpression = statement.expression
+            if (yieldExpression != null) {
+                return isUnconditionalReturn(yieldExpression)
             }
         } else if (statement is UParenthesizedExpression) {
             return isUnconditionalReturn(statement.expression)
         }
-        return statement is UReturnExpression
+
+        if (statement is UReturnExpression || statement is UThrowExpression) {
+            return true
+        } else if (statement is UCallExpression) {
+            val methodName = getMethodName(statement)
+            // Look for Kotlin runtime library methods that unconditionally exit
+            if ("error" == methodName || "TODO" == methodName) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun getWithinVersionCheckConditional(
@@ -332,6 +344,29 @@ class VersionChecks(
                         prev = prev,
                         apiLookup = apiLookup
                     )?.let { return it }
+                }
+
+                val switch = current.getParentOfType(USwitchExpression::class.java, true)
+                val entries = switch?.body?.expressions?.filterIsInstance<USwitchClauseExpression>() ?: emptyList()
+                var prevConstraint: ApiConstraint? = null
+                for (entry in entries) {
+                    if (entry === current) {
+                        break
+                    }
+
+                    for (case in entry.caseValues) {
+                        val constraint = getVersionCheckConditional(
+                            element = case,
+                            and = true,
+                            apiLookup = apiLookup
+                        )
+
+                        prevConstraint = if (prevConstraint == null) constraint else prevConstraint and constraint
+                    }
+                }
+
+                if (prevConstraint != null) {
+                    return prevConstraint.adjust(0, -2).not()
                 }
             } else if (current is UCallExpression &&
                 (prev as? UExpression)?.skipParenthesizedExprDown() is ULambdaExpression
@@ -1019,7 +1054,7 @@ class VersionChecks(
         }
 
         override fun visitIfExpression(node: UIfExpression): Boolean {
-            super.visitIfExpression(node)
+            val exit = super.visitIfExpression(node)
             if (done) {
                 return true
             }
@@ -1055,7 +1090,68 @@ class VersionChecks(
                     }
                 }
             }
-            return true
+            return exit
+        }
+
+        override fun visitSwitchExpression(node: USwitchExpression): Boolean {
+            val exit = super.visitSwitchExpression(node)
+            if (done) {
+                return true
+            }
+            if (endElement.isUastChildOf(node, true)) {
+                // Even if there is an unconditional exit, endElement will occur before it!
+                done = true
+                return true
+            }
+
+            if (node.expression == null) {
+                var knownConstraint: ApiConstraint? = null
+                for (entry in node.body.expressions) {
+                    if (entry is USwitchClauseExpression) {
+                        if (entry is USwitchClauseExpressionWithBody) {
+                            for (case in entry.caseValues) {
+                                val constraint = getVersionCheckConditional(
+                                    element = case,
+                                    and = false
+                                )
+                                if (constraint != null) {
+                                    if (constraint.matches(api)) {
+                                        // See if the body does an immediate return
+                                        if (isUnconditionalReturn(entry.body)) {
+                                            found = true
+                                            done = true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        for (case in entry.caseValues) {
+                            val constraint = getVersionCheckConditional(
+                                element = case,
+                                and = true
+                            )
+                            if (constraint != null) {
+                                knownConstraint = constraint and knownConstraint
+                            }
+                        }
+
+                        if (knownConstraint != null &&
+                            entry is USwitchClauseExpressionWithBody &&
+                            isUnconditionalReturn(entry.body)
+                        ) {
+                            if (knownConstraint.neverAtMost(api + 2)) {
+                                // We've had earlier clauses which checked the API level.
+                                // No, this isn't right; we need to lower the level
+                                found = true
+                                done = true
+                            }
+                        }
+                    }
+                }
+            }
+
+            return exit
         }
 
         fun found(): Boolean {

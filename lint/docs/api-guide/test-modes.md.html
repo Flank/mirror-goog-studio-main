@@ -441,6 +441,21 @@ The purpose of these tweaks are similar to the expression body change:
 making sure that detectors are properly handling the presence of
 absence of `UBlockExpression` around the child nodes.
 
+### If to When Replacement
+
+In Kotlin, you can replace a series of `if`/`else` statements with a
+single `when` block. These two alternative do not look the same in the
+AST; `if` expressions show up as `UIfExpression`, and `when`
+expressions show up as `USwitchExpression`.
+
+The if-to-when test mode will change all the `if` statements in Kotlin
+lint tests with the corresponding when statement, and makes sure that
+the test results remain the same. This ensures that detectors are
+properly looking for both `UIfExpression` and `USwitchExpression` and
+handling each. When this test mode was introduced, around 12 unit tests
+in lint's built-in checks (spread across 5 detectors) needed some
+tweaks.
+
 ### Whitespace Mode
 
 This test mode inserts a number of "unnecessary" whitespace characters

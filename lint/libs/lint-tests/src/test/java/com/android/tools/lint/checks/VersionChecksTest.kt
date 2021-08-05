@@ -2474,6 +2474,244 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testWhenEarlyReturns() {
+        lint().files(
+            manifest().minSdk(16),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build.VERSION.SDK_INT
+                import androidx.annotation.RequiresApi
+
+                fun testWhen1() {
+                    when {
+                        SDK_INT > 30 -> { }
+                        else -> return
+                    }
+                    requires21() // ERROR 1: SDK_INT can be 22 through 30
+                }
+
+                fun testWhen2() {
+                    when {
+                        SDK_INT > 30 -> { }
+                        SDK_INT > 23 -> { }
+                        else -> return
+                    }
+                    requires21() // ERROR 2: SDK_INT can be 22 through 23
+                }
+
+                fun testWhen3() {
+                    when {
+                        SDK_INT > 30 -> { }
+                        SDK_INT > 22 -> { }
+                        else -> return
+                    }
+                    requires21() // ERROR 3: SDK_INT can be 22 through 22
+                }
+
+                fun testWhen4() {
+                    when {
+                        SDK_INT > 30 -> { }
+                        SDK_INT > 21 -> { }
+                        else -> return
+                    }
+                    requires21() // OK 1: We know SDK_INT <= 21
+                }
+
+                fun testWhen5() {
+                    when {
+                        SDK_INT > 20 -> { }
+                        SDK_INT > 30 -> { } // never true
+                        else -> return
+                    }
+                    requires21() // OK 2: We know SDK_INT <= 20
+                }
+
+                fun testWhen6() {
+                    when {
+                        SDK_INT > 30 -> {
+                            requires21() // OK 3: We know SDK_INT >= 31
+                        }
+                        SDK_INT >= 21 -> {
+                            requires21() // OK 4: We know SDK_INT >= 21
+                        }
+                        SDK_INT >= 20 -> {
+                            requires21() // ERROR 4: SDK_INT can be 20
+                        }
+                        SDK_INT >= 19 -> {
+                            requires21() // ERROR 5: SDK_INT can be 19
+                        }
+                        else -> return
+                    }
+                }
+
+                @RequiresApi(21)
+                fun requires21() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:11: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                requires21() // ERROR 1: SDK_INT can be 22 through 30
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:20: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                requires21() // ERROR 2: SDK_INT can be 22 through 23
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:29: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                requires21() // ERROR 3: SDK_INT can be 22 through 22
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:59: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 4: SDK_INT can be 20
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:62: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 5: SDK_INT can be 19
+                        ~~~~~~~~~~
+            5 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testPreviousWhenStatements() {
+        lint().files(
+            manifest().minSdk(16),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build.VERSION.SDK_INT
+                import androidx.annotation.RequiresApi
+
+                fun testWhen0() {
+                    when {
+                        SDK_INT >= 20 -> {
+                            requires21() // ERROR 1: SDK_INT can be 20
+                        }
+                        else -> {
+                            requires21() // OK 2: We know SDK_INT < 20
+                        }
+                    }
+                }
+
+                fun testWhen1() {
+                    when {
+                        SDK_INT >= 21 -> {
+                            requires21() // OK 3: We know SDK_INT >= 21
+                        }
+                        else -> {
+                            requires21() // OK 4: We know SDK_INT < 21
+                        }
+                    }
+                }
+
+                fun testWhen2() {
+                    when {
+                        SDK_INT >= 22 -> {
+                            requires21() // OK 5: We know SDK_INT >= 22
+                        }
+                        else -> {
+                            requires21() // OK 6: We know SDK_INT < 22
+                        }
+                    }
+                }
+
+                fun testWhen3() {
+                    when {
+                        SDK_INT >= 23 -> {
+                            requires21() // OK 7: We know SDK_INT >= 23
+                        }
+                        else -> {
+                            requires21() // ERROR 2: SDK_INT can be 22
+                        }
+                    }
+                }
+
+                fun testWhen4() {
+                    when {
+                        SDK_INT >= 24 -> {
+                            requires21() // OK 8: We know SDK_INT >= 24
+                        }
+                        else -> {
+                            requires21() // ERROR 3: SDK_INT can be 22 or 23
+                        }
+                    }
+                }
+
+                fun testWhen5() {
+                    when {
+                        SDK_INT >= 30 -> { }
+                        SDK_INT >= 22 -> {
+                            requires21() // OK 5: We know SDK_INT >= 22
+                        }
+                        else -> {
+                            requires21() // OK 6: We know SDK_INT < 22
+                        }
+                    }
+                }
+
+                @RequiresApi(21)
+                fun requires21() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:9: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 1: SDK_INT can be 20
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:45: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 2: SDK_INT can be 22
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:56: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 3: SDK_INT can be 22 or 23
+                        ~~~~~~~~~~
+            3 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testWhenSubject() {
+        // We don't currently handle cases where the SDK_INT is the subject of a when statement
+        // and we're using ranges.
+        lint().files(
+            manifest().minSdk(16),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build.VERSION.SDK_INT
+                import androidx.annotation.RequiresApi
+
+                fun testWhenSubject() {
+                    when (SDK_INT) {
+                        in 1..15 -> {  }
+                        16 ->  { }
+                        in 17..20 -> requires21() // ERROR
+                        in 24..30 -> requires21() // OK
+                    }
+                }
+
+                @RequiresApi(21)
+                fun requires21() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            // Note that we have a false positives here; this unit test
+            // is capturing the current state until this is fixed
+            """
+            src/test/pkg/test.kt:10: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                    in 17..20 -> requires21() // ERROR
+                                 ~~~~~~~~~~
+            src/test/pkg/test.kt:11: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                    in 24..30 -> requires21() // OK
+                                 ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun testNestedIfs() {
         // Regression test for issue 67553351
         lint().files(

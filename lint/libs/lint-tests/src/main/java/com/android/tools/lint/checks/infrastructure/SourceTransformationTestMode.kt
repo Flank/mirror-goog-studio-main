@@ -45,8 +45,6 @@ import java.lang.IllegalStateException
  * * For == calls in Kotlin files to non primitives, consider switching
  *   to .equals() to make sure detector dealing with
  *   UBinaryExpression also handle UCallExpression
- * * Advanced: Consider switching if-then-else chains to when
- *   statements?
  * * Advanced: Consider trying to introduce apply statements for
  *   repeated construction chains, or "with"
  *   statements for repeated initialization
@@ -233,11 +231,11 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
             val actualLine = actualLines[i]
             if (expectedLine != actualLine && !messagesMatch(expectedLine, actualLine)) {
                 if (type == OutputKind.QUICKFIXES) {
-                    // Many existing unit tests used 0-based line numbers; this was changed
-                    // at some point but continue letting older unit tests pass if they
-                    // only vary by line numbers
-                    val adjusted = LintFixVerifier.bumpFixLineNumbers(expectedLine)
-                    if (messagesMatch(adjusted, actualLine)) {
+                    // Line numbers can drift in quickfixes since the source transformations
+                    // can easily introduce some new lines here and there.
+                    val adjustedExpectations = LintFixVerifier.adjustLineNumbers(expectedLine) { 0 }
+                    val adjustedActual = LintFixVerifier.adjustLineNumbers(actualLine) { 0 }
+                    if (messagesMatch(adjustedExpectations, adjustedActual)) {
                         continue
                     }
                 }

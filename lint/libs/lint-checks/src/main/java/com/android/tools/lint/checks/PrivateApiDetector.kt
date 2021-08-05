@@ -477,8 +477,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE_MAX_Q ->
                 if (targetSdk <= AndroidVersion.VersionCodes.Q ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        client, evaluator, call, AndroidVersion.VersionCodes.Q, false
-                    )
+                            client, evaluator, call, AndroidVersion.VersionCodes.Q, false
+                        )
                 ) {
                     warning()
                 } else {
@@ -487,8 +487,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE_MAX_R ->
                 if (targetSdk <= AndroidVersion.VersionCodes.R ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        client, evaluator, call, AndroidVersion.VersionCodes.R, false
-                    )
+                            client, evaluator, call, AndroidVersion.VersionCodes.R, false
+                        )
                 ) {
                     warning()
                 } else {

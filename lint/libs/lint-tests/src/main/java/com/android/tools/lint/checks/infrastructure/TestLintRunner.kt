@@ -348,20 +348,8 @@ class TestLintRunner(private val task: TestLintTask) {
             // the diff easily show what the change was.
             val modifications = getModifications(results, mode, resultState)
             if (modifications.isNotEmpty()) {
-                fun String.withLineNumbers(): String {
-                    var lineNumber = 1
-                    val lines = this.lines()
-                    val width = ceil(log10(lines.size.toDouble())).toInt()
-                    return lines.joinToString("\n") { String.format("%${width}d %s", lineNumber++, it) }
-                }
-
-                fun describe(path: String, contents: String): String {
-                    val line = "//".repeat(35)
-                    return "\n$line\n$path:\n$line\n\n${contents.withLineNumbers()}"
-                }
-
-                val originalFiles = modifications.joinToString("\n") { describe(it.path, it.before) }
-                val modifiedFiles = modifications.joinToString("\n") { describe(it.path, it.after) }
+                val originalFiles = modifications.joinToString("\n") { listFile(it.path, it.before) }
+                val modifiedFiles = modifications.joinToString("\n") { listFile(it.path, it.after) }
                 assertEquals(
                     message,
                     "$expectedLabel$expected$originalFiles",
@@ -631,4 +619,16 @@ class TestLintRunner(private val task: TestLintTask) {
         }
         return projectDirs
     }
+}
+
+internal fun String.withLineNumbers(): String {
+    var lineNumber = 1
+    val lines = this.lines()
+    val width = ceil(log10(lines.size.toDouble())).toInt()
+    return lines.joinToString("\n") { String.format("%${width}d %s", lineNumber++, it) }
+}
+
+internal fun listFile(path: String, contents: String): String {
+    val line = "//".repeat(35)
+    return "\n$line\n$path:\n$line\n\n${contents.withLineNumbers()}"
 }
