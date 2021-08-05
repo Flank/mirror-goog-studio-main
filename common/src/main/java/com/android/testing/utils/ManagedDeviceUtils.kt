@@ -30,7 +30,7 @@ private const val ABI_OFFSET = 3
  * managed device dsl.
  *
  * @param version: the API version level from the dsl
- * @param imageSource: the system image source. Either "google" or "aosp"
+ * @param imageSource: the system image source. Either "google", "google-atd", "aosp" or "aosp-atd"
  * @param abi: the abi for the system image.
  *
  * @return the hash for the system image repository with the given parameters.
@@ -45,9 +45,12 @@ private fun computeVersionString(version: Int) = "android-${version}"
 private fun computeVendorString(imageSource: String) =
     when (imageSource) {
         "google" -> "google_apis_playstore"
+        "google-atd" -> "google_atd"
         "aosp" -> "default"
+        "aosp-atd" -> "aosp_atd"
         else -> error("""
-            Unrecognized systemImagevendor: $imageSource. "google" or "aosp" expected.
+            Unrecognized systemImageVendor: $imageSource.
+            "google", "google-atd", "aosp" or "aosp-atd" expected.
         """.trimIndent())
     }
 

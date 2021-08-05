@@ -28,10 +28,13 @@ interface ManagedVirtualDevice : Device {
     var apiLevel: Int
 
     /**
-     * Which source the system image should come from. Either "google" or "aosp"
+     * Which source the system image should come from. Either "google", "google-atd", "aosp", or
+     * "aosp-atd"
      *
      * "google", the default, will select Google Play images for the device.
+     * "google-atd" will use automated test device images from Google Play.
      * "aosp" will use aosp images for the device.
+     * "aosp-atd" will use automated test device image from aosp.
      */
     var systemImageSource: String
 
