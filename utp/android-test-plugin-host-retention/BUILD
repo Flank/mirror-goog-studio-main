@@ -41,11 +41,11 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.launcher",
         # Test dependencies.
         ":android-test-plugin-host-retention",
-        "//prebuilts/tools/common/m2:io.grpc.grpc-stub.1.21.1",
-        "//prebuilts/tools/common/m2:io.grpc.grpc-testing.1.21.1",
+        "@maven//:io.grpc.grpc-stub",
+        "@maven//:io.grpc.grpc-testing",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

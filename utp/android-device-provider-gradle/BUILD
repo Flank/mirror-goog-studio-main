@@ -37,7 +37,7 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.launcher",
         # Test dependencies.
         ":android-device-provider-gradle",
         "//tools/base/common:tools.common",
