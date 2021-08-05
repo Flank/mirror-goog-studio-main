@@ -21,7 +21,6 @@ import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.Expect;
 import java.io.BufferedInputStream;
@@ -132,6 +131,7 @@ public class GmavenZipTest {
                 "com/android/testutils/truth/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/testutils.kotlin_module",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/gradle-api",
@@ -1405,7 +1405,7 @@ public class GmavenZipTest {
                 "com/android/tools/apk/analyzer/dex/",
                 "com/android/tools/apk/analyzer/dex/tree/",
                 "com/android/tools/apk/analyzer/internal/",
-                "com/android/tools/apk/analyzer/optimizer/",
+                "com/android/tools/apk/analyzer/internal/rewriters/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -1464,6 +1464,7 @@ public class GmavenZipTest {
                 "com/android/fakeadbserver/statechangehubs/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/fakeadbserver.kotlin_module",
                 "NOTICE");
 
         expected.putAll(
@@ -1484,6 +1485,7 @@ public class GmavenZipTest {
                 "com/android/tools/analytics/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/publisher.kotlin_module",
                 "NOTICE");
 
         expected.putAll(
@@ -1494,6 +1496,7 @@ public class GmavenZipTest {
                 "com/android/tools/analytics/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/testing.kotlin_module",
                 "NOTICE");
 
         expected.putAll(
@@ -1731,26 +1734,7 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/host/",
                 "com/android/tools/utp/plugins/host/logcat/");
 
-        // TODO: fix these. (b/64921827)
-        ImmutableSet<String> bazelNotImplementedYet =
-                ImmutableSet.of(
-                        "com/android/tools/testutils",
-                        "com/android/tools/analytics-library/publisher",
-                        "com/android/tools/apkparser/binary-resources",
-                        "com/android/tools/apkparser/apkanalyzer",
-                        "com/android/tools/pixelprobe/pixelprobe",
-                        "com/android/tools/draw9patch",
-                        "com/android/tools/ninepatch",
-                        "com/android/tools/fakeadbserver/fakeadbserver",
-                        "com/android/tools/analytics-library/inspector",
-                        "com/android/tools/chunkio/chunkio",
-                        "com/android/tools/analytics-library/testing");
-
-        EXPECTED =
-                ImmutableSetMultimap.copyOf(
-                        Multimaps.filterEntries(
-                                expected.build(),
-                                entry -> !bazelNotImplementedYet.contains(entry.getKey())));
+        EXPECTED = expected.build();
     }
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();

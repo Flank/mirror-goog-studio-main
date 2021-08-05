@@ -42,3 +42,15 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
     ],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "binary-resources/src/main/**/*.java",
+    ]) + [
+        "binary-resources/build.gradle",
+        "binary-resources/NOTICE",
+        "binary-resources/LICENSE",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

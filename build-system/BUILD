@@ -435,14 +435,19 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//prebuilts/tools/common/lint-psi/uast:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
     "//tools/analytics-library/crash:agp_gradle_build_files",
+    "//tools/analytics-library/inspector:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/analytics-library/protos:agp_gradle_build_files",
     "//tools/analytics-library/protos/src/main/proto:agp_gradle_build_files",
+    "//tools/analytics-library/publisher:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/analytics-library/shared:agp_gradle_build_files",
+    "//tools/analytics-library/testing:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/analytics-library/tracker:agp_gradle_build_files",
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
     "//tools/base:agp_artifacts.zip",
     "//tools/base/annotations:agp_gradle_build_files",
+    "//tools/base/apkparser:agp_gradle_build_files",  # Only published, not a dependency of AGP
+    "//tools/base/apkparser/analyzer:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
     "//tools/base/build-system/aapt2-proto:agp_gradle_build_files",
     "//tools/base/build-system/aaptcompiler:agp_gradle_build_files",
@@ -452,21 +457,27 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/gradle-api:agp_gradle_build_files",
     "//tools/base/build-system/gradle-core:agp_gradle_build_files",
     "//tools/base/build-system/profile:agp_gradle_build_files",
+    "//tools/base/chunkio:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/common:agp_gradle_build_files",
     "//tools/base/ddmlib:agp_gradle_build_files",
     "//tools/base/device_validator:agp_gradle_build_files",
+    "//tools/base/draw9patch:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/emulator/proto:agp_gradle_build_files",
+    "//tools/base/fakeadbserver:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/layoutlib-api:agp_gradle_build_files",
     "//tools/base/lint:agp_gradle_build_files",
     "//tools/base/lint/cli:agp_gradle_build_files",
     "//tools/base/lint/libs/lint-tests:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
+    "//tools/base/ninepatch:agp_gradle_build_files",  # Only published, not a dependency of AGP
+    "//tools/base/pixelprobe:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/profgen/profgen:agp_gradle_build_files",
     "//tools/base/repository:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",
     "//tools/base/sdk-common/aia-manifest-jar-generator:agp_gradle_build_files",
     "//tools/base/sdklib:agp_gradle_build_files",
     "//tools/base/signflinger:agp_gradle_build_files",
+    "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle-proto:agp_gradle_build_files",
