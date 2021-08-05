@@ -23,11 +23,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -51,18 +47,11 @@ import org.gradle.work.DisableCachingByDefault
 @DisableCachingByDefault
 abstract class ListingFileRedirectTask: NonIncrementalTask() {
 
-    @Suppress("unused")
-    @get:Input
-    val listingFileLocation: Provider<String> by lazy {
-        listingFile.map {
-            it.asFile.absolutePath
-        }
-    }
-
     @get:OutputFile
     abstract val redirectFile: RegularFileProperty
 
-    @get:Internal
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val listingFile: RegularFileProperty
 
     @TaskAction
