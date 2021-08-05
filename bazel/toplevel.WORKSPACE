@@ -147,6 +147,7 @@ local_maven_repository(
     "net.java.dev.jna:jna-platform:5.6.0",
     "net.sf.jopt-simple:jopt-simple:4.9",
     "net.sf.kxml:kxml2:2.3.0",
+    "nl.jqno.equalsverifier:equalsverifier:3.4.1",
     "org.antlr:antlr4:4.5.3",
     "org.apache.commons:commons-compress:1.20",
     "org.apache.httpcomponents:httpclient:4.5.6",
