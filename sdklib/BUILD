@@ -41,11 +41,9 @@ fileset(
     name = "tools.resources",
     srcs = glob([
         "src/main/resources/**",
-        "src/main/java/com/android/sdklib/devices/*.xml",
     ]),
     mappings = {
         "src/main/resources/": "",
-        "src/main/java/": "",
     },
 )
 
@@ -89,23 +87,13 @@ maven_library(
 
 kotlin_test(
     name = "tools.tests",
-    # TODO: Why are the xml files not under resources?
     srcs = glob([
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
     data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
-    resources = glob(
-        include = [
-            "src/test/java/**",
-            "src/test/resources/**",
-        ],
-        exclude = [
-            "src/test/java/**/*.java",
-            "src/test/java/**/*.kt",
-        ],
-    ),
+    resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
@@ -284,7 +272,6 @@ filegroup(
     srcs = glob([
         "src/main/**/*.java",
         "src/main/**/*.kt",
-        "src/main/java/com/android/sdklib/devices/*.xml",
         "src/main/resources/**",
     ]) + [
         "build.gradle",

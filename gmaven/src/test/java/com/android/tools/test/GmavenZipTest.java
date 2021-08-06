@@ -1068,6 +1068,7 @@ public class GmavenZipTest {
                 "com/android/sdklib/internal/",
                 "com/android/sdklib/internal/avd/",
                 "com/android/sdklib/internal/build/",
+                "com/android/sdklib/internal/build/BuildConfig.template",
                 "com/android/sdklib/internal/project/",
                 "com/android/sdklib/repository/",
                 "com/android/sdklib/repository/generated/",
