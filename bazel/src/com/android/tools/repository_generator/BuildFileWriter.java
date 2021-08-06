@@ -115,19 +115,7 @@ public class BuildFileWriter {
             }
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
-                            .map(
-                                    d -> {
-                                        // We might have already created a maven_import() rule
-                                        // for this target. If we did, then we should use the
-                                        // unversioned rule name.
-                                        String ruleWithoutVersion = ruleNameFromCoord(d, false);
-                                        if (generatedRuleNames.contains(ruleWithoutVersion)) {
-                                            return ruleWithoutVersion;
-                                        } else {
-                                            // Fall back to use versioned rule name.
-                                            return ruleNameFromCoord(d, true);
-                                        }
-                                    })
+                            .map(d -> ruleNameFromCoord(d, true))
                             .toArray(String[]::new);
 
             if (originalDepRuleNames.length != 0) {

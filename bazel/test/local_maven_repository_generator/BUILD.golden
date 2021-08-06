@@ -175,7 +175,7 @@ maven_artifact(
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
     repo_path = "com/google/example/g/1",
     deps = [
-        "com.google.example.f",
+        "com.google.example.f_2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -253,7 +253,7 @@ maven_artifact(
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
     repo_path = "com/google/example/c/1",
     deps = [
-        "com.google.example.d",
+        "com.google.example.d_1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -265,7 +265,7 @@ maven_artifact(
     repo_path = "com/google/example/d/1",
     parent = "com.google.example.d-parent_1",
     deps = [
-        "com.google.example.e",
+        "com.google.example.e_1",
     ],
     visibility = ["//visibility:public"],
 )
