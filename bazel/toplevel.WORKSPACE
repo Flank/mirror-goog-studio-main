@@ -105,6 +105,7 @@ local_repository(
 local_maven_repository(
   name = "maven",
   path = "prebuilts/tools/common/m2/repository/",
+  resolve = True,
   artifacts = [
     "commons-codec:commons-codec:1.10",
     "commons-io:commons-io:2.4",
@@ -183,6 +184,7 @@ local_maven_repository(
 local_maven_repository(
   name = "maven_tests",
   path = "prebuilts/tools/common/m2/repository/",
+  resolve = False,
   artifacts = [
         "android.arch.core:common:1.1.1",
         "android.arch.core:runtime:1.1.1",
