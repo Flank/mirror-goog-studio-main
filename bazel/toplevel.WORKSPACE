@@ -6,9 +6,9 @@ load("//tools/base/bazel:maven.bzl", "local_maven_repository")
 setup_external_repositories()
 
 register_toolchains(
-  "@native_toolchain//:cc-toolchain-x64_linux",
-  "@native_toolchain//:cc-toolchain-darwin",
-  "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
+    "@native_toolchain//:cc-toolchain-x64_linux",
+    "@native_toolchain//:cc-toolchain-darwin",
+    "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
 )
 
 local_repository(
@@ -29,6 +29,7 @@ local_repository(
     name = "windows_toolchains",
     path = "tools/base/bazel/toolchains/windows",
 )
+
 # Bazel cannot auto-detect python on Windows yet
 # See: https://github.com/bazelbuild/bazel/issues/7844
 register_toolchains("@windows_toolchains//:python_toolchain")
@@ -60,21 +61,28 @@ local_repository(
     name = "cov",
     path = "tools/base/bazel/coverage",
 )
+
 # Coverage results processing
 load("@cov//:results.bzl", "setup_testlogs_loop_repo")
+
 setup_testlogs_loop_repo()
+
 # Coverage baseline construction
 load("@cov//:baseline.bzl", "setup_bin_loop_repo")
+
 setup_bin_loop_repo()
 
-load("@bazel_toolchains//rules/exec_properties:exec_properties.bzl",
-     "create_rbe_exec_properties_dict",
-     "custom_exec_properties")
+load(
+    "@bazel_toolchains//rules/exec_properties:exec_properties.bzl",
+    "create_rbe_exec_properties_dict",
+    "custom_exec_properties",
+)
+
 custom_exec_properties(
     name = "exec_properties",
     constants = {
         "LARGE_MACHINE": create_rbe_exec_properties_dict(
-	    labels = {"machine-size": "large"},
+            labels = {"machine-size": "large"},
         ),
     },
 )
@@ -103,90 +111,90 @@ local_repository(
 )
 
 local_maven_repository(
-  name = "maven",
-  path = "prebuilts/tools/common/m2/repository/",
-  resolve = True,
-  artifacts = [
-    "commons-codec:commons-codec:1.10",
-    "commons-io:commons-io:2.4",
-    "commons-logging:commons-logging:1.2",
-    "com.android.tools.build:aapt2-proto:7.0.0-beta04-7396180",
-    "com.android.tools.build:bundletool:1.7.0",
-    "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09",
-    "com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta09",
-    "com.android.tools.build:transform-api:2.0.0-deprecated-use-gradle-api",
-    "com.googlecode.json-simple:json-simple:1.1",
-    "com.googlecode.juniversalchardet:juniversalchardet:1.0.3",
-    "com.google.auto:auto-common:0.10",
-    "com.google.auto.value:auto-value:1.6.2",
-    "com.google.code.findbugs:jsr305:3.0.2",
-    "com.google.code.gson:gson:2.8.6",
-    "com.google.crypto.tink:tink:1.3.0-rc2",
-    "com.google.flatbuffers:flatbuffers-java:1.12.0",
-    "com.google.guava:guava:30.1-jre",
-    "com.google.jimfs:jimfs:1.1",
-    "com.google.protobuf:protobuf-java:3.10.0",
-    "com.google.protobuf:protobuf-java-util:3.10.0",
-    "com.google.testing.platform:core-proto:0.0.8-alpha07",
-    "com.google.truth:truth:0.44",
-    "com.squareup:javapoet:1.10.0",
-    "com.squareup:javawriter:2.5.0",
-    "it.unimi.dsi:fastutil:8.4.0",
-    "com.google.testing.platform:android-device-provider-local::0.0.8-alpha07",
-    "com.google.testing.platform:core-proto:0.0.8-alpha07",
-    "com.google.testing.platform:launcher:0.0.8-alpha07",
-    "com.google.truth:truth:0.44",
-    "commons-io:commons-io:2.4",
-    "commons-logging:commons-logging:1.2",
-    "io.grpc:grpc-all:1.21.1",
-    "io.grpc:grpc-api:1.21.1",
-    "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
-    "javax.annotation:javax.annotation-api:1.3.2",
-    "javax.inject:javax.inject:1",
-    "junit:junit:4.13.2",
-    "net.java.dev.jna:jna:5.6.0",
-    "net.java.dev.jna:jna-platform:5.6.0",
-    "net.sf.jopt-simple:jopt-simple:4.9",
-    "net.sf.kxml:kxml2:2.3.0",
-    "nl.jqno.equalsverifier:equalsverifier:3.4.1",
-    "org.antlr:antlr4:4.5.3",
-    "org.apache.commons:commons-compress:1.20",
-    "org.apache.httpcomponents:httpclient:4.5.6",
-    "org.apache.httpcomponents:httpcore:4.4.10",
-    "org.apache.httpcomponents:httpmime:4.5.6",
-    "org.bouncycastle:bcpkix-jdk15on:1.56",
-    "org.bouncycastle:bcprov-jdk15on:1.56",
-    "org.codehaus.groovy:groovy-all:pom:3.0.8",
-    "org.easymock:easymock:3.3",
-    "org.glassfish.jaxb:jaxb-runtime:2.3.2",
-    "org.jetbrains.dokka:dokka-core:1.4.32",
-    "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
-    "org.jetbrains.kotlin:kotlin-reflect:1.4.32",
-    "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
-    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
-    "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
-    "org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0",
-    "org.jetbrains.kotlin:kotlin-test:1.4.32",
-    "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8",
-    "org.mockito:mockito-core:3.4.6",
-    "org.mockito:mockito-all:1.9.5",
-    "org.ow2.asm:asm-analysis:9.1",
-    "org.ow2.asm:asm-commons:9.1",
-    "org.ow2.asm:asm-tree:9.1",
-    "org.ow2.asm:asm-util:9.1",
-    "org.ow2.asm:asm:9.1",
-    "org.smali:dexlib2:2.2.4",
-    "org.smali:baksmali:2.2.4",
-    "org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2",
-    "xerces:xercesImpl:2.12.0",
-  ]
+    name = "maven",
+    path = "prebuilts/tools/common/m2/repository/",
+    resolve = True,
+    artifacts = [
+        "commons-codec:commons-codec:1.10",
+        "commons-io:commons-io:2.4",
+        "commons-logging:commons-logging:1.2",
+        "com.android.tools.build:aapt2-proto:7.0.0-beta04-7396180",
+        "com.android.tools.build:bundletool:1.7.0",
+        "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09",
+        "com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta09",
+        "com.android.tools.build:transform-api:2.0.0-deprecated-use-gradle-api",
+        "com.googlecode.json-simple:json-simple:1.1",
+        "com.googlecode.juniversalchardet:juniversalchardet:1.0.3",
+        "com.google.auto:auto-common:0.10",
+        "com.google.auto.value:auto-value:1.6.2",
+        "com.google.code.findbugs:jsr305:3.0.2",
+        "com.google.code.gson:gson:2.8.6",
+        "com.google.crypto.tink:tink:1.3.0-rc2",
+        "com.google.flatbuffers:flatbuffers-java:1.12.0",
+        "com.google.guava:guava:30.1-jre",
+        "com.google.jimfs:jimfs:1.1",
+        "com.google.protobuf:protobuf-java:3.10.0",
+        "com.google.protobuf:protobuf-java-util:3.10.0",
+        "com.google.testing.platform:core-proto:0.0.8-alpha07",
+        "com.google.truth:truth:0.44",
+        "com.squareup:javapoet:1.10.0",
+        "com.squareup:javawriter:2.5.0",
+        "it.unimi.dsi:fastutil:8.4.0",
+        "com.google.testing.platform:android-device-provider-local::0.0.8-alpha07",
+        "com.google.testing.platform:core-proto:0.0.8-alpha07",
+        "com.google.testing.platform:launcher:0.0.8-alpha07",
+        "com.google.truth:truth:0.44",
+        "commons-io:commons-io:2.4",
+        "commons-logging:commons-logging:1.2",
+        "io.grpc:grpc-all:1.21.1",
+        "io.grpc:grpc-api:1.21.1",
+        "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
+        "javax.annotation:javax.annotation-api:1.3.2",
+        "javax.inject:javax.inject:1",
+        "junit:junit:4.13.2",
+        "net.java.dev.jna:jna:5.6.0",
+        "net.java.dev.jna:jna-platform:5.6.0",
+        "net.sf.jopt-simple:jopt-simple:4.9",
+        "net.sf.kxml:kxml2:2.3.0",
+        "nl.jqno.equalsverifier:equalsverifier:3.4.1",
+        "org.antlr:antlr4:4.5.3",
+        "org.apache.commons:commons-compress:1.20",
+        "org.apache.httpcomponents:httpclient:4.5.6",
+        "org.apache.httpcomponents:httpcore:4.4.10",
+        "org.apache.httpcomponents:httpmime:4.5.6",
+        "org.bouncycastle:bcpkix-jdk15on:1.56",
+        "org.bouncycastle:bcprov-jdk15on:1.56",
+        "org.codehaus.groovy:groovy-all:pom:3.0.8",
+        "org.easymock:easymock:3.3",
+        "org.glassfish.jaxb:jaxb-runtime:2.3.2",
+        "org.jetbrains.dokka:dokka-core:1.4.32",
+        "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
+        "org.jetbrains.kotlin:kotlin-reflect:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0",
+        "org.jetbrains.kotlin:kotlin-test:1.4.32",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8",
+        "org.mockito:mockito-core:3.4.6",
+        "org.mockito:mockito-all:1.9.5",
+        "org.ow2.asm:asm-analysis:9.1",
+        "org.ow2.asm:asm-commons:9.1",
+        "org.ow2.asm:asm-tree:9.1",
+        "org.ow2.asm:asm-util:9.1",
+        "org.ow2.asm:asm:9.1",
+        "org.smali:dexlib2:2.2.4",
+        "org.smali:baksmali:2.2.4",
+        "org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2",
+        "xerces:xercesImpl:2.12.0",
+    ],
 )
 
 local_maven_repository(
-  name = "maven_tests",
-  path = "prebuilts/tools/common/m2/repository/",
-  resolve = False,
-  artifacts = [
+    name = "maven_tests",
+    path = "prebuilts/tools/common/m2/repository/",
+    resolve = False,
+    artifacts = [
         "android.arch.core:common:1.1.1",
         "android.arch.core:runtime:1.1.1",
         "android.arch.lifecycle:common:1.1.1",
@@ -288,5 +296,5 @@ local_maven_repository(
         "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
         "xmlpull:xmlpull:1.1.3.1",
         "xpp3:xpp3:1.1.4c",
-    ]
+    ],
 )
