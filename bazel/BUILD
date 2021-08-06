@@ -356,18 +356,6 @@ java_library(
     ],
 )
 
-java_binary(
-    name = "antlr",
-    srcs = ["src/com/android/tools/binaries/AntlrCompiler.java"],
-    main_class = "com.android.tools.binaries.AntlrCompiler",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":utils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.antlr_antlr",
-    ],
-)
-
 py_binary(
     name = "status_reader",
     srcs = ["status_reader.py"],
