@@ -166,7 +166,7 @@ class Aapt2DaemonTimeoutTest {
             AndroidSdkHandler.getInstance(AndroidLocationsSingleton, TestUtils.getSdk())
                     .getAndroidTargetManager(FakeProgressIndicator())
                     .getTargets(FakeProgressIndicator())
-                    .maxBy { it.version }!!
+                    .maxByOrNull { it.version }!!
         }
     }
 }

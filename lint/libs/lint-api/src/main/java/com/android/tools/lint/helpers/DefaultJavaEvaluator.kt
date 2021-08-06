@@ -215,7 +215,7 @@ open class DefaultJavaEvaluator(
         val path = file.path
         return projects.asSequence()
             .filter { path == it.dir.path || path.startsWith(it.dir.path + File.separator) }
-            .maxBy { it.dir.path.length }
+            .maxByOrNull { it.dir.path.length }
     }
 
     override fun findJarPath(element: PsiElement): String? {

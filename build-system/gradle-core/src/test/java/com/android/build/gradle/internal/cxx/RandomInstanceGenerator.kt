@@ -124,7 +124,7 @@ class RandomInstanceGenerator {
 
         val constructor = type.constructors
             .filter { !it.isSynthetic }
-            .maxBy { it.parameterCount }
+            .maxByOrNull { it.parameterCount }
             ?: throw RuntimeException("No usable constructor ${type.name}: " +
                     "${type.constructors.map { it.toGenericString() }}")
 

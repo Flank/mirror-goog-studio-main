@@ -214,7 +214,7 @@ private fun squashTasks(tasks: BuildTaskAttributions): List<BuildTaskAttribution
     for (task in tasks.attributionList.sortedBy { it.startTimeOffsetMs }) {
         val chosenTrack = result
             .filter { it.lastOrNull()?.endTimeOffsetMs ?: 0 <= task.startTimeOffsetMs }
-            .maxBy { it.lastOrNull()?.endTimeOffsetMs ?: 0 }
+            .maxByOrNull { it.lastOrNull()?.endTimeOffsetMs ?: 0 }
         if (chosenTrack == null) {
             result.add(mutableListOf(task))
         } else {

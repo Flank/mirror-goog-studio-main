@@ -1430,7 +1430,7 @@ open class LintCliClient : LintClient {
         return knownProjects.asSequence()
             .filter { it.isAndroidProject }
             .mapNotNull { it.buildTarget }
-            .maxBy { it.version }
+            .maxByOrNull { it.version }
     }
 
     public override fun disposeProjects(knownProjects: Collection<Project>) {

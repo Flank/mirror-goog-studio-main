@@ -135,7 +135,7 @@ class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
             environmentNames,
             mutableSetOf(),
             matches)
-        return matches.maxBy { it.groupPriority }
+        return matches.maxByOrNull { it.groupPriority }
                 ?.propertyValue
     }
 }

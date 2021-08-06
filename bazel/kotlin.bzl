@@ -53,7 +53,8 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre, transitive_classpat
     args.add("-module-name", name)
     args.add("-nowarn")  # Mirrors the default javac opts.
     args.add("-jvm-target", "1.8")
-    args.add("-api-version", "1.3")  # b/166582569
+    args.add("-api-version", "1.4")
+    args.add("-language-version", "1.4")
     args.add("-Xjvm-default=enable")
     args.add("-no-stdlib")
 
