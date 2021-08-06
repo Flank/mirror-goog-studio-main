@@ -149,6 +149,7 @@ local_maven_repository(
         "commons-logging:commons-logging:1.2",
         "io.grpc:grpc-all:1.21.1",
         "io.grpc:grpc-api:1.21.1",
+        "io.netty:netty-all:4.1.13.Final",
         "it.unimi.dsi:fastutil:8.4.0",
         "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
         "javax.annotation:javax.annotation-api:1.3.2",
