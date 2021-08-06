@@ -18,7 +18,6 @@ package com.android.tools.binaries;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.android.testutils.TestUtils;
 import java.nio.file.Files;
@@ -26,7 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.Test;
 
 public class LocalMavenRepositoryGeneratorTest {
@@ -41,10 +39,41 @@ public class LocalMavenRepositoryGeneratorTest {
         );
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
-                new LocalMavenRepositoryGenerator(repoPath, outputBuildFile, coords, false, false);
+                new LocalMavenRepositoryGenerator(
+                        repoPath, outputBuildFile, coords, true, false, false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.golden");
+        Path generated = Paths.get(outputBuildFile);
+
+        assertTrue(generated.toFile().exists());
+        String goldenFileContents = Files.readString(golden);
+        String generatedFileContents = Files.readString(generated);
+        if (!goldenFileContents.equals(generatedFileContents)) {
+            System.err.println("=== Start generated file contents ===");
+            System.err.println(generatedFileContents);
+            System.err.println("=== End generated file contents ===");
+            Files.copy(generated, TestUtils.getTestOutputDir().resolve(outputBuildFile));
+        }
+        assertEquals("The files differ!", goldenFileContents, generatedFileContents);
+    }
+
+    @Test
+    public void testGeneratorNoResolve() throws Exception {
+        Path repoPath =
+                Paths.get("tools/base/bazel/test/local_maven_repository_generator/fake_repository");
+        List<String> coords =
+                Arrays.asList(
+                        "com.google.example:a:1",
+                        "com.google.example:b:1",
+                        "com.google.example:h:pom:1");
+        String outputBuildFile = "generated.noresolve.BUILD";
+        LocalMavenRepositoryGenerator generator =
+                new LocalMavenRepositoryGenerator(
+                        repoPath, outputBuildFile, coords, false, false, false);
+        generator.run();
+
+        Path golden = repoPath.resolveSibling("BUILD.noresolve.golden");
         Path generated = Paths.get(outputBuildFile);
 
         assertTrue(generated.toFile().exists());
