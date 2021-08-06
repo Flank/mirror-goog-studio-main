@@ -474,6 +474,26 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                 } else {
                     error()
                 }
+            Restriction.MAYBE_MAX_Q ->
+                if (targetSdk <= AndroidVersion.VersionCodes.Q ||
+                    VersionChecks.isWithinVersionCheckConditional(
+                        client, evaluator, call, AndroidVersion.VersionCodes.Q, false
+                    )
+                ) {
+                    warning()
+                } else {
+                    error()
+                }
+            Restriction.MAYBE_MAX_R ->
+                if (targetSdk <= AndroidVersion.VersionCodes.R ||
+                    VersionChecks.isWithinVersionCheckConditional(
+                        client, evaluator, call, AndroidVersion.VersionCodes.R, false
+                    )
+                ) {
+                    warning()
+                } else {
+                    error()
+                }
             Restriction.MAYBE -> warning()
             else -> return // nothing to report
         }

@@ -80,10 +80,12 @@ private fun String.fromSignature(): String =
 
 private fun parse(name: String): Restriction =
     when (name) {
-        "WHITE" -> Restriction.ALLOW
-        "BLACK" -> Restriction.DENY
-        "GREY" -> Restriction.MAYBE
-        "GREY_MAX_O" -> Restriction.MAYBE_MAX_O
-        "GREY_MAX_P" -> Restriction.MAYBE_MAX_P
+        "SDK" -> Restriction.ALLOW
+        "BLOCKED" -> Restriction.DENY
+        "UNSUPPORTED" -> Restriction.MAYBE
+        "MAX_TARGET_O" -> Restriction.MAYBE_MAX_O
+        "MAX_TARGET_P" -> Restriction.MAYBE_MAX_P
+        "MAX_TARGET_Q" -> Restriction.MAYBE_MAX_Q
+        "MAX_TARGET_R" -> Restriction.MAYBE_MAX_R
         else -> Restriction.UNKNOWN
     }

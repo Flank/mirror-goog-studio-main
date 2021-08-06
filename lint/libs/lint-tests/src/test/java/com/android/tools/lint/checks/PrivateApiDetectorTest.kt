@@ -40,9 +40,9 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                     public void test(Context context, int subId) {
                         try {
                             TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                            Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_SELECTION_MODE_MANUAL"); // ERROR 1
+                            Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_TYPES"); // ERROR 1
                             Object o1 = deniedField.get(tm);
-                            Field allowedField = TelephonyManager.class.getDeclaredField("PHONE_TYPE_CDMA"); // OK
+                            Field allowedField = TelephonyManager.class.getDeclaredField("NETWORK_SELECTION_MODE_MANUAL"); // OK
                             Object o2 = allowedField.get(tm);
                             Field maybeField = TelephonyManager.class.getDeclaredField("OTASP_NEEDED"); // ERROR 2
                             Object o3 = maybeField.get(tm);
@@ -55,9 +55,9 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/TestReflection.java:12: Error: Reflective access to NETWORK_SELECTION_MODE_MANUAL is forbidden when targeting API 28 and above [BlockedPrivateApi]
-                        Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_SELECTION_MODE_MANUAL"); // ERROR 1
-                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/TestReflection.java:12: Error: Reflective access to NETWORK_TYPES is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_TYPES"); // ERROR 1
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/TestReflection.java:16: Error: Reflective access to OTASP_NEEDED will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         Field maybeField = TelephonyManager.class.getDeclaredField("OTASP_NEEDED"); // ERROR 2
                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -384,9 +384,9 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
     fun testMaybeListJavaCall() {
         val expected =
             """
-            src/test/pkg/application/ReflectionTest.java:11: Error: Reflective access to toggleFreeformWindowingMode is forbidden when targeting API 28 and above [BlockedPrivateApi]
-                        Method m2 = Activity.class.getDeclaredMethod("toggleFreeformWindowingMode");
-                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:11: Error: Reflective access to getContentCaptureManager is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        Method m2 = Activity.class.getDeclaredMethod("getContentCaptureManager");
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:10: Warning: Reflective access to setParent, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         Method m1 = Activity.class.getDeclaredMethod("setParent", Activity.class);
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,7 +415,7 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                     private static void test() throws Exception {
                         if (android.os.Build.VERSION.SDK_INT <= 26) {
                             Method m1 = Activity.class.getDeclaredMethod("setParent", Activity.class);
-                            Method m2 = Activity.class.getDeclaredMethod("toggleFreeformWindowingMode");
+                            Method m2 = Activity.class.getDeclaredMethod("getContentCaptureManager");
                             Method m3 = Activity.class.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle.class); // MAYBE_MAX_O
                         }
                         Method m4 = Activity.class.getDeclaredMethod("setParent", Activity.class); // MAYBE_MAX_P
@@ -579,9 +579,9 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
     fun testMaybeListKotlinCall() {
         val expected =
             """
-            src/test/pkg/application/ReflectionTest.kt:11: Error: Reflective access to toggleFreeformWindowingMode is forbidden when targeting API 28 and above [BlockedPrivateApi]
-                        25 -> clazz.getDeclaredMethod("toggleFreeformWindowingMode") // DENY
-                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.kt:11: Error: Reflective access to getContentCaptureManager is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        25 -> clazz.getDeclaredMethod("getContentCaptureManager") // DENY
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.kt:13: Warning: Reflective access to setParent, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         27 -> clazz.getDeclaredMethod("setParent", Activity::class.java) // MAYBE_MAX_P
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -610,7 +610,7 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         clazz.getDeclaredMethod("dismissDialog", Int::class.javaPrimitiveType) // OK
                         // TODO: Fix VersionChecks to recognize this
                         when (android.os.Build.VERSION.SDK_INT) {
-                            25 -> clazz.getDeclaredMethod("toggleFreeformWindowingMode") // DENY
+                            25 -> clazz.getDeclaredMethod("getContentCaptureManager") // DENY
                             26 -> clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java)
                             27 -> clazz.getDeclaredMethod("setParent", Activity::class.java) // MAYBE_MAX_P
                             else -> clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java) // MAYBE_MAX_O
@@ -643,12 +643,12 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                         try {
                             TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                             Method setNetworkSelectionModeAutomatic =
-                                    TelephonyManager.class.getDeclaredMethod("setNetworkSelectionModeAutomatic", int.class); // Error 1
+                                    TelephonyManager.class.getDeclaredMethod("setNetworkSelectionModeAutomatic", int.class); // OK
                             setNetworkSelectionModeAutomatic.invoke(tm, subId);
 
                             Method getDataEnabled = TelephonyManager.class.getDeclaredMethod("getDataEnabled"); // OK: it's allow-listed
                             getDataEnabled.invoke(tm);
-                            Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getNetworkSelectionMode"); // Error 2
+                            Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getAvailableNetworks"); // Error 2
                             getNetworkSelectionMode.invoke(tm);
 
                             Class<?> systemProperties = Class.forName("android.os.SystemProperties"); // Error 3
@@ -661,9 +661,9 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/TestReflection.java:18: Error: Reflective access to getNetworkSelectionMode is forbidden when targeting API 28 and above [BlockedPrivateApi]
-                        Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getNetworkSelectionMode"); // Error 2
-                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/TestReflection.java:18: Error: Reflective access to getAvailableNetworks is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getAvailableNetworks"); // Error 2
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/TestReflection.java:21: Warning: Accessing internal APIs via reflection is not supported and may not work on all devices or in the future [PrivateApi]
                         Class<?> systemProperties = Class.forName("android.os.SystemProperties"); // Error 3
                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

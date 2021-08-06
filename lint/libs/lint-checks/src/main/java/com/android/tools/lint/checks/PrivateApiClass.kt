@@ -91,6 +91,8 @@ enum class Restriction(val encoding: Int) {
     MAYBE(3),
     MAYBE_MAX_O(4),
     MAYBE_MAX_P(5),
+    MAYBE_MAX_Q(6),
+    MAYBE_MAX_R(7),
 }
 
 fun decode(encoding: Int): Restriction =
@@ -100,5 +102,7 @@ fun decode(encoding: Int): Restriction =
         3 -> Restriction.MAYBE
         4 -> Restriction.MAYBE_MAX_O
         5 -> Restriction.MAYBE_MAX_P
+        6 -> Restriction.MAYBE_MAX_Q
+        7 -> Restriction.MAYBE_MAX_R
         else -> Restriction.UNKNOWN
     }
