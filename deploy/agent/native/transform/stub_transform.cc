@@ -21,15 +21,6 @@
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
-namespace {
-struct BytecodeConvertingVisitor : public lir::Visitor {
-  lir::Bytecode* out = nullptr;
-  bool Visit(lir::Bytecode* bytecode) {
-    out = bytecode;
-    return true;
-  }
-};
-}  // namespace
 
 void StubTransform::Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
   for (auto& method : dex_ir->encoded_methods) {

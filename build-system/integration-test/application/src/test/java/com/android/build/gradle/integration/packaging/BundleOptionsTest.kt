@@ -17,13 +17,16 @@
 package com.android.build.gradle.integration.packaging
 
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.ide.common.build.ListingFileRedirect
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.utils.getVariantBuildInformationByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Streams;
+import com.google.common.collect.Streams
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -101,6 +104,17 @@ class BundleOptionsTest {
         assertThat(mainArtifact.bundleTaskOutputListingFile).isNotNull()
         val postBundleModel = File(mainArtifact.bundleTaskOutputListingFile!!)
         checkPostBundleModel(postBundleModel)
+
+        // test redirect file presence.
+        val redirectFile = FileUtils.join(
+            InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE.getOutputDir(project.buildDir),
+            "debug",
+            ListingFileRedirect.REDIRECT_FILE_NAME
+        )
+        assertThat(redirectFile.exists()).isTrue()
+        val listingFile = ListingFileRedirect.maybeExtractRedirectedFile(redirectFile)
+        assertThat(listingFile).isNotNull()
+        checkPostBundleModel(listingFile!!)
     }
 
     private fun generateApks(): Set<String> {

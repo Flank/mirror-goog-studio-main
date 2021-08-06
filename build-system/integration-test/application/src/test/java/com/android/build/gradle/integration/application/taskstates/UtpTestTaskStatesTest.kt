@@ -58,12 +58,9 @@ class UtpTestTaskStatesTest {
     }
 
     @Test
-    fun checkNoUtpTasksDefault() {
-        assertTaskDoesNotExist(project, "cleanManagedDevices")
-    }
-
-    @Test
     fun checkNoUtpTasksWithoutFlag() {
+        project.gradlePropertiesFile.appendText(
+            "\nandroid.experimental.androidTest.useUnifiedTestPlatform=false\n")
         appProject.buildFile.appendText("""
             android {
                 testOptions {

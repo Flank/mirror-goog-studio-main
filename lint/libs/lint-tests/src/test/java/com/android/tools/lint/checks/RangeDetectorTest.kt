@@ -954,6 +954,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                         "   }\n" +
                         "}"
                 ),
+                0xbcbf9445,
                 "jar/jar/AnnotationsClass.class:" +
                     "H4sIAAAAAAAAAIWQ20pCQRSG//GwNTW0g50LgiLrom2BdFFElgiKVFgEXY46" +
                     "xojOyN6jPVdXQRc9QA9VrdloRUINzJrT/631r3l7f3kFcISNBMJYjWEthnUG" +

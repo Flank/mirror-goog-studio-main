@@ -32,6 +32,7 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UVariable;
+import org.jetbrains.uast.kotlin.KotlinUQualifiedReferenceExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
@@ -116,7 +117,8 @@ public class TypeEvaluator {
         }
 
         UElement resolved = node;
-        if (resolved instanceof UReferenceExpression) {
+        if (resolved instanceof UReferenceExpression
+                && !(resolved instanceof KotlinUQualifiedReferenceExpression)) {
             resolved = UastLintUtils.tryResolveUDeclaration(resolved);
         }
 

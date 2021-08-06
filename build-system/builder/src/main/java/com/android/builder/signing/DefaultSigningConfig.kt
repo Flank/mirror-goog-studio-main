@@ -26,30 +26,27 @@ import java.security.KeyStore
  * SigningConfig encapsulates the information necessary to access certificates in a keystore file
  * that can be used to sign APKs.
  */
-open class DefaultSigningConfig(private val mName: String) : SigningConfig {
+abstract class DefaultSigningConfig constructor(private val mName: String) : SigningConfig {
     companion object {
         const val DEFAULT_PASSWORD = "android"
         const val DEFAULT_ALIAS = "AndroidDebugKey"
 
         /**
-         * Creates a [DefaultSigningConfig] that uses the default debug alias and passwords.
+         * Creates a [DebugSigningConfig] that uses the default debug alias and passwords.
          */
         @JvmStatic
-        fun debugSigningConfig(storeFile: File): DefaultSigningConfig {
-            val result = DefaultSigningConfig(BuilderConstants.DEBUG)
-            result.storeFile = storeFile
-            result.storePassword = DEFAULT_PASSWORD
-            result.keyAlias = DEFAULT_ALIAS
-            result.keyPassword = DEFAULT_PASSWORD
-            return result
+        fun debugSigningConfig(storeFile: File): DebugSigningConfig {
+            return DebugSigningConfig(storeFile)
         }
     }
-
-    override var storeFile: File? = null
-    override var storePassword: String? = null
-    override var keyAlias: String? = null
-    override var keyPassword: String? = null
-    override var storeType: String? = KeyStore.getDefaultType()
+    protected abstract var _storeFilePath: String?
+    override var storeFile: File?
+        get() = _storeFilePath?.let { File(it) }
+        set(value) { _storeFilePath = value?.path }
+    abstract override var storePassword: String?
+    abstract override var keyAlias: String?
+    abstract override var keyPassword: String?
+    abstract override var storeType: String?
 
     override var isV1SigningEnabled = true
         set(value) {
@@ -62,10 +59,10 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
             field = value
         }
 
-    var enableV1Signing: Boolean? = null
-    var enableV2Signing: Boolean? = null
-    var enableV3Signing: Boolean? = null
-    var enableV4Signing: Boolean? = null
+    abstract var enableV1Signing: Boolean?
+    abstract var enableV2Signing: Boolean?
+    abstract var enableV3Signing: Boolean?
+    abstract var enableV4Signing: Boolean?
 
     override val isSigningReady: Boolean
         get() = storeFile != null &&
@@ -165,5 +162,19 @@ open class DefaultSigningConfig(private val mName: String) : SigningConfig {
             .add("enableV3Signing", enableV3Signing)
             .add("enableV4Signing", enableV4Signing)
             .toString()
+    }
+
+    class DebugSigningConfig(val storeFile: File) {
+        val storePassword: String get() = DEFAULT_PASSWORD
+        val keyAlias: String get() = DEFAULT_ALIAS
+        val keyPassword: String get() = DEFAULT_PASSWORD
+        val storeType: String get() = KeyStore.getDefaultType()
+        fun copyToSigningConfig(other: DefaultSigningConfig) {
+            other.storeFile = storeFile
+            other.storePassword = storePassword
+            other.keyAlias = keyAlias
+            other.keyPassword = keyPassword
+            other.storeType = storeType
+        }
     }
 }

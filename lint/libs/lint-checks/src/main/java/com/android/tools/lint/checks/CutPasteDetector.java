@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.RESOURCE_CLZ_ID;
 import static com.android.tools.lint.checks.ViewTypeDetector.FIND_VIEW_BY_ID;
 import static com.android.tools.lint.checks.ViewTypeDetector.REQUIRE_VIEW_BY_ID;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprUp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -102,8 +103,9 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
             @NonNull UCallExpression call,
             @NonNull PsiMethod calledMethod) {
         // If it's in a comparison, don't do anything
-        if (call.getUastParent() instanceof UBinaryExpression
-                && !UastExpressionUtils.isAssignment(call.getUastParent())) {
+        UElement callParent = skipParenthesizedExprUp(call.getUastParent());
+        if (callParent instanceof UBinaryExpression
+                && !UastExpressionUtils.isAssignment(callParent)) {
             return;
         }
 

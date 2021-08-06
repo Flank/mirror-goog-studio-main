@@ -83,6 +83,8 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
@@ -188,9 +190,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         return
                     }
 
-                    val expression = usage.getParentOfType(
-                        UExpression::class.java, true
-                    )
+                    val expression = skipParenthesizedExprUp(usage.getParentOfType(UExpression::class.java, true))
                     // Crap - how do we avoid double-checking here, we can't limit ourselves
                     // to just left or right because what if the other one doesn't have
                     // data?
@@ -260,6 +260,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (argument.elseExpression != null) {
                 checkColor(context, argument.elseExpression!!)
             }
+            return
+        } else if (argument is UParenthesizedExpression) {
+            checkColor(context, argument.expression)
             return
         }
 
@@ -374,6 +377,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 checkPx(context, argument.elseExpression!!)
             }
             return
+        } else if (argument is UParenthesizedExpression) {
+            checkPx(context, argument.expression)
+            return
         }
 
         val types = ResourceEvaluator.getResourceTypes(
@@ -432,7 +438,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         ) {
             val call = argument.getParentOfType<UExpression>(UCallExpression::class.java, false)
             if (call is UCallExpression &&
-                typeArrayFromArrayLiteral(call.receiver, context)
+                typeArrayFromArrayLiteral(call.receiver?.skipParenthesizedExprDown(), context)
             ) {
                 // You're generally supposed to provide a styleable to the TypedArray methods,
                 // but you're also allowed to supply an integer array
@@ -525,11 +531,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         } else if (node.isNewArrayWithDimensions()) {
             return true
         } else if (node is UParenthesizedExpression) {
-            val parenthesizedExpression = node as UParenthesizedExpression?
-            val operand = parenthesizedExpression!!.expression
-            return typeArrayFromArrayLiteral(operand, context)
+            return typeArrayFromArrayLiteral(node.expression, context)
         } else if (node.isTypeCast()) {
-            val castExpression = (node as UBinaryExpressionWithType?)!!
+            val castExpression = node as UBinaryExpressionWithType
             val operand = castExpression.operand
             return typeArrayFromArrayLiteral(operand, context)
         }
@@ -539,7 +543,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun getMethodCall(node: UElement?): UCallExpression? {
         if (node is UQualifiedReferenceExpression) {
-            val last = getLastInQualifiedChain((node as UQualifiedReferenceExpression?)!!)
+            val last = node.findSelector()
             if (last.isMethodCall()) {
                 return last as UCallExpression
             }
@@ -548,14 +552,6 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return if (node != null && node.isMethodCall()) {
             node as UCallExpression?
         } else null
-    }
-
-    private fun getLastInQualifiedChain(node: UQualifiedReferenceExpression): UExpression {
-        var last = node.selector
-        while (last is UQualifiedReferenceExpression) {
-            last = last.selector
-        }
-        return last
     }
 
     companion object {

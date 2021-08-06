@@ -18,6 +18,14 @@ Guide.
   match for test.kt; expected 0x26e3997d but was 0xb76b5946”). In these
   cases, just drop in the new checksum.
 
+* Source-modifying test modes. Lint's testing library now runs your
+  unit tests through a number of additional paces: it will try
+  inserting unnecessary parentheses, it will try replacing all
+  imported symbols with fully qualified names, it will try adding
+  argument names and reordering arguments to Kotlin calls, etc, and
+  making sure the same results are reported. More information about
+  this is available in [](test-modes.md.html).
+
 **7.0**
 
 * The API level has bumped to 10.

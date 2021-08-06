@@ -165,9 +165,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-
+                import android.content.ContentResolver;
                 public class MediaStoreVideoUsage {
-                    protected void example() {
+                    protected void example(ContentResolver contentResolver) {
                          contentResolver.query(
                  android.provider.MediaStore.Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -191,9 +191,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
                 import android.provider.MediaStore;
-
+                import android.content.ContentResolver;
                 public class MediaStoreVideoUsage {
-                    protected void example() {
+                    protected void example(ContentResolver contentResolver) {
                          contentResolver.query(
                             MediaStore.Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -217,9 +217,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
                 import android.provider.MediaStore.Video;
-
+                import android.content.ContentResolver;
                 public class MediaStoreVideoUsage {
-                    protected void example() {
+                    protected void example(ContentResolver contentResolver) {
                          contentResolver.query(
                             Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -243,9 +243,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
                 import static android.provider.MediaStore.*;
-
+                import android.content.ContentResolver;
                 public class MediaStoreVideoUsage {
-                    protected void example() {
+                    protected void example(ContentResolver contentResolver) {
                          contentResolver.query(
                             Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -308,8 +308,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             kotlin(
                 """
                 package test.pkg
+                import android.content.ContentResolver
                 class MediaStoreVideoUsage {
-                    fun example(): Unit {
+                    fun example(contentResolver: ContentResolver): Unit {
                          contentResolver.query(
                  android.provider.MediaStore.Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -333,9 +334,9 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
                 import android.provider.MediaStore
-
+                import android.content.ContentResolver
                 class MediaStoreVideoUsage {
-                    fun example(): Unit {
+                    fun example(contentResolver: ContentResolver): Unit {
                          contentResolver.query(
                           MediaStore.Video.Media.INTERNAL_CONTENT_URI,
                             null,
@@ -359,7 +360,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
                 import android.provider.MediaStore.Video
-
+                import android.content.ContentResolver
                 class MediaStoreVideoUsage {
                     fun example(): Unit {
                          contentResolver.query(
@@ -385,7 +386,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
                 import android.provider.MediaStore.*
-
+                import android.content.ContentResolver
                 class MediaStoreVideoUsage {
                     fun example(): Unit {
                          contentResolver.query(

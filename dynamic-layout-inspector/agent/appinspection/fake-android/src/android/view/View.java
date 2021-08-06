@@ -66,7 +66,7 @@ public class View {
     private int mHeight = 0;
     private int mScrollX = 0;
     private int mScrollY = 0;
-    private final ViewGroup.LayoutParams mLayoutParams = new ViewGroup.LayoutParams();
+    private ViewGroup.LayoutParams mLayoutParams = new ViewGroup.LayoutParams();
 
     private ViewRootImpl mViewRootImpl;
 
@@ -179,6 +179,10 @@ public class View {
 
     public ViewGroup.LayoutParams getLayoutParams() {
         return mLayoutParams;
+    }
+
+    public void setLayoutParams(ViewGroup.LayoutParams params) {
+        mLayoutParams = params;
     }
 
     @VisibleForTesting

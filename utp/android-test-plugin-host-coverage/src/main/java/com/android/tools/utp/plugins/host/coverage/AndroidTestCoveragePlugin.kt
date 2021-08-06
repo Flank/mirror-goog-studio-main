@@ -56,7 +56,7 @@ class AndroidTestCoveragePlugin(
     }
 
     private lateinit var testCoverageConfig: AndroidTestCoverageConfig
-    private var isTestServiceInstalled: Boolean = false
+    private var useTestStorageService: Boolean = false
 
     override fun configure(config: Config) {
         config as ProtoConfig
@@ -69,8 +69,17 @@ class AndroidTestCoveragePlugin(
         createEmptyDirectoryOnHost(File(testCoverageConfig.outputDirectoryOnHost))
         cleanPreviousCodeCoverageOnDevice(deviceController)
 
-        isTestServiceInstalled = deviceController.isTestServiceInstalled()
-        if (isTestServiceInstalled) {
+        if (testCoverageConfig.useTestStorageService &&
+                !deviceController.isTestServiceInstalled()) {
+            logger.warning(
+                "useTestStorageService is requested but TestStorageService is not installed on" +
+                " device.")
+        }
+
+        useTestStorageService = (
+                testCoverageConfig.useTestStorageService &&
+                deviceController.isTestServiceInstalled())
+        if (useTestStorageService) {
             val apiLevel = (deviceController.getDevice().properties as? AndroidDeviceProperties)
                 ?.deviceApiLevel?.toIntOrNull() ?: 0
             if (apiLevel >= 30) {
@@ -155,7 +164,7 @@ class AndroidTestCoveragePlugin(
 
     private fun copyCoverageFileToHost(
         deviceController: DeviceController, tmpDir: String) {
-        val coverageFilePath = if (isTestServiceInstalled) {
+        val coverageFilePath = if (useTestStorageService) {
             "${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${testCoverageConfig.singleCoverageFile}"
         } else {
             testCoverageConfig.singleCoverageFile
@@ -178,7 +187,7 @@ class AndroidTestCoveragePlugin(
 
     private fun copyCoverageFilesInDirectoryToHost(
         deviceController: DeviceController, tmpDir: String) {
-        val coverageDir = if (isTestServiceInstalled) {
+        val coverageDir = if (useTestStorageService) {
             "${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${testCoverageConfig.multipleCoverageFilesInDirectory}"
         } else {
             testCoverageConfig.multipleCoverageFilesInDirectory
@@ -204,16 +213,16 @@ class AndroidTestCoveragePlugin(
 
     /**
      * Executes adb shell command wrapped with run-as command if runAsPackageName
-     * is not blank in [testCoverageConfig] and [isTestServiceInstalled] is false,
+     * is not blank in [testCoverageConfig] and [useTestStorageService] is false,
      * otherwise it executes the command as-is.
      *
-     * When [isTestServiceInstalled] is true, test coverage file is always written under
+     * When [useTestStorageService] is true, test coverage file is always written under
      * non-package private directory ([TEST_STORAGE_SERVICE_OUTPUT_DIR]), so run-as
      * command is not needed (actually, you cannot use it as tested package may not have
      * access to sdcard).
      */
     private fun DeviceController.deviceShellWithRunAs(vararg commands: String): CommandResult {
-        val runAsPackage = if (isTestServiceInstalled) {
+        val runAsPackage = if (useTestStorageService) {
             ""
         } else {
             testCoverageConfig.runAsPackageName

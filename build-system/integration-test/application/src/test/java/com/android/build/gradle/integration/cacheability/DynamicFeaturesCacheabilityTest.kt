@@ -54,14 +54,12 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:preBuild",
 
                     ":feature1:clean",
-                    ":feature1:compileDebugSources",
                     ":feature1:generateDebugAssets",
                     ":feature1:generateDebugResources",
                     ":feature1:preBuild",
                     ":feature1:preDebugBuild",
 
                     ":feature2:clean",
-                    ":feature2:compileDebugSources",
                     ":feature2:generateDebugAssets",
                     ":feature2:generateDebugResources",
                     ":feature2:preBuild",
@@ -169,16 +167,19 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
+                    ":app:createDebugApkListingFileRedirect",
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:writeDebugModuleMetadata",
 
+                    ":feature1:createDebugApkListingFileRedirect",
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
 
+                    ":feature2:createDebugApkListingFileRedirect",
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",
@@ -201,7 +202,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
                     ":app:compileDebugShaders",
-                    ":app:compileDebugSources",
                     ":app:mergeDebugNativeDebugMetadata",
                     ":app:mergeDebugNativeLibs",
                     ":app:processDebugJavaRes",

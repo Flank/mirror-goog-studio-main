@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V2_SDK
 import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V3_SDK
@@ -36,10 +37,15 @@ class SigningConfigImplTest(
     private val targetApi: Int?
 ) {
 
+    fun signingConfig(name: String) =
+        createDslServices().let {
+                services -> services.newDecoratedInstance(SigningConfig::class.java, name, services)
+        }
+
     @Test
     fun testSignatureVersions() {
         val dslSigningConfig =
-            SigningConfig("test").also {
+            signingConfig("test").also {
                 it.enableV1Signing = enableV1Signing
                 it.enableV2Signing = enableV2Signing
                 it.enableV3Signing = enableV3Signing

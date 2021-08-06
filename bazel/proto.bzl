@@ -142,7 +142,7 @@ def java_proto_library(
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
         protoc_grpc_version = None,
-        proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
+        proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
         **kwargs):
     """Compiles protobuf into a .jar file and optionally creates a maven artifact.
 
@@ -295,6 +295,7 @@ def maven_proto_library(
         srcs = None,
         proto_deps = [],
         java_deps = [],
+        java_exports = [],
         coordinates = "",
         visibility = None,
         grpc_support = False,
@@ -326,7 +327,7 @@ def maven_proto_library(
         visibility = visibility,
     )
 
-    grpc_extra_deps = ["@//prebuilts/tools/common/m2:javax.annotation.javax.annotation-api.1.3.2"]
+    grpc_extra_deps = ["@maven//:javax.annotation.javax.annotation-api"]
     java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
     java_deps += proto_java_runtime_library
 
@@ -335,6 +336,7 @@ def maven_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
+            exports = java_exports,
             coordinates = coordinates,
             legacy_name = legacy_name,
             visibility = visibility,
@@ -345,6 +347,7 @@ def maven_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
+            exports = java_exports,
             javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
             visibility = visibility,
             **kwargs

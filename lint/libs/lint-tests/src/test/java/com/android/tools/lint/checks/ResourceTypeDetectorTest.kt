@@ -107,13 +107,16 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
 
                     private void foo2(@androidx.annotation.ColorInt int c) {
                     }
-
-                    private static class R {
-                        private static class color {
-                            public static final int red=0x7f060000;
-                            public static final int green=0x7f060001;
-                            public static final int blue=0x7f060002;
-                        }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                public class R {
+                    public static class color {
+                        public static final int red=0x7f060000;
+                        public static final int green=0x7f060001;
+                        public static final int blue=0x7f060002;
                     }
                 }
                 """
@@ -2133,6 +2136,42 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 test[color, sb] // ERROR 7
                      ~~~~~
             8 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testAnnotationReceiver() {
+        // Regression test for b/195014464
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.ColorRes
+                import androidx.annotation.DrawableRes
+                import androidx.annotation.StringRes
+
+                fun @receiver:StringRes Int.colorize1(o: Int) { }
+                infix fun @receiver:StringRes Int.colorize2(o: Int) { }
+
+                fun testExtensionFunction1(@DrawableRes panel: Int, c: Int) {
+                    panel.colorize1(c) // ERROR 1
+                }
+                fun testExtensionFunction2(@DrawableRes panel: Int, c: Int) {
+                    panel colorize2 c // ERROR 2
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:11: Error: Expected resource of type string [ResourceType]
+                panel.colorize1(c) // ERROR 1
+                ~~~~~
+            src/test/pkg/test.kt:14: Error: Expected resource of type string [ResourceType]
+                panel colorize2 c // ERROR 2
+                ~~~~~
+            2 errors, 0 warnings
             """
         )
     }

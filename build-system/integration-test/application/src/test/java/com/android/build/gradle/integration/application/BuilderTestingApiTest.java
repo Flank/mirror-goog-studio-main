@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
@@ -49,7 +50,11 @@ public class BuilderTestingApiTest {
     @Test
     public void deviceCheck() throws IOException, InterruptedException {
         assumeNotWindows(); // b/145233124
-        GradleBuildResult result = project.executor().run("deviceCheck");
+        GradleBuildResult result =
+                project.executor()
+                        // The builder testing DeviceProvider API is not supported by UTP.
+                        .with(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM, false)
+                        .run("deviceCheck");
         ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
         ScannerSubjectUtils.forEachLine(
                 result.getStdout(),

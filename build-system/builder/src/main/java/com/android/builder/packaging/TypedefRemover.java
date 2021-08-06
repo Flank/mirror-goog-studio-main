@@ -17,7 +17,6 @@
 package com.android.builder.packaging;
 
 import static com.android.SdkConstants.DOT_CLASS;
-import static org.objectweb.asm.Opcodes.ASM5;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -35,6 +34,7 @@ import java.util.Set;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Finds and deletes typedef annotation classes (and also warns if their retention is wrong, such
@@ -226,16 +226,17 @@ public class TypedefRemover implements JarMerger.Transformer {
     }
 
     private byte[] rewriteOuterClass(@NonNull ClassReader reader) {
-        ClassWriter classWriter = new ClassWriter(ASM5);
-        ClassVisitor classVisitor = new ClassVisitor(ASM5, classWriter) {
-            @Override
-            public void visitInnerClass(String name, String outerName, String innerName,
-                    int access) {
-                if (!mAnnotationNames.contains(name)) {
-                    super.visitInnerClass(name, outerName, innerName, access);
-                }
-            }
-        };
+        ClassWriter classWriter = new ClassWriter(Opcodes.ASM7);
+        ClassVisitor classVisitor =
+                new ClassVisitor(Opcodes.ASM7, classWriter) {
+                    @Override
+                    public void visitInnerClass(
+                            String name, String outerName, String innerName, int access) {
+                        if (!mAnnotationNames.contains(name)) {
+                            super.visitInnerClass(name, outerName, innerName, access);
+                        }
+                    }
+                };
         reader.accept(classVisitor, 0);
         return classWriter.toByteArray();
     }

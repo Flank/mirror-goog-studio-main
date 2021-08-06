@@ -726,11 +726,14 @@ public class VariantDependenciesBuilder {
         attrContainer.attribute(Usage.USAGE_ATTRIBUTE, usage);
 
         // Add standard attributes defined by Gradle.
-        attrContainer.attribute(LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
         attrContainer.attribute(BUNDLING_ATTRIBUTE, bundling);
         attrContainer.attribute(CATEGORY_ATTRIBUTE, category);
+        // Use DocsType to qualify the type of the documentation when publishing sources/javadoc
+        // and use LibraryElements to represent the type of a library variant when publishing aar
         if (docsType != null) {
             attrContainer.attribute(DocsType.DOCS_TYPE_ATTRIBUTE, docsType);
+        } else {
+            attrContainer.attribute(LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
         }
 
         if (buildType != null) {

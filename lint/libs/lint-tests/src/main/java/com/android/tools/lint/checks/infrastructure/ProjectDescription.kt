@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants
+import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile
@@ -190,7 +191,7 @@ class ProjectDescription : Comparable<ProjectDescription> {
             }
             val added = targets.add(file.targetRelativePath)
             if (!added) {
-                if (file.targetRelativePath.endsWith("/test.kt") && ClassName(file.contents).className == null) {
+                if (file.targetRelativePath.endsWith("/test.kt") && ClassName(file.contents, DOT_KT).className == null) {
                     // Just a default name assigned to a Kotlin compilation unit with no class: pick a new unique name
                     var next = 2
                     val base = file.targetRelativePath.substring(0, file.targetRelativePath.length - 7)

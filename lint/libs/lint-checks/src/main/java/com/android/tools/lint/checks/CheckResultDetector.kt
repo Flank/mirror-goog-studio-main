@@ -32,7 +32,6 @@ import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnot
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
-import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
@@ -51,6 +50,7 @@ import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUTernaryIfExpression
+import org.jetbrains.uast.skipParenthesizedExprUp
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -172,17 +172,14 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     companion object {
         fun isExpressionValueUnused(element: UElement): Boolean {
             if (element is UParenthesizedExpression) {
-                return element.uastParent?.let(::isExpressionValueUnused) ?: true
+                return isExpressionValueUnused(element.expression)
             }
 
-            var prev = element.getParentOfType(
-                UExpression::class.java, false
-            ) ?: return true
-
-            var curr = skipParentheses(prev.uastParent) ?: return true
-            while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
+            var prev: UElement = element.getParentOfType(UExpression::class.java, false) ?: return true
+            var curr: UElement = prev.uastParent ?: return true
+            while (curr is UQualifiedReferenceExpression && curr.selector === prev || curr is UParenthesizedExpression) {
                 prev = curr
-                curr = skipParentheses(curr.uastParent) ?: return true
+                curr = curr.uastParent ?: return true
             }
 
             @Suppress("RedundantIf")
@@ -210,7 +207,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 // It's the last child: see if the parent is unused
-                val parent = skipParentheses(curr.uastParent)
+                val parent = skipParenthesizedExprUp(curr.uastParent)
                 if (parent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
                     val expressionType = parent.getExpressionType()?.canonicalText
                     if (expressionType != null &&
@@ -247,7 +244,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     // so we know that the value is used
                     return false
                 }
-                val parent = skipParentheses(curr.uastParent) ?: return true
+                val parent = skipParenthesizedExprUp(curr.uastParent) ?: return true
                 if (parent is UMethod || parent is UClassInitializer) {
                     return true
                 }
@@ -257,7 +254,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             } else {
                 @Suppress("UnstableApiUsage")
                 if (curr is UYieldExpression) {
-                    val p2 = skipParentheses((skipParentheses(curr.uastParent))?.uastParent)
+                    val p2 = skipParenthesizedExprUp((skipParenthesizedExprUp(curr.uastParent))?.uastParent)
                     val body = p2 as? USwitchClauseExpressionWithBody ?: return false
                     val switch = body.getParentOfType(USwitchExpression::class.java) ?: return true
                     return isExpressionValueUnused(switch)

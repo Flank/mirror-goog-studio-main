@@ -47,7 +47,7 @@ object BackgroundTaskUtil {
                 this.taskId = taskId
                 setMetaData()
             }
-            timestamp = System.nanoTime()
+            timestamp = System.currentTimeMillis()
         }
         sendEvent(eventBuilder.build().toByteArray())
     }

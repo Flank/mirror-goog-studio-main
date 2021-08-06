@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
-import org.junit.Assert;
 
 public class LintSyntaxHighlighterTest extends TestCase {
     private static final boolean DEBUG = false;
@@ -102,7 +101,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "foo.xml", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 10 </span>        <span class=\"prefix\">android:</span><span class=\"attribute\">label</span>=<span class=\"value\">\"@string/app_name\"</span>\n"
@@ -153,7 +152,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "foo.txt", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 10 </span>        android:label=\"@string/app_name\"\n"
@@ -193,7 +192,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  4 </span><span class=\"javadoc\">/**\n"
@@ -245,7 +244,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 11 </span>        <span class=\"keyword\">char</span> y = <span class=\"string\">'\\u1234'</span>;\n"
@@ -287,7 +286,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", true);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  5 </span>  <span class=\"keyword\">char</span> y = <span class=\"string\">'\\u1234'</span>;\n"
@@ -324,7 +323,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  3 </span><span class=\"javadoc\"> */</span>\n"
                         + "<span class=\"lineno\">  4 </span><span class=\"annotation\">@SuppressWarnings</span>(<span class=\"string\">\"all\"</span>)\n"
@@ -357,7 +356,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(
+        assertEquals(
                 ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 1 </span>map.<span class=\"string\">'single quote'</span>\n"
@@ -366,6 +365,31 @@ public class LintSyntaxHighlighterTest extends TestCase {
                         + "<span class=\"caretline\"><span class=\"lineno\"> 4 </span>map.<span class=\"string\">\"\"\"</span><span class=\"error\"><span class=\"string\">triple double quote</span></span><span class=\"string\">\"\"\"</span></span>\n"
                         + "<span class=\"lineno\"> 5 </span>map./slashy string/\n"
                         + "<span class=\"lineno\"> 6 </span>map.$/dollar slashy string/$    \n"
+                        + "</pre>\n",
+                html);
+    }
+
+    public void testKotlin() {
+        //noinspection all // Sample code
+        @Language("kotlin")
+        String source =
+                ""
+                        + "/* Comment /* Nested comment fun commentedOut() { } */  */\n"
+                        + "val x = \"\"\"\n"
+                        + "    This is a string\n"
+                        + "\"\"\".trimIndent()\n";
+        int beginOffset = source.indexOf("This is a");
+        int endOffset = source.indexOf('\"', beginOffset);
+        @Language("HTML")
+        String html = highlight(source, beginOffset, endOffset, false, "Foo.kt", false);
+
+        assertEquals(
+                ""
+                        + "<pre class=\"errorlines\">\n"
+                        + "<span class=\"lineno\"> 1 </span><span class=\"comment\">/* Comment /* Nested comment fun commentedOut() { } */  */</span>\n"
+                        + "<span class=\"lineno\"> 2 </span><span class=\"keyword\">val</span> x = <span class=\"string\">\"\"\"\n"
+                        + "</span><span class=\"caretline\"><span class=\"lineno\"> 3 </span><span class=\"string\">    </span><span class=\"warning\"><span class=\"string\">This is a string</span></span></span><span class=\"string\">\n"
+                        + "</span><span class=\"lineno\"> 4 </span><span class=\"string\">\"\"\"</span>.trimIndent()\n"
                         + "</pre>\n",
                 html);
     }

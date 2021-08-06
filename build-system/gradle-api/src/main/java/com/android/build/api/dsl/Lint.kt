@@ -107,10 +107,7 @@ import java.io.File
  */
 interface Lint {
     /**
-     * The set of issue IDs to suppress.
-     *
-     * Issues passed to [disable]  to this list, call
-     * Callers are allowed to modify this collection.
+     * The set of issue IDs to suppress. Callers are allowed to modify this collection.
      *
      */
     @get:Incubating
@@ -124,7 +121,7 @@ interface Lint {
 
     /**
      * The exact set of issues to check set by [checkOnly].
-     *s
+     *
      * If empty, lint will detect the issues that are enabled by default plus
      * any issues enabled via [enable] and without issues disabled via [disable].
      */

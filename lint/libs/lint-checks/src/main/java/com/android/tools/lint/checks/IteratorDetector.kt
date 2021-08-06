@@ -33,6 +33,8 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 
 /** Warns about a couple of broken iterators on Android N. */
@@ -90,7 +92,7 @@ class IteratorDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
-        val receiver = node.receiver ?: return
+        val receiver = node.receiver?.skipParenthesizedExprDown() ?: return
 
         val name = method.name
 
@@ -105,14 +107,14 @@ class IteratorDetector : Detector(), SourceCodeScanner {
 
         val resolved = receiver.tryResolve() ?: return
         val variable = resolved as? PsiVariable ?: return
-        val initializer = UastLintUtils.findLastAssignment(variable, node) ?: return
+        val initializer = UastLintUtils.findLastAssignment(variable, node)?.skipParenthesizedExprDown() ?: return
         if (initializer is UQualifiedReferenceExpression) {
-            val r = initializer.receiver
+            val r = initializer.receiver.skipParenthesizedExprDown()
             val type = TypeEvaluator.evaluate(r) ?: return
             val canonical = (type as? PsiClassType)?.rawType()?.canonicalText
             if (canonical == "java.util.LinkedHashMap") {
                 // Look for acceptable uses: passing to the workaround functions
-                val pp = node.uastParent?.uastParent
+                val pp = skipParenthesizedExprUp(skipParenthesizedExprUp(node.uastParent)?.uastParent)
                 if (pp is UQualifiedReferenceExpression &&
                     (pp.selector as? UCallExpression)?.methodName == "characteristics"
                 ) {

@@ -48,6 +48,8 @@ fun assertRunnerConfigProto(
     runnerConfig: RunnerConfigProto.RunnerConfig,
     deviceId: String = "mockDeviceSerialNumber",
     useOrchestrator: Boolean = false,
+    useTestStorageService: Boolean = false,
+    noWindowAnimation: Boolean = false,
     instrumentationArgs: Map<String, String> = mapOf(),
     iceboxConfig: String = "",
     useGradleManagedDeviceProvider: Boolean = false,
@@ -307,6 +309,8 @@ fun assertRunnerConfigProto(
                       value: "${value}"
                     }
                     """}.joinToString("\n")}
+                    ${if (noWindowAnimation) "no_window_animation: true" else ""}
+                    ${if (useTestStorageService) "use_test_storage_service: true" else ""}
                   }
                 }
                 am_instrument_timeout: 31536000

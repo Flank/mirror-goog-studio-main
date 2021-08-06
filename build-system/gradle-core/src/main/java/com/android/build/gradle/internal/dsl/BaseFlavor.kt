@@ -36,6 +36,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import java.io.File
 import org.gradle.api.Action
+import org.gradle.api.plugins.ExtensionAware
 
 /** Base DSL object used to configure product flavors.  */
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :

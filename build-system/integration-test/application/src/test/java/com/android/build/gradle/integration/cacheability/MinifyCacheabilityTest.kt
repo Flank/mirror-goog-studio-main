@@ -46,7 +46,6 @@ class MinifyCacheabilityTest {
         // Sort by alphabetical order for easier searching
         UP_TO_DATE to setOf(
             ":clean",
-            ":compileMinifiedSources",
             ":generateMinifiedAssets",
             ":generateMinifiedResources",
             ":preBuild",
@@ -81,6 +80,7 @@ class MinifyCacheabilityTest {
             }
         ),
         DID_WORK to setOf(
+            ":createMinifiedApkListingFileRedirect",
             ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
             ":mergeMinifiedJavaResource", /* Bug 181142260 */

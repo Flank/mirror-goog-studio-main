@@ -134,6 +134,106 @@ class KotlinDslTest {
     }
 
     @Test
+    fun testDslLockingCollections() {
+        plugin.createAndroidTasks()
+        assertFailsWith(AgpDslLockedException::class) {
+            android.buildTypes.create("customBuildType")
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to add new build types
+                    They have already been used to configure this project.
+                    Consider moving this call to finalizeDsl or during evaluation.
+                """.trimIndent()
+            )
+        }
+        assertFailsWith(AgpDslLockedException::class) {
+            android.productFlavors.create("orange")
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to add new product flavors
+                    They have already been used to configure this project.
+                    Consider moving this call to finalizeDsl or during evaluation.
+                """.trimIndent()
+            )
+        }
+        assertFailsWith(AgpDslLockedException::class) {
+            android.signingConfigs.create("qa")
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to add new signing configs
+                    They have already been used to configure this project.
+                    Consider moving this call to finalizeDsl or during evaluation.
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun testDslLockingWithinCollections() {
+        val debug = android.buildTypes.getByName("debug")
+        android.flavorDimensions += "fruit"
+        val orange = android.productFlavors.create("orange")
+        orange.dimension = "fruit"
+        val qa = android.signingConfigs.create("qa")
+        plugin.createAndroidTasks()
+
+        assertFailsWith(AgpDslLockedException::class) {
+            debug.isCrunchPngs = true
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to set crunchPngs
+                    It has already been read to configure this project.
+                    Consider either moving this call to be during evaluation,
+                    or using the variant API.
+                """.trimIndent()
+            )
+        }
+
+        assertFailsWith(AgpDslLockedException::class) {
+            android.defaultConfig.applicationId = "com.example.fruit"
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to set applicationId
+                    It has already been read to configure this project.
+                    Consider either moving this call to be during evaluation,
+                    or using the variant API.
+                """.trimIndent()
+            )
+        }
+
+        assertFailsWith(AgpDslLockedException::class) {
+            orange.applicationId = "com.example.orange"
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to set applicationId
+                    It has already been read to configure this project.
+                    Consider either moving this call to be during evaluation,
+                    or using the variant API.
+                """.trimIndent()
+            )
+        }
+
+        assertFailsWith(AgpDslLockedException::class) {
+            qa.enableV1Signing = true
+        }.also { exception ->
+            assertThat(exception).hasMessageThat().isEqualTo(
+                """
+                    It is too late to set enableV1Signing
+                    It has already been read to configure this project.
+                    Consider either moving this call to be during evaluation,
+                    or using the variant API.
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
     fun `compileAgainst externalNativeBuild ndkBuild ImplClass`() {
 
         val externalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild =

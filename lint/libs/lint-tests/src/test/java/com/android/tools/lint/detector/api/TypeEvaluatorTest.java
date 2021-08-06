@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.kotlin;
+
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
@@ -37,8 +41,11 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 public class TypeEvaluatorTest extends TestCase {
     private static void checkUast(
             Object expected, @Language("JAVA") String source, final String targetVariable) {
-        Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
+        checkUast(expected, java("src/test/pkg/Test.java", source), targetVariable);
+    }
+
+    private static void checkUast(Object expected, TestFile source, final String targetVariable) {
+        Pair<JavaContext, Disposable> pair = LintUtilsTest.parse(source);
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
 
@@ -277,6 +284,24 @@ public class TypeEvaluatorTest extends TestCase {
 
     public void testConstructorInvocation() {
         checkStatements(String.class, "Object o = new String(\"test\");\nObject bar = o;\n", "bar");
+    }
+
+    public void testConstructorFqnInvocation() {
+        checkStatements(
+                String.class,
+                "Object o = new java.lang.String(\"test\");\nObject bar = o;\n",
+                "bar");
+
+        checkUast(
+                String.class,
+                kotlin(
+                        ""
+                                + "fun test() {\n"
+                                + "    val o = java.lang.String(\"test\")\n"
+                                + "    val p: Any = o\n"
+                                + "    val bar = p\n"
+                                + "}"),
+                "bar");
     }
 
     public void testFieldInitializerType() {

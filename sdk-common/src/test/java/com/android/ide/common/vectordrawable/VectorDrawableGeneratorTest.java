@@ -164,13 +164,17 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     //////////////////////////////////////////////////////////
-    // Tests starts here:
+    // Tests start here:
     public void testSvgFillAlpha() throws Exception {
         checkSvgConversion("ic_add_to_notepad_black");
     }
 
     public void testSvgArcto1() throws Exception {
         checkSvgConversion("test_arcto_1");
+    }
+
+    public void testSvgArcto2() throws Exception {
+        checkSvgConversion("test_arcto_2");
     }
 
     public void testSvgControlPoints01() throws Exception {
@@ -988,6 +992,16 @@ public class VectorDrawableGeneratorTest extends TestCase {
         Locale.setDefault(Locale.FRANCE);
         try {
             checkSvgConversion("test_locale_with_decimal_comma");
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
+
+    public void testLocaleWithDashAsMinus() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(new Locale("SE", "sv"));
+        try {
+            checkSvgConversion("test_locale_with_dash_as_minus");
         } finally {
             Locale.setDefault(defaultLocale);
         }

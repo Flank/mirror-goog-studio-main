@@ -25,7 +25,7 @@ coverage_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 

@@ -24,7 +24,7 @@ import org.gradle.api.model.ObjectFactory;
 /** Factory to create ProductFlavor object using an {@link ObjectFactory} to add the DSL methods. */
 public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFlavor> {
 
-    @NonNull private DslServices dslServices;
+    @NonNull private final DslServices dslServices;
 
     public ProductFlavorFactory(@NonNull DslServices dslServices) {
         this.dslServices = dslServices;
@@ -33,6 +33,6 @@ public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFla
     @NonNull
     @Override
     public ProductFlavor create(@NonNull String name) {
-        return dslServices.newInstance(ProductFlavor.class, name, dslServices);
+        return dslServices.newDecoratedInstance(ProductFlavor.class, name, dslServices);
     }
 }

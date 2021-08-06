@@ -57,6 +57,8 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 
 /** Looks for SDK_INT checks and suggests annotating these. */
@@ -143,12 +145,12 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                 return
             }
             val isGreaterOrEquals = tokenType === UastBinaryOperator.GREATER_OR_EQUALS
-            val parent = comparison.uastParent
+            val parent = skipParenthesizedExprUp(comparison.uastParent)
             if (parent is UField) {
                 checkField(comparison, context, isGreaterOrEquals, parent)
                 return
             } else if (parent is UReturnExpression) {
-                val parentParent = parent.uastParent
+                val parentParent = skipParenthesizedExprUp(parent.uastParent)
                 if (parentParent is UBlockExpression && parentParent.uastParent is UMethod) {
                     val size = parentParent.expressions.size
                     if (size == 1) {
@@ -157,29 +159,29 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                     }
                 }
             } else if (parent is UIfExpression) {
-                val then = (parent.thenExpression as? UBlockExpression)?.expressions?.firstOrNull()
-                    ?: parent.thenExpression
+                val then = (parent.thenExpression as? UBlockExpression)?.expressions?.firstOrNull()?.skipParenthesizedExprDown()
+                    ?: parent.thenExpression?.skipParenthesizedExprDown()
                     ?: return
                 val receiver = when (then) {
-                    is UQualifiedReferenceExpression -> then.receiver
-                    is UCallExpression -> then.receiver ?: return
+                    is UQualifiedReferenceExpression -> then.receiver.skipParenthesizedExprDown() ?: return
+                    is UCallExpression -> then.receiver?.skipParenthesizedExprDown() ?: return
                     else -> return
                 }
 
-                val method: UMethod = if (parent.uastParent is UReturnExpression) {
-                    parent.uastParent?.uastParent as? UMethod
-                        ?: parent.uastParent?.uastParent?.uastParent as? UMethod
+                val parentParent = skipParenthesizedExprUp(parent.uastParent)
+                val method: UMethod = if (parentParent is UReturnExpression) {
+                    parentParent.uastParent as? UMethod
+                        ?: parentParent.uastParent?.uastParent as? UMethod
                         ?: return
-                } else if (parent.uastParent is UBlockExpression &&
-                    parent.uastParent?.uastParent is UMethod
+                } else if (parentParent is UBlockExpression &&
+                    parentParent.uastParent is UMethod
                 ) {
-                    val block = parent.uastParent as UBlockExpression
-                    val expressions = block.expressions
+                    val expressions = parentParent.expressions
                     if (expressions.size == 1 ||
-                        expressions.size == 2 && expressions[1] is UReturnExpression
+                        expressions.size == 2 && expressions[1].skipParenthesizedExprDown() is UReturnExpression
                     ) {
-                        parent.uastParent?.uastParent as? UMethod
-                            ?: parent.uastParent?.uastParent?.uastParent as? UMethod
+                        parentParent.uastParent as? UMethod
+                            ?: parentParent.uastParent?.uastParent as? UMethod
                             ?: return
                     } else {
                         return
@@ -218,7 +220,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             method: UMethod,
             lambda: Int = -1
         ) {
-            val apiOperand = comparison.rightOperand
+            val apiOperand = comparison.rightOperand.skipParenthesizedExprDown() ?: return
             val apiValue = apiOperand.evaluate() ?: ConstantEvaluator.evaluate(context, apiOperand)
             val api = apiValue as? Int
             if (api != null) {
@@ -301,7 +303,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             isGreaterOrEquals: Boolean,
             field: UField
         ) {
-            val apiOperand = comparison.rightOperand
+            val apiOperand = comparison.rightOperand.skipParenthesizedExprDown() ?: return
             val value = apiOperand.evaluate()
                 ?: ConstantEvaluator.evaluate(context, apiOperand)
             val api = value as? Int ?: return

@@ -85,7 +85,7 @@ class UastLintUtils {
                 return null
             }
 
-            val containingFile = element as? PsiFile ?: element.containingFile
+            val containingFile = element as? PsiFile ?: element.containingFile ?: return null
 
             // In Kotlin files identifiers are sometimes using LightElements that are hosted in
             // a placeholder file, these do not have the right PsiFile as containing elements
@@ -424,4 +424,17 @@ class UastLintUtils {
             qualifiedName: String
         ): Boolean = list.stream().anyMatch { e -> e.qualifiedName == qualifiedName }
     }
+}
+
+fun PsiParameter.isReceiver(): Boolean {
+    // It's tempting to just check
+    //    this is KtUltraLightReceiverParameter
+    // here, but besides that being an internal class, that approach
+    // would only work for source references; for compiled Kotlin
+    // code (including the runtime library) these will just be
+    // ClsParameterImpl, so we have to resort to name patterns anyway.
+
+    // Fully qualified names here because we can't suppress usage in import list
+    val name = name
+    return name.startsWith("\$this") || name.startsWith("\$self")
 }

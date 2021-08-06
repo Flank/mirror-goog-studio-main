@@ -83,7 +83,7 @@ class RunUtpWorkActionTest {
         createRunUtpWorkAction().execute()
 
         verify(mockJavaExecSpec).classpath(File("launcherJar"))
-        verify(mockJavaExecSpec).setMain(UtpDependency.LAUNCHER.mainClass)
+        verify(mockJavaExecSpec.mainClass).set(UtpDependency.LAUNCHER.mainClass)
         verify(mockJavaExecSpec).args(listOf(
             "coreJar", "--proto_config=runnerConfig", "--proto_server_config=serverConfig"))
         verify(mockJavaExecSpec).jvmArgs(listOf(

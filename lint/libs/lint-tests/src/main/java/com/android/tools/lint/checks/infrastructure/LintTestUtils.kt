@@ -18,7 +18,8 @@
 
 package com.android.tools.lint.checks.infrastructure
 
-import com.android.SdkConstants
+import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
 import com.android.tools.lint.LintCliClient
@@ -128,12 +129,12 @@ fun <T> checkTransitiveComparator(list: List<T>, comparator: Comparator<T>) {
 private class JavaTestContext(
     driver: LintDriver,
     project: Project,
-    private val mJavaSource: String,
+    private val javaSource: String,
     file: File
 ) : JavaContext(driver, project, null, file) {
 
     override fun getContents(): String {
-        return mJavaSource
+        return javaSource
     }
 }
 
@@ -174,16 +175,9 @@ private fun createTestProjectForFiles(
     kotlinLanguageLevel: LanguageVersionSettings? = null,
     sdkHome: File? = null
 ): Project {
-    sourcesMap.forEach { (fullPath, source) ->
-        fullPath.parentFile.mkdirs()
-        fullPath.writeText(source)
-    }
-
     val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
         override fun readFile(file: File): CharSequence {
-            return if (file in sourcesMap) {
-                sourcesMap[file] as CharSequence
-            } else super.readFile(file)
+            return sourcesMap[file] ?: super.readFile(file)
         }
 
         override fun getCompileTarget(project: Project): IAndroidTarget? {
@@ -220,7 +214,7 @@ private fun createTestProjectForFiles(
             project: Project,
             includeProvided: Boolean
         ): List<File> {
-            return libs + findKotlinStdlibPath().map { File(it) }
+            return super.getJavaLibraries(project, includeProvided) + libs + findKotlinStdlibPath().map(::File)
         }
 
         override fun getJavaSourceFolders(project: Project): List<File> {
@@ -260,47 +254,53 @@ fun parseFirst(
     vararg testFiles: TestFile = emptyArray(),
     sdkHome: File? = null
 ): Pair<JavaContext, Disposable> {
-    val result = parse(javaLanguageLevel, kotlinLanguageLevel, library, android, sdkHome, temporaryFolder, *testFiles)
-    return Pair(result.first.first(), result.second)
+    val (contexts, disposable) = parse(javaLanguageLevel, kotlinLanguageLevel, library, sdkHome, android, temporaryFolder, *testFiles)
+    val first = contexts.firstOrNull { it.file.path.endsWith(testFiles[0].targetRelativePath) } ?: contexts.first()
+    return Pair(first, disposable)
 }
 
 fun parse(
     javaLanguageLevel: LanguageLevel? = null,
     kotlinLanguageLevel: LanguageVersionSettings? = null,
     library: Boolean = false,
-    android: Boolean = true,
     sdkHome: File? = null,
+    android: Boolean = sdkHome != null,
     temporaryFolder: TemporaryFolder,
     vararg testFiles: TestFile
 ): Pair<List<JavaContext>, Disposable> {
-    val dir = temporaryFolder.newFolder("src")
+    val dir = temporaryFolder.newFolder()
+    val projects = TestLintTask().files(*testFiles).createProjects(dir)
+    return parse(projects[0], javaLanguageLevel, kotlinLanguageLevel, library, sdkHome, android)
+}
 
-    val libs: List<File> = if (testFiles.size > 1) {
-        val projects = TestLintTask().files(*testFiles).createProjects(dir)
-        testFiles.filter { it.targetRelativePath.endsWith(SdkConstants.DOT_JAR) }
-            .map { File(projects[0], it.targetRelativePath) }
-    } else {
-        emptyList()
-    }
-
-    val sources = testFiles
-        .filter { !it.targetRelativePath.endsWith(SdkConstants.DOT_JAR) }
-        .associate { Pair(File(dir, it.targetRelativePath), it.contents) }
-
+fun parse(
+    dir: File,
+    javaLanguageLevel: LanguageLevel? = null,
+    kotlinLanguageLevel: LanguageVersionSettings? = null,
+    library: Boolean = false,
+    sdkHome: File? = null,
+    android: Boolean = sdkHome != null,
+    sourceOverride: Map<File, String> = emptyMap(),
+    extraLibs: List<File> = emptyList()
+): Pair<List<JavaContext>, Disposable> {
     val project =
-        createTestProjectForFiles(dir, sources, libs, library, android, javaLanguageLevel, kotlinLanguageLevel, sdkHome)
+        createTestProjectForFiles(dir, sourceOverride, extraLibs, library, android, javaLanguageLevel, kotlinLanguageLevel, sdkHome)
     val client = project.client as LintCliClient
-    val request = LintRequest(client, sources.keys.toList())
+    val request = LintRequest(client, sourceOverride.keys.toList())
     val driver = LintDriver(TestIssueRegistry(), LintCliClient(LintClient.CLIENT_UNIT_TESTS), request)
     driver.scope = EnumSet.of(Scope.ALL_JAVA_FILES)
 
     val uastParser = client.getUastParser(project)
     TestCase.assertNotNull(uastParser)
-    val contexts = sources.map { (fullPath, source) ->
-        val context = JavaTestContext(driver, project, source, fullPath)
-        context.uastParser = uastParser
-        context
-    }
+    val contexts = dir.walk().mapNotNull { file ->
+        if (file.path.endsWith(DOT_KT) || file.path.endsWith(DOT_JAVA)) {
+            val context: JavaContext = JavaTestContext(driver, project, sourceOverride[file] ?: file.readText(), file)
+            context.uastParser = uastParser
+            context
+        } else {
+            null
+        }
+    }.toList()
     uastParser.prepare(contexts)
     contexts.forEach { context ->
         val uFile = uastParser.parse(context)

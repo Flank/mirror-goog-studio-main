@@ -292,29 +292,19 @@ public class Main {
             // folder, whereas with --report-only we'll take the parent
             // directory, so the path resolves to different values
             for (LintModelModule module : argumentState.modules) {
-                String variableName = getPathVariableName(module);
-                pathVariables.add(variableName, module.getDir(), false);
+                // Add project directory path variable
+                pathVariables.add(
+                        "{" + module.getModulePath() + "*projectDir}", module.getDir(), false);
+                // Add build directory path variable
+                pathVariables.add(
+                        "{" + module.getModulePath() + "*buildDir}",
+                        module.getBuildFolder(),
+                        false);
             }
 
             // Create some default variables
             pathVariables.add("HOME", new File(System.getProperty("user.home")), true);
         }
-    }
-
-    @NonNull
-    private String getPathVariableName(@NonNull LintModelModule module) {
-        String path = module.getModulePath();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < path.length(); i++) {
-            char c = path.charAt(i);
-            if (Character.isJavaIdentifierPart(c)) {
-                sb.append(Character.toUpperCase(c));
-            } else if (i > 0) {
-                sb.append('_');
-            }
-        }
-
-        return sb.toString();
     }
 
     // Debugging utility
@@ -407,8 +397,14 @@ public class Main {
             return driver;
         }
 
-        public ArgumentState getArgumentState() {
-            return argumentState;
+        @NonNull
+        @Override
+        public PathVariables getPathVariables() {
+            PathVariables pathVariables = argumentState.pathVariables;
+            if (pathVariables != null) {
+                return pathVariables;
+            }
+            return super.getPathVariables();
         }
 
         @NonNull

@@ -381,6 +381,28 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
     }
 
+    @Test
+    public void testResourceConfigurations() {
+        Eval.me("project",
+                project,
+                "project.android {\n"
+                        + "    flavorDimensions += ['fruit']\n"
+                        + "    defaultConfig {\n"
+                        + "        resourceConfigurations += ['en']\n"
+                        + "    }\n"
+                        + "    productFlavors {\n"
+                        + "        orange {\n"
+                        + "            resourceConfigurations += ['de']\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        plugin.createAndroidTasks();
+
+        assertThat(android.getDefaultConfig().getResourceConfigurations()).containsExactly("en");
+
+        assertThat(android.getProductFlavors().getByName("orange").getResourceConfigurations()).containsExactly("de");
+    }
+
     private void checkGeneratedDensities(String taskName, String... densities) {
         MergeResources mergeResources = getTask(taskName, MergeResources.class);
         assertThat(mergeResources.getGeneratedDensities())

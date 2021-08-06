@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
-import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiElement
@@ -48,6 +47,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
@@ -59,6 +59,8 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getValueIfStringLiteral
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
@@ -266,7 +268,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
             element: UElement,
             nameLookup: NameLookup? = null
         ): Boolean {
-            var current = skipParentheses(element.uastParent)
+            var current = skipParenthesizedExprUp(element.uastParent)
             var prev = element
             while (current != null) {
                 if (current is UIfExpression) {
@@ -344,7 +346,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                     return false
                 }
                 prev = current
-                current = skipParentheses(current.uastParent)
+                current = skipParenthesizedExprUp(current.uastParent)
             }
 
             return false
@@ -374,13 +376,13 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                 val resolved = element.resolve()
                 if (resolved is PsiMethod &&
                     element is UQualifiedReferenceExpression &&
-                    element.selector is UCallExpression
+                    element.selector.skipParenthesizedExprDown() is UCallExpression
                 ) {
-                    val call = element.selector as UCallExpression
+                    val call = element.selector.skipParenthesizedExprDown() as UCallExpression
                     return isValidFeatureCheckCall(and, call, nameLookup)
                 } else if (resolved is PsiMethod &&
                     element is UQualifiedReferenceExpression &&
-                    element.receiver is UReferenceExpression
+                    element.receiver.skipParenthesizedExprDown() is UReferenceExpression
                 ) {
                     // Method call via Kotlin property syntax
                     return isValidFeatureCheckCall(and, element, resolved, nameLookup)
@@ -393,6 +395,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                         return ok
                     }
                 }
+            } else if (element is UParenthesizedExpression) {
+                return isNameCheckConditional(element.expression, and, element, nameLookup)
             }
             return null
         }
@@ -459,11 +463,11 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                 }
 
                 if (expressions.size == 1) {
-                    val statement = expressions[0]
+                    val statement = expressions[0].skipParenthesizedExprDown()
                     var returnValue: UExpression? = null
                     @Suppress("SENSELESS_COMPARISON")
                     if (statement is UReturnExpression) {
-                        returnValue = statement.returnExpression
+                        returnValue = statement.returnExpression?.skipParenthesizedExprDown()
                     } else if (statement != null) {
                         // Kotlin: may not have an explicit return statement
                         returnValue = statement
@@ -475,11 +479,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                                 returnValue is UCallExpression ||
                                 returnValue is UQualifiedReferenceExpression
                             ) {
-                                val isConditional = isNameCheckConditional(
-                                    returnValue,
-                                    and,
-                                    null, null
-                                )
+                                val isConditional = isNameCheckConditional(returnValue, and, null, null)
                                 if (isConditional != null) {
                                     return isConditional
                                 }
@@ -487,10 +487,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                         } else if (arguments.size == 1) {
                             // See if we're passing in a value to the feature check utility method
                             val lookup = NameLookup(arguments)
-                            val ok = isNameCheckConditional(
-                                returnValue, and,
-                                null, lookup
-                            )
+                            val ok = isNameCheckConditional(returnValue, and, null, lookup)
                             if (ok != null) {
                                 return ok
                             }

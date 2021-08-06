@@ -572,7 +572,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         ZipFile(outputDir.resolve("main.jar").toFile()).use {
             val input =
                 it.getInputStream(it.getEntry("$className.class"))
-            ClassReader(input).accept(object : ClassVisitor(Opcodes.ASM5) {
+            ClassReader(input).accept(object : ClassVisitor(Opcodes.ASM7) {
                 override fun visitAnnotation(
                     desc: String?,
                     visible: Boolean

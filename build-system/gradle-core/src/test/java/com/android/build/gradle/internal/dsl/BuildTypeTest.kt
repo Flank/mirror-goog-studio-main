@@ -15,12 +15,11 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.plugins.AppPlugin
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
@@ -29,6 +28,7 @@ import com.android.testutils.internal.CopyOfTester
 import com.android.testutils.truth.PathSubject
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert
@@ -70,7 +70,7 @@ class BuildTypeTest {
 
     @Test
     fun testBuildConfigOverride() {
-        val debugBuildType = dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
 
         Truth.assertThat(debugBuildType).isNotNull()
         debugBuildType.buildConfigField("String", "name", "sensitiveValue")
@@ -82,7 +82,7 @@ class BuildTypeTest {
 
     @Test
     fun testResValueOverride() {
-        val debugBuildType = dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
 
         Truth.assertThat(debugBuildType).isNotNull()
         debugBuildType.resValue("String", "name", "sensitiveValue")
@@ -96,14 +96,14 @@ class BuildTypeTest {
     fun testInitWith() {
         CopyOfTester.assertAllGettersCalled(
             BuildType::class.java,
-            dslServices.newInstance(BuildType::class.java, "original", dslServices),
+            dslServices.newDecoratedInstance(BuildType::class.java, "original", dslServices),
             listOf(
                 // Extensions are not copied as AGP doesn't manage them
                 "getExtensions",
                 "isZipAlignEnabled\$annotations"
             )
         ) { original: BuildType ->
-            val copy = dslServices.newInstance(BuildType::class.java, original.name, dslServices)
+            val copy = dslServices.newDecoratedInstance(BuildType::class.java, original.name, dslServices)
             copy.initWith(original)
             // Ndk and ndkConfig refer to the same object
             original.ndk
@@ -115,13 +115,15 @@ class BuildTypeTest {
             original.isShrinkResources
             // Covered by _useProguard
             original.isUseProguard
+            // Covered by externalNativeBuildOptions
+            original.externalNativeBuild
         }
     }
 
     @Test
     fun setProguardFilesTest() {
         val buildType : com.android.build.api.dsl.BuildType =
-            dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+            dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
         buildType.apply {
             // Check set replaces
             proguardFiles += dslServices.file("replaced")

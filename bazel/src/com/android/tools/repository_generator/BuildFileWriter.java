@@ -23,9 +23,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.lang3.SystemUtils;
 
 /** Utility for generating a BUILD file from a {@link ResolutionResult} object. */
@@ -81,7 +81,9 @@ public class BuildFileWriter {
             throws IOException {
         if (dep.file == null) return;
 
-        if (!dep.file.endsWith(".jar")) {
+        if (!dep.file.endsWith(".jar")
+                && !dep.file.endsWith(".aar")
+                && !dep.file.endsWith(".pom")) {
             throw new RuntimeException("Unsupported file: " + dep.file);
         }
 
@@ -96,48 +98,52 @@ public class BuildFileWriter {
         // Deduce the repo path of the artifact from the file.
         Path artifactRepoPath = Paths.get(dep.file).getParent();
 
-        if (isConflictLoser) {
-            // Conflict losers must include their version in the rule name.
-            String ruleNameWithVersion = ruleNameFromCoord(dep.coord, true);
-            if (generatedRuleNames.add(ruleNameWithVersion)) {
-                fileWriter.append("\n");
-                fileWriter.append("maven_artifact(\n");
-                fileWriter.append(String.format("    name = \"%s\",\n", ruleNameWithVersion));
-                fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(dep.pomPath)));
-                fileWriter.append(String.format("    repo_root_path = \"%s\",\n", pathToString(repoPrefix)));
-                fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
-                if (dep.parentCoord != null) {
-                    String parentRuleName = ruleNameFromCoord(dep.parentCoord, true);
-                    fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
-                }
-                String[] originalDepRuleNames =
-                        Arrays.stream(dep.originalDependencies)
-                                .map(
-                                        d -> {
-                                            // We might have already created a maven_import() rule
-                                            // for this target. If we did, then we should use the
-                                            // unversioned rule name.
-                                            String ruleWithoutVersion = ruleNameFromCoord(d, false);
-                                            if (generatedRuleNames.contains(ruleWithoutVersion)) {
-                                                return ruleWithoutVersion;
-                                            } else {
-                                                // Fall back to use versioned rule name.
-                                                return ruleNameFromCoord(d, true);
-                                            }
-                                        })
-                                .toArray(String[]::new);
 
-                if (originalDepRuleNames.length != 0) {
-                    fileWriter.append("    deps = [\n");
-                    for (String dependency : originalDepRuleNames) {
-                        fileWriter.append(String.format("        \"%s\",\n", dependency));
-                    }
-                    fileWriter.append("    ],\n");
-                }
-
-                fileWriter.append(")\n");
+        // All deps, conflict loser or winner, must have a maven_artifact() rule that includes the artifact
+        // version in the rule's name.
+        String ruleNameWithVersion = ruleNameFromCoord(dep.coord, true);
+        if (generatedRuleNames.add(ruleNameWithVersion)) {
+            fileWriter.append("\n");
+            fileWriter.append("maven_artifact(\n");
+            fileWriter.append(String.format("    name = \"%s\",\n", ruleNameWithVersion));
+            fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(dep.pomPath)));
+            fileWriter.append(String.format("    repo_root_path = \"%s\",\n", pathToString(repoPrefix)));
+            fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
+            if (dep.parentCoord != null) {
+                String parentRuleName = ruleNameFromCoord(dep.parentCoord, true);
+                fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
-        } else {
+            String[] originalDepRuleNames =
+                    Arrays.stream(dep.originalDependencies)
+                            .map(
+                                    d -> {
+                                        // We might have already created a maven_import() rule
+                                        // for this target. If we did, then we should use the
+                                        // unversioned rule name.
+                                        String ruleWithoutVersion = ruleNameFromCoord(d, false);
+                                        if (generatedRuleNames.contains(ruleWithoutVersion)) {
+                                            return ruleWithoutVersion;
+                                        } else {
+                                            // Fall back to use versioned rule name.
+                                            return ruleNameFromCoord(d, true);
+                                        }
+                                    })
+                            .toArray(String[]::new);
+
+            if (originalDepRuleNames.length != 0) {
+                fileWriter.append("    deps = [\n");
+                for (String dependency : originalDepRuleNames) {
+                    fileWriter.append(String.format("        \"%s\",\n", dependency));
+                }
+                fileWriter.append("    ],\n");
+            }
+            fileWriter.append("    visibility = [\"//visibility:public\"],\n");
+            fileWriter.append(")\n");
+        }
+
+        // Any dependency that is not a conflict loser (i.e., never entered into a conflict, or won a conflict) gets
+        // a maven_import() rule that does not have the artifact version in the rule name.
+        if (!isConflictLoser) {
             String ruleName = ruleNameFromCoord(dep.coord);
             fileWriter.append("\n");
             fileWriter.append("maven_import(\n");
@@ -149,20 +155,29 @@ public class BuildFileWriter {
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
             fileWriter.append("    jars = [\n");
-            fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
+            if (dep.file.endsWith(".jar")) {
+                fileWriter.append(String.format("        \"%s/%s\"\n", repoPrefix, pathToString(dep.file)));
+            }
             fileWriter.append("    ],\n");
-            String[] depRuleNames =
-                    Arrays.stream(dep.directDependencies)
-                            .map(BuildFileWriter::ruleNameFromCoord)
-                            .toArray(String[]::new);
-            if (depRuleNames.length != 0) {
-                fileWriter.append("    deps = [\n");
-                for (String directDependency : depRuleNames) {
-                    fileWriter.append(String.format("        \"%s\",\n", directDependency));
+            for (Map.Entry<String, List<String>> scopedDeps : dep.directDependencies.entrySet()) {
+                String scope = scopedDeps.getKey();
+                List<String> deps = scopedDeps.getValue();
+                if (!deps.isEmpty()) {
+                    switch (scope) {
+                        case "compile":
+                            fileWriter.append("    exports = [\n");
+                            break;
+                        case "runtime":
+                            fileWriter.append("    deps = [\n");
+                            break;
+                        default:
+                            throw new IllegalStateException("Scope " + scope + " is not supported");
+                    }
+                    for (String d : deps) {
+                        fileWriter.append(String.format("        \"%s\",\n", ruleNameFromCoord(d)));
+                    }
+                    fileWriter.append("    ],\n");
                 }
-                fileWriter.append("    ],\n");
-            } else {
-                fileWriter.append("    deps = [],\n");
             }
             // Original dependencies use version numbers in their rule names.
             String[] originalDepRuleNames =
@@ -183,7 +198,7 @@ public class BuildFileWriter {
             fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
             if (dep.srcjar != null) {
                 fileWriter.append(
-                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, pathToString(dep.file)));
+                        String.format("    srcjar = \"%s/%s\",\n", repoPrefix, pathToString(dep.srcjar)));
             }
             fileWriter.append("    visibility = [\"//visibility:public\"],\n");
             fileWriter.append(")\n");

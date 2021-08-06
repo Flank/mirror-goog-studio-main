@@ -7,6 +7,7 @@ import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ProjectInfo
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.core.VariantType
@@ -59,6 +60,8 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             if (variantType.isAar) {
                 // We need the library lint models if checkDependencies is true
                 taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests.main))
+                // We need the library lint model metadata if checkDependencies is false
+                taskFactory.register(LintModelMetadataTask.CreationAction(variantWithTests.main))
             } else {
                 // We need app and dynamic feature models if there are dynamic features.
                 // TODO (b/180672373) consider also publishing dynamic feature and app lint models

@@ -12,8 +12,8 @@ coverage_java_library(
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
-        "//tools/base/third_party:org.smali_dexlib2",
+        "@maven//:net.sf.jopt-simple.jopt-simple",
+        "@maven//:org.smali.dexlib2",
     ],
 )
 

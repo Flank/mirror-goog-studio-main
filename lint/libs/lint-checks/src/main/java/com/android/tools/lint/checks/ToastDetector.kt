@@ -31,6 +31,7 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -57,7 +58,7 @@ class ToastDetector : Detector(), SourceCodeScanner {
             // (Note that this *is* allowed for Snackbars)
             val args = node.valueArguments
             if (args.size == 3) {
-                val duration = args[2]
+                val duration = args[2].skipParenthesizedExprDown()
                 if (duration is ULiteralExpression) {
                     context.report(
                         ISSUE,

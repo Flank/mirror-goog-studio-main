@@ -22,7 +22,6 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.options.BooleanOption
-import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import org.junit.Test
 import java.io.File
@@ -118,7 +117,8 @@ The added field is used in the MainActivity.kt file.
                     + SingleArtifact.APK.getFolderName()
                     + "/debug")
         val builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(
-            File(apkFolder, BuiltArtifactsImpl.METADATA_FILE_NAME))
+            File(apkFolder, BuiltArtifactsImpl.METADATA_FILE_NAME)
+        )
             ?: throw RuntimeException("Cannot load APKs")
         if (builtArtifacts.elements.size != 1)
             throw RuntimeException("Expected one APK !")

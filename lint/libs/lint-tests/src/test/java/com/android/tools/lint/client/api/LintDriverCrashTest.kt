@@ -141,7 +141,8 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 source(
                     "META-INF/services/com.android.tools.lint.client.api.IssueRegistry",
                     "test.pkg.MyIssueRegistry"
-                )
+                ),
+                0x70522285
             ),
             bytecode(
                 "lint.jar",
@@ -187,7 +188,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
                     }
                     """
                 ).indented(),
-                0x6e84c289,
+                0xd89a7462,
                 """
                 test/pkg/MyDetector.class:
                 H4sIAAAAAAAAAJ1WWVMbRxD+RgIdi4xlGWPwSeJLMjYr4yuxsBOMsVkihI0w

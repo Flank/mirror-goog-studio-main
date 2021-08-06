@@ -60,15 +60,25 @@ public class GmavenZipTest {
     private static final Set<String> MISSING_LICENSE =
             ImmutableSet.of(
                     "com/android/tools/emulator/proto",
+                    "com/android/tools/emulator/proto:sources",
                     "com/android/tools/utp/android-test-plugin-host-device-info-proto",
+                    "com/android/tools/utp/android-test-plugin-host-device-info-proto:sources",
                     "com/android/tools/utp/android-test-plugin-host-coverage",
+                    "com/android/tools/utp/android-test-plugin-host-coverage:sources",
                     "com/android/tools/utp/android-test-plugin-host-additional-test-output",
+                    "com/android/tools/utp/android-test-plugin-host-additional-test-output:sources",
                     "com/android/tools/utp/android-test-plugin-result-listener-gradle",
+                    "com/android/tools/utp/android-test-plugin-result-listener-gradle:sources",
                     "com/android/tools/utp/android-test-plugin-host-logcat",
+                    "com/android/tools/utp/android-test-plugin-host-logcat:sources",
                     "com/android/tools/utp/android-device-provider-ddmlib",
+                    "com/android/tools/utp/android-device-provider-ddmlib:sources",
                     "com/android/tools/utp/android-device-provider-gradle",
+                    "com/android/tools/utp/android-device-provider-gradle:sources",
                     "com/android/tools/utp/android-test-plugin-host-device-info",
-                    "com/android/tools/utp/android-test-plugin-host-retention");
+                    "com/android/tools/utp/android-test-plugin-host-device-info:sources",
+                    "com/android/tools/utp/android-test-plugin-host-retention",
+                    "com/android/tools/utp/android-test-plugin-host-retention:sources");
 
     static {
         // Useful command for getting these lists:
@@ -1775,6 +1785,8 @@ public class GmavenZipTest {
         for (Path jar : ourJars) {
             if (jar.toString().endsWith("-sources.jar")) {
                 checkSourcesJar(jar, repo);
+            } else if (jar.toString().endsWith("-javadoc.jar")) {
+                // Ignore
             } else {
                 checkJar(jar, repo);
                 jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
@@ -1824,7 +1836,7 @@ public class GmavenZipTest {
                             + ".\n"
                             + "Remove it from MISSING_LICENSE");
         } else if (!found && !knownMissing) {
-            expect.fail("No license file in " + jarPath + " from " + repo);
+            expect.fail("No license file in " + jarPath + " with key " + key);
         }
     }
 

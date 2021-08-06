@@ -42,4 +42,8 @@ message AndroidTestCoverageConfig {
 
     // A path to the output directory on a host machine.
     string output_directory_on_host = 4;
+
+    // Use the test storage service provided by the 'androidx.test.services'
+    // package.
+    bool use_test_storage_service = 5;
 }

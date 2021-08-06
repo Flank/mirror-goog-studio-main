@@ -58,7 +58,6 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
-import com.android.build.gradle.internal.tasks.LintModelMetadataTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
@@ -341,8 +340,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         // Add a task to create the AAR metadata file
         taskFactory.register(new AarMetadataTask.CreationAction(libraryVariant));
 
-        // Add tasks to write the lint model metadata file and the local lint AAR file
-        taskFactory.register(new LintModelMetadataTask.CreationAction(libraryVariant));
+        // Add a task to write the local lint AAR file
         taskFactory.register(new BundleAar.LibraryLocalLintCreationAction(libraryVariant));
 
         createBundleTask(libraryVariant);

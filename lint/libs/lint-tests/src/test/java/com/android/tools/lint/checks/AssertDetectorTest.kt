@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Platform
 
@@ -64,8 +65,13 @@ class AssertDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             kotlinAssertionRuntime
-        ).issues(AssertDetector.EXPENSIVE).platforms(Platform.JDK_SET).run().expect(
-            """
+        )
+            .skipTestModes(TestMode.PARENTHESIZED)
+            .issues(AssertDetector.EXPENSIVE)
+            .platforms(Platform.JDK_SET)
+            .run()
+            .expect(
+                """
             src/test/pkg/AssertTest.kt:18: Warning: Kotlin assertion arguments are always evaluated, even when assertions are off. Consider surrounding assertion with if (javaClass.desiredAssertionStatus()) { assert(...) } [ExpensiveAssertion]
                     assert(expensive()) // WARN
                            ~~~~~~~~~~~
@@ -74,14 +80,14 @@ class AssertDetectorTest : AbstractCheckTest() {
                        ~~~~~~~~~~~
             0 errors, 2 warnings
             """
-        ).expectFixDiffs(
-            """
+            ).expectFixDiffs(
+                """
             Fix for src/test/pkg/AssertTest.kt line 18: Surround with desiredAssertionStatus() check:
             @@ -18 +18
             -         assert(expensive()) // WARN
             +         if (javaClass.desiredAssertionStatus()) { assert(expensive()) } // WARN
             """
-        )
+            )
     }
 
     private val kotlinTestFile = kotlin(

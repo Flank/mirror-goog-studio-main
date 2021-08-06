@@ -34,6 +34,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USuperExpression
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /** Makes sure that methods call super when overriding methods. */
@@ -172,7 +173,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
             anySuperCallCount++
-            val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
+            val parent = skipParenthesizedExprUp(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
                 if (resolved == null || // Avoid false positives for type resolution problems

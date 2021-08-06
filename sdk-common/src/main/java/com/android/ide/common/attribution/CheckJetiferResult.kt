@@ -31,7 +31,7 @@ import java.io.File
  * Note that this class can represent a sub-result as well as an aggregated result (see
  * [aggregateResults]).
  */
-class CheckJetifierResult(
+data class CheckJetifierResult(
 
     /**
      * Version of this object, used to handle backward/forward compatibility during deserialization.
@@ -139,7 +139,7 @@ class CheckJetifierResult(
  * A path from a configuration of a project to a direct dependency, to any intermediate
  * dependencies, then to another dependency.
  */
-class FullDependencyPath(
+data class FullDependencyPath(
 
     /** Fully qualified name of the project (e.g., ":app", "lib1:lib2"). */
     val projectPath: String = "Unknown",
@@ -162,7 +162,7 @@ class FullDependencyPath(
  * `org.gradle.api.artifacts.component.ComponentIdentifier.getDisplayName()`), usually in the
  * form of "group:name:version".
  */
-class DependencyPath(val elements: List<String>) {
+data class DependencyPath(val elements: List<String>) {
 
     init {
         check(elements.isNotEmpty())

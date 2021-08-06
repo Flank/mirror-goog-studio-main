@@ -18,13 +18,13 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -32,16 +32,20 @@ import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.DexSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class JacocoTest {
 
     private static final String CLASS_NAME = "com/example/B";
@@ -55,16 +59,29 @@ public class JacocoTest {
     private static final GradleProject TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
 
+    @Parameterized.Parameters(name = "jacocoTransformEnabled={0}")
+    public static Collection<Boolean> param() {
+        return Arrays.asList(true, false);
+    }
+
+    final Boolean jacocoTransformEnabled;
+
+    public JacocoTest(Boolean jacocoTransformEnabled) {
+        this.jacocoTransformEnabled = jacocoTransformEnabled;
+    }
+
     @Rule
     public final GradleTestProject project =
             GradleTestProject.builder().fromTestApp(TEST_APP).create();
 
     @Before
-    public void enableCodeCoverage() throws Exception {
-        Files.append(
-                "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
-                project.getBuildFile(),
-                Charsets.UTF_8);
+    public void setup() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
+        TestFileUtils.appendToFile(
+                project.getGradlePropertiesFile(),
+                BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION.getPropertyName() + "="
+                        + (jacocoTransformEnabled ? "true" : "false"));
     }
 
     @Test

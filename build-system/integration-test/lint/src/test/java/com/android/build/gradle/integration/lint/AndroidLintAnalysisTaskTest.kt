@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -25,10 +26,6 @@ import org.junit.Test
 import java.io.File
 
 class AndroidLintAnalysisTaskTest {
-
-    private val slash = File.separator
-    private val expectedPartialResultsDir =
-        "build${slash}intermediates${slash}lint_partial_results${slash}debug${slash}out"
 
     @get:Rule
     val lintKotlinProject: GradleTestProject =
@@ -54,6 +51,8 @@ class AndroidLintAnalysisTaskTest {
                     File(partialResultsDir, "lint-partial-debug.xml")
                 )
             )
+        assertThat(File(partialResultsDir, "lint-definite-debug.xml"))
+            .contains("{:app*projectDir}")
     }
 
     @Test
@@ -75,5 +74,7 @@ class AndroidLintAnalysisTaskTest {
                     File(partialResultsDir, "lint-partial-debug.xml")
                 )
             )
+        assertThat(File(partialResultsDir, "lint-definite-debug.xml"))
+            .contains("{:library*projectDir}")
     }
 }

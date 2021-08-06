@@ -371,7 +371,7 @@
                * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}
                * {PROJECT}/build/generated/res/rs/androidTest/debug{!}
             - abiFilters                    = []
-            - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/androidTest/debug/output-metadata.json{!}
+            - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/debugAndroidTest/redirect.txt{!}
             - testInfo:
                - animationsDisabled       = false
                - execution                = HOST

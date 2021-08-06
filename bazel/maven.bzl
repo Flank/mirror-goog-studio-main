@@ -9,6 +9,9 @@ def generate_pom(
         version,
         output_pom,
         deps = [],
+        exports = [],
+        description = None,
+        pom_name = None,
         source = None,
         export = False,
         properties = None,
@@ -35,6 +38,10 @@ def generate_pom(
         args += ["--artifact", artifact]
     if version:
         args += ["--version", version]
+    if description:
+        args += ["--description", description]
+    if pom_name:
+        args += ["--pom_name", pom_name]
     if properties:
         args += ["--properties", properties.path]
         inputs += [properties]
@@ -50,7 +57,8 @@ def generate_pom(
             args += ["--exclusion", dependency, ",".join([e for e in exclusions])]
 
     args += ["--deps", ":".join([dep.path for dep in deps])]
-    inputs += deps
+    args += ["--exports", ":".join([dep.path for dep in exports])]
+    inputs += deps + exports
 
     ctx.actions.run(
         mnemonic = "GenPom",
@@ -147,7 +155,7 @@ def _maven_pom_impl(ctx):
         properties_files = ctx.files.properties_files,
         version_property = ctx.attr.version_property,
         exclusions = ctx.attr.exclusions,
-        deps = ctx.files.deps,
+        exports = ctx.files.deps,  # deps are compile dependencies in the legacy rule
     )
 
     return struct(maven = struct(
@@ -521,10 +529,21 @@ def _local_maven_repository_impl(repository_ctx):
     repo_path = "repo"
     repository_ctx.symlink(local_repo, repo_path)
 
-    java_home = repository_ctx.os.environ.get("JAVA_HOME")
-    if not java_home:
-        fail("Cannot find JAVA_HOME")
-    java = repository_ctx.path(java_home + "/bin/java")
+    jdk11 = workspace.get_child("prebuilts").get_child("studio").get_child("jdk").get_child("jdk11")
+    os_name = repository_ctx.os.name.lower()
+    if os_name.startswith("mac os"):
+        # Ignore mac-arm64, it's OK to use x86 version of java.
+        jdk11_os = jdk11.get_child("mac").get_child("Contents").get_child("Home")
+    elif os_name.find("windows") != -1:
+        jdk11_os = jdk11.get_child("win")
+    else:
+        jdk11_os = jdk11.get_child("linux")
+
+    java_exe = "java.exe" if os_name.find("windows") != -1 else "java"
+    java = jdk11_os.get_child("bin").get_child(java_exe)
+
+    if not java.exists:
+        fail("Failed to find java binary at: " + str(java))
 
     # Invoke build file generator tool.
     inputs = repository_ctx.attr.artifacts
@@ -557,6 +576,7 @@ _local_maven_repository = repository_rule(
             allow_files = True,
         ),
     },
+    environ = ["MAVEN_FETCH"],
     local = True,
     implementation = _local_maven_repository_impl,
 )
@@ -595,12 +615,12 @@ MavenInfo = provider(fields = {
 })
 
 def _maven_artifact_impl(ctx):
-    files = [(ctx.attr.repo_path, file) for file in ctx.files.files]
+    files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
     return [
         DefaultInfo(files = depset(ctx.files.files)),
         MavenInfo(
             pom = ctx.file.pom,
-            files = ctx.files.files,
+            files = files,
             transitive = depset(direct = files, transitive = [d[MavenInfo].transitive for d in ctx.attr.deps]),
         ),
     ]
@@ -645,11 +665,18 @@ def _maven_import_impl(ctx):
         infos.append(JavaInfo(
             output_jar = jar,
             compile_jar = ijar,
-            deps = [dep[JavaInfo] for dep in ctx.attr.deps],
+            deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.exports],
         ))
-    runfiles = None
 
-    mavens = [dep[MavenInfo] for dep in ctx.attr.deps + ([ctx.attr.parent] if ctx.attr.parent else [])]
+    infos += [dep[JavaInfo] for dep in ctx.attr.exports]
+
+    data_deps = []
+    data_deps += ctx.attr.deps if ctx.attr.deps else []
+    data_deps += ctx.attr.exports if ctx.attr.exports else []
+    data_deps += ctx.attr.original_deps if ctx.attr.original_deps else []
+    data_deps += [ctx.attr.parent] if ctx.attr.parent else []
+
+    mavens = [dep[MavenInfo] for dep in data_deps]
     files = [(ctx.attr.repo_path + "/" + file.basename, file) for file in ctx.files.files]
 
     names = []
@@ -661,10 +688,10 @@ def _maven_import_impl(ctx):
 
     return struct(
         providers = [
-            DefaultInfo(files = depset(ctx.files.jars), runfiles = runfiles),
+            DefaultInfo(files = depset(ctx.files.jars)),
             MavenInfo(
                 pom = ctx.file.pom,
-                files = ctx.files.files,
+                files = files,
                 transitive = depset(direct = files, transitive = [info.transitive for info in mavens]),
             ),
             java_common.merge(infos),
@@ -680,7 +707,8 @@ _maven_import = rule(
     attrs = {
         "jars": attr.label_list(allow_files = True),
         "files": attr.label_list(allow_files = True),
-        "deps": attr.label_list(),
+        "deps": attr.label_list(providers = [MavenInfo]),
+        "exports": attr.label_list(providers = [MavenInfo]),
         "repo_path": attr.string(),
         "repo_root_path": attr.string(),
         "parent": attr.label(),
@@ -721,13 +749,28 @@ def maven_import(
 def _maven_repository_impl(ctx):
     rel_paths = []
     files = []
-    for artifact in ctx.attr.artifacts:
-        if MavenInfo not in artifact:
-            fail("Maven repositories can only contain maven artifacts")
-        artifacts = artifact[MavenInfo].transitive.to_list() if ctx.attr.include_transitive_deps else artifact[MavenInfo].files
-        for r, f in artifacts:
-            files.append(f)
-            rel_paths.append((r, f))
+    artifacts = depset(
+        direct = [f for artifact in ctx.attr.artifacts for f in artifact[MavenInfo].files],
+        transitive = [artifact[MavenInfo].transitive for artifact in ctx.attr.artifacts] if ctx.attr.include_transitive_deps else [],
+    )
+
+    # Redundancy check:
+    if not ctx.attr.allow_duplicates:
+        for b in ctx.attr.artifacts:
+            b_items = {e: None for e in b[MavenInfo].transitive.to_list()}
+            for a in ctx.attr.artifacts:
+                if a != b:
+                    included = True
+                    for e in a[MavenInfo].files:
+                        if e not in b_items:
+                            included = False
+                            break
+                    if included:
+                        fail("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+
+    for r, f in artifacts.to_list():
+        files.append(f)
+        rel_paths.append((r, f))
 
     build_manifest_content = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
     manifest_content = "".join([k + "=" + v.short_path + "\n" for k, v in rel_paths])
@@ -752,7 +795,8 @@ def _maven_repository_impl(ctx):
 maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
-        "include_transitive_deps": attr.bool(),
+        "include_transitive_deps": attr.bool(default = True),
+        "allow_duplicates": attr.bool(default = True),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "exec",
@@ -783,10 +827,10 @@ def split_coordinates(coordinates):
 # created by the new rules, so we do not need rule
 # duplication. Once all artifacts have been
 # migrated we can delete the old rules and this bridge.
-def import_maven_library(maven_java_library_rule, maven_library_rule, deps = [], notice = None):
+def import_maven_library(maven_java_library_rule, maven_library_rule, notice = None):
     maven_java_import(
         name = maven_java_library_rule,
-        deps = deps,
+        exports = [":" + maven_library_rule],
         jars = [":" + maven_library_rule + ".jar"],
         notice = notice,
         pom = ":" + maven_java_library_rule + ".pom",

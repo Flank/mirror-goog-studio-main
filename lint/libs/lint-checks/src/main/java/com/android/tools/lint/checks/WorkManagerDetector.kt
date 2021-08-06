@@ -33,6 +33,8 @@ import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 
 /** Some lint checks around WorkManager usage. */
@@ -111,14 +113,14 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
                     enqueued = true
                 } else {
                     // Used in a list etc: start to track the list
-                    val parent = call.uastParent
+                    val parent = skipParenthesizedExprUp(call.uastParent)
                     if (parent is UQualifiedReferenceExpression) {
-                        val listVariable = parent.receiver.tryResolve()
+                        val listVariable = parent.receiver.skipParenthesizedExprDown()?.tryResolve()
                         if (listVariable is PsiLocalVariable) {
                             references.add(listVariable)
                         } else {
                             // List factory method?
-                            val parentParent = parent.uastParent
+                            val parentParent = skipParenthesizedExprUp(parent.uastParent)
                             if (parentParent is ULocalVariable) {
                                 addVariableReference(parentParent)
                             }
@@ -140,7 +142,7 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         })
 
         if (!enqueued) {
-            val name = (node.uastParent?.uastParent as? ULocalVariable)?.name
+            val name = (skipParenthesizedExprUp(skipParenthesizedExprUp(node.uastParent)?.uastParent) as? ULocalVariable)?.name
             val nameString = if (name != null) "`$name` " else ""
             context.report(
                 ISSUE, node, context.getLocation(node),

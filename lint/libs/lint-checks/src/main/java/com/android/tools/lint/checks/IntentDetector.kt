@@ -34,6 +34,8 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 
@@ -80,14 +82,14 @@ class IntentDetector : Detector(), SourceCodeScanner {
         var constructorStatement: UExpression? = null
         var variable: PsiElement? = null
         var block: UBlockExpression? = null
-        var p: UElement? = node.uastParent
+        var p: UElement? = skipParenthesizedExprUp(node.uastParent)
         while (p != null) {
             if (p is UVariable) {
                 variable = p.psi
             } else if (p.isAssignment()) {
                 variable = (p as UBinaryExpression).leftOperand.tryResolve()
             }
-            val parent = p.uastParent
+            val parent = skipParenthesizedExprUp(p.uastParent)
             if (parent is UBlockExpression) {
                 block = parent
                 constructorStatement = p as? UExpression
@@ -111,7 +113,8 @@ class IntentDetector : Detector(), SourceCodeScanner {
         var seenType: UElement? = null
 
         // Did we pass in a non-null Uri? If so record that
-        for (argument in node.valueArguments) {
+        for (topArgument in node.valueArguments) {
+            val argument = topArgument.skipParenthesizedExprDown() ?: continue
             val type = argument.getExpressionType() ?: continue
             if (type.canonicalText == ANDROID_NET_URI &&
                 !(argument is ULiteralExpression && argument.isNull)
@@ -123,17 +126,17 @@ class IntentDetector : Detector(), SourceCodeScanner {
         }
 
         for (index in start + 1 until statements.size) {
-            val statement = statements[index]
+            val statement = statements[index].skipParenthesizedExprDown()
             if (statement is UQualifiedReferenceExpression) {
-                val statementReceiver = statement.receiver.tryResolve()
+                val statementReceiver = statement.receiver.skipParenthesizedExprDown()?.tryResolve()
                 if (statementReceiver == variable) {
-                    val call = statement.selector
+                    val call = statement.selector.skipParenthesizedExprDown()
                     if (call is UCallExpression) {
                         val args = call.valueArguments
                         if (args.size != 1) {
                             continue
                         }
-                        val arg = args[0]
+                        val arg = args[0].skipParenthesizedExprDown()
                         if (arg is ULiteralExpression && arg.isNull) {
                             continue
                         }

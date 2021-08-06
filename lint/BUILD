@@ -1,6 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_library", "kotlin_test", "maven_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
@@ -125,13 +124,6 @@ maven_library(
     ],
 )
 
-maven_pom(
-    name = "lint-api.pom",
-    artifact = "lint-api",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
-)
-
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint-checks",
@@ -191,16 +183,18 @@ maven_library(
     ],
 )
 
-kotlin_library_legacy(
-    name = "tools.lint-gradle",
+maven_library(
+    name = "tools.lint-gradle_bzl",
     # TODO: move resources out of java?
     srcs = glob([
         "libs/lint-gradle/src/main/java/**/*.kt",
         "libs/lint-gradle/src/main/java/**/*.java",
     ]),
+    coordinates = "com.android.tools.lint:lint-gradle:" + BASE_VERSION,
+    legacy_name = "tools.lint-gradle",
     lint_baseline = "libs/lint-gradle/lint_baseline.xml",
     module_name = "lint-gradle",
-    pom = "lint-gradle.pom",
+    notice = "libs/lint-gradle/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle",
     resources = glob(
         include = ["libs/lint-gradle/src/main/java/**"],
@@ -208,44 +202,37 @@ kotlin_library_legacy(
             "libs/lint-gradle/src/main/java/**/*.java",
             "libs/lint-gradle/src/main/java/**/*.kt",
         ],
-    ) + ["libs/lint-gradle/NOTICE"],
+    ),
     visibility = ["//visibility:public"],
     deps = [
         # NOTE NOTE NOTE - before changing this, note that lint dependencies
         # must also be reflected in [ReflectiveLintRunner#computeUrls] as well
         # so update both in sync
-        ":tools.lint-api",
-        ":tools.lint-checks",
-        ":tools.lint-model",
-        "//prebuilts/tools/common/lint-psi/intellij-core",
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
-        "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/annotations",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint/cli",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.jetbrains_annotations",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/zipflinger",
+        ":tools.lint-api_bzl",
+        ":tools.lint-checks_bzl",
+        ":tools.lint-model_bzl",
+        "//prebuilts/tools/common/lint-psi/intellij-core:intellij-core_bzl",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler:kotlin-compiler_bzl",
+        "//prebuilts/tools/common/lint-psi/uast:uast_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/build-system:tools.manifest-merger_bzl",
+        "//tools/base/build-system/builder:builder_bzl",
+        "//tools/base/build-system/builder-model:builder-model_bzl",
+        "//tools/base/build-system/gradle-api:gradle-api_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/ddmlib:tools.ddmlib_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/lint/cli:cli_bzl",
+        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "//tools/base/zipflinger:zipflinger_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.codehaus.groovy.groovy-all",
+        "@maven//:org.jetbrains.annotations",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
-)
-
-maven_pom(
-    name = "lint-gradle.pom",
-    artifact = "lint-gradle",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 kotlin_test(

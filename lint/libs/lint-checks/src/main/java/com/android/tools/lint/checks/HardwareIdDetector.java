@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -318,8 +319,9 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
                             "invoke",
                             1 /* param index */)) {
                 // method.invoke(instance, "ro.serialno")
-                UExpression arg = methodParameterAt(expression, 1);
-                String value = ConstantEvaluator.evaluateString(mContext, arg, false);
+                UExpression arg = skipParenthesizedExprDown(methodParameterAt(expression, 1));
+                String value =
+                        arg != null ? ConstantEvaluator.evaluateString(mContext, arg, false) : null;
                 if (RO_SERIALNO.equals(value)) {
                     mContext.report(
                             ISSUE,
@@ -360,7 +362,11 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
                 return false;
             }
             // Check that the qualifier used is the same.
-            UExpression qualifierExpression = expression.getReceiver();
+            UExpression receiver = expression.getReceiver();
+            if (receiver == null) {
+                return false;
+            }
+            UExpression qualifierExpression = skipParenthesizedExprDown(receiver);
             if (qualifierExpression == null
                     || !variableQualifier.equals(qualifierExpression.asSourceString())) {
                 return false;

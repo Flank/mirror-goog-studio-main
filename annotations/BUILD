@@ -1,5 +1,4 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_import", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
@@ -24,6 +23,7 @@ maven_library(
     name = "annotations_bzl",
     srcs = glob(["src/main/java/**"]),
     coordinates = "com.android.tools:annotations:" + BASE_VERSION,
+    enable_scopes = True,
     legacy_name = "annotations",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/annotations",

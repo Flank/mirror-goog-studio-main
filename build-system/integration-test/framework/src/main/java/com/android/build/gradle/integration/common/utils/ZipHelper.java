@@ -291,7 +291,7 @@ public class ZipHelper {
             ZipEntry entry = zipFile.getEntry(entryName);
             assertThat(entry).named(entryName + " entry").isNotNull();
             ClassReader classReader = new ClassReader(zipFile.getInputStream(entry));
-            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM5);
+            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM7);
             classReader.accept(mainTestClassNode, 0);
 
             FieldNode fieldNode = null;

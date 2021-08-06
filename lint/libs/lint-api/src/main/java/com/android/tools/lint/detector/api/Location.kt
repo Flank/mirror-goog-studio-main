@@ -136,7 +136,7 @@ protected constructor(
      * Returns the source element for this location provided it's of the
      * given type, if applicable.
      */
-    var source: Any? = null
+    open var source: Any? = null
 
     /**
      * Sets a secondary location with the given message and returns the
@@ -478,6 +478,13 @@ protected constructor(
             @Suppress("UNUSED_PARAMETER")
             override var secondary: Location? = null
                 set(value) = Unit
+
+            @Suppress("SetterBackingFieldAssignment")
+            override var source: Any? = null
+                set(_) {
+                    // Deliberately not allowing the source to be
+                    // overridden on the shared & static location
+                }
         }
 
         /**

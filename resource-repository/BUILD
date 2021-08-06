@@ -1,4 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 # managed by go/iml_to_build

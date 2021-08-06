@@ -118,7 +118,11 @@ class LibraryPublishingTest {
 
                 android {
                     publishing {
-                        singleVariant("release")
+                        singleVariant("release") {
+                            // make sure app can consume library published with source and javadoc
+                            withSourcesJar()
+                            withJavadocJar()
+                        }
                     }
                 }
             """.trimIndent()

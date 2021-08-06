@@ -35,6 +35,8 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AaptOptions;
@@ -44,6 +46,8 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
+import com.android.ide.common.build.ListingFileRedirect;
+import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Map;
@@ -199,9 +203,7 @@ public class BasicTest {
             assertThat(variantBuildOutput.getAssembleTaskName()).contains("assemble");
             assertThat(variantBuildOutput.getAssembleTaskOutputListingFile()).isNotNull();
             File listingFile = new File(variantBuildOutput.getAssembleTaskOutputListingFile());
-            BuiltArtifactsImpl builtArtifacts =
-                    BuiltArtifactsLoaderImpl.loadFromFile(
-                            listingFile, listingFile.getParentFile().toPath());
+            BuiltArtifactsImpl builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(listingFile);
 
             assertThat(builtArtifacts).isNotNull();
             assertThat(builtArtifacts.getElements()).hasSize(1);
@@ -210,6 +212,16 @@ public class BasicTest {
             assertThat(built.getVariantOutputConfiguration().getFilters()).isEmpty();
             assertThat(built.getVariantOutputConfiguration().getOutputType())
                     .isEqualTo(VariantOutputConfiguration.OutputType.SINGLE);
+
+            // test redirect file presence.
+            File redirectFile =
+                    FileUtils.join(
+                            ArtifactTypeUtil.getOutputDir(
+                                    InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE,
+                                    project.getBuildDir()),
+                            variantBuildOutput.getVariantName(),
+                            ListingFileRedirect.REDIRECT_FILE_NAME);
+            assertThat(redirectFile.exists()).isTrue();
         }
     }
 

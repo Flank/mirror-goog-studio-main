@@ -24,8 +24,8 @@ import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Label
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ACC_PRIVATE
-import org.objectweb.asm.Opcodes.ASM5
 import org.objectweb.asm.TypePath
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
@@ -41,7 +41,7 @@ import java.lang.reflect.Modifier.isPublic
  */
 class DependenciesAnalyzer {
 
-    private val level = ASM5
+    private val asmVersion = Opcodes.ASM7
 
     private val primitives = setOf(
         "void",
@@ -73,7 +73,7 @@ class DependenciesAnalyzer {
     }
 
     /** Class Visitor */
-    inner class DependenciesClassVisitor(val reader: ClassReader): ClassVisitor(level) {
+    inner class DependenciesClassVisitor(val reader: ClassReader): ClassVisitor(asmVersion) {
         var classes = mutableMapOf<String, Boolean>()
 
         init {
@@ -230,7 +230,7 @@ class DependenciesAnalyzer {
             SignatureReader(sign).acceptType(DependencySignatureVisitor(access))
         }
 
-        inner class FieldDependenciesVisitor: FieldVisitor(level) {
+        inner class FieldDependenciesVisitor: FieldVisitor(api) {
             override fun visitAnnotation(desc: String?, visible: Boolean): AnnotationVisitor {
                 addType(Type.getType(desc).className)
                 return AnnotationDependenciesVisitor()
@@ -246,7 +246,7 @@ class DependenciesAnalyzer {
             }
         }
 
-        inner class MethodDependenciesVisitor: MethodVisitor(level) {
+        inner class MethodDependenciesVisitor: MethodVisitor(api) {
             override fun visitLocalVariable(
                 name: String?,
                 desc: String?,
@@ -285,7 +285,7 @@ class DependenciesAnalyzer {
             }
         }
 
-        inner class AnnotationDependenciesVisitor: AnnotationVisitor(level) {
+        inner class AnnotationDependenciesVisitor: AnnotationVisitor(api) {
 
             override fun visit(name: String?, value: Any?) {
                 if (value is Type) {
@@ -304,7 +304,7 @@ class DependenciesAnalyzer {
 
         }
 
-        inner class DependencySignatureVisitor(val access: Int): SignatureVisitor(level) {
+        inner class DependencySignatureVisitor(val access: Int): SignatureVisitor(api) {
             override fun visitTypeVariable(name: String?) {
                 if (name != null) {
                     addType(name, access)

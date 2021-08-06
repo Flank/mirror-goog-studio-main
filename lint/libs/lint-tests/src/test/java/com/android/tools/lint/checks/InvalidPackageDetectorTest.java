@@ -109,6 +109,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                                 + "      return null;\n"
                                                 + "   }\n"
                                                 + "}"),
+                                0x61274b06,
                                 "test/pkg/ApiCallTest.class:"
                                         + "H4sIAAAAAAAAAJ1U8VMSQRT+Vg9O8DRTM0EpNTLQ4iwNDaxEsmLmkEZRq1+a"
                                         + "A1a8xNubu0PjvyqnsZl+6A/oj2p6BzoSjVnBzL7b97737be77+33H1+/AVhE"

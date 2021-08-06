@@ -398,10 +398,8 @@ class LintDetectorDetector : Detector(), UastScanner {
         }
 
         private fun checkEnumSet(node: UCallExpression) {
-            val receiver = node.receiver
-            if (receiver is USimpleNameReferenceExpression &&
-                receiver.identifier == "EnumSet"
-            ) {
+            val targetClass = node.resolve()?.containingClass?.qualifiedName ?: return
+            if (targetClass == "java.util.EnumSet") {
                 val scopes = EnumSet.noneOf(Scope::class.java)
                 for (argument in node.valueArguments) {
                     var name = (argument.tryResolve() as? PsiField)?.name

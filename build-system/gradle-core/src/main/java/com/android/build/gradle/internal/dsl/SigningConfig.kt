@@ -16,15 +16,22 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.signing.DefaultSigningConfig
 import com.google.common.base.MoreObjects
 import org.gradle.api.Named
 import java.io.File
 import java.io.Serializable
+import java.security.KeyStore
 import javax.inject.Inject
 
-open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfig(name),
+abstract class SigningConfig @Inject @WithLazyInitialization("lazyInit") constructor(name: String, dslServices: DslServices) : DefaultSigningConfig(name),
     Serializable, Named, com.android.build.api.dsl.ApkSigningConfig, InternalSigningConfig {
+
+    fun lazyInit() {
+        storeType = KeyStore.getDefaultType()
+    }
 
     override fun initWith(that: com.android.build.api.dsl.SigningConfig) {
         if (that !is SigningConfig) {

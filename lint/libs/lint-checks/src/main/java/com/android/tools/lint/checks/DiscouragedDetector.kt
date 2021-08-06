@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.checks;
+package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Scope.Companion.JAVA_FILE_SCOPE
-import com.android.tools.lint.detector.api.Scope.Companion.MANIFEST_SCOPE
-import com.android.tools.lint.detector.api.Scope.Companion.RESOURCE_FILE_SCOPE
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
-import java.util.EnumSet
 
 class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 

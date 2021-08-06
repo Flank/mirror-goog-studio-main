@@ -435,7 +435,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_android-device-provider-local",
-    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.android-device-provider-local.0.0.8-alpha06",
+    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.android-device-provider-local.0.0.8-alpha07",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -443,7 +443,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.core-proto.0.0.8-alpha06",
+    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.core-proto.0.0.8-alpha07",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -451,7 +451,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_launcher",
-    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha06",
+    export_artifact = "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
     visibility = ["//visibility:public"],
     exports = [],
 )

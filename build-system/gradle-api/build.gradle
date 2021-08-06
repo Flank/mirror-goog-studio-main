@@ -46,7 +46,6 @@ compileKotlin {
 
 javadoc {
   classpath += configurations.compileOnly
-  options.links("http://docs.oracle.com/javase/8/docs/api/", "https://docs.gradle.org/current/javadoc/")
 }
 
 task javadocZip(type: Zip) {

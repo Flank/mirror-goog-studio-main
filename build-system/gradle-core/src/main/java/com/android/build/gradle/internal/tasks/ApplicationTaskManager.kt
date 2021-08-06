@@ -266,9 +266,31 @@ class ApplicationTaskManager(
             }
             taskFactory.register(FinalizeBundleTask.CreationAction(variant))
             taskFactory.register(BundleIdeModelProducerTask.CreationAction(variant))
+            taskFactory.register(
+                ListingFileRedirectTask.CreationAction(
+                    variant,
+                    "Bundle",
+                    InternalArtifactType.BUNDLE_IDE_MODEL,
+                    InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE
+                )
+            )
             taskFactory.register(BundleToApkTask.CreationAction(variant))
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variant))
             taskFactory.register(ExtractApksTask.CreationAction(variant))
+            taskFactory.register(
+                ListingFileRedirectTask.CreationAction(
+                    variant,
+                    "ApksFromBundle",
+                    InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL,
+                    InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE
+                )
+            )
+
+            taskFactory.register(AnchorTaskNames.getExtractApksAnchorTaskName(variant)) {
+                it.dependsOn(variant.artifacts.get(
+                    InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE
+                ))
+            }
 
             taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
             variant.taskContainer.assembleTask.configure { task ->

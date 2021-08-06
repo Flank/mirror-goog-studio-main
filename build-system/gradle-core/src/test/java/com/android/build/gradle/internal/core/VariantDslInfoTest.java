@@ -51,10 +51,8 @@ import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /** Test cases for {@link VariantDslInfo}. */
 public class VariantDslInfoTest {
@@ -65,21 +63,16 @@ public class VariantDslInfoTest {
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
 
-    @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
     public void testSigningBuildTypeOverride() {
         initNoDeviceApiInjection();
 
         // SigningConfig doesn't compare the name, so put some content.
-        SigningConfig debugSigning = new SigningConfig("debug");
+        SigningConfig debugSigning = signingConfig("debug");
         debugSigning.storePassword("debug");
         buildType.setSigningConfig(debugSigning);
 
-        SigningConfig override = new SigningConfig("override");
+        SigningConfig override = signingConfig("override");
         override.storePassword("override");
 
         VariantDslInfo<?> variant = getVariant(override);
@@ -92,11 +85,11 @@ public class VariantDslInfoTest {
         initNoDeviceApiInjection();
 
         // SigningConfig doesn't compare the name, so put some content.
-        SigningConfig defaultSigning = new SigningConfig("defaultConfig");
+        SigningConfig defaultSigning = signingConfig("defaultConfig");
         defaultSigning.storePassword("debug");
         defaultConfig.setSigningConfig(defaultSigning);
 
-        SigningConfig override = new SigningConfig("override");
+        SigningConfig override = signingConfig("override");
         override.storePassword("override");
 
         VariantDslInfo<?> variant = getVariant(override);
@@ -361,10 +354,14 @@ public class VariantDslInfoTest {
         variantPropertiesApiServices =
                 FakeServices.createVariantPropertiesApiServices(projectServices);
 
-        defaultConfig = new DefaultConfig("main", dslServices);
+        defaultConfig = dslServices.newDecoratedInstance(DefaultConfig.class, "main", dslServices);
         defaultConfig.applicationId("com.foo");
-        flavorConfig = dslServices.newInstance(ProductFlavor.class, "flavor", dslServices);
+        flavorConfig = dslServices.newDecoratedInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
-        buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
+        buildType = dslServices.newDecoratedInstance(BuildType.class, "debug", dslServices);
+    }
+
+    private SigningConfig signingConfig(String name) {
+        return dslServices.newDecoratedInstance(SigningConfig.class, name, dslServices);
     }
 }

@@ -52,6 +52,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.manifest.LazyManifestParser
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
@@ -1017,7 +1018,7 @@ class VariantManager<
 
     private fun createSigningOverride(): SigningConfig? {
         SigningOptions.readSigningOptions(projectOptions)?.let { signingOptions ->
-            val signingConfigDsl = SigningConfig(SigningOptions.SIGNING_CONFIG_NAME)
+            val signingConfigDsl = globalScope.dslServices.newDecoratedInstance(SigningConfig::class.java, SigningOptions.SIGNING_CONFIG_NAME, globalScope.dslServices)
             signingConfigDsl.storeFile(File(signingOptions.storeFile))
             signingConfigDsl.storePassword(signingOptions.storePassword)
             signingConfigDsl.keyAlias(signingOptions.keyAlias)

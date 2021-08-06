@@ -215,15 +215,13 @@ class SamDetectorTest : AbstractCheckTest() {
     }
 
     fun testAidlCompileTestCase() {
-        // Tests that we can suppress this lint check not just at the lambda site but
-        // at the target method as well. Based on a scenario first encountered in
-        // AidlCompile in AGP.
         lint().files(
             kotlin(
                 """
                 package test.pkg
                 abstract class AidlCompile {
                     abstract val execOperations: ExecOperations
+                    val path = "/sdcard/path"
                     fun doTaskAction() {
                         val processor = GradleProcessExecutor(execOperations::exec)
                     }

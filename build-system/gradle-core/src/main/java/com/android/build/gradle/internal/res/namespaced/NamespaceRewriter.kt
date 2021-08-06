@@ -40,9 +40,9 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
-import org.objectweb.asm.Opcodes.ASM5
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -80,7 +80,7 @@ class NamespaceRewriter(
 
     private fun rewriteClass(originalClass: ByteArray) : ByteArray {
         val cw = ClassWriter(0)
-        val crw = ClassReWriter(ASM5, cw)
+        val crw = ClassReWriter(Opcodes.ASM7, cw)
         val cr = ClassReader(originalClass)
         cr.accept(crw, 0)
         // Write inner R classes references.

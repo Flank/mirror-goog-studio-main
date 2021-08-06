@@ -508,6 +508,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                         }
                         """
                     ).indented(),
+                    0xc44b30ca,
                     """
                     test/pkg/Foo＄Bar.class:
                     H4sIAAAAAAAAAE1Oy2oCQRCs8bGr6/oKXnMI5KAe3KMXCeiCKIiXSO6jO4SJ
@@ -621,6 +622,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                         }
                         """
                     ).indented(),
+                    0x13be0c3d,
                     "test/pkg/Foo/Bar.class:" +
                         "H4sIAAAAAAAAAB1NuwrCQBCczVOjooU/kE4tvNJGBBVSiY1if0kOOR+5EC+C" +
                         "n2UlWPgBfpS4usXOzM4s8/48XwAm6ERwEYVohWgTgqkutJ0R3MFwR/CWJleE" +

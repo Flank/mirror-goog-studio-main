@@ -22,6 +22,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.ide.common.build.GenericBuiltArtifactsLoader
+import com.android.ide.common.build.ListingFileRedirect
 import com.android.utils.NullLogger
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -29,9 +30,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileWriter
 import java.io.ObjectOutputStream
-import java.util.Properties
 import kotlin.test.fail
 
 /**
@@ -597,11 +596,7 @@ class BuiltArtifactsImplTest {
         // now writes the file redirect.
         val redirectFolder = tmpFolder.newFolder("redirect_folder")
         val redirectFile = File(redirectFolder, BuiltArtifactsImpl.REDIRECT_FILE_NAME)
-        Properties().also {
-            it.setProperty(GenericBuiltArtifactsLoader.RedirectFilePropertyName,
-                listingFile.relativeTo(redirectFolder).path)
-            it.store(FileWriter(redirectFile), GenericBuiltArtifactsLoader.RedirectMarker)
-        }
+        ListingFileRedirect.writeRedirect(listingFile, redirectFile)
 
         Truth.assertThat(redirectFile.exists()).isTrue()
         val loadedFromFile = GenericBuiltArtifactsLoader.loadFromFile(redirectFile, NullLogger())

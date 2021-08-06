@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.dsl;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.FakeServices;
 import com.android.testutils.internal.CopyOfTester;
 import groovy.util.Eval;
 import org.junit.Test;
@@ -29,25 +31,28 @@ public class SigningConfigTest {
     public void testInitWith() throws Exception {
         CopyOfTester.assertAllGettersCalled(
                 SigningConfig.class,
-                new SigningConfig("original"),
+                signingConfig("original"),
                 original -> {
                     // Manually call getters that are not called by _initWith:
                     original.getName();
                     original.isSigningReady();
 
-                    new SigningConfig("copy").initWith(original);
+                    signingConfig("copy").initWith(original);
                 });
     }
 
     @Test
     public void testGroovyInitWith() throws Exception {
-        SigningConfig original =
-                FakeObjectFactory.getFactory().newInstance(SigningConfig.class, "original");
+        SigningConfig original = signingConfig("original");
         original.setEnableV1Signing(false);
-        SigningConfig copy =
-                FakeObjectFactory.getFactory().newInstance(SigningConfig.class, "copy");
+        SigningConfig copy =signingConfig("copy");
         // Check that groovy can invoke initWith
         Eval.xy(copy, original, "x.initWith(y)");
         assertThat(copy.getEnableV1Signing()).isFalse();
+    }
+
+    private SigningConfig signingConfig(String name) {
+        DslServices dslServices = FakeServices.createDslServices();
+        return dslServices.newDecoratedInstance(SigningConfig.class, name, dslServices);
     }
 }

@@ -11,3 +11,9 @@ filegroup(
     srcs = glob(["local_maven_repository_generator/**"]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "pom_generator",
+    srcs = glob(["pom_generator/**"]),
+    visibility = ["//visibility:public"],
+)

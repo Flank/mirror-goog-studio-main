@@ -154,7 +154,7 @@ public class AndroidTestResourcesTest {
             ZipEntry layoutEntry = zipFile.getEntry("com/example/helloworld/test/R$layout.class");
             assertThat(layoutEntry).named("R$layout.class entry").isNotNull();
             ClassReader layoutClassReader = new ClassReader(zipFile.getInputStream(layoutEntry));
-            ClassNode layoutClassNode = new ClassNode(Opcodes.ASM5);
+            ClassNode layoutClassNode = new ClassNode(Opcodes.ASM7);
             layoutClassReader.accept(layoutClassNode, 0);
 
             Set<String> layoutFieldNames =
@@ -166,7 +166,7 @@ public class AndroidTestResourcesTest {
             ZipEntry idEntry = zipFile.getEntry("com/example/helloworld/test/R$id.class");
             assertThat(idEntry).named("R$id.class entry").isNotNull();
             ClassReader idClassReader = new ClassReader(zipFile.getInputStream(idEntry));
-            ClassNode idClassNode = new ClassNode(Opcodes.ASM5);
+            ClassNode idClassNode = new ClassNode(Opcodes.ASM7);
             idClassReader.accept(idClassNode, 0);
 
             Set<String> idFieldNames =

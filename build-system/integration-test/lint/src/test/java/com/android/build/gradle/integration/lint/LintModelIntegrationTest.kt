@@ -177,6 +177,12 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
             put(Version.ANDROID_GRADLE_PLUGIN_VERSION, "${"$"}androidGradlePluginVersion")
             put(File.separator, "/")
             put(File.pathSeparator, ":")
+            put("kotlin-stdlib:${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib:${"$"}{kotlinVersion}")
+            put("kotlin-stdlib/${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib/${"$"}{kotlinVersion}")
+            put("kotlin-stdlib-${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-${"$"}{kotlinVersion}")
+            put("kotlin-stdlib-common:${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common:${"$"}{kotlinVersion}")
+            put("kotlin-stdlib-common/${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common/${"$"}{kotlinVersion}")
+            put("kotlin-stdlib-common-${TestUtils.KOTLIN_VERSION_FOR_TESTS}", "kotlin-stdlib-common-${"$"}{kotlinVersion}")
         })
     }
 

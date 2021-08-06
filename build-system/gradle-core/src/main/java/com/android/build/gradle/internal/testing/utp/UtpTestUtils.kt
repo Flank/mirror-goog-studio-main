@@ -23,6 +23,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.google.common.io.Files
 import java.io.File
 import java.io.FileOutputStream
+import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
 
 /**
@@ -59,6 +60,13 @@ fun shouldEnableUtp(
     projectOptions: ProjectOptions,
     testOptions: TestOptions?
 ): Boolean {
+    if (projectOptions[BooleanOption.ENABLE_TEST_SHARDING]) {
+        Logging.getLogger("UtpTestUtils").warn(
+            "Disabling ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM option because" +
+                    "ENABLE_TEST_SHARDING is specified. ENABLE_TEST_SHARDING is not" +
+                    "supported by ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM yet.")
+        return false
+    }
     return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
             || (testOptions != null && testOptions.emulatorSnapshots.enableForTestFailures))
 }

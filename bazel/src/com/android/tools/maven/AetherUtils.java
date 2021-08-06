@@ -28,38 +28,39 @@ import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 /** Constructs Aether objects. */
 public class AetherUtils {
     static final RemoteRepository MAVEN_CENTRAL =
-            new RemoteRepository.Builder("prebuilts", "default", "https://repo1.maven.org/maven2/")
+            new RemoteRepository.Builder(
+                            "Maven Central", "default", "https://repo1.maven.org/maven2/")
                     .build();
 
     static final RemoteRepository JCENTER =
-            new RemoteRepository.Builder("prebuilts", "default", "https://jcenter.bintray.com/")
+            new RemoteRepository.Builder("JCenter", "default", "https://jcenter.bintray.com/")
                     .build();
 
     static final RemoteRepository GOOGLE =
-            new RemoteRepository.Builder("prebuilts", "default", "https://maven.google.com/")
-                    .build();
+            new RemoteRepository.Builder("Google", "default", "https://maven.google.com/").build();
 
     static final RemoteRepository GRADLE =
             new RemoteRepository.Builder(
-                            "prebuilts",
+                            "Gradle",
                             "default",
                             "https://repo.gradle.org/gradle/libs-releases-local/")
                     .build();
 
     static final RemoteRepository INTELLIJ =
             new RemoteRepository.Builder(
-                            "prebuilts",
+                            "IntelliJ deps",
                             "default",
                             "https://jetbrains.bintray.com/intellij-third-party-dependencies")
                     .build();
 
     static final RemoteRepository KOTLIN_EAP =
             new RemoteRepository.Builder(
-                            "prebuilts", "default", "https://dl.bintray.com/kotlin/kotlin-eap")
+                            "Kotlin eap", "default", "https://dl.bintray.com/kotlin/kotlin-eap")
                     .build();
 
     static final RemoteRepository GRADLE_PLUGINS =
-            new RemoteRepository.Builder("prebuilts", "default", "https://plugins.gradle.org/m2")
+            new RemoteRepository.Builder(
+                            "GradlePlugins", "default", "https://plugins.gradle.org/m2")
                     .build();
 
     public static final ImmutableList<RemoteRepository> REPOSITORIES =

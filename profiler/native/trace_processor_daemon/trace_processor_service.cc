@@ -33,6 +33,7 @@
 #include "src/profiling/symbolizer/symbolize_database.h"
 #include "src/profiling/symbolizer/symbolizer.h"
 #include "trace_events/android_frame_events_request_handler.h"
+#include "trace_events/android_frame_timeline_request_handler.h"
 #include "trace_events/trace_events_request_handler.h"
 #include "trace_metadata_request_handler.h"
 
@@ -217,6 +218,12 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         handler.PopulateTraceMetadata(
             request.trace_metadata_request(),
             query_result->mutable_trace_metadata_result());
+      } break;
+      case QueryParameters::kAndroidFrameTimelineRequest: {
+        AndroidFrameTimelineRequestHandler handler(tp_.get());
+        handler.PopulateFrameTimeline(
+            request.android_frame_timeline_request(),
+            query_result->mutable_android_frame_timeline_result());
       } break;
       case QueryParameters::QUERY_NOT_SET:
         // Do nothing.

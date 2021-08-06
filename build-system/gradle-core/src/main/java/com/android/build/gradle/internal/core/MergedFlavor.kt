@@ -39,6 +39,19 @@ class MergedFlavor(
     private val dslServices: DslServices
 ) : AbstractProductFlavor(name), InternalBaseVariant.MergedFlavor {
 
+    override var dimension: String? = null
+    override var renderscriptSupportModeEnabled: Boolean? = null
+    override var renderscriptSupportModeBlasEnabled: Boolean? = null
+    override var renderscriptNdkModeEnabled: Boolean? = null
+    override var testApplicationId: String? = null
+    override var testInstrumentationRunner: String? = null
+    override var testHandleProfiling: Boolean? = null
+    override var testFunctionalTest: Boolean? = null
+    override var wearAppUnbundled: Boolean? = null
+    protected override var _versionCode: Int? = null
+    protected override var _versionName: String? = null
+    override val resourceConfigurations: MutableSet<String> = mutableSetOf()
+
     // in the merged flavor scenario which is still accessible from the old variant API, we need
     // to reset the value in the VariantProperties which we can do through the DslInfo reference.
     override var applicationId: String?

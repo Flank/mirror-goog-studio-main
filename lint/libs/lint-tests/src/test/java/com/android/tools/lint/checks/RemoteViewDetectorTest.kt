@@ -39,47 +39,47 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
                 xml(
                     "res/layout/test.xml",
                     """
-                <merge>
-                    <Button />
-                    <AdapterViewFlipper />
-                    <FrameLayout />
-                    <GridLayout />
-                    <GridView />
-                    <LinearLayout />
-                    <ListView />
-                    <RelativeLayout />
-                    <StackView />
-                    <ViewFlipper />
-                    <AnalogClock />
-                    <Button />
-                    <Chronometer />
-                    <ImageButton />
-                    <ImageView />
-                    <ProgressBar />
-                    <TextClock />
-                    <TextView />
-                    <DatePicker />
-                    <androidx.appcompat.widget.AppCompatTextView />
-                </merge>
-                """
+                    <merge>
+                        <Button />
+                        <AdapterViewFlipper />
+                        <FrameLayout />
+                        <GridLayout />
+                        <GridView />
+                        <LinearLayout />
+                        <ListView />
+                        <RelativeLayout />
+                        <StackView />
+                        <ViewFlipper />
+                        <AnalogClock />
+                        <Button />
+                        <Chronometer />
+                        <ImageButton />
+                        <ImageView />
+                        <ProgressBar />
+                        <TextClock />
+                        <TextView />
+                        <DatePicker />
+                        <androidx.appcompat.widget.AppCompatTextView />
+                    </merge>
+                    """
                 ).indented(),
                 java(
                     """
-                package foo.main;
-                public class R {
-                    public static class layout {
-                        public static final int test = 0x7f070031;
+                    package test.pkg;
+                    public class R {
+                        public static class layout {
+                            public static final int test = 0x7f070031;
+                        }
                     }
-                }
-                """
+                    """
                 ).indented()
             ).run().expect(
                 """
-            src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
-                val remoteView = RemoteViews(packageName, R.layout.test)
-                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            1 errors, 0 warnings
-            """
+                src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
+                    val remoteView = RemoteViews(packageName, R.layout.test)
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
             )
     }
 }

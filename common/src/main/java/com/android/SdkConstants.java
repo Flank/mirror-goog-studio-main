@@ -1314,6 +1314,7 @@ public final class SdkConstants {
     public static final String CONSTRAINT_REFERENCED_IDS = "constraint_referenced_ids";
 
     // Tags: Drawables
+    public static final String TAG_ANIMATION_LIST = "animation-list";
     public static final String TAG_ANIMATED_SELECTOR = "animated-selector";
     public static final String TAG_ANIMATED_VECTOR = "animated-vector";
     public static final String TAG_BITMAP = "bitmap";
@@ -1524,6 +1525,13 @@ public final class SdkConstants {
     public static final String ATTR_VIEWPORT_WIDTH = "viewportWidth";
     public static final String ATTR_PATH_DATA = "pathData";
     public static final String ATTR_FILL_COLOR = "fillColor";
+
+    // Attributes: AnimationDrawable
+    public static final String ATTR_ONESHOT = "oneshot";
+
+    // Attributes: AnimatedStateListDrawable
+    public static final String ATTR_FROM_ID = "fromId";
+    public static final String ATTR_TO_ID = "toId";
 
     // Attributes: Gradients
     public static final String ATTR_END_X = "endX";

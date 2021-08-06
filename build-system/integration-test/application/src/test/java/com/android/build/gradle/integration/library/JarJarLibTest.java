@@ -154,9 +154,9 @@ public class JarJarLibTest {
             try (InputStream zipEntry = zipFile.getInputStream(entry)) {
                 classReader = new ClassReader(zipEntry);
             }
-            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM5);
+            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM7);
             classReader.accept(mainTestClassNode, 0);
-            
+
             // Make sure bytecode got rewritten to point to renamed classes.
 
             // search for the onCrate method.

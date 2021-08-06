@@ -1,7 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:kotlin.bzl", "maven_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("xjc.bzl", "xsd_to_java")
 load("//tools/base/common:version.bzl", "BASE_VERSION")

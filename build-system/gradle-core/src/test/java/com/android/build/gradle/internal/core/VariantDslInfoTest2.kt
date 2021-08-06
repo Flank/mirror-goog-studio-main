@@ -942,21 +942,21 @@ class VariantDslInfoTest2 :
         var dslNamespace: String? = null
 
         /** default Config values */
-        val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)
+        val defaultConfig: DefaultConfig = dslServices.newDecoratedInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)
 
         /** configures the default config */
         fun defaultConfig(action: DefaultConfig.() -> Unit) {
             action(defaultConfig)
         }
 
-        val buildType: BuildType = dslServices.newInstance(BuildType::class.java, "Build-Type", dslServices)
+        val buildType: BuildType = dslServices.newDecoratedInstance(BuildType::class.java, "Build-Type", dslServices)
 
         fun buildType(action: BuildType.() -> Unit) {
             action(buildType)
         }
 
         private val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name ->
-            dslServices.newInstance(ProductFlavor::class.java, name, dslServices)
+            dslServices.newDecoratedInstance(ProductFlavor::class.java, name, dslServices)
         }
         val flavors: List<ProductFlavor>
             get() = productFlavors.values.toList()

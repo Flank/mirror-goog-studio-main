@@ -24,6 +24,7 @@ cc_library(
         "process_metadata/process_metadata_request_handler.cc",
         "scheduling/scheduling_request_handler.cc",
         "trace_events/android_frame_events_request_handler.cc",
+        "trace_events/android_frame_timeline_request_handler.cc",
         "trace_events/trace_events_request_handler.cc",
         "trace_metadata_request_handler.cc",
         "trace_processor_service.cc",
@@ -34,6 +35,7 @@ cc_library(
         "process_metadata/process_metadata_request_handler.h",
         "scheduling/scheduling_request_handler.h",
         "trace_events/android_frame_events_request_handler.h",
+        "trace_events/android_frame_timeline_request_handler.h",
         "trace_events/trace_events_request_handler.h",
         "trace_metadata_request_handler.h",
         "trace_processor_service.h",
@@ -124,7 +126,27 @@ cc_test(
         "-Itools/base/profiler/native/trace_processor_daemon",
     ],
     data = [
-        "testdata/frame.trace",
+        "testdata/frame-lifecycle.trace",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":trace_processor_service_impl",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "android_frame_timeline_request_handler_test",
+    size = "medium",
+    srcs = [
+        "trace_events/android_frame_timeline_request_handler_test.cc",
+    ],
+    copts = [
+        "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
+        "-Itools/base/profiler/native/trace_processor_daemon",
+    ],
+    data = [
+        "testdata/frame-timeline.trace",
     ],
     linkstatic = 1,
     deps = [

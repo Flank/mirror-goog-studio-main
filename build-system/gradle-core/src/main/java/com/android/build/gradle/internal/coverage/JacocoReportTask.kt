@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.coverage
 
-import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
@@ -23,17 +22,17 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.utils.usLocaleCapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Closeables
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -96,7 +95,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val sourceFolders: ConfigurableFileCollection
+    abstract val javaSources: ListProperty<ConfigurableFileTree>
 
     @get:Internal
     abstract val tabWidth: Property<Int>
@@ -118,6 +117,10 @@ abstract class JacocoReportTask : NonIncrementalTask() {
             }
             connectedTestJacocoFiles.toSet()
         }
+
+        // Jacoco requires source set directory roots rather than source files to produce
+        // source code highlighting in reports.
+        val sourceFolders = javaSources.get().map(ConfigurableFileTree::getDir)
 
         workerExecutor
             .classLoaderIsolation { classpath: ClassLoaderWorkerSpec ->
@@ -158,7 +161,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
             task.tabWidth.setDisallowChanges(4)
 
             task.classFileCollection.setFrom(creationConfig.testedConfig.artifacts.getAllClasses())
-            task.sourceFolders.setFrom(creationConfig.services.fileCollection(creationConfig.testedConfig.javaSources))
+            task.javaSources.setDisallowChanges(creationConfig.testedConfig.javaSources)
         }
     }
 

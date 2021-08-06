@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.tools.json.JsonFileWriter;
 import com.android.tools.maven.AetherUtils;
+import com.android.tools.maven.HandleAarDescriptorReaderDelegate;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.repository_generator.BuildFileWriter;
 import com.android.tools.repository_generator.ResolutionResult;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -45,6 +47,7 @@ import org.apache.maven.model.building.ModelBuilder;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.apache.maven.model.resolution.ModelResolver;
+import org.apache.maven.repository.internal.ArtifactDescriptorReaderDelegate;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -125,10 +128,10 @@ public class LocalMavenRepositoryGenerator {
                 new RemoteRepository.Builder("prebuilts", "default", "file://" + this.repoPath)
                         .build();
         List<RemoteRepository> repositories = new ArrayList<>();
-        repositories.add(remoteRepository);
         if (fetch) {
             repositories.addAll(AetherUtils.REPOSITORIES);
         }
+        repositories.add(remoteRepository);
         repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
     }
 
@@ -289,16 +292,16 @@ public class LocalMavenRepositoryGenerator {
         // involved in a conflict, then this will map requested dependency artifact
         // to its reconciled dependency artifact.
         Map<String, String> conflictResolution = new HashMap<>();
-        // The dependencies after resolution.
-        List<String> resolvedDeps = new ArrayList<>();
+        // The dependencies after resolution grouped by scope.
+        Map<String, List<String>> resolvedDeps = new TreeMap<>();
         // The dependencies that were involved in a conflict and got upgraded.
         List<String> originalDeps = new ArrayList<>();
 
-        if (isConflictLoser) {
-            for (DependencyNode child : node.getChildren()) {
-                originalDeps.add(child.getArtifact().toString());
-            }
-        } else {
+        for (DependencyNode child : node.getChildren()) {
+            originalDeps.add(child.getArtifact().toString());
+        }
+
+        if (!isConflictLoser) {
             for (DependencyNode child : node.getChildren()) {
                 DependencyNode winnerChildNode = getWinner(child);
                 if (winnerChildNode == null
@@ -309,14 +312,18 @@ public class LocalMavenRepositoryGenerator {
                                 .equals(child.getArtifact().toString())) {
                     // Winner doesn't exist, does not have an artifact, or is identical
                     // to the child node. This is a dependency that was not upgraded.
-                    resolvedDeps.add(child.getArtifact().toString());
+                    String scope = child.getDependency().getScope();
+                    resolvedDeps.putIfAbsent(scope, new ArrayList<>());
+                    resolvedDeps.get(scope).add(child.getArtifact().toString());
                 } else {
                     // This dependency was in a conflict, and got upgraded.
                     conflictResolution.put(
                             child.getArtifact().toString(),
                             winnerChildNode.getArtifact().toString());
-                    resolvedDeps.add(winnerChildNode.getArtifact().toString());
-                    originalDeps.add(child.getArtifact().toString());
+                    // We still maintain the original dependency scope.
+                    String scope = child.getDependency().getScope();
+                    resolvedDeps.putIfAbsent(scope, new ArrayList<>());
+                    resolvedDeps.get(scope).add(winnerChildNode.getArtifact().toString());
                 }
             }
         }
@@ -329,10 +336,10 @@ public class LocalMavenRepositoryGenerator {
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
                             null,
                             null,
-                            new String[0],
                             node.getChildren().stream()
                                     .map(d -> d.getArtifact().toString())
                                     .toArray(String[]::new),
+                            null,
                             null));
         } else {
             result.dependencies.add(
@@ -342,8 +349,8 @@ public class LocalMavenRepositoryGenerator {
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
                             parentCoord,
                             sourcesJarPath,
-                            resolvedDeps.toArray(new String[0]),
                             originalDeps.toArray(new String[0]),
+                            resolvedDeps,
                             conflictResolution));
         }
     }
@@ -364,7 +371,7 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
-        boolean fetch = false;
+        boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -581,6 +588,9 @@ public class LocalMavenRepositoryGenerator {
             // When this flag is true, these nodes are kept in the dependency graph, but have a
             // special marker (NODE_DATA_WINNER).
             session.setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true);
+            session.setConfigProperty(
+                    ArtifactDescriptorReaderDelegate.class.getName(),
+                    new HandleAarDescriptorReaderDelegate());
 
             return session;
         }

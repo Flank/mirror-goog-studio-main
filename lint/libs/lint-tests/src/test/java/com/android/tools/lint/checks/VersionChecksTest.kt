@@ -3048,6 +3048,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         get() = false
                     """
                 ),
+                0xdeff4caa,
                 "test/pkg/utils/UtilsKt.class:" +
                     "H4sIAAAAAAAAAI1UzVcaVxT/vQFhGPwY0fiBrVpDEtDqIEnaNBhbYzVySrWt" +
                     "xEVdPWAkI8MMZ97ASXaebvo3dNt1F+0up4sej931P+k/0dP7RjCgNJbFe/fd" +
@@ -3094,6 +3095,7 @@ class VersionChecksTest : AbstractCheckTest() {
 
                     """
                 ),
+                0xe95da7a2,
                 """
                 test/pkg/utils/Utils2Kt.class:
                 H4sIAAAAAAAAAG1QyU4CQRB9PQMMjCi44IL7loAHR4g3vBgTEyIuEeXCqZGO
@@ -3138,6 +3140,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                     """
                 ),
+                0xb5722a1d,
                 "test/pkg/constants/Constants.class:" +
                     "H4sIAAAAAAAAAG1RTU8bMRB9zoYkm6QQKCnlm5QeSA9dqT30AEIKEa1WWkGU" +
                     "DTnkgpyNG0wSO9p1UH9UL4hDEYf+AH4UYnYFoQUOnrGf5817Y9/e3fwF8A0f" +

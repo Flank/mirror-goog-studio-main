@@ -1,20 +1,16 @@
-load("//tools/base/bazel:proto.bzl", "java_proto_library")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:proto.bzl", "maven_proto_library")
+load("//tools/base/bazel:maven.bzl", "import_maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-java_proto_library(
-    name = "android-test-plugin-host-coverage-proto",
+import_maven_library("android-test-plugin-host-coverage-proto", "android-test-plugin-host-coverage-proto_bzl")
+
+maven_proto_library(
+    name = "android-test-plugin-host-coverage-proto_bzl",
     srcs = glob(["src/main/proto/*.proto"]),
-    pom = ":pom",
+    coordinates = "com.android.tools.utp:android-test-plugin-host-coverage-proto:" + BASE_VERSION,
     protoc_grpc_version = "1.21.1",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-coverage-proto",
     visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "android-test-plugin-host-coverage-proto",
-    group = "com.android.tools.utp",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 filegroup(

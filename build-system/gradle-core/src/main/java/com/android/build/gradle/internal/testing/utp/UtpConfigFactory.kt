@@ -354,6 +354,7 @@ class UtpConfigFactory {
             if (additionalTestOutputDir != null && additionalTestOutputOnDeviceDir != null) {
                 addHostPlugin(
                     createAdditionalTestOutputPlugin(
+                        deviceName,
                         additionalTestOutputDir,
                         additionalTestOutputOnDeviceDir,
                         utpDependencies))
@@ -450,6 +451,9 @@ class UtpConfigFactory {
                 instrumentationArgsBuilder.apply {
                     putAllArgsMap(testData.instrumentationRunnerArguments)
 
+                    useTestStorageService = testData.instrumentationRunnerArguments.getOrDefault(
+                        "useTestStorageService", "false").toBoolean()
+
                     if (testData.isTestCoverageEnabled) {
                         putArgsMap("coverage", "true")
                         val testCoverageArgName = if (useOrchestrator) {
@@ -465,6 +469,8 @@ class UtpConfigFactory {
                     if (additionalTestOutputOnDeviceDir != null) {
                         putArgsMap("additionalTestOutputDir", additionalTestOutputOnDeviceDir)
                     }
+
+                    noWindowAnimation = testData.animationsDisabled
                 }
             }
             this.useOrchestrator = useOrchestrator
@@ -550,8 +556,11 @@ class UtpConfigFactory {
             } else {
                 singleCoverageFile = coverageFilePath
             }
-            outputDirectoryOnHost = "${coverageOutputDir.absolutePath}/${deviceName}/"
+            outputDirectoryOnHost = coverageOutputDir.absolutePath +
+                    File.separator + deviceName + File.separator
             runAsPackageName = testData.instrumentationTargetPackageId
+            useTestStorageService = testData.instrumentationRunnerArguments.getOrDefault(
+                "useTestStorageService", "false").toBoolean()
         }
     }
 
@@ -572,12 +581,14 @@ class UtpConfigFactory {
     }
 
     private fun createAdditionalTestOutputPlugin(
+        deviceName: String,
         additionalTestOutputDir: File,
         additionalTestOutputOnDeviceDir: String,
         utpDependencies:UtpDependencies): ExtensionProto.Extension {
         return ANDROID_TEST_ADDITIONAL_TEST_OUTPUT_PLUGIN.toExtensionProto(
             utpDependencies, AndroidAdditionalTestOutputConfig::newBuilder) {
-            additionalOutputDirectoryOnHost = additionalTestOutputDir.absolutePath
+            additionalOutputDirectoryOnHost =
+                additionalTestOutputDir.absolutePath + File.separator + deviceName + File.separator
             additionalOutputDirectoryOnDevice = additionalTestOutputOnDeviceDir
         }
     }

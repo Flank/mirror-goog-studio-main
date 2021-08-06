@@ -60,6 +60,7 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
@@ -84,7 +85,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         var call = origCall
         // Handle typedefs and resource types: if you're comparing it, check that
         // it's being compared with something compatible
-        var p = com.android.tools.lint.detector.api.skipParentheses(call.uastParent) ?: return
+        var p = skipParenthesizedExprUp(call.uastParent) ?: return
 
         if (p is UQualifiedReferenceExpression) {
             call = p
@@ -755,7 +756,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     // which are "b.contains(a)"
                     val text = operator.text
                     val operand =
-                        if (text == "in" || text == "!in") {
+                        if (context.evaluator.isInfix(method) || text == "in" || text == "!in") {
                             call.leftOperand
                         } else {
                             call.rightOperand

@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.errors.SyncIssueReporter
-import com.android.builder.core.VariantType
 import com.android.builder.errors.IssueReporter
 import com.google.common.collect.ImmutableList
 
@@ -158,7 +158,7 @@ class DimensionCombinator(
                 val productFlavor = flavor.productFlavor
                 val dim = productFlavor.dimension
                 if (dim == null) {
-                    productFlavor.dimension = FAKE_DIMENSION
+                    (productFlavor as ProductFlavor).internalDimensionDefault = FAKE_DIMENSION
                 } else {
                     dimensions.add(dim)
                 }
@@ -177,7 +177,7 @@ class DimensionCombinator(
             for (flavorData in variantInputModel.productFlavors.values) {
                 val flavor = flavorData.productFlavor
                 if (flavor.dimension == null) {
-                    flavor.dimension = dimensionName
+                    (flavor as ProductFlavor).internalDimensionDefault = dimensionName
                 }
             }
         }

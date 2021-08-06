@@ -54,8 +54,8 @@ public class VdPreview {
      * Otherwise, use {@code imageScale} to scale the image based on the XML's size information.
      */
     public static class TargetSize {
-        private int imageMaxDimension;
-        private double imageScale;
+        private final int imageMaxDimension;
+        private final double imageScale;
 
         private TargetSize(int maxDimension, double imageScale) {
             this.imageMaxDimension = maxDimension;

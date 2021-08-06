@@ -22,6 +22,8 @@ import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprDown;
+import static org.jetbrains.uast.UastUtils.skipParenthesizedExprUp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,7 +34,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -54,6 +55,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UastUtils;
@@ -139,43 +141,49 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         List<UExpression> args = call.getValueArguments();
-        if (args.size() == 1 && args.get(0) instanceof UReferenceExpression) {
-            PsiElement resolvedServiceConst = ((UReferenceExpression) args.get(0)).resolve();
-            if (!(resolvedServiceConst instanceof PsiField)) {
-                return;
-            }
-            String name = ((PsiField) resolvedServiceConst).getName();
+        if (args.size() != 1) {
+            return;
+        }
 
-            // Check WIFI_SERVICE context origin
-            if (WIFI_SERVICE.equals(name)) {
-                checkWifiService(context, call);
-            }
+        UExpression argument = skipParenthesizedExprDown(args.get(0));
+        if (!(argument instanceof UReferenceExpression)) {
+            return;
+        }
+        PsiElement resolvedServiceConst = ((UReferenceExpression) argument).resolve();
+        if (!(resolvedServiceConst instanceof PsiField)) {
+            return;
+        }
+        String name = ((PsiField) resolvedServiceConst).getName();
 
-            UElement parent =
-                    Lint.skipParentheses(UastUtils.getQualifiedParentOrThis(call).getUastParent());
-            if (UastExpressionUtils.isTypeCast(parent)) {
-                UBinaryExpressionWithType cast = (UBinaryExpressionWithType) parent;
+        // Check WIFI_SERVICE context origin
+        if (WIFI_SERVICE.equals(name)) {
+            checkWifiService(context, call);
+        }
 
-                // Check cast
-                String expectedClass = getExpectedType(name);
-                if (expectedClass != null && cast != null) {
-                    String castType = cast.getType().getCanonicalText();
-                    if (castType.indexOf('.') == -1) {
-                        expectedClass = stripPackage(expectedClass);
+        UElement parent =
+                skipParenthesizedExprUp(UastUtils.getQualifiedParentOrThis(call).getUastParent());
+        if (parent != null && UastExpressionUtils.isTypeCast(parent)) {
+            UBinaryExpressionWithType cast = (UBinaryExpressionWithType) parent;
+
+            // Check cast
+            String expectedClass = getExpectedType(name);
+            if (expectedClass != null) {
+                String castType = cast.getType().getCanonicalText();
+                if (castType.indexOf('.') == -1) {
+                    expectedClass = stripPackage(expectedClass);
+                }
+                if (!castType.equals(expectedClass)) {
+                    // It's okay to mix and match
+                    // android.content.ClipboardManager and android.text.ClipboardManager
+                    if (isClipboard(castType) && isClipboard(expectedClass)) {
+                        return;
                     }
-                    if (!castType.equals(expectedClass)) {
-                        // It's okay to mix and match
-                        // android.content.ClipboardManager and android.text.ClipboardManager
-                        if (isClipboard(castType) && isClipboard(expectedClass)) {
-                            return;
-                        }
 
-                        String message =
-                                String.format(
-                                        "Suspicious cast to `%1$s` for a `%2$s`: expected `%3$s`",
-                                        stripPackage(castType), name, stripPackage(expectedClass));
-                        context.report(ISSUE, call, context.getLocation(cast), message);
-                    }
+                    String message =
+                            String.format(
+                                    "Suspicious cast to `%1$s` for a `%2$s`: expected `%3$s`",
+                                    stripPackage(castType), name, stripPackage(expectedClass));
+                    context.report(ISSUE, call, context.getLocation(cast), message);
                 }
             }
         }
@@ -266,6 +274,9 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                     return checkContextReference(context, lastAssignment, call);
                 }
             }
+        } else if (element instanceof UParenthesizedExpression) {
+            return checkContextReference(
+                    context, ((UParenthesizedExpression) element).getExpression(), call);
         }
 
         return false;

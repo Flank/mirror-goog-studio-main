@@ -33,12 +33,14 @@ import com.android.tools.lint.detector.api.Project
 import com.google.common.collect.Lists
 import com.google.common.collect.ObjectArrays
 import com.google.common.io.Files
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import java.io.File
 import java.io.IOException
 import java.util.EnumSet
 import javax.annotation.CheckReturnValue
+import kotlin.math.ceil
+import kotlin.math.log10
 
 /**
  * The actual machinery for running lint tests for a given [task]. This
@@ -48,7 +50,7 @@ import javax.annotation.CheckReturnValue
  * this class to contain actual test running code.
  */
 class TestLintRunner(private val task: TestLintTask) {
-    /** Whether the [.run] method has already been invoked. */
+    /** Whether the [run] method has already been invoked. */
     var alreadyRun = false
         private set
 
@@ -119,77 +121,8 @@ class TestLintRunner(private val task: TestLintTask) {
                 // tests may only apply if we discovered in the default test
                 // mode that the test actually consults the resource repository.)
                 for (mode in task.testModes) {
-                    currentTestMode = mode
-                    firstThrowable = null
-
-                    // Run lint with a specific test type?
-                    // For example, the UInjectionHost tests are only relevant
-                    // if the project contains Kotlin source files.
-                    val projectList = projects.projects
-                    if (!mode.applies(TestModeContext(this, projectList, emptyList(), null))) {
-                        notApplicable.add(mode)
-                        continue
-                    }
-
-                    // Look up output folder for projects; this allows
-                    // multiple test types to share a single project tree
-                    // (for example, UInjectionHost mode does not modify
-                    // the project structure in any way)
-                    val folderName: String = mode.folderName
-                    val root = File(rootDir, folderName)
-                    var files = projectMap[folderName]
-                    if (files == null) {
-                        files = this@TestLintRunner.createProjects(root)
-                        if (TestLintTask.duplicateFinder != null && task.testName != null) {
-                            TestLintTask.duplicateFinder.recordTestProject(task.testName, task, mode, files)
-                        }
-                        projectMap[folderName] = files
-                    }
-                    val beforeState = TestModeContext(this, projectList, files, null)
-                    val clientState: Any? = mode.before(beforeState)
-                    if (clientState === TestMode.CANCEL) {
-                        continue
-                    }
-                    var listener: LintListener? = null
-                    try {
-                        val lintClient: TestLintClient = createClient()
-                        mode.eventListener?.let {
-                            listener =
-                                object : LintListener {
-                                    override fun update(
-                                        driver: LintDriver,
-                                        type: LintListener.EventType,
-                                        project: Project?,
-                                        context: Context?
-                                    ) {
-                                        val testContext = TestModeContext(
-                                            task, projectList, files,
-                                            clientState, driver, context
-                                        )
-                                        it.invoke(testContext, type, clientState)
-                                    }
-                                }
-                            listeners.add(listener)
-                        }
-
-                        val testResult: TestResultState = checkLint(lintClient, root, files, mode)
-                        results[mode] = testResult
-                        if (projectInspector != null) {
-                            val knownProjects = lintClient.knownProjects
-                            val projects: List<Project> = ArrayList(knownProjects)
-                            val driver = lintClient.driver
-                            projects.sortedWith(Comparator.comparing { obj: Project -> obj.name })
-                            projectInspector.inspect(driver, projects)
-                        }
-                    } finally {
-                        val afterState = TestModeContext(this, projectList, files, clientState)
-                        mode.after(afterState)
-                        if (listener != null) {
-                            listeners.remove(listener)
-                        }
-                    }
+                    runMode(mode, notApplicable, rootDir, projectMap, results)
                 }
-                checkConsistentOutput(results)
 
                 // If you specifically configure a test mode which is not applicable
                 // in this test, produce a fake result which pinpoints the problem:
@@ -215,6 +148,136 @@ class TestLintRunner(private val task: TestLintTask) {
                 TestLintResult(this, results, defaultType)
             } finally {
                 TestFile.deleteFilesRecursively(tempDir)
+            }
+        }
+    }
+
+    private fun getTestModeFiles(
+        mode: TestMode,
+        rootDir: File,
+        projectMap: MutableMap<String, List<File>>
+    ): Pair<File, List<File>> {
+        // Look up output folder for projects; this allows
+        // multiple test types to share a single project tree
+        // (for example, UInjectionHost mode does not modify
+        // the project structure in any way)
+        val folderName: String = mode.folderName
+        val root = File(rootDir, folderName)
+        var files = projectMap[folderName]
+        if (files == null) {
+            files = this@TestLintRunner.createProjects(root)
+            if (TestLintTask.duplicateFinder != null && task.testName != null) {
+                TestLintTask.duplicateFinder.recordTestProject(task.testName, task, mode, files)
+            }
+            projectMap[folderName] = files
+        }
+        return Pair(root, files)
+    }
+
+    private fun TestLintTask.runMode(
+        mode: TestMode,
+        notApplicable: HashSet<TestMode>,
+        rootDir: File,
+        projectMap: MutableMap<String, List<File>>,
+        results: MutableMap<TestMode, TestResultState>,
+        forceCleanDir: Boolean = false
+    ) {
+        currentTestMode = mode
+        firstThrowable = null
+
+        // Run lint with a specific test type?
+        // For example, the UInjectionHost tests are only relevant
+        // if the project contains Kotlin source files.
+        val projectList = projects.projects
+        if (!mode.applies(TestModeContext(this, projectList, emptyList(), null))) {
+            notApplicable.add(mode)
+            return
+        }
+        val (root, files) = getTestModeFiles(mode, rootDir, projectMap)
+        val partitions = results[TestMode.DEFAULT]?.let {
+            val state = TestModeContext(this, projectList, files, null)
+            mode.partition(state)
+        } ?: listOf(mode)
+
+        if (partitions.size == 1 && partitions[0] == mode) {
+            runMode(mode, notApplicable, rootDir, projectMap, results, root, projectList, files)
+        } else {
+            for (nestedMode in partitions) {
+                runMode(nestedMode, notApplicable, rootDir, projectMap, results, forceCleanDir)
+            }
+        }
+    }
+    private fun TestLintTask.runMode(
+        mode: TestMode,
+        notApplicable: HashSet<TestMode>,
+        rootDir: File,
+        projectMap: MutableMap<String, List<File>>,
+        results: MutableMap<TestMode, TestResultState>,
+        root: File,
+        projectList: List<ProjectDescription>,
+        files: List<File>
+    ) {
+        val beforeState = TestModeContext(this, projectList, files, null)
+        val clientState: Any? = mode.before(beforeState)
+        if (clientState === TestMode.CANCEL) {
+            return
+        }
+        var listener: LintListener? = null
+        try {
+            val lintClient: TestLintClient = createClient()
+            mode.eventListener?.let {
+                listener =
+                    object : LintListener {
+                        override fun update(
+                            driver: LintDriver,
+                            type: LintListener.EventType,
+                            project: Project?,
+                            context: Context?
+                        ) {
+                            val testContext = TestModeContext(
+                                task, projectList, files,
+                                clientState, driver, context
+                            )
+                            it.invoke(testContext, type, clientState)
+                        }
+                    }
+                listeners.add(listener)
+            }
+
+            val testResult: TestResultState = checkLint(lintClient, root, files, mode)
+            results[mode] = testResult
+            if (projectInspector != null) {
+                val knownProjects = lintClient.knownProjects
+                val projects: List<Project> = ArrayList(knownProjects)
+                val driver = lintClient.driver
+                projects.sortedWith(Comparator.comparing { obj: Project -> obj.name })
+                projectInspector.inspect(driver, projects)
+            }
+
+            if (testModesIdenticalOutput) {
+                if (mode is MergedSourceTransformationTestMode && mode.modes.size > 1) {
+                    try {
+                        checkConsistentOutput(results, testModes.first(), mode)
+                        // Composite was successful: pass it into all the other individual modes
+                        for (nestedMode in mode.modes) {
+                            results[nestedMode] = testResult
+                        }
+                    } catch (exception: Throwable) {
+                        // The results are *not* consistent. Therefore, we'll run
+                        // each mode individually to pinpoint the problem
+                        for (nestedMode in mode.modes) {
+                            runMode(nestedMode, notApplicable, rootDir, projectMap, results, forceCleanDir = true)
+                        }
+                    }
+                } else {
+                    checkConsistentOutput(results, mode, testModes.first())
+                }
+            }
+        } finally {
+            val afterState = TestModeContext(this, projectList, files, clientState)
+            mode.after(afterState)
+            if (listener != null) {
+                listeners.remove(listener)
             }
         }
     }
@@ -249,43 +312,107 @@ class TestLintRunner(private val task: TestLintTask) {
             )
     }
 
-    private fun checkConsistentOutput(results: Map<TestMode, TestResultState>) {
-        with(task) {
-            if (!testModesIdenticalOutput) {
-                return
-            }
+    /**
+     * Makes sure that the test output for the two test modes matches
+     */
+    private fun checkConsistentOutput(
+        results: Map<TestMode, TestResultState>,
+        mode: TestMode,
+        first: TestMode
+    ) {
+        if (mode == first) {
+            return
+        }
 
-            // Make sure the output matches
-            var first: TestMode? = null
-            for (mode in testModes) {
-                if (first == null) {
-                    first = mode
-                    continue
+        // Skip if this is a configured test type which we skipped during analysis
+        val resultState = results[mode] ?: return
+        val actual = resultState.output
+        val expected = results[first]?.output ?: ""
+        if (!mode.sameOutput(expected, actual)) {
+            val expectedLabel = first.description
+            val actualLabel = mode.description + "\nTo run in isolation, change .run() to .testModes(${mode.fieldName}).run()"
+            val message = mode.diffExplanation
+                ?: """
+                The lint output was different between the test types
+                $first and $mode.
+
+                If this difference is expected, you can set the
+                eventType() set to include only one of these two.
+                """.trimIndent()
+
+            // We've already checked that the output does not match. Now include
+            // the mode labels in the assertion (which will fail) to clearly label
+            // the junit diff explaining which output is which.
+            // And if the sources were modified, include the sources itself to make
+            // the diff easily show what the change was.
+            val modifications = getModifications(results, mode, resultState)
+            if (modifications.isNotEmpty()) {
+                fun String.withLineNumbers(): String {
+                    var lineNumber = 1
+                    val lines = this.lines()
+                    val width = ceil(log10(lines.size.toDouble())).toInt()
+                    return lines.joinToString("\n") { String.format("%${width}d %s", lineNumber++, it) }
                 }
-                // Skip if this is a configured test type which we skipped during analysis
-                val resultState = results[mode] ?: continue
-                val actual = resultState.output
-                val expected = results[first]?.output
-                if (expected != actual) {
-                    val expectedLabel = first.description
-                    val actualLabel = mode.description
-                    val message = mode.diffExplanation
-                        ?: """
-                        The lint output was different between the test types
-                        $first and $mode.
 
-                        If this difference is expected, you can set the
-                        eventType() set to include only one of these two.
-                        """.trimIndent().trim()
+                fun describe(path: String, contents: String): String {
+                    val line = "//".repeat(35)
+                    return "\n$line\n$path:\n$line\n\n${contents.withLineNumbers()}"
+                }
 
-                    // We've already checked that the output does not match. Now include
-                    // the mode labels in the assertion (which will fail) to clearly label
-                    // the junit diff explaining which output is which.
-                    assertEquals(
-                        message,
-                        "$expectedLabel:\n\n$expected",
-                        "$actualLabel:\n\n$actual"
-                    )
+                val originalFiles = modifications.joinToString("\n") { describe(it.path, it.before) }
+                val modifiedFiles = modifications.joinToString("\n") { describe(it.path, it.after) }
+                assertEquals(
+                    message,
+                    "$expectedLabel:\n\n$expected$originalFiles",
+                    "$actualLabel:\n\n$actual$modifiedFiles"
+                )
+            } else {
+                assertEquals(
+                    message,
+                    "$expectedLabel:\n\n$expected",
+                    "$actualLabel:\n\n$actual"
+                )
+            }
+        }
+    }
+
+    private fun getModifications(
+        results: Map<TestMode, TestResultState>,
+        mode: TestMode,
+        resultState: TestResultState,
+    ): List<ChangedFile> {
+        val changedFiles: MutableList<ChangedFile> = mutableListOf()
+        val defaultState = results[TestMode.DEFAULT]
+        if (mode.modifiesSources && mode != TestMode.DEFAULT && defaultState != null) {
+            val originalDir = defaultState.rootDir
+            val modifiedDir = resultState.rootDir
+            addChangedFiles(changedFiles, originalDir, modifiedDir, "")
+        }
+
+        return changedFiles
+    }
+
+    private class ChangedFile(val path: String, val before: String, val after: String)
+
+    private fun addChangedFiles(
+        changed: MutableList<ChangedFile>,
+        dir1: File,
+        dir2: File,
+        path: String
+    ) {
+        val list = dir1.listFiles() ?: return
+        for (file1 in list) {
+            val name = file1.name
+            val file2 = File(dir2, name)
+            if (file1.isDirectory) {
+                addChangedFiles(changed, file1, file2, if (path.isEmpty()) name else "$path/$name")
+            } else {
+                if (file1.isFile && file2.isFile) {
+                    val contents1 = file1.readText()
+                    val contents2 = file2.readText()
+                    if (contents1 != contents2) {
+                        changed.add(ChangedFile(path, contents1, contents2))
+                    }
                 }
             }
         }
@@ -452,7 +579,7 @@ class TestLintRunner(private val task: TestLintTask) {
                     dirToProjectDescription[projectDir] = project
                     if (!projectDir.isDirectory) {
                         val ok = projectDir.mkdirs()
-                        Assert.assertTrue("Couldn't create projectDir $projectDir", ok)
+                        assertTrue("Couldn't create projectDir $projectDir", ok)
                     }
                     projectDirs.add(projectDir)
                 } catch (e: Exception) {

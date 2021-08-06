@@ -208,7 +208,10 @@ message StartFetchCommand {
     // If true, only show view nodes created by the user's own app
     bool skip_system_views = 2;
 }
-message StartFetchResponse {}
+message StartFetchResponse {
+    // Empty if start is successful, otherwise an appropriate error message.
+    string error = 1;
+}
 
 // Command to fire to stop |LayoutEvent|s from being returned.
 // If |FetchCommand| was never called, this will be a no-op.

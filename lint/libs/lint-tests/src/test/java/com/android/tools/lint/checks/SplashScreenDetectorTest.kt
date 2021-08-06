@@ -69,6 +69,11 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 class LaunchScreen : FragmentActivity() {
                     override fun onCreate(savedState: Bundle?) { }
                 }
+
+                // Make sure that if UAST manufactures a class to contain
+                // top level functions, we don't also try to flag these (e.g.
+                // an error in LaunchScreen.kt)
+                fun topLevelFunction() { }
                 """
             ).indented(),
             fragmentActivityStub,
@@ -80,7 +85,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 class LaunchScreen : FragmentActivity() {
                       ~~~~~~~~~~~~
                 0 errors, 1 warnings
-            """
+                """
             )
     }
 

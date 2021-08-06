@@ -20,17 +20,6 @@ import com.android.io.CancellableFileIo
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
 import com.android.tools.idea.protobuf.ByteString
 import java.awt.Image
-import java.awt.Point
-import java.awt.color.ColorSpace
-import java.awt.image.BufferedImage
-import java.awt.image.DataBuffer
-import java.awt.image.DataBufferInt
-import java.awt.image.DataBufferShort
-import java.awt.image.DirectColorModel
-import java.awt.image.Raster
-import java.awt.image.SinglePixelPackedSampleModel
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.file.Path
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.annotation.XmlAttribute

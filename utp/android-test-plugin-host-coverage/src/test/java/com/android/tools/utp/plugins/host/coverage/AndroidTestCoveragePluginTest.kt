@@ -39,6 +39,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyList
+import org.mockito.ArgumentMatchers.contains
 import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -173,6 +174,7 @@ class AndroidTestCoveragePluginTest {
             runAsPackageName = TESTED_APP
             singleCoverageFile = coverageFile
             outputDirectoryOnHost = outputDir
+            useTestStorageService = true
         }
 
         inOrder(mockDeviceController).apply {
@@ -281,6 +283,7 @@ class AndroidTestCoveragePluginTest {
             runAsPackageName = TESTED_APP
             multipleCoverageFilesInDirectory = coverageDir
             outputDirectoryOnHost = outputDir
+            useTestStorageService = true
         }
 
         inOrder(mockDeviceController).apply {
@@ -342,5 +345,44 @@ class AndroidTestCoveragePluginTest {
         verify(mockLogger, atLeastOnce()).warning(argThat<Supplier<String>> {
             it.get().contains("Shell command failed (-1)")
         })
+    }
+
+    @Test
+    fun useTestStorageServiceIsRequestedButNotInstalled() {
+        val coverageFile = "/data/data/${TESTED_APP}/coverage.ec"
+        val tmpDir = "/data/local/tmp/UUID-coverage_data"
+        val outputDir = "coverageOutputDir/deviceName/"
+
+        runAndroidTestCoveragePlugin() {
+            runAsPackageName = TESTED_APP
+            singleCoverageFile = coverageFile
+            outputDirectoryOnHost = outputDir
+            useTestStorageService = true
+        }
+
+        inOrder(mockDeviceController).apply {
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "run-as", TESTED_APP, "rm -f \"${coverageFile}\""))
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "mkdir -p \"${tmpDir}\"",
+            ))
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "run-as", TESTED_APP, "cat \"${coverageFile}\" > \"${tmpDir}/coverage.ec\""
+            ))
+            verify(mockDeviceController).pull(createTestArtifact(
+                "${tmpDir}/coverage.ec",
+                "${outputDir}/coverage.ec"))
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "rm -rf \"${tmpDir}\"",
+            ))
+            verifyNoMoreInteractions()
+        }
+
+        verify(mockLogger).warning(contains("TestStorageService is not installed"))
+        verifyNoMoreInteractions(mockLogger)
     }
 }

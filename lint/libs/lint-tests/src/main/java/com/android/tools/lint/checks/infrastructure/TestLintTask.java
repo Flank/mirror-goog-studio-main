@@ -131,6 +131,7 @@ public class TestLintTask {
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
     Collection<TestMode> testModes = new ArrayList<>(TestMode.Companion.values());
+    Collection<TestMode> ignoredTestModes = new ArrayList<>();
     boolean testModesIdenticalOutput = true;
     boolean useTestProject;
     boolean allowExceptions;
@@ -412,6 +413,7 @@ public class TestLintTask {
     public TestLintTask skipTestModes(TestMode... modes) {
         for (TestMode mode : modes) {
             testModes.remove(mode);
+            ignoredTestModes.add(mode);
         }
         return this;
     }

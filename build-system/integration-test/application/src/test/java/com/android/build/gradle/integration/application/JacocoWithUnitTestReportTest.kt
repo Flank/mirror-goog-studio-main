@@ -26,6 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 @RunWith(Parameterized::class)
 class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean) {
@@ -62,6 +63,7 @@ class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean
         testProject.executor()
             .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, isJacocoTransformEnabled)
             .run("createDebugUnitTestCoverageReport")
+        checkHighlitedSourceCodeReportFiles(testProject.buildDir)
         val generatedCoverageReport = FileUtils.join(
             testProject.buildDir,
             "reports",
@@ -83,5 +85,16 @@ class JacocoWithUnitTestReportTest(private val isJacocoTransformEnabled: Boolean
         assertThat(reportTitle!!.groups[1]!!.value).isEqualTo("debug")
         // Checks if the total line coverage on unit tests exceeds 0% i.e
         assertThat(totalUnitTestCoveragePercentage.trimEnd('%').toInt() > 0).isTrue()
+    }
+
+    // Regression test for b/188953818.
+    private fun checkHighlitedSourceCodeReportFiles(buildDir: File) {
+        val reportPackageInfoDir = FileUtils.join(
+            buildDir, "reports", "coverage", "test", "debug", "com.android.tests")
+        assertThat(FileUtils.join(reportPackageInfoDir, "MainActivity.java.html").exists())
+            .isTrue()
+        assertThat(FileUtils.join(reportPackageInfoDir, "someKotlinCode.kt.html").exists())
+            .isTrue()
+
     }
 }

@@ -169,6 +169,8 @@ java_binary(
     visibility = ["//visibility:public"],
 )
 
+exports_files(["maven/android.pom"])
+
 java_binary(
     name = "pom_generator",
     srcs = ["src/com/android/tools/binaries/PomGenerator.java"],
@@ -182,6 +184,21 @@ java_binary(
         ":maven",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+    ],
+)
+
+coverage_java_test(
+    name = "pom_generator_test",
+    srcs = ["testSrc/com/android/tools/binaries/PomGeneratorTest.java"],
+    data = ["//tools/base/bazel/test:pom_generator"],
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.PomGeneratorTest",
+    deps = [
+        ":maven",
+        ":pom_generator",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 
@@ -607,6 +624,7 @@ coverage_java_test(
         ":json",
         ":local_maven_repository_generator",
         ":maven",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
         "//tools/base/third_party:org.eclipse.aether_aether-transport-file",

@@ -21,7 +21,7 @@ import android.os.Looper
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
+import java.util.concurrent.ExecutionException
 
 object ThreadUtils {
 
@@ -55,12 +55,22 @@ object ThreadUtils {
         return if (!Looper.getMainLooper().isCurrentThread) {
             val future = CompletableFuture<T>()
             Handler.createAsync(Looper.getMainLooper()).post {
-                future.complete(block())
+                try {
+                    future.complete(block())
+                }
+                catch (exception: Exception) {
+                    future.completeExceptionally(exception)
+                }
             }
             future
         }
         else {
-            CompletableFuture.completedFuture(block())
+            try {
+                CompletableFuture.completedFuture(block())
+            }
+            catch (exception: Exception) {
+                CompletableFuture<T>().apply { completeExceptionally(exception) }
+            }
         }
     }
 

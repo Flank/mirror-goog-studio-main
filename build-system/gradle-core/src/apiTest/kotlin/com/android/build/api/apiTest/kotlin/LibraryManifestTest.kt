@@ -114,7 +114,8 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
         val ps = PrintStream(byteArrayOutputStream)
         val apkAnalyzer = ApkAnalyzerImpl(ps, Mockito.mock(AaptInvoker::class.java))
         val builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(
-            File(apkFolder, BuiltArtifactsImpl.METADATA_FILE_NAME))
+            File(apkFolder, BuiltArtifactsImpl.METADATA_FILE_NAME)
+        )
             ?: throw RuntimeException("Cannot load APKs")
         if (builtArtifacts.elements.size != 1)
             throw RuntimeException("Expected one APK !")

@@ -1,38 +1,40 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library_legacy", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-kotlin_library_legacy(
-    name = "lint-tests",
+maven_library(
+    name = "lint-tests_bzl",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    pom = ":pom",
+    coordinates = "com.android.tools.lint:lint-tests:" + BASE_VERSION,
+    legacy_name = "lint-tests",
+    notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/lint-psi/intellij-core",
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
-        "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
-        "//tools/base/lint:tools.lint-gradle",
-        "//tools/base/lint:tools.lint-model",
-        "//tools/base/lint/cli",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains_annotations",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/base/third_party:org.ow2.asm_asm",
+        "//prebuilts/tools/common/lint-psi/intellij-core:intellij-core_bzl",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler:kotlin-compiler_bzl",
+        "//prebuilts/tools/common/lint-psi/uast:uast_bzl",
+        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/common:common_bzl",
+        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
+        "//tools/base/lint:tools.lint-api_bzl",
+        "//tools/base/lint:tools.lint-checks_bzl",
+        "//tools/base/lint:tools.lint-gradle_bzl",
+        "//tools/base/lint:tools.lint-model_bzl",
+        "//tools/base/lint/cli:cli_bzl",
+        "//tools/base/sdk-common:tools.sdk-common_bzl",
+        "//tools/base/sdklib:tools.sdklib_bzl",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
+        "@maven//:org.codehaus.groovy.groovy-all",
+        "@maven//:org.jetbrains.annotations",
+        "@maven//:org.jetbrains.intellij.deps.trove4j",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
     ],
 )
 
@@ -98,13 +100,6 @@ kotlin_test(
         "//tools/base/third_party:org.jetbrains_annotations",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
-)
-
-maven_pom(
-    name = "pom",
-    artifact = "lint-tests",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
 )
 
 filegroup(

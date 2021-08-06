@@ -236,7 +236,7 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                                 LintFix.create()
                                         .name("Replace with valueOf()", true)
                                         .replace()
-                                        .pattern("(new\\s+" + replacedType + ")")
+                                        .pattern("(new.+)\\(")
                                         .with(replacedType + ".valueOf")
                                         .autoFix()
                                         .build();
