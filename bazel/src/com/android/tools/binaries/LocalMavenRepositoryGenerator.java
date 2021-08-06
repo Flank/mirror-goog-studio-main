@@ -27,6 +27,7 @@ import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +42,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -145,6 +148,15 @@ public class LocalMavenRepositoryGenerator {
     }
 
     public void run() throws Exception {
+        // Before triggering downloads, we must make sure there are no stale cache files
+        // After doing repo sync, the -prebuilts files might still be fresh enough to be used
+        // but different from the real metadata file.
+        try (Stream<Path> files = Files.walk(this.repoPath, FileVisitOption.FOLLOW_LINKS)) {
+            files.filter(path -> path.getFileName().toString().equals("maven-metadata-prebuilts.xml"))
+                 .map(Path::toFile)
+                 .forEach(File::delete);
+        }
+
         ResolutionResult result = new ResolutionResult();
 
         // Compute dependency graph with version resolution, but without conflict resolution.

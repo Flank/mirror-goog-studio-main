@@ -81,12 +81,6 @@ public class BuildFileWriter {
             throws IOException {
         if (dep.file == null) return;
 
-        if (!dep.file.endsWith(".jar")
-                && !dep.file.endsWith(".aar")
-                && !dep.file.endsWith(".pom")) {
-            throw new RuntimeException("Unsupported file: " + dep.file);
-        }
-
         Map<String, String> coord_parts = parseCoord(dep.coord);
         String classifier = coord_parts.getOrDefault("classifier", "default");
         if (classifier.equals("sources")) {
