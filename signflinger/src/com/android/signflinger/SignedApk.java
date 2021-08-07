@@ -34,6 +34,7 @@ import com.android.zipflinger.ZipSource;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -237,13 +238,19 @@ public class SignedApk implements Archive {
             return;
         }
         String name = req.getEntryName();
-        ByteBuffer content = archive.getContent(name);
-        if (content == null) {
-            String err = String.format("Cannot find and therefore inspect entry %s.", name);
-            throw new IllegalStateException(err);
+        try (InputStream in = archive.getInputStream(name)) {
+            if (in == null) {
+                String err = String.format("Cannot find and therefore inspect entry %s.", name);
+                throw new IllegalStateException(err);
+            }
+            // Send the whole payload into the datasink
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                req.getDataSink().consume(buffer, 0, read);
+            }
+            req.done();
         }
-        req.getDataSink().consume(content);
-        req.done();
     }
 
     private void finishV1() throws IOException {
