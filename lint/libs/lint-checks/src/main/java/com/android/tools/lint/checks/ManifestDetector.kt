@@ -19,6 +19,7 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ALLOW_BACKUP
 import com.android.SdkConstants.ATTR_FULL_BACKUP_CONTENT
 import com.android.SdkConstants.ATTR_ICON
+import com.android.SdkConstants.ATTR_LABEL
 import com.android.SdkConstants.ATTR_MIN_SDK_VERSION
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PACKAGE
@@ -431,6 +432,20 @@ class ManifestDetector :
             priority = 4,
             severity = Severity.WARNING,
             moreInfo = "https://firebase.google.com/docs/app-indexing/android/personal-content#add-a-broadcast-receiver-to-your-app",
+            implementation = IMPLEMENTATION
+        )
+
+        @JvmField
+        val REDUNDANT_LABEL = Issue.create(
+            id = "RedundantLabel",
+            briefDescription = "Redundant label on activity",
+            explanation = """
+                When an activity does not have a label attribute, it will use the one from the application tag. \
+                Since the application has already specified the same label, the label on this activity can be omitted.
+                """,
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.WARNING,
             implementation = IMPLEMENTATION
         )
 
@@ -1031,6 +1046,7 @@ class ManifestDetector :
                     }
                 }
                 checkMipmapIcon(context, element)
+                checkLabel(context, element)
             } else if (tag == TAG_SERVICE && context.project.isGradleProject) {
                 if (context.project.targetSdk >= 26) {
                     for (child in XmlUtils.getSubTagsByName(element, TAG_INTENT_FILTER)) {
@@ -1449,6 +1465,17 @@ class ManifestDetector :
                     "Should use `@mipmap` instead of `@drawable` for launcher icons"
                 )
             }
+        }
+    }
+
+    private fun checkLabel(context: XmlContext, activity: Element) {
+        val labelAttribute = activity.getAttributeNodeNS(ANDROID_URI, ATTR_LABEL) ?: return
+        val applicationElement = activity.parentNode as? Element ?: return
+        if (applicationElement.nodeName != TAG_APPLICATION) return
+        val applicationLabel = applicationElement.getAttributeNS(ANDROID_URI, ATTR_LABEL) ?: return
+        if (labelAttribute.value == applicationLabel) {
+            val fix = fix().unset(ANDROID_URI, ATTR_LABEL).build()
+            context.report(REDUNDANT_LABEL, context.getLocation(labelAttribute), "Redundant label can be removed", fix)
         }
     }
 

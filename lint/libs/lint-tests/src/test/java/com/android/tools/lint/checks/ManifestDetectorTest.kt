@@ -2273,6 +2273,46 @@ class ManifestDetectorTest : AbstractCheckTest() {
         ).issues(ManifestDetector.DATA_EXTRACTION_RULES).run().expectClean()
     }
 
+    fun testRedundantLabelOnActivity() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lb.myapplication">
+
+                    <application
+                        android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name"
+                        android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true"
+                        android:theme="@style/Theme.MyApplication">
+                        <activity android:name=".MainActivity" android:label="@string/app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).issues(ManifestDetector.REDUNDANT_LABEL).run().expect(
+            """
+            AndroidManifest.xml:7: Warning: Redundant label can be removed [RedundantLabel]
+                    <activity android:name=".MainActivity" android:label="@string/app_name">
+                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings"""
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 7: Delete label:
+            @@ -12 +12
+            -         <activity
+            -             android:name=".MainActivity"
+            -             android:label="@string/app_name" >
+            +         <activity android:name=".MainActivity" >
+        """
+        )
+    }
+
     private val fullBackup = xml(
         "res/xml/full_backup_content.xml",
         """

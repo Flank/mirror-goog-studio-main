@@ -258,6 +258,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ManifestDetector.MOCK_LOCATION,
                 ManifestDetector.MULTIPLE_USES_SDK,
                 ManifestDetector.ORDER,
+                ManifestDetector.REDUNDANT_LABEL,
                 ManifestDetector.SET_VERSION,
                 ManifestDetector.TARGET_NEWER,
                 ManifestDetector.UNIQUE_PERMISSION,
