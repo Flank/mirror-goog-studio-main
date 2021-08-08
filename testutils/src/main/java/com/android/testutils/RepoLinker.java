@@ -50,7 +50,7 @@ public class RepoLinker {
             if (split.length != 2) {
                 throw new IllegalStateException("Invalid repository file " + artifact);
             }
-            Path src = Paths.get(split[1]).toAbsolutePath();
+            Path src = Paths.get(split[1]).toAbsolutePath().normalize();
             Path dest = destination.resolve(split[0]);
 
             Files.createDirectories(dest.getParent());
