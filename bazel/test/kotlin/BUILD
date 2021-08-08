@@ -1,5 +1,5 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "maven_library")
-load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 
 # Test just kotlin
 java_library(
@@ -36,44 +36,40 @@ java_library(
 
 # Test just kotlin
 maven_library(
-    name = "test_maven_only_java_bzl",
+    name = "test_maven_only_java",
     srcs = ["java0/pkg/J0.java"],
     coordinates = "test_group:test_maven_only_java:1.2.3",
-    legacy_name = "test_maven_only_java",
 )
 
 maven_library(
-    name = "test_maven_only_kotlin_bzl",
+    name = "test_maven_only_kotlin",
     srcs = ["kotlin0/pkg/K0.kt"],
     coordinates = "test_group:test_maven_only_kotlin:1.2.3",
-    legacy_name = "test_maven_only_kotlin",
-    deps = [":test_maven_only_java_bzl"],
+    deps = [":test_maven_only_java"],
 )
 
 # Test circular dependencies with kotlin and java
 maven_library(
-    name = "test_maven_kotlin_and_java_bzl",
+    name = "test_maven_kotlin_and_java",
     srcs = [
         "java1_kotlin1/pkg/J1.java",
         "java1_kotlin1/pkg/K1.kt",
     ],
     coordinates = "test_group:test_maven_kotlin_and_java:1.2.3",
-    legacy_name = "test_maven_kotlin_and_java",
-    deps = [":test_maven_only_java_bzl"],
+    deps = [":test_maven_only_java"],
 )
 
 maven_library(
-    name = "test_maven_java_to_kotlin_bzl",
+    name = "test_maven_java_to_kotlin",
     srcs = ["java2/pkg/J2.java"],
     coordinates = "test_group:test_maven_java_to_kotlin:1.2.3",
-    legacy_name = "test_maven_java_to_kotlin",
     deps = [
-        ":test_maven_kotlin_and_java_bzl",
-        ":test_maven_only_kotlin_bzl",
+        ":test_maven_kotlin_and_java",
+        ":test_maven_only_kotlin",
     ],
 )
 
-maven_repo(
+maven_repository(
     name = "test_repo_from_kotlin",
     artifacts = [
         ":test_maven_only_kotlin",
