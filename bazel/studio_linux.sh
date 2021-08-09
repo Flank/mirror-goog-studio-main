@@ -147,7 +147,6 @@ function run_bazel_test() {
     --max_idle_secs=60 \
     "${bazelrc_flags[@]}" \
     test \
-    --keep_going \
     ${CONFIG_OPTIONS} \
     --worker_max_instances=${worker_instances} \
     --invocation_id=${invocation_id} \

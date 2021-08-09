@@ -90,7 +90,6 @@ fi
 "${script_dir}/bazel" \
   "${bazelrc_flags[@]}" \
   test \
-  --keep_going \
   --config=dynamic \
   --invocation_id=${invocation_id} \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
