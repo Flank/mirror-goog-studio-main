@@ -16,7 +16,6 @@
 
 package com.android.testutils;
 
-import com.android.utils.PathUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,7 +30,6 @@ public class RepoLinker {
             System.exit(1);
         }
         Path destination = Paths.get(args[0]);
-        PathUtils.deleteRecursivelyIfExists(destination);
         List<String> artifacts =
                 Files.readAllLines(Paths.get(System.getProperty("artifacts_manifest_file")));
         new RepoLinker().link(destination, artifacts);
