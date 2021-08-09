@@ -171,8 +171,12 @@ class AndroidEval implements Eval {
 
             // We use invokevirtual for everything else which is inaccurate for private methods
             // and super methods invocations.
-            Method method =
-                    forName(owner.replace('/', '.')).getDeclaredMethod(name, parameterClass);
+            Method method = methodLookup(owner, name, parameterClass);
+            if (method == null) {
+                // Unlikely since we know that the class compiles.
+                throw new IllegalStateException("Cannot find " + name + " in " + owner);
+            }
+
             method.setAccessible(true);
             Object result =
                     method.invoke(
@@ -196,9 +200,14 @@ class AndroidEval implements Eval {
             for (int i = 0; i < parameterClass.length; i++) {
                 parameterClass[i] = typeToClass(parameterType[i]);
             }
-            Method method =
-                    Class.forName(owner.replace('/', '.'))
-                            .getDeclaredMethod(methodName, parameterClass);
+
+            Method method = methodLookup(owner, methodName, parameterClass);
+            if (method == null) {
+                // Unlikely since we know that the class compiles.
+                throw new IllegalStateException(
+                        "Cannot find static " + methodName + " in " + owner);
+            }
+
             method.setAccessible(true);
             Object result =
                     method.invoke(null, list.stream().map(AndroidEval::valueToObject).toArray());
@@ -442,6 +451,21 @@ class AndroidEval implements Eval {
             default:
                 return forName(type);
         }
+    }
+
+    private Method methodLookup(String className, String methodName, Class[] parameterClass)
+            throws ClassNotFoundException {
+        Method method = null;
+        Class curClass = forName(className.replace('/', '.'));
+        while (curClass != null) {
+            try {
+                method = curClass.getDeclaredMethod(methodName, parameterClass);
+                break;
+            } catch (NoSuchMethodException e) {
+                curClass = curClass.getSuperclass();
+            }
+        }
+        return method;
     }
 
     /**
