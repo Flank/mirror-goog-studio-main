@@ -29,6 +29,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiImportStaticReferenceElement
 import com.intellij.psi.PsiModifier
+import com.intellij.psi.impl.JavaPsiFacadeEx
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.uast.UCallExpression
@@ -85,7 +86,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 return true
             }
 
-            // Kotlin synthetic classes are computed on the fly by a compiler plugin"
+            // Kotlin synthetic classes are computed on the fly by a compiler plugin
             if (s.startsWith("kotlinx.android.synthetic.")) {
                 return true
             }
@@ -127,12 +128,26 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 val clsName = qualifiedExpression?.receiverExpression?.text
                 if (clsName != null) {
                     val name = qualifiedExpression.selectorExpression?.text
-                    val importedClass = evaluator.findClass(clsName)
-                    if (importedClass != null && importedClass.methods.any {
-                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+
+                    fun PsiClass.hasTargetMethod(): Boolean {
+                        return methods.any {
+                            it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+                        }
                     }
-                    ) {
+
+                    val importedClass = evaluator.findClass(clsName)
+                    if (importedClass != null && importedClass.hasTargetMethod()) {
                         return super.visitImportStatement(node)
+                    }
+
+                    // If it's a top level function, the left hand side is the package, not the class name.
+                    // There are a number of possible classes that can contain that package, so search through them:
+                    val facade = JavaPsiFacadeEx.getInstance(importReferencePsi.project)
+                    val pkg = facade.findPackage(clsName)
+                    if (pkg != null) {
+                        if (pkg.classes.any { it.hasTargetMethod() }) {
+                            return super.visitImportStatement(node)
+                        }
                     }
                 }
             }

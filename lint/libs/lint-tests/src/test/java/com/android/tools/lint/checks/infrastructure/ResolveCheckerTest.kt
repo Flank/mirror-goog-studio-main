@@ -19,10 +19,11 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.AlwaysShowActionDetector
 import com.android.tools.lint.checks.ToastDetector
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest.compiled
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
-import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Test
 
 @Suppress("LintDocExample")
 class ResolveCheckerTest {
@@ -163,5 +164,90 @@ class ResolveCheckerTest {
                 e.message?.replace(" \n", "\n")?.trim()
             )
         }
+    }
+
+    @Test
+    fun testResolveTopLevelFunctionImport() {
+        lint().files(
+            kotlin(
+                """
+                package test
+
+                import androidx.compose.runtime.remember
+
+                fun test() {
+                    val foo = remember { true }
+                }
+            """
+            ),
+            compiled(
+                "libs/remember.jar",
+                kotlin(
+                    "androidx/compose/runtime/Remember.kt",
+                    """
+                    package androidx.compose.runtime
+
+                    inline fun <T> remember(calculation: () -> T): T = calculation()
+
+                    inline fun <T, V1> remember(
+                        v1: V1,
+                        calculation: () -> T
+                    ): T = calculation()
+
+                    inline fun <T, V1, V2> remember(
+                        v1: V1,
+                        v2: V2,
+                        calculation: () -> T
+                    ): T = calculation()
+
+                    inline fun <T, V1, V2, V3> remember(
+                        v1: V1,
+                        v2: V2,
+                        v3: V3,
+                        calculation: () -> T
+                    ): T = calculation()
+
+                    inline fun <V> remember(
+                        vararg inputs: Any?,
+                        calculation: () -> V
+                    ): V = calculation()
+                    """
+                ).indented(),
+                0x8c16884e,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3ApcYlkZiXUpSfmVKhl5yfW5BfnKpX
+                VJpXkpmbKsQVlJqbmpuUWuRdwsXHxVKSWlwixBYCJL1LlBi0GADwe0pKUAAA
+                AA==
+                """,
+                """
+                androidx/compose/runtime/RememberKt.class:
+                H4sIAAAAAAAAAK1WW1PbVhD+juSLfMEWJlDippSAQ8BAZBuatjHQUmZoPCEk
+                EzxqpzzJtkIFtpTRkT15ZPrQp/6BvvYX9DHtQ4ehb/1Rna4uYAOKCU089u5q
+                tft9u2elc/zPv3/+BWAVWwyzmtmyLaP1WmlanVcW1xW7azpGR1de6B2909Dt
+                J04cjEE+1Hqa0tbMA+VZ41BvkldkkOwgimF1fufIctqGqRz2OsrLrtl0DMvk
+                ynZglaoLO5cxqgyba/VHV/0b14GtLdbr1Y3qAklqYseyD5RD3WnYmkFRmmla
+                juZn7FrObrfdpqhUU2s3u23PLyHBMDVAYZiObptaW6mZjk0YRpPHkWIYb/6o
+                N48CkOearXV0x+32/vzVogc8ey7IQXVBTWMEmSTSyF7kC2kpjlGGmGH2rCOd
+                4dZ8yHKlMYZbKeQwzjBSMAovC/31ZzWG6etGwLAdVvj/GdwPoYNTy6HTrKvl
+                61guTFTolRlyYbTfD1/49+mIv3tHauWtbdbVyg1brTAcvltXH6bPX96zT3Vl
+                aPN1deWGC7DC8O38/gfqrr6mhpZ3c3yqUvWqVKvei/mq63AJcwxjIVgMo2dw
+                T3VHa2mO5vbW6Ym01TJXROkdPXINgfyvDdcqkdUqM+acHE8kBUlMCpMC6XRS
+                kEfpd3KcPDnO3yOdFx6zmYh0ciyzSloW8lIukiNXSXx8+rP09xt2cnz6W0yQ
+                I/mVi8GkmBytxOQYOaPDUuP5zbBUkoIsnQPE5ARpaRhQMv/s7UAkRTl1BS4m
+                p0mnhsGO5Nd92IwPm6lMyNl8OidJLBeZZKXRkjzj6QGQzGWQ3OlPQjwZlU5/
+                rZSYu/b06rG6u9MEoxvcKQW17IqKK+gJZSqjQSJ1di4+OHIYIltWizbr7I5h
+                6rtd113XGm3dRbTouFE123CvA2dizzgwNadrk1144Z+zNbNncINunx8um/3T
+                iyG5Z3Xtpr5tuPm3gxzVzxgIRBkCInA/UdymXwwi1uhqi/wC6Wwxl3wDWVwr
+                /oEJht/dxxDrJGPUk0SpG2RPkE9CHB9hkryUhASBAV950XF8TTrOvAR4LPmA
+                5Snddp/n7KLPsr4YypLwWKYp9IzFKw138IlXus/HAr6PPb6EG9JnnAoYvwv6
+                zS75jBtLoYxZj7FIoWeM4iXGabL6vQoB96ced0r0gvrsdwP2BoVEScvLPvvD
+                yHIIfYIWdMP7oxUl26d3a5bP6eVzehmzZAme5RYiBoXMeIWM+KMdLKUQlLIX
+                LP14MXefShk2gAwt6dkAMgMDGMcc5j348QsDuOdzCwGrLwVserKKb0i3yLtA
+                1RT3IdawWMMSSSzX8ABKDSWU98E4KljZxxhHlGOVI8HxGUeM4yHHHY48x+cc
+                0xxTHF9wzHLc5fiSY47jkfct/AfDBOqMsAoAAA==
+                """
+            )
+        ).issues(AlwaysShowActionDetector.ISSUE).run().expectClean()
     }
 }
