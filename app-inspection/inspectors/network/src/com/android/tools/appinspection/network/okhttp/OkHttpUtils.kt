@@ -16,12 +16,11 @@
 package com.android.tools.appinspection.network.okhttp
 
 import java.io.OutputStream
-import java.util.Arrays
 
 /**
- * Scans the current stack trace and return the section that starts with OkHttp package.
+ * Scans the current stack trace and returns the section that comes after OkHttp packages.
  */
-fun getCallstack(okHttpPackage: String): Array<StackTraceElement> {
+fun getOkHttpCallStack(okHttpPackage: String): String {
     val callstack = Throwable().stackTrace
     var okHttpCallstackStart = -1
     var okHttpCallstackEnd = 0
@@ -35,9 +34,10 @@ fun getCallstack(okHttpPackage: String): Array<StackTraceElement> {
         }
     }
     return if (okHttpCallstackStart >= 0) {
-        Arrays.copyOfRange(callstack, okHttpCallstackEnd, callstack.size)
+        callstack.copyOfRange(okHttpCallstackEnd, callstack.size)
+            .fold("") { acc, stackTraceElement -> "$acc$stackTraceElement\n" }
     } else {
-        emptyArray()
+        ""
     }
 }
 

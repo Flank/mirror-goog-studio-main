@@ -65,7 +65,7 @@ class OkHttp3Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
     }
 
     private fun trackRequest(request: Request): HttpConnectionTracker {
-        val callstack = getCallstack(request.javaClass.getPackage().name)
+        val callstack = getOkHttpCallStack(request.javaClass.getPackage().name)
         val tracker = trackerFactory.trackConnection(request.url().toString(), callstack)
         tracker.trackRequest(request.method(), request.headers().toMultimap())
         if (request.body() != null) {

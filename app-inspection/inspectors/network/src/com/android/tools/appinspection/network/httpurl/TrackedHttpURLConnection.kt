@@ -33,7 +33,7 @@ import java.security.Permission
  */
 class TrackedHttpURLConnection(
     private val wrapped: HttpURLConnection,
-    callstack: Array<StackTraceElement>,
+    callstack: String,
     trackerFactory: HttpTrackerFactory
 ) {
 

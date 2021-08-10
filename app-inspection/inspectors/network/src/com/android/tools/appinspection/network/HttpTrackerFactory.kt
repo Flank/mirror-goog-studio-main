@@ -31,10 +31,9 @@ class HttpTrackerFactory(private val inspectorConnection: androidx.inspection.Co
      *
      * Returns an [HttpConnectionTracker] which can be used to track request and response details.
      */
-    fun trackConnection(url: String, callstack: Array<StackTraceElement>): HttpConnectionTracker {
+    fun trackConnection(url: String, callstack: String): HttpConnectionTracker {
         return ConnectionTracker(
-            url,
-            callstack.fold("") { acc, stackTraceElement -> "$acc$stackTraceElement\n" },
+            url, callstack,
             ConnectionReporter.createConnectionTracker(inspectorConnection)
         )
     }

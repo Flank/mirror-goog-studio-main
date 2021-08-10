@@ -28,7 +28,7 @@ import java.security.Permission
  */
 class HttpURLConnectionWrapper(
     wrapped: HttpURLConnection,
-    callstack: Array<StackTraceElement>,
+    callstack: String,
     trackerFactory: HttpTrackerFactory
 ) : HttpURLConnection(wrapped.url) {
 

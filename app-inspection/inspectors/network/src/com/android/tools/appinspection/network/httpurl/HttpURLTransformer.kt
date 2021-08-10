@@ -15,10 +15,10 @@
  */
 package com.android.tools.appinspection.network.httpurl
 
+import com.android.tools.appinspection.common.getStackTrace
 import com.android.tools.appinspection.network.HttpTrackerFactory
 import java.net.HttpURLConnection
 import java.net.URLConnection
-import java.util.Arrays
 import javax.net.ssl.HttpsURLConnection
 
 /**
@@ -31,8 +31,7 @@ fun wrapURLConnection(
     trackerFactory: HttpTrackerFactory
 ): URLConnection {
     // Skip the irrelevant stack trace elements (including app inspection stack frames)
-    var callstack = Throwable().stackTrace
-    callstack = Arrays.copyOfRange(callstack, 5, callstack.size)
+    val callstack = getStackTrace(5)
 
     // Create the wrapper class based on the dynamic type of the wrapped object
     return when (wrapped) {
