@@ -210,7 +210,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                             if (actuallyAdded.isNotEmpty()) {
                                 ThreadUtils.runOnMainThread {
                                     for (toAdd in added) {
-                                        startCapturing(currRoots.getValue(toAdd))
+                                        try {
+                                            startCapturing(currRoots.getValue(toAdd))
+                                        }
+                                        catch (t: Throwable) {
+                                            connection.sendEvent {
+                                                errorEvent = ErrorEvent.newBuilder().apply {
+                                                    message = t.stackTraceToString()
+                                                }.build()
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -487,29 +496,18 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             }
         }
 
-        try {
-            synchronized(stateLock) {
-                val handle =
-                    SkiaQWorkaround.startRenderingCommandsCapture(
-                        root,
-                        captureExecutor,
-                        callback = { os },
-                        shouldSerialize = { state.snapshotRequests.isNotEmpty() ||
-                                state.screenshotSettings.type == Screenshot.Type.SKP })
-                if (handle != null) {
-                    state.contextMap[root.uniqueDrawingId] =
-                        CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
-                }
-            }
-            root.invalidate() // Force a re-render so we send the current screen
+        synchronized(stateLock) {
+            val handle =
+                SkiaQWorkaround.startRenderingCommandsCapture(
+                    root,
+                    captureExecutor,
+                    callback = { os },
+                    shouldSerialize = { state.snapshotRequests.isNotEmpty() ||
+                            state.screenshotSettings.type == Screenshot.Type.SKP })
+            state.contextMap[root.uniqueDrawingId] =
+                CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
         }
-        catch (t: Throwable) {
-            connection.sendEvent {
-                errorEvent = ErrorEvent.newBuilder().apply {
-                    message = t.stackTraceToString()
-                }.build()
-            }
-        }
+        root.invalidate() // Force a re-render so we send the current screen
     }
 
     private fun handleStartFetchCommand(
