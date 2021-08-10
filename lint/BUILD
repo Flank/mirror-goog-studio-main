@@ -340,6 +340,7 @@ exports_files(
 filegroup(
     name = "agp_gradle_build_files",
     srcs = glob([
+        "libs/intellij-core/src/main/java/**/*.java",
         "libs/lint-model/src/main/**/*.java",
         "libs/lint-model/src/main/**/*.kt",
         "libs/lint-model/src/main/resources/**",
@@ -352,6 +353,7 @@ filegroup(
         "libs/lint-checks/src/main/**/*.java",
         "libs/lint-checks/src/main/**/*.kt",
         "libs/lint-checks/src/main/resources/**",
+        "libs/uast/src/main/java/**/*.java",
     ]) + [
         "libs/lint-model/build.gradle",
         "libs/lint-model/NOTICE",
