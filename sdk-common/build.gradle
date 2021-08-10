@@ -52,7 +52,7 @@ protobuf {
 }
 
 sourceSets {
-    main.proto.srcDir 'aia-manifest-jar-generator/src'
+    main.proto.srcDirs 'aia-manifest-jar-generator/src', 'src/main/proto'
 }
 
 project.ext.pomName = 'Android Tools sdk-common library'

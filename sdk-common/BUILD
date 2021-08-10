@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
@@ -152,4 +153,10 @@ filegroup(
         "NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+java_proto_library(
+    name = "model.sync",
+    srcs = glob(["src/main/proto/*.proto"]),
+    visibility = ["//visibility:public"],
 )

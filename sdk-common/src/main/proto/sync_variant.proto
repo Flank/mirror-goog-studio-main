@@ -1,0 +1,63 @@
+syntax = "proto3";
+option java_package = "com.android.tools.build.gradle.sync";
+option java_multiple_files = true;
+
+//
+// Top level message for variant model.
+//
+message Variant {
+    // common properties that are shared by all variant types.
+    CommonVariantModel common = 1;
+
+    // variant model information, per variant type. Only one of the field is valid at a time.
+    oneof variant {
+        ApplicationVariantModel applicationVariantModel = 2;
+        LibraryVariantModel libraryVariantModel = 3;
+        AndroidTestVariantModel androidTestVariantModel = 4;
+        UnitTestVariantModel unitTestVariantModel = 5;
+        TestVariantModel testVariantModel = 6;
+        TestFixturesVariantModel testFixtureVariantModel = 7;
+    }
+}
+
+//
+// Common model information for all variant types.
+//
+message CommonVariantModel {
+}
+
+//
+// Application VariantType specific model.
+//
+message ApplicationVariantModel {
+    string applicationId = 1;
+}
+
+//
+// Library VariantType specific model.
+//
+message LibraryVariantModel {
+}
+
+//
+// AndroidTest VariantType specific model.
+//
+message AndroidTestVariantModel {
+    string applicationId = 1;
+}
+
+//
+// UnitTest VariantType specific model.
+//
+message UnitTestVariantModel {
+}
+
+//
+// Test VariantType specific model.
+//
+message TestVariantModel {
+}
+
+// TestFixture Variant type specific model
+message TestFixturesVariantModel {
+}
