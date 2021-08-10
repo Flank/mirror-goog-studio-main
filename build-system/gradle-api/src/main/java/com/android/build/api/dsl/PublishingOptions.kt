@@ -19,18 +19,20 @@ package com.android.build.api.dsl
 /**
  * Maven publishing options shared by [SingleVariant] and [MultipleVariants].
  *
- * To publish sources jar apart from AAR, use [withSourcesJar]. The following sets up publishing of
- * sources jar in two different publishing mechanisms.
+ * To publish sources & javadoc jar apart from AAR, use [withSourcesJar] and [withJavadocJar].
+ * The following sets up publishing of sources & javadoc jar in two different publishing mechanisms.
  *
  * ```
  * android {
  *     publishing {
  *         singleVariant("release") {
  *             withSourcesJar()
+ *             withJavadocJar()
  *         }
  *
  *         multipleVariants {
  *             withSourcesJar()
+ *             withJavadocJar()
  *             allVariants()
  *         }
  *     }
