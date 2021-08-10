@@ -9,6 +9,13 @@ java_import(
     ],
 )
 
+java_import(
+    name = "kotlin-stdlib",
+    jars = [
+        "lib/kotlin-stdlib.jar",
+    ],
+)
+
 kotlin_library(
     name = "eval4j",
     srcs = glob([
@@ -32,7 +39,7 @@ coverage_java_library(
 
         # For prototyping LE, we will check in our own version of the
         # eval4j dependencies.
-        "lib/asm-all-9.0.jar",
+        ":jetbrains_asm4",
         ":eval4j",
     ],
 )
@@ -55,8 +62,8 @@ coverage_java_test(
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        "lib/kotlin-stdlib.jar",
         ":eval4j",
+        ":kotlin-stdlib",
         ":runtime_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
@@ -72,8 +79,8 @@ dex_library(
     jars = [
         ":runtime_java",
         ":eval4j",
-        "lib/asm-all-9.0.jar",
-        "lib/kotlin-stdlib.jar",
+        ":jetbrains_asm4",
+        ":kotlin-stdlib",
     ],
     visibility = ["//visibility:public"],
 )
