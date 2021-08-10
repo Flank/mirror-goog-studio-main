@@ -89,7 +89,6 @@ gradle_integration_test(
 maven_repository(
     name = "prebuilts",
     # keep sorted
-    allow_duplicates = False,
     artifacts = [
         "@maven_tests//:android.arch.lifecycle.livedata_1.1.1",
         "@maven_tests//:com.android.support.constraint.constraint-layout_1.0.2",
