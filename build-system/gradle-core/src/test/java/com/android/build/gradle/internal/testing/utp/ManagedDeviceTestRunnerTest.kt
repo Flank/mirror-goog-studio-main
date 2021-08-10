@@ -139,6 +139,7 @@ class ManagedDeviceTestRunnerTest {
                 mockVersionedSdkLoader,
                 mockRetentionConfig,
                 useOrchestrator = false,
+                numShards = null,
                 mockUtpConfigFactory) { utpTestResultListener ->
             capturedTestResultListener = utpTestResultListener
             mockUtpTestResultListenerServerRunner

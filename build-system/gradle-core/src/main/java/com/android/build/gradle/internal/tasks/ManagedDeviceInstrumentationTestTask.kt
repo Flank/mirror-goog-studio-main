@@ -124,12 +124,13 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             }
 
             return ManagedDeviceTestRunner(
-                    workerExecutor,
-                    utpDependencies,
-                    sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
-                    retentionConfig.get(),
-                    useOrchestrator)
-
+                workerExecutor,
+                utpDependencies,
+                sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
+                retentionConfig.get(),
+                useOrchestrator,
+                testShardsSize.getOrNull()
+            )
         }
     }
 
