@@ -53,6 +53,8 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetProperties
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Point
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertiesEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
@@ -64,7 +66,6 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreens
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.lang.UnsupportedOperationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
@@ -86,6 +87,21 @@ class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_
 
 class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
     Inspector(connection) {
+
+    private var checkpoint: ProgressCheckpoint = ProgressCheckpoint.NOT_STARTED
+        set(value) {
+            if (value <= field){
+                return
+            }
+            field = value
+            if (value != ProgressCheckpoint.NOT_STARTED) {
+                connection.sendEvent {
+                    progressEvent = ProgressEvent.newBuilder().apply {
+                        checkpoint = field
+                    }.build()
+                }
+            }
+        }
 
     /**
      * Context data associated with a capture of a single layout tree.
@@ -189,6 +205,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 val removed = lastRootIds.filter { !currRootIds.contains(it) }
                 val added = currRootIds.filter { !lastRootIds.contains(it) }
                 lastRootIds = currRootIds
+                checkpoint = ProgressCheckpoint.ROOTS_EVENT_SENT
                 connection.sendEvent {
                     rootsEvent = WindowRootsEvent.newBuilder().apply {
                         addAllIds(currRootIds)
@@ -356,6 +373,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         val sequentialExecutor = Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
 
         val captureExecutor = Executor { command ->
+            checkpoint = ProgressCheckpoint.VIEW_INVALIDATION_CALLBACK
             sequentialExecutor.execute {
                 var snapshotRequest: SnapshotRequest?
                 var context: CaptureContext
@@ -425,7 +443,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         else -> ByteString.EMPTY
                     }
                     os.reset() // Clear stream, ready for next frame
-
+                    checkpoint = ProgressCheckpoint.SCREENSHOT_CAPTURED
                     if (context.isLastCapture) {
                         context.handle.close()
                     }
@@ -441,7 +459,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
                         (rootView to rootOffset)
                     }.get()
-
+                    checkpoint = ProgressCheckpoint.VIEW_HIERARCHY_CAPTURED
                     val layout = LayoutEvent.newBuilder().apply {
                         addAllStrings(stringTable.toStringEntries())
                         this.appContext = appContext
@@ -463,6 +481,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         snapshotResponse.layout = layout
                     }
                     else {
+                        checkpoint = ProgressCheckpoint.RESPONSE_SENT
                         connection.sendEvent {
                             layoutEvent = layout
                         }
@@ -507,6 +526,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             state.contextMap[root.uniqueDrawingId] =
                 CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
         }
+        checkpoint = ProgressCheckpoint.STARTED
         root.invalidate() // Force a re-render so we send the current screen
     }
 
@@ -514,6 +534,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         startFetchCommand: StartFetchCommand,
         callback: CommandCallback
     ) {
+        checkpoint = ProgressCheckpoint.START_RECEIVED
         forceStopAllCaptures()
 
         synchronized(stateLock) {
