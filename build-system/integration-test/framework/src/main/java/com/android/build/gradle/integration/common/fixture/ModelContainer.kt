@@ -32,29 +32,46 @@ import java.io.Serializable
  * This is meant to contain both the model and the associated sync issue.
  */
 class ModelContainerV2(
-    val rootBuildId: BuildIdentifier,
-    val infoMaps: Map<BuildIdentifier, Map<String, ModelInfo>>,
-    /** mapOf(buildId, mapOf(Pair(projectPath, projectDir))) */
-    val projectMaps: Map<BuildIdentifier, List<Pair<String, File>>>,
+    val infoMaps: Map<String, Map<String, ModelInfo>>,
+    val buildMap: Map<String, BuildInfo>,
     val globalLibraryMap: GlobalLibraryMap? = null
 ) : Serializable {
 
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L
+
+        const val ROOT_BUILD_ID = ":"
     }
 
-    data class ModelInfo(
-        val versions: Versions,
-        val androidProject: AndroidProject?,
-        val androidDsl: AndroidDsl?,
-        val variantDependencies: VariantDependencies?,
-        val nativeModule: NativeModule?,
-        val issues: ProjectSyncIssues
+    data class BuildInfo(
+        val name: String,
+        val rootDir: File,
+        /** projects for this build as pair(projectPath, projectDir) */
+        val projects: List<Pair<String, File>>
     ): Serializable {
         companion object {
             @JvmStatic
             private val serialVersionUID: Long = 1L
+        }
+    }
+
+    data class ModelInfo(
+        val projectDir: File,
+        val versions: Versions?,
+        val androidProject: AndroidProject?,
+        val androidDsl: AndroidDsl?,
+        val variantDependencies: VariantDependencies?,
+        val nativeModule: NativeModule?,
+        val issues: ProjectSyncIssues?
+    ): Serializable {
+        companion object {
+            @JvmStatic
+            private val serialVersionUID: Long = 1L
+        }
+
+        fun isAndroid(): Boolean {
+            return versions != null
         }
     }
 
@@ -63,6 +80,7 @@ class ModelContainerV2(
      */
     val singleVersions: Versions
         get() = singleInfo.versions
+            ?: throw RuntimeException("No Versions model for project '${singleInfoPath}'")
 
     /**
      * Returns the only [AndroidProject] when there is no composite builds and a single sub-project.
@@ -99,8 +117,9 @@ class ModelContainerV2(
      * Returns the only [ProjectSyncIssues] model when there is no composite builds and a single
      * Android sub-project.
      */
-    val singleProjectIssues: ProjectSyncIssues
+    val singleProjectIssues: ProjectSyncIssues?
         get() = singleInfo.issues
+            ?: throw RuntimeException("No ProjectSyncIssues model for project '${singleInfoPath}'")
 
     /**
      * Returns the single [ModelInfo] when there is no composite builds and a single
@@ -138,6 +157,7 @@ class ModelContainerV2(
      */
     val rootInfoMap: Map<String, ModelInfo>
         get() {
-            return infoMaps[rootBuildId] ?: throw RuntimeException("failed to find project map for root build id: $rootBuildId\nMap = $infoMaps")
+            return infoMaps[ROOT_BUILD_ID]
+                ?: throw RuntimeException("failed to find project map for root build id: $ROOT_BUILD_ID\nMap = $infoMaps")
         }
 }

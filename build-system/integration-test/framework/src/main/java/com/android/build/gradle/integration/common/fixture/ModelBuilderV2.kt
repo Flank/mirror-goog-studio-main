@@ -38,7 +38,6 @@ import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.ResultHandler
 import org.gradle.tooling.events.OperationType
-import org.gradle.tooling.model.BuildIdentifier
 import org.gradle.tooling.model.GradleProject
 import org.junit.Assert
 import java.io.BufferedOutputStream
@@ -153,7 +152,7 @@ class ModelBuilderV2 internal constructor(
 
     private fun getFileNormalizer(container: ModelContainerV2): FileNormalizerImpl {
         return FileNormalizerImpl(
-            buildId = container.rootBuildId,
+            buildMap = container.buildMap,
             gradleUserHome = projectLocation.testLocation.gradleUserHome.toFile(),
             gradleCacheDir = projectLocation.testLocation.gradleCacheDir,
             androidSdkDir = project?.androidSdkDir,
@@ -161,8 +160,7 @@ class ModelBuilderV2 internal constructor(
             androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
             localRepos = GradleTestProject.localRepositories,
             additionalMavenRepo = project?.additionalMavenRepoDir,
-            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
-            projectBuildFolders = container.projectMaps
+            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
     }
 
@@ -240,13 +238,13 @@ class ModelBuilderV2 internal constructor(
         val errors = container.infoMaps
             .entries
             .asSequence()
-            .flatMap { buildEntry: Map.Entry<BuildIdentifier, Map<String, ModelInfo>> ->
+            .flatMap { buildEntry: Map.Entry<String, Map<String, ModelInfo>> ->
                 buildEntry
                     .value
                     .entries
                     .asSequence()
                     .map { projectEntry: Map.Entry<String, ModelInfo> ->
-                        "${buildEntry.key.rootDir}@@${projectEntry.key}" to removeAllowedIssues(projectEntry.value.issues.syncIssues, allowedOptions)
+                        "${buildEntry.key}@@${projectEntry.key}" to removeAllowedIssues(projectEntry.value.issues?.syncIssues, allowedOptions)
                     }
             }
             .filter { it.second.isNotEmpty() }
@@ -263,9 +261,12 @@ class ModelBuilderV2 internal constructor(
     }
 
     private fun removeAllowedIssues(
-        issues: Collection<SyncIssue>,
+        issues: Collection<SyncIssue>?,
         allowedOptions: Set<String>
     ): List<SyncIssue> {
+        if (issues == null) {
+            return listOf()
+        }
         return issues
             .asSequence()
             .filter { syncIssue: SyncIssue -> syncIssue.severity > maxSyncIssueSeverityLevel }
@@ -280,7 +281,7 @@ class ModelBuilderV2 internal constructor(
 }
 
 class FileNormalizerImpl(
-    buildId: BuildIdentifier,
+    buildMap: Map<String, ModelContainerV2.BuildInfo>,
     gradleUserHome: File,
     gradleCacheDir: File,
     androidSdkDir: File?,
@@ -288,9 +289,7 @@ class FileNormalizerImpl(
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
     additionalMavenRepo: Path?,
-    defaultNdkSideBySideVersion: String,
-    /** mapOf(buildId, listOf(pairOf(project path, build folder))) */
-    projectBuildFolders: Map<BuildIdentifier, List<Pair<String, File>>>
+    defaultNdkSideBySideVersion: String
 ) : FileNormalizer {
 
     private data class RootData(
@@ -304,12 +303,14 @@ class FileNormalizerImpl(
     init {
         val mutableList = mutableListOf<RootData>()
 
-        for ((buildId, pairs) in projectBuildFolders) {
-            for ((projectPath, projectDir) in pairs) {
+        // The order of the following must go from leaf to root.
+        // So first we include the project themselves
+        for ((buildName, buildInfo) in buildMap) {
+            for ((projectPath, projectDir) in buildInfo.projects) {
                 mutableList.add(
                     RootData(
                         File(File(projectDir, "build"), ".transforms"),
-                        "BUILD_FOLDER(${projectPath})"
+                        "BUILD_FOLDER($buildName|${projectPath})"
                     ) {
                         // Remove the actual checksum (size 32)
                         // incoming string is "XXXX/..." so removing XXX leaves a leading /
@@ -319,7 +320,19 @@ class FileNormalizerImpl(
             }
         }
 
-        mutableList.add(RootData(buildId.rootDir, "PROJECT"))
+        // then the included builds
+        // TODO: order so that nested projects include leaf first.
+        for (buildInfo in buildMap.values) {
+            // skip the root project so that they appear as PROJECT instead of INCLUDED_BUILD(:)
+            if (buildInfo.name != ModelContainerV2.ROOT_BUILD_ID) {
+                mutableList.add(RootData(buildInfo.rootDir, "INCLUDED_BUILD(${buildInfo.name})"))
+            }
+        }
+
+        // then the root build (in case the included ones are inside the root build.
+        val rootBuildInfo = buildMap[ModelContainerV2.ROOT_BUILD_ID]
+            ?: throw RuntimeException("Unable to find BuildInfo for root build")
+        mutableList.add(RootData(rootBuildInfo.rootDir, "PROJECT"))
 
         mutableList.add(RootData(gradleCacheDir, "GRADLE_CACHE") {
             // Remove the actual checksum (size 32)

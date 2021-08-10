@@ -2,18 +2,18 @@
    - name                 = "debug"
    - mainArtifact:
       - compileDependencies:
-         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
    - androidTestArtifact:
       - compileDependencies:
          - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies = []
@@ -22,16 +22,16 @@
          - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
          - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
-               - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+               - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
                   - dependencies = "*visited*"
-         - __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+         - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
    < unitTestArtifact
    - testFixturesArtifact = (null)
@@ -96,31 +96,31 @@
          - publicResources     = (null)
          - symbolFile          = (null)
       < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
-      > __wrapped_aars__|:lib|unspecified||project:lib:unspecified:
+      > __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
          - type                = ANDROID_LIBRARY
          - artifact            = {PROJECT}/lib/lib.aar{F}
          - projectInfo         = (null)
          - libraryInfo:
             - group      = "__wrapped_aars__"
-            - name       = ":lib"
+            - name       = ":|:lib"
             - version    = "unspecified"
             - attributes = []
             - capabilities:
                * "project:lib:unspecified"
-         - compileJarFiles     = [{BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/jars/classes.jar{F}]
-         - manifest            = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/AndroidManifest.xml{F}
-         - resFolder           = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/res{D}
-         - resStaticLibrary    = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/res.apk{!}
-         - assetsFolder        = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/assets{!}
-         - jniFolder           = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/jni{!}
-         - aidlFolder          = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/aidl{!}
-         - renderscriptFolder  = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/rs{!}
-         - proguardRules       = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/proguard.txt{!}
-         - lintJar             = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/jars/lint.jar{!}
-         - externalAnnotations = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/annotations.zip{!}
-         - publicResources     = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/public.txt{!}
-         - symbolFile          = {BUILD_FOLDER(:lib)}/{CHECKSUM}/transformed/lib/R.txt{!}
-      < __wrapped_aars__|:lib|unspecified||project:lib:unspecified
+         - compileJarFiles     = [{BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jars/classes.jar{F}]
+         - runtimeJarFiles     = [{BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jars/classes.jar{F}]
+         - manifest            = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/AndroidManifest.xml{F}
+         - resFolder           = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/res{D}
+         - resStaticLibrary    = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/res.apk{!}
+         - assetsFolder        = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/assets{!}
+         - jniFolder           = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jni{!}
+         - aidlFolder          = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/aidl{!}
+         - renderscriptFolder  = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/rs{!}
+         - proguardRules       = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/proguard.txt{!}
+         - lintJar             = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jars/lint.jar{!}
+         - externalAnnotations = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/annotations.zip{!}
+         - publicResources     = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/public.txt{!}
+         - symbolFile          = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/R.txt{!}
+      < __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified
    < libraries
 < GlobalLibraryMap

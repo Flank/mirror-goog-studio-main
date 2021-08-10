@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInp
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
@@ -87,6 +86,7 @@ import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BuildMap
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
@@ -96,7 +96,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
-import org.gradle.api.provider.Provider
+import org.gradle.api.invocation.Gradle
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
 import java.io.File
 import java.io.FileInputStream
@@ -131,6 +131,7 @@ class ModelBuilder<
 
     override fun canBuild(className: String): Boolean {
         return className == Versions::class.java.name
+                || className == BuildMap::class.java.name
                 || className == AndroidProject::class.java.name
                 || className == AndroidDsl::class.java.name
                 || className == GlobalLibraryMap::class.java.name
@@ -142,7 +143,8 @@ class ModelBuilder<
      * Non-parameterized model query. Valid for all but the VariantDependencies model
      */
     override fun buildAll(className: String, project: Project): Any = when (className) {
-        Versions::class.java.name -> buildModelVersions(project)
+        Versions::class.java.name -> buildModelVersions()
+        BuildMap::class.java.name -> buildBuildMap(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
         AndroidDsl::class.java.name -> buildAndroidDslModel(project)
         GlobalLibraryMap::class.java.name -> buildGlobalLibraryMapModel(project)
@@ -163,6 +165,7 @@ class ModelBuilder<
     ): Any? = when (className) {
         VariantDependencies::class.java.name -> buildVariantDependenciesModel(project, parameter)
         Versions::class.java.name,
+        BuildMap::class.java.name,
         AndroidProject::class.java.name,
         GlobalLibraryMap::class.java.name,
         ProjectSyncIssues::class.java.name -> throw RuntimeException(
@@ -171,7 +174,7 @@ class ModelBuilder<
         else -> throw RuntimeException("Does not support model '$className'")
     }
 
-    private fun buildModelVersions(project: Project): Versions {
+    private fun buildModelVersions(): Versions {
         return VersionsImpl(
             androidProject = VersionImpl(0, 1),
             androidDsl = VersionImpl(0, 1),
@@ -180,6 +183,8 @@ class ModelBuilder<
             agp = Version.ANDROID_GRADLE_PLUGIN_VERSION
         )
     }
+
+    private fun buildBuildMap(project: Project): BuildMap = BuildMapImpl(getBuildMap(project))
 
     private fun buildAndroidProjectModel(project: Project): AndroidProject {
         // Cannot be injected, as the project might not be the same as the project used to construct
@@ -285,24 +290,9 @@ class ModelBuilder<
             createVariant(it, buildFeatures, instantAppResultMap)
         }
 
-        val currentGradle = project.gradle
-        val parentGradle = currentGradle.parent
-        val gradleName = if (parentGradle != null) {
-            // search for the parent included builds for the current gradle, matching by the
-            // root dir
-            parentGradle.includedBuilds.singleOrNull {
-                // these values already canonicalized
-                //noinspection FileComparisons
-                it.projectDir == currentGradle.rootProject.projectDir
-            }?.name
-        } else {
-            // this is top gradle so name is ":"
-            ":"
-        }
-
         return AndroidProjectImpl(
             path = project.path,
-            buildName = gradleName ?: throw RuntimeException("Failed to get Gradle name for ${project.path}"),
+            buildName = getBuildName(project),
             buildFolder = project.layout.buildDirectory.get().asFile,
 
             projectType = projectType,
@@ -329,6 +319,49 @@ class ModelBuilder<
             flags = getFlags(),
             lintRuleJars = getLocalCustomLintChecksForModel(project, syncIssueReporter)
         )
+    }
+
+    /**
+     * Returns the current build name
+     */
+    private fun getBuildName(project: Project): String {
+        val currentGradle = project.gradle
+        val parentGradle = currentGradle.parent
+
+        return if (parentGradle != null) {
+            // search for the parent included builds for the current gradle, matching by the
+            // root dir
+            parentGradle.includedBuilds.singleOrNull {
+                // these values already canonicalized
+                //noinspection FileComparisons
+                it.projectDir == currentGradle.rootProject.projectDir
+            }?.name
+                ?: throw RuntimeException("Failed to get Gradle name for ${project.path}")
+        } else {
+            // this is top gradle so name is ":"
+            ":"
+        }
+    }
+
+    /**
+     * Returns the build map and the current name
+     */
+    private fun getBuildMap(project: Project): Map<String, File> {
+        var rootGradle = project.gradle
+        while (rootGradle.parent != null) {
+            rootGradle = rootGradle.parent!!
+        }
+
+        return mutableMapOf<String, File>().also { map ->
+            map[":"] = rootGradle.rootProject.projectDir
+            getBuildMap(rootGradle, map)
+        }
+    }
+
+    private fun getBuildMap(gradle: Gradle, map: MutableMap<String, File>) {
+        for (build in gradle.includedBuilds) {
+            map[build.name] = build.projectDir
+        }
     }
 
     private fun buildAndroidDslModel(project: Project): AndroidDsl {

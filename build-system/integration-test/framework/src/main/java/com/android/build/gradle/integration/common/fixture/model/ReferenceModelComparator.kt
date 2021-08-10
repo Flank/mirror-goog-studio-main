@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.fixture.model
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
+import com.android.build.gradle.integration.common.fixture.testprojects.RootTestProjectBuilderImpl
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilderImpl
 import org.junit.Rule
@@ -122,8 +123,8 @@ abstract class ReferenceModelComparator(
     }
 
     companion object {
-        private fun createBaseProject(action: TestProjectBuilder.() -> Unit): TestProjectBuilderImpl {
-            val builder = TestProjectBuilderImpl()
+        private fun createBaseProject(action: TestProjectBuilder.() -> Unit): RootTestProjectBuilderImpl {
+            val builder = RootTestProjectBuilderImpl()
             action(builder)
 
             return builder

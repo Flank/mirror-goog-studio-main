@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuil
 import com.android.build.gradle.integration.common.fixture.gradle_project.BuildSystem
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
 import com.android.build.gradle.integration.common.fixture.gradle_project.initializeProjectLocation
+import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
 import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.truth.forEachLine
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -273,7 +274,9 @@ class GradleTestProject @JvmOverloads internal constructor(
             )
         }
 
-        /** Returns a string that contains the gradle buildscript content  */
+        /**
+         * Returns a string that contains the gradle buildscript content
+         */
         @JvmStatic
         val gradleBuildscript: String
             get() =
@@ -525,6 +528,22 @@ class GradleTestProject @JvmOverloads internal constructor(
         }
     }
 
+    /** Returns a string that contains the gradle buildscript content  */
+    fun computeGradleBuildscript(): String {
+        val projectParentDir = projectDir.parent
+        return """
+                apply from: "${File(projectParentDir, "commonHeader.gradle").toURI()}"
+                buildscript { apply from: "${File(projectParentDir, "commonBuildScript.gradle").toURI()}" }
+                apply from: "${File(projectParentDir, "commonLocalRepo.gradle").toURI()}"
+
+                // Treat javac warnings as errors
+                tasks.withType(JavaCompile) {
+                    options.compilerArgs << "-Werror"
+                }
+                """.trimIndent()
+    }
+
+
     private fun populateTestDirectory() {
         val projectDir = projectDir
         FileUtils.deleteRecursivelyIfExists(projectDir)
@@ -539,14 +558,25 @@ class GradleTestProject @JvmOverloads internal constructor(
         if (testProject != null) {
             testProject.write(
                 projectDir,
-                if (testProject.containsFullBuildScript()) "" else gradleBuildscript
+                if (testProject.containsFullBuildScript()) "" else computeGradleBuildscript()
             )
         } else {
-            buildFile.writeText(gradleBuildscript)
+            buildFile.writeText(computeGradleBuildscript())
         }
-        createSettingsFile()
+        createSettingsFile(settingsFile, rootProjectName)
         localProp = createLocalProp()
         createGradleProp()
+
+        if (testProject is TestProjectBuilder) {
+            for (includedBuild in  testProject.includedBuilds) {
+                val includedProjectDir = File(projectDir, includedBuild.name)
+                createSettingsFile(
+                    File(includedProjectDir, "settings.gradle"),
+                    rootProjectName = null
+                )
+                createLocalProp(includedProjectDir)
+            }
+        }
     }
 
     private fun getRepoDirectories(): List<Path> {
@@ -1420,13 +1450,18 @@ allprojects { proj ->
         return localProp.file as File
     }
 
-    private fun createSettingsFile() {
+    private fun createSettingsFile(
+        settingsFile: File,
+        rootProjectName: String?
+    ) {
         var settingsContent = if (settingsFile.exists()) settingsFile.readText() else ""
 
         if (withPluginManagementBlock) {
+            val projectParentDir = projectDir.parent
+
             settingsContent = """
             pluginManagement { t ->
-                apply from: "../commonLocalRepo.gradle", to: t
+                apply from: "${File(projectParentDir, "commonLocalRepo.gradle").toURI()}", to: t
 
                 resolutionStrategy {
                     eachPlugin {

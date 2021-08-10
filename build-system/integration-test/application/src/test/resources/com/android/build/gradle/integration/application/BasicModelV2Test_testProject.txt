@@ -1,6 +1,7 @@
 > AndroidProject:
    - projectType           = APPLICATION
    - path                  = ":"
+   - buildName             = ":"
    - buildFolder           = {PROJECT}/build{!}
    - namespace             = "com.android.tests.basic"
    - androidTestNamespace  = "com.android.tests.basic.debug.test"

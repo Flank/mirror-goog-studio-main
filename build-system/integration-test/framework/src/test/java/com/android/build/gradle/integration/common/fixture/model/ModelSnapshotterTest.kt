@@ -409,7 +409,7 @@ class ModelSnapshotterTest {
                     SnapshotContainer.ContentType.OBJECT_PROPERTIES
                 )
 
-        action(ModelSnapshotter(registrar, model, normalizer, mapOf()))
+        action(ModelSnapshotter(registrar, model, normalizer))
 
         val writer = SnapshotItemWriter()
         return writer.write(registrar)

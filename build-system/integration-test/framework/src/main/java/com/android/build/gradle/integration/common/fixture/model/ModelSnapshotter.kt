@@ -82,15 +82,9 @@ private fun <ModelT> getSnapshotContainer(
     action: ModelSnapshotter<ModelT>.() -> Unit
 ): SnapshotContainer {
 
-    val includedBuilds = project.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-
-    val buildIdMap = includedBuilds
-        .mapIndexed { index, str -> str to "BUILD_$index" }
-        .toMap()
-
     val registrar =
             SnapshotItemRegistrarImpl(modelName, SnapshotContainer.ContentType.OBJECT_PROPERTIES)
-    action(ModelSnapshotter(registrar, modelAction(project), project.normalizer, buildIdMap))
+    action(ModelSnapshotter(registrar, modelAction(project), project.normalizer))
 
     return registrar
 }
@@ -137,7 +131,6 @@ class ModelSnapshotter<ModelT>(
     private val registrar: SnapshotItemRegistrar,
     private val model: ModelT,
     private val normalizer: FileNormalizer,
-    private val buildIdMap: Map<String, String>
 ) {
 
     fun <PropertyT> item(
@@ -189,7 +182,7 @@ class ModelSnapshotter<ModelT>(
     internal fun normalizeArtifactAddress(address: String): String {
         // normalize the value if it contains a local jar path,
 
-        val normalizedValue = if (address.startsWith(LOCAL_JAR_PREFIX)) {
+        return if (address.startsWith(LOCAL_JAR_PREFIX)) {
             // extract the path. The format is __local_aars__|PATH|...
             // so we search for the 2nd | char
             val secondPipe = address.indexOf('|', LOCAL_JAR_PREFIX_LENGTH)
@@ -201,28 +194,6 @@ class ModelSnapshotter<ModelT>(
         } else {
             address
         }
-
-        // normalize the value if it contains a buildID
-        return if (normalizedValue.contains("@@")) {
-            val buildId = normalizedValue.substringBefore("@@")
-            val projectPathAndVariant = normalizedValue.substringAfter("@@")
-
-            val newID = buildIdMap[buildId] ?: buildId
-
-            "{${newID}}@@${projectPathAndVariant}"
-
-        } else {
-            normalizedValue
-        }
-    }
-
-    fun buildId(
-        name: String,
-        propertyAction: ModelT.() -> String?,
-    ) {
-        val value = propertyAction(model)
-        val buildId = value?.let { buildIdMap[it]?.let { "{$it}" } } ?: value
-        registrar.item(name, buildId)
     }
 
     fun <PropertyT> list(
@@ -251,7 +222,6 @@ class ModelSnapshotter<ModelT>(
                     registrar = it,
                     model = this,
                     normalizer = normalizer,
-                    buildIdMap = buildIdMap
                 )
             )
         }
@@ -296,7 +266,6 @@ class ModelSnapshotter<ModelT>(
                             registrar = itemHolder,
                             model = this,
                             normalizer = normalizer,
-                            buildIdMap = buildIdMap
                         )
                     )
                 }
@@ -322,7 +291,6 @@ class ModelSnapshotter<ModelT>(
                             registrar = itemHolder,
                             model = this,
                             normalizer = normalizer,
-                            buildIdMap = buildIdMap
                         )
                     )
                 }
