@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.VariantDimensionData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
@@ -69,13 +68,6 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
                         variantType.getArtifactName(),
                         sourceSet));
             }
-        }
-
-        if (variantDimensionData.getTestFixturesSourceSet() != null) {
-            clonedContainers.add(
-                    SourceProviderContainerImpl.create(
-                            VariantTypeImpl.TEST_FIXTURES.getArtifactName(),
-                            variantDimensionData.getTestFixturesSourceSet()));
         }
 
         return new ProductFlavorContainerImpl(

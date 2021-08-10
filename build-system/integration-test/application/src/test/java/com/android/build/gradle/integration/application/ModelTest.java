@@ -49,11 +49,7 @@ public class ModelTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(
-                            HelloWorldApp.forPluginWithAndroidConfig(
-                                    "com.android.application",
-                                    "  testFixtures.enable = true\n"
-                                            + "  testFixtures.androidResources = true\n"))
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
     @Test
@@ -162,15 +158,6 @@ public class ModelTest {
         assertThat(unitTestArtifact.getGeneratedSourceFolders())
                 .containsExactly(
                         project.file("build/generated/ap_generated_sources/debugUnitTest/out"));
-
-        AndroidArtifact testFixturesArtifact = VariantUtils.getTestFixturesArtifact(debugVariant);
-
-        assertThat(testFixturesArtifact.getGeneratedSourceFolders())
-                .containsExactly(
-                        project.file("build/generated/ap_generated_sources/debugTestFixtures/out"));
-
-        assertThat(testFixturesArtifact.getGeneratedResourceFolders())
-                .containsExactly(project.file("build/generated/res/resValues/testFixtures/debug"));
     }
 
     @Test

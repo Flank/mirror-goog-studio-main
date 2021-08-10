@@ -31,8 +31,3 @@ const val ARTIFACT_NAME_ANDROID_TEST = "_android_test_"
  * Name reserved the unit test artifact in a [Variant].
  */
 const val ARTIFACT_NAME_UNIT_TEST = "_unit_test_"
-
-/**
- * Name reserved the test fixtures artifact in a [Variant].
- */
-const val ARTIFACT_NAME_TEST_FIXTURES = "_test_fixtures_"

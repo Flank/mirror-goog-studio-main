@@ -21,7 +21,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SourceProvider;
@@ -64,12 +63,6 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
                         variantType.getArtifactName(),
                         testSourceSet));
             }
-        }
-        if (buildTypeData.getTestFixturesSourceSet() != null) {
-            clonedContainers.add(
-                    SourceProviderContainerImpl.create(
-                            VariantTypeImpl.TEST_FIXTURES.getArtifactName(),
-                            buildTypeData.getTestFixturesSourceSet()));
         }
         return new BuildTypeContainerImpl(
                 new BuildTypeImpl(buildTypeData.getBuildType()),

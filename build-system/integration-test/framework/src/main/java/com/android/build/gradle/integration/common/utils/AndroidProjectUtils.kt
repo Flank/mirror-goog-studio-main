@@ -104,16 +104,6 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
             androidTestSourceProviders.sourceProvider)
             .test()
 
-    val testFixturesSourceProviders = defaultConfig.getExtraSourceProviderContainer(
-        AndroidProject.ARTIFACT_TEST_FIXTURES)
-
-    SourceProviderHelper(
-        name,
-        projectDir,
-        VariantType.TEST_FIXTURES_PREFIX,
-        testFixturesSourceProviders.sourceProvider)
-        .test()
-
     // test the source provider for the build types
     val buildTypes = buildTypes
     TruthHelper.assertThat(buildTypes).named("build types").hasSize(2)
@@ -135,6 +125,6 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
 
         TruthHelper.assertThat(extraSourceProviderNames)
             .containsExactly(AndroidProject.ARTIFACT_ANDROID_TEST,
-                AndroidProject.ARTIFACT_UNIT_TEST, AndroidProject.ARTIFACT_TEST_FIXTURES)
+                AndroidProject.ARTIFACT_UNIT_TEST)
     }
 }

@@ -703,13 +703,6 @@ public class ModelBuilder<Extension extends BaseExtension>
             com.android.build.api.variant.impl.VariantImpl variant =
                     (com.android.build.api.variant.impl.VariantImpl) component;
 
-            if (variant.getTestFixturesComponent() != null) {
-                extraAndroidArtifacts.add(
-                        createAndroidArtifact(
-                                VariantTypeImpl.TEST_FIXTURES.getArtifactName(),
-                                variant.getTestFixturesComponent()));
-            }
-
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
                 ComponentImpl testVariant = variant.getTestComponents().get(variantType);
                 if (testVariant != null) {

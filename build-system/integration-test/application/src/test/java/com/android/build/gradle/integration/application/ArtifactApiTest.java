@@ -3,8 +3,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
-import static com.android.builder.model.AndroidProject.ARTIFACT_TEST_FIXTURES;
 import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -103,10 +103,7 @@ public class ArtifactApiTest {
             assertThat(extraSourceProviderNames)
                     .named(name)
                     .containsExactly(
-                            CUSTOM_ARTIFACT_NAME,
-                            ARTIFACT_UNIT_TEST,
-                            ARTIFACT_ANDROID_TEST,
-                            ARTIFACT_TEST_FIXTURES);
+                            CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST);
 
             SourceProviderContainer extraSourceProvideContainer =
                     SourceSetContainerUtils.getExtraSourceProviderContainer(
@@ -134,14 +131,12 @@ public class ArtifactApiTest {
                     "Extra artifact source provider container for product flavor size '"
                             + name
                             + "' check",
-                    4,
+                    3,
                     extraSourceProviderContainers.size());
 
             // query to validate presence
             SourceSetContainerUtils.getExtraSourceProviderContainer(
                     pfContainer, ARTIFACT_ANDROID_TEST);
-            SourceSetContainerUtils.getExtraSourceProviderContainer(
-                    pfContainer, ARTIFACT_TEST_FIXTURES);
 
             SourceProviderContainer sourceProviderContainer =
                     SourceSetContainerUtils.getExtraSourceProviderContainer(
