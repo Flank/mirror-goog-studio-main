@@ -35,7 +35,8 @@ public class LocalMavenRepositoryGeneratorTest {
         List<String> coords = Arrays.asList(
             "com.google.example:a:1",
             "com.google.example:b:1",
-            "com.google.example:h:pom:1"
+            "com.google.example:h:pom:1",
+            "com.google.example:j:jar:linux:1"
         );
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
@@ -66,7 +67,8 @@ public class LocalMavenRepositoryGeneratorTest {
                 Arrays.asList(
                         "com.google.example:a:1",
                         "com.google.example:b:1",
-                        "com.google.example:h:pom:1");
+                        "com.google.example:h:pom:1",
+                        "com.google.example:j:jar:linux:1");
         String outputBuildFile = "generated.noresolve.BUILD";
         LocalMavenRepositoryGenerator generator =
                 new LocalMavenRepositoryGenerator(

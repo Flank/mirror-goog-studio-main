@@ -95,21 +95,21 @@ public class BuildFileWriter {
 
         // All deps, conflict loser or winner, must have a maven_artifact() rule that includes the artifact
         // version in the rule's name.
-        String ruleNameWithVersion = ruleNameFromCoord(dep.coord, true);
-        if (generatedRuleNames.add(ruleNameWithVersion)) {
+        String mavenArtifactRuleName = getMavenArtifactRuleName(dep.coord);
+        if (generatedRuleNames.add(mavenArtifactRuleName)) {
             fileWriter.append("\n");
             fileWriter.append("maven_artifact(\n");
-            fileWriter.append(String.format("    name = \"%s\",\n", ruleNameWithVersion));
+            fileWriter.append(String.format("    name = \"%s\",\n", mavenArtifactRuleName));
             fileWriter.append(String.format("    pom = \"%s/%s\",\n", repoPrefix, pathToString(dep.pomPath)));
             fileWriter.append(String.format("    repo_root_path = \"%s\",\n", pathToString(repoPrefix)));
             fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
             if (dep.parentCoord != null) {
-                String parentRuleName = ruleNameFromCoord(dep.parentCoord, true);
+                String parentRuleName = getMavenArtifactRuleName(dep.parentCoord);
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
-                            .map(d -> ruleNameFromCoord(d, true))
+                            .map(BuildFileWriter::getMavenArtifactRuleName)
                             .toArray(String[]::new);
 
             if (originalDepRuleNames.length != 0) {
@@ -126,14 +126,14 @@ public class BuildFileWriter {
         // Any dependency that is not a conflict loser (i.e., never entered into a conflict, or won a conflict) gets
         // a maven_import() rule that does not have the artifact version in the rule name.
         if (!isConflictLoser) {
-            String ruleName = ruleNameFromCoord(dep.coord);
+            String ruleName = getMavenImportRuleName(dep.coord);
             fileWriter.append("\n");
             fileWriter.append("maven_import(\n");
             fileWriter.append(String.format("    name = \"%s\",\n", ruleName));
             // TODO: Implement classifiers only if we really need them.
             fileWriter.append("    classifiers = [],\n");
             if (dep.parentCoord != null) {
-                String parentRuleName = ruleNameFromCoord(dep.parentCoord, true);
+                String parentRuleName = getMavenArtifactRuleName(dep.parentCoord);
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
             fileWriter.append("    jars = [\n");
@@ -156,7 +156,7 @@ public class BuildFileWriter {
                             throw new IllegalStateException("Scope " + scope + " is not supported");
                     }
                     for (String d : deps) {
-                        fileWriter.append(String.format("        \"%s\",\n", ruleNameFromCoord(d)));
+                        fileWriter.append(String.format("        \"%s\",\n", getMavenImportRuleName(d)));
                     }
                     fileWriter.append("    ],\n");
                 }
@@ -164,7 +164,7 @@ public class BuildFileWriter {
             // Original dependencies use version numbers in their rule names.
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
-                            .map((String d) -> ruleNameFromCoord(d, true))
+                            .map(BuildFileWriter::getMavenArtifactRuleName)
                             .toArray(String[]::new);
             if (originalDepRuleNames.length != 0) {
                 fileWriter.append("    original_deps = [\n");
@@ -192,7 +192,7 @@ public class BuildFileWriter {
 
     private void write(ResolutionResult.Parent parent) throws IOException {
         // Generate rule for parent, if a parent exists, and if it's not created already.
-        String ruleName = ruleNameFromCoord(parent.coord, true);
+        String ruleName = getMavenArtifactRuleName(parent.coord);
         if (!generatedRuleNames.add(ruleName)) return;
 
         fileWriter.append("\n");
@@ -204,7 +204,7 @@ public class BuildFileWriter {
         Path artifactRepoPath = Paths.get(parent.pomPath).getParent();
         fileWriter.append(String.format("    repo_path = \"%s\",\n", pathToString(artifactRepoPath)));
         if (parent.parentCoord != null) {
-            String parentRuleName = ruleNameFromCoord(parent.parentCoord, true);
+            String parentRuleName = getMavenArtifactRuleName(parent.parentCoord);
             fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
         }
         fileWriter.append(")\n");
@@ -256,16 +256,20 @@ public class BuildFileWriter {
 
     /**
      * Converts the given Maven coordinate into a string that can be used as a Bazel rule name.
+     * Do not call this method directly. Instead, use getMavenArtifactRuleName or getMavenImportRuleName.
+     *
      *
      * @param coord the Maven coordinate for which to generate a Bazel rule name
      * @param useVersion If true, the version field in the given coordinate will also be a part of
      *     the generated rule name.
+     * @param useClassifier If true, the classifier field in the given coordinate (if exists) will
+     *     also be a part of the generated rule name.
      */
-    public static String ruleNameFromCoord(String coord, boolean useVersion) {
+    public static String ruleNameFromCoord(String coord, boolean useVersion, boolean useClassifier) {
         Map<String, String> parts = parseCoord(coord);
 
         String ruleName;
-        if (parts.containsKey("classifier")) {
+        if (useClassifier && parts.containsKey("classifier")) {
             ruleName =
                     String.join(
                             ".",
@@ -283,9 +287,12 @@ public class BuildFileWriter {
         }
     }
 
-    /** See ruleNameFromCoord(String,boolean) above. */
-    public static String ruleNameFromCoord(String coord) {
-        return ruleNameFromCoord(coord, false);
+    public static String getMavenArtifactRuleName(String coord) {
+        return ruleNameFromCoord(coord, true, false);
+    }
+
+    public static String getMavenImportRuleName(String coord) {
+        return ruleNameFromCoord(coord, false, true);
     }
 
     /** Converts path to forward slash separated string. */

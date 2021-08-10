@@ -127,6 +127,14 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.google.example.j_1",
+    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/j/1/j-1.pom",
+    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    repo_path = "com/google/example/j/1",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.example.a-parent-parent_1",
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a-parent-parent/1/a-parent-parent-1.pom",
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
