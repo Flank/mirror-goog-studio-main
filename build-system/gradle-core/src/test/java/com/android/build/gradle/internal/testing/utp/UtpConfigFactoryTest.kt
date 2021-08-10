@@ -472,6 +472,20 @@ class UtpConfigFactoryTest {
         )
     }
 
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithAdditionalTestOutputNotSupported() {
+        `when`(mockDevice.apiLevel).thenReturn(15)
+        val runnerConfigProto = createForLocalDevice(
+            additionalTestOutputDir = mockFile("additionalTestOutputDir")
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            additionalTestOutputConfig = "",
+        )
+    }
+
     @Test
     fun createServerConfigProto() {
         val factory = UtpConfigFactory()

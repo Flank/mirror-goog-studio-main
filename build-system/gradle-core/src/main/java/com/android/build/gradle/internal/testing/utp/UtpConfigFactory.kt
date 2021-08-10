@@ -111,7 +111,8 @@ class UtpConfigFactory {
         trustCertCollection: File,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
-        val additionalTestOutputOnDeviceDir = if (additionalTestOutputDir != null) {
+        val updatedAdditionalTestOutputDir = if (device.apiLevel >= ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL) additionalTestOutputDir else null
+        val additionalTestOutputOnDeviceDir = if (updatedAdditionalTestOutputDir != null) {
             findAdditionalTestOutputDirectoryOnDevice(device, testData)
         } else {
             null
@@ -133,7 +134,7 @@ class UtpConfigFactory {
                     tmpDir,
                     retentionConfig,
                     useOrchestrator,
-                    additionalTestOutputDir,
+                    updatedAdditionalTestOutputDir,
                     additionalTestOutputOnDeviceDir,
                     device.name,
                     coverageOutputDir
