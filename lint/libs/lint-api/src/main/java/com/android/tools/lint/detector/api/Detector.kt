@@ -562,6 +562,7 @@ abstract class Detector {
     ) {
     }
 
+    @Deprecated("This method is missing the referenced parameter; use/override the other overload instead")
     open fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,

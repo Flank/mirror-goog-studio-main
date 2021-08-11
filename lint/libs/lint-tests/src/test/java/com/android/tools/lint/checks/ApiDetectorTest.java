@@ -3005,6 +3005,59 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testAnonymous2() {
+        // anonymous class references are sometimes null in UAST
+        // so we have to do extra work
+        lint().files(
+                        manifest().minSdk(1),
+                        java(
+                                ""
+                                        + "package test.api;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class Api {\n"
+                                        + "    @RequiresApi(29)\n"
+                                        + "    public static class InnerApi {\n"
+                                        + "        public static String method() { return \"\"; }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                "package test.usage;\n"
+                                        + "import test.api.Api.InnerApi;\n"
+                                        + "\n"
+                                        + "public class JavaUsage {\n"
+                                        + "    public void test() {\n"
+                                        + "        Object o1 = new InnerApi();\n"
+                                        + "        Object o2 = new InnerApi() { };\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package test.usage\n"
+                                        + "\n"
+                                        + "import test.api.Api.InnerApi\n"
+                                        + "\n"
+                                        + "class KotlinUsage {\n"
+                                        + "    fun test() {\n"
+                                        + "        val o1: Any = InnerApi()\n"
+                                        + "        val o2: Any = object : InnerApi() {}\n"
+                                        + "    }\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/usage/JavaUsage.java:6: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        Object o1 = new InnerApi();\n"
+                                + "                    ~~~~~~~~~~~~\n"
+                                + "src/test/usage/KotlinUsage.kt:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        val o1: Any = InnerApi()\n"
+                                + "                      ~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testUpdatedDescriptions() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=78495
         // Without this fix, the required API level for getString would be 21 instead of 12

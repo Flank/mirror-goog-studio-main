@@ -29,8 +29,10 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiImportStaticReferenceElement
+import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.impl.JavaPsiFacadeEx
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.uast.UCallExpression
@@ -53,7 +55,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
 
         val sb = StringBuilder()
         val location = getLocation(error)
-        val source = root.sourcePsi.text.toString() ?: ""
+        val source = root.sourcePsi.text.toString()
         val lines = location.getErrorLines { source }
         sb.append(
             "Found error element $error in ${file.name}:${line + 1} with text " +
@@ -128,11 +130,20 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 val importedClass = cls.resolve()
                 if (importedClass is PsiClass) {
                     val name = importReferencePsi.referenceName
-                    if (importedClass.methods.any {
-                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+                    if (importedClass.hasStaticMemberNamed(name)) {
+                        return true
                     }
-                    ) {
-                        return super.visitImportStatement(node)
+                }
+            } else if (importReferencePsi is PsiJavaCodeReferenceElement) {
+                val fqn = importReferencePsi.qualifiedName
+                val index = fqn?.lastIndexOf('.')
+                if (index != null && index != -1) {
+                    val className = fqn.substring(0, index)
+                    val name = fqn.substring(index + 1)
+                    val facade = JavaPsiFacadeEx.getInstance(importReferencePsi.project)
+                    val psiClass = facade.findClass(className, GlobalSearchScope.allScope(importReferencePsi.project))
+                    if (psiClass != null && psiClass.hasStaticMemberNamed(name)) {
+                        return true
                     }
                 }
             } else if (node is KotlinUImportStatement) {
@@ -142,14 +153,8 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 if (clsName != null) {
                     val name = qualifiedExpression.selectorExpression?.text
 
-                    fun PsiClass.hasTargetMethod(): Boolean {
-                        return methods.any {
-                            it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
-                        }
-                    }
-
                     val importedClass = evaluator.findClass(clsName)
-                    if (importedClass != null && importedClass.hasTargetMethod()) {
+                    if (importedClass != null && importedClass.hasStaticMemberNamed(name)) {
                         return super.visitImportStatement(node)
                     }
 
@@ -158,7 +163,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                     val facade = JavaPsiFacadeEx.getInstance(importReferencePsi.project)
                     val pkg = facade.findPackage(clsName)
                     if (pkg != null) {
-                        if (pkg.classes.any { it.hasTargetMethod() }) {
+                        if (pkg.classes.any { it.hasStaticMemberNamed(name) }) {
                             return super.visitImportStatement(node)
                         }
                     }
@@ -174,6 +179,18 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 )
             }
             return super.visitImportStatement(node)
+        }
+
+        fun PsiClass.hasStaticMemberNamed(name: String?): Boolean {
+            return methods.any {
+                it.name == name &&
+                    (
+                        it.modifierList.hasModifierProperty(PsiModifier.STATIC) ||
+                            it.modifierList.hasModifierProperty(PsiModifier.DEFAULT)
+                        )
+            } || fields.any {
+                it.name == name && it.modifierList?.hasModifierProperty(PsiModifier.STATIC) == true
+            }
         }
 
         override fun visitCallExpression(node: UCallExpression): Boolean {

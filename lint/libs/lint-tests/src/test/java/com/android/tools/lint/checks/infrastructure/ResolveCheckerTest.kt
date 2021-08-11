@@ -167,6 +167,49 @@ class ResolveCheckerTest {
     }
 
     @Test
+    fun testValidImports() {
+        lint().files(
+            java(
+                """
+                package test.api;
+                public interface JavaApi {
+                    final int MY_CONSTANT = 5;
+                    default void test() { }
+
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.api;
+                const val foo1 = 42
+                val foo2 = 43
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                import static test.api.JavaApi.MY_CONSTANT;
+                import static test.api.JavaApi.test;
+                public class Test { }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import test.api.foo1
+                import test.api.foo2
+                fun test() { }
+                """
+            ).indented()
+        )
+            .testModes(TestMode.DEFAULT)
+            .issues(AlwaysShowActionDetector.ISSUE)
+            .run()
+            .expectClean()
+    }
+
+    @Test
     fun testResolveTopLevelFunctionImport() {
         lint().files(
             kotlin(

@@ -1228,6 +1228,16 @@ internal class UElementVisitor constructor(
 
             return super.visitPostfixExpression(node)
         }
+
+        override fun visitClassLiteralExpression(node: UClassLiteralExpression): Boolean {
+            annotationHandler?.visitClassLiteralExpression(mContext, node)
+            return super.visitClassLiteralExpression(node)
+        }
+
+        override fun visitObjectLiteralExpression(node: UObjectLiteralExpression): Boolean {
+            annotationHandler?.visitObjectLiteralExpression(mContext, node)
+            return super.visitObjectLiteralExpression(node)
+        }
     }
 
     companion object {

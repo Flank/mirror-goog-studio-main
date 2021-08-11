@@ -143,7 +143,6 @@ import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.URL
 import java.nio.ByteBuffer
-import java.nio.charset.CharacterCodingException
 import java.util.ArrayDeque
 import java.util.Locale
 import java.util.regex.Pattern
@@ -592,12 +591,7 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     // Instead we'll search ourselves.
 
     // First try Kotlin resolving service
-    val ktElement = this.sourcePsi as? KtElement ?: return null
-    val service = ServiceManager.getService(ktElement.project, KotlinUastResolveProviderService::class.java)
-        ?: return null
-    val bindingContext = service.getBindingContext(ktElement)
-    val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
-    val source = resolvedCall.resultingDescriptor.toSource()
+    val source = resolveKotlinCall(sourcePsi)
     if (source is PsiMethod) {
         return source
     } // else can be KtFunction which is referenced by methods; see light member check below
@@ -690,6 +684,16 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     }
 
     return typeMatch
+}
+
+internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
+    // First try Kotlin resolving service
+    val ktElement = sourcePsi as? KtElement ?: return null
+    val service = ServiceManager.getService(sourcePsi.project, KotlinUastResolveProviderService::class.java)
+        ?: return null
+    val bindingContext = service.getBindingContext(ktElement)
+    val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
+    return resolvedCall.resultingDescriptor.toSource()
 }
 
 // See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
