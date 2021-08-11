@@ -523,6 +523,9 @@ InternalArtifactType<T : FileSystemLocation>(
     object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
 
 
+    // Sync dynamic properties file artifacts
+    object VARIANT_MODEL: InternalArtifactType<RegularFile>(FILE)
+
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()
     }

@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "com.android.tools.build.gradle.sync";
+option java_package = "com.android.ide.model.sync";
 option java_multiple_files = true;
 
 //

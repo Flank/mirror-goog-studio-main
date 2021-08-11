@@ -64,6 +64,7 @@ maven_library(
     ]),
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
+        "//tools/base/sdk-common:model.sync",
     ],
     coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
     notice = "NOTICE",
@@ -148,6 +149,7 @@ filegroup(
         "src/main/**/*.java",
         "src/main/**/*.kt",
         "src/main/resources/**",
+        "src/main/proto/**",
     ]) + [
         "build.gradle",
         "NOTICE",
