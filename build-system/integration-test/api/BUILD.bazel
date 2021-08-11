@@ -1,4 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 
 gradle_integration_test(
@@ -22,7 +21,6 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
-        "//tools/base/build-system/integration-test/api:prebuilts",
         "//tools/base/build-system/previous-versions:3.5.0",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -48,27 +46,4 @@ gradle_integration_test(
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
-)
-
-# Maven repo with all the dependencies required by test projects.
-#
-# Quick way of updating this list:
-# - Run the new test with bazel
-# - Copy the output log to $PWD/test.log
-# - Run this command:
-# grep -F '> Could not find' test.log \
-#   | sed -e 's:> Could not find :"//prebuilts/tools/common/m2/repository/:' \
-#   | sed -e 's/:/\//g' \
-#   | sed -e 's/\.$/:jar",/' \
-#   | sed -e 's/\([a-z]\)\.\([a-z]\)/\1\/\2/g'
-maven_repo(
-    name = "prebuilts",
-    # keep sorted
-    artifacts = [
-        "//prebuilts/tools/common/m2:de.undercouch.gradle-download-task.4.0.2",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-reflect.1.3.72",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib.1.3.72",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-common.1.3.72",
-    ],
-    visibility = ["__subpackages__"],
 )

@@ -18,305 +18,126 @@ exports_files(["test-projects/commonBuildScript.gradle"])
 
 LATEST_SUPPORT = "28.0.0"
 
-#keep sorted
-SUPPORT_LIBRARY_AARS = [
-    "animated-vector-drawable",
-    "appcompat-v7",
-    "asynclayoutinflater",
-    "cardview-v7",
-    "coordinatorlayout",
-    "cursoradapter",
-    "customtabs",
-    "customview",
-    "design",
-    "documentfile",
-    "drawerlayout",
-    "interpolator",
-    "leanback-v17",
-    "loader",
-    "localbroadcastmanager",
-    "percent",
-    "print",
-    "recyclerview-v7",
-    "slidingpanelayout",
-    "support-compat",
-    "support-core-ui",
-    "support-core-utils",
-    "support-fragment",
-    "support-media-compat",
-    "support-v13",
-    "support-v4",
-    "support-vector-drawable",
-    "swiperefreshlayout",
-    "transition",
-    "versionedparcelable",
-    "viewpager",
-    "wear",
-]
-
-#keep sorted
-SUPPORT_LIBRARY_JARS = [
-    "collections",
-    "support-annotations",
-]
-
-#keep sorted
-ANDROID_ARCH_DEPS = [
-    "android.arch.core.common.1.1.1",
-    "android.arch.core.runtime.1.1.1_aar",
-    "android.arch.lifecycle.common.1.1.1",
-    "android.arch.lifecycle.livedata-core.1.1.1_aar",
-    "android.arch.lifecycle.runtime.1.1.1_aar",
-    "android.arch.lifecycle.viewmodel.1.1.1_aar",
-    "android.arch.navigation.navigation-common.1.0.0_aar",
-    "android.arch.navigation.navigation-fragment.1.0.0_aar",
-    "android.arch.navigation.navigation-runtime.1.0.0_aar",
-    "android.arch.persistence.db.1.0.0_aar",
-    "android.arch.persistence.db-framework.1.0.0_aar",
-    "android.arch.persistence.room.common.1.0.0",
-    "android.arch.persistence.room.runtime.1.0.0_aar",
-]
-
-#keep sorted
-ANDROID_TEST_DEPS = [
-    "androidx.test.monitor.1.1.1_aar",
-    "com.android.support.support-annotations.27.1.1",
-    "com.android.support.test.monitor.1.0.2_aar",
-    "com.android.support.test.rules.1.0.2_aar",
-    "com.android.support.test.runner.1.0.2_aar",
-    "com.google.errorprone.error_prone_annotations.2.2.0",
-    "com.google.guava.failureaccess.1.0.1",
-    "com.google.guava.guava.27.0.1-jre",
-    "com.google.guava.listenablefuture.9999.0-empty-to-avoid-conflict-with-guava",
-    "javax.annotation.javax.annotation-api.1.3.2",
-    "junit.junit.4.12",
-    "org.codehaus.mojo.animal-sniffer-annotations.1.17",
-    "org.hamcrest.hamcrest-core.1.3",
-    "org.ow2.asm.asm.7.0",
-    "org.ow2.asm.asm-analysis.7.0",
-    "org.ow2.asm.asm-commons.7.0",
-    "org.ow2.asm.asm-tree.7.0",
-    "org.ow2.asm.asm-util.7.0",
-]
-
 LATEST_ANDROID_X_SUPPORT = "1.0.0"
-
-#keep sorted
-ANDROID_X_SUPPORT_AARS = [
-    "androidx.appcompat.appcompat",
-    "androidx.asynclayoutinflater.asynclayoutinflater",
-    "androidx.coordinatorlayout.coordinatorlayout",
-    "androidx.core.core",
-    "androidx.cursoradapter.cursoradapter",
-    "androidx.customview.customview",
-    "androidx.documentfile.documentfile",
-    "androidx.drawerlayout.drawerlayout",
-    "androidx.fragment.fragment",
-    "androidx.interpolator.interpolator",
-    "androidx.legacy.legacy-support-core-ui",
-    "androidx.legacy.legacy-support-core-utils",
-    "androidx.legacy.legacy-support-v4",
-    "androidx.loader.loader",
-    "androidx.localbroadcastmanager.localbroadcastmanager",
-    "androidx.media.media",
-    "androidx.preference.preference",
-    "androidx.print.print",
-    "androidx.recyclerview.recyclerview",
-    "androidx.slidingpanelayout.slidingpanelayout",
-    "androidx.swiperefreshlayout.swiperefreshlayout",
-    "androidx.vectordrawable.vectordrawable",
-    "androidx.vectordrawable.vectordrawable-animated",
-    "androidx.versionedparcelable.versionedparcelable",
-    "androidx.viewpager.viewpager",
-]
-
-#keep sorted
-ANDROID_X_SUPPORT_JARS = [
-    "androidx.annotation.annotation",
-    "androidx.collection.collection",
-]
 
 LATEST_ANDROID_X_ARCH = "2.0.0"
 
-#keep sorted
-ANDROID_X_ARCH_AARS = [
-    "androidx.arch.core.core-runtime",
-    "androidx.lifecycle.lifecycle-livedata",
-    "androidx.lifecycle.lifecycle-livedata-core",
-    "androidx.lifecycle.lifecycle-runtime",
-    "androidx.lifecycle.lifecycle-viewmodel",
-    "androidx.room.room-runtime",
-    "androidx.sqlite.sqlite",
-    "androidx.sqlite.sqlite-framework",
-]
-
-#keep sorted
-ANDROID_X_ARCH_JARS = [
-    "androidx.arch.core.core-common",
-    "androidx.lifecycle.lifecycle-common",
-    "androidx.room.room-common",
-    "androidx.room.room-compiler",
-]
-
 LATEST_ANDROID_X_CONSTRAINTLAYOUT = "1.1.3"
 
-#keep sorted
-ANDROID_X_CONSTRAINTLAYOUT_AARS = [
-    "androidx.constraintlayout.constraintlayout",
-]
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 
-#keep sorted
-ANDROID_X_CONSTRAINTLAYOUT_JARS = [
-    "androidx.constraintlayout.constraintlayout-solver",
-]
-
-load("//tools/base/bazel:maven.bzl", "maven_repo")
-
-maven_repo(
+maven_repository(
     name = "support_library_latest",
-    # keep sorted
-    artifacts = ["//prebuilts/tools/common/m2:com.android.support." + name + "." +
-                 LATEST_SUPPORT + "_aar" for name in SUPPORT_LIBRARY_AARS] +
-                ["//prebuilts/tools/common/m2:com.android.support." + name + "." +
-                 LATEST_SUPPORT + "" for name in SUPPORT_LIBRARY_JARS] +
-                ["//prebuilts/tools/common/m2:" + name for name in ANDROID_TEST_DEPS] +
-                ["//prebuilts/tools/common/m2:" + name for name in ANDROID_ARCH_DEPS],
+    artifacts = [
+        "@maven_tests//:com.android.support.design_" + LATEST_SUPPORT,
+        "@maven_tests//:com.android.support.leanback-v17_" + LATEST_SUPPORT,
+        "@maven_tests//:com.android.support.support-v13_" + LATEST_SUPPORT,
+        "@maven_tests//:com.android.support.support-v4_" + LATEST_SUPPORT,
+        "@maven_tests//:android.arch.navigation.navigation-fragment_1.0.0",
+        "@maven_tests//:android.arch.persistence.room.runtime_1.0.0",
+        "@maven_tests//:com.android.support.test.rules_1.0.2",
+        "@maven_tests//:com.android.support.test.runner_1.0.2",
+        "@maven_tests//:org.jacoco.org.jacoco.ant_0.8.3",
+    ],
     visibility = [":__subpackages__"],
 )
 
-maven_repo(
+maven_repository(
     name = "androidx_latest",
-    # keep sorted
-    artifacts = ["//prebuilts/tools/common/m2:" + name + "." + LATEST_ANDROID_X_SUPPORT +
-                 "_aar" for name in ANDROID_X_SUPPORT_AARS] +
-                ["//prebuilts/tools/common/m2:" + name + "." + LATEST_ANDROID_X_SUPPORT +
-                 "" for name in ANDROID_X_SUPPORT_JARS] +
-                ["//prebuilts/tools/common/m2:" + name + "." + LATEST_ANDROID_X_ARCH +
-                 "_aar" for name in ANDROID_X_ARCH_AARS] +
-                ["//prebuilts/tools/common/m2:" + name + "." + LATEST_ANDROID_X_ARCH +
-                 "" for name in ANDROID_X_ARCH_JARS] +
-                ["//prebuilts/tools/common/m2:" + name + "." +
-                 LATEST_ANDROID_X_CONSTRAINTLAYOUT + "_aar" for name in ANDROID_X_CONSTRAINTLAYOUT_AARS] +
-                ["//prebuilts/tools/common/m2:" + name + "." +
-                 LATEST_ANDROID_X_CONSTRAINTLAYOUT + "" for name in ANDROID_X_CONSTRAINTLAYOUT_JARS],
+    artifacts = [
+        "@maven_tests//:androidx.room.room-compiler_" + LATEST_ANDROID_X_ARCH,
+        "@maven_tests//:androidx.room.room-runtime_" + LATEST_ANDROID_X_ARCH,
+        "@maven_tests//:androidx.appcompat.appcompat_" + LATEST_ANDROID_X_SUPPORT,
+        "@maven_tests//:androidx.preference.preference_" + LATEST_ANDROID_X_SUPPORT,
+        "@maven_tests//:androidx.constraintlayout.constraintlayout_" + LATEST_ANDROID_X_CONSTRAINTLAYOUT,
+        "@maven_tests//:androidx.legacy.legacy-support-v4_" + LATEST_ANDROID_X_SUPPORT,
+    ],
     visibility = [":__subpackages__"],
 )
 
-maven_repo(
+maven_repository(
     name = "androidx_test_latest",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2:androidx.test.core.1.3.0_aar",
-        "//prebuilts/tools/common/m2:androidx.test.ext.junit.1.1.2_aar",
-        "//prebuilts/tools/common/m2:androidx.test.monitor.1.3.0_aar",
-        "//prebuilts/tools/common/m2:androidx.test.rules.1.3.0_aar",
-        "//prebuilts/tools/common/m2:androidx.test.runner.1.3.0_aar",
+        "@maven_tests//:androidx.test.ext.junit_1.1.2",
+        "@maven_tests//:androidx.test.rules_1.3.0",
+        "@maven_tests//:androidx.test.runner_1.3.0",
     ],
     visibility = [":__subpackages__"],
 )
 
 # These dependencies are required for the Gradle Kotlin DSL use.
-maven_repo(
+maven_repository(
     name = "gradle_kotlin_dsl_prebuilts",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2:commons-codec.commons-codec.1.9",
-        "//prebuilts/tools/common/m2:org.apache.httpcomponents.httpclient.4.5.3",
-        "//prebuilts/tools/common/m2:org.apache.httpcomponents.httpcore.4.4.6",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-reflect.1.5.21",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib.1.5.21",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-common.1.5.21",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk7.1.5.21",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-jdk8.1.5.21",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-reflect_1.5.21",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.21",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib_1.5.21",
     ],
     visibility = [":__subpackages__"],
 )
 
 # Dagger dependencies
-maven_repo(
+maven_repository(
     name = "dagger_prebuilts",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2:com.google.dagger.dagger.2.28.3",
-        "//prebuilts/tools/common/m2:com.google.dagger.dagger-compiler.2.28.3",
-        "//prebuilts/tools/common/m2:com.google.dagger.dagger-producers.2.28.3",
-        "//prebuilts/tools/common/m2:com.google.dagger.dagger-spi.2.28.3",
-        "//prebuilts/tools/common/m2:com.google.errorprone.javac-shaded.9-dev-r4023-3",
-        "//prebuilts/tools/common/m2:com.google.googlejavaformat.google-java-format.1.5",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.27.1-jre",
-        "//prebuilts/tools/common/m2:com.squareup.javapoet.1.13.0",
-        "//prebuilts/tools/common/m2:net.ltgt.gradle.incap.incap.0.2",
-        "//prebuilts/tools/common/m2:org.checkerframework.checker-compat-qual.2.5.3",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib.1.3.72",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib-common.1.3.72",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-metadata-jvm.0.1.0",
+        "@maven_tests//:com.google.dagger.dagger-compiler_2.28.3",
+        "@maven_tests//:com.google.dagger.dagger_2.28.3",
     ],
     visibility = [":__subpackages__"],
 )
 
 # Kotlin Gradle plugin dependencies
-maven_repo(
+maven_repository(
     name = "kotlin_gradle_plugin_prebuilts",
     # keep sorted
     artifacts = [
-        "//tools/base/third_party/kotlin/for_agp:org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
-        "//tools/base/third_party/kotlin/for_agp:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
-        "//tools/base/third_party/kotlin/for_agp:org.jetbrains.kotlin_kotlin-gradle-plugin",
-        "//tools/base/third_party/kotlin/for_agp:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party/kotlin/for_agp:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        "@maven_tests//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.5.0",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.5.0",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.5.0",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.0",
     ],
     visibility = ["//visibility:public"],
 )
 
 # Kotlin Gradle plugin 1.4.32 dependencies
-maven_repo(
+maven_repository(
     name = "kotlin_gradle_plugin_1_4_32_prebuilts",
     # keep sorted
     artifacts = [
-        "//tools/base/third_party/kotlin/1_4_32:org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
-        "//tools/base/third_party/kotlin/1_4_32:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
-        "//tools/base/third_party/kotlin/1_4_32:org.jetbrains.kotlin_kotlin-gradle-plugin",
-        "//tools/base/third_party/kotlin/1_4_32:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party/kotlin/1_4_32:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
+        "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
     ],
     visibility = ["__subpackages__"],
 )
 
-maven_repo(
+maven_repository(
     name = "prefab_repo",
     artifacts = [
-        "//prebuilts/tools/common/m2:com.google.prefab.cli.2.0.0",
+        "@maven_tests//:com.google.prefab.cli_2.0.0",
     ],
     visibility = [":__subpackages__"],
 )
 
 # Maven repo with all the UTP plugins required by tests with UTP.
-maven_repo(
+maven_repository(
     name = "utp_plugins",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2:com.google.code.gson.gson.2.7",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-driver-instrumentation.0.0.8-alpha07",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-test-plugin.0.0.8-alpha07",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.core.0.0.8-alpha07",
-        "//tools/base/utp/android-device-provider-ddmlib",
-        "//tools/base/utp/android-device-provider-gradle",
-        "//tools/base/utp/android-device-provider-gradle-proto",
-        "//tools/base/utp/android-test-plugin-host-additional-test-output",
-        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
-        "//tools/base/utp/android-test-plugin-host-coverage",
-        "//tools/base/utp/android-test-plugin-host-coverage-proto",
-        "//tools/base/utp/android-test-plugin-host-device-info",
-        "//tools/base/utp/android-test-plugin-host-device-info-proto",
-        "//tools/base/utp/android-test-plugin-host-logcat",
-        "//tools/base/utp/android-test-plugin-host-retention",
-        "//tools/base/utp/android-test-plugin-host-retention-proto",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
-        # These can be removed once the repo rules are migrated
-        "//tools/base/emulator/proto:proto",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.android-device-provider-local.0.0.8-alpha07",
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
+        "//tools/base/utp/android-device-provider-ddmlib:android-device-provider-ddmlib_bzl",
+        "//tools/base/utp/android-device-provider-gradle:android-device-provider-gradle_bzl",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output:android-test-plugin-host-additional-test-output_bzl",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto:android-test-plugin-host-additional-test-output-proto_bzl",
+        "//tools/base/utp/android-test-plugin-host-coverage:android-test-plugin-host-coverage_bzl",
+        "//tools/base/utp/android-test-plugin-host-device-info:android-test-plugin-host-device-info_bzl",
+        "//tools/base/utp/android-test-plugin-host-logcat:android-test-plugin-host-logcat_bzl",
+        "//tools/base/utp/android-test-plugin-host-retention:android-test-plugin-host-retention_bzl",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle:android-test-plugin-result-listener-gradle_bzl",
+        "@maven_tests//:com.google.testing.platform.android-driver-instrumentation_0.0.8-alpha07",
+        "@maven_tests//:com.google.testing.platform.android-test-plugin_0.0.8-alpha07",
+        "@maven_tests//:com.google.testing.platform.core_0.0.8-alpha07",
     ],
     visibility = ["__subpackages__"],
 )
