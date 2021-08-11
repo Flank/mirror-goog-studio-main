@@ -248,7 +248,7 @@ enum class VariantTypeImpl(
         isTestFixturesComponent = true,
         publishToOtherModules = true,
         publishToRepository = true,
-        artifactName = "_test_fixtures_",
+        artifactName = AndroidProject.ARTIFACT_TEST_FIXTURES,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
         analyticsVariantType = GradleBuildVariant.VariantType.TEST_FIXTURES
     );
