@@ -13,167 +13,169 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.integration.application
 
-package com.android.build.gradle.integration.application;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.truth.ZipFileSubject
+import com.google.common.collect.ImmutableMap
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
+import java.io.IOException
+import java.nio.file.Files
 
-import static com.android.testutils.truth.ZipFileSubject.assertThat;
+/** Integration test for composite build.  */
+class CompositeBuildTest {
+    @get:Rule
+    val app = builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .withName("app")
+        .create()
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
-import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Scanner;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+    @get:Rule
+    val lib = builder()
+        .fromTestApp(EmptyAndroidTestApp())
+        .withName("lib")
+        .create()
 
-/** Integration test for composite build. */
-public class CompositeBuildTest {
-
-    @Rule
-    public GradleTestProject app =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .withName("app")
-                    .create();
-
-    @Rule
-    public GradleTestProject lib =
-            GradleTestProject.builder()
-                    .fromTestApp(new EmptyAndroidTestApp())
-                    .withName("lib")
-                    .create();
-
-    @Rule
-    public GradleTestProject androidLib =
-            GradleTestProject.builder()
-                    .fromTestApp(
-                            new MultiModuleTestProject(
-                                    ImmutableMap.of(
-                                            "androidLib1",
-                                            new EmptyAndroidTestApp("com.example.androidLib1"),
-                                            "androidLib2",
-                                            new EmptyAndroidTestApp("com.example.androidLib2"))))
-                    .withName("androidLib")
-                    .withDependencyChecker(false)
-                    .create();
+    @get:Rule
+    val androidLib = builder()
+        .fromTestApp(
+            MultiModuleTestProject(
+                ImmutableMap.of(
+                    "androidLib1",
+                    EmptyAndroidTestApp("com.example.androidLib1"),
+                    "androidLib2",
+                    EmptyAndroidTestApp("com.example.androidLib2")
+                )
+            )
+        )
+        .withName("androidLib")
+        .withDependencyChecker(false)
+        .create()
 
     @Before
-    public void setUp() throws IOException {
-        Files.write(
-                app.file("settings.gradle").toPath(),
-                ("includeBuild('../lib') {\n"
-                                + "    dependencySubstitution {\n"
-                                + "        substitute module('com.example:lib') with project(':')\n"
-                                + "    }\n"
-                                + "}\n"
-                                + "includeBuild('../androidLib') {\n"
-                                + "    dependencySubstitution {\n"
-                                + "        substitute module('com.example:androidLib1') with project(':androidLib1')\n"
-                                + "        substitute module('com.example:androidLib2') with project(':androidLib2')\n"
-                                + "    }\n"
-                                + "}\n")
-                        .getBytes());
+    fun setUp() {
+        app.file("settings.gradle").writeText(
+            """
+includeBuild('../lib') {
+    dependencySubstitution {
+        substitute module('com.example:lib') with project(':')
+    }
+}
+includeBuild('../androidLib') {
+    dependencySubstitution {
+        substitute module('com.example:androidLib1') with project(':androidLib1')
+        substitute module('com.example:androidLib2') with project(':androidLib2')
+    }
+}
+"""
+        )
 
         TestFileUtils.appendToFile(
-                app.getBuildFile(),
-                "android {\n"
-                        + "    buildTypes.debug.testCoverageEnabled true\n"
-                        + "}\n"
-                        + "dependencies {\n"
-                        + "    api 'com.example:lib'\n"
-                        + "    api 'com.example:androidLib1'\n"
-                        + "    api 'com.example:androidLib2'\n"
-                        + "}\n");
+            app.buildFile,
+            """
+android {
+    buildTypes.debug.testCoverageEnabled true
+}
+dependencies {
+    api 'com.example:lib'
+    api 'com.example:androidLib1'
+    api 'com.example:androidLib2'
+}
+"""
+        )
 
         // lib is just an empty project.
-        lib.file("settings.gradle").createNewFile();
-        TestFileUtils.appendToFile(lib.getBuildFile(), "apply plugin: 'java'\n");
+        lib.file("settings.gradle").createNewFile()
+        TestFileUtils.appendToFile(lib.buildFile, "apply plugin: 'java'\n")
 
-        // b/62428620 - Add a dummy file to the classpath to cause androidLib project to be loaded
+        // b/62428620 - Add a fake file to the classpath to cause androidLib project to be loaded
         // in a different classloader.  This used to cause problem in composite build in older
         // Gradle plugin.
         TestFileUtils.searchAndReplace(
-                androidLib.getBuildFile(),
-                "buildscript { apply from: \"../commonBuildScript.gradle\" }",
-                "buildscript {"
-                        + "    apply from: \"../commonBuildScript.gradle\"\n"
-                        + "    dependencies {"
-                        + "        classpath files('dummy')\n"
-                        + "    }\n"
-                        + "}\n");
+            androidLib.buildFile,
+            "buildscript { apply from: \"../commonBuildScript.gradle\" }",
+            """
+buildscript {    apply from: "../commonBuildScript.gradle"
+    dependencies {
+        classpath files('fake')
+    }
+}
+"""
+        )
 
         // androidLib1 and androidLib2 are empty aar project.
-        Files.write(
-                androidLib.file("settings.gradle").toPath(),
-                ("include 'androidLib1'\n" + "include 'androidLib2'\n").getBytes());
-        String androidLibBuildGradle =
-                "apply plugin: 'com.android.library'\n"
-                        + "\n"
-                        + "android {\n"
-                        + "    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "}\n";
-        TestFileUtils.appendToFile(
-                androidLib.getSubproject(":androidLib1").getBuildFile(), androidLibBuildGradle);
+        androidLib.file("settings.gradle").writeText(
+            """
+include 'androidLib1'
+include 'androidLib2'
+"""
+        )
 
+        val androidLibBuildGradle = """
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+}
+"""
         TestFileUtils.appendToFile(
-                androidLib.getSubproject(":androidLib2").getBuildFile(), androidLibBuildGradle);
+            androidLib.getSubproject(":androidLib1").buildFile, androidLibBuildGradle
+        )
+        TestFileUtils.appendToFile(
+            androidLib.getSubproject(":androidLib2").buildFile, androidLibBuildGradle
+        )
     }
 
     @Test
-    public void assembleDebug() throws Exception {
-        app.execute(":assembleDebug");
-        assertThat(
-                app.getApkAsFile(GradleTestProject.ApkType.DEBUG),
-                it -> {
-                    it.exists();
-                });
+    fun assembleDebug() {
+        app.execute(":assembleDebug")
+        ZipFileSubject.assertThat(
+            app.getApkAsFile(GradleTestProject.ApkType.DEBUG)
+        ) { it.exists() }
     }
 
     @Test
-    public void assembleDebugWithConfigureOnDemand() throws Exception {
-        app.executor().withArgument("--configure-on-demand").run(":assembleDebug");
-        assertThat(
-                app.getApkAsFile(GradleTestProject.ApkType.DEBUG),
-                it -> {
-                    it.exists();
-                });
+    fun assembleDebugWithConfigureOnDemand() {
+        app.executor().withArgument("--configure-on-demand").run(":assembleDebug")
+        ZipFileSubject.assertThat(
+            app.getApkAsFile(GradleTestProject.ApkType.DEBUG)
+        ) {  it.exists() }
     }
 
     @Ignore("b/195109976")
     @Test
-    public void checkDifferentPluginVersionsCauseFailure()
-            throws IOException, InterruptedException {
+    fun checkDifferentPluginVersionsCauseFailure() {
         TestFileUtils.appendToFile(
-                androidLib.getBuildFile(),
-                "\n"
-                        + "buildscript {\n"
-                        + "  dependencies {\n"
-                        + "    classpath('com.android.tools.build:gradle:3.5.0') { force=true }\n"
-                        + "  }\n"
-                        + "}\n");
-
-        GradleBuildResult result =
-                app.executor().withFailOnWarning(false).expectFailure().run("help");
-        try (Scanner scanner = result.getStderr()) {
-            ScannerSubject.assertThat(scanner)
-                    .contains(
-                            "   > Using multiple versions of the Android Gradle plugin in the same build is not allowed.");
+            androidLib.buildFile,
+            """
+buildscript {
+  dependencies {
+    classpath('com.android.tools.build:gradle:3.5.0') { force=true }
+  }
+}
+"""
+        )
+        val result = app.executor().withFailOnWarning(false).expectFailure().run("help")
+        result.stderr.use { scanner ->
+            assertThat(scanner)
+                .contains(
+                    "   > Using multiple versions of the Android Gradle plugin in the same build is not allowed."
+                )
         }
     }
 
     @Test
-    public void testFetchingAndroidModel() throws IOException {
-        app.model().fetchAndroidProjects();
-        androidLib.model().fetchAndroidProjects();
+    fun testFetchingAndroidModel() {
+        app.model().fetchAndroidProjects()
+        androidLib.model().fetchAndroidProjects()
     }
 }
