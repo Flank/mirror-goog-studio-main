@@ -100,7 +100,14 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 isForAnalysis = false
             )
         // The artifact produced is only used by lint tasks with checkDependencies=true
-        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, checkDependencies=true)
+        this.variantInputs
+            .initializeForStandalone(
+                project,
+                javaConvention,
+                projectOptions,
+                checkDependencies = true,
+                isForAnalysis = false
+            )
         this.partialResultsDir = partialResultsDir
         this.partialResultsDirPath = partialResultsDir.absolutePath
     }
@@ -160,6 +167,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 variantWithoutTests,
                 checkDependencies = checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = false,
+                isForAnalysis = false,
                 addBaseModuleLintModel = creationConfig is DynamicFeatureCreationConfig
             )
             task.partialResultsDir =

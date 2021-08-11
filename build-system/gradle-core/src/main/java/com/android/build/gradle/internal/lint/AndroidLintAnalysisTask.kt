@@ -276,7 +276,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.variantInputs.initialize(
                 variant,
                 checkDependencies = false,
-                warnIfProjectTreatedAsExternalDependency = false
+                warnIfProjectTreatedAsExternalDependency = false,
+                isForAnalysis = true
             )
             task.lintTool
                 .initialize(
@@ -369,7 +370,8 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 project,
                 javaPluginConvention,
                 projectOptions,
-                checkDependencies=false
+                checkDependencies = false,
+                isForAnalysis = true
             )
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory

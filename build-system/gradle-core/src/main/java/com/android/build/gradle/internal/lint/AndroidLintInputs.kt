@@ -708,22 +708,23 @@ abstract class VariantInputs {
      * Initializes the variant inputs
      *
      * @param variantWithTests the [VariantWithTests].
-     * @param checkDependencies whether or not the module dependencies should be modeled as module
+     * @param checkDependencies whether the module dependencies should be modeled as module
      *     dependencies (instead of modeled as external libraries).
-     * @param warnIfProjectTreatedAsExternalDependency whether or not to warn the user if the
-     *     standalone plugin is not applied to a java module dependency when checkDependencies is
-     *     true.
-     * @param addBaseModuleLintModel whether or not the base app module should be modeled as a
-     *     module dependency if checkDependencies is false. This Boolean only affects dynamic
-     *     feature modules, and it has no effect if checkDependencies is true.
-     * @param includeDynamicFeatureSourceProviders whether or not to merge any dynamic feature
-     *     source providers with this module's source providers. This Boolean only affects app
-     *     modules.
+     * @param warnIfProjectTreatedAsExternalDependency whether to warn the user if the standalone
+     *     plugin is not applied to a java module dependency when checkDependencies is true.
+     * @param isForAnalysis whether the inputs are for lint analysis (as opposed to lint reporting
+     *     or lint model writing).
+     * @param addBaseModuleLintModel whether the base app module should be modeled as a module
+     *     dependency if checkDependencies is false. This Boolean only affects dynamic feature
+     *     modules, and it has no effect if checkDependencies is true.
+     * @param includeDynamicFeatureSourceProviders whether to merge any dynamic feature source
+     *     providers with this module's source providers. This Boolean only affects app modules.
      */
     fun initialize(
         variantWithTests: VariantWithTests,
         checkDependencies: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
+        isForAnalysis: Boolean,
         addBaseModuleLintModel: Boolean = false,
         includeDynamicFeatureSourceProviders: Boolean = false
     ) {
@@ -787,7 +788,9 @@ abstract class VariantInputs {
         resourceConfigurations.setDisallowChanges(creationConfig.resourceConfigurations)
 
         sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
-            creationConfig.services.newInstance(SourceProviderInput::class.java).initialize(sourceProvider)
+            creationConfig.services
+                .newInstance(SourceProviderInput::class.java)
+                .initialize(sourceProvider, isForAnalysis)
         })
 
         proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
@@ -804,7 +807,7 @@ abstract class VariantInputs {
                 unitTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
                     creationConfig.services
                         .newInstance(SourceProviderInput::class.java)
-                        .initialize(sourceProvider, unitTestOnly = true)
+                        .initialize(sourceProvider, isForAnalysis, unitTestOnly = true)
                 }
             )
         }
@@ -813,7 +816,7 @@ abstract class VariantInputs {
                 androidTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
                     creationConfig.services
                         .newInstance(SourceProviderInput::class.java)
-                        .initialize(sourceProvider, instrumentationTestOnly = true)
+                        .initialize(sourceProvider, isForAnalysis, instrumentationTestOnly = true)
                 }
             )
         }
@@ -839,7 +842,13 @@ abstract class VariantInputs {
         dynamicFeatureLintModels.disallowChanges()
     }
 
-    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, checkDependencies: Boolean) {
+    internal fun initializeForStandalone(
+        project: Project,
+        javaConvention: JavaPluginConvention,
+        projectOptions: ProjectOptions,
+        checkDependencies: Boolean,
+        isForAnalysis: Boolean
+    ) {
         val mainSourceSet = javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
         val testSourceSet = javaConvention.sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
 
@@ -866,11 +875,16 @@ abstract class VariantInputs {
         minifiedEnabled.setDisallowChanges(false)
         sourceProviders.setDisallowChanges(listOf(
             project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, mainSourceSet, unitTestOnly = false)
+                .initializeForStandalone(
+                    project,
+                    mainSourceSet,
+                    isForAnalysis,
+                    unitTestOnly = false
+                )
         ))
         testSourceProviders.setDisallowChanges(listOf(
             project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, testSourceSet, unitTestOnly = true)
+                .initializeForStandalone(project, testSourceSet, isForAnalysis, unitTestOnly = true)
         ))
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -965,20 +979,56 @@ abstract class BuildFeaturesInput {
 
 abstract class SourceProviderInput {
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val manifestFile: RegularFileProperty
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val javaDirectories: ConfigurableFileCollection
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val resDirectories: ConfigurableFileCollection
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val assetsDirectories: ConfigurableFileCollection
+
+    // Without javaDirectoriesClasspath, the lint analysis task would be UP-TO-DATE after a change
+    // in the *order* of java source directories, which would be incorrect. We can't get rid of
+    // javaDirectories entirely because without javaDirectories, the lint analysis task would be
+    // UP-TO-DATE after the addition or removal of a non-existent java source directory. We need to
+    // set javaDirectoriesClasspath only for lint analysis tasks because other lint tasks set
+    // javaDirectoryPaths.
+    @get:Classpath
+    @get:Optional
+    abstract val javaDirectoriesClasspath: ConfigurableFileCollection
+
+    // See comment for javaDirectoriesClasspath
+    @get:Classpath
+    @get:Optional
+    abstract val resDirectoriesClasspath: ConfigurableFileCollection
+
+    // See comment for javaDirectoriesClasspath
+    @get:Classpath
+    @get:Optional
+    abstract val assetsDirectoriesClasspath: ConfigurableFileCollection
+
+    @get:Input
+    @get:Optional
+    abstract val manifestFilePath: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val javaDirectoryPaths: ListProperty<String>
+
+    @get:Input
+    @get:Optional
+    abstract val resDirectoryPaths: ListProperty<String>
+
+    @get:Input
+    @get:Optional
+    abstract val assetsDirectoryPaths: ListProperty<String>
 
     @get:Input
     abstract val debugOnly: Property<Boolean>
@@ -989,8 +1039,12 @@ abstract class SourceProviderInput {
     @get:Input
     abstract val instrumentationTestOnly: Property<Boolean>
 
+    @get:Input
+    abstract val name: Property<String>
+
     internal fun initialize(
         sourceProvider: SourceProvider,
+        isForAnalysis: Boolean,
         unitTestOnly: Boolean = false,
         instrumentationTestOnly: Boolean = false
     ): SourceProviderInput {
@@ -999,22 +1053,58 @@ abstract class SourceProviderInput {
         this.javaDirectories.fromDisallowChanges(javaDirectories)
         this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
         this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)
+        if (isForAnalysis) {
+            this.javaDirectoriesClasspath.from(javaDirectories)
+            this.resDirectoriesClasspath.from(sourceProvider.resDirectories)
+            this.assetsDirectoriesClasspath.from(sourceProvider.assetsDirectories)
+        } else {
+            this.manifestFilePath.set(sourceProvider.manifestFile.absolutePath)
+            this.javaDirectoryPaths.set(javaDirectories.map { it.absolutePath })
+            this.resDirectoryPaths.set(sourceProvider.resDirectories.map { it.absolutePath })
+            this.assetsDirectoryPaths.set(sourceProvider.assetsDirectories.map { it.absolutePath })
+        }
+        this.javaDirectoriesClasspath.disallowChanges()
+        this.resDirectoriesClasspath.disallowChanges()
+        this.assetsDirectoriesClasspath.disallowChanges()
+        this.manifestFilePath.disallowChanges()
+        this.javaDirectoryPaths.disallowChanges()
+        this.resDirectoryPaths.disallowChanges()
+        this.assetsDirectoryPaths.disallowChanges()
         this.debugOnly.setDisallowChanges(false) //TODO
         this.unitTestOnly.setDisallowChanges(unitTestOnly)
         this.instrumentationTestOnly.setDisallowChanges(instrumentationTestOnly)
+        this.name.setDisallowChanges(sourceProvider.name)
         return this
     }
 
-    internal fun initializeForStandalone(project: Project, sourceSet: SourceSet, unitTestOnly: Boolean): SourceProviderInput {
+    internal fun initializeForStandalone(
+        project: Project,
+        sourceSet: SourceSet,
+        isForAnalysis: Boolean,
+        unitTestOnly: Boolean
+    ): SourceProviderInput {
         val fakeManifestFile =
             project.layout.buildDirectory.file("fakeAndroidManifest/${sourceSet.name}/AndroidManifest.xml")
         this.manifestFile.setDisallowChanges(fakeManifestFile)
         this.javaDirectories.fromDisallowChanges(project.provider { sourceSet.allSource.srcDirs })
         this.resDirectories.disallowChanges()
         this.assetsDirectories.disallowChanges()
+        if (isForAnalysis) {
+            this.javaDirectoriesClasspath.from(project.provider { sourceSet.allSource.srcDirs })
+        } else {
+            this.javaDirectoryPaths.set(sourceSet.allSource.srcDirs.map { it.absolutePath })
+        }
+        this.javaDirectoriesClasspath.disallowChanges()
+        this.resDirectoriesClasspath.disallowChanges()
+        this.assetsDirectoriesClasspath.disallowChanges()
+        this.manifestFilePath.disallowChanges()
+        this.javaDirectoryPaths.disallowChanges()
+        this.resDirectoryPaths.disallowChanges()
+        this.assetsDirectoryPaths.disallowChanges()
         this.debugOnly.setDisallowChanges(false)
         this.unitTestOnly.setDisallowChanges(unitTestOnly)
         this.instrumentationTestOnly.setDisallowChanges(false)
+        this.name.setDisallowChanges(sourceSet.name)
         return this
     }
 
