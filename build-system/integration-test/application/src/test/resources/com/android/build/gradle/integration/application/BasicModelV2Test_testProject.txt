@@ -82,30 +82,7 @@
             * {PROJECT}/src/test/shaders{!}
          - mlModelsDirectories = (null)
       < unitTestSourceProvider
-      > testFixturesSourceProvider:
-         - name                = "testFixtures"
-         - manifestFile        = {PROJECT}/src/testFixtures/AndroidManifest.xml{!}
-         - javaDirectories:
-            * {PROJECT}/src/testFixtures/java{!}
-         - kotlinDirectories:
-            * {PROJECT}/src/testFixtures/java{!}
-            * {PROJECT}/src/testFixtures/kotlin{!}
-         - resourcesDirectories:
-            * {PROJECT}/src/testFixtures/resources{!}
-         - aidlDirectories:
-            * {PROJECT}/src/testFixtures/aidl{!}
-         - renderscriptDirectories:
-            * {PROJECT}/src/testFixtures/rs{!}
-         - resDirectories:
-            * {PROJECT}/src/testFixtures/res{!}
-         - assetsDirectories:
-            * {PROJECT}/src/testFixtures/assets{!}
-         - jniLibsDirectories:
-            * {PROJECT}/src/testFixtures/jniLibs{!}
-         - shadersDirectories:
-            * {PROJECT}/src/testFixtures/shaders{!}
-         - mlModelsDirectories = (null)
-      < testFixturesSourceProvider
+      - testFixturesSourceProvider = (null)
    < defaultConfig
    > buildTypes:
       > debug:
@@ -181,30 +158,7 @@
                * {PROJECT}/src/testDebug/shaders{!}
             - mlModelsDirectories = (null)
          < unitTestSourceProvider
-         > testFixturesSourceProvider:
-            - name                = "testFixturesDebug"
-            - manifestFile        = {PROJECT}/src/testFixturesDebug/AndroidManifest.xml{!}
-            - javaDirectories:
-               * {PROJECT}/src/testFixturesDebug/java{!}
-            - kotlinDirectories:
-               * {PROJECT}/src/testFixturesDebug/java{!}
-               * {PROJECT}/src/testFixturesDebug/kotlin{!}
-            - resourcesDirectories:
-               * {PROJECT}/src/testFixturesDebug/resources{!}
-            - aidlDirectories:
-               * {PROJECT}/src/testFixturesDebug/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesDebug/rs{!}
-            - resDirectories:
-               * {PROJECT}/src/testFixturesDebug/res{!}
-            - assetsDirectories:
-               * {PROJECT}/src/testFixturesDebug/assets{!}
-            - jniLibsDirectories:
-               * {PROJECT}/src/testFixturesDebug/jniLibs{!}
-            - shadersDirectories:
-               * {PROJECT}/src/testFixturesDebug/shaders{!}
-            - mlModelsDirectories = (null)
-         < testFixturesSourceProvider
+         - testFixturesSourceProvider = (null)
       < debug
       > release:
          > sourceProvider:
@@ -279,30 +233,7 @@
                * {PROJECT}/src/testRelease/shaders{!}
             - mlModelsDirectories = (null)
          < unitTestSourceProvider
-         > testFixturesSourceProvider:
-            - name                = "testFixturesRelease"
-            - manifestFile        = {PROJECT}/src/testFixturesRelease/AndroidManifest.xml{!}
-            - javaDirectories:
-               * {PROJECT}/src/testFixturesRelease/java{!}
-            - kotlinDirectories:
-               * {PROJECT}/src/testFixturesRelease/java{!}
-               * {PROJECT}/src/testFixturesRelease/kotlin{!}
-            - resourcesDirectories:
-               * {PROJECT}/src/testFixturesRelease/resources{!}
-            - aidlDirectories:
-               * {PROJECT}/src/testFixturesRelease/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesRelease/rs{!}
-            - resDirectories:
-               * {PROJECT}/src/testFixturesRelease/res{!}
-            - assetsDirectories:
-               * {PROJECT}/src/testFixturesRelease/assets{!}
-            - jniLibsDirectories:
-               * {PROJECT}/src/testFixturesRelease/jniLibs{!}
-            - shadersDirectories:
-               * {PROJECT}/src/testFixturesRelease/shaders{!}
-            - mlModelsDirectories = (null)
-         < testFixturesSourceProvider
+         - testFixturesSourceProvider = (null)
       < release
    < buildTypes
    - productFlavors        = []

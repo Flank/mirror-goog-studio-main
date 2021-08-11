@@ -199,6 +199,17 @@ class ModelBuilder<
 
         val variants = variantModel.variants
 
+        val testFixturesEnabledBuildTypes = mutableSetOf<String>()
+        val testFixturesEnabledProductFlavors = mutableSetOf<Pair<String, String>>()
+
+        for (variant in variants) {
+            // testFixtures is enabled for this variant
+            if (variant.testFixturesComponent != null) {
+                testFixturesEnabledBuildTypes.add(variant.buildType!!)
+                testFixturesEnabledProductFlavors.addAll(variant.productFlavors)
+            }
+        }
+
         // for now grab the first buildFeatureValues as they cannot be different.
         val buildFeatures = variants.first().buildFeatures
 
@@ -208,7 +219,9 @@ class ModelBuilder<
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
             unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-            testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet?.convert(buildFeatures)
+            testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet?.takeIf {
+                testFixturesEnabledBuildTypes.isNotEmpty()
+            }?.convert(buildFeatures)
         )
 
         // gather all the build types
@@ -219,7 +232,9 @@ class ModelBuilder<
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-                    testFixturesSourceProvider = buildType.testFixturesSourceSet?.convert(buildFeatures)
+                    testFixturesSourceProvider = buildType.testFixturesSourceSet?.takeIf {
+                        testFixturesEnabledBuildTypes.contains(buildType.buildType.name)
+                    }?.convert(buildFeatures)
                 )
             )
         }
@@ -232,7 +247,11 @@ class ModelBuilder<
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-                    testFixturesSourceProvider = flavor.testFixturesSourceSet?.convert(buildFeatures)
+                    testFixturesSourceProvider = flavor.testFixturesSourceSet?.takeIf {
+                        testFixturesEnabledProductFlavors.contains(
+                            Pair(flavor.productFlavor.dimension, flavor.productFlavor.name)
+                        )
+                    }?.convert(buildFeatures)
                 )
             )
         }

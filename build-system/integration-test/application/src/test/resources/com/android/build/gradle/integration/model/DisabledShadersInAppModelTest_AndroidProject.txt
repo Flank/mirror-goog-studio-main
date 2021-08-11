@@ -9,9 +9,6 @@
       - unitTestSourceProvider:
          - shadersDirectories:
             * {PROJECT}/src/test/shaders{!}{REMOVED}
-      - testFixturesSourceProvider:
-         - shadersDirectories:
-            * {PROJECT}/src/testFixtures/shaders{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
@@ -24,9 +21,6 @@
          - unitTestSourceProvider:
             - shadersDirectories:
                * {PROJECT}/src/testDebug/shaders{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - shadersDirectories:
-               * {PROJECT}/src/testFixturesDebug/shaders{!}{REMOVED}
       < debug
       > release:
          - sourceProvider:
@@ -38,9 +32,6 @@
          - unitTestSourceProvider:
             - shadersDirectories:
                * {PROJECT}/src/testRelease/shaders{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - shadersDirectories:
-               * {PROJECT}/src/testFixturesRelease/shaders{!}{REMOVED}
       < release
    < buildTypes
 < AndroidProject

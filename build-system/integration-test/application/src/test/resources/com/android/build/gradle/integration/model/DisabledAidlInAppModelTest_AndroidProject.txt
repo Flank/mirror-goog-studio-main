@@ -9,9 +9,6 @@
       - unitTestSourceProvider:
          - aidlDirectories:
             * {PROJECT}/src/test/aidl{!}{REMOVED}
-      - testFixturesSourceProvider:
-         - aidlDirectories:
-            * {PROJECT}/src/testFixtures/aidl{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
@@ -24,9 +21,6 @@
          - unitTestSourceProvider:
             - aidlDirectories:
                * {PROJECT}/src/testDebug/aidl{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - aidlDirectories:
-               * {PROJECT}/src/testFixturesDebug/aidl{!}{REMOVED}
       < debug
       > release:
          - sourceProvider:
@@ -38,9 +32,6 @@
          - unitTestSourceProvider:
             - aidlDirectories:
                * {PROJECT}/src/testRelease/aidl{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - aidlDirectories:
-               * {PROJECT}/src/testFixturesRelease/aidl{!}{REMOVED}
       < release
    < buildTypes
    > variants:
