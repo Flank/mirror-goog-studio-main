@@ -54,6 +54,7 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.EnumSet;
 import java.util.List;
+import org.jetbrains.kotlin.psi.KtCollectionLiteralExpression;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
@@ -63,7 +64,6 @@ import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.java.JavaAnnotationArrayInitializerUCallExpression;
-import org.jetbrains.uast.kotlin.expressions.KotlinUCollectionLiteralExpression;
 
 /** Evaluates constant expressions */
 public class ResourceEvaluator {
@@ -470,7 +470,11 @@ public class ResourceEvaluator {
                         }
                     }
                 } else if (call instanceof JavaAnnotationArrayInitializerUCallExpression
-                        || call instanceof KotlinUCollectionLiteralExpression) {
+                        // TODO: The following line should be `call instanceof KotlinUCollectionLiteralExpression`.
+                        //  However, KotlinUCollectionLiteralExpression recently moved to a different package,
+                        //  and we cannot refer to the new name until both Lint CLI *and* Lint in the IDE
+                        //  are compiled against Kotlin 1.5.30.
+                        || call.getSourcePsi() instanceof KtCollectionLiteralExpression) {
                     EnumSet<ResourceType> types = EnumSet.noneOf(ResourceType.class);
                     for (UExpression argument : call.getValueArguments()) {
                         EnumSet<ResourceType> resourceTypes = getResourceTypes(argument);
