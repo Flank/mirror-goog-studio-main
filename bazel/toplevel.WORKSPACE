@@ -117,7 +117,7 @@ local_maven_repository(
     # keep sorted: for buildifier
     artifacts = [
         "com.android.tools.build:aapt2-proto:7.0.0-beta04-7396180",
-        "com.android.tools.build:bundletool:1.7.0",
+        "com.android.tools.build:bundletool:1.8.0",
         "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09",
         "com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta09",
         "com.android.tools.build:transform-api:2.0.0-deprecated-use-gradle-api",

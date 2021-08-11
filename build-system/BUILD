@@ -206,7 +206,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2:commons-logging.commons-logging.1.2",
     "//prebuilts/tools/common/m2:com.android.tools.build.jetifier.jetifier-core.1.0.0-beta09",
     "//prebuilts/tools/common/m2:com.android.tools.build.jetifier.jetifier-processor.1.0.0-beta09",
-    "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.7.0",
+    "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.8.0",
     "//prebuilts/tools/common/m2:com.android.tools.build.transform-api.2.0.0-deprecated-use-gradle-api",
     "//prebuilts/tools/common/m2:com.googlecode.json-simple.json-simple.1.1",
     "//prebuilts/tools/common/m2:com.googlecode.juniversalchardet.juniversalchardet.1.0.3",

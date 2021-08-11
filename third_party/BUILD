@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.7.0",
+    export_artifact = "//prebuilts/tools/common/m2:com.android.tools.build.bundletool.1.8.0",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
