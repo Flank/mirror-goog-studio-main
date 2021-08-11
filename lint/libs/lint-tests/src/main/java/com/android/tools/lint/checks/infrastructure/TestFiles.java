@@ -21,8 +21,11 @@ import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
+import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -33,7 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.intellij.lang.annotations.Language;
@@ -141,6 +146,38 @@ public class TestFiles {
     public static TestFile.BinaryTestFile bytecode(
             @NonNull String to, @NonNull TestFile.BytecodeProducer producer) {
         return new TestFile.BinaryTestFile(to, producer);
+    }
+
+    @NonNull
+    public static TestFile rClass(@NonNull String pkg, @NonNull String... urls) {
+        int id = 0x7f040000;
+        StringBuilder sb = new StringBuilder();
+        sb.append("package ").append(pkg).append(";\n");
+        sb.append("public final class R {\n");
+        Map<ResourceType, List<ResourceUrl>> map = new HashMap<>();
+        for (String url : urls) {
+            ResourceUrl reference = ResourceUrl.parse(url);
+            assertNotNull("Resource reference was not a valid URL: " + reference, reference);
+            List<ResourceUrl> list = map.computeIfAbsent(reference.type, o -> new ArrayList<>());
+            list.add(reference);
+        }
+        for (ResourceType type : ResourceType.values()) {
+            List<ResourceUrl> resources = map.get(type);
+            if (resources == null) {
+                continue;
+            }
+            sb.append("    public static final class ").append(type).append(" {\n");
+            for (ResourceUrl resource : resources) {
+                sb.append("        public static final int ")
+                        .append(resource.name)
+                        .append(" = 0x")
+                        .append(Integer.toHexString(id++))
+                        .append(";\n");
+            }
+            sb.append("    }\n");
+        }
+        sb.append("}");
+        return java(sb.toString());
     }
 
     @NonNull

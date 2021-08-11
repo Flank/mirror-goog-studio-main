@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.annotations.NonNull;
@@ -182,19 +183,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "    }\n"
                                                 + "}")
                                 .indented(),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class anim {\n"
-                                        + "        public static final int blink1 = 0x7f070031;\n"
-                                        + "        public static final int blink3 = 0x7f070033;\n"
-                                        + "    }\n"
-                                        + "    public static class animator {\n"
-                                        + "        public static final int blink2 = 0x7f070032;\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + ""),
+                        rClass("test.pkg", "@anim/blink1", "@anim/blink3", "@animator/blink2"),
                         xml(
                                         "res/anim/blink1.xml",
                                         ""
@@ -3765,20 +3754,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(R.string.string2);\n"
                                                 + "    }\n"
                                                 + "}\n"),
-                                java(
-                                        ""
-                                                + "package foo.main;\n"
-                                                + "public class R {\n"
-                                                + "    public static class color {\n"
-                                                // "Wrong casing for 'my_color'" presubmit warning
-                                                // is incorrect here: b/176242084
-                                                + "        public static final int my_color = 0x7f070031;\n"
-                                                + "    }\n"
-                                                + "    public static class string {\n"
-                                                + "        public static final int string2 = 0x7f070032;\n"
-                                                + "    }\n"
-                                                + "}\n"
-                                                + ""),
+                                rClass("foo.main", "@color/my_color", "@string/string2"),
                                 java(
                                         ""
                                                 + "package test.pkg;\n"
@@ -3822,15 +3798,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        System.out.println(R.string.string1);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                ""
-                                        + "package foo.library;\n"
-                                        + "public class R {\n"
-                                        + "    public static class string {\n"
-                                        + "        public static final int string1 = 0x7f070033;\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + ""),
+                        rClass("foo.library", "@string/string1"),
                         xml(
                                 "res/values/strings.xml",
                                 ""
@@ -5874,14 +5842,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                         + "}\n"),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class color {\n"
-                                        + "        public static final int primary_text_default_material_light = 0x7f070031;\n"
-                                        + "    }\n"
-                                        + "}\n"))
+                        rClass("test.pkg", "@color/primary_text_default_material_light"))
                 .run()
                 .expect(
                         ""

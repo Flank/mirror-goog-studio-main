@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
 import com.android.annotations.NonNull;
@@ -437,15 +438,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        setContentView(R.layout.main)\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class layout {\n"
-                                        + "        public static final int main = 1;\n"
-                                        + "    }\n"
-                                        + "}"),
+                        rClass("test.pkg", "@layout/main"),
                         manifest().minSdk(14))
                 .issues(UnusedResourceDetector.ISSUE) // Not id's
                 .run()
@@ -466,15 +459,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"
                                         + "\n"
                                         + "class Five : Parent(R.layout.main)"),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class layout {\n"
-                                        + "        public static final int main = 1;\n"
-                                        + "    }\n"
-                                        + "}"),
+                        rClass("test.pkg", "@layout/main"),
                         manifest().minSdk(14))
                 .issues(UnusedResourceDetector.ISSUE) // Not id's
                 .run()
@@ -502,16 +487,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}"),
                         xml("res/layout/main1.xml", LAYOUT_XML),
                         xml("res/layout/main2.xml", LAYOUT_XML),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class layout {\n"
-                                        + "        public static final int main1 = 1;\n"
-                                        + "        public static final int main2 = 2;\n"
-                                        + "    }\n"
-                                        + "}"),
+                        rClass("test.pkg", "@layout/main1", "@layout/main2"),
                         manifest().minSdk(14))
                 .issues(UnusedResourceDetector.ISSUE) // Not id's
                 .run()
@@ -536,15 +512,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        setContentView(RC.layout.main)\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class layout {\n"
-                                        + "        public static final int main = 1;\n"
-                                        + "    }\n"
-                                        + "}"),
+                        rClass("test.pkg", "@layout/main"),
                         manifest().minSdk(14))
                 .issues(UnusedResourceDetector.ISSUE) // Not id's
                 .run()
@@ -1002,19 +970,11 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        int z = nameFormat; // Static explicit import\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class dimen {\n"
-                                        + "        public static final int largePadding = 1;\n"
-                                        + "        public static final int smallPadding = 2;\n"
-                                        + "    }\n"
-                                        + "    public static class string {\n"
-                                        + "        public static final int nameFormat = 3;\n"
-                                        + "    }\n"
-                                        + "}"))
+                        rClass(
+                                "test.pkg",
+                                "@dimen/largePadding",
+                                "@dimen/smallPadding",
+                                "@string/nameFormat"))
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
@@ -1254,23 +1214,15 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        System.out.println(R.navigation.graph);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                "src/test/pkg/R.java",
-                                ""
-                                        + "package my.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class id {\n"
-                                        + "        public static final int navigation = 0;\n"
-                                        + "        public static final int importFragment = 1;\n"
-                                        + "        public static final int exportFragment = 2;\n"
-                                        + "        public static final int process_import = 3;\n"
-                                        + "        public static final int process_export = 4;\n"
-                                        + "        public static final int eventListFragment = 5;\n"
-                                        + "    }\n"
-                                        + "    public static class navigation {\n"
-                                        + "        public static final int graph = 6;\n"
-                                        + "    }\n"
-                                        + "}"))
+                        rClass(
+                                "my.pkg",
+                                "@id/navigation",
+                                "@id/importFragment",
+                                "@id/exportFragment",
+                                "@id/process_import",
+                                "@id/process_export",
+                                "@id/eventListFragment",
+                                "@navigation/graph"))
                 .issues(UnusedResourceDetector.ISSUE_IDS, UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();

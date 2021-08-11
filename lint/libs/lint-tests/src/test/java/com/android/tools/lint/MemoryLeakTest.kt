@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.GradleDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl
@@ -177,16 +178,7 @@ class MemoryLeakTest {
                 }
                 """
             ),
-            java(
-                """
-                package com.gharrma.sampleapp;
-                public class R {
-                    public static class layout {
-                        public static final int activity_main=0x7f050000;
-                    }
-                }
-                """
-            )
+            rClass("com.gharrma.sampleapp", "@layout/activity_main")
         )
             // Needed to allow PrivateResourceDetector to run.
 

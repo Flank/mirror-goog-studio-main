@@ -18,8 +18,10 @@ package com.android.tools.lint.checks
 
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.ToastDetectorTest.Companion.snackbarStubs
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.JavaContext
@@ -692,14 +694,5 @@ class DataFlowAnalyzerTest : TestCase() {
 
     private fun lint() = TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
 
-    private val rClass = java(
-        """
-        package test.pkg;
-        public class R {
-            public static final class string {
-                public static final int app_name = 0x7f0a0000;
-            }
-        }
-        """
-    ).indented()
+    private val rClass: TestFile = rClass("test.pkg", "@string/app_name")
 }

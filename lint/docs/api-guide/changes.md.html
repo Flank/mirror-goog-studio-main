@@ -45,6 +45,11 @@ Guide.
   UArrayAccessExpression.resolveOperator extension method, which is
   also used by the above machinery.
 
+* The lint testing library now contains a new test file type, `rClass`,
+  which lets you easily construct Android `R` classes with resource
+  declarations (which are needed in tests that reference the R fields
+  to ensure that symbol resolution works.)
+
 **7.0**
 
 * The API level has bumped to 10.

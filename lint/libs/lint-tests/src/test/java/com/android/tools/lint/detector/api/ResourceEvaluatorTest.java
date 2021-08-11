@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.kotlin;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -86,20 +87,7 @@ public class ResourceEvaluatorTest extends TestCase {
     }
 
     private static final TestFile rClass =
-            java(
-                    ""
-                            + ""
-                            + "package test.pkg;\n"
-                            + "public class R {\n"
-                            + "    public static class string {\n"
-                            + "        public static final int foo=0x7f050000;\n"
-                            + "    }\n"
-                            + "    public static class color {\n"
-                            + "        public static final int red=0x7f060000;\n"
-                            + "        public static final int green=0x7f060001;\n"
-                            + "        public static final int blue=0x7f060002;\n"
-                            + "    }\n"
-                            + "}");
+            rClass("test.pkg", "@string/foo", "@color/red", "@color/green", "@color/blue");
 
     interface ContextChecker {
         void check(@NonNull JavaContext context);
