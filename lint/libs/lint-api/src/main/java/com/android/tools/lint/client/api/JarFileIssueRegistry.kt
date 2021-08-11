@@ -302,6 +302,7 @@ shows that the lint check jar references (for example)
 the following API which is no longer valid in this
 version of lint:
 ${verifier.describeFirstIncompatibleReference()}
+(Referenced from ${verifier.getReferenceClassFile()})
 
 Recompile the checks against the latest version, or if
 this is a check bundled with a third-party library, see
@@ -359,6 +360,7 @@ shows that the lint check jar references (for example)
 the following API which is not valid in the version of
 lint which is running:
 ${verifier.describeFirstIncompatibleReference()}
+(Referenced from ${verifier.getReferenceClassFile()})
 
 To use this lint check, upgrade to a more recent version
 of lint.

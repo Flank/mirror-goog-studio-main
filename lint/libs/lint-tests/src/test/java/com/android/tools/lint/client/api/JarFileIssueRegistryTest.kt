@@ -592,6 +592,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 the following API which is not valid in the version of
                 lint which is running:
                 com.android.tools.lint.detector.api.DeletedInterface
+                (Referenced from test/pkg/Helper.class)
 
                 To use this lint check, upgrade to a more recent version
                 of lint.
@@ -808,6 +809,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 the following API which is no longer valid in this
                 version of lint:
                 com.android.tools.lint.detector.api.DeletedInterface
+                (Referenced from test/pkg/Incompatible1.class)
 
                 Recompile the checks against the latest version, or if
                 this is a check bundled with a third-party library, see

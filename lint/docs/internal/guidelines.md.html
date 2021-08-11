@@ -73,6 +73,25 @@ this, open the `tools/adt/idea` project and run the
 place, either set `$ADT_SOURCE_TREE` or edit the test first to point
 the `sourceTree` var to point to your checkout.
 
+# Deprecating and Removing APIs
+
+If we have to remove methods (such as `UastContext`, which is slated
+for removal from UAST in the next version of IntelliJ), just
+deprecating doesn't seem to be enough; a lot of existing lint checks
+will use APIs if the code continues to compile and run. We are guilty
+of this ourselves; lint itself is still referencing a lot of deprecated
+APIs.
+
+However, if we just delete APIs, that will break existing lint checks
+in the field. Therefore, to deprecate APIs, we should be using Kotlin's
+special support for marking deprecated methods hidden (the
+`DeprecationLevel` attribute in a `Deprecated` annotation). This will
+keep the method in the runtime jar file, and older lint checks will be
+able to invoke it -- but it's removed from compilation, therefore
+forcing lint checks to update before we actually remove the API for
+good. (This support is one of the reasons why we want all new APIs in
+lint to be implemented in Kotlin.)
+
 # Issue Granularity
 
 We regularly get requests for a new lint check to highlight or
