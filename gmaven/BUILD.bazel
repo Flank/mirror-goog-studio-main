@@ -7,6 +7,7 @@ zip_merger(
     srcs = [
         "//tools/base:agp_artifacts.zip",
         "//tools/base/build-system:android_gradle_plugin.zip",
+        "//tools/data-binding:data_binding_runtime.zip",
     ],
 )
 

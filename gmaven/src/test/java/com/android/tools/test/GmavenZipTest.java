@@ -56,6 +56,20 @@ public class GmavenZipTest {
 
     private static final Set<String> MISSING_LICENSE =
             ImmutableSet.of(
+                    "androidx/databinding/databinding-adapters",
+                    "androidx/databinding/databinding-adapters:sources",
+                    "androidx/databinding/databinding-ktx",
+                    "androidx/databinding/databinding-ktx:sources",
+                    "androidx/databinding/databinding-runtime",
+                    "androidx/databinding/databinding-runtime:sources",
+                    "androidx/databinding/viewbinding",
+                    "androidx/databinding/viewbinding:sources",
+                    "com/android/databinding/library",
+                    "com/android/databinding/library:sources",
+                    "com/android/databinding/viewbinding",
+                    "com/android/databinding/viewbinding:sources",
+                    "com/android/databinding/adapters",
+                    "com/android/databinding/adapters:sources",
                     "com/android/signflinger",
                     "com/android/signflinger:sources",
                     "com/android/tools/emulator/proto",
@@ -3223,6 +3237,91 @@ public class GmavenZipTest {
                 "com/android/",
                 "com/android/signflinger/");
 
+        expected.putAll(
+                "com/android/databinding/viewbinding",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/com.android.databinding_viewbinding.version");
+
+        expected.putAll(
+                "com/android/databinding/adapters",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/com.android.databinding_baseAdapters.version",
+                "data-binding-base-class-log/",
+                "data-binding-base-class-log/com.android.databinding.library.baseAdapters-binding_classes.json",
+                "data-binding/",
+                "data-binding/com.android.databinding.library.baseAdapters-br.bin",
+                "data-binding/com.android.databinding.library.baseAdapters-setter_store.json",
+                "res/",
+                "res/values/",
+                "res/values/values.xml",
+                "values/");
+
+        expected.putAll(
+                "com/android/databinding/library",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/com.android.databinding_library.version",
+                "proguard.txt",
+                "res/",
+                "res/values/",
+                "res/values/values.xml",
+                "values/");
+
+        expected.putAll(
+                "androidx/databinding/databinding-runtime",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/androidx.databinding_library.version",
+                "proguard.txt",
+                "res/",
+                "res/values/",
+                "res/values/values.xml",
+                "values/");
+
+        expected.putAll(
+                "androidx/databinding/databinding-adapters",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/androidx.databinding_baseAdapters.version",
+                "data-binding-base-class-log/",
+                "data-binding-base-class-log/androidx.databinding.library.baseAdapters-binding_classes.json",
+                "data-binding/",
+                "data-binding/androidx.databinding.library.baseAdapters-br.bin",
+                "data-binding/androidx.databinding.library.baseAdapters-setter_store.json",
+                "res/",
+                "res/values/",
+                "res/values/values.xml",
+                "values/");
+
+        expected.putAll(
+                "androidx/databinding/viewbinding",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/androidx.databinding_viewbinding.version");
+
+        expected.putAll(
+                "androidx/databinding/databinding-ktx",
+                "AndroidManifest.xml",
+                "META-INF/com/android/build/gradle/aar-metadata.properties",
+                "R.txt",
+                "classes.jar",
+                "classes.jar:META-INF/androidx.databinding_databindingKtx.version",
+                "classes.jar:META-INF/databindingKtx_release.kotlin_module");
+
         EXPECTED = expected.build();
     }
 
@@ -3237,7 +3336,10 @@ public class GmavenZipTest {
 
         List<Path> ourJars =
                 Files.walk(repo)
-                        .filter(path -> path.toString().endsWith(".jar"))
+                        .filter(
+                                path ->
+                                        path.toString().endsWith(".jar")
+                                                || path.toString().endsWith(".aar"))
                         .filter(GmavenZipTest::isCurrentVersion)
                         .collect(Collectors.toList());
 
@@ -3251,7 +3353,7 @@ public class GmavenZipTest {
                 jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
             }
         }
-        expect.that(jarNames).named("Jars").containsExactlyElementsIn(EXPECTED.keySet());
+        expect.that(jarNames).named("Jars and aars").containsExactlyElementsIn(EXPECTED.keySet());
     }
 
     private void checkSourcesJar(Path jarPath, Path repo) throws IOException {
@@ -3297,7 +3399,7 @@ public class GmavenZipTest {
         String expectedNameNoClassifier = name + "-" + revision;
         String filename = jar.getFileName().toString();
         String path = FileUtils.toSystemIndependentPath(pathWithoutVersion);
-        if (!filename.equals(expectedNameNoClassifier + ".jar")) {
+        if (!filename.substring(0, filename.length() - 4).equals(expectedNameNoClassifier)) {
             String classifier =
                     filename.substring(
                             expectedNameNoClassifier.length() + 1,
@@ -3375,7 +3477,8 @@ public class GmavenZipTest {
 
             expect.that(actual)
                     .named(jar.toString() + " with key " + key)
-                    .containsExactlyElementsIn(expected);
+                    .containsExactlyElementsIn(
+                            expected.stream().sorted().collect(Collectors.toList()));
         }
     }
 
