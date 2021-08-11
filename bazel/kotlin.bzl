@@ -231,12 +231,14 @@ def _kotlin_library_impl(ctx):
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
     deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.bundled_deps + ctx.attr.exports]
+    java_info_deps = [dep[JavaInfo] for dep in ctx.attr.deps]
 
     # Kotlin
     jars = []
     kotlin_providers = []
     if kotlin_srcs:
         deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
+        java_info_deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -295,14 +297,14 @@ def _kotlin_library_impl(ctx):
     providers = [JavaInfo(
         output_jar = ctx.outputs.jar,
         compile_jar = ijar,
-        deps = deps,
-        runtime_deps = deps,
+        deps = java_info_deps,
+        runtime_deps = java_info_deps,
     )]
     providers += [dep[JavaInfo] for dep in ctx.attr.exports]
 
     transitive_runfiles = depset(transitive = [
         dep[DefaultInfo].default_runfiles.files
-        for dep in ctx.attr.deps + ctx.attr.bundled_deps
+        for dep in ctx.attr.deps
         if dep[DefaultInfo].default_runfiles
     ])
     runfiles = ctx.runfiles(files = ctx.files.data, transitive_files = transitive_runfiles)
