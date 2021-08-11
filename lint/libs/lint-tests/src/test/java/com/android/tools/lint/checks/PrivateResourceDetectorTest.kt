@@ -2,16 +2,28 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.FN_PUBLIC_TXT
 import com.android.SdkConstants.FN_RESOURCE_TEXT
+import com.android.resources.ResourceUrl
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.GradleModelMocker
 import com.android.tools.lint.checks.infrastructure.TestFile
-import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
+import com.android.tools.lint.checks.infrastructure.TestLintTask
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.io.IOException
+import java.util.function.Consumer
 
-class PrivateResourceDetectorTest : AbstractCheckTest() {
-    override fun getDetector(): Detector {
-        return PrivateResourceDetector()
+class PrivateResourceDetectorTest {
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
+
+    fun lint(): TestLintTask {
+        return TestLintTask.lint().issues(PrivateResourceDetector.ISSUE).sdkHome(TestUtils.getSdk().toFile())
     }
 
     // Sample code
@@ -40,8 +52,30 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
         """
     ).indented()
 
-    private val rFile = createRFile()
-    private val publicTxtFile = createPublicResourcesFile()
+    private val defaultLibraryMocks: Consumer<GradleModelMocker> = createLibraryMocker(
+        createLibrary(
+            artifact = "com.android.tools:test-library:1.0.0",
+            all = listOf(
+                "@string/my_private_string",
+                "@string/my_public_string",
+                "@layout/my_private_layout",
+                "@id/title",
+                "@style/Theme_AppCompat_DayNight"
+
+            ),
+            public = listOf(
+                "@string/my_public_string",
+                "@style/Theme_AppCompat_DayNight"
+            )
+        )
+    )
+
+    private val defaultRClass: TestFile = rClass(
+        "test.pkg",
+        "@string/my_private_string",
+        "@string/my_public_string"
+    )
+
     private val gradle: TestFile = gradle(
         """
         apply plugin: 'com.android.application'
@@ -50,67 +84,9 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
             compile 'com.android.tools:test-library:1.0.0'
         }
         """
-    )
-        .withMockerConfigurator { mocker: GradleModelMocker ->
-            mocker.withLibraryPublicResourcesFile(
-                "com.android.tools:test-library:1.0.0",
-                publicTxtFile.path
-            )
-            mocker.withLibrarySymbolFile(
-                "com.android.tools:test-library:1.0.0", rFile.path
-            )
-        }
+    ).indented().withMockerConfigurator(defaultLibraryMocks)
 
-    private fun createPublicResourcesFile(): File {
-        return try {
-            val tempDir = TestUtils.createTempDirDeletedOnExit().toFile()
-            val publicResources = """
-                string my_public_string
-                style Theme.AppCompat.DayNight
-
-            """.trimIndent()
-            val publicTxtFile = File(tempDir, FN_PUBLIC_TXT)
-            publicTxtFile.writeText(publicResources)
-            publicTxtFile
-        } catch (ioe: IOException) {
-            fail(ioe.message)
-            File("")
-        }
-    }
-
-    private fun createRFile(): File {
-        return try {
-            val tempDir = TestUtils.createTempDirDeletedOnExit().toFile()
-            val allResources = """
-                int string my_private_string 0x7f040000
-                int string my_public_string 0x7f040001
-                int layout my_private_layout 0x7f040002
-                int id title 0x7f040003
-                int style Theme_AppCompat_DayNight 0x7f070004
-            """.trimIndent()
-            val rFile = File(tempDir, FN_RESOURCE_TEXT)
-            rFile.writeText(allResources)
-            rFile
-        } catch (ioe: IOException) {
-            fail(ioe.message)
-            File("")
-        }
-    }
-
-    // Sample code
-    private val rClass = java(
-        "src/main/java/test/pkg/R.java",
-        """
-        package test.pkg;
-        public final class R {
-            public static final class string {
-                public static final int my_private_string = 0x7f0a0000;
-                public static final int my_public_string = 0x7f0a0001;
-            }
-        }
-        """
-    ).indented()
-
+    @Test
     fun testPrivateInXml() {
         val expected =
             """
@@ -145,6 +121,7 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    @Test
     fun testPrivateInJava() {
         val expected =
             """
@@ -167,7 +144,7 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            rClass,
+            defaultRClass,
             gradle
         ).allowCompilationErrors().run().expect(expected)
     }
@@ -240,22 +217,11 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
                     compile 'com.android.tools:test-library:1.0.0'
                 }
                 """
-            )
-                .withMockerConfigurator { mocker: GradleModelMocker ->
-                    mocker.withLibraryPublicResourcesFile(
-                        "com.android.tools:test-library:1.0.0",
-                        publicTxtFile.path
-                    )
-                    mocker.withLibrarySymbolFile(
-                        "com.android.tools:test-library:1.0.0",
-                        rFile.path
-                    )
-                }
-        )
-            .run()
-            .expect(expected)
+            ).indented().withMockerConfigurator(defaultLibraryMocks)
+        ).run().expect(expected)
     }
 
+    @Test
     fun testIds() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=183851
         lint().files(
@@ -293,22 +259,11 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
                     compile 'com.android.tools:test-library:1.0.0'
                 }
                 """
-            )
-                .withMockerConfigurator { mocker: GradleModelMocker ->
-                    mocker.withLibraryPublicResourcesFile(
-                        "com.android.tools:test-library:1.0.0",
-                        publicTxtFile.path
-                    )
-                    mocker.withLibrarySymbolFile(
-                        "com.android.tools:test-library:1.0.0",
-                        rFile.path
-                    )
-                }
-        )
-            .run()
-            .expectClean()
+            ).indented().withMockerConfigurator(defaultLibraryMocks)
+        ).run().expectClean()
     }
 
+    @Test
     fun testAllowLocalOverrides() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=207152
@@ -318,15 +273,155 @@ class PrivateResourceDetectorTest : AbstractCheckTest() {
         //       you also need to mark that local resource as a deliberate override,
         //       but if not you'll get a warning in the XML file where the override is
         //       defined.)
-        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle).run().expectClean()
+        lint().files(manifest().pkg("test.pkg"), defaultRClass, cls, strings, gradle).run().expectClean()
     }
 
+    @Test
     fun testAllowLocalOverridesWithResourceRepository() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=207152
-        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle)
+        lint().files(manifest().pkg("test.pkg"), defaultRClass, cls, strings, gradle)
             .supportResourceRepository(true)
             .run()
             .expectClean()
+    }
+
+    @Test
+    fun test195097935() {
+        // Regression test for 195097935: Use of private resources doesn't generate any lint warnings
+        lint().files(
+            java(
+                """
+                package com.example.resourcevisibility;
+
+                public class MainActivity extends android.app.Activity {
+
+                  protected void test() {
+                    // Expected to be private:
+                    int privateResourceId = com.google.android.material.R.anim.abc_fade_in;
+                    int privateResourceId2 = R.anim.abc_fade_in;
+                    // Expected to be public:
+                    int publicResourceId = com.google.android.material.R.style.Animation_Design_BottomSheetDialog;
+                    int publicResourceId2 = R.style.Animation_Design_BottomSheetDialog;
+                  }
+                }
+                """
+            ).indented(),
+            rClass(
+                "com.example.resourcevisibility",
+                "@anim/abc_fade_in",
+                "@style/Animation_Design_BottomSheetDialog"
+            ),
+            rClass(
+                "com.google.android.material",
+                "@anim/abc_fade_in",
+                "@style/Animation_Design_BottomSheetDialog"
+            ),
+            gradle(
+                """
+                apply plugin: 'com.android.application'
+                dependencies {
+                    implementation 'com.google.android.material:material:1.4.0'
+                    implementation 'androidx.activity:activity:1.3.1'
+                    implementation 'androidx.appcompat:appcompat:1.3.1'
+                }
+                """
+            ).indented().withMockerConfigurator(
+                createLibraryMocker(
+                    createLibrary(
+                        artifact = "com.google.android.material:material:1.4.0",
+                        all = listOf(
+                            "@attr/showMotionSpec",
+                            "@anim/abc_fade_in",
+                            "@anim/abc_tooltip_enter",
+                            "@style/Animation_Design_BottomSheetDialog"
+                        ),
+                        public = listOf(
+                            "@attr/showMotionSpec",
+                            "@style/Animation_Design_BottomSheetDialog"
+                        )
+                    ),
+                    createLibrary(
+                        artifact = "androidx.appcompat:appcompat:1.3.1",
+                        all = listOf(
+                            "@attr/autoCompleteTextViewStyle",
+                            "@anim/abc_fade_in",
+                            "@drawable/abc_edit_text_material"
+                        ),
+                        public = listOf(
+                            "@attr/autoCompleteTextViewStyle"
+                        )
+                    ),
+                    createLibrary(
+                        artifact = "androidx.activity:activity:1.3.1",
+                        all = listOf(
+                            "@color/ripple_material_light",
+                        )
+                        // no public resources
+                    )
+                )
+            )
+        ).run().expect(
+            """
+            src/main/java/com/example/resourcevisibility/MainActivity.java:7: Warning: The resource @anim/abc_fade_in is marked as private in com.google.android.material:material:1.4.0 [PrivateResource]
+                int privateResourceId = com.google.android.material.R.anim.abc_fade_in;
+                                                                           ~~~~~~~~~~~
+            src/main/java/com/example/resourcevisibility/MainActivity.java:8: Warning: The resource @anim/abc_fade_in is marked as private in com.google.android.material:material:1.4.0 [PrivateResource]
+                int privateResourceId2 = R.anim.abc_fade_in;
+                                                ~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    private fun createAllSymbolsFile(artifact: String, vararg resources: String): File {
+        val file = File(temporaryFolder.root, artifact.replace(':', '_') + "/" + FN_RESOURCE_TEXT)
+        var id = 0x7f040000
+        file.parentFile?.mkdirs()
+        file.writeText(
+            resources.map { it.toUrl() }.joinToString("\n") {
+                "int ${it.type} ${it.name} 0x${Integer.toHexString(id++)}"
+            }
+        )
+        return file
+    }
+
+    private fun createPublicSymbolsFile(artifact: String, vararg resources: String): File {
+        val file = File(temporaryFolder.root, artifact.replace(':', '_') + "/" + FN_PUBLIC_TXT)
+        // Note that we always return a path but don't create the
+        // file if it's empty; this matches the behavior of AGP
+        if (resources.isNotEmpty()) {
+            file.parentFile?.mkdirs()
+            file.writeText(
+                resources.map { it.toUrl() }.joinToString("\n") {
+                    "${it.type} ${it.name}"
+                }
+            )
+        }
+        return file
+    }
+
+    private fun String.toUrl(): ResourceUrl = ResourceUrl.parse(this) ?: error("Invalid resource reference $this")
+
+    private fun createLibrary(artifact: String, all: List<String>, public: List<String> = emptyList()):
+        Triple<String, List<String>, List<String>> =
+            Triple(artifact, all, public)
+
+    private fun createLibraryMocker(
+        vararg libraries: Triple<String, List<String>, List<String>>
+    ): Consumer<GradleModelMocker> {
+        return Consumer { mocker: GradleModelMocker ->
+            for (library in libraries) {
+                val (artifact, all, public) = library
+                mocker.withLibraryPublicResourcesFile(
+                    artifact,
+                    createPublicSymbolsFile(artifact, *public.toTypedArray()).path
+                )
+                mocker.withLibrarySymbolFile(
+                    artifact,
+                    createAllSymbolsFile(artifact, *all.toTypedArray()).path
+                )
+            }
+        }
     }
 }
