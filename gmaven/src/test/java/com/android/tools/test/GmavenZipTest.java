@@ -56,6 +56,8 @@ public class GmavenZipTest {
 
     private static final Set<String> MISSING_LICENSE =
             ImmutableSet.of(
+                    "com/android/signflinger",
+                    "com/android/signflinger:sources",
                     "com/android/tools/emulator/proto",
                     "com/android/tools/emulator/proto:sources",
                     "com/android/tools/utp/android-test-plugin-host-device-info-proto",
@@ -75,7 +77,9 @@ public class GmavenZipTest {
                     "com/android/tools/utp/android-test-plugin-host-device-info",
                     "com/android/tools/utp/android-test-plugin-host-device-info:sources",
                     "com/android/tools/utp/android-test-plugin-host-retention",
-                    "com/android/tools/utp/android-test-plugin-host-retention:sources");
+                    "com/android/tools/utp/android-test-plugin-host-retention:sources",
+                    "com/android/zipflinger",
+                    "com/android/zipflinger:sources");
 
     static {
         // Useful command for getting these lists:
@@ -1040,17 +1044,6 @@ public class GmavenZipTest {
                 "com/android/",
                 "com/android/annotations/",
                 "com/android/annotations/concurrency/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
-                "com/",
-                "com/android/",
-                "com/android/tools/",
-                "com/android/tools/device/",
-                "com/android/tools/device/internal/",
-                "com/android/tools/device/internal/adb/",
-                "com/android/tools/device/internal/adb/commands/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -3196,6 +3189,23 @@ public class GmavenZipTest {
                 "test/",
                 "test/pkg/");
 
+
+        expected.putAll(
+                "com/android/zipflinger",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "com/",
+                "com/android/",
+                "com/android/zipflinger/");
+
+        expected.putAll(
+                "com/android/signflinger",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "com/",
+                "com/android/",
+                "com/android/signflinger/");
+
         EXPECTED = expected.build();
     }
 
@@ -3203,26 +3213,13 @@ public class GmavenZipTest {
 
     @Test
     public void checkTools() throws Exception {
-        checkGroup("com/android/tools");
-    }
 
-    @Test
-    public void checkDataBinding() throws Exception {
-        checkGroup("androidx/databinding/databinding-common");
-        checkGroup("androidx/databinding/databinding-compiler-common");
-        checkGroup("androidx/databinding/databinding-compiler");
-        // pre-android X
-        checkGroup("com/android/databinding/baseLibrary");
-    }
-
-    private void checkGroup(String groupPrefix) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
         Path repo = getRepo();
-        Path androidTools = repo.resolve(groupPrefix);
 
         List<Path> ourJars =
-                Files.walk(androidTools)
+                Files.walk(repo)
                         .filter(path -> path.toString().endsWith(".jar"))
                         .filter(GmavenZipTest::isCurrentVersion)
                         .collect(Collectors.toList());
@@ -3237,21 +3234,7 @@ public class GmavenZipTest {
                 jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
             }
         }
-
-        String groupPrefixThenForwardSlash = groupPrefix + "/";
-        List<String> expectedJars =
-                EXPECTED.keySet().stream()
-                        // Allow subdirectories and exact matches, but don't conflate
-                        // databinding/compilerCommon with databinding/compiler
-                        .filter(
-                                name ->
-                                        name.startsWith(groupPrefixThenForwardSlash)
-                                                || name.equals(groupPrefix))
-                        .collect(Collectors.toList());
-        // Test only artifact need not be there.
-        expectedJars.remove("com/android/tools/internal/build/test/devicepool");
-        expect.that(expectedJars).isNotEmpty();
-        expect.that(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
+        expect.that(jarNames).named("Jars").containsExactlyElementsIn(EXPECTED.keySet());
     }
 
     private void checkSourcesJar(Path jarPath, Path repo) throws IOException {
