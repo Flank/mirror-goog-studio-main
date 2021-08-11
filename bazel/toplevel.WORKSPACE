@@ -181,6 +181,7 @@ local_maven_repository(
         "org.jacoco:org.jacoco.core:0.7.9",
         "org.jacoco:org.jacoco.report:0.7.9",
         "org.jetbrains.dokka:dokka-core:1.4.32",
+        "org.jetbrains.intellij.deps:asm-all:8.0.1",
         "org.jetbrains.intellij.deps:trove4j:1.0.20181211",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.4.32",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32",
