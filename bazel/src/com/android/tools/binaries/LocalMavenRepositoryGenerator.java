@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -275,13 +276,14 @@ public class LocalMavenRepositoryGenerator {
      * losers.
      */
     private List<DependencyNode> collectNodes(DependencyNode root) {
-        Map<String, DependencyNode> allNodes = new HashMap<>();
+        LinkedHashSet<DependencyNode> allNodes = new LinkedHashSet<DependencyNode>();
+
         root.accept(
                 new DependencyVisitor() {
                     @Override
                     public boolean visitEnter(DependencyNode node) {
                         if (node.getArtifact() == null) return true;
-                        if (allNodes.containsKey(node.getArtifact().toString())) return false;
+                        if (allNodes.contains(node)) return false;
 
                         // Exclude conflict losers.
                         // Dependency loser nodes do not have their children populated, and
@@ -300,7 +302,7 @@ public class LocalMavenRepositoryGenerator {
                                                 .equals(node.getArtifact().toString());
                         if (lostConflict) return true;
 
-                        allNodes.put(node.getArtifact().toString(), node);
+                        allNodes.add(node);
                         return true;
                     }
 
@@ -310,7 +312,7 @@ public class LocalMavenRepositoryGenerator {
                     }
                 });
 
-        return new ArrayList<>(allNodes.values());
+        return new ArrayList<>(allNodes);
     }
 
     /**
@@ -381,7 +383,7 @@ public class LocalMavenRepositoryGenerator {
         }
 
         if (isConflictLoser) {
-            result.conflictLosers.add(
+            result.addConflictLoser(
                     new ResolutionResult.Dependency(
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),
@@ -394,7 +396,7 @@ public class LocalMavenRepositoryGenerator {
                             null,
                             null));
         } else {
-            result.dependencies.add(
+            result.addDependency(
                     new ResolutionResult.Dependency(
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),

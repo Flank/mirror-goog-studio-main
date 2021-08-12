@@ -36,7 +36,9 @@ public class LocalMavenRepositoryGeneratorTest {
             "com.google.example:a:1",
             "com.google.example:b:1",
             "com.google.example:h:pom:1",
-            "com.google.example:j:jar:linux:1"
+            "com.google.example:j:jar:linux:1",
+            "com.google.example:k:1",
+            "com.google.example:l:1"
         );
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
