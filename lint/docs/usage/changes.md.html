@@ -6,8 +6,13 @@ lint check authors, see the API Guide.
 
 **7.1**
 
-* The various annotation-based checks now perform additional checks
-  for overloaded Kotlin operators
+* The various annotation-based checks now perform additional checks for
+  overloaded Kotlin operators, as well as additional scenarios where
+  the annotation is inherited from outer classes, super methods, and in
+  the case of fields, containing classes and packages (this was already
+  the case for methods). This may show up as new violations in your
+  codebase, such as the `VisibleForTests` check flagging additional
+  usages of test-only APIs outside of tests.
 
 * New built-in lint checks:
 

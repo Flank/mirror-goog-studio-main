@@ -46,12 +46,29 @@ Guide.
   also used by the above machinery.
 
 * The annotation support (where a detector callback is invoked when
-  elements are combined with annotated elements) now supports both
-  annotations from outer classes as well as field references where
-  annotations are coming from containing classes, outer classes and
-  packages. There are new usage type enum constants to distinguish
-  these, in case your check should not inherit annotations from outer
-  classes, does not apply to fields, and so on.
+  elements are combined with annotated elements) now supports visiting
+  the following additional scenarios:
+
+  * Fields in annotated classes and packages
+  * Fields and methods in annotated outerclasses
+  * Class and object literals
+  * Overridden methods
+
+  There are new annotation usage type enum constants for these which
+  let your lint checks treat these differently. For example, the lint
+  check which makes sure that calls to methods annotated with
+  `@CheckResult` started flagging overrides of these methods. The fix
+  was to add the following override to the `CheckResultDetector`:
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
+  override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+    return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type)
+  }
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  (Using this new API constant will make your lint check only work with
+  the new version of lint. An alternative fix is to check that the
+  `usage` parameter is not a `UMethod`.)
 
 * The lint testing library now contains a new test file type, `rClass`,
   which lets you easily construct Android `R` classes with resource

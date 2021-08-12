@@ -148,7 +148,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
         } else if (call is UVariable) {
             val variable = call
-            val variablePsi = call.psi
+            val variablePsi = call.sourcePsi
             // TODO: What about fields?
             call.getContainingUMethod()?.accept(object : AbstractUastVisitor() {
                 override fun visitSimpleNameReferenceExpression(
@@ -456,6 +456,66 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     }
                 })
             }
+
+            //noinspection ExternalAnnotations
+            val localAnnotations = method.uAnnotations
+            // Were any of the annotations on this method inherited? (methodAnnotations include
+            // annotations from super implementations)
+            if (localAnnotations.size < methodAnnotations.size) {
+                val inheritedAnnotations = filterRelevantAnnotations(
+                    evaluator,
+                    evaluator.getAllAnnotations(method as UAnnotated, inHierarchy = true)
+                ).filter { annotation ->
+                    localAnnotations.none { it == annotation || it.sourcePsi === annotation.sourcePsi }
+                }
+                if (inheritedAnnotations.isNotEmpty()) {
+                    // Check return values
+                    checkAnnotations(
+                        context = context,
+                        argument = method,
+                        type = AnnotationUsageType.METHOD_OVERRIDE,
+                        method = method,
+                        referenced = method,
+                        annotations = inheritedAnnotations,
+                        allMethodAnnotations = inheritedAnnotations,
+                        annotated = method
+                    )
+                }
+            }
+        }
+
+        val superMethod = evaluator.getSuperMethod(method) ?: return
+
+        // Look for annotations on the class as well: these trickle
+        // down to all the methods in the class
+        val containingClass: PsiClass? = superMethod.containingClass
+        val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(containingClass, evaluator, method)
+
+        if (classAnnotations.isNotEmpty()) {
+            checkAnnotations(
+                context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null,
+                method, classAnnotations, emptyList(), classAnnotations, pkgAnnotations, containingClass
+            )
+        }
+
+        var outer = containingClass?.containingClass
+        while (outer != null) {
+            val allOuterAnnotations = evaluator.getAllAnnotations(outer, inHierarchy = true)
+            val outerAnnotations = filterRelevantAnnotations(evaluator, allOuterAnnotations, method)
+            if (outerAnnotations.isNotEmpty()) {
+                checkAnnotations(
+                    context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null,
+                    method, outerAnnotations, emptyList(), outerAnnotations, pkgAnnotations, outer
+                )
+            }
+            outer = outer.containingClass
+        }
+
+        if (pkgAnnotations.isNotEmpty()) {
+            checkAnnotations(
+                context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null, method, pkgAnnotations,
+                emptyList(), classAnnotations, pkgAnnotations, null
+            )
         }
     }
 

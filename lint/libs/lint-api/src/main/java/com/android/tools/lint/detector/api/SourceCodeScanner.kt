@@ -647,10 +647,7 @@ interface SourceCodeScanner : FileScanner {
      *     surrounding class
      * @param allPackageAnnotations all annotations in the target
      *     surrounding package
-     * @deprecated This method is missing the referenced parameter; use
-     *     the other method instead
      */
-    @Deprecated("This method is missing the referenced parameter; use/override the other overload instead")
     fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,

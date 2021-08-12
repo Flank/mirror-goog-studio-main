@@ -75,7 +75,7 @@ abstract class Detector {
      * See [com.android.tools.lint.detector.api.SourceCodeScanner]; this
      * class is (temporarily) here for backwards compatibility.
      */
-    interface UastScanner : com.android.tools.lint.detector.api.SourceCodeScanner
+    interface UastScanner : SourceCodeScanner
 
     /**
      * See [com.android.tools.lint.detector.api.ClassScanner]; this
@@ -131,7 +131,7 @@ abstract class Detector {
      * @return true if this detector applies to the given context and
      *     file
      */
-    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Suppress("DeprecatedCallableAddReplaceWith", "UNUSED_PARAMETER")
     @Deprecated("Slated for removal") // Slated for removal in lint 2.0 - this method isn't used
     fun appliesTo(context: Context, file: File): Boolean = false
 
@@ -591,6 +591,7 @@ abstract class Detector {
         allPackageAnnotations: List<UAnnotation>
     ) {
         // Backwards compatibility
+        @Suppress("DEPRECATION")
         visitAnnotationUsage(
             context, usage, type, annotation, qualifiedName, method,
             annotations, allMemberAnnotations, allClassAnnotations, allPackageAnnotations

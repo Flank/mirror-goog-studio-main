@@ -63,6 +63,10 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         "com.google.errorprone.annotations.CheckReturnValue"
     )
 
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type)
+    }
+
     override fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,

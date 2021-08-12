@@ -551,6 +551,88 @@ class AnnotationHandlerTest {
     }
 
     @Test
+    fun testOverride() {
+        lint().files(
+            java(
+                """
+                package test.api;
+                import pkg.java.MyJavaAnnotation;
+                import pkg.kotlin.MyKotlinAnnotation;
+
+                public interface StableInterface {
+                    @MyJavaAnnotation
+                    @MyKotlinAnnotation
+                    void experimentalMethod();
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.api;
+                class ConcreteStableInterface implements StableInterface {
+                    @Override
+                    public void experimentalMethod() {} // ERROR 1A and 1B
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.api
+                class ConcreteStableInterface2 : StableInterface {
+                    override fun experimentalMethod() {} // ERROR 2A and 2B
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import pkg.kotlin.MyKotlinAnnotation
+
+                interface I {
+                    fun m() {}
+                }
+
+                // Make sure outer annotations are inherited into the C override of m
+                @MyKotlinAnnotation
+                open class A {
+                    open class B : I {
+                        override fun m() {}
+                    }
+                }
+
+                open class C : A.B() {
+                    override fun m() {}
+                }
+                """
+            ).indented(),
+            javaAnnotation,
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                public void experimentalMethod() {} // ERROR 1A and 1B
+                            ~~~~~~~~~~~~~~~~~~
+            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                public void experimentalMethod() {} // ERROR 1A and 1B
+                            ~~~~~~~~~~~~~~~~~~
+            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                override fun experimentalMethod() {} // ERROR 2A and 2B
+                             ~~~~~~~~~~~~~~~~~~
+            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                override fun experimentalMethod() {} // ERROR 2A and 2B
+                             ~~~~~~~~~~~~~~~~~~
+            src/test/pkg/I.kt:16: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            open class C : A.B() {
+                           ~~~~~
+            src/test/pkg/I.kt:17: Error: METHOD_OVERRIDE_OUTER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                override fun m() {}
+                             ~
+            6 errors, 0 warnings
+            """
+        )
+    }
+
+    @Test
     fun test195014464() {
         lint().files(
             kotlin(
