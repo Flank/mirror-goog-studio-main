@@ -178,7 +178,7 @@ java_binary(
     main_class = "com.android.tools.binaries.PomGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
+        "@maven//:org.slf4j.slf4j-simple",
     ],
     deps = [
         ":maven",

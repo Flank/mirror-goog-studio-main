@@ -199,6 +199,7 @@ local_maven_repository(
         "org.ow2.asm:asm-commons:9.1",
         "org.ow2.asm:asm-tree:9.1",
         "org.ow2.asm:asm-util:9.1",
+        "org.slf4j:slf4j-simple:1.7.2",
         "org.smali:baksmali:2.2.4",
         "org.smali:dexlib2:2.2.4",
         "org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2",
