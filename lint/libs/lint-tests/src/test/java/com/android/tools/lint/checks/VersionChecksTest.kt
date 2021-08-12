@@ -3602,6 +3602,30 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun test189459502() {
+        // Regression test for 189459502
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                val capture = when {
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R -> "fallback"
+                    System.getProperty("foo") != null -> requires30() // OK
+                    else -> requires30() // OK
+                }
+
+                @RequiresApi(30)
+                fun requires30() {}
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return ApiDetector()
     }
