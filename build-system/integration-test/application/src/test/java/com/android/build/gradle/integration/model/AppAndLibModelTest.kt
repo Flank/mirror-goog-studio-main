@@ -50,12 +50,6 @@ class HelloWorldAppAndLibModelTest: ModelComparator() {
             android {
                 setUpHelloWorld()
             }
-            dependencies {
-                lintPublish(localJar {
-                    name = "lint-publish.jar"
-                    addClass("com/example/MainClass")
-                })
-            }
         }
     }
 

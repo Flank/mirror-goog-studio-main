@@ -40,6 +40,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import java.io.File
 
 /**
  * This holder class exists to allow lint to depend on the artifact collections.
@@ -248,6 +249,13 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactType.MANIFEST
     )
 
+    @get:Internal
+    val lintJar: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
+        consumedConfigType,
+        AndroidArtifacts.ArtifactScope.ALL,
+        AndroidArtifacts.ArtifactType.LINT
+    )
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     val manifestsFileCollection: FileCollection
@@ -344,9 +352,11 @@ private fun getAllArtifacts(
 
     // Then we can query for MANIFEST that will give us only the Android project so that we
     // can detect JAVA vs ANDROID.
-    val manifests = collections.manifests.asMultiMap()
+    val manifests = collections.manifests.asMap { it }
 
-    val explodedAars = collections.explodedAars.asMultiMap()
+    val explodedAars = collections.explodedAars.asMap { it.file }
+
+    val lintJars = collections.lintJar.asMap { it.file }
 
     val projectList = collections.projectJars
 
@@ -369,7 +379,7 @@ private fun getAllArtifacts(
 
     // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
     val aarWrappedAsProjects =
-        explodedAars.keySet().filter { it.owner is ProjectComponentIdentifier }
+        explodedAars.keys.filter { it.owner is ProjectComponentIdentifier }
 
     // build a list of android dependencies based on them publishing a MANIFEST element
 
@@ -391,11 +401,12 @@ private fun getAllArtifacts(
         // ResolvedArtifactResult.
         val dependencyType: ResolvedArtifact.DependencyType
 
-        val extractedAar: Collection<ResolvedArtifactResult> = explodedAars[variantKey]
+        val extractedAar: File? = explodedAars[variantKey]
 
-        val manifest: Collection<ResolvedArtifactResult> = manifests[variantKey]
+        val manifest = manifests[variantKey]
 
         val mainArtifacts: Collection<ResolvedArtifactResult>
+        val publishedLintJar: File?
 
         val artifactType =
             resolvedComponentResult.variant.attributes.getAttribute(AndroidArtifacts.ARTIFACT_TYPE)
@@ -405,11 +416,15 @@ private fun getAllArtifacts(
                 // publish the AAR between projects.
                 dependencyType = ResolvedArtifact.DependencyType.ANDROID
                 mainArtifacts = listOf(resolvedComponentResult)
+                publishedLintJar = lintJars[variantKey]
             }
             AndroidArtifacts.ArtifactType.JAR.type ->
-                if (manifest.isNotEmpty()) {
+                if (manifest != null) {
                     dependencyType = ResolvedArtifact.DependencyType.ANDROID
-                    mainArtifacts = manifest
+                    // this will be a sub-project dependency anyway, so it's ok to point the main
+                    // artifact to the manifest, it won't be used later.
+                    mainArtifacts = listOf(manifest)
+                    publishedLintJar = lintJars[variantKey]
                 } else {
                     dependencyType = ResolvedArtifact.DependencyType.JAVA
                     val projectJar = projectJars[variantKey]
@@ -418,9 +433,9 @@ private fun getAllArtifacts(
                         // This is tested by AppWithClassifierDepTest.
                         listOf<ResolvedArtifactResult>(resolvedComponentResult)
                     }
+                    publishedLintJar = null
                 }
             else -> throw IllegalStateException("Internal error: Artifact type $artifactType not expected, only jar or aar are handled.")
-
         }
 
         check(mainArtifacts.isNotEmpty()) {
@@ -436,7 +451,8 @@ private fun getAllArtifacts(
             artifacts.add(
                 ResolvedArtifact(
                     mainArtifact,
-                    extractedAar.firstOrNull(),
+                    extractedAar,
+                    publishedLintJar,
                     dependencyType,
                     isAarWrappedAsProject,
                     buildMapping,
@@ -461,6 +477,9 @@ private fun ArtifactCollection.asMultiMap(): ImmutableMultimap<VariantKey, Resol
             }
         }.build()
 }
+
+private fun <T> ArtifactCollection.asMap(action: (ResolvedArtifactResult) -> T): Map<VariantKey, T> =
+    artifacts.associate { it.variant.toKey() to action(it) }
 
 /**
  * A custom key for [ResolvedVariantResult].

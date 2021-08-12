@@ -188,6 +188,8 @@ interface ProductFlavorBuilder {
 
 interface DependenciesBuilder {
 
+    fun clear()
+
     /**
      * adds a dependency in the implementation scope.
      *

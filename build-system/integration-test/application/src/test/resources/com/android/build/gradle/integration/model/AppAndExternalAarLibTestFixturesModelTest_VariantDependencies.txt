@@ -141,7 +141,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/lint.jar{!}
+         - lintJar             = (null)
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/R.txt{!}
@@ -173,7 +173,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/lint.jar{!}
+         - lintJar             = (null)
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/R.txt{!}
@@ -205,7 +205,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/lint.jar{!}
+         - lintJar             = (null)
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/R.txt{!}
@@ -237,7 +237,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/lint.jar{!}
+         - lintJar             = (null)
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/R.txt{!}

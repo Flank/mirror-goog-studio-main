@@ -29,6 +29,10 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
             .map { it.second }
             .filterIsInstance(MavenRepoGenerator.Library::class.java)
 
+    override fun clear() {
+        dependencies.clear()
+    }
+
     override fun implementation(dependency: Any) {
         dependencies.add("implementation" to dependency)
     }

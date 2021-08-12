@@ -386,7 +386,6 @@
          - testedTargetVariant    = (null)
       < release
    < variants
-   - lintRuleJars          = []
    - javaCompileOptions:
       - encoding                       = "UTF-8"
       - sourceCompatibility            = "1.8"
@@ -400,4 +399,5 @@
       * "ML_MODEL_BINDING -> false"
       * "TEST_R_CLASS_CONSTANT_IDS -> true"
       * "TRANSITIVE_R_CLASS -> true"
+   - lintChecksJars        = []
 < AndroidProject

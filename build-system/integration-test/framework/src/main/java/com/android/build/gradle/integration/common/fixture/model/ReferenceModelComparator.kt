@@ -122,6 +122,15 @@ abstract class ReferenceModelComparator(
         }
     }
 
+    fun compareGlobalLibrary(
+        goldenFileSuffix: String = ""
+    ) {
+        Comparator(this, result, referenceResult).compareGlobalLibraryMap(
+            modelAction = { container.globalLibraryMap!! },
+            goldenFile = goldenFileSuffix
+        )
+    }
+
     companion object {
         private fun createBaseProject(action: TestProjectBuilder.() -> Unit): RootTestProjectBuilderImpl {
             val builder = RootTestProjectBuilderImpl()

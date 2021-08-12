@@ -317,7 +317,7 @@ class ModelBuilder<
             ),
 
             flags = getFlags(),
-            lintRuleJars = getLocalCustomLintChecksForModel(project, syncIssueReporter)
+            lintChecksJars = getLocalCustomLintChecksForModel(project, syncIssueReporter),
         )
     }
 

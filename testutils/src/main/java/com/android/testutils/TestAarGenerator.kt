@@ -39,7 +39,8 @@ fun generateAarWithContent(
     mainJar: ByteArray = jarWithEmptyEntries(listOf()),
     secondaryJars: Map<String, ByteArray> = mapOf(),
     resources: Map<String, ByteArray> = mapOf(),
-    apiJar: ByteArray? = null
+    apiJar: ByteArray? = null,
+    lintJar: ByteArray? = null
 ): ByteArray {
     ByteArrayOutputStream().use { baos ->
         ZipOutputStream(baos).use { zos ->
@@ -57,6 +58,10 @@ fun generateAarWithContent(
             }
             apiJar?.let {
                 zos.putNextEntry(ZipEntry("api.jar"))
+                zos.write(it)
+            }
+            lintJar?.let {
+                zos.putNextEntry(ZipEntry("lint.jar"))
                 zos.write(it)
             }
         }

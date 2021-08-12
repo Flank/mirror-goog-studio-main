@@ -47,7 +47,7 @@ data class AndroidProjectImpl(
     override val dynamicFeatures: Collection<String>?,
     override val viewBindingOptions: ViewBindingOptions?,
     override val flags: AndroidGradlePluginProjectFlags,
-    override val lintRuleJars: List<File>
+    override val lintChecksJars: List<File>,
 ) : AndroidProject, Serializable {
     companion object {
         @JvmStatic

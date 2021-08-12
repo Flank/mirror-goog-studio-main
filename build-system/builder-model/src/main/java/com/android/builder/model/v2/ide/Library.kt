@@ -138,7 +138,8 @@ interface Library: AndroidModel {
     val proguardRules: File?
 
     /**
-     * The jar containing custom lint checks
+     * The jar containing custom lint checks for consumers to use. This is filled by the
+     * lintPublish configuration.
      *
      * The file may not exist.
      *

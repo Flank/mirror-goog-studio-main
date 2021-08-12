@@ -47,6 +47,8 @@ data class ResolvedArtifact internal constructor(
      * represents an exploded aar
      */
     val extractedFolder: File?,
+    /** optional published lint jar */
+    val publishedLintJar: File?,
     val dependencyType: DependencyType,
     val isWrappedModule: Boolean,
     val buildMapping: ImmutableMap<String, String>,
@@ -54,7 +56,8 @@ data class ResolvedArtifact internal constructor(
 
     constructor(
         mainArtifactResult: ResolvedArtifactResult,
-        secondaryArtifactResult: ResolvedArtifactResult?,
+        extractedFolder: File?,
+        publishedLintJar: File?,
         dependencyType: DependencyType,
         isWrappedModule: Boolean,
         buildMapping: ImmutableMap<String, String>,
@@ -64,7 +67,8 @@ data class ResolvedArtifact internal constructor(
                 mainArtifactResult.variant,
                 mainArtifactResult.getVariantName(),
                 mainArtifactResult.file,
-                secondaryArtifactResult?.file,
+                extractedFolder,
+                publishedLintJar,
                 dependencyType,
                 isWrappedModule,
                 buildMapping,
@@ -73,19 +77,6 @@ data class ResolvedArtifact internal constructor(
     enum class DependencyType constructor(val extension: String) {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR)
-    }
-
-    fun fixWithVariantResult(variant: ResolvedVariantResult): ResolvedArtifact {
-        return ResolvedArtifact(
-            this.componentIdentifier,
-            variant,
-            variantName,
-            artifactFile,
-            extractedFolder,
-            dependencyType,
-            isWrappedModule,
-            buildMapping,
-        )
     }
 
     /**

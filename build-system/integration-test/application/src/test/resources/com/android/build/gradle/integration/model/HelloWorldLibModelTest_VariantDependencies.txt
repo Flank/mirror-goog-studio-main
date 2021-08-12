@@ -50,7 +50,7 @@
          - aidlFolder          = (null)
          - renderscriptFolder  = (null)
          - proguardRules       = (null)
-         - lintJar             = (null)
+         - lintJar             = {PROJECT}/build/intermediates/lint_publish_jar/global/lint.jar{!}
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
@@ -80,7 +80,7 @@
          - aidlFolder          = (null)
          - renderscriptFolder  = (null)
          - proguardRules       = (null)
-         - lintJar             = (null)
+         - lintJar             = {PROJECT}/build/intermediates/lint_publish_jar/global/lint.jar{!}
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)

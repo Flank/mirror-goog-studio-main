@@ -217,6 +217,10 @@ interface AndroidProject: AndroidModel {
     /** Returns the AGP flags for this project.  */
     val flags: AndroidGradlePluginProjectFlags
 
-    /** The lint jars that this module uses to run extra lint checks  */
-    val lintRuleJars: List<File>
+    /**
+     * The lint jars that this module uses to run extra lint checks on this project.
+     *
+     * This is the resolution of the `lintCheck` configuration.
+     */
+    val lintChecksJars: List<File>
 }

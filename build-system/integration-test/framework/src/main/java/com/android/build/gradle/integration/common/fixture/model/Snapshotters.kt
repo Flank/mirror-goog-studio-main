@@ -131,7 +131,6 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     ) {
         snapshotVariant()
     }
-    valueList("lintRuleJars", AndroidProject::lintRuleJars) { it?.sorted() }
     dataObject("javaCompileOptions", AndroidProject::javaCompileOptions) {
         item("encoding", JavaCompileOptions::encoding)
         item("sourceCompatibility", JavaCompileOptions::sourceCompatibility)
@@ -151,6 +150,7 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     ) { collection ->
         collection?.sortedBy { it.key.name }
     }
+    valueList("lintChecksJars", AndroidProject::lintChecksJars) { it?.sorted() }
 }
 
 internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {

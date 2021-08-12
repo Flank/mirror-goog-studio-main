@@ -65,7 +65,7 @@
          - aidlFolder          = (null)
          - renderscriptFolder  = (null)
          - proguardRules       = (null)
-         - lintJar             = (null)
+         - lintJar             = {INCLUDED_BUILD(other-build)}/lib/build/intermediates/lint_publish_jar/global/lint.jar{!}
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
@@ -95,7 +95,7 @@
          - aidlFolder          = (null)
          - renderscriptFolder  = (null)
          - proguardRules       = (null)
-         - lintJar             = (null)
+         - lintJar             = {INCLUDED_BUILD(other-build)}/lib/build/intermediates/lint_publish_jar/global/lint.jar{!}
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)

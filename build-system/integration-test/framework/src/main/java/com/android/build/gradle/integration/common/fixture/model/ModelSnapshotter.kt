@@ -324,7 +324,7 @@ private const val LOCAL_JAR_PREFIX_LENGTH = LOCAL_JAR_PREFIX.length
 /**
  * Converts a value into a single String depending on its type (null, File, String, Collection, Any)
  */
-internal fun Any?.toValueString(normalizer: FileNormalizer): String {
+fun Any?.toValueString(normalizer: FileNormalizer): String {
     fun Collection<*>.toValueString(normalizer: FileNormalizer): String {
         return this.map { it.toValueString(normalizer) }.toString()
     }
@@ -344,7 +344,7 @@ internal fun Any?.toValueString(normalizer: FileNormalizer): String {
  *
  * In case of a collection, still return a collection.
  */
-internal fun Any?.toNormalizedStrings(normalizer: FileNormalizer): Any = when (this) {
+fun Any?.toNormalizedStrings(normalizer: FileNormalizer): Any = when (this) {
     null -> NULL_STRING
     is File -> normalizer.normalize(this)
     is Collection<*> -> map { it.toNormalizedStrings(normalizer) }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-84e1f6f2ade0b42713b9735b32c247a09a3b260e69306e4c749e8295067e22f0
+601e4c9cee5db16c85e1273a097ec9feb9322768e24c0300e96ea8a7988c27a2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -761,7 +761,7 @@ com.android.builder.model.v2.models.AndroidProject.getBuildTypeSourceSets: java.
 com.android.builder.model.v2.models.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags ()
 com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.android.builder.model.v2.ide.JavaCompileOptions ()
-com.android.builder.model.v2.models.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
+com.android.builder.model.v2.models.AndroidProject.getLintChecksJars: java.util.List<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getMainSourceSet: com.android.builder.model.v2.ide.SourceSetContainer ()
 com.android.builder.model.v2.models.AndroidProject.getNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getPath: java.lang.String ()

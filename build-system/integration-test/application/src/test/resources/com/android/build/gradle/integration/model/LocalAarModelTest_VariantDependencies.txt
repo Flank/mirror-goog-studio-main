@@ -120,7 +120,7 @@
          - aidlFolder          = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/aidl{!}
          - renderscriptFolder  = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/rs{!}
          - proguardRules       = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/proguard.txt{!}
-         - lintJar             = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/jars/lint.jar{!}
+         - lintJar             = (null)
          - externalAnnotations = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/annotations.zip{!}
          - publicResources     = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/public.txt{!}
          - symbolFile          = {BUILD_FOLDER(:|:lib)}/{CHECKSUM}/transformed/lib/R.txt{!}

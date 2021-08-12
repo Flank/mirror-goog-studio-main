@@ -53,8 +53,7 @@ class FullDependencyGraphBuilder(
 
     private fun buildGraph(
         configType: AndroidArtifacts.ConsumedConfigType,
-
-        ): List<GraphItem> {
+    ): List<GraphItem> {
         // query for the actual graph, and get the first level children.
         val roots: Set<DependencyResult> = resolutionResultProvider.getResolutionResult(configType).root.dependencies
 
@@ -129,13 +128,14 @@ class FullDependencyGraphBuilder(
                     ResolvedArtifact(
                         variant.owner,
                         variant,
-                        variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
-                                ?: "unknown",
-                        File("wont/matter"),
-                        null,
-                        ResolvedArtifact.DependencyType.ANDROID,
-                        false,
-                        inputs.buildMapping
+                        variantName = variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
+                            ?: "unknown",
+                        artifactFile = File("wont/matter"),
+                        extractedFolder = null,
+                        publishedLintJar = null,
+                        dependencyType = ResolvedArtifact.DependencyType.ANDROID,
+                        isWrappedModule = false,
+                        buildMapping = inputs.buildMapping
                     )
                 )
             } else {

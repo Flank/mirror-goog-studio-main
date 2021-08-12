@@ -246,7 +246,7 @@ class LibraryServiceImpl(
                     publicResources = File(folder, SdkConstants.FN_PUBLIC_TXT),
                     symbolFile = File(folder, SdkConstants.FN_RESOURCE_TEXT),
 
-                    lintJar = FileUtils.join(folder, SdkConstants.FD_JARS, SdkConstants.FN_LINT_JAR),
+                    lintJar = artifact.publishedLintJar,
                     artifact = artifact.artifactFile,
                 )
             } else {
@@ -265,12 +265,14 @@ class LibraryServiceImpl(
                     key = stringCache.cacheString(projectInfo.computeKey()),
                     type = LibraryType.PROJECT,
                     projectInfo = projectInfo,
+                    lintJar = artifact.publishedLintJar,
                 )
             } else {
                 LibraryImpl(
                     key = stringCache.cacheString(projectInfo.computeKey()),
                     type = LibraryType.PROJECT,
                     projectInfo = projectInfo,
+                    lintJar = artifact.publishedLintJar,
                 )
             }
         }
