@@ -23,6 +23,7 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.impl.FileOpImpl;
 import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -36,6 +37,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -117,7 +119,7 @@ public final class FileOpUtils {
      * @param fop The FileOp to use for file operations.
      * @throws IOException If the destination already exists, or if there is a problem copying the
      *     files or creating directories.
-     * @deprecated Use {@link #recursiveCopy(Path, Path, boolean, ProgressIndicator)}.
+     * @deprecated Use {@link #recursiveCopy(Path, Path, boolean, Predicate, ProgressIndicator)}.
      */
     public static void recursiveCopy(
             @NonNull File src,
@@ -131,13 +133,26 @@ public final class FileOpUtils {
     @VisibleForTesting
     static void recursiveCopy(@NonNull File src, @NonNull File dest, boolean merge,
             @NonNull FileOp fop, @NonNull ProgressIndicator progress) throws IOException {
-        recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, progress);
+        recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, null, progress);
     }
 
+    /**
+     * Copies a file or directory tree to the given location.
+     * @param src the source path
+     * @param dest the destination path
+     * @param merge whether to merge files or directories. If false, an already existing destination
+     *              will cause error
+     * @param fileFilter predicate that should return true if the file or directory should be
+     *                   copied, or null if not using a filter
+     * @param progress the progress indicator
+     * @throws IOException If the destination already exists, or if there is a problem copying the
+     *                     files or creating directories.
+     */
     public static void recursiveCopy(
             @NonNull Path src,
             @NonNull Path dest,
             boolean merge,
+            @Nullable Predicate<Path> fileFilter,
             @NonNull ProgressIndicator progress)
             throws IOException {
         if (CancellableFileIo.exists(dest)) {
@@ -153,12 +168,17 @@ public final class FileOpUtils {
         if (progress.isCanceled()) {
             throw new IOException("Operation cancelled");
         }
+
+        if (fileFilter != null && !fileFilter.test(src)) {
+            return;
+        }
+
         if (CancellableFileIo.isDirectory(src)) {
             Files.createDirectories(dest);
 
             for (Path child : FileOpUtils.listFiles(src)) {
                 Path newDest = dest.resolve(child.getFileName());
-                recursiveCopy(child, newDest, merge, progress);
+                recursiveCopy(child, newDest, merge, fileFilter, progress);
             }
         } else if (CancellableFileIo.isRegularFile(src) && !CancellableFileIo.exists(dest)) {
             Files.copy(src, dest);
@@ -211,7 +231,7 @@ public final class FileOpUtils {
             if (!success && CancellableFileIo.exists(destBackup)) {
                 try {
                     // Merge in case some things had been moved and some not.
-                    recursiveCopy(destBackup, dest, true, progress);
+                    recursiveCopy(destBackup, dest, true, null, progress);
                     FileOpUtils.deleteFileOrFolder(destBackup);
                 }
                 catch (IOException e) {
@@ -246,7 +266,7 @@ public final class FileOpUtils {
                     if (CancellableFileIo.exists(dest)) {
                         // Couldn't get rid of the new, partial stuff. Try merging the old ones back
                         // over.
-                        recursiveCopy(destBackup, dest, true, progress);
+                        recursiveCopy(destBackup, dest, true, null, progress);
                     } else {
                         // dest is cleared. Move temp stuff back into place
                         moveOrCopyAndDelete(destBackup, dest, progress);
@@ -271,7 +291,7 @@ public final class FileOpUtils {
             Files.move(src, dest);
         } catch (IOException ignore) {
             // Failed to move. Try copy/delete, with merge in case something already got moved.
-            recursiveCopy(src, dest, true, progress);
+            recursiveCopy(src, dest, true, null, progress);
             if (!FileOpUtils.deleteFileOrFolder(src)) {
                 throw new IOException("Failed to delete" + src);
             }

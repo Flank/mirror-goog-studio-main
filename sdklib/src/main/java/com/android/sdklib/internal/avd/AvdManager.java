@@ -53,6 +53,7 @@ import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -1013,7 +1014,11 @@ public class AvdManager {
             ProgressIndicator progInd = new ConsoleProgressIndicator();
             progInd.setText("Copying files");
             progInd.setIndeterminate(true);
-            FileOpUtils.recursiveCopy(origAvd, destAvdFolder, false, progInd);
+            FileOpUtils.recursiveCopy(origAvd,
+                                      destAvdFolder,
+                                      false,
+                                      path -> !path.toString().endsWith(".lock"), // Do not copy *.lock files
+                                      progInd);
 
             // Modify the ID and display name in the new config.ini
             Path configIni = destAvdFolder.resolve(CONFIG_INI);

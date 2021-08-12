@@ -16,18 +16,13 @@
 
 package com.android.repository.io;
 
-import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
-import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
-import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
-import static com.android.testutils.file.InMemoryFileSystems.recordExistingFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.file.DelegatingFileSystemProvider;
+import org.junit.Assume;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.CopyOption;
@@ -35,8 +30,16 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Assume;
-import org.junit.Test;
+
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystemAndFolder;
+import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
+import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
+import static com.android.testutils.file.InMemoryFileSystems.recordExistingFile;
+import static com.android.testutils.truth.PathSubject.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for FileOpUtils
@@ -157,6 +160,42 @@ public class FileOpUtilsTest {
 
         // Finally verify that nothing else is created
         assertEquals(3, fop.getExistingFiles().size());
+    }
+
+    @Test
+    public void recursiveCopyWithFilter() throws Exception {
+        Path rootDir = createInMemoryFileSystemAndFolder("root");
+        Path src = rootDir.resolve("src");
+        Path s1 = src.resolve("a");
+        Path s2 = src.resolve("foo/a.unwanted");
+        Path s3 = src.resolve("foo/b");
+        Path s4 = src.resolve("foo/bar/a");
+        Path s5 = src.resolve("baz/c.unwanted");
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(s3, "content3");
+        recordExistingFile(s4, "content4");
+        recordExistingFile(s5, "content5");
+
+        Path dest = rootDir.resolve("dest");
+        FileOpUtils.recursiveCopy(src, dest, false,
+                                  path -> !path.toString().endsWith(".unwanted"),
+                                  new FakeProgressIndicator());
+
+        assertThat(dest.resolve("a")).hasContents("content1");
+        assertThat(dest.resolve("foo/b")).hasContents("content3");
+        assertThat(dest.resolve("foo/bar/a")).hasContents("content4");
+
+        // Also verify the sources are unchanged
+        assertThat(s1).hasContents("content1");
+        assertThat(s2).hasContents("content2");
+        assertThat(s3).hasContents("content3");
+        assertThat(s4).hasContents("content4");
+        assertThat(s5).hasContents("content5");
+
+        // Finally verify that nothing else is created
+        assertEquals(8, getExistingFiles(rootDir.getFileSystem()).size());
     }
 
     @Test
