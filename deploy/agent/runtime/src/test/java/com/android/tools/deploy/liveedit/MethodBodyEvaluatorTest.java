@@ -442,4 +442,15 @@ public class MethodBodyEvaluatorTest {
         }
         return os.toByteArray();
     }
+
+    @org.junit.Test
+    public void testReturnVoid() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "functionReturningVoid")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Assert.assertTrue("Expected void value", result == null);
+    }
 }
