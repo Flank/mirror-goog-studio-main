@@ -31,7 +31,7 @@ fun wrapURLConnection(
     trackerFactory: HttpTrackerFactory
 ): URLConnection {
     // Skip the irrelevant stack trace elements (including app inspection stack frames)
-    val callstack = getStackTrace(5)
+    val callstack = getStackTrace(2)
 
     // Create the wrapper class based on the dynamic type of the wrapped object
     return when (wrapped) {

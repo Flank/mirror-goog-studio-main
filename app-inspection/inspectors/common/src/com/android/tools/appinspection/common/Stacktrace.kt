@@ -16,6 +16,8 @@
 
 package com.android.tools.appinspection.common
 
+val APPINSPECTION_PACKAGE_PREFIX = "com.android.tools.appinspection"
+
 /**
  * Obtains the current stack trace ignoring the first [offset] lines.
  *
@@ -23,7 +25,7 @@ package com.android.tools.appinspection.common
  * the prefix will be ignored until encountering a line that does not contain it.
  * Then [offset] logic is applied.
  */
-fun getStackTrace(offset: Int, packagePrefix: String? = null): String {
+fun getStackTrace(offset: Int, packagePrefix: String? = APPINSPECTION_PACKAGE_PREFIX): String {
     return Throwable().stackTrace.let { stacks ->
         val trimmed = packagePrefix?.let { prefix ->
             stacks.dropWhile { element -> element.className.startsWith(prefix) }
