@@ -69,7 +69,7 @@ public class MethodBodyEvaluator {
                 interpreterLoop(target, init, evaluator, InterpretationEventHandler.NONE);
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
-            return AndroidEval.valueToObject(value);
+            return value.obj();
         }
 
         // TODO: Handle Exceptions

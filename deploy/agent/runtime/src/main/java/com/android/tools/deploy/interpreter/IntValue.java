@@ -20,6 +20,6 @@ import org.jetbrains.org.objectweb.asm.Type;
 
 public class IntValue extends AbstractValue<Integer> {
     public IntValue(int value, Type asmType) {
-        super(new Integer(value), asmType);
+        super(value, asmType);
     }
 }
