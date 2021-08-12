@@ -1638,8 +1638,8 @@ class LintIssueDocGenerator constructor(
     }
 
     companion object {
-        val MESSAGE_PATTERN = Pattern.compile("""(.+): (Error|Warning|Information): (.+) \[(.+)]""")
-        val LOCATION_PATTERN = Pattern.compile("""(.+):(\d+)""")
+        val MESSAGE_PATTERN: Pattern = Pattern.compile("""(.+): (Error|Warning|Information): (.+) \[(.+)]""")
+        val LOCATION_PATTERN: Pattern = Pattern.compile("""(.+):(\d+)""")
         private val ANDROID_SUPPORT_SYMBOL_PATTERN = Pattern.compile("\\b(android.support.[a-zA-Z0-9_.]+)\\b")
 
         @Suppress("SpellCheckingInspection")

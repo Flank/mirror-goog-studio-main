@@ -38,7 +38,7 @@ java_library(
         ":signflinger",
         "//tools/apksig",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -69,8 +69,8 @@ java_test(
         ":signflinger",
         "//tools/apksig",
         "//tools/base/annotations",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -93,8 +93,8 @@ java_test(
         "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -116,8 +116,8 @@ java_test(
         "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -140,8 +140,8 @@ java_test(
         "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -162,8 +162,8 @@ java_test(
         "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -181,8 +181,8 @@ java_test(
         "//tools/apksig",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 

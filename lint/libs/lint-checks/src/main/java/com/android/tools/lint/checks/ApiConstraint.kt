@@ -80,6 +80,41 @@ inline class ApiConstraint(val bits: Int) {
         )
     }
 
+    /**
+     * Returns a new constraint which takes the union of the two
+     * constraints.
+     */
+    infix fun or(other: ApiConstraint?): ApiConstraint {
+        other ?: return this
+        val from = min(fromInclusive(), other.fromInclusive())
+        val to = max(toExclusive(), other.toExclusive())
+        return range(from, to)
+    }
+
+    /**
+     * Returns a new constraint which takes the intersection of the two
+     * constraints.
+     */
+    infix fun and(other: ApiConstraint?): ApiConstraint {
+        other ?: return this
+        val from = max(fromInclusive(), other.fromInclusive())
+        val to = max(min(toExclusive(), other.toExclusive()), from)
+        return range(from, to)
+    }
+
+    /**
+     * Adjusts the API level range by adding the given adjustments
+     * (which can be negative) to the from and to levels.
+     */
+    fun adjust(fromAdjustment: Int, toAdjustment: Int): ApiConstraint {
+        val from = fromInclusive()
+        val to = toExclusive()
+
+        val newFrom = max(1, from + fromAdjustment)
+        val newTo = if (to == INFINITY) INFINITY else max(newFrom, to + toAdjustment)
+        return createConstraint(newFrom, newTo)
+    }
+
     override fun toString(): String {
         val from = fromInclusive()
         val to = toExclusive()

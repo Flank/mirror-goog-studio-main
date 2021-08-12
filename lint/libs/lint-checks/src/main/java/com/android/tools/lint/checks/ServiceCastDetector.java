@@ -373,6 +373,28 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
         if (value == null) {
             return null;
         }
+
+        // Populated from the Context#getSystemService implementation in the framework.
+        // This requires manually inspecting the sources; the documentation is the easiest
+        // place. For example, for MEDIA_COMMUNICATION_SERVICE, locate the field declaration and
+        // docs like
+        // this:
+        //
+        //    /**
+        //     * Use with {@link #getSystemService(String)} to retrieve a
+        //     * {@link android.media.MediaCommunicationManager}
+        //     * for managing {@link android.media.MediaSession2}.
+        //     *
+        //     * @see #getSystemService(String)
+        //     * @see android.media.MediaCommunicationManager
+        //     */
+        //    public static final String MEDIA_COMMUNICATION_SERVICE = "media_communication";
+        //
+        // From this we can conclude that MEDIA_COMMUNICATION_SERVICE maps to
+        // android.media.MediaCommunicationManager.
+        // Make sure to skip constants marked @hide or @SystemApi (or cross check what is in
+        // android.jar).
+
         switch (value) {
             case "ACCESSIBILITY_SERVICE":
                 return "android.view.accessibility.AccessibilityManager";
@@ -390,6 +412,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.media.AudioManager";
             case "BATTERY_SERVICE":
                 return "android.os.BatteryManager";
+            case "BIOMETRIC_SERVICE":
+                return "android.hardware.biometrics.BiometricManager";
             case "BLUETOOTH_SERVICE":
                 return "android.bluetooth.BluetoothManager";
             case "CAMERA_SERVICE":
@@ -407,6 +431,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.net.ConnectivityManager";
             case "CONSUMER_IR_SERVICE":
                 return "android.hardware.ConsumerIrManager";
+            case "CROSS_PROFILE_APPS_SERVICE":
+                return "content.pm.CrossProfileApps";
             case "EUICC_SERVICE":
                 return "android.telephony.euicc.EuiccManager";
             case "DEVICE_POLICY_SERVICE":
@@ -437,6 +463,10 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.view.LayoutInflater";
             case "LOCATION_SERVICE":
                 return "android.location.LocationManager";
+            case "MEDIA_COMMUNICATION_SERVICE":
+                return "android.media.MediaCommunicationManager";
+            case "MEDIA_METRICS_SERVICE":
+                return "android.media.metrics.MediaMetricsManager";
             case "MEDIA_PROJECTION_SERVICE":
                 return "android.media.projection.MediaProjectionManager";
             case "MEDIA_ROUTER_SERVICE":
@@ -459,6 +489,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.print.PrintManager";
             case "RESTRICTIONS_SERVICE":
                 return "android.content.RestrictionsManager";
+            case "ROLE_SERVICE":
+                return "android.app.role.RoleManager";
             case "SEARCH_SERVICE":
                 return "android.app.SearchManager";
             case "SENSOR_SERVICE":
@@ -491,14 +523,20 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.hardware.usb.UsbManager";
             case "USER_SERVICE":
                 return "android.os.UserManager";
+            case "VIBRATOR_MANAGER_SERVICE":
+                return "android.os.VibratorManager";
             case "VIBRATOR_SERVICE":
                 return "android.os.Vibrator";
+            case "VPN_MANAGEMENT_SERVICE":
+                return "android.net.VpnManager";
             case "WALLPAPER_SERVICE":
                 return "android.app.WallpaperManager";
             case "WIFI_AWARE_SERVICE":
                 return "android.net.wifi.aware.WifiAwareManager";
             case "WIFI_P2P_SERVICE":
                 return "android.net.wifi.p2p.WifiP2pManager";
+            case "WIFI_RTT_RANGING_SERVICE":
+                return "android.net.wifi.rtt.WifiRttManager";
             case "WIFI_SERVICE":
                 return "android.net.wifi.WifiManager";
             case "WINDOW_SERVICE":

@@ -25,6 +25,10 @@ public class Child extends Parent {
         return super.protectedInc(a);
     }
 
+    int callInheritedProtectedMethod(int a) {
+        return this.protectedInc(a);
+    }
+
     Parent callProtectedConstructor() {
         return new Parent(1, 2);
     }

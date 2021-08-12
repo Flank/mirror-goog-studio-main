@@ -154,7 +154,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                     sb.append(buildType)
                 }
             }
-            if (variantType.isTestComponent || variantType.isTestFixturesComponent) {
+            if (variantType.isNestedComponent) {
                 if (sb.isEmpty()) {
                     // need the lower case version
                     sb.append(variantType.prefix)
@@ -211,7 +211,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 sb.append(it)
             }
 
-            if (variantType.isTestComponent) {
+            if (variantType.isNestedComponent) {
                 if (sb.isNotEmpty()) {
                     sb.append('-')
                 }
@@ -251,7 +251,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 sb.appendCapitalized(it)
             }
 
-            if (variantType.isTestComponent) {
+            if (variantType.isNestedComponent) {
                 sb.append(variantType.suffix)
             }
             return sb.toString()

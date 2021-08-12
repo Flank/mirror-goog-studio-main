@@ -65,6 +65,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.findSelector
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiElement

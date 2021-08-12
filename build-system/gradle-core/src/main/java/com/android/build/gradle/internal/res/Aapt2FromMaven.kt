@@ -53,6 +53,10 @@ import java.util.zip.ZipInputStream
 class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
     companion object {
         private const val TYPE_EXTRACTED_AAPT2_BINARY = "_internal-android-aapt2-binary"
+        private const val PLATFORM_WINDOWS = "windows"
+        private const val PLATFORM_LINUX = "linux"
+        private const val PLATFORM_OSX = "osx"
+        private val ACCEPTED_PLATFORMS = listOf(PLATFORM_WINDOWS, PLATFORM_OSX, PLATFORM_LINUX)
 
         private object Aapt2Version {
             val BUILD_NUMBER: String by lazy(LazyThreadSafetyMode.PUBLICATION) {
@@ -106,13 +110,26 @@ class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
                     else
                         defaultVersion
 
+            val overriddenPlatform = projectOptions[StringOption.AAPT2_FROM_MAVEN_PLATFORM_OVERRIDE] ?: ""
             // See tools/base/aapt2 for the classifiers to use.
-            val classifier = when (SdkConstants.currentPlatform()) {
-                SdkConstants.PLATFORM_WINDOWS -> "windows"
-                SdkConstants.PLATFORM_DARWIN -> "osx"
-                SdkConstants.PLATFORM_LINUX -> "linux"
-                else -> error("Unknown platform '${System.getProperty("os.name")}'")
-            }
+            val classifier =
+                    if (overriddenPlatform.any()) {
+                        if (!ACCEPTED_PLATFORMS.contains(overriddenPlatform)) {
+                            error("Unknown platform '$overriddenPlatform'")
+                        }
+                        // Used when system is a not officially supported platform but can run
+                        // other supported platform executables, eg. FreeBSD can use Linux.
+                        // The option is experimental and we do not guarantee that the executable
+                        // will work correctly.
+                        overriddenPlatform
+                    }
+                    else
+                        when (SdkConstants.currentPlatform()) {
+                            SdkConstants.PLATFORM_WINDOWS -> PLATFORM_WINDOWS
+                            SdkConstants.PLATFORM_DARWIN -> PLATFORM_OSX
+                            SdkConstants.PLATFORM_LINUX -> PLATFORM_LINUX
+                            else -> error("Unknown platform '${System.getProperty("os.name")}'")
+                        }
 
             val configuration = project.configurations.detachedConfiguration(
                 project.dependencies.module(

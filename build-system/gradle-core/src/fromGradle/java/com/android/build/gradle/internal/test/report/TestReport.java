@@ -113,6 +113,9 @@ public class TestReport {
                             failure.getAttribute("message"), failure.getTextContent(),
                             deviceName, projectName, flavorName);
                 }
+                if (testCase.getElementsByTagName("skipped").getLength() > 0) {
+                    testResult.ignored();
+                }
             }
             NodeList ignoredTestCases = document.getElementsByTagName("ignored-testcase");
             for (int i = 0; i < ignoredTestCases.getLength(); i++) {

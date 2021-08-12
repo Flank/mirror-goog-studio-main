@@ -162,6 +162,7 @@ public class AndroidArtifacts {
     private static final String TYPE_NAVIGATION_JSON = "android-navigation-json";
 
     private static final String TYPE_PREFAB_PACKAGE = "android-prefab";
+    private static final String TYPE_PREFAB_PACKAGE_CONFIGURATION = "android-prefab-configuration";
 
     private static final String TYPE_DESUGAR_LIB_MERGED_KEEP_RULES =
             "android-desugar-lib-merged-keep-rules";
@@ -381,6 +382,7 @@ public class AndroidArtifacts {
          * dependencies from AARs. https://google.github.io/prefab/
          */
         PREFAB_PACKAGE(TYPE_PREFAB_PACKAGE),
+        PREFAB_PACKAGE_CONFIGURATION(TYPE_PREFAB_PACKAGE_CONFIGURATION),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
         PUBLIC_RES(TYPE_PUBLIC_RES),
         UNFILTERED_PROGUARD_RULES(TYPE_UNFILTERED_PROGUARD_RULES),

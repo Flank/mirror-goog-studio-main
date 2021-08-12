@@ -45,8 +45,8 @@ coverage_java_test(
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.builder-test-api",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 

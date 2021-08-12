@@ -36,6 +36,7 @@ import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USuperExpression
+import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.java.JavaUAssertExpression
@@ -189,6 +190,9 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : Source
             }
 
             private fun parenthesize(node: UExpression) {
+                if (node.uastParent is USwitchClauseExpression) {
+                    return
+                }
                 parenthesize(node, node)
             }
 

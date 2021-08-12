@@ -28,9 +28,9 @@ coverage_java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",
+        "@maven//:com.google.flatbuffers.flatbuffers-java",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.tensorflow.tensorflow-lite-metadata",
     ],
 )
 

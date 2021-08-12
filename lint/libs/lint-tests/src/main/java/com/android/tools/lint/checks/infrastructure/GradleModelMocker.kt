@@ -491,7 +491,7 @@ class GradleModelMocker @JvmOverloads constructor(
         fun <T : LintModelLibrary> Collection<T>.resolveConflicts(): Collection<T> {
             return groupBy { getMavenName(it.artifactAddress).let { it.groupId to it.artifactId } }
                 .mapValues { (_, libs) ->
-                    libs.maxBy { GradleVersion.tryParse(getMavenName(it.artifactAddress).version) ?: GradleVersion(0, 0) }
+                    libs.maxByOrNull { GradleVersion.tryParse(getMavenName(it.artifactAddress).version) ?: GradleVersion(0, 0) }
                 }
                 .values
                 .mapNotNull { it }

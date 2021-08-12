@@ -6,7 +6,7 @@ android_java_proto_library(
     name = "deploy-service-proto",
     srcs = glob(["proto/**/*.proto"]),
     grpc_support = 1,
-    java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
+    java_deps = ["@maven//:io.grpc.grpc-all"],
     protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
@@ -27,8 +27,8 @@ java_binary(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/deployer:tools.deployer",
         "//tools/base/deploy/proto:deploy_java_proto",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
     ],
 )
 
@@ -54,8 +54,8 @@ java_test(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/deployer:tools.deployer",
         "//tools/base/deploy/proto:deploy_java_proto",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )

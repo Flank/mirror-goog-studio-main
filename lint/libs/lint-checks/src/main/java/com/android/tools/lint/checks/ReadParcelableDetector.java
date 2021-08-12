@@ -33,6 +33,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
+import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UastLiteralUtils;
@@ -100,7 +101,7 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
                                     + "will not work if you are restoring your own classes. Consider "
                                     + "using for example `%1$s(getClass().getClassLoader())` instead.",
                             getMethodName(node));
-            LintFix fix = createQuickfixData(")");
+            LintFix fix = createQuickfixData("(\\))");
             Location location = context.getCallLocation(node, false, true);
             context.report(ISSUE, node, location, message, fix);
         } else if (argumentCount == 1) {
@@ -111,18 +112,18 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
                                 + "will not work if you are restoring your own classes. Consider "
                                 + "using for example `getClass().getClassLoader()` instead.";
                 Location location = context.getCallLocation(node, false, true);
-                LintFix fix = createQuickfixData("null)");
+                LintFix fix = createQuickfixData("(null\\s*\\))");
                 context.report(ISSUE, node, location, message, fix);
             }
         }
     }
 
     @NonNull
-    private static LintFix createQuickfixData(String parameter) {
+    private static LintFix createQuickfixData(@RegExp String parameter) {
         return LintFix.create()
                 .name("Use getClass().getClassLoader()")
                 .replace()
-                .text(parameter)
+                .pattern(parameter)
                 .with("getClass().getClassLoader())")
                 .build();
     }

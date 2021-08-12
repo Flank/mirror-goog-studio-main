@@ -70,7 +70,7 @@ private fun findCmakeQueryApiIndexFile(replyFolder: File) : File? {
     if (files == null || files.isEmpty()) error("$replyFolder didn't have any files: $files")
     return files.toList()
             .filter { it.name.startsWith("index") && it.name.endsWith(".json") }
-            .maxBy { it.name }
+            .maxByOrNull { it.name }
 }
 
 

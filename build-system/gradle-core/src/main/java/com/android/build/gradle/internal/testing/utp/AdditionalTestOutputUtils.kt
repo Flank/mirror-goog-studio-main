@@ -27,6 +27,11 @@ import com.android.ddmlib.TimeoutException
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import org.gradle.api.logging.Logging.getLogger
+
+private val logger = getLogger("AdditionalTestOutputUtils")
+
+const val ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL = 16
 
 /**
  * Finds a directory for storing additional test output on a test device.
@@ -34,14 +39,15 @@ import java.util.concurrent.TimeUnit
 fun findAdditionalTestOutputDirectoryOnDevice(
     device: DeviceConnector,
     testData: StaticTestData
-): String {
+): String? {
+    if (device.getApiLevel() < ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL) {
+        logger.warn("additionalTestOutput is not supported on devices running API level < 16")
+        return null
+    }
+
     val userSpecifiedDir = testData.instrumentationRunnerArguments.get("additionalTestOutputDir")
     if (userSpecifiedDir != null) {
         return userSpecifiedDir
-    }
-
-    if (device.getApiLevel() < 16) {
-        error("additionalTestOutput is not supported on devices running API level < 16")
     }
 
     if (device.getApiLevel() >= 29) {
@@ -52,13 +58,13 @@ fun findAdditionalTestOutputDirectoryOnDevice(
         return "/sdcard/Android/media/${testData.instrumentationTargetPackageId}/additional_test_output"
     }
 
-    return requireNotNull(queryAdditionalTestOutputLocation(device, testData))
+    return queryAdditionalTestOutputLocation(device, testData)
 }
 
 private fun queryAdditionalTestOutputLocation(
     device: DeviceConnector,
     testData: StaticTestData
-): String? {
+): String {
     var result: String? = null
     val receiver: MultiLineReceiver = object : MultiLineReceiver() {
         override fun processNewLines(lines: Array<String>) {

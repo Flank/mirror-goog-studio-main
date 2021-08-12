@@ -498,6 +498,7 @@ public abstract class PermissionRequirement {
         }
         return null;
     }
+
     /**
      * Generates a String representation of this permission requirement which can be used to
      * recreate the permission requirement via {@link #deserialize}
@@ -621,9 +622,15 @@ public abstract class PermissionRequirement {
     static final String[] REVOCABLE_PERMISSION_NAMES =
             new String[] {
                 "android.permission.ACCEPT_HANDOVER",
+                "android.permission.ACCESS_BACKGROUND_LOCATION",
                 "android.permission.ACCESS_COARSE_LOCATION",
                 "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.ACCESS_MEDIA_LOCATION",
+                "android.permission.ACTIVITY_RECOGNITION",
                 "android.permission.ANSWER_PHONE_CALLS",
+                "android.permission.BLUETOOTH_ADVERTISE",
+                "android.permission.BLUETOOTH_CONNECT",
+                "android.permission.BLUETOOTH_SCAN",
                 "android.permission.BODY_SENSORS",
                 "android.permission.CALL_PHONE",
                 "android.permission.CAMERA",
@@ -642,6 +649,7 @@ public abstract class PermissionRequirement {
                 "android.permission.RECORD_AUDIO",
                 "android.permission.SEND_SMS",
                 "android.permission.USE_SIP",
+                "android.permission.UWB_RANGING",
                 "android.permission.WRITE_CALENDAR",
                 "android.permission.WRITE_CALL_LOG",
                 "android.permission.WRITE_CONTACTS",

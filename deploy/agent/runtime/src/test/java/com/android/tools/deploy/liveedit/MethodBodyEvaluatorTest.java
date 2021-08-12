@@ -134,6 +134,20 @@ public class MethodBodyEvaluatorTest {
     }
 
     @org.junit.Test
+    public void testInheritedProtectedMethod() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        int a = 1;
+        Child c = new Child(1);
+        Object result =
+                new MethodBodyEvaluator(classInput, "callInheritedProtectedMethod")
+                        .eval(c, Parent.class.getTypeName(), new Object[] {a});
+
+        int actual = (Integer) result;
+        int expected = c.callInheritedProtectedMethod(a);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
     public void testLongValue() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         TestTarget owner = new TestTarget();
@@ -346,6 +360,18 @@ public class MethodBodyEvaluatorTest {
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Boolean z = (Boolean) result;
         Assert.assertEquals(owner.isInstanceOf(), z.booleanValue());
+    }
+
+    @org.junit.Test
+    public void testParentStatic() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "callParentStaticPlusFive")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Integer r = (Integer) result;
+        Assert.assertTrue(owner.callParentStaticPlusFive() == r.intValue());
     }
 
     @org.junit.Test

@@ -9,6 +9,8 @@ maven_repo(
     artifacts = [
         # These direct dependencies are manually added to satisfy gradle
         # TODO: Analyze what can be cleaned up
+        "//prebuilts/tools/common/m2:com.beust.jcommander.1.64",  # Can be removed once libraries that are not part of AGP are removed from the gradle build
+        "//prebuilts/tools/common/m2:junit.junit.4.12",  # Can be removed once libraries that are not part of AGP are removed from the gradle build
         "//prebuilts/tools/common/m2:com.google.protobuf.protoc.3.10.0",
         "//prebuilts/tools/common/m2:io.grpc.protoc-gen-grpc-java.1.21.1",
         "//prebuilts/tools/common/m2:gradle.plugin.org.jetbrains.gradle.plugin.idea-ext.gradle-idea-ext.0.8.1",
@@ -28,7 +30,7 @@ maven_repo(
         "//prebuilts/tools/common/m2:com.google.j2objc.j2objc-annotations.1.1",
         "//prebuilts/tools/common/m2:org.codehaus.mojo.animal-sniffer-annotations.1.14",
         "//prebuilts/tools/common/m2:org.ow2.asm.asm-debug-all.5.2",
-        "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.17.0",
+        "//prebuilts/tools/common/m2:com.github.javaparser.javaparser-core.3.18.0",
         "//tools/base/third_party:cglib_cglib-nodep",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",

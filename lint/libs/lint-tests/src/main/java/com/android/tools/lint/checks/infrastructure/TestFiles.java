@@ -21,8 +21,11 @@ import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
+import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -33,7 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.intellij.lang.annotations.Language;
@@ -141,6 +146,38 @@ public class TestFiles {
     public static TestFile.BinaryTestFile bytecode(
             @NonNull String to, @NonNull TestFile.BytecodeProducer producer) {
         return new TestFile.BinaryTestFile(to, producer);
+    }
+
+    @NonNull
+    public static TestFile rClass(@NonNull String pkg, @NonNull String... urls) {
+        int id = 0x7f040000;
+        StringBuilder sb = new StringBuilder();
+        sb.append("package ").append(pkg).append(";\n");
+        sb.append("public final class R {\n");
+        Map<ResourceType, List<ResourceUrl>> map = new HashMap<>();
+        for (String url : urls) {
+            ResourceUrl reference = ResourceUrl.parse(url);
+            assertNotNull("Resource reference was not a valid URL: " + reference, reference);
+            List<ResourceUrl> list = map.computeIfAbsent(reference.type, o -> new ArrayList<>());
+            list.add(reference);
+        }
+        for (ResourceType type : ResourceType.values()) {
+            List<ResourceUrl> resources = map.get(type);
+            if (resources == null) {
+                continue;
+            }
+            sb.append("    public static final class ").append(type).append(" {\n");
+            for (ResourceUrl resource : resources) {
+                sb.append("        public static final int ")
+                        .append(resource.name)
+                        .append(" = 0x")
+                        .append(Integer.toHexString(id++))
+                        .append(";\n");
+            }
+            sb.append("    }\n");
+        }
+        sb.append("}");
+        return java(sb.toString());
     }
 
     @NonNull
@@ -408,22 +445,25 @@ public class TestFiles {
                     || name.startsWith("kotlin-compiler-")
                     || name.startsWith("uast-")
                     || name.startsWith("intellij-core")
+                    || name.startsWith("kotlin-compiler_bzl") // bazel (using maven_library bridge)
+                    || name.startsWith("uast_bzl") // bazel (using maven_library bridge)
+                    || name.startsWith("intellij-core_bzl") // bazel (using maven_library bridge)
                     || name.endsWith(".lint-api-base") // IJ
-                    || name.endsWith("lint-api.jar") // blaze
-                    || name.endsWith("lint-api_bzl.jar") // blaze (using maven_library)
+                    || name.endsWith("lint-api.jar") // bazel
+                    || name.endsWith("lint-api_bzl.jar") // bazel (using maven_library bridge)
                     || name.endsWith(".lint.checks-base") // IJ
-                    || name.endsWith("lint-checks.jar") // blaze
-                    || name.endsWith("lint-checks_bzl.jar") // blaze (using maven_library)
+                    || name.endsWith("lint-checks.jar") // bazel
+                    || name.endsWith("lint-checks_bzl.jar") // bazel (using maven_library bridge)
                     || name.endsWith(".lint-model-base") // IJ
-                    || name.endsWith("lint-model.jar") // blaze
-                    || name.endsWith("lint-model_bzl.jar") // blaze (using maven_library)
+                    || name.endsWith("lint-model.jar") // bazel
+                    || name.endsWith("lint-model_bzl.jar") // bazel (using maven_library bridge)
                     || name.startsWith("lint-model") // Gradle
                     || name.endsWith(".testutils")
                     || name.endsWith("testutils.jar")
                     || name.startsWith("testutils-")
                     || name.endsWith(".lint.tests")
-                    || name.endsWith("lint-tests.jar") // blaze
-                    || name.endsWith("lint-tests_bzl.jar") // blaze (using maven_library)
+                    || name.endsWith("lint-tests.jar") // bazel
+                    || name.endsWith("lint-tests_bzl.jar") // bazel (using maven_library bridge)
                     || (name.equals("main") && path.contains("lint-tests")) // Gradle
                     || name.endsWith(".lint.cli")) {
                 TestFile testFile = new LibraryReferenceTestFile(file);

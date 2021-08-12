@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.zip.Deflater;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -585,6 +584,33 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
                     "Extracted content does not match what was presented for storage(uncompressed)",
                     file1Bytes,
                     toByteArray(file1_2ByteBuffer));
+        }
+    }
+
+    @Test
+    public void testZipExtractionWithInputstream() throws Exception {
+        Path file1Path = getPath("file1.txt");
+        byte[] file1Bytes = Files.readAllBytes(file1Path);
+
+        Path path = getTestPath("testZipStreamExtraction.zip");
+        try (ZipArchive archive = new ZipArchive(path)) {
+
+            // Add compressed file
+            archive.add(new BytesSource(file1Bytes, "1", Deflater.BEST_SPEED));
+        }
+
+        try (ZipArchive archive = new ZipArchive(path)) {
+            InputStream file1Stream = archive.getInputStream("1");
+            Assert.assertTrue(
+                    "Extracted content does not match what was presented for compression",
+                    streamMatch(file1Stream, new ByteArrayInputStream(file1Bytes)));
+
+            // Add uncompressed file
+            archive.add(new BytesSource(file1Bytes, "file1-2.txt", Deflater.NO_COMPRESSION));
+            InputStream file1_2Stream = archive.getInputStream("file1-2.txt");
+            Assert.assertTrue(
+                    "Extracted content does not match what was presented for storage",
+                    streamMatch(file1_2Stream, new ByteArrayInputStream(file1Bytes)));
         }
     }
 

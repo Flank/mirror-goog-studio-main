@@ -79,11 +79,8 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NotNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
-            @NotNull
-                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
-                            allVariants) {
-        createCommonTasks(variantInfo, allVariants);
+            @NotNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo) {
+        createCommonTasks(variantInfo);
 
         TestVariantImpl testVariantProperties = variantInfo.getVariant();
 

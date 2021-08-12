@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
@@ -144,6 +145,11 @@ class VariantManager<
      */
     val mainComponents: List<ComponentInfo<VariantBuilderT, VariantT>>
         get() = variants
+
+    /**
+     * Returns a list of all nested components.
+     */
+    val nestedComponents: MutableList<ComponentImpl> = Lists.newArrayList()
 
     /**
      * Returns a list of all test components.
@@ -899,7 +905,7 @@ class VariantManager<
                         productFlavorDataList,
                         variantInfo
                     )
-                    testFixturesComponents.add(testFixtures)
+                    addTestFixturesComponent(testFixtures)
                     (variant as HasTestFixtures).testFixtures = testFixtures
                 }
 
@@ -1013,7 +1019,14 @@ class VariantManager<
 
     private fun addTestComponent(
             testComponent: TestComponentImpl) {
+        nestedComponents.add(testComponent)
         testComponents.add(testComponent)
+    }
+
+    private fun addTestFixturesComponent(
+        testFixturesComponent: TestFixturesImpl) {
+        nestedComponents.add(testFixturesComponent)
+        testFixturesComponents.add(testFixturesComponent)
     }
 
     private fun createSigningOverride(): SigningConfig? {

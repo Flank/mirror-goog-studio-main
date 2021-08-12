@@ -49,9 +49,9 @@ kotlin_library(
         ":app-processes-proto",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:net.sf.kxml_kxml2",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:net.sf.kxml.kxml2",
     ],
 )
 
@@ -65,7 +65,7 @@ java_library(
         ":ddmlib-base",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 
@@ -114,12 +114,12 @@ kotlin_test(
         "//tools/base/common:tools.common",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.easymock_easymock",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.easymock.easymock",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 

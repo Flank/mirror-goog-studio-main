@@ -8,20 +8,3 @@ java_jarjar(
     rules = "//tools/base/bazel:jarjar_rules.txt",
     visibility = ["//visibility:public"],
 )
-
-java_library(
-    name = "netty-grpc-jar",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2:io.netty.netty-buffer.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-codec.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-codec-http.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-codec-http2.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-codec-socks.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-common.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-handler.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-handler-proxy.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-resolver.4.1.34.Final",
-        "//prebuilts/tools/common/m2:io.netty.netty-transport.4.1.34.Final",
-    ],
-)

@@ -58,9 +58,25 @@ coverage_java_test(
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.smali_dexlib2",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.smali.dexlib2",
     ],
+)
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/main/**/*.kt",
+        "src/main/resources/**",
+    ]) + [
+        "build.gradle",
+        "NOTICE",
+        "//prebuilts/tools/common/archive-patcher:explainer",
+        "//prebuilts/tools/common/archive-patcher:generator",
+        "//prebuilts/tools/common/archive-patcher:shared",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
 )

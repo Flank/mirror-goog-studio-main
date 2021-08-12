@@ -44,4 +44,8 @@ public class Parent {
     public int callPrivateInc(int a) {
         return privateInc(a);
     }
+
+    protected static int parentStaticPlusFive() {
+        return 1;
+    }
 }

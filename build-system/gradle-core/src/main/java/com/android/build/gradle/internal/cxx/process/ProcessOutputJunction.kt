@@ -101,7 +101,6 @@ class ProcessOutputJunction(
 
                 logStructured { encoder ->
                     val info = EncodedExecuteProcess.newBuilder()
-                    info.executableId = encoder.encode(proc.executable)
                     info.descriptionId = encoder.encode(proc.description)
                     info.argsId = encoder.encodeList(proc.args)
                     info.environmentKeysId =
@@ -113,6 +112,8 @@ class ProcessOutputJunction(
                         info.jvmClassPathId = encoder.encode(proc.classpath)
                         info.jvmMainClassId = encoder.encode(proc.mainClass)
                         info.jvmArgsId = encoder.encodeList(proc.jvmArgs)
+                    } else {
+                        info.executableId = encoder.encode(proc.executable)
                     }
                     info.build()
                 }

@@ -72,7 +72,7 @@ java_test(
     tags = ["no_windows"],
     deps = [
         "//tools/base/deploy/deployer:tools.deployer",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 

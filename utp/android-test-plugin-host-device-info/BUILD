@@ -37,17 +37,17 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2:com.google.testing.platform.launcher.0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.launcher",
         # Test dependencies.
         ":android-test-plugin-host-device-info",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.mockito_mockito-core",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
     ],
 )
 

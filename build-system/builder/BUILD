@@ -119,16 +119,16 @@ kotlin_test(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/signflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.jimfs_jimfs",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
-        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/zipflinger",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:nl.jqno.equalsverifier.equalsverifier",
+        "@maven//:org.bouncycastle.bcpkix-jdk15on",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
     ],
 )
 
@@ -163,8 +163,8 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -186,8 +186,8 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -209,8 +209,8 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -232,8 +232,8 @@ java_test(
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/zipflinger",
+        "@maven//:junit.junit",
     ],
 )
 

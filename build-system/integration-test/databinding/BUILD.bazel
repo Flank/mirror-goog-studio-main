@@ -18,12 +18,12 @@ TEST_DEPS = [
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
     "//tools/base/testutils:tools.testutils",
-    "//tools/base/third_party:com.google.guava_guava",
-    "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
-    "//tools/base/third_party:com.google.truth_truth",
-    "//tools/base/third_party:commons-io_commons-io",
-    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+    "@maven//:com.google.guava.guava",
+    "@maven//:com.google.truth.extensions.truth-java8-extension",
+    "@maven//:com.google.truth.truth",
+    "@maven//:commons-io.commons-io",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    "@maven//:org.jetbrains.kotlin.kotlin-test",
 ]
 
 #keep sorted
@@ -85,7 +85,7 @@ coverage_java_test(
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
         ":java_tests",
         ":kotlin_tests",
     ],

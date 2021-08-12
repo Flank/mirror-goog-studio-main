@@ -13,7 +13,7 @@ java_library(
         "//visibility:public",
     ],
     deps = [
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 

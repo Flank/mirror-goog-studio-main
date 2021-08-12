@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="androidx-inspection">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../bazel-bin/prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0/jar_unpacked_classes.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../bazel-bin/prebuilts/tools/common/m2/androidx.inspection.inspection.1.0.0_unpacked_classes.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0/inspection-1.0.0-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/androidx/inspection/inspection/1.0.0/inspection-1.0.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

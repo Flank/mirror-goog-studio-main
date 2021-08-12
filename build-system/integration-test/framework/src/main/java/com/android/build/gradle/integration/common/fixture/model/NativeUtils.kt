@@ -319,12 +319,63 @@ fun cartesianOf(c1:Array<*>, c2:Array<*>) : Array<Array<*>> =
         c1.flatMap { e1 -> c2.map { e2 -> arrayOf(e1, e2) } }.toTypedArray()
 
 /**
- * Produce all combinations of elements from c1, c2, and c3.
+ * Produce all combinations of elements individual arrays in [members].
  */
-fun cartesianOf(c1:Array<*>, c2:Array<*>, c3:Array<*>) : Array<Array<*>> =
-        cartesianOf(c1, c2).flatMap { outer ->
-            c3.map { e3 -> arrayOf(outer[0], outer[1], e3)}
-        }.toTypedArray()
+fun cartesianOf(vararg members : Array<*>) =
+    cartesianOfIndices(members.map { it.size }).map {
+        it.mapIndexed { index, ordinal ->
+            members[index][ordinal]
+        }
+    }
+    .map { it.toTypedArray() }
+    .toTypedArray()
+
+private fun cartesianOfIndices(sizes: List<Int>) : List<List<Int>> =
+    if (sizes.size == 1) (0 until sizes[0]).map { listOf(it) }
+    else (0 until sizes[0]).flatMap { ordinal ->
+        cartesianOfIndices(sizes.drop(1)).map { inner ->
+            listOf(ordinal) + inner
+        }
+    }
+
+/**
+ * Produces all pairs, triples, etc up to size [maxTupleSize] from [row].
+ * Tuples elements are in ascending order according to their place in [row].
+ * The result key is the index of the field in [row].
+ * The result value is the value of the field at index in [row].
+ */
+private fun tuplesOfRow(row : Array<Any?>, maxTupleSize : Int, startIndex : Int = 0,
+    outer : Map<Int, Any?> = mapOf(), result : MutableSet<Map<Int, Any?>> = mutableSetOf())
+    : Set<Map<Int, Any?>> {
+    if (maxTupleSize == 0) return result
+    for (index in startIndex until row.size) {
+        val tuple = outer.toMutableMap()
+        tuple[index] = row[index]
+        result.add(tuple)
+        tuplesOfRow(row, maxTupleSize - 1, index + 1, tuple, result)
+    }
+    return result
+}
+
+/**
+ * Find a small set of rows from [this] that covers all pairs, triples, etc of field
+ * values. The purposes is to select a smaller but still representative set of tests
+ * so that we don't have to run all combinations. If [maxTupleSize] is set to the
+ * size of rows in [this] then all rows will be returned.
+ */
+fun Array<Array<Any?>>.minimizeUsingTupleCoverage(maxTupleSize : Int): Array<Array<Any?>> {
+    val remainingTuples = flatMap { tuplesOfRow(it, maxTupleSize) }.toMutableSet()
+    val result = mutableSetOf<Int>()
+    while (remainingTuples.isNotEmpty()) {
+        // Choose the row that covers the most remaining uncovered tuples
+        val bestRow = indices
+            .filter { !result.contains(it) }
+            .minBy { (remainingTuples - tuplesOfRow(this[it], maxTupleSize)).size }!!
+        remainingTuples.removeAll(tuplesOfRow(this[bestRow], maxTupleSize))
+        result.add(bestRow)
+    }
+    return result.map { this[it] }.toTypedArray()
+}
 
 /**
  * Enable C/C++ structured logging for this project.
@@ -343,6 +394,7 @@ inline fun <reified Encoded, Decoded> GradleTestProject.readStructuredLogs(
     val logFolder = getCxxStructuredLogFolder(rootProject.projectDir)
     return readStructuredLogs(logFolder, decode)
 }
+
 
 
 

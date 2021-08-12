@@ -48,8 +48,8 @@ gradle_integration_test(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )

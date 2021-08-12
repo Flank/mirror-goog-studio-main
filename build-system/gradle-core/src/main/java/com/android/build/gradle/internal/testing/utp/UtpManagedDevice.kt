@@ -37,4 +37,17 @@ data class UtpManagedDevice(
     val avdFolder: String,
     val id: String,
     val emulatorPath: String,
-    val displayEmulator: Boolean)
+    val displayEmulator: Boolean) {
+
+    fun forShard(shardIndex: Int) =
+        UtpManagedDevice(
+            deviceName,
+            avdName,
+            api,
+            abi,
+            avdFolder,
+            "${id}_$shardIndex",
+            emulatorPath,
+            displayEmulator
+        )
+}

@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
+import com.android.build.api.variant.Component;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -44,6 +45,7 @@ import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import groovy.util.Eval;
 import java.io.File;
@@ -699,6 +701,140 @@ public class PluginDslTest {
                                 + " will be used.\n"
                                 + "To suppress this warning, remove \"buildToolsVersion '19.0.0'\" from your build.gradle file, "
                                 + "as each version of the Android Gradle Plugin now has a default version of the build tools.");
+    }
+
+    private void checkNestedComponents(
+            VariantImpl variant,
+            boolean unitTestsEnabled,
+            boolean androidTestsEnabled,
+            boolean testFixturesEnabled) {
+        List<String> expected = Lists.newArrayList();
+        if (unitTestsEnabled) {
+            expected.add(variant.getName() + "UnitTest");
+        }
+        if (androidTestsEnabled) {
+            expected.add(variant.getName() + "AndroidTest");
+        }
+        if (testFixturesEnabled) {
+            expected.add(variant.getName() + "TestFixtures");
+        }
+        assertThat(Lists.transform(variant.getNestedComponents(), Component::getName))
+                .containsExactlyElementsIn(expected);
+    }
+
+    @Test
+    public void testNestedComponents() {
+        plugin.createAndroidTasks();
+        List<VariantImpl> variants =
+                plugin.getVariantManager().getMainComponents().stream()
+                        .map(ComponentInfo::getVariant)
+                        .collect(Collectors.toList());
+
+        assertThat(variants.size()).isEqualTo(2);
+
+        VariantImpl debugVariant =
+                variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
+        VariantImpl releaseVariant =
+                variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
+
+        checkNestedComponents(debugVariant, true, true, false);
+        checkNestedComponents(releaseVariant, true, false, false);
+    }
+
+    @Test
+    public void testNestedComponentsWithTestFixturesEnabled() {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.android {\n"
+                        + "\n"
+                        + "\n"
+                        + "    testFixtures {\n"
+                        + "        enable true\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n");
+
+        plugin.createAndroidTasks();
+        List<VariantImpl> variants =
+                plugin.getVariantManager().getMainComponents().stream()
+                        .map(ComponentInfo::getVariant)
+                        .collect(Collectors.toList());
+
+        assertThat(variants.size()).isEqualTo(2);
+
+        VariantImpl debugVariant =
+                variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
+        VariantImpl releaseVariant =
+                variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
+
+        checkNestedComponents(debugVariant, true, true, true);
+        checkNestedComponents(releaseVariant, true, false, true);
+    }
+
+    @Test
+    public void testNestedComponentsWithReleaseUnitTestsDisabled() {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.androidComponents {\n"
+                        + "\n"
+                        + "\n"
+                        + "    beforeVariants(selector().withBuildType(\"release\")) {\n"
+                        + "        enableUnitTest false\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n");
+
+        plugin.createAndroidTasks();
+        List<VariantImpl> variants =
+                plugin.getVariantManager().getMainComponents().stream()
+                        .map(ComponentInfo::getVariant)
+                        .collect(Collectors.toList());
+
+        assertThat(variants.size()).isEqualTo(2);
+
+        VariantImpl debugVariant =
+                variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
+        VariantImpl releaseVariant =
+                variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
+
+        checkNestedComponents(debugVariant, true, true, false);
+        checkNestedComponents(releaseVariant, false, false, false);
+    }
+
+    @Test
+    public void testNestedComponentsWithAndroidTestsDisabled() {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.androidComponents {\n"
+                        + "\n"
+                        + "\n"
+                        + "    beforeVariants(selector().withBuildType(\"debug\")) {\n"
+                        + "        enableAndroidTest false\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n");
+
+        plugin.createAndroidTasks();
+        List<VariantImpl> variants =
+                plugin.getVariantManager().getMainComponents().stream()
+                        .map(ComponentInfo::getVariant)
+                        .collect(Collectors.toList());
+
+        assertThat(variants.size()).isEqualTo(2);
+
+        VariantImpl debugVariant =
+                variants.stream().filter(it -> it.getName().equals("debug")).findFirst().get();
+        VariantImpl releaseVariant =
+                variants.stream().filter(it -> it.getName().equals("release")).findFirst().get();
+
+        checkNestedComponents(debugVariant, true, false, false);
+        checkNestedComponents(releaseVariant, true, false, false);
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {

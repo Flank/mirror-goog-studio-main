@@ -551,7 +551,8 @@ def _local_maven_repository_impl(repository_ctx):
         [java, "-jar", repository_ctx.path(repository_ctx.attr._generator)] +
         inputs +
         ["-o", "BUILD"] +
-        ["--repo-path", repo_path]
+        ["--repo-path", repo_path] +
+        (["--noresolve"] if not repository_ctx.attr.resolve else [])
     )
     result = repository_ctx.execute(
         arguments,
@@ -567,6 +568,7 @@ _local_maven_repository = repository_rule(
     attrs = {
         "path": attr.string(),
         "_this_file": attr.label(default = "@//tools/base/bazel:maven.bzl"),
+        "resolve": attr.bool(),
         "artifacts": attr.string_list(),
         "_generator": attr.label(default = "@//tools/base/bazel:maven/generator.jar"),
         "_pom": attr.label(
@@ -598,10 +600,11 @@ _local_maven_repository = repository_rule(
 # Args:
 #   path: Local path to a Maven repository relative to the workspace root
 #   artifacts: Coordinates of the Maven artifacts to resolve
-def local_maven_repository(name, path, artifacts):
+def local_maven_repository(name, path, resolve, artifacts):
     _local_maven_repository(
         name = name,
         path = path,
+        resolve = resolve,
         artifacts = artifacts,
     )
 
@@ -756,6 +759,8 @@ def _maven_repository_impl(ctx):
 
     # Redundancy check:
     if not ctx.attr.allow_duplicates:
+        has_duplicates = False
+        rem = {a: True for a in ctx.attr.artifacts}
         for b in ctx.attr.artifacts:
             b_items = {e: None for e in b[MavenInfo].transitive.to_list()}
             for a in ctx.attr.artifacts:
@@ -766,7 +771,12 @@ def _maven_repository_impl(ctx):
                             included = False
                             break
                     if included:
-                        fail("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+                        rem[a] = False
+                        print("%s is redundant as it's a dependency of %s" % (a.label, b.label))
+                        has_duplicates = True
+        if has_duplicates:
+            print("The minimum set of dependencies is:\n" + ",\n".join(["\"%s\"" % str(a.label) for a, v in rem.items() if v]))
+            fail("Duplicated/Redundant dependencies found.")
 
     for r, f in artifacts.to_list():
         files.append(f)

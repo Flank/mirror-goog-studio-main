@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.zipflinger.ZipArchive;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -109,7 +110,8 @@ public class LnZipperTest {
         lnZipper.execute();
 
         try (ZipArchive archive = new ZipArchive(output)) {
-            String symlinkTarget = new String(archive.getContent("path/my-symlink").array());
+            ByteBuffer buffer = archive.getContent("path/my-symlink");
+            String symlinkTarget = new String(buffer.array(), buffer.position(), buffer.limit());
             assertThat(symlinkTarget).isEqualTo("fileA.txt");
         }
     }

@@ -137,6 +137,7 @@ class UtpConfigFactoryTest {
             testData: StaticTestData = this.testData,
             useOrchestrator: Boolean = false,
             additionalTestOutputDir: File? = null,
+            shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return UtpConfigFactory().createRunnerConfigProtoForLocalDevice(
                 mockDevice,
@@ -156,12 +157,14 @@ class UtpConfigFactoryTest {
                 mockResultListenerClientCert,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                shardConfig
         )
     }
 
     private fun createForManagedDevice(
             testData: StaticTestData = this.testData,
-            useOrchestrator: Boolean = false
+            useOrchestrator: Boolean = false,
+            shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         val managedDevice = UtpManagedDevice(
                 "deviceName",
@@ -185,7 +188,8 @@ class UtpConfigFactoryTest {
                 mockRetentionConfig,
                 mockCoverageOutputDir,
                 useOrchestrator,
-                testResultListenerServerMetadata
+                testResultListenerServerMetadata,
+                shardConfig
         )
     }
 
@@ -421,6 +425,34 @@ class UtpConfigFactoryTest {
     }
 
     @Test
+    fun createRunnerConfigProtoForLocalDeviceWithShardConfig() {
+        val runnerConfigProto = createForLocalDevice(
+            shardConfig = ShardConfig(totalCount = 10, index = 2))
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            shardingConfig = """
+                shard_count: 10
+                shard_index: 2
+            """
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceWithShardConfig() {
+        val runnerConfigProto = createForManagedDevice(
+            shardConfig = ShardConfig(totalCount = 10, index = 2))
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            deviceId = ":app:deviceNameDebugAndroidTest",
+            useGradleManagedDeviceProvider = true,
+            shardingConfig = """
+                shard_count: 10
+                shard_index: 2
+            """
+        )
+    }
+
+    @Test
     fun createRunnerConfigProtoForLocalDeviceWithAdditionalTestOutput() {
         val runnerConfigProto = createForLocalDevice(
             additionalTestOutputDir = mockFile("additionalTestOutputDir")
@@ -437,6 +469,20 @@ class UtpConfigFactoryTest {
                additional_output_directory_on_device: "${onDeviceDir}"
                additional_output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(onHostDir)}"
             """
+        )
+    }
+
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithAdditionalTestOutputNotSupported() {
+        `when`(mockDevice.apiLevel).thenReturn(15)
+        val runnerConfigProto = createForLocalDevice(
+            additionalTestOutputDir = mockFile("additionalTestOutputDir")
+        )
+
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            additionalTestOutputConfig = "",
         )
     }
 

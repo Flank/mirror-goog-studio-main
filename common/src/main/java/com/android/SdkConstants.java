@@ -2819,7 +2819,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.1";
+    public static final String GRADLE_LATEST_VERSION = "7.2-rc-1";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

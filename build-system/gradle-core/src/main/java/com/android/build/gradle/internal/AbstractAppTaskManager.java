@@ -90,11 +90,7 @@ public abstract class AbstractAppTaskManager<
                 projectInfo);
     }
 
-    protected void createCommonTasks(
-            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
-            @NonNull
-                    List<? extends ComponentInfo<VariantBuilderT, VariantT>>
-                            allComponentsWithLint) {
+    protected void createCommonTasks(@NonNull ComponentInfo<VariantBuilderT, VariantT> variant) {
         VariantT appVariantProperties = variant.getVariant();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 

@@ -52,8 +52,8 @@ coverage_java_test(
     deps = [
         ":tools.layoutlib-api",
         "//tools/base/common:tools.common",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 

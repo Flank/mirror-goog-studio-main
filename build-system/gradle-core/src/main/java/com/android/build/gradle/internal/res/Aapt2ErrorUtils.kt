@@ -203,6 +203,7 @@ private fun rewriteException(
                     Message.Kind.ERROR,
                     e.output ?: "",
                     "",
+                    //noinspection VisibleForTests
                     AbstractAaptOutputParser.AAPT_TOOL_NAME,
                     SourceFilePosition.UNKNOWN
                 )

@@ -52,7 +52,7 @@ public class CrashlyticsTest {
                         + "apply plugin: 'io.fabric'\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    api 'com.crashlytics.sdk.android:crashlytics:2.6.7@aar'\n"
+                        + "    api 'com.crashlytics.sdk.android:crashlytics:2.6.8@aar'\n"
                         + "}\n"
                         + ""
                         + "android {\n"

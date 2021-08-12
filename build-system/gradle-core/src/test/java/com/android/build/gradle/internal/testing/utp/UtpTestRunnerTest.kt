@@ -103,7 +103,8 @@ class UtpTestRunnerTest {
                 anyInt(),
                 any(File::class.java),
                 any(File::class.java),
-                any(File::class.java))).then {
+                any(File::class.java),
+                nullable(ShardConfig::class.java))).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())

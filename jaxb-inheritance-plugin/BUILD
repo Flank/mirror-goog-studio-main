@@ -5,8 +5,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.sun.activation_javax.activation",
-        "//tools/base/third_party:org.glassfish.jaxb_jaxb-xjc",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.sun.activation.javax.activation",
+        "@maven//:org.glassfish.jaxb.jaxb-xjc",
     ],
 )

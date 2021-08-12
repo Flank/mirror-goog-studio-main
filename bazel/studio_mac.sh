@@ -29,7 +29,6 @@ readonly config_options="--config=local --config=rcache"
 "${script_dir}/bazel" \
         --max_idle_secs=60 \
         test \
-        --keep_going \
         ${config_options} \
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \

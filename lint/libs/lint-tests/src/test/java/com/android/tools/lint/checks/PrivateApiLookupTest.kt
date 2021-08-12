@@ -96,8 +96,8 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
             Restriction.DENY,
             db.getMethodRestriction(
                 "android/app/Notification",
-                "getContextualActions",
-                "()Ljava/util/List;"
+                "dumpDebug",
+                "(Landroid/util/proto/ProtoOutputStream;J)V"
             )
         )
         assertEquals(
@@ -130,6 +130,13 @@ public class PrivateApiLookupTest : AbstractCheckTest() {
             db.getFieldRestriction(
                 "android.animation.ValueAnimator",
                 "sDurationScale"
+            )
+        )
+        assertEquals(
+            Restriction.MAYBE_MAX_R,
+            db.getFieldRestriction(
+                "android.app.StatusBarManager",
+                "DISABLE_NOTIFICATION_TICKER"
             )
         )
     }

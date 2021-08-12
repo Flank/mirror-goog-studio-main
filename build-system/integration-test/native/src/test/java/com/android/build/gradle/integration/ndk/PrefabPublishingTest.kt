@@ -167,7 +167,8 @@ class PrefabPublishingTest(
               "abi": "${abi.tag}",
               "api": $apiLevel,
               "ndk": $ndkMajor,
-              "stl": "c++_shared"
+              "stl": "c++_shared",
+              "static": ${libraryType == LibraryType.Static}
             }
             """.trimIndent()
         )
@@ -192,7 +193,7 @@ class PrefabPublishingTest(
             """
             {
               "name": "$gradleModuleName",
-              "schema_version": 1,
+              "schema_version": 2,
               "dependencies": [],
               "version": "1.0"
             }
@@ -384,7 +385,7 @@ class PrefabPublishingTest(
             """
             {
               "name": "$gradleModuleName",
-              "schema_version": 1,
+              "schema_version": 2,
               "dependencies": [],
               "version": "1.0.0"
             }

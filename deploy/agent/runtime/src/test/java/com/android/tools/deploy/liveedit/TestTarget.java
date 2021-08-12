@@ -190,4 +190,8 @@ class TestTarget {
     public int getIntegerFields() {
         return i1 & i2;
     }
+
+    public int callParentStaticPlusFive() {
+        return Child.parentStaticPlusFive();
+    }
 }

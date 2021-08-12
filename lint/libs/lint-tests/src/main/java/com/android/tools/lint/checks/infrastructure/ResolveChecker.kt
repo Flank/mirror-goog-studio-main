@@ -24,11 +24,15 @@ import com.android.tools.lint.Reporter
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.getErrorLines
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiImportStaticReferenceElement
+import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiModifier
+import com.intellij.psi.impl.JavaPsiFacadeEx
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.uast.UCallExpression
@@ -47,7 +51,19 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         PsiErrorElement::class.java
     )
     if (error != null) {
-        error("Found error element $error in ${file.name} with text \"${error.text}\" inside \"${error.parent.text}\"")
+        val line = getLocation(error).start?.line ?: -1
+
+        val sb = StringBuilder()
+        val location = getLocation(error)
+        val source = root.sourcePsi.text.toString()
+        val lines = location.getErrorLines { source }
+        sb.append(
+            "Found error element $error in ${file.name}:${line + 1} with text " +
+                "\"${error.text}\" inside \"${error.parent.text}\"\n" +
+                "$lines\n" +
+                listFile(file.name, source)
+        )
+        error(sb.toString())
     }
 
     val detectors = task.issues?.asSequence()
@@ -85,7 +101,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 return true
             }
 
-            // Kotlin synthetic classes are computed on the fly by a compiler plugin"
+            // Kotlin synthetic classes are computed on the fly by a compiler plugin
             if (s.startsWith("kotlinx.android.synthetic.")) {
                 return true
             }
@@ -114,11 +130,20 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 val importedClass = cls.resolve()
                 if (importedClass is PsiClass) {
                     val name = importReferencePsi.referenceName
-                    if (importedClass.methods.any {
-                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
+                    if (importedClass.hasStaticMemberNamed(name)) {
+                        return true
                     }
-                    ) {
-                        return super.visitImportStatement(node)
+                }
+            } else if (importReferencePsi is PsiJavaCodeReferenceElement) {
+                val fqn = importReferencePsi.qualifiedName
+                val index = fqn?.lastIndexOf('.')
+                if (index != null && index != -1) {
+                    val className = fqn.substring(0, index)
+                    val name = fqn.substring(index + 1)
+                    val facade = JavaPsiFacadeEx.getInstance(importReferencePsi.project)
+                    val psiClass = facade.findClass(className, GlobalSearchScope.allScope(importReferencePsi.project))
+                    if (psiClass != null && psiClass.hasStaticMemberNamed(name)) {
+                        return true
                     }
                 }
             } else if (node is KotlinUImportStatement) {
@@ -127,12 +152,20 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 val clsName = qualifiedExpression?.receiverExpression?.text
                 if (clsName != null) {
                     val name = qualifiedExpression.selectorExpression?.text
+
                     val importedClass = evaluator.findClass(clsName)
-                    if (importedClass != null && importedClass.methods.any {
-                        it.name == name && it.modifierList.hasModifierProperty(PsiModifier.STATIC)
-                    }
-                    ) {
+                    if (importedClass != null && importedClass.hasStaticMemberNamed(name)) {
                         return super.visitImportStatement(node)
+                    }
+
+                    // If it's a top level function, the left hand side is the package, not the class name.
+                    // There are a number of possible classes that can contain that package, so search through them:
+                    val facade = JavaPsiFacadeEx.getInstance(importReferencePsi.project)
+                    val pkg = facade.findPackage(clsName)
+                    if (pkg != null) {
+                        if (pkg.classes.any { it.hasStaticMemberNamed(name) }) {
+                            return super.visitImportStatement(node)
+                        }
                     }
                 }
             }
@@ -146,6 +179,18 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                 )
             }
             return super.visitImportStatement(node)
+        }
+
+        fun PsiClass.hasStaticMemberNamed(name: String?): Boolean {
+            return methods.any {
+                it.name == name &&
+                    (
+                        it.modifierList.hasModifierProperty(PsiModifier.STATIC) ||
+                            it.modifierList.hasModifierProperty(PsiModifier.DEFAULT)
+                        )
+            } || fields.any {
+                it.name == name && it.modifierList?.hasModifierProperty(PsiModifier.STATIC) == true
+            }
         }
 
         override fun visitCallExpression(node: UCallExpression): Boolean {

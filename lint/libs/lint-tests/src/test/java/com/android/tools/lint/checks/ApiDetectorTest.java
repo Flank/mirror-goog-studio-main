@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.annotations.NonNull;
@@ -182,19 +183,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "    }\n"
                                                 + "}")
                                 .indented(),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class anim {\n"
-                                        + "        public static final int blink1 = 0x7f070031;\n"
-                                        + "        public static final int blink3 = 0x7f070033;\n"
-                                        + "    }\n"
-                                        + "    public static class animator {\n"
-                                        + "        public static final int blink2 = 0x7f070032;\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + ""),
+                        rClass("test.pkg", "@anim/blink1", "@anim/blink3", "@animator/blink2"),
                         xml(
                                         "res/anim/blink1.xml",
                                         ""
@@ -3016,6 +3005,59 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testAnonymous2() {
+        // anonymous class references are sometimes null in UAST
+        // so we have to do extra work
+        lint().files(
+                        manifest().minSdk(1),
+                        java(
+                                ""
+                                        + "package test.api;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class Api {\n"
+                                        + "    @RequiresApi(29)\n"
+                                        + "    public static class InnerApi {\n"
+                                        + "        public static String method() { return \"\"; }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                "package test.usage;\n"
+                                        + "import test.api.Api.InnerApi;\n"
+                                        + "\n"
+                                        + "public class JavaUsage {\n"
+                                        + "    public void test() {\n"
+                                        + "        Object o1 = new InnerApi();\n"
+                                        + "        Object o2 = new InnerApi() { };\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package test.usage\n"
+                                        + "\n"
+                                        + "import test.api.Api.InnerApi\n"
+                                        + "\n"
+                                        + "class KotlinUsage {\n"
+                                        + "    fun test() {\n"
+                                        + "        val o1: Any = InnerApi()\n"
+                                        + "        val o2: Any = object : InnerApi() {}\n"
+                                        + "    }\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/usage/JavaUsage.java:6: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        Object o1 = new InnerApi();\n"
+                                + "                    ~~~~~~~~~~~~\n"
+                                + "src/test/usage/KotlinUsage.kt:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        val o1: Any = InnerApi()\n"
+                                + "                      ~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testUpdatedDescriptions() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=78495
         // Without this fix, the required API level for getString would be 21 instead of 12
@@ -3765,20 +3807,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                 + "        System.out.println(R.string.string2);\n"
                                                 + "    }\n"
                                                 + "}\n"),
-                                java(
-                                        ""
-                                                + "package foo.main;\n"
-                                                + "public class R {\n"
-                                                + "    public static class color {\n"
-                                                // "Wrong casing for 'my_color'" presubmit warning
-                                                // is incorrect here: b/176242084
-                                                + "        public static final int my_color = 0x7f070031;\n"
-                                                + "    }\n"
-                                                + "    public static class string {\n"
-                                                + "        public static final int string2 = 0x7f070032;\n"
-                                                + "    }\n"
-                                                + "}\n"
-                                                + ""),
+                                rClass("foo.main", "@color/my_color", "@string/string2"),
                                 java(
                                         ""
                                                 + "package test.pkg;\n"
@@ -3822,15 +3851,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        System.out.println(R.string.string1);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        java(
-                                ""
-                                        + "package foo.library;\n"
-                                        + "public class R {\n"
-                                        + "    public static class string {\n"
-                                        + "        public static final int string1 = 0x7f070033;\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + ""),
+                        rClass("foo.library", "@string/string1"),
                         xml(
                                 "res/values/strings.xml",
                                 ""
@@ -5637,8 +5658,23 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "                    Log.i(\"tag\", it.toString())\n"
                                         + "                }\n"
                                         + "    }\n"
-                                        + "}"))
-                .allowCompilationErrors() // missing symbols for the realm example
+                                        + "}"),
+                        kotlin(
+                                ""
+                                        + "package io.realm\n"
+                                        + "class Realm\n"
+                                        + "class RealmModel\n"
+                                        + "class RealmQuery {\n"
+                                        + "    fun findAll(): List<Number> {\n"
+                                        + "        return emptyList()\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package io.realm.kotlin\n"
+                                        + "import io.realm.Realm\n"
+                                        + "import io.realm.RealmQuery\n"
+                                        + "fun <T> Realm.where(): RealmQuery = TODO()\n"))
                 .run()
                 .expectClean();
     }
@@ -5859,14 +5895,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                         + "}\n"),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class color {\n"
-                                        + "        public static final int primary_text_default_material_light = 0x7f070031;\n"
-                                        + "    }\n"
-                                        + "}\n"))
+                        rClass("test.pkg", "@color/primary_text_default_material_light"))
                 .run()
                 .expect(
                         ""
@@ -7231,12 +7260,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "@RequiresApi(31)\n"
                                         + "operator fun Point.minus(other: Point): Point {\n"
                                         + "    return Point(x + other.x, y + other.y)\n"
-                                        + "}\n"
-                                // TODO: Plain arrays (make sure no resolve)
-                                // TODO: Get and set methods with the wrong signatures - as well as
-                                // mixed in any order with one that has both
-                                //    Especially one with the wrong value parameter type
-                                ),
+                                        + "}\n"),
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -7262,7 +7286,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    @RequiresApi(30) // Wrong signature\n"
+                                        + "    @RequiresApi(30)\n"
                                         + "    public void set(long key, E value) {\n"
                                         + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
@@ -7300,7 +7324,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Point.kt:10: Error: Call requires API level S (current min is 21): get [NewApi]\n"
                                 + "    val y = array[1] // ERROR\n"
                                 + "            ~~~~~~~~\n"
-                                + "src/test/pkg/Point.kt:11: Error: Call requires API level S (current min is 21): set [NewApi]\n"
+                                + "src/test/pkg/Point.kt:11: Error: Call requires API level 30 (current min is 21): set [NewApi]\n"
                                 + "    array[1L] = \"three\" // ERROR\n"
                                 + "    ~~~~~~~~~\n"
                                 + "src/test/pkg/Point.kt:16: Error: Call requires API level S (current min is 21): set [NewApi]\n"

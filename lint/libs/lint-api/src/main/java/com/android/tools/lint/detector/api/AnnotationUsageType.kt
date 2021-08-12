@@ -26,6 +26,12 @@ enum class AnnotationUsageType {
     METHOD_CALL_CLASS,
 
     /**
+     * A reference to a member in a class where an outer class was
+     * annotated.
+     */
+    METHOD_CALL_OUTER_CLASS,
+
+    /**
      * A reference to a member in a package where the package was
      * annotated.
      */
@@ -42,6 +48,12 @@ enum class AnnotationUsageType {
      * method was annotated.
      */
     METHOD_REFERENCE,
+
+    /**
+     * A class reference (such as Foo:class or as another example a
+     * cast) where the corresponding class was annotated.
+     */
+    CLASS_REFERENCE,
 
     /**
      * An argument to an annotation where the annotation parameter has
@@ -84,5 +96,23 @@ enum class AnnotationUsageType {
     EXTENDS,
 
     /** An annotated field is referenced. */
-    FIELD_REFERENCE;
+    FIELD_REFERENCE,
+
+    /**
+     * An annotated field is referenced where the class containing the
+     * field is annotated.
+     */
+    FIELD_REFERENCE_CLASS,
+
+    /**
+     * An annotated field is referenced where an outer class of the
+     * class containing the field is annotated.
+     */
+    FIELD_REFERENCE_OUTER_CLASS,
+
+    /**
+     * An annotated field is referenced where the package containing the
+     * field is annotated.
+     */
+    FIELD_REFERENCE_PACKAGE;
 }

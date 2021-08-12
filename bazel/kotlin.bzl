@@ -53,7 +53,8 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre, transitive_classpat
     args.add("-module-name", name)
     args.add("-nowarn")  # Mirrors the default javac opts.
     args.add("-jvm-target", "1.8")
-    args.add("-api-version", "1.3")  # b/166582569
+    args.add("-api-version", "1.4")
+    args.add("-language-version", "1.4")
     args.add("-Xjvm-default=enable")
     args.add("-no-stdlib")
 
@@ -230,12 +231,14 @@ def _kotlin_library_impl(ctx):
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
 
     deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.bundled_deps + ctx.attr.exports]
+    java_info_deps = [dep[JavaInfo] for dep in ctx.attr.deps]
 
     # Kotlin
     jars = []
     kotlin_providers = []
     if kotlin_srcs:
         deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
+        java_info_deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -294,14 +297,14 @@ def _kotlin_library_impl(ctx):
     providers = [JavaInfo(
         output_jar = ctx.outputs.jar,
         compile_jar = ijar,
-        deps = deps,
-        runtime_deps = deps,
+        deps = java_info_deps,
+        runtime_deps = java_info_deps,
     )]
     providers += [dep[JavaInfo] for dep in ctx.attr.exports]
 
     transitive_runfiles = depset(transitive = [
         dep[DefaultInfo].default_runfiles.files
-        for dep in ctx.attr.deps + ctx.attr.bundled_deps
+        for dep in ctx.attr.deps
         if dep[DefaultInfo].default_runfiles
     ])
     runfiles = ctx.runfiles(files = ctx.files.data, transitive_files = transitive_runfiles)

@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.AbstractCheckTest.SUPPORT_ANNOTATIONS_JAR;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.TestFile;
@@ -379,16 +380,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                                         + "    android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\"\n"
                                         + "    android:orientation=\"vertical\" />\n"),
-                        java(
-                                ""
-                                        + ""
-                                        + "package test.pkg;\n"
-                                        + "public class R {\n"
-                                        + "    public static class layout {\n"
-                                        + "        public static final int the_layout=0x7f050000;\n"
-                                        + "        public static final int title=0x7f050001;\n"
-                                        + "    }\n"
-                                        + "}"),
+                        rClass("test.pkg", "@layout/the_layout", "@layout/title"),
                         SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();

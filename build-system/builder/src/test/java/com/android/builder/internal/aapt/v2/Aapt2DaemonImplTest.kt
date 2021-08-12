@@ -442,7 +442,7 @@ class Aapt2DaemonImplTest {
             AndroidSdkHandler.getInstance(AndroidLocationsSingleton, TestUtils.getSdk())
                 .getAndroidTargetManager(FakeProgressIndicator())
                 .getTargets(FakeProgressIndicator())
-                .maxBy { it.version }!!
+                .maxByOrNull { it.version }!!
         }
 
         val BINARY_XML_CONTENT = listOf(

@@ -64,12 +64,9 @@ class AdditionalTestOutputUtilsTest {
     fun findAdditionalTestOutputDirectoryOnDeviceWithApi15() {
         `when`(device.apiLevel).thenReturn(15)
 
-        val exception = assertThrows(IllegalStateException::class.java) {
-            findAdditionalTestOutputDirectoryOnDevice(device, testData)
-        }
+        val dir = findAdditionalTestOutputDirectoryOnDevice(device, testData)
 
-        assertThat(exception.message).contains(
-            "additionalTestOutput is not supported on devices running API level < 16")
+        assertThat(dir).isNull()
     }
 
     @Test

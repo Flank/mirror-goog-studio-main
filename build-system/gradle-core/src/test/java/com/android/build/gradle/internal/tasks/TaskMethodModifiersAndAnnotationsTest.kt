@@ -115,7 +115,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportType",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setWillRun",
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
-                "com.android.build.gradle.internal.tasks.DependencyReportTask::setTestComponents",
+                "com.android.build.gradle.internal.tasks.DependencyReportTask::setNestedComponents",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setSerialOption",

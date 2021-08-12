@@ -27,8 +27,11 @@ import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +42,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -62,6 +67,8 @@ import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -108,17 +115,22 @@ public class LocalMavenRepositoryGenerator {
     /** Whether to fetch dependencies from remote repositories. */
     private final boolean fetch;
 
+    /** Whether to resolve versions and generate java_library like rules. */
+    private final boolean resolve;
+
     @VisibleForTesting
     public LocalMavenRepositoryGenerator(
             Path repoPath,
             String outputBuildFile,
             List<String> coords,
+            boolean resolve,
             boolean fetch,
             boolean verbose) {
         this.coords = coords;
         this.outputBuildFile = outputBuildFile;
         this.repoPath = repoPath.toAbsolutePath();
         this.verbose = verbose;
+        this.resolve = resolve;
         this.fetch = fetch;
 
         // This is where the artifacts will be downloaded from. We make it point to our own local
@@ -136,33 +148,73 @@ public class LocalMavenRepositoryGenerator {
     }
 
     public void run() throws Exception {
-        ResolutionResult result = new ResolutionResult();
-
-        // Compute dependency graph with version resolution and with conflict resolution.
-        List<DependencyNode> resolvedNodes =
-                collectNodes(repo.resolveDependencies(coords, true));
-
-        // Add the nodes in the conflict-resolved graph into the |dependencies| section of |result|.
-        for (DependencyNode node : resolvedNodes) {
-            processNode(node, false, result);
+        // Before triggering downloads, we must make sure there are no stale cache files
+        // After doing repo sync, the -prebuilts files might still be fresh enough to be used
+        // but different from the real metadata file.
+        try (Stream<Path> files = Files.walk(this.repoPath, FileVisitOption.FOLLOW_LINKS)) {
+            files.filter(path -> path.getFileName().toString().equals("maven-metadata-prebuilts.xml"))
+                 .map(Path::toFile)
+                 .forEach(File::delete);
         }
+
+        ResolutionResult result = new ResolutionResult();
 
         // Compute dependency graph with version resolution, but without conflict resolution.
         List<DependencyNode> unresolvedNodes =
                 collectNodes(repo.resolveDependencies(coords, false));
 
-        // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved graph
-        // into the |conflictLosers| section of |result|.
-        Set<String> resolvedNodeCoords =
-                resolvedNodes.stream()
-                        .map(d -> d.getArtifact().toString())
-                        .collect(Collectors.toSet());
-        Set<DependencyNode> conflictLoserNodes =
-                unresolvedNodes.stream()
-                        .filter(d -> !resolvedNodeCoords.contains(d.getArtifact().toString()))
-                        .collect(Collectors.toSet());
-        for (DependencyNode node : conflictLoserNodes) {
-            processNode(node, true, result);
+        if (resolve) {
+            // Compute dependency graph with version resolution and with conflict resolution.
+            List<DependencyNode> resolvedNodes =
+                    collectNodes(repo.resolveDependencies(coords, true));
+
+            // Add the nodes in the conflict-resolved graph into the |dependencies| section of
+            // |result|.
+            for (DependencyNode node : resolvedNodes) {
+                processNode(node, false, result);
+            }
+
+            // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved
+            // graph
+            // into the |conflictLosers| section of |result|.
+            Set<String> resolvedNodeCoords =
+                    resolvedNodes.stream()
+                            .map(d -> d.getArtifact().toString())
+                            .collect(Collectors.toSet());
+            Set<DependencyNode> conflictLoserNodes =
+                    unresolvedNodes.stream()
+                            .filter(d -> !resolvedNodeCoords.contains(d.getArtifact().toString()))
+                            .collect(Collectors.toSet());
+            for (DependencyNode node : conflictLoserNodes) {
+                processNode(node, true, result);
+            }
+        } else {
+            for (DependencyNode node : unresolvedNodes) {
+                processNode(node, true, result);
+            }
+        }
+
+        // "Fetch" the metadata from the locally downloaded files
+        if (this.fetch) {
+            for (DependencyNode node : unresolvedNodes) {
+                Artifact artifact = node.getArtifact();
+                DefaultMetadata metadata = new DefaultMetadata(artifact.getGroupId(),
+                        artifact.getArtifactId(),
+                        "maven-metadata.xml",
+                        Metadata.Nature.RELEASE_OR_SNAPSHOT);
+
+                for (RemoteRepository repository : AetherUtils.REPOSITORIES) {
+                    String path = repo.session.getLocalRepositoryManager()
+                            .getPathForRemoteMetadata(metadata, repository, "");
+                    File source = new File(repo.session.getLocalRepository().getBasedir(), path);
+                    if (source.exists()) {
+                        File target = new File(source.getParentFile(), "maven-metadata.xml");
+                        Files.copy(source.toPath(), target.toPath(),
+                                StandardCopyOption.REPLACE_EXISTING);
+                        break;
+                    }
+                }
+            }
         }
 
         // Add the transitive parents of all nodes in the conflict-unresolved graph into the
@@ -334,7 +386,7 @@ public class LocalMavenRepositoryGenerator {
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),
                             repoPath.relativize(model.getPomFile().toPath()).toString(),
-                            null,
+                            parentCoord,
                             null,
                             node.getChildren().stream()
                                     .map(d -> d.getArtifact().toString())
@@ -371,6 +423,7 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
+        boolean resolve = true;
         boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
@@ -401,6 +454,10 @@ public class LocalMavenRepositoryGenerator {
                 fetch = true;
                 continue;
             }
+            if (arg.equals("--noresolve")) {
+                resolve = false;
+                continue;
+            }
 
             // All other arguments are coords.
             coords.add(args[i]);
@@ -415,7 +472,8 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
-        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, fetch, verbose).run();
+        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, verbose)
+                .run();
     }
 
     /**

@@ -320,6 +320,36 @@ class ParenthesisTestModeTest {
     }
 
     @Test
+    fun testSkipCase() {
+        @Language("kotlin")
+        val kotlin = """
+            @file:Suppress("ALL")
+            package test.pkg
+            fun testWhen(sdk: Int) {
+                when (sdk) {
+                    in 1..15 -> { return }
+                }
+                loop@ for (i in 1..100) { }
+            }
+        """.trimIndent().trim()
+
+        @Language("kotlin")
+        val expected = """
+            @file:Suppress("ALL")
+            package test.pkg
+            fun testWhen(sdk: Int) {
+                when (sdk) {
+                    in (1..15) -> { return }
+                }
+                loop@ for (i in (1..100)) { }
+            }
+        """.trimIndent().trim()
+
+        val parenthesized = parenthesizeKotlin(kotlin)
+        assertEquals(expected, parenthesized)
+    }
+
+    @Test
     fun testArrays() {
         @Language("java")
         val java = """

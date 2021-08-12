@@ -20,6 +20,6 @@ java_test(
     test_class = "EmulatorTest",
     deps = [
         "//tools/base/bazel/avd:emulator_rule",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )

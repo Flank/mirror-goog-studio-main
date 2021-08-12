@@ -92,9 +92,9 @@ kotlin_test(
         ":tools.fixtures",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
 )
 
@@ -127,7 +127,7 @@ kotlin_library(
     deps = [
         ":tools.common",
         "//tools/base/annotations",
-        "//tools/base/third_party:com.google.guava_guava",
+        "@maven//:com.google.guava.guava",
     ],
 )
 

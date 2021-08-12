@@ -116,6 +116,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
                                 }
                                 firstInDir = false
                             }
+                            currentClassFile = name
                             jar.getInputStream(entry).use { stream ->
                                 val bytes = ByteStreams.toByteArray(stream)
                                 val reader = ClassReader(bytes)
@@ -164,6 +165,11 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
         return sb.toString()
     }
 
+    /** Returns the class file containing the invalid reference. */
+    fun getReferenceClassFile(): String {
+        return incompatibleReferencer!! // should only be called if incompatibleReference is non null
+    }
+
     fun describeFirstPackagedDependency(): String =
         packageConflict?.replace('/', '.')?.removeSuffix(".") ?: "None"
 
@@ -175,6 +181,12 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
 
     /** The internal name of the invalid reference. */
     private var incompatibleReference: String? = null
+
+    /**
+     * The class file containing the reference to
+     * [incompatibleReference]
+     */
+    private var incompatibleReferencer: String? = null
 
     /** The first conflicting package found */
     private var packageConflict: String? = null
@@ -209,6 +221,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
                 getClass(internal)
             } catch (e: Throwable) {
                 incompatibleReference = internal
+                incompatibleReferencer = currentClassFile
             }
         }
     }
@@ -218,6 +231,9 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
      */
     var apiCount = 0
         private set
+
+    /** Current class file being visited */
+    private var currentClassFile: String? = null
 
     /**
      * Checks that the method for the given containing class [owner]
@@ -233,6 +249,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
                 getMethod(owner, name, descriptor)
             } catch (e: Throwable) {
                 incompatibleReference = "$owner#$name$descriptor"
+                incompatibleReferencer = currentClassFile
             }
         }
     }
@@ -251,6 +268,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM7) {
                 getField(owner, name)
             } catch (e: Throwable) {
                 incompatibleReference = "$owner#$name"
+                incompatibleReferencer = currentClassFile
             }
         }
     }

@@ -43,21 +43,20 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("prefabApp")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     @Rule
     @JvmField
     val prefabNoDepsProject = GradleTestProject.builder().fromTestProject("prefabNoDeps")
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .create()
 
     companion object {
         @Parameterized.Parameters(name = "build system = {0}, cmake = {1}")
         @JvmStatic
         fun data() = listOf(
-                arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
-                arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
-                arrayOf(NativeBuildSystem.NDK_BUILD, "N/A"),
                 arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
                 arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
                 arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")

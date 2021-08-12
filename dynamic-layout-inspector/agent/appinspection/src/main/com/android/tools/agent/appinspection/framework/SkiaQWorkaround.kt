@@ -61,7 +61,7 @@ object SkiaQWorkaround {
         executor: Executor,
         callback: Callable<OutputStream?>,
         shouldSerialize: () -> Boolean
-    ): AutoCloseable? {
+    ): AutoCloseable {
         VMDebug.allowHiddenApiReflectionFrom(SkiaQWorkaround::class.java)
         val attachInfo = getFieldValue(tree, "mAttachInfo")
             ?: throw IllegalArgumentException("Given view isn't attached")
@@ -70,7 +70,9 @@ object SkiaQWorkaround {
             ("Called on the wrong thread."
                     + " Must be called on the thread that owns the given View")
         }
-        val renderer = getFieldValue(attachInfo, "mThreadedRenderer") ?: return null
+        val renderer =
+            getFieldValue(attachInfo, "mThreadedRenderer")
+                ?: throw IllegalStateException("Unable to get ThreadedRenderer")
         val streamingPictureCallbackHandler = StreamingPictureCallbackHelper.createCallback(
             renderer, callback, executor, shouldSerialize)
         VMDebug.allowHiddenApiReflectionFrom(streamingPictureCallbackHandler.javaClass)

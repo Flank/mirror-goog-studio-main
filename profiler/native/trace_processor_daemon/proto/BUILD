@@ -14,6 +14,6 @@ java_proto_library(
     name = "java_proto",
     srcs = glob(["**/*.proto"]),
     grpc_support = 1,
-    java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
+    java_deps = ["@maven//:io.grpc.grpc-all"],
     protoc_grpc_version = "1.21.1",
 )

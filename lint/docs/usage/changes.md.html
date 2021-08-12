@@ -57,6 +57,8 @@ lint check authors, see the API Guide.
   target name will not change based on whether the project has product
   flavors, so you can start just running `./gradlew:app:lint` instead
   of `./gradlew :app:lintDebug` or `:app:lintProDebug` etc.
+  Furthermore, the `lintOptions` block is now just named `lint`
+  instead.
 
 * Lint “partial analysis” mode is now integrated in lint. It is
   enabled by default, but you can disable it by modifying

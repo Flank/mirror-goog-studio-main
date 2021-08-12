@@ -44,6 +44,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getParentOfType
@@ -251,16 +252,19 @@ class AssertDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isWithinAssertionStatusCheck(node: UExpression): Boolean {
-        var curr = node
+        var curr = node.uastParent ?: return false
         while (true) {
-            val ifStatement = curr.getParentOfType<UIfExpression>(true) ?: break
-            // This is inefficient, but works around current resolve bug on javaClass access
-            if (ifStatement.condition.sourcePsi?.text?.contains("desiredAssertionStatus") == true) {
+            if (curr is UIfExpression && isAssertionStatusCheck(curr.condition) ||
+                curr is USwitchClauseExpressionWithBody && curr.caseValues.all(::isAssertionStatusCheck)
+            ) {
                 return true
             }
-            curr = ifStatement
+            curr = curr.uastParent ?: return false
         }
+    }
 
-        return false
+    private fun isAssertionStatusCheck(condition: UExpression): Boolean {
+        // This is inefficient, but works around current resolve bug on javaClass access
+        return condition.sourcePsi?.text?.contains("desiredAssertionStatus") == true
     }
 }

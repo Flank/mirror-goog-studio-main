@@ -82,7 +82,6 @@ setlocal
   --max_idle_secs=60 ^
   %BAZELRC_FLAGS% ^
   test ^
-  --keep_going ^
   --config=dynamic ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^

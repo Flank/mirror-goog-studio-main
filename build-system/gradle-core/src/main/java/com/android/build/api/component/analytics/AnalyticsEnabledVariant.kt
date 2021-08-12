@@ -19,6 +19,7 @@ package com.android.build.api.component.analytics
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
@@ -166,5 +167,12 @@ abstract class AnalyticsEnabledVariant (
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.VARIANT_PROPERTIES_VALUE
             return delegate.experimentalProperties
+        }
+
+    override val nestedComponents: List<Component>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.NESTED_COMPONENTS_VALUE
+            return delegate.nestedComponents
         }
 }

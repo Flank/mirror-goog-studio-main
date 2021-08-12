@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.detector.api.Detector
 
 class ResourceTypeDetectorTest : AbstractCheckTest() {
@@ -110,17 +111,7 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
                 }
                 """
             ).indented(),
-            java(
-                """
-                public class R {
-                    public static class color {
-                        public static final int red=0x7f060000;
-                        public static final int green=0x7f060001;
-                        public static final int blue=0x7f060002;
-                    }
-                }
-                """
-            ).indented(),
+            rClass("test.pkg", "@color/red", "@color/green", "@color/blue"),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -1679,22 +1670,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
         // 78283842: False positive lint errors when calling Kotlin extension method from Java
         //    with Android resource annotations on parameters
         lint().files(
-            java(
-                """
-                package test.pkg;
-
-                @SuppressWarnings({"ClassNameDiffersFromFileName"})
-                public class R {
-                    @SuppressWarnings("FieldNamingConvention")
-                    public static final class drawable {
-                      public static int some_img=0x7f020000;
-                    }
-                    public static final class string {
-                      public static int some_string=0x7f020001;
-                    }
-                }
-                """
-            ).indented(),
+            rClass("test.pkg", "@drawable/some_img", "@string/some_string"),
             java(
                 """
                 package test.pkg;

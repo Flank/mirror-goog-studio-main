@@ -723,6 +723,12 @@ public class TestFile {
 
             return mocker;
         }
+
+        @Override
+        public GradleTestFile indented() {
+            super.indented();
+            return this;
+        }
     }
 
     public static class PropertyTestFile extends TestFile {

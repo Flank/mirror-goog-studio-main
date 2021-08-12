@@ -38,7 +38,19 @@ coverage_java_test(
     deps = [
         ":tools.binary-resources",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
+)
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "binary-resources/src/main/**/*.java",
+    ]) + [
+        "binary-resources/build.gradle",
+        "binary-resources/NOTICE",
+        "binary-resources/LICENSE",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
 )

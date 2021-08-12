@@ -31,7 +31,7 @@ java_library(
     deps = [
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -52,7 +52,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -72,7 +72,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -100,7 +100,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -119,7 +119,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -138,7 +138,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -158,7 +158,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -173,7 +173,7 @@ java_test(
     deps = [
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -189,7 +189,7 @@ java_test(
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:junit_junit",
+        "@maven//:junit.junit",
     ],
 )
 

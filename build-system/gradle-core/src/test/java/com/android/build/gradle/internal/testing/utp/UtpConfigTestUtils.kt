@@ -55,6 +55,7 @@ fun assertRunnerConfigProto(
     useGradleManagedDeviceProvider: Boolean = false,
     testCoverageConfig: String = "",
     additionalTestOutputConfig: String = "",
+    shardingConfig: String = ""
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
         label {
@@ -164,6 +165,15 @@ fun assertRunnerConfigProto(
           }
         }
         """
+    } else {
+        ""
+    }
+
+    val shardingConfigProto = if (shardingConfig.isNotBlank()) { """
+        sharding_config {
+          ${"\n" + shardingConfig.trimIndent().prependIndent(" ".repeat(10))}
+        }
+    """
     } else {
         ""
     }
@@ -347,6 +357,7 @@ fun assertRunnerConfigProto(
               id: "AGP_Test_Fixture"
             }
           }
+          ${"\n" + shardingConfigProto.trimIndent().prependIndent(" ".repeat(10))}
         }
         """.trimIndent().lines().filter(String::isNotBlank).joinToString("\n"))
 }

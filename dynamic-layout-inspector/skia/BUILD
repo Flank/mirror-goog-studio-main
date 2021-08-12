@@ -27,8 +27,8 @@ kotlin_test(
         "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common",
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_java_proto",
         "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
 )
 

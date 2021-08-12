@@ -251,7 +251,7 @@ class PrecompileRemoteResourcesTest {
 
         ZFile.openReadOnly(compressed).use {
             assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
-                DummyContent.TINY_BINARY_XML
+                DummyContent.TINY_PROTO_CONVERTED_TO_BINARY_XML
             )
             assertThat(it.get("res/drawable-anydpi-v26/button.xml")!!.read()).isNotEqualTo(
                 DummyContent.TINY_BINARY_XML

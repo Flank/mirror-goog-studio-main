@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.2.0-dev">
+<issues format="5" by="lint 7.1.0-dev">
 
     <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
-            line="291"/>
+            line="292"/>
     </issue>
 
     <issue
@@ -14,7 +14,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
-            line="307"/>
+            line="308"/>
     </issue>
 
     <issue
@@ -22,7 +22,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
-            line="342"/>
+            line="343"/>
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PostValidator.java"
-            line="358"/>
+            line="359"/>
     </issue>
 
     <issue
@@ -38,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
-            line="273"/>
+            line="274"/>
     </issue>
 
     <issue
@@ -46,7 +46,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/PreValidator.java"
-            line="289"/>
+            line="290"/>
     </issue>
 
     <issue
@@ -54,7 +54,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
-            line="764"/>
+            line="803"/>
     </issue>
 
     <issue
@@ -62,7 +62,23 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="manifest-merger/src/main/java/com/android/manifmerger/XmlElement.java"
-            line="778"/>
+            line="817"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavigationXmlDocument.kt"
+            line="124"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="manifest-merger/src/main/java/com/android/manifmerger/NavigationXmlDocument.kt"
+            line="140"/>
     </issue>
 
 </issues>

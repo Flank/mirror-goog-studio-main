@@ -17,10 +17,10 @@ package com.android.tools.deploy.liveedit;
 
 import static org.jetbrains.eval4j.InterpreterLoopKt.interpreterLoop;
 
+import com.android.tools.deploy.interpreter.ObjectValue;
+import com.android.tools.deploy.interpreter.Value;
 import org.jetbrains.eval4j.InterpretationEventHandler;
 import org.jetbrains.eval4j.InterpreterResult;
-import org.jetbrains.eval4j.ObjectValue;
-import org.jetbrains.eval4j.Value;
 import org.jetbrains.eval4j.ValueReturned;
 import org.jetbrains.org.objectweb.asm.Opcodes;
 import org.jetbrains.org.objectweb.asm.Type;

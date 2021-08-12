@@ -429,7 +429,11 @@ open class JavaContext(
         return psi != null && isSuppressedWithComment(psi, issue)
     }
 
-    @Deprecated("Use UastFacade instead", ReplaceWith("org.jetbrains.uast.UastFacade"))
+    @Deprecated(
+        "Use UastFacade instead",
+        ReplaceWith("org.jetbrains.uast.UastFacade"),
+        DeprecationLevel.HIDDEN
+    )
     val uastContext: UastContext
         get() = uastFile?.getUastContext()!!
 

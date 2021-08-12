@@ -52,10 +52,9 @@ internal class DynamicFeatureTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-            variantInfo: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>,
-            allVariants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
+            variantInfo: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
     ) {
-        createCommonTasks(variantInfo, allVariants)
+        createCommonTasks(variantInfo)
 
         val variant = variantInfo.variant
 

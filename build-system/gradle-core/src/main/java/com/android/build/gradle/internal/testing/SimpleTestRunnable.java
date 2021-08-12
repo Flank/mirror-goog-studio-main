@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing;
 
+import static com.android.build.gradle.internal.testing.utp.AdditionalTestOutputUtilsKt.ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL;
 import static com.android.build.gradle.internal.testing.utp.AdditionalTestOutputUtilsKt.findAdditionalTestOutputDirectoryOnDevice;
 import static com.android.ddmlib.DdmPreferences.getTimeOut;
 
@@ -241,7 +242,8 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 runner.addInstrumentationArg(argument.getKey(), argument.getValue());
             }
 
-            if (additionalTestOutputEnabled && device.getApiLevel() >= 16) {
+            if (additionalTestOutputEnabled
+                    && device.getApiLevel() >= ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL) {
                 additionalTestOutputDir =
                         findAdditionalTestOutputDirectoryOnDevice(device, testData);
 

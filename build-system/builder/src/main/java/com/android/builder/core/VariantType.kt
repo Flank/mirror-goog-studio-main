@@ -62,6 +62,12 @@ interface VariantType {
     val publishToOtherModules: Boolean
 
     /**
+     * Returns true if this is a nested component in the module (either a test component or
+     * a testFixtures component).
+     */
+    val isNestedComponent: Boolean
+
+    /**
      * Returns true if this is the test component of the module.
      */
     val isTestComponent: Boolean
@@ -255,4 +261,7 @@ enum class VariantTypeImpl(
 
     override val requiresManifest: Boolean
         get() = !isForTesting && !isTestFixturesComponent
+
+    override val isNestedComponent: Boolean
+        get() = isTestComponent || isTestFixturesComponent
 }

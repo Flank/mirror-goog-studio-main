@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.detector.api.Detector
 
 class RemoteViewDetectorTest : AbstractCheckTest() {
@@ -63,16 +64,7 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
                     </merge>
                     """
                 ).indented(),
-                java(
-                    """
-                    package test.pkg;
-                    public class R {
-                        public static class layout {
-                            public static final int test = 0x7f070031;
-                        }
-                    }
-                    """
-                ).indented()
+                rClass("test.pkg", "@layout/test")
             ).run().expect(
                 """
                 src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]

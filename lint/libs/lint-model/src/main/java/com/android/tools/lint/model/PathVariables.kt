@@ -218,8 +218,8 @@ class PathVariables {
          * a semi-colon separated list of name=path pairs, such
          * as HOME=/Users/demo;GRADLE_USER=/Users/demo/.gradle;
          *
-         * If the string contains multiple pairs with the same
-         * name, the first pair takes precedence.
+         * If the string contains multiple pairs with the same name, the
+         * first pair takes precedence.
          */
         fun parse(s: String): PathVariables {
             val variables = PathVariables()
@@ -253,7 +253,7 @@ class PathVariables {
                 name.asSequence().any { !it.isJavaIdentifierPart() } ->
                     error(
                         "Invalid path variable name $name. Contains illegal character \"" +
-                                "${name.asSequence().first { !it.isJavaIdentifierPart() }}\"."
+                            "${name.asSequence().first { !it.isJavaIdentifierPart() }}\"."
                     )
             }
         }

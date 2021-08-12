@@ -40,13 +40,6 @@ It is by design that Zipflinger throws an exception when attempting to overwrite
 By asking developer to aknowledge an overwrite by first deleting an entry, this mecanism has allowed to
 surface many bugs.
 
-Load entries in memory:
-=======================
-Zipflinger loads entries in memory before adding them to an archive (unless the entry is coming from an
-other archive in which case a zero-copy transfer occurs). This design choice is a trade-off which
-increase speed (by allowing multithreaded-compression) and simplify the overall architecture at the
-cost of not supporting files bigger than 2GiB.  
-
 ## ZipArchive
 ZipArchive is the interface to create/read/write an archive. Typically an user will provide the path
 to an archive and request operations such as add/delete.
@@ -195,15 +188,15 @@ Once the target has run, retrieve the report from the workstation tmp folder. e.
 ```
 cp /tmp/report.json ~/
 ```
-You can examine the report in Chrome via about://tracing. 
+You can examine the report in Chrome via about://tracing.
 
 Edit time (ms) on a 3Ghz machine with a PM981 NVMe drive.
 
 ```
-APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)          
+APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)
  120 MiB      5000       16 KiB         10            4 MiB          27
   60 MiB      2500       16 KiB         10            4 MiB          18
   49 MiB      2500        4 KiB         10            4 MiB          18
 ```
-  
-The edit time is dominated by the parsing time (itself dominated by the number of entries).  
+
+The edit time is dominated by the parsing time (itself dominated by the number of entries).
