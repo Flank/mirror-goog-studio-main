@@ -730,6 +730,7 @@ coverage_report(
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+        "//tools/adt/idea/device-explorer:intellij.android.device-explorer.tests_tests",
         "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
         "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
