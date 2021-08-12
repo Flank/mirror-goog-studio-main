@@ -32,7 +32,7 @@ fun getWindowsShortNameFile(file: File): File {
     if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS) {
         return file
     }
-    val process = Runtime.getRuntime().exec("cmd /c for %I in (\"$file\") do @echo %~fsI")
+    val process = Runtime.getRuntime().exec("cmd /c for %I in ( \"$file\" ) do @echo %~fsI")
     process.waitFor()
     val data = ByteArray(65536)
     val size = process.inputStream.read(data)
