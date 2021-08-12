@@ -117,8 +117,10 @@ import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
+import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -126,6 +128,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
@@ -694,6 +697,32 @@ internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
     val bindingContext = service.getBindingContext(ktElement)
     val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
     return resolvedCall.resultingDescriptor.toSource()
+}
+
+/**
+ * Workaround for UAST not returning the parameter types for delegated
+ * properties
+ */
+fun getKotlinDelegatePropertyType(sourcePsi: PsiElement?, element: UVariable): PsiType? {
+    val ktElement = sourcePsi as? KtElement ?: return null
+    val service = ServiceManager.getService(sourcePsi.project, KotlinUastResolveProviderService::class.java)
+        ?: return null
+    val bindingContext = service.getBindingContext(ktElement)
+
+    if (ktElement is KtProperty) {
+        val delegate = ktElement.delegate
+        if (delegate != null) {
+            val expression = delegate.expression
+            if (expression != null) {
+                val newType: KotlinType? = bindingContext.getType(expression)
+                if (newType != null) {
+                    return LintJavaUtils.getType(newType, element, ktElement, false)
+                }
+            }
+        }
+    }
+
+    return element.type
 }
 
 // See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt

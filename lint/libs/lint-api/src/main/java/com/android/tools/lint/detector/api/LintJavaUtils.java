@@ -16,6 +16,12 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.intellij.psi.PsiType;
+import org.jetbrains.kotlin.psi.KtElement;
+import org.jetbrains.kotlin.types.KotlinType;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt;
+
 // Class which contains some code which cannot be expressed in Kotlin;
 // not public since the public LintUtils methods will more directly expose them
 class LintJavaUtils {
@@ -25,5 +31,10 @@ class LintJavaUtils {
         boolean assertionsEnabled = false;
         assert assertionsEnabled = true; // Intentional side-effect
         return assertionsEnabled;
+    }
+
+    @SuppressWarnings("KotlinInternalInJava")
+    static PsiType getType(KotlinType type, UElement source, KtElement ktElement, boolean boxed) {
+        return KotlinInternalUastUtilsKt.toPsiType(type, source, ktElement, boxed);
     }
 }
