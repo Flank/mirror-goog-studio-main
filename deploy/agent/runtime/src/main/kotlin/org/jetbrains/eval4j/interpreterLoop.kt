@@ -6,6 +6,8 @@
 package org.jetbrains.eval4j
 
 import com.android.tools.deploy.interpreter.Eval
+import com.android.tools.deploy.interpreter.InterpretationEventHandler
+import com.android.tools.deploy.interpreter.InterpreterResult
 import com.android.tools.deploy.interpreter.LabelValue
 import com.android.tools.deploy.interpreter.ObjectValue
 import com.android.tools.deploy.interpreter.Value
@@ -17,10 +19,6 @@ import org.jetbrains.org.objectweb.asm.tree.*
 import org.jetbrains.org.objectweb.asm.tree.analysis.Frame
 import org.jetbrains.org.objectweb.asm.util.Printer
 import java.util.*
-
-interface InterpreterResult {
-    override fun toString(): String
-}
 
 class ExceptionThrown(val exception: ObjectValue, val kind: ExceptionKind) : InterpreterResult {
     override fun toString(): String = "Thrown $exception: $kind"
@@ -34,20 +32,6 @@ class ExceptionThrown(val exception: ObjectValue, val kind: ExceptionKind) : Int
 
 data class ValueReturned(val result: Value) : InterpreterResult {
     override fun toString(): String = "Returned $result"
-}
-
-interface InterpretationEventHandler {
-    object NONE : InterpretationEventHandler {
-        override fun instructionProcessed(insn: AbstractInsnNode): InterpreterResult? = null
-        override fun exceptionThrown(currentState: Frame<Value>, currentInsn: AbstractInsnNode, exception: Value): InterpreterResult? = null
-        override fun exceptionCaught(currentState: Frame<Value>, currentInsn: AbstractInsnNode, exception: Value): InterpreterResult? = null
-    }
-
-    // If a non-null value is returned, interpreter loop is terminated and that value is used as a result
-    fun instructionProcessed(insn: AbstractInsnNode): InterpreterResult?
-
-    fun exceptionThrown(currentState: Frame<Value>, currentInsn: AbstractInsnNode, exception: Value): InterpreterResult?
-    fun exceptionCaught(currentState: Frame<Value>, currentInsn: AbstractInsnNode, exception: Value): InterpreterResult?
 }
 
 abstract class ThrownFromEvalExceptionBase(cause: Throwable) : RuntimeException(cause) {
