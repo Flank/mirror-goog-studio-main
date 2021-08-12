@@ -1,7 +1,7 @@
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_import")
+load("//tools/base/bazel:maven.bzl", "maven_import")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
@@ -78,7 +78,7 @@ def app_inspection_aar_import(name, aar, **kwargs):
         tools = ["//tools/base/bazel:unzipper"],
         cmd = "$(location //tools/base/bazel:unzipper) $< classes.jar:$@",
     )
-    maven_java_import(
+    maven_import(
         name = name,
         jars = [unpacked_jar],
         **kwargs

@@ -116,6 +116,8 @@ local_maven_repository(
     resolve = True,
     # keep sorted: for buildifier
     artifacts = [
+        "androidx.annotation:annotation:1.1.0",
+        "androidx.inspection:inspection:aar:1.0.0",
         "com.android.tools.build:aapt2-proto:7.0.0-beta04-7396180",
         "com.android.tools.build:bundletool:1.8.0",
         "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09",

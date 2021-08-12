@@ -603,6 +603,16 @@ def maven_import(
         parent = None,
         classified_only = False,
         **kwargs):
+    if repo_root_path and repo_path:
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"])
+        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE"
+    elif repo_path:
+        files = native.glob([repo_path + "/**"])
+        notice = repo_path + "/NOTICE"
+    else:
+        files = []
+        notice = "NOTICE"
+
     _maven_import(
         name = name,
         visibility = visibility,
@@ -611,8 +621,8 @@ def maven_import(
         repo_path = repo_path,
         repo_root_path = repo_root_path,
         parent = parent,
-        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
-        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE",
+        files = files,
+        notice = notice,
         tags = ["require_license"],
         **kwargs
     )

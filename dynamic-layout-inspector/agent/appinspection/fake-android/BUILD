@@ -10,6 +10,6 @@ kotlin_library(
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "@maven//:androidx.annotation.annotation",
     ],
 )
