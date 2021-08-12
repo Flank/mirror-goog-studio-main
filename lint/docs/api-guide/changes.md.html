@@ -45,6 +45,14 @@ Guide.
   UArrayAccessExpression.resolveOperator extension method, which is
   also used by the above machinery.
 
+* The annotation support (where a detector callback is invoked when
+  elements are combined with annotated elements) now supports both
+  annotations from outer classes as well as field references where
+  annotations are coming from containing classes, outer classes and
+  packages. There are new usage type enum constants to distinguish
+  these, in case your check should not inherit annotations from outer
+  classes, does not apply to fields, and so on.
+
 * The lint testing library now contains a new test file type, `rClass`,
   which lets you easily construct Android `R` classes with resource
   declarations (which are needed in tests that reference the R fields

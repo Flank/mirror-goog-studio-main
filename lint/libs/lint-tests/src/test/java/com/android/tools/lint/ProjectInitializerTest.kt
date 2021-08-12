@@ -166,7 +166,7 @@ class ProjectInitializerTest {
             ).indented()
         ).name("App").dependsOn(library)
 
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         val configFile = File(root, "lint.xml")
         @Language("XML")
@@ -380,7 +380,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testManualProjectErrorHandling() {
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         @Language("XML")
         val descriptor =
@@ -434,7 +434,7 @@ class ProjectInitializerTest {
     @Test
     fun testManualProjectErrorHandlingWithoutSourceFiles() {
         // Regression test for https://issuetracker.google.com/180408027
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         @Language("XML")
         val descriptor =
@@ -477,7 +477,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testSimpleProject() {
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             java(
                 "src/test/pkg/InterfaceMethodTest.java",
@@ -581,7 +581,7 @@ class ProjectInitializerTest {
     @Test
     fun testPaths() {
         // Regression test for https://issuetracker.google.com/159169803
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             xml(
                 "layout/AndroidManifest.xml",
@@ -634,7 +634,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testGradleDetectorsFiring() { // Regression test for b/132992488
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             java(
                 "src/main/pkg/MainActivity.java",
@@ -723,7 +723,7 @@ class ProjectInitializerTest {
     fun testAar() {
         // Check for missing application icon and have that missing icon be supplied by
         // an AAR dependency and make its way into the merged manifest.
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             manifest(
                 """
@@ -843,7 +843,7 @@ class ProjectInitializerTest {
     fun testJar() {
         // Check for missing application icon and have that missing icon be supplied by
         // an AAR dependency and make its way into the merged manifest.
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             java(
                 "src/test/pkg/Child.java",
@@ -936,7 +936,7 @@ class ProjectInitializerTest {
     @Test
     fun testClasspathJar() {
         // Ensure that class path jars are properly included for type resolution
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         val projects = lint().files(
 
@@ -1005,7 +1005,7 @@ class ProjectInitializerTest {
     @Test
     fun testSrcJar() {
         // Checks that source files can be read from srcjar files as well
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             jar(
                 "src/my.srcjar",
@@ -1082,7 +1082,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testNonAndroidProject() {
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             java(
                 "C.java",
@@ -1128,7 +1128,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testJava8Libraries() {
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val projects = lint().files(
             java(
                 "C.java",
@@ -1202,7 +1202,7 @@ class ProjectInitializerTest {
     @Test
     fun testExternalAnnotations() {
         // Checks that external annotations support works
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         val projects = lint().projects(
             project(
@@ -1318,7 +1318,7 @@ class ProjectInitializerTest {
     fun testJava14() {
         // Tests Java language support for some recent features, such as
         // switch expressions
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         val projects = lint().projects(
             project(
@@ -1395,7 +1395,7 @@ class ProjectInitializerTest {
     fun testCrLf() {
         // Regression test for bug handling Windows line endings,
         // https://issuetracker.google.com/149490356
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
         val crlf = File(root, "app/src/main/java/ClassCRLF.java")
         crlf.parentFile.mkdirs()
         crlf.writeText(
@@ -1452,7 +1452,7 @@ class ProjectInitializerTest {
     fun testInvalidDescriptorFile() {
         // Make sure we give a suitable error message when you pass in a directory instead of
         // an XML file
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         MainTest.checkDriver(
             "",
@@ -1521,7 +1521,7 @@ class ProjectInitializerTest {
             ).indented()
         ).name("App").dependsOn(library)
 
-        val root = temp.newFolder()
+        val root = temp.newFolder().canonicalFile.absoluteFile
 
         val configFile = File(root, "foobar/lint.xml")
         @Language("XML")
