@@ -91,7 +91,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.2-rc-1"
+GRADLE_VERSION = "7.2-rc-3"
 
 filegroup(
     name = "gradle-distrib",
