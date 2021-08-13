@@ -19,6 +19,7 @@ package com.android.tools.binaries;
 import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.Source;
 import com.android.zipflinger.ZipArchive;
+import com.android.zipflinger.ZipMap;
 import com.android.zipflinger.ZipRepo;
 import com.android.zipflinger.ZipSource;
 import com.google.common.collect.LinkedListMultimap;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -71,21 +73,21 @@ public class ZipMerger {
                 override = true;
                 dataPath = dataPath.substring(1);
             }
-            adds.add(new ZipFile(root, Paths.get(dataPath), override));
+            adds.add(new ZipFile(root, ZipMap.from(Paths.get(dataPath)), override));
         }
         mergeZips(out, adds, true, level);
     }
 
     private static class ZipFile {
-        ZipFile(String root, Path file, boolean override) {
+        ZipFile(String root, ZipMap map, boolean override) {
             this.root = root;
-            this.file = file;
             this.override = override;
+            this.map = map;
         }
 
         final boolean override;
         final String root;
-        final Path file;
+        final ZipMap map;
     }
 
     private static class Entry {
@@ -119,22 +121,21 @@ public class ZipMerger {
 
         ListMultimap<String, Entry> entries = LinkedListMultimap.create();
         for (ZipFile add : files) {
-            try (ZipRepo zip = new ZipRepo(add.file)) {
-                for (String s : zip.getEntries().keySet()) {
-                    String newName = add.root + s;
-                    entries.put(newName, new Entry(add, s));
-                }
+            for (String s : add.map.getEntries().keySet()) {
+                String newName = add.root + s;
+                entries.put(newName, new Entry(add, s));
             }
         }
 
         // Merge
-        ListMultimap<ZipFile, String> merged = LinkedListMultimap.create();
+        // Zip sources are not pre-populated to allow interleaving of inner zips.
+        LinkedHashMap<ZipFile, ZipSource> zipSources = new LinkedHashMap<>();
         for (Map.Entry<String, Collection<Entry>> e : entries.asMap().entrySet()) {
             String newName = e.getKey();
             Collection<Entry> zips = e.getValue();
             if (zips.size() == 1) {
                 Entry next = zips.iterator().next();
-                merged.put(next.zip, next.entry);
+                select(zipSources, next, newName);
                 continue;
             }
             boolean isZip = newName.endsWith(".jar") || newName.endsWith(".zip");
@@ -153,20 +154,23 @@ public class ZipMerger {
                 Path tmp = File.createTempFile(new File(newName).getName(), ".mrg.tmp").toPath();
                 List<ZipFile> toMerge = new ArrayList<>();
                 for (Entry zip : zips) {
-                    Path part = extract(zip.zip.file, zip.entry);
-                    toMerge.add(new ZipFile("", part, zip.zip.override));
+                    ZipMap innerZipMap = extract(zip.zip.map, zip.entry);
+                    toMerge.add(new ZipFile("", innerZipMap, zip.zip.override));
                 }
                 mergeZips(tmp.toAbsolutePath().toString(), toMerge, false, compressionLevel);
-                tmp.toFile().deleteOnExit();
-
+                for (ZipFile zipFile : toMerge) {
+                    Files.delete(zipFile.map.getPath());
+                }
                 Path mergedZip = File.createTempFile("merged", ".zip").toPath();
                 createZip(mergedZip, tmp, newName, compressionLevel);
-                merged.put(new ZipFile("", mergedZip, false), newName);
+                Files.delete(tmp);
+                ZipFile zip = new ZipFile("", ZipMap.from(mergedZip), false);
+                select(zipSources, new Entry(zip, newName), newName);
                 mergedZip.toFile().deleteOnExit();
             } else if (newName.endsWith("/")) {
                 // Directory entries should not have content, just pick the first.
                 Entry chosen = zips.iterator().next();
-                merged.put(chosen.zip, chosen.entry);
+                select(zipSources, chosen, newName);
             } else {
                 // Merging files - Pick the one override, or fail.
                 Entry chosen = null;
@@ -182,18 +186,13 @@ public class ZipMerger {
                     throw new IllegalArgumentException(
                             "No entries for " + newName + ", have override set");
                 }
-                merged.put(chosen.zip, chosen.entry);
+                select(zipSources, chosen, newName);
             }
         }
 
         // Save
         try (ZipArchive zip = new ZipArchive(outFile)) {
-            for (Map.Entry<ZipFile, Collection<String>> e : merged.asMap().entrySet()) {
-                ZipFile src = e.getKey();
-                ZipSource zipsrc = new ZipSource(src.file);
-                for (String entry : e.getValue()) {
-                    zipsrc.select(entry, src.root + entry);
-                }
+            for (ZipSource zipsrc : zipSources.values()) {
                 if (ensureRW) {
                     for (Source source : zipsrc.getSelectedEntries()) {
                         if ((source.getVersionMadeBy() & 0xFF00) != Source.MADE_BY_UNIX) {
@@ -217,14 +216,18 @@ public class ZipMerger {
         }
     }
 
-    private static Path extract(Path file, String entry) throws IOException {
+    private static ZipMap extract(ZipMap map, String entry) throws IOException {
         Path o = File.createTempFile(new File(entry).getName(), ".tmp").toPath();
-        try (ZipRepo archive = new ZipRepo(file);
+        try (ZipRepo archive = new ZipRepo(map);
                 OutputStream fos = Files.newOutputStream(o)) {
             ByteStreams.copy(archive.getInputStream(entry), fos);
         }
-        o.toFile().deleteOnExit();
-        return o;
+        return ZipMap.from(o);
+    }
+
+    private static void select(Map<ZipFile, ZipSource> zipSources, Entry entry, String newName) {
+        ZipSource zipSource = zipSources.computeIfAbsent(entry.zip, zip -> new ZipSource(zip.map));
+        zipSource.select(entry.entry, newName);
     }
 
     private static void printUsage() {
