@@ -501,19 +501,13 @@ def maven_library(
         # Create legacy rules and make them point to the new rules.
         import_maven_library(legacy_name, name, notice = notice)
 
-    kotlins = [src for src in srcs if src.endswith(".kt")]
-    javas = [src for src in srcs if src.endswith(".java")]
-    source_jars = [src for src in srcs if src.endswith(".srcjar")]
-    final_javacopts = javacopts + ["--release", "8"]
     neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink") or dep.endswith("_neverlink_bzl")]
     bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
 
-    _kotlin_library(
+    kotlin_library(
         name = name + ".lib",
-        jar = name + ".jar",
-        java_srcs = javas,
-        kotlin_srcs = kotlins,
-        source_jars = source_jars,
+        jar_name = name + ".jar",
+        srcs = srcs,
         data = data,
         deps = deps + neverlink_deps,
         exports = exports,
@@ -521,8 +515,6 @@ def maven_library(
         friends = friends,
         notice = notice,
         module_name = module_name,
-        kotlin_use_ir = test_kotlin_use_ir(),
-        javacopts = final_javacopts if javas else None,
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
@@ -542,20 +534,3 @@ def maven_library(
         library = ":" + name + ".lib",
         **kwargs
     )
-
-    if lint_baseline:
-        # TODO: use srcs once the migration is completed
-        lint_srcs = javas + kotlins
-        if not lint_srcs:
-            fail("lint_baseline set for rule that has no sources")
-
-        lint_test(
-            name = name + "_lint_test",
-            srcs = lint_srcs,
-            baseline = lint_baseline,
-            deps = deps + bundled_deps + lint_classpath,
-            custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
-            tags = ["no_windows"],
-            is_test_sources = lint_is_test_sources,
-            timeout = lint_timeout if lint_timeout else None,
-        )
