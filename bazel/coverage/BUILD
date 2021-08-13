@@ -626,6 +626,26 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Device Manager" tool window
+coverage_report(
+    name = "device-manager",
+    srcpath_exclude = [
+        # "Groups" tab is currently disabled via a feature flag
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/groupstab",
+        # "CycleAction" is not used
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/CycleAction.kt",
+        # "Preconfigured virtual devices" tab is not enabled yet
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/PreconfiguredDisplayList.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/PreconfiguredDisplayListModel.kt",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -641,6 +661,7 @@ combine_report_definitions(
         "dagger-editing",
         "databinding",
         "designtools",
+        "device-manager",
         "dsl",
         "dynamic-layout-inspector",
         "emulator",
