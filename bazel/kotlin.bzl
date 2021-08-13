@@ -396,29 +396,32 @@ def _maven_library_impl(ctx):
         deps = pom_deps,
         exports = pom_exports,
     )
-    repo_files = [
-        (coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom),
-        (coordinates.repo_path + "/" + basename + ".jar", ctx.file.library),
-    ]
+
+    repo_files = [(coordinates.repo_path + "/" + n, f.files.to_list()[0]) for f, n in ctx.attr.files.items()]
+
+    repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
+    if ctx.attr.library:
+        repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
+
     if ctx.file.notice:
         repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
 
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
 
-    return [
-        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = [ctx.attr.library[DefaultInfo].files])),
-        ctx.attr.library[JavaInfo],
-        MavenInfo(
-            pom = ctx.outputs.pom,
-            files = repo_files,
-            transitive = transitive,
-        ),
+    default_files = [ctx.attr.library[DefaultInfo].files] if ctx.attr.library else []
+    providers = [
+        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = default_files)),
+        MavenInfo(pom = ctx.outputs.pom, files = repo_files, transitive = transitive),
     ]
+    if ctx.attr.library:
+        providers += [ctx.attr.library[JavaInfo]]
+    return providers
 
 _maven_library = rule(
     attrs = {
         "notice": attr.label(allow_single_file = True),
         "library": attr.label(providers = [JavaInfo], allow_single_file = True),
+        "files": attr.label_keyed_string_dict(allow_files = True),
         "coordinates": attr.string(),
         "description": attr.string(),
         "pom_name": attr.string(),
@@ -532,5 +535,13 @@ def maven_library(
         description = description,
         pom_name = pom_name,
         library = ":" + name + ".lib",
+        **kwargs
+    )
+
+def custom_maven_library(
+        name,
+        **kwargs):
+    _maven_library(
+        name = name,
         **kwargs
     )
