@@ -104,6 +104,7 @@ coverage_java_test(
         ":zip_merger",
         "//tools/base/zipflinger",
         "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
     ],
 )

@@ -16,6 +16,7 @@
 
 package com.android.tools.binaries;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.io.ByteStreams;
@@ -83,10 +84,10 @@ public class ZipMergerTest {
         assertZipEquals(res,
                 "prefix/place/here/b.txt", "BB",
                 "prefix/place/here/c.txt", "CC",
-                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/d.zip!one.txt", "11",
                 "prefix/place/here/e.zip!two.txt", "22",
                 "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/g.zip!four.txt", "44");
     }
 
@@ -137,10 +138,10 @@ public class ZipMergerTest {
         assertZipEquals(res,
                 "prefix/place/here/b.txt", "BB",
                 "prefix/place/here/c.txt", "CC",
-                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/d.zip!one.txt", "11",
                 "prefix/place/here/e.zip!two.txt", "OO",
                 "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/g.zip!four.txt", "44");
     }
 
@@ -150,7 +151,9 @@ public class ZipMergerTest {
         for (int i = 0; i < args.length; i += 2) {
             expected.put(args[i], args[i + 1]);
         }
-        assertEquals(expected, readZip(zip));
+        assertThat(readZip(zip).entrySet())
+                .containsExactlyElementsIn(expected.entrySet())
+                .inOrder();
     }
 
     private Map<String, String> readZip(File zip) throws Exception {
