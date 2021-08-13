@@ -475,4 +475,29 @@ public class MethodBodyEvaluatorTest {
                                 .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Assert.assertEquals("catch block missed", result.intValue(), owner.tryCatch());
     }
+
+    @org.junit.Test
+    public void testParameterInvokeTypes() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+
+        Object result =
+                new MethodBodyEvaluator(classInput, "invokeBooleanParamWithBool")
+                        .eval(owner, TestTarget.class.getTypeName(), new Object[] {true});
+        Boolean r = (Boolean) result;
+        Assert.assertTrue(
+                "Invoke with typed parameters", owner.invokeBooleanParamWithBool(true) == r);
+    }
+
+    @org.junit.Test
+    public void testStaticParameterInvokeTypes() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "staticInvokeBooleanParamWithBool")
+                        .evalStatic(new Object[] {true});
+        Boolean r = (Boolean) result;
+        Assert.assertTrue(
+                "Static invoke with type parameters",
+                TestTarget.staticInvokeBooleanParamWithBool(true) == r);
+    }
 }

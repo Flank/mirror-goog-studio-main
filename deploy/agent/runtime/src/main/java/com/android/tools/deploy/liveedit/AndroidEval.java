@@ -134,6 +134,11 @@ class AndroidEval implements Eval {
                 parameterClass[i] = typeToClass(parameterType[i]);
             }
 
+            Object[] argValues = new Object[args.size()];
+            for (int i = 0; i < argValues.length; i++) {
+                argValues[i] = args.get(i).obj(parameterType[i]);
+            }
+
             // This is a constructor call.
             if (invokeSpecial && "<init>".equals(name)) {
                 ObjectValue objTarget = (ObjectValue) target;
@@ -144,7 +149,7 @@ class AndroidEval implements Eval {
                 Class klass = typeToClass(objTarget.getAsmType());
                 Constructor constructor = klass.getDeclaredConstructor(parameterClass);
                 constructor.setAccessible(true);
-                Object obj = constructor.newInstance(args.stream().map(Value::obj).toArray());
+                Object obj = constructor.newInstance(argValues);
                 objTarget.setValue(obj);
                 return new ObjectValue(obj, objTarget.getAsmType());
             }
@@ -158,7 +163,7 @@ class AndroidEval implements Eval {
             }
 
             method.setAccessible(true);
-            Object result = method.invoke(target.obj(), args.stream().map(Value::obj).toArray());
+            Object result = method.invoke(target.obj(), argValues);
             return makeValue(result, Type.getReturnType(method));
         } catch (Throwable t) {
             handleThrowable(t);
@@ -169,7 +174,7 @@ class AndroidEval implements Eval {
     @NonNull
     @Override
     public Value invokeStaticMethod(
-            MethodDescription description, @NonNull List<? extends Value> list) {
+            MethodDescription description, @NonNull List<? extends Value> args) {
         String owner = description.getOwnerInternalName();
         String methodName = description.getName();
         String signature = description.getDesc();
@@ -180,6 +185,11 @@ class AndroidEval implements Eval {
                 parameterClass[i] = typeToClass(parameterType[i]);
             }
 
+            Object[] argValues = new Object[args.size()];
+            for (int i = 0; i < argValues.length; i++) {
+                argValues[i] = args.get(i).obj(parameterType[i]);
+            }
+
             Method method = methodLookup(owner, methodName, parameterClass);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
@@ -188,7 +198,7 @@ class AndroidEval implements Eval {
             }
 
             method.setAccessible(true);
-            Object result = method.invoke(null, list.stream().map(Value::obj).toArray());
+            Object result = method.invoke(null, argValues);
             return makeValue(result, Type.getReturnType(method));
         } catch (Exception e) {
             handleThrowable(e);

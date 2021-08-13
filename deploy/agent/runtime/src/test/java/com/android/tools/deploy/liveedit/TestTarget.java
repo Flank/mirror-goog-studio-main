@@ -223,4 +223,24 @@ class TestTarget {
             return 4;
         }
     }
+
+    private boolean not(boolean x) {
+        return !x;
+    }
+
+    public boolean invokeBooleanParamWithBool(boolean x) {
+        boolean y = !x;
+        boolean z = not(y);
+        return z;
+    }
+
+    private static boolean staticNot(boolean b) {
+        return !b;
+    }
+
+    public static boolean staticInvokeBooleanParamWithBool(boolean x) {
+        boolean y = !x;
+        boolean z = staticNot(y);
+        return z;
+    }
 }
