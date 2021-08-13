@@ -183,7 +183,7 @@ public abstract class ResourceVisibilityLookup {
         public boolean isPrivate(@NonNull ResourceType type, @NonNull String name) {
             for (int i = 0, n = mRepositories.size(); i < n; i++) {
                 ResourceVisibilityLookup lookup = mRepositories.get(i);
-                if (lookup.isPublic(type, name) && lookup.isKnown(type, name)) {
+                if (lookup.isPublic(type, name)) {
                     return false;
                 }
             }
