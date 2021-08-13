@@ -1,4 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:utils.bzl", "zip_merger")
 

@@ -368,19 +368,6 @@ def maven_aar(name, aar, pom, visibility = None):
         source = pom,
     )
 
-MavenRepoInfo = provider(fields = {
-    "artifacts": "The list of files in the repo",
-    "build_manifest": "The repo's manifest file with full paths for build rules",
-})
-
-def _collect_pom_provider(pom, jars, clsjars, include_sources):
-    collected = [(pom, None)]
-    collected += [(jar, None) for jar in jars.to_list()]
-    for classifier, jars in clsjars.items():
-        if include_sources or classifier != "sources":
-            collected += [(jar, classifier) for jar in jars.to_list()]
-    return collected
-
 def _zipper(actions, zipper, desc, map_file, files, out):
     zipper_args = ["c", out.path]
     zipper_args += ["@" + map_file.path]
@@ -391,125 +378,6 @@ def _zipper(actions, zipper, desc, map_file, files, out):
         arguments = zipper_args,
         progress_message = desc,
         mnemonic = "zipper",
-    )
-
-# Collects all parent and dependency artifacts for a given list of artifacts.
-# Each artifact is represented as a tuple (artifact, classifier), with classifier = None if there is no classifier.
-#
-# If include_deps = False, the collected artifacts do not include dependency artifacts.
-def _collect_artifacts(artifacts, include_sources, include_deps):
-    seen = {}
-    collected = []
-
-    for artifact in artifacts:
-        if seen.get(artifact.maven.pom):
-            continue
-
-        # Always include parent artifacts even when include_deps=False. Otherwise, Maven
-        # model builders won't accept the set of collected artifacts as a valid Maven repo.
-        # Note that this also includes the dependencies of parent.
-        for pom in artifact.maven.parent.poms.to_list():
-            if seen.get(pom):
-                continue
-            jars = artifact.maven.parent.jars[pom]
-            clsjars = artifact.maven.parent.clsjars[pom]
-            collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
-            seen[pom] = True
-
-        collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars, include_sources)
-        seen[artifact.maven.pom] = True
-
-        if include_deps:
-            for pom in artifact.maven.deps.poms.to_list():
-                if seen.get(pom):
-                    continue
-                jars = artifact.maven.deps.jars[pom]
-                clsjars = artifact.maven.deps.clsjars[pom]
-                collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
-                seen[pom] = True
-
-    return collected
-
-def _maven_repo_impl(ctx):
-    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources, ctx.attr.include_transitive_deps)
-    args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    inputs = [artifact for artifact, _ in artifacts]
-
-    args = [artifact.path + "," + artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    artifact_lst = ctx.actions.declare_file(ctx.label.name + ".artifact.lst")
-    ctx.actions.write(artifact_lst, "\n".join(args))
-
-    # Generate manifests of where files should be located in the repository.
-    # The format is the same used by @bazel_tools//tools/zip:zipper, where
-    # each line is"path_to_target_location=path_to_file"
-    build_manifest = ctx.actions.declare_file(ctx.label.name + ".build.manifest")
-    ctx.actions.run(
-        inputs = [artifact_lst] + inputs,
-        outputs = [build_manifest, ctx.outputs.manifest],
-        mnemonic = "mavenrepobuilder",
-        arguments = [artifact_lst.path, build_manifest.path, ctx.outputs.manifest.path],
-        executable = ctx.executable._repo_builder,
-    )
-    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip...", build_manifest, inputs, ctx.outputs.zip)
-
-    runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
-    return [
-        DefaultInfo(
-            # Do not include the zip as a default output (like _deploy.jar)
-            files = depset([ctx.outputs.manifest]),
-            runfiles = runfiles,
-        ),
-        MavenRepoInfo(
-            artifacts = inputs,
-            build_manifest = build_manifest,
-        ),
-    ]
-
-_maven_repo = rule(
-    attrs = {
-        "artifacts": attr.label_list(),
-        "include_sources": attr.bool(),
-        "include_transitive_deps": attr.bool(),
-        "_zipper": attr.label(
-            default = Label("@bazel_tools//tools/zip:zipper"),
-            cfg = "exec",
-            executable = True,
-        ),
-        "_repo_builder": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//tools/base/bazel:repo_builder"),
-            allow_files = True,
-        ),
-    },
-    outputs = {
-        "manifest": "%{name}.manifest",
-        "zip": "%{name}.zip",
-    },
-    implementation = _maven_repo_impl,
-)
-
-# Creates a maven repo with the given artifacts and all their transitive dependencies.
-#
-# The rule exposes a MavenRepoInfo provider and outputs a manifest file. The manifest file contains
-# relative runfile paths, which are available only during bazel run/test (see
-# https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
-# If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
-# full paths to each of the artifacts.
-#
-# Usage:
-# maven_repo(
-#     name = The name of the rule. The output of the rule will be ${name}.manifest.
-#     artifacts = A list of all maven_java_libraries to add to the repo.
-#     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
-#     include_sources = Add source jars to the repo as well (useful for tests).
-# )
-def maven_repo(artifacts = [], include_sources = False, include_transitive_deps = True, **kwargs):
-    _maven_repo(
-        artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
-        include_sources = include_sources,
-        include_transitive_deps = include_transitive_deps,
-        **kwargs
     )
 
 def _local_maven_repository_impl(repository_ctx):
@@ -749,6 +617,11 @@ def maven_import(
         **kwargs
     )
 
+MavenRepoInfo = provider(fields = {
+    "artifacts": "The list of files in the repo",
+    "build_manifest": "The repo's manifest file with full paths for build rules",
+})
+
 def _maven_repository_impl(ctx):
     rel_paths = []
     files = []
@@ -802,6 +675,20 @@ def _maven_repository_impl(ctx):
         ),
     ]
 
+# Creates a maven repo with the given artifacts and all their transitive dependencies.
+#
+# The rule exposes a MavenRepoInfo provider and outputs a manifest file. The manifest file contains
+# relative runfile paths, which are available only during bazel run/test (see
+# https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
+# If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
+# full paths to each of the artifacts.
+#
+# Usage:
+# maven_repository(
+#     name = The name of the rule. The output of the rule will be ${name}.manifest.
+#     artifacts = A list of all maven_java_libraries to add to the repo.
+#     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
+# )
 maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
