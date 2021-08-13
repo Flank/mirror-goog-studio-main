@@ -18,7 +18,6 @@ package com.android.tools.deploy.instrument;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
-import android.util.Log;
 import com.android.tools.deploy.liveedit.MethodBodyEvaluator;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,7 +54,9 @@ public final class LiveEditStubs {
         // TODO: This is a super helpful message as it tells us rather or not
         // we actually trampoline to AndroidEval. Remove this later once when
         // we are more confident that this always WAI.
-        Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
+
+        // TODO: This occasionally crashes with class not found. Not sure why yet.
+        // Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
         return result;
     }
 
