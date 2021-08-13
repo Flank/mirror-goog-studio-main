@@ -169,23 +169,6 @@ do not use it in our code base.
 There are several other tools in this package that can be used to manage
 dependencies in prebuilts.
 
-### third\_party\_build\_generator
-
-Used to generate `//tools/base/third_party/BUILD`. Computes effective versions
-of all necessary dependencies and creates a `java_library` rule for each one of
-them. It will also download missing jars into
-`//prebuilts/tools/common/m2/repository`.
-
-Invoked by running:
-
-```
-bazel run //tools/base/bazel:third_party_build_generator
-```
-
-The tool looks for names and versions of libraries in `//tools/buildSrc/base/dependencies.properties`.
-The same file is read by our Gradle scripts, to keep the set of dependencies consistent between the
-two.
-
 ### add\_dependency
 
 Can be used to download one or more Maven artifacts (JARs, AARs or APKs) into

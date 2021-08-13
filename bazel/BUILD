@@ -250,28 +250,6 @@ java_binary(
 
 # See README.md
 java_binary(
-    name = "third_party_build_generator",
-    srcs = [
-        "src/com/android/tools/binaries/JavaImportGenerator.java",
-        "src/com/android/tools/binaries/ThirdPartyBuildGenerator.java",
-    ],
-    main_class = "com.android.tools.binaries.ThirdPartyBuildGenerator",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
-    ],
-    deps = [
-        ":bazel_generator",
-        ":maven",
-        ":utils",
-        "@maven//:com.google.code.findbugs.jsr305",
-        "@maven//:com.google.guava.guava",
-        "@maven//:org.apache.maven.maven-aether-provider",
-    ],
-)
-
-# See README.md
-java_binary(
     name = "add_dependency",
     srcs = [
         "src/com/android/tools/binaries/AddDependency.java",
@@ -531,29 +509,6 @@ coverage_java_test(
         ":bin2c",
         "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
-    ],
-)
-
-coverage_java_test(
-    name = "third_party_up_to_date",
-    srcs = ["testSrc/com/android/tools/binaries/ThirdPartyBuildConsistencyTest.java"],
-    data = [
-        "//tools/base/third_party:BUILD",
-        "//tools/buildSrc/base:dependencies.properties",
-    ],
-    tags = [
-        "no_test_windows",
-    ],
-    test_class = "com.android.tools.binaries.ThirdPartyBuildConsistencyTest",
-    deps = [
-        ":bazel_generator",
-        ":maven",
-        ":third_party_build_generator",
-        ":utils",
-        "//tools/base/testutils:tools.testutils",
-        "@maven//:com.google.guava.guava",
-        "@maven//:junit.junit",
-        "@maven//:org.apache.maven.maven-aether-provider",
     ],
 )
 
