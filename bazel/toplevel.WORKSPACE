@@ -245,6 +245,7 @@ local_maven_repository(
         "androidx.core:core:1.5.0-beta01",
         "androidx.core:core:1.5.0-rc02",
         "androidx.core:core-ktx:1.0.1",
+        "androidx.core:core-ktx:1.0.2",
         "androidx.core:core-ktx:1.2.0",
         "androidx.core:core-ktx:1.3.0",
         "androidx.core:core-ktx:1.3.2",
