@@ -71,9 +71,9 @@ class WearableConfigurationActionDetector : Detector(), XmlScanner {
             id = "WearableConfigurationAction",
             briefDescription = "Wear configuration action metadata must match an activity",
             explanation = """
-                If and only if a watch face service defines `wearableConfigurationAction` metadata, with the value `WATCH_FACE_EDITOR`, \
+                Only when a watch face service defines `wearableConfigurationAction` metadata, with the value `WATCH_FACE_EDITOR`, \
                 there should be an activity in the same package, which has an intent filter for `WATCH_FACE_EDITOR` \
-                (with com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION if minSdkVersion is less than 30).
+                (with `com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION` if `minSdkVersion` is less than 30).
             """,
             moreInfo = "https://developer.android.com/training/wearables/watch-faces/configuration",
             category = Category.CORRECTNESS,

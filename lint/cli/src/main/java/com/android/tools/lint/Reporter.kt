@@ -95,6 +95,7 @@ import com.android.tools.lint.checks.Utf8Detector
 import com.android.tools.lint.checks.VectorPathDetector
 import com.android.tools.lint.checks.ViewTypeDetector
 import com.android.tools.lint.checks.WakelockDetector
+import com.android.tools.lint.checks.WatchFaceForAndroidXDetector
 import com.android.tools.lint.checks.WatchFaceEditorDetector
 import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
@@ -535,6 +536,7 @@ abstract class Reporter protected constructor(
                     ViewTypeDetector.ADD_CAST,
                     ViewTypeDetector.WRONG_VIEW_CAST,
                     WakelockDetector.TIMEOUT,
+                    WatchFaceForAndroidXDetector.ISSUE,
                     WatchFaceEditorDetector.ISSUE,
                     WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
                     WrongCallDetector.ISSUE,
