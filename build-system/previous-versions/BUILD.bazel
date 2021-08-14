@@ -24,7 +24,7 @@ maven_repository(
 
 AGP_4_1_0_ARTIFACTS = [
     "@maven_tests//:com.android.tools.build.gradle_4.1.0",
-    "@maven_tests//:com.android.tools.build.aapt2.linux_4.1.0-6503028",
+    "@maven_tests//:com.android.tools.build.aapt2_4.1.0-6503028",
     "@maven_tests//:com.android.tools.lint.lint-gradle_27.1.0",
 ]
 
@@ -36,7 +36,7 @@ maven_repository(
 
 AGP_4_0_0_ARTIFACTS = [
     "@maven_tests//:com.android.tools.build.gradle_4.0.0",
-    "@maven_tests//:com.android.tools.build.aapt2.linux_4.0.0-6051327",
+    "@maven_tests//:com.android.tools.build.aapt2_4.0.0-6051327",
     "@maven_tests//:com.android.tools.lint.lint-gradle_27.0.0",
 ]
 
@@ -59,7 +59,7 @@ maven_repository(
 
 # keep sorted
 AGP_3_5_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.aapt2.linux_3.5.0-5435860",
+    "@maven_tests//:com.android.tools.build.aapt2_3.5.0-5435860",
     "@maven_tests//:com.android.tools.build.gradle_3.5.0",
     "@maven_tests//:com.android.tools.lint.lint-gradle_26.5.0",
 ]
@@ -109,7 +109,7 @@ maven_repository(
     name = "3.3.2",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.aapt2.linux_3.3.2-5309881",
+        "@maven_tests//:com.android.tools.build.aapt2_3.3.2-5309881",
         "@maven_tests//:com.android.tools.build.gradle_3.3.2",
         "@maven_tests//:com.android.tools.lint.lint-gradle_26.3.2",
     ],
