@@ -94,6 +94,7 @@ dex_library(
     jars = [
         ":runtime_java",
         ":eval4j",
+        ":interpreter_common",
         ":jetbrains_asm4",
         ":kotlin-stdlib",
     ],
