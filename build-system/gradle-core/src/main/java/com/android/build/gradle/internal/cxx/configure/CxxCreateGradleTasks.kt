@@ -61,7 +61,39 @@ import org.gradle.api.tasks.TaskProvider
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PREFAB_PACKAGE_CONFIGURATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import org.gradle.api.provider.Provider
+
+/**
+ * Create just the externalNativeBuild per-variant task.
+ * This is done earlier so that callers of [taskContainer.externalNativeBuildTask]
+ */
+fun createCxxVariantBuildTask(
+    taskFactory: TaskFactory,
+    variant: VariantImpl) {
+    val configuration = tryCreateConfigurationParameters(
+        variant.services.projectOptions,
+        variant) ?: return
+    val sdkComponentsBuildService: Provider<SdkComponentsBuildService> =
+        getBuildService(variant.services.buildServiceRegistry)
+    val androidLocationBuildService: Provider<AndroidLocationsBuildService> =
+        getBuildService(variant.services.buildServiceRegistry)
+    val configurationModel  = createInitialCxxModel(
+        sdkComponentsBuildService.get(),
+        androidLocationBuildService.get(),
+        listOf(configuration)).toConfigurationModel()
+    variant.taskContainer.cxxConfigurationModel = configurationModel
+    variant.taskContainer.externalNativeBuildTask =
+        taskFactory.register(
+            createRepublishCxxBuildTask(
+                configurationModel,
+                variant,
+                variant.computeTaskName("externalNativeBuild")
+            )
+        )
+}
 
 /**
  * Construct gradle tasks for C/C++ configuration and build.
@@ -141,14 +173,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         )
                     }
                     is VariantBuild -> {
-                        val task = createRepublishCxxBuildTask(
-                            configuration,
-                            variant,
-                            name)
-
-                        val buildTask = taskFactory.register(task)
-                        variant.taskContainer.cxxConfigurationModel = configuration
-                        variant.taskContainer.externalNativeBuildTask = buildTask
+                        val buildTask = variant.taskContainer.externalNativeBuildTask!!
                         variant.taskContainer.compileTask.dependsOn(buildTask)
                         buildTask.dependsOn(variant.variantDependencies.getArtifactFileCollection(
                                 RUNTIME_CLASSPATH,
@@ -203,7 +228,7 @@ private fun createPrefabConfigurePackageTask(
 private fun createPrefabPackageTask(
     taskFactory: TaskFactory,
     configurationModel: CxxConfigurationModel,
-    buildTask: TaskProvider<ExternalNativeBuildTask>,
+    buildTask: TaskProvider<out ExternalNativeBuildTask>,
     libraryVariant: LibraryVariantImpl) {
     val modules = libraryVariant.prefabPackageConfigurationData()
     if (modules.isNotEmpty()) {

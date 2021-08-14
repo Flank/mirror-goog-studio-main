@@ -58,7 +58,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
-import com.android.utils.cxx.streamCompileCommands
 import com.android.utils.cxx.streamCompileCommandsV2
 import com.google.common.truth.Truth
 import org.junit.Assume
@@ -403,23 +402,40 @@ class CmakeBasicProjectTest(
         TruthHelper.assertThatNativeLib(lib).isStripped()
     }
 
+    private val expectedBuildProducts =
+        """
+        {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+        {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+        {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+        """.trimIndent()
+
     @Test
     fun `build product golden locations`() {
         project.execute("assembleDebug")
         val golden = project.goldenBuildProducts()
-        println(golden)
-        Truth.assertThat(golden).isEqualTo("""
-            {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
-            """.trimIndent())
+        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
+    }
+
+    @Test
+    fun `build product golden locations with forced task order`() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            // ------------------------------------------------------------------------
+            // b/195318431 whenTaskAdded can change the task evaluation order
+            tasks.whenTaskAdded { }
+            """.trimIndent()
+        )
+        project.execute("assembleDebug")
+        val golden = project.goldenBuildProducts()
+        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
     }
 
     @Test
