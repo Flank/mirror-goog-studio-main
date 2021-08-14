@@ -540,8 +540,16 @@ def maven_library(
 
 def custom_maven_library(
         name,
+        files,
         **kwargs):
+    """A rule to create a custom maven library with provided files.
+
+    Args:
+        name: the name of the rule
+        files: a map of <file> -> <string> for all files to have the given name in maven.
+    """
     _maven_library(
         name = name,
+        files = files,
         **kwargs
     )
