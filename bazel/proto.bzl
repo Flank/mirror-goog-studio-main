@@ -1,5 +1,5 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
-load(":maven.bzl", "import_maven_library", "maven_java_library")
+load(":maven.bzl", "maven_java_library")
 load(":kotlin.bzl", "maven_library")
 load(":utils.bzl", "java_jarjar")
 load(":android.bzl", "select_android")
@@ -302,16 +302,12 @@ def maven_proto_library(
         protoc_version = PROTOC_VERSION,
         protoc_grpc_version = None,
         proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
-        legacy_name = "",
         **kwargs):
     # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.
     if grpc_support and not protoc_grpc_version:
         fail("grpc support was requested, but the version of grpc java protoc plugin was not specified")
 
-    if not name.endswith("_bzl"):
-        fail("maven_proto_library rule name must end with '_bzl', found: " + name)
-
-    srcs_name = name[:-len("_bzl")] + "_srcs"
+    srcs_name = name + "_srcs"
     outs = [srcs_name + ".srcjar"]
     _gen_proto_rule(
         name = srcs_name,
@@ -338,7 +334,6 @@ def maven_proto_library(
             deps = java_deps,
             exports = java_exports,
             coordinates = coordinates,
-            legacy_name = legacy_name,
             visibility = visibility,
             **kwargs
         )

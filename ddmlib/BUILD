@@ -75,7 +75,7 @@ java_library(
 # Kotlin is not enabled in ddmlib module but here we use kotlin_library rule
 # for bundled_deps support.
 maven_library(
-    name = "tools.ddmlib_bzl",
+    name = "tools.ddmlib",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -85,13 +85,12 @@ maven_library(
         ":app-processes-proto",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
-    legacy_name = "tools.ddmlib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:net.sf.kxml.kxml2",

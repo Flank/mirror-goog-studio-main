@@ -53,7 +53,7 @@ fileset(
 )
 
 maven_library(
-    name = "common_bzl",
+    name = "tools.common",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -61,7 +61,6 @@ maven_library(
     coordinates = "com.android.tools:common:" + BASE_VERSION,
     description = "common library used by other Android tools libraries.",
     enable_scopes = True,
-    legacy_name = "tools.common",
     module_name = "common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",
@@ -71,7 +70,7 @@ maven_library(
     ],
     visibility = ["//visibility:public"],
     exports = [
-        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/annotations",
         "@maven//:com.google.guava.guava",
     ],
     deps = [

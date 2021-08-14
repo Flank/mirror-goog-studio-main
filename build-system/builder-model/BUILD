@@ -32,7 +32,7 @@ iml_module(
 )
 
 maven_library(
-    name = "builder-model_bzl",
+    name = "builder-model",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -42,13 +42,12 @@ maven_library(
         "-source 6",
         "-target 6",
     ],
-    legacy_name = "builder-model",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/builder-model",
     resources = [":version.properties"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/annotations",
     ],
 )
 

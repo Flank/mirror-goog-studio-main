@@ -1,6 +1,6 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "explicit_target")
-load(":maven.bzl", "MavenInfo", "generate_pom", "import_maven_library", "maven_pom", "split_coordinates")
+load(":maven.bzl", "MavenInfo", "generate_pom", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "run_singlejar")
@@ -470,6 +470,7 @@ def maven_library(
         friends = [],
         notice = None,
         coordinates = None,
+        jar_name = None,
         description = None,
         pom_name = None,
         exclusions = None,
@@ -478,7 +479,6 @@ def maven_library(
         lint_is_test_sources = False,
         lint_timeout = None,
         module_name = None,
-        legacy_name = "",
         plugins = [],
         manifest_lines = None,
         **kwargs):
@@ -500,16 +500,13 @@ def maven_library(
         lint_*: Lint configuration arguments
         module_name: The kotlin module name.
     """
-    if legacy_name:
-        # Create legacy rules and make them point to the new rules.
-        import_maven_library(legacy_name, name, notice = notice)
 
-    neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink") or dep.endswith("_neverlink_bzl")]
+    neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink")]
     bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
 
     kotlin_library(
         name = name + ".lib",
-        jar_name = name + ".jar",
+        jar_name = jar_name if jar_name else name + ".jar",
         srcs = srcs,
         data = data,
         deps = deps + neverlink_deps,

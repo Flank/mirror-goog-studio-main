@@ -3,37 +3,10 @@ load("//tools/base/bazel:kotlin.bzl", "custom_maven_library")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 load("//prebuilts/tools/common/aapt:aapt2_version.bzl", "AAPT2_VERSION")
 
-filegroup(
-    name = "aapt2",
-    visibility = ["//visibility:public"],
-)
-
-maven_pom(
-    name = "aapt2_maven",
-    artifact = "aapt2",
-    classified_files = [
-        ":darwin_zip",
-        ":linux_zip",
-        ":windows_zip",
-    ],
-    classifiers = [
-        "osx",
-        "linux",
-        "windows",
-    ],
-    group = "com.android.tools.build",
-    properties_files = [
-        "//tools/buildSrc/base:version.properties",
-        "//prebuilts/tools/common/aapt:aapt2_version.properties",
-    ],
-    version_property = "${buildVersion}-${aapt2Version}",
-    visibility = ["//visibility:public"],
-)
-
 POM_VERSION = BUILD_VERSION + "-" + AAPT2_VERSION
 
 custom_maven_library(
-    name = "aapt2_bzl",
+    name = "aapt2",
     coordinates = "com.android.tools.build:aapt2:" + POM_VERSION,
     files = {
         ":libdarwin_zip.jar": "aapt2-" + POM_VERSION + "-osx.jar",

@@ -73,8 +73,8 @@ maven_repository(
 maven_repository(
     name = "agp_artifacts",
     artifacts = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations:annotations",
+        "//tools/base/common:tools.common",
     ],
     include_transitive_deps = False,
     visibility = [

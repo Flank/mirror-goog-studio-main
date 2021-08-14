@@ -1,11 +1,8 @@
 load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
-load("//tools/base/bazel:maven.bzl", "import_maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-import_maven_library("android-device-provider-gradle-proto", "android-device-provider-gradle-proto_bzl")
-
 maven_proto_library(
-    name = "android-device-provider-gradle-proto_bzl",
+    name = "android-device-provider-gradle-proto",
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.utp:android-device-provider-gradle-proto:" + BASE_VERSION,
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",

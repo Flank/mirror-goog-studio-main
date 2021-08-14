@@ -9,7 +9,7 @@ coverage_java_library(
     ]),
     deps = [
         "lib/asm-all-9.0.jar",
-        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/annotations",
     ],
 )
 
@@ -49,7 +49,7 @@ coverage_java_library(
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/annotations",
 
         # For prototyping LE, we will check in our own version of the
         # eval4j dependencies.

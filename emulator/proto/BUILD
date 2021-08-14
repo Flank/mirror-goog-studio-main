@@ -1,11 +1,8 @@
 load("//tools/base/bazel:proto.bzl", "maven_proto_library", "android_java_proto_library", "java_proto_library")
-load("//tools/base/bazel:maven.bzl", "import_maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-import_maven_library("proto", "proto_bzl")
-
 maven_proto_library(
-    name = "proto_bzl",
+    name = "proto",
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.emulator:proto:" + BASE_VERSION,
     grpc_support = 1,

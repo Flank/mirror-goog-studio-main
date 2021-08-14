@@ -2,19 +2,18 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 maven_library(
-    name = "android-test-plugin-host-logcat_bzl",
+    name = "android-test-plugin-host-logcat",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-logcat:" + BASE_VERSION,
-    legacy_name = "android-test-plugin-host-logcat",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-logcat/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/common:common_bzl",
-        "//tools/base/ddmlib:tools.ddmlib_bzl",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx

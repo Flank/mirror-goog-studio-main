@@ -20,19 +20,18 @@ iml_module(
 )
 
 maven_library(
-    name = "tools.fakeadbserver_bzl",
+    name = "tools.fakeadbserver",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.fakeadbserver:fakeadbserver:" + BASE_VERSION,
-    legacy_name = "tools.fakeadbserver",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.guava.guava",
     ],
 )

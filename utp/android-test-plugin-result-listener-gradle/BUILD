@@ -2,18 +2,17 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 maven_library(
-    name = "android-test-plugin-result-listener-gradle_bzl",
+    name = "android-test-plugin-result-listener-gradle",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-result-listener-gradle:" + BASE_VERSION,
-    legacy_name = "android-test-plugin-result-listener-gradle",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/common:common_bzl",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.guava.guava",
         "@maven//:io.grpc.grpc-core",
         "@maven//:io.grpc.grpc-netty",
@@ -21,7 +20,7 @@ maven_library(
         "@maven//:io.grpc.grpc-protobuf",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
-        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto:android-test-plugin-result-listener-gradle-proto_bzl",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "@maven//:com.google.testing.platform.android-device-provider-local",

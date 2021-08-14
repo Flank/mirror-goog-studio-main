@@ -25,22 +25,21 @@ iml_module(
 )
 
 maven_library(
-    name = "tools.manifest-merger_bzl",
+    name = "tools.manifest-merger",
     srcs = glob([
         "manifest-merger/src/main/java/**/*.kt",
         "manifest-merger/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.build:manifest-merger:" + BASE_VERSION,
-    legacy_name = "tools.manifest-merger",
     notice = "manifest-merger/NOTICE",
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/build-system/builder-model:builder-model_bzl",
-        "//tools/base/common:common_bzl",
-        "//tools/base/sdk-common:tools.sdk-common_bzl",
-        "//tools/base/sdklib:tools.sdklib_bzl",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
@@ -82,13 +81,12 @@ kotlin_test(
 )
 
 maven_library(
-    name = "tools.apksig_bzl",
+    name = "tools.apksig",
     srcs = [],
     bundled_deps = [
         "//tools/apksig:apksig-all",
     ],
     coordinates = "com.android.tools.build:apksig:" + BUILD_VERSION,
-    legacy_name = "tools.apksig",
     visibility = ["//visibility:public"],
 )
 
@@ -185,9 +183,9 @@ java_import(
 # the data-binding runtime library with the Gradle plugin.
 
 GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
-    "//tools/base/build-system/aapt2:aapt2_bzl",
-    "//tools/base/build-system/gradle-core:gradle-core_bzl",
-    "//tools/base/lint:tools.lint-gradle_bzl",
+    "//tools/base/build-system/aapt2:aapt2",
+    "//tools/base/build-system/gradle-core:gradle-core",
+    "//tools/base/lint:tools.lint-gradle",
     "@maven//:com.github.javaparser.javaparser-core",
 ]
 
@@ -200,7 +198,7 @@ maven_repository(
 # Full m2 repository to run the Gradle plugin.
 # Only use if you need data-binding, otherwise use gradle_plugin_no_databinding_repo
 GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
-    "//tools/data-binding:tools.compiler_bzl",
+    "//tools/data-binding:tools.compiler",
 ]
 
 maven_repository(

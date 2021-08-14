@@ -20,19 +20,18 @@ iml_module(
 )
 
 maven_library(
-    name = "tools.builder-test-api_bzl",
+    name = "tools.builder-test-api",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.build:builder-test-api:" + BUILD_VERSION,
-    legacy_name = "tools.builder-test-api",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/builder-test-api",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
-        "//tools/base/ddmlib:tools.ddmlib_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "@maven//:com.google.guava.guava",
     ],
 )

@@ -11,7 +11,7 @@ fileset(
 )
 
 maven_library(
-    name = "gradle-api_bzl",
+    name = "gradle-api",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -20,16 +20,15 @@ maven_library(
         "//tools/base/build-system:gradle-api_neverlink",
     ],
     coordinates = "com.android.tools.build:gradle-api:" + BUILD_VERSION,
-    legacy_name = "gradle-api",
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/build-system/builder-model:builder-model_bzl",  # Only present for legacy reasons.
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api_bzl",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",  # Only present for legacy reasons.
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "@maven//:com.google.guava.guava",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.ow2.asm.asm",

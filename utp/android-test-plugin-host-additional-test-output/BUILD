@@ -2,21 +2,20 @@ load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 maven_library(
-    name = "android-test-plugin-host-additional-test-output_bzl",
+    name = "android-test-plugin-host-additional-test-output",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-additional-test-output:" + BASE_VERSION,
-    legacy_name = "android-test-plugin-host-additional-test-output",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-additional-test-output/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/common:common_bzl",
+        "//tools/base/common:tools.common",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
-        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto:android-test-plugin-host-additional-test-output-proto_bzl",
+        "//tools/base/utp/android-test-plugin-host-additional-test-output-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "@maven//:com.google.testing.platform.android-device-provider-local",

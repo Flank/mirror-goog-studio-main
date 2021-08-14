@@ -48,23 +48,22 @@ fileset(
 )
 
 maven_library(
-    name = "tools.sdklib_bzl",
+    name = "tools.sdklib",
     srcs = glob(
         ["src/main/java/**/*.java"],
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
     coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
-    legacy_name = "tools.sdklib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
-        "//tools/base/device_validator:tools.dvlib_bzl",
-        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
-        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/device_validator:tools.dvlib",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
         # TODO(emrekultursay): These dependency upgrade manipulations should no longer be

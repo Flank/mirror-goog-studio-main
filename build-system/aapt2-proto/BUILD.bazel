@@ -3,13 +3,12 @@ load("//tools/base/common:version.bzl", "BUILD_VERSION")
 load("//prebuilts/tools/common/aapt:aapt2_version.bzl", "AAPT2_VERSION")
 
 maven_library(
-    name = "aapt2-proto_bzl",
+    name = "aapt2-proto",
     srcs = [],
     bundled_deps = [
         ":aapt2-proto-with-notice",
     ],
     coordinates = "com.android.tools.build:aapt2-proto:" + BUILD_VERSION + "-" + AAPT2_VERSION,
-    legacy_name = "aapt2-proto",
     visibility = ["//visibility:public"],
     deps = [
         "@maven//:com.google.protobuf.protobuf-java",

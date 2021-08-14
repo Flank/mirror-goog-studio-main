@@ -3,12 +3,11 @@ load("//tools/base/bazel:kotlin.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
 maven_library(
-    name = "zipflinger_bzl",
+    name = "zipflinger",
     srcs = glob([
         "src/com/android/zipflinger/**/*.java",
     ]),
     coordinates = "com.android:zipflinger:" + BUILD_VERSION,
-    legacy_name = "zipflinger",
     visibility = [
         "//tools/base/bazel:__subpackages__",
         "//tools/base/build-system:__subpackages__",
@@ -18,7 +17,7 @@ maven_library(
         "//tools/base/zipflinger/tools:__subpackages__",
     ],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
+        "//tools/base/annotations",
     ],
 )
 

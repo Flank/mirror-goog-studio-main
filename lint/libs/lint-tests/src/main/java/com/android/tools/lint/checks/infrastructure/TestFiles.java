@@ -445,25 +445,19 @@ public class TestFiles {
                     || name.startsWith("kotlin-compiler-")
                     || name.startsWith("uast-")
                     || name.startsWith("intellij-core")
-                    || name.startsWith("kotlin-compiler_bzl") // bazel (using maven_library bridge)
-                    || name.startsWith("uast_bzl") // bazel (using maven_library bridge)
-                    || name.startsWith("intellij-core_bzl") // bazel (using maven_library bridge)
+                    || name.endsWith("uast.jar") // bazel
                     || name.endsWith(".lint-api-base") // IJ
                     || name.endsWith("lint-api.jar") // bazel
-                    || name.endsWith("lint-api_bzl.jar") // bazel (using maven_library bridge)
                     || name.endsWith(".lint.checks-base") // IJ
                     || name.endsWith("lint-checks.jar") // bazel
-                    || name.endsWith("lint-checks_bzl.jar") // bazel (using maven_library bridge)
                     || name.endsWith(".lint-model-base") // IJ
                     || name.endsWith("lint-model.jar") // bazel
-                    || name.endsWith("lint-model_bzl.jar") // bazel (using maven_library bridge)
                     || name.startsWith("lint-model") // Gradle
                     || name.endsWith(".testutils")
                     || name.endsWith("testutils.jar")
                     || name.startsWith("testutils-")
                     || name.endsWith(".lint.tests")
                     || name.endsWith("lint-tests.jar") // bazel
-                    || name.endsWith("lint-tests_bzl.jar") // bazel (using maven_library bridge)
                     || (name.equals("main") && path.contains("lint-tests")) // Gradle
                     || name.endsWith(".lint.cli")) {
                 TestFile testFile = new LibraryReferenceTestFile(file);

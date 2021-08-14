@@ -28,19 +28,18 @@ fileset(
 )
 
 maven_library(
-    name = "tools.dvlib_bzl",
+    name = "tools.dvlib",
     srcs = glob([
         "dvlib/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:dvlib:" + BASE_VERSION,
-    legacy_name = "tools.dvlib",
     notice = "dvlib/NOTICE",
     resource_strip_prefix = "tools/base/device_validator/dvlib",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
     ],
 )
 

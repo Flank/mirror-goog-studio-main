@@ -20,11 +20,10 @@ filegroup(
 )
 
 maven_library(
-    name = "annotations_bzl",
+    name = "annotations",
     srcs = glob(["src/main/java/**"]),
     coordinates = "com.android.tools:annotations:" + BASE_VERSION,
     enable_scopes = True,
-    legacy_name = "annotations",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/annotations",
     visibility = ["//visibility:public"],

@@ -25,18 +25,17 @@ iml_module(
 )
 
 maven_library(
-    name = "tools.layoutlib-api_bzl",
+    name = "tools.layoutlib-api",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.layoutlib:layoutlib-api:" + BASE_VERSION,
-    legacy_name = "tools.layoutlib-api",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/layoutlib-api",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.guava.guava",
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.annotations",

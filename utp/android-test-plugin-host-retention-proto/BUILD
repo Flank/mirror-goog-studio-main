@@ -1,11 +1,8 @@
 load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
-load("//tools/base/bazel:maven.bzl", "import_maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-import_maven_library("android-test-plugin-host-retention-proto", "android-test-plugin-host-retention-proto_bzl")
-
 maven_proto_library(
-    name = "android-test-plugin-host-retention-proto_bzl",
+    name = "android-test-plugin-host-retention-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-retention-proto:" + BASE_VERSION,
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention-proto",
