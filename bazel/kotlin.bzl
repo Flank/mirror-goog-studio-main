@@ -3,7 +3,7 @@ load(":functions.bzl", "explicit_target")
 load(":maven.bzl", "MavenInfo", "generate_pom", "import_maven_library", "maven_pom", "split_coordinates")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
-load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
+load(":merge_archives.bzl", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 load(":functions.bzl", "create_option_file")
 
