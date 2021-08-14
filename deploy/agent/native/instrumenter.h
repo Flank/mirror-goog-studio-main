@@ -51,6 +51,12 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_;
 };
 
+// Unpacks and adds the instrumentation jar to the bootstrap class loader and
+// returns the where the jar was written to disk. If the jar is not successfully
+// added to the bootstrap class loader, returns an empty string.
+std::string SetUpInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
+                                    const std::string& package_name);
+
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                            const std::string& package_name, bool overlay_swap);
 

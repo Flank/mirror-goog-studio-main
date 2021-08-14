@@ -284,6 +284,23 @@ bool Instrumenter::ApplyTransforms(
   return failed_classes.empty();
 }
 
+std::string SetUpInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
+                                    const std::string& package_name) {
+  std::string instrument_jar_path =
+      Sites::AppStudio(package_name) + kInstrumentationJarName;
+  if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
+    Log::E("Error writing instrumentation.jar to disk.");
+    return "";
+  }
+
+  if (!LoadInstrumentationJar(jvmti, jni, instrument_jar_path)) {
+    Log::E("Error loading instrumentation dex.");
+    return "";
+  }
+
+  return instrument_jar_path;
+}
+
 bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
   const ModifyParameterTransform loaders(
       /* target class */ "android/app/ApplicationLoaders",
@@ -345,16 +362,8 @@ bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                            const std::string& package_name, bool overlay_swap) {
   std::string instrument_jar_path =
-      Sites::AppStudio(package_name) + kInstrumentationJarName;
-
-  // Make sure the instrumentation jar is ready on disk.
-  if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
-    Log::E("Error writing instrumentation.jar to disk.");
-    return false;
-  }
-
-  if (!LoadInstrumentationJar(jvmti, jni, instrument_jar_path)) {
-    Log::E("Error loading instrumentation dex.");
+      SetUpInstrumentationJar(jvmti, jni, package_name);
+  if (instrument_jar_path.empty()) {
     return false;
   }
 
