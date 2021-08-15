@@ -1,4 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 
 maven_library(
     name = "device-provider",

@@ -1,5 +1,6 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
+load(":kotlin.bzl", "kotlin_library")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
 
 def generate_pom(
@@ -727,4 +728,180 @@ def split_coordinates(coordinates):
         artifact_id = parts[1],
         version = parts[2],
         repo_path = "/".join(segments),
+    )
+
+def _maven_library_impl(ctx):
+    infos_deps = [dep[MavenInfo] for dep in ctx.attr.deps]
+    infos_exports = [dep[MavenInfo] for dep in ctx.attr.exports]
+    pom_deps = [info.pom for info in infos_deps]
+    pom_exports = [info.pom for info in infos_exports]
+
+    coordinates = split_coordinates(ctx.attr.coordinates)
+    basename = coordinates.artifact_id + "-" + coordinates.version
+    pom_name = ctx.attr.pom_name if ctx.attr.pom_name else coordinates.group_id + "." + coordinates.artifact_id
+    generate_pom(
+        ctx,
+        source = ctx.file.template_pom,
+        output_pom = ctx.outputs.pom,
+        group = coordinates.group_id,
+        artifact = coordinates.artifact_id,
+        version = coordinates.version,
+        description = ctx.attr.description,
+        pom_name = pom_name,
+        deps = pom_deps,
+        exports = pom_exports,
+    )
+
+    repo_files = [(coordinates.repo_path + "/" + n, f.files.to_list()[0]) for f, n in ctx.attr.files.items()]
+
+    repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
+    if ctx.attr.library:
+        repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
+
+    if ctx.file.notice:
+        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
+
+    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
+
+    default_files = [ctx.attr.library[DefaultInfo].files] if ctx.attr.library else []
+    providers = [
+        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = default_files)),
+        MavenInfo(pom = ctx.outputs.pom, files = repo_files, transitive = transitive),
+    ]
+    if ctx.attr.library:
+        providers += [ctx.attr.library[JavaInfo]]
+    return providers
+
+_maven_library = rule(
+    attrs = {
+        "notice": attr.label(allow_single_file = True),
+        "library": attr.label(providers = [JavaInfo], allow_single_file = True),
+        "files": attr.label_keyed_string_dict(allow_files = True),
+        "coordinates": attr.string(),
+        "description": attr.string(),
+        "pom_name": attr.string(),
+        "template_pom": attr.label(
+            default = Label("//tools/base/bazel:maven/android.pom"),
+            allow_single_file = True,
+        ),
+        "deps": attr.label_list(providers = [MavenInfo]),
+        "exports": attr.label_list(providers = [MavenInfo]),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_pom": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "pom": "%{name}.pom",
+    },
+    fragments = ["java"],
+    implementation = _maven_library_impl,
+)
+
+def maven_library(
+        name,
+        srcs,
+        javacopts = [],
+        resources = [],
+        resource_strip_prefix = None,
+        data = [],
+        deps = [],
+        exports = [],
+        enable_scopes = False,
+        runtime_deps = [],
+        bundled_deps = [],
+        friends = [],
+        notice = None,
+        coordinates = None,
+        jar_name = None,
+        description = None,
+        pom_name = None,
+        exclusions = None,
+        lint_baseline = None,
+        lint_classpath = [],
+        lint_is_test_sources = False,
+        lint_timeout = None,
+        module_name = None,
+        plugins = [],
+        manifest_lines = None,
+        **kwargs):
+    """Compiles a library jar from Java and Kotlin sources
+
+    Args:
+        srcs: The sources of the library.
+        javacopts: Additional javac options.
+        resources: Resources to add to the jar.
+        resources_strip_prefix: The prefix to strip from the resources path.
+        deps: The dependencies of this library.
+        exports: The exported dependencies of this library.
+        runtime_deps: The runtime dependencies.
+        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
+        friends: The list of kotlin-friends.
+        notice: An optional notice file to be included in the jar.
+        coordinates: The maven coordinates of this artifact.
+        exclusions: Files to exclude from the generated pom file.
+        lint_*: Lint configuration arguments
+        module_name: The kotlin module name.
+    """
+
+    neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink")]
+    bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
+
+    kotlin_library(
+        name = name + ".lib",
+        jar_name = jar_name if jar_name else name + ".jar",
+        srcs = srcs,
+        data = data,
+        deps = deps + neverlink_deps,
+        exports = exports,
+        bundled_deps = bundled_deps,
+        friends = friends,
+        notice = notice,
+        module_name = module_name,
+        resources = resources,
+        resource_strip_prefix = resource_strip_prefix,
+        runtime_deps = runtime_deps,
+        plugins = plugins,
+        manifest_lines = manifest_lines,
+        **kwargs
+    )
+
+    _maven_library(
+        name = name,
+        notice = notice,
+        deps = deps if enable_scopes else [],
+        exports = ([] if enable_scopes else deps) + exports,
+        coordinates = coordinates,
+        description = description,
+        pom_name = pom_name,
+        library = ":" + name + ".lib",
+        **kwargs
+    )
+
+def custom_maven_library(
+        name,
+        files,
+        **kwargs):
+    """A rule to create a custom maven library with provided files.
+
+    Args:
+        name: the name of the rule
+        files: a map of <file> -> <string> for all files to have the given name in maven.
+    """
+    _maven_library(
+        name = name,
+        files = files,
+        **kwargs
     )

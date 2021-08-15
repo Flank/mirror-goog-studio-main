@@ -1,5 +1,4 @@
-load("//tools/base/bazel:maven.bzl", "maven_pom")
-load("//tools/base/bazel:kotlin.bzl", "custom_maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_pom", "custom_maven_library")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 load("//prebuilts/tools/common/aapt:aapt2_version.bzl", "AAPT2_VERSION")
 
