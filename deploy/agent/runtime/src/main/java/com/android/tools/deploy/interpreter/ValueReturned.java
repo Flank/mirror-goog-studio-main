@@ -13,33 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.deploy.interpreter;
 
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.annotations.NonNull;
 
-public class IntValue extends AbstractValue<Integer> {
-    public IntValue(int value, Type asmType) {
-        super(value, asmType);
+public class ValueReturned implements InterpreterResult {
+    private final Value result;
+
+    public ValueReturned(@NonNull Value result) {
+        this.result = result;
     }
 
-    public IntValue(int value) {
-        super(Integer.valueOf(value), Type.INT_TYPE);
+    @NonNull
+    public Value getResult() {
+        return result;
     }
 
-    static IntValue fromBool(boolean b) {
-        return new IntValue(b ? 1 : 0, Type.BOOLEAN_TYPE);
-    }
-
-    static IntValue fromShort(short s) {
-        return new IntValue(s, Type.SHORT_TYPE);
-    }
-
-    static IntValue fromChar(char c) {
-        return new IntValue(c, Type.CHAR_TYPE);
-    }
-
-    static IntValue fromByte(byte b) {
-        return new IntValue(b, Type.BYTE_TYPE);
+    @Override
+    public String toString() {
+        return "Returned" + result;
     }
 }

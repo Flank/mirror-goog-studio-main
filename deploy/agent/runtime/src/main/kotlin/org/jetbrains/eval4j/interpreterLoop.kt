@@ -12,6 +12,7 @@ import com.android.tools.deploy.interpreter.LabelValue
 import com.android.tools.deploy.interpreter.ObjectValue
 import com.android.tools.deploy.interpreter.Value
 import com.android.tools.deploy.interpreter.Value.VOID_VALUE
+import com.android.tools.deploy.interpreter.ValueReturned
 import org.jetbrains.eval4j.ExceptionThrown.ExceptionKind
 import org.jetbrains.org.objectweb.asm.Opcodes.*
 import org.jetbrains.org.objectweb.asm.Type
@@ -28,10 +29,6 @@ class ExceptionThrown(val exception: ObjectValue, val kind: ExceptionKind) : Int
         FROM_EVALUATOR,
         BROKEN_CODE
     }
-}
-
-data class ValueReturned(val result: Value) : InterpreterResult {
-    override fun toString(): String = "Returned $result"
 }
 
 abstract class ThrownFromEvalExceptionBase(cause: Throwable) : RuntimeException(cause) {

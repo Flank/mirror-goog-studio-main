@@ -15,13 +15,13 @@
  */
 package com.android.tools.deploy.liveedit;
 
-import static org.jetbrains.eval4j.InterpreterLoopKt.interpreterLoop;
-
+import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
 import com.android.tools.deploy.interpreter.InterpretationEventHandler;
 import com.android.tools.deploy.interpreter.InterpreterResult;
 import com.android.tools.deploy.interpreter.ObjectValue;
 import com.android.tools.deploy.interpreter.Value;
-import org.jetbrains.eval4j.ValueReturned;
+import com.android.tools.deploy.interpreter.ValueReturned;
+import org.jetbrains.eval4j.InterpreterLoopKt;
 import org.jetbrains.org.objectweb.asm.Opcodes;
 import org.jetbrains.org.objectweb.asm.Type;
 import org.jetbrains.org.objectweb.asm.tree.MethodNode;
@@ -32,6 +32,7 @@ public class MethodBodyEvaluator {
 
     private final MethodNode target;
     private final ClassLoader classLoader;
+    private static final boolean USE_JFLINGER = true;
 
     public MethodBodyEvaluator(byte[] classData, String targetMethod) {
         this(classData, targetMethod, new byte[0][]);
@@ -65,8 +66,16 @@ public class MethodBodyEvaluator {
         }
 
         AndroidEval evaluator = new AndroidEval(classLoader);
-        InterpreterResult result =
-                interpreterLoop(target, init, evaluator, InterpretationEventHandler.NONE);
+        InterpreterResult result;
+        if (USE_JFLINGER) {
+            result =
+                    ByteCodeInterpreter.interpreterLoop(
+                            target, init, evaluator, InterpretationEventHandler.NONE);
+        } else {
+            result =
+                    InterpreterLoopKt.interpreterLoop(
+                            target, init, evaluator, InterpretationEventHandler.NONE);
+        }
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
             return value.obj();

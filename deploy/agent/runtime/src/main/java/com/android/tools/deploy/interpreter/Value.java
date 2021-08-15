@@ -103,4 +103,6 @@ public abstract class Value implements org.jetbrains.org.objectweb.asm.tree.anal
                     return "VOID_VALUE";
                 }
             };
+
+    public static ObjectValue NULL_VALUE = new ObjectValue(null, Type.getObjectType("null"));
 }
