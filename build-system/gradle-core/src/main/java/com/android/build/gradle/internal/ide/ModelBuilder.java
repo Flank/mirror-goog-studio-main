@@ -19,10 +19,8 @@ package com.android.build.gradle.internal.ide;
 import static com.android.AndroidProjectTypes.PROJECT_TYPE_APP;
 import static com.android.AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE;
 import static com.android.SdkConstants.DIST_URI;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 
 import com.android.SdkConstants;
@@ -133,7 +131,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.xml.namespace.QName;
@@ -144,15 +141,12 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-
-import com.google.common.collect.Streams;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -1069,59 +1063,75 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     public static List<File> getGeneratedSourceFoldersForUnitTests(
-            @NonNull ComponentImpl component) {
-        return Streams.stream(getGeneratedSourceFoldersFileCollectionForUnitTests(component))
-                .collect(Collectors.toList());
+            @Nullable ComponentImpl component) {
+        if (component == null) {
+            return Collections.emptyList();
+        }
+
+        List<File> folders =
+                Lists.newArrayList(component.getVariantData().getExtraGeneratedSourceFolders());
+        folders.add(
+                component
+                        .getArtifacts()
+                        .get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE)
+                        .get()
+                        .getAsFile());
+        return folders;
     }
 
     @NonNull
-    private static FileCollection getGeneratedSourceFoldersFileCollectionForUnitTests(
-            @NonNull ComponentImpl component) {
-        ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
-        fileCollection.from(component.getVariantData().getExtraGeneratedSourceFolders());
-        fileCollection.from(
-                component.getArtifacts().get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE));
-        fileCollection.disallowChanges();
-        return fileCollection;
-    }
+    public static List<File> getGeneratedSourceFolders(@Nullable ComponentImpl component) {
+        if (component == null) {
+            return Collections.emptyList();
+        }
+        ArtifactsImpl operations = component.getArtifacts();
 
-    @NonNull
-    public static List<File> getGeneratedSourceFolders(@NonNull ComponentImpl component) {
-        return Streams.stream(getGeneratedSourceFoldersFileCollection(component))
-                .collect(Collectors.toList());
-    }
+        boolean isDataBindingEnabled = component.getBuildFeatures().getDataBinding();
+        boolean isViewBindingEnabled = component.getBuildFeatures().getViewBinding();
+        Directory dataBindingSources =
+                operations.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
+        boolean addBindingSources =
+                (isDataBindingEnabled || isViewBindingEnabled) && (dataBindingSources != null);
+        List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(component);
 
-    @NonNull
-    public static FileCollection getGeneratedSourceFoldersFileCollection(
-            @NonNull ComponentImpl component) {
-        ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
-        ArtifactsImpl artifacts = component.getArtifacts();
-        fileCollection.from(getGeneratedSourceFoldersFileCollectionForUnitTests(component));
-        Callable<Directory> aidlCallable =
-                () -> artifacts.get(AIDL_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
-        fileCollection.from(aidlCallable);
+        // Set this to the number of folders you expect to add explicitly in the code below.
+        int additionalFolders = 4;
+        if (addBindingSources) {
+            additionalFolders += 1;
+        }
+        List<File> folders =
+                Lists.newArrayListWithExpectedSize(additionalFolders + extraFolders.size());
+        folders.addAll(extraFolders);
+
+        Directory aidlSources =
+                operations.get(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
+
+        if (aidlSources != null) {
+            folders.add(aidlSources.getAsFile());
+        }
         if (component.getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
-            Callable<Directory> buildConfigCallable =
-                    () -> component.getPaths().getBuildConfigSourceOutputDir().getOrNull();
-            fileCollection.from(buildConfigCallable);
+            Directory maybeBuildConfig =
+                    component.getPaths().getBuildConfigSourceOutputDir().getOrNull();
+            if (maybeBuildConfig != null) {
+                folders.add(maybeBuildConfig.getAsFile());
+            }
         }
         // this is incorrect as it cannot get the final value, we should always add the folder
         // as a potential source origin and let the IDE deal with it.
         boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
-            Callable<Directory> renderscriptCallable =
-                    () -> artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE).getOrNull();
-            fileCollection.from(renderscriptCallable);
+            Directory renderscriptSources =
+                    operations
+                            .get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
+                            .getOrNull();
+            if (renderscriptSources != null) {
+                folders.add(renderscriptSources.getAsFile());
+            }
         }
-        boolean isDataBindingEnabled = component.getBuildFeatures().getDataBinding();
-        boolean isViewBindingEnabled = component.getBuildFeatures().getViewBinding();
-        if (isDataBindingEnabled || isViewBindingEnabled) {
-            Callable<Directory> dataBindingCallable =
-                    () -> artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
-            fileCollection.from(dataBindingCallable);
+        if (addBindingSources) {
+            folders.add(dataBindingSources.getAsFile());
         }
-        fileCollection.disallowChanges();
-        return fileCollection;
+        return folders;
     }
 
     @NonNull
