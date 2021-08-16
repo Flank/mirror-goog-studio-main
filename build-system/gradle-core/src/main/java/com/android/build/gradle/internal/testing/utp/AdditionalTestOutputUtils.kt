@@ -58,13 +58,18 @@ fun findAdditionalTestOutputDirectoryOnDevice(
         return "/sdcard/Android/media/${testData.instrumentationTargetPackageId}/additional_test_output"
     }
 
-    return queryAdditionalTestOutputLocation(device, testData)
+    val additionalTestOutputLocation = queryAdditionalTestOutputLocation(device, testData)
+    if (additionalTestOutputLocation == null) {
+        logger.warn("additionalTestOutput is not supported on this device running API level ${device.getApiLevel()} because the additional test output directory could not be found")
+        return null
+    }
+    return "${additionalTestOutputLocation}/data/${testData.instrumentationTargetPackageId}/files/test_data"
 }
 
 private fun queryAdditionalTestOutputLocation(
     device: DeviceConnector,
     testData: StaticTestData
-): String {
+): String? {
     var result: String? = null
     val receiver: MultiLineReceiver = object : MultiLineReceiver() {
         override fun processNewLines(lines: Array<String>) {
@@ -95,5 +100,5 @@ private fun queryAdditionalTestOutputLocation(
     )
     receiver.flush()
 
-    return "${result}/data/${testData.instrumentationTargetPackageId}/files/test_data"
+    return result
 }
