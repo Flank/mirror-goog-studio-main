@@ -27,6 +27,10 @@ import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -66,6 +70,8 @@ import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -678,9 +684,39 @@ public class LocalMavenRepositoryGenerator {
                     return result;
                 }
 
-                // TODO: Consider searching the files/directories in the repository to identify the
-                //  versions
-                throw new IllegalStateException("Range resolution is not yet implemented.");
+                // Add support to resolve only if pointing locally
+                for (RemoteRepository repository : request.getRepositories()) {
+                    try {
+                        URI uri = new URL(repository.getUrl()).toURI();
+                        try {
+                            File repoPath = new File(uri);
+                            Artifact artifact = request.getArtifact();
+                            String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
+                            File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
+                            File[] versions = artifactPath.listFiles();
+                            if (versions != null) {
+                                for (File version : versions) {
+                                    if (!version.isDirectory())
+                                        continue;
+                                    try {
+                                        result.addVersion(versionScheme.parseVersion(version.getName()));
+                                    } catch (InvalidVersionSpecificationException e) {
+                                        // Ignore invalid versions.
+                                    }
+                                }
+                                if (!result.getVersions().isEmpty()) {
+                                    return result;
+                                }
+                            }
+                        } catch (IllegalArgumentException e) {
+                            // Ignore non local repositories
+                        }
+                    } catch (URISyntaxException | MalformedURLException e) {
+                        result.addException(e);
+                        throw new VersionRangeResolutionException(result);
+                    }
+
+                }
             }
 
             return super.resolveVersionRange(session, request);
