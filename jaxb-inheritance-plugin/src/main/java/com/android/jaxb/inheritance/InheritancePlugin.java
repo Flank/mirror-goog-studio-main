@@ -474,7 +474,14 @@ public class InheritancePlugin extends Plugin {
                         // applied if the element is missing altogether. We must apply it ourselves.
                         JFieldVar fieldRef = classOutline.implClass.fields()
                                 .get(info.getName(false));
-                        fieldRef.init(JExpr.lit(((XSElementDecl) term).getDefaultValue().value));
+                        JType fieldType = fieldRef.type();
+                        JClass boxedType = fieldType.boxify();
+                        String defaultValue = ((XSElementDecl) term).getDefaultValue().value;
+                        if (boxedType.fullName().equals("java.lang.Boolean")) {
+                            fieldRef.init(JExpr.lit(Boolean.valueOf(defaultValue)));
+                        } else {
+                            fieldRef.init(JExpr.lit(defaultValue));
+                        }
                     }
 
                     XSType type = ((XSElementDecl)term).getType();

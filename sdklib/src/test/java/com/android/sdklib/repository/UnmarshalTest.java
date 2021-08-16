@@ -32,18 +32,97 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import junit.framework.TestCase;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
 
 /**
  * Tests for unmarshalling an xml repository
  */
 public class UnmarshalTest extends TestCase {
 
-    public void testLoadRepo() throws Exception {
+    public void testLoadRepoV3() throws Exception {
+        String filename = "/repository2-3_sample.xml";
+        InputStream xmlStream = getClass().getResourceAsStream(filename);
+        assertNotNull("Missing test file: " + filename, xmlStream);
+
+        SchemaModule repoEx = AndroidSdkHandler.getRepositoryModule();
+        SchemaModule addonEx = AndroidSdkHandler.getAddonModule();
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        Repository repo =
+                (Repository)
+                        SchemaModuleUtil.unmarshal(
+                                xmlStream,
+                                ImmutableList.of(repoEx, addonEx, RepoManager.getGenericModule()),
+                                true,
+                                progress);
+        progress.assertNoErrorsOrWarnings();
+        List<? extends License> licenses = repo.getLicense();
+        assertEquals(licenses.size(), 2);
+        Map<String, String> licenseMap = Maps.newHashMap();
+        for (License license : licenses) {
+            licenseMap.put(license.getId(), license.getValue());
+        }
+        assertEquals(licenseMap.get("license1").trim(), "This is the license for this platform.");
+        assertEquals(
+                licenseMap.get("license2").trim(),
+                "Licenses are only of type 'text' right now, so this is implied.");
+
+        List<? extends RemotePackage> packages = repo.getRemotePackage();
+        assertEquals(3, packages.size());
+        Map<String, RemotePackage> packageMap = Maps.newHashMap();
+        for (RemotePackage p : packages) {
+            packageMap.put(p.getPath(), p);
+        }
+
+        RemotePackage platform22 = packageMap.get("platforms;android-22");
+        assertEquals(platform22.getDisplayName(), "Lollipop MR1");
+
+        assertTrue(platform22.getTypeDetails() instanceof DetailsTypes.PlatformDetailsType);
+        DetailsTypes.PlatformDetailsType details =
+                (DetailsTypes.PlatformDetailsType)platform22.getTypeDetails();
+        assertEquals(22, details.getApiLevel());
+        assertEquals("22x", details.getApiLevelString());
+        assertEquals(2, details.getExtensionLevel().intValue());
+        assertFalse(details.isBaseExtension());
+        assertEquals(5, details.getLayoutlib().getApi());
+
+        List<Archive> archives = ((RemotePackageImpl)platform22).getAllArchives();
+        assertEquals(2, archives.size());
+        Archive archive = archives.get(1);
+        assertEquals("x64", archive.getHostArch());
+        assertEquals("windows", archive.getHostOs());
+        Archive.PatchType patch = archive.getAllPatches().get(0);
+        assertEquals(new Revision(1), patch.getBasedOn().toRevision());
+        assertEquals(4321, patch.getSize());
+        assertEquals("something", patch.getUrl());
+        Archive.CompleteType complete = archive.getComplete();
+        assertEquals(65536, complete.getSize());
+        Checksum checksum = complete.getTypedChecksum();
+        assertEquals("1234ae37115ebf13412bbef91339ee0d9454525e", checksum.getValue());
+        assertEquals("sha-1", checksum.getType());
+
+        RemotePackage sourcePackage = packageMap.get("sources;android-1");
+        Checksum checksum2 =
+                sourcePackage.getArchive().getComplete().getTypedChecksum();
+        DetailsTypes.SourceDetailsType
+                sourcePackageTypeDetails
+                = (DetailsTypes.SourceDetailsType)sourcePackage.getTypeDetails();
+        assertEquals(1, sourcePackageTypeDetails.getApiLevel());
+        assertEquals("1", sourcePackageTypeDetails.getApiLevelString());
+        assertNull(sourcePackageTypeDetails.getExtensionLevel());
+        assertTrue(sourcePackageTypeDetails.isBaseExtension());
+        assertNull(sourcePackageTypeDetails.getExtensionLevel());
+        assertEquals(
+                "1234ae37115ebf13412bbef91339ee0d945412341339ee0d9454123494541234",
+                checksum2.getValue());
+        assertEquals("sha-256", checksum2.getType());
+    }
+
+    public void testLoadRepoV2() throws Exception {
         String filename = "/repository2-2_sample.xml";
         InputStream xmlStream = getClass().getResourceAsStream(filename);
         assertNotNull("Missing test file: " + filename, xmlStream);

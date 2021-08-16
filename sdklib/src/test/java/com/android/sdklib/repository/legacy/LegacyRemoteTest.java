@@ -111,6 +111,7 @@ public class LegacyRemoteTest extends TestCase {
                 = (DetailsTypes.PlatformDetailsType) pastryDetails;
         assertEquals(5, platformDetails.getApiLevel());
         assertEquals("Pastry", platformDetails.getCodename());
+        assertTrue(platformDetails.isBaseExtension());
         assertEquals(1, platformDetails.getLayoutlib().getApi());
 
         // TODO: more specific checks

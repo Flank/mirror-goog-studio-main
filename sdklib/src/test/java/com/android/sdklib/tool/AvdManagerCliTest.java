@@ -95,7 +95,9 @@ public class AvdManagerCliTest {
         details2.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
         details2.setAbi("armeabi-v7a");
         details2.setApiLevel(26);
-        p2.setTypeDetails((TypeDetails) details2);
+        details2.setExtensionLevel(5);
+        details2.setBaseExtension(false);
+        p2.setTypeDetails((TypeDetails)details2);
         mFileOp.recordExistingFile(p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 

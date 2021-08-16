@@ -16,8 +16,6 @@
 
 package com.android.sdklib.repository.meta;
 
-import static com.android.sdklib.repository.targets.SystemImage.DEFAULT_TAG;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -27,9 +25,12 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.IdDisplay;
+
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.annotation.XmlTransient;
+
+import static com.android.sdklib.repository.targets.SystemImage.DEFAULT_TAG;
 
 /**
  * Container for the subclasses of {@link TypeDetails} used by the android SDK.
@@ -57,12 +58,74 @@ public final class DetailsTypes {
         /**
          * Sets the api level this package corresponds to.
          */
-        void setApiLevel(int apiLevel);
+        default void setApiLevel(int apiLevel) {
+            // Implementation for schema v3 and above.
+            if (isBaseExtension()) {
+                setApiLevelString(String.valueOf(apiLevel));
+            }
+            else {
+                setApiLevelString(apiLevel + "x");
+            }
+        }
 
         /**
          * Gets the api level of this package.
          */
-        int getApiLevel();
+        default int getApiLevel() {
+            // Implementation for schema v3 and above.
+            return getApiLevelInt(getApiLevelString());
+        }
+
+        /**
+         * Only to be used for schema v3 and above.Returns the contents of the api-level tag. This
+         * is an int if it is the base SDK, or an int followed by an 'x' character if the sdk
+         * contains extensions eg. "32x".
+         */
+        default String getApiLevelString() {
+            // Overridden by v3 and shouldn't be used otherwise
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * @Deprecated Use {@link #setApiLevel(int)} instead.
+         */
+        default void setApiLevelString(String apiLevelString) {
+            // Overridden by v3 and shouldn't be used otherwise
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Returns whether the package is the base sdk for this api level.
+         */
+        default boolean isBaseExtension() {
+            // Implementation for schema v1 and v2.
+            return true;
+        }
+
+        /**
+         * Sets whether the package is the base sdk for this api level.
+         */
+        default void setBaseExtension(boolean isBaseExtension) {
+            // Overridden by v3 and shouldn't be used otherwise.
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Gets the extension level of this package.
+         */
+        @Nullable
+        default Integer getExtensionLevel() {
+            // Implementation for schema v1 and v2.
+            return null;
+        }
+
+        /**
+         * Sets the extension level of this package.
+         */
+        default void setExtensionLevel(Integer extensionLevel) {
+            // Overridden by v3 and shouldn't be used otherwise
+            throw new UnsupportedOperationException();
+        }
 
         /**
          * If this is a preview release the api is identified by a codename in addition to the api
@@ -75,6 +138,23 @@ public final class DetailsTypes {
          * null for preview releases.
          */
         String getCodename();
+
+        static int getApiLevelInt(String apiLevel) {
+            if (apiLevel == null) {
+                return 0;
+            }
+            try {
+                if (apiLevel.endsWith("x")) {
+                    return Integer.parseInt(apiLevel.substring(0, apiLevel.length() - 1));
+                }
+                else {
+                    return Integer.parseInt(apiLevel);
+                }
+            }
+            catch (NumberFormatException exception) {
+                return 0;
+            }
+        }
     }
 
     /**

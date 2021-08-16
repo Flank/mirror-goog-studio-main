@@ -220,7 +220,7 @@ public class AndroidSdkHandlerTest extends TestCase {
                             provider.getSources(null, new FakeProgressIndicator(), false)) {
                         String url = source.getUrl();
                         if (url.equals(
-                                "https://dl.google.com/android/repository/repository2-1.xml")) {
+                                "https://dl.google.com/android/repository/repository2-3.xml")) {
                             found = true;
                             break;
                         }
