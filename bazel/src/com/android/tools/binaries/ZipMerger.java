@@ -163,6 +163,10 @@ public class ZipMerger {
                 createZip(mergedZip, tmp, newName, compressionLevel);
                 merged.put(new ZipFile("", mergedZip, false), newName);
                 mergedZip.toFile().deleteOnExit();
+            } else if (newName.endsWith("/")) {
+                // Directory entries should not have content, just pick the first.
+                Entry chosen = zips.iterator().next();
+                merged.put(chosen.zip, chosen.entry);
             } else {
                 // Merging files - Pick the one override, or fail.
                 Entry chosen = null;

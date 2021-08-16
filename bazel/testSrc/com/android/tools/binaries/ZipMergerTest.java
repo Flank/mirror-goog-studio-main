@@ -38,6 +38,39 @@ import org.junit.Test;
 public class ZipMergerTest {
 
     @Test
+    public void testDirectoryDuplication() throws Exception {
+        File zip1 = createZipFile("zip1.zip",
+                "com/", "",
+                "com/example/", "",
+                "com/example/a/", "",
+                "com/example/a/a.txt", "A");
+        File zip2 = createZipFile("zip2.zip",
+                // Add spurious content to the directory entries that conflict here to verify
+                // the merger is deterministic - it picks the directory from the first zip.
+                "com/", "--invalid--",
+                "com/example/", "--invalid--",
+                "com/example/b/", "",
+                "com/example/b/b.txt", "B");
+
+        File res = newFile("res.zip");
+        ZipMerger.main(new String[]{
+                "c",
+                res.getAbsolutePath(),
+                zip1.getAbsolutePath(),
+                zip2.getAbsolutePath(),
+        });
+
+        assertZipEquals(res,
+                "com/", "",
+                "com/example/", "",
+                "com/example/a/", "",
+                "com/example/a/a.txt", "A",
+                "com/example/b/", "",
+                "com/example/b/b.txt", "B");
+    }
+
+
+    @Test
     public void testMergeTwoZips() throws Exception {
         File zip1 = createZipFile("zip1.zip",
                 "place/here/b.txt", "BB",
