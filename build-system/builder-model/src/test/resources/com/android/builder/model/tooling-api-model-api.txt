@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-0440a471b1dc89ece8087ec04576da5794f452aa5759231265b65762af9987f5
+b78142533a946caca01e29fb4bf8ec6980a938378d624255f14409010adbba5f
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -480,6 +480,13 @@ com.android.builder.model.level2.Library.getSymbolFile: java.lang.String ()
 com.android.builder.model.level2.Library.getType: int ()
 com.android.builder.model.level2.Library.getVariant: java.lang.String ()
 com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.ModelSyncFile
+com.android.builder.model.v2.ModelSyncFile$ModelSyncType extends java.lang.Enum
+com.android.builder.model.v2.ModelSyncFile$ModelSyncType.valueOf: com.android.builder.model.v2.ModelSyncFile$ModelSyncType (java.lang.String)
+com.android.builder.model.v2.ModelSyncFile$ModelSyncType.values: com.android.builder.model.v2.ModelSyncFile$ModelSyncType[] ()
+com.android.builder.model.v2.ModelSyncFile.getModelSyncType: com.android.builder.model.v2.ModelSyncFile$ModelSyncType ()
+com.android.builder.model.v2.ModelSyncFile.getSyncFile: java.io.File ()
+com.android.builder.model.v2.ModelSyncFile.getTaskName: java.lang.String ()
 com.android.builder.model.v2.dsl.BaseConfig implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.dsl.BaseConfig.getApplicationIdSuffix: java.lang.String ()
 com.android.builder.model.v2.dsl.BaseConfig.getBuildConfigFields: java.util.Map<java.lang.String, com.android.builder.model.v2.dsl.ClassField> ()
@@ -590,6 +597,7 @@ com.android.builder.model.v2.ide.BaseArtifact.getClassesFolders: java.util.Set<j
 com.android.builder.model.v2.ide.BaseArtifact.getCompileTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BaseArtifact.getGeneratedSourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.BaseArtifact.getIdeSetupTaskNames: java.util.Set<java.lang.String> ()
+com.android.builder.model.v2.ide.BaseArtifact.getModelSyncFiles: java.util.Collection<com.android.builder.model.v2.ModelSyncFile> ()
 com.android.builder.model.v2.ide.BaseArtifact.getMultiFlavorSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BaseArtifact.getVariantSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BundleInfo implements com.android.builder.model.v2.AndroidModel

@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWr
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
@@ -72,6 +73,8 @@ class ApplicationTaskManager(
         createCommonTasks(variantInfo)
 
         val variant = variantInfo.variant
+
+        taskFactory.register(ApplicationVariantModelTask.CreationAction(variant))
 
         // Base feature specific tasks.
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variant))

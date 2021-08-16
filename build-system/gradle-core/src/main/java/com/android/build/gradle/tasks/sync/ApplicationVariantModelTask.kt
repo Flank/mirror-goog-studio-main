@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -34,6 +35,11 @@ import java.io.FileOutputStream
 
 @DisableCachingByDefault
 abstract class ApplicationVariantModelTask: NonIncrementalTask() {
+
+    companion object {
+        fun getTaskName(creationConfig: ComponentCreationConfig) =
+            creationConfig.computeTaskName("create", "VariantModel")
+    }
 
     @get:Input
     abstract val applicationId: Property<String>
@@ -58,7 +64,7 @@ abstract class ApplicationVariantModelTask: NonIncrementalTask() {
         ) {
 
         override val name: String
-            get() = creationConfig.computeTaskName("create", "VariantModel")
+            get() = getTaskName(creationConfig)
         override val type: Class<ApplicationVariantModelTask>
             get() = ApplicationVariantModelTask::class.java
 

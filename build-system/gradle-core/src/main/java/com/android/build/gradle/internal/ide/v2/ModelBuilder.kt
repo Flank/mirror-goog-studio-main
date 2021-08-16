@@ -35,6 +35,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -70,8 +71,10 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
@@ -554,6 +557,18 @@ class ModelBuilder<
         val maxSdkVersion =
                 if (component is VariantCreationConfig) component.maxSdkVersion else null
 
+        val modelSyncFiles = if (component is ApplicationCreationConfig) {
+            listOf(
+                ModelSyncFileImpl(
+                    ModelSyncFile.ModelSyncType.BASIC,
+                    ApplicationVariantModelTask.getTaskName(component),
+                    component.artifacts.get(InternalArtifactType.VARIANT_MODEL).get().asFile
+                )
+            )
+        } else {
+            listOf()
+        }
+
         return AndroidArtifactImpl(
             minSdkVersion = minSdkVersion,
             targetSdkVersionOverride = targetSdkVersionOverride,
@@ -585,7 +600,8 @@ class ModelBuilder<
             assembleTaskOutputListingFile = if (component.variantType.isApk)
                 component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
-                null
+                null,
+            modelSyncFiles = modelSyncFiles,
         )
     }
 
@@ -624,7 +640,8 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
             runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
 
-            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull()
+            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull(),
+            modelSyncFiles = listOf(),
         )
     }
 

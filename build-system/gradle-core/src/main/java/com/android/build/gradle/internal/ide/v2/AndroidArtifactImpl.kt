@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.ide.AndroidArtifact
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.BundleInfo
@@ -52,6 +53,7 @@ data class AndroidArtifactImpl(
     override val generatedResourceFolders: Collection<File>,
     override val classesFolders: Set<File>,
     override val assembleTaskOutputListingFile: File?,
+    override val modelSyncFiles: Collection<ModelSyncFile>
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic
