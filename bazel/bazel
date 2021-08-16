@@ -79,6 +79,7 @@ def main():
     env['TMP'] = os.environ.get('TMP','')
     env['PATH'] = os.environ.get('PATH','')
     env['USERPROFILE'] = os.environ.get('USERPROFILE', '')
+    env['APPDATA'] = os.environ.get('APPDATA', '')
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')

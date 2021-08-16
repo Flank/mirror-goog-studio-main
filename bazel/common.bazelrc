@@ -88,7 +88,7 @@ build:release --define release=true
 build:_remote_base --bes_timeout=60s
 build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
 build:_remote_base --project_id=908081808034
-build:_remote_base --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
+build:_remote_base --google_default_credentials
 build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
 build:_remote_base --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
 # Building runfile trees is unnecessary, unless executing binaries in bazel-bin/ manually (use 'bazel run' instead)
