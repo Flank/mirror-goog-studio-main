@@ -27,11 +27,8 @@ import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,7 +40,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -54,9 +50,11 @@ import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
 import org.apache.maven.model.resolution.ModelResolver;
 import org.apache.maven.repository.internal.ArtifactDescriptorReaderDelegate;
+import org.apache.maven.repository.internal.DefaultVersionRangeResolver;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -68,14 +66,15 @@ import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.metadata.DefaultMetadata;
-import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
@@ -86,6 +85,11 @@ import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.VersionConstraint;
+import org.eclipse.aether.version.VersionRange;
+import org.eclipse.aether.version.VersionScheme;
 
 /**
  * A tool that generates a virtual Maven repository from a given list of initial artifacts, and
@@ -149,15 +153,6 @@ public class LocalMavenRepositoryGenerator {
     }
 
     public void run() throws Exception {
-        // Before triggering downloads, we must make sure there are no stale cache files
-        // After doing repo sync, the -prebuilts files might still be fresh enough to be used
-        // but different from the real metadata file.
-        try (Stream<Path> files = Files.walk(this.repoPath, FileVisitOption.FOLLOW_LINKS)) {
-            files.filter(path -> path.getFileName().toString().equals("maven-metadata-prebuilts.xml"))
-                 .map(Path::toFile)
-                 .forEach(File::delete);
-        }
-
         ResolutionResult result = new ResolutionResult();
 
         // Compute dependency graph with version resolution, but without conflict resolution.
@@ -192,29 +187,6 @@ public class LocalMavenRepositoryGenerator {
         } else {
             for (DependencyNode node : unresolvedNodes) {
                 processNode(node, true, result);
-            }
-        }
-
-        // "Fetch" the metadata from the locally downloaded files
-        if (this.fetch) {
-            for (DependencyNode node : unresolvedNodes) {
-                Artifact artifact = node.getArtifact();
-                DefaultMetadata metadata = new DefaultMetadata(artifact.getGroupId(),
-                        artifact.getArtifactId(),
-                        "maven-metadata.xml",
-                        Metadata.Nature.RELEASE_OR_SNAPSHOT);
-
-                for (RemoteRepository repository : AetherUtils.REPOSITORIES) {
-                    String path = repo.session.getLocalRepositoryManager()
-                            .getPathForRemoteMetadata(metadata, repository, "");
-                    File source = new File(repo.session.getLocalRepository().getBasedir(), path);
-                    if (source.exists()) {
-                        File target = new File(source.getParentFile(), "maven-metadata.xml");
-                        Files.copy(source.toPath(), target.toPath(),
-                                StandardCopyOption.REPLACE_EXISTING);
-                        break;
-                    }
-                }
             }
         }
 
@@ -623,6 +595,7 @@ public class LocalMavenRepositoryGenerator {
                     RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
             locator.addService(TransporterFactory.class, FileTransporterFactory.class);
             locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+            locator.setService(VersionRangeResolver.class, CustomVersionRangeResolver.class);
 
             // Note that, if any of the inputs transitively depend on an artifact using a version
             // range, the default version range resolver will not be able to resolve the version,
@@ -653,6 +626,64 @@ public class LocalMavenRepositoryGenerator {
                     new HandleAarDescriptorReaderDelegate());
 
             return session;
+        }
+    }
+
+
+    /**
+     * Resolves maven version ranges (e.g., [15.0, 19.0)) into actual versions (e.g., listOf(15.0,
+     * 16.0, 17.0)).
+     *
+     * <p>The default version range resolver requires the presence of a maven-metadata.xml file to
+     * identify which versions within the given range actually exist in the repository. However, our
+     * local maven repository does not have maven-metadata.xml files. This custom implementation
+     * uses the filesystem to load all the available versions.
+     */
+    private static class CustomVersionRangeResolver extends DefaultVersionRangeResolver {
+
+        @Override
+        public VersionRangeResult resolveVersionRange(
+                RepositorySystemSession session, VersionRangeRequest request)
+                throws VersionRangeResolutionException {
+            // Taken from DefaultVersionRangeResolver.
+            VersionRangeResult result = new VersionRangeResult(request);
+            VersionScheme versionScheme = new GenericVersionScheme();
+            VersionConstraint versionConstraint;
+            try {
+                versionConstraint =
+                        versionScheme.parseVersionConstraint(request.getArtifact().getVersion());
+            } catch (InvalidVersionSpecificationException e) {
+                result.addException(e);
+                throw new VersionRangeResolutionException(result);
+            }
+
+            if (versionConstraint.getRange() != null) {
+                // When there is a range, the DefaultVersionRangeResolver refers to a
+                // maven-metadata.xml file to identify which versions exist. We don't have such
+                // manifest files, so we need a workaround.
+
+                VersionRange.Bound lower = versionConstraint.getRange().getLowerBound();
+                VersionRange.Bound upper = versionConstraint.getRange().getUpperBound();
+                // When version is [v], the constraint is parsed to be the range [v,v]. It's
+                // easy to identify this, and return a single constraint.
+                // This is the behavior documented in VersionRangeResolver interface, but
+                // not respected by the DefaultVersionRangeResolver.
+                // For instance, this block enables the following dependency to be properly
+                // resolved:
+                //     androidx.navigation:navigation-safe-args-gradle-plugin:jar:2.3.1 ->
+                //         androidx.navigation:navigation-safe-args-generator:jar:[2.3.1]
+                if (lower.getVersion() == upper.getVersion()) {
+                    result.setVersionConstraint(versionConstraint);
+                    result.addVersion(versionConstraint.getRange().getLowerBound().getVersion());
+                    return result;
+                }
+
+                // TODO: Consider searching the files/directories in the repository to identify the
+                //  versions
+                throw new IllegalStateException("Range resolution is not yet implemented.");
+            }
+
+            return super.resolveVersionRange(session, request);
         }
     }
 }
