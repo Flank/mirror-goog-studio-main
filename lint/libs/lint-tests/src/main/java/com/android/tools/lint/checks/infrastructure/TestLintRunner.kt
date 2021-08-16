@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_JAR
+import com.android.SdkConstants.DOT_KOTLIN_MODULE
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Companion.populateProjectDirectory
 import com.android.tools.lint.checks.infrastructure.TestMode.TestModeContext
 import com.android.tools.lint.client.api.Configuration
@@ -30,6 +33,7 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
+import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.collect.Lists
 import com.google.common.collect.ObjectArrays
 import com.google.common.io.Files
@@ -375,7 +379,7 @@ class TestLintRunner(private val task: TestLintTask) {
         if (mode.modifiesSources && mode != TestMode.DEFAULT && defaultState != null) {
             val originalDir = defaultState.rootDir
             val modifiedDir = resultState.rootDir
-            addChangedFiles(changedFiles, originalDir, modifiedDir, "")
+            addChangedFiles(changedFiles, originalDir, modifiedDir, "", 0)
         }
 
         return changedFiles
@@ -383,24 +387,33 @@ class TestLintRunner(private val task: TestLintTask) {
 
     private class ChangedFile(val path: String, val before: String, val after: String)
 
+    // Add non-binary files that differ between the two folders
     private fun addChangedFiles(
         changed: MutableList<ChangedFile>,
         dir1: File,
         dir2: File,
-        path: String
+        path: String,
+        depth: Int
     ) {
         val list = dir1.listFiles() ?: return
         for (file1 in list) {
             val name = file1.name
+            val fullPath = if (path.isEmpty()) name else "$path/$name"
             val file2 = File(dir2, name)
             if (file1.isDirectory) {
-                addChangedFiles(changed, file1, file2, if (path.isEmpty()) name else "$path/$name")
+                if (depth == 1 && (name == "libs" || name == "bin")) {
+                    continue
+                }
+                addChangedFiles(changed, file1, file2, fullPath, depth + 1)
             } else {
-                if (file1.isFile && file2.isFile) {
+                if (file1.isFile && file2.isFile &&
+                    !name.endsWith(DOT_JAR) && !name.endsWith(DOT_CLASS) &&
+                    !name.endsWith(DOT_KOTLIN_MODULE) && !isBitmapFile(file1)
+                ) {
                     val contents1 = file1.readText()
                     val contents2 = file2.readText()
                     if (contents1 != contents2) {
-                        changed.add(ChangedFile(path, contents1, contents2))
+                        changed.add(ChangedFile(fullPath, contents1, contents2))
                     }
                 }
             }

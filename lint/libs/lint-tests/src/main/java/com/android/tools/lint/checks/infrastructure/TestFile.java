@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_KOTLIN_MODULE;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
 import static com.android.SdkConstants.DOT_PNG;
@@ -438,7 +439,7 @@ public class TestFile {
                     if (!seen.add(path)) {
                         // Duplicate: OK for .kotlin_module files; we include them redundantly in
                         // CompiledSourceFiles
-                        if (path.startsWith("META-INF/") && path.endsWith(".kotlin_module")) {
+                        if (path.startsWith("META-INF/") && path.endsWith(DOT_KOTLIN_MODULE)) {
                             continue;
                         }
                     }
