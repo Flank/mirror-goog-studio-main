@@ -21,6 +21,7 @@ import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -212,7 +213,9 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     /**
      * CreationAction for the lintVitalAnalyzeVariant task. Does not use the variant with tests
      */
-    class LintVitalCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
+    class LintVitalCreationAction(variant: ConsumableCreationConfig) :
+        VariantCreationAction(VariantWithTests(variant, androidTest = null, unitTest = null))
+    {
         override val name = creationConfig.computeTaskName("lintVitalAnalyze")
         override val fatalOnly = true
         override val description =
@@ -363,6 +366,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                 project,
                 javaPluginConvention,
                 taskCreationServices.projectOptions,
+                fatalOnly,
                 checkDependencies = false,
                 isForAnalysis = true
             )

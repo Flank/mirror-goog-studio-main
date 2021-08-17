@@ -107,6 +107,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 project,
                 javaConvention,
                 taskCreationServices.projectOptions,
+                fatalOnly = false,
                 checkDependencies = true,
                 isForAnalysis = false
             )
@@ -115,9 +116,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     class LintCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        variant: VariantWithTests,
         checkDependencies: Boolean = true
-    ) : BaseCreationAction(creationConfig, checkDependencies) {
+    ) : BaseCreationAction(variant, checkDependencies) {
 
         override val useLintVitalPartialResults: Boolean
             get() = false
@@ -127,9 +128,12 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     class LintVitalCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        variant: ConsumableCreationConfig,
         checkDependencies: Boolean = false
-    ) : BaseCreationAction(creationConfig, checkDependencies) {
+    ) : BaseCreationAction(
+        VariantWithTests(variant, androidTest = null, unitTest = null),
+        checkDependencies
+    ) {
 
         override val useLintVitalPartialResults: Boolean
             get() = true
@@ -139,11 +143,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     abstract class BaseCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        val variant: VariantWithTests,
         private val checkDependencies: Boolean
-    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(
-        creationConfig
-    ) {
+    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(variant.main) {
         abstract val useLintVitalPartialResults: Boolean
 
         final override val type: Class<LintModelWriterTask>
@@ -162,11 +164,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
 
         override fun configure(task: LintModelWriterTask) {
             super.configure(task)
-            // Do not export test sources between projects
-            val variantWithoutTests = VariantWithTests(creationConfig, null, null)
-            task.projectInputs.initialize(variantWithoutTests, isForAnalysis = false)
+            task.projectInputs.initialize(variant, isForAnalysis = false)
             task.variantInputs.initialize(
-                variantWithoutTests,
+                variant,
                 checkDependencies = checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = false,
                 isForAnalysis = false,

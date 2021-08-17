@@ -312,6 +312,17 @@ public class Main {
                                 module.getModulePath(),
                                 variant.getName());
                     }
+                    int testSourceProviderIndex = 0;
+                    for (LintModelSourceProvider testSourceProvider :
+                            variant.getTestSourceProviders()) {
+                        addSourceProviderPathVariables(
+                                pathVariables,
+                                testSourceProvider,
+                                "testSourceProvider",
+                                testSourceProviderIndex++,
+                                module.getModulePath(),
+                                variant.getName());
+                    }
                 }
             }
 

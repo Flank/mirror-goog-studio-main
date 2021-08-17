@@ -826,6 +826,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 project,
                 javaPluginConvention,
                 taskCreationServices.projectOptions,
+                fatalOnly,
                 checkDependencies = false,
                 isForAnalysis = false
             )

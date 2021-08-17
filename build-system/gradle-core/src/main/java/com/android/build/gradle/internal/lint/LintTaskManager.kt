@@ -59,7 +59,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
                 // We need the library lint models if checkDependencies is true
-                taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests.main))
+                taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests))
                 // We need the library lint model metadata if checkDependencies is false
                 taskFactory.register(LintModelMetadataTask.CreationAction(variantWithTests.main))
             } else {
@@ -69,7 +69,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 //  app or dynamic feature module with checkDependencies = true.
                 taskFactory.register(
                     LintModelWriterTask.LintCreationAction(
-                        variantWithTests.main,
+                        variantWithTests,
                         checkDependencies = false
                     )
                 )
@@ -80,7 +80,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
 
             if (variantType.isDynamicFeature) {
                 taskFactory.register(
-                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests)
+                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests.main)
                 )
                 taskFactory.register(
                     LintModelWriterTask.LintVitalCreationAction(variantWithTests.main)
@@ -110,7 +110,7 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 globalScope.extension.lintOptions.isCheckReleaseBuilds
             ) {
                 taskFactory.register(
-                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests)
+                    AndroidLintAnalysisTask.LintVitalCreationAction(mainVariant)
                 )
                 taskFactory.register(AndroidLintTask.LintVitalCreationAction(mainVariant))
                 val lintVitalTask =

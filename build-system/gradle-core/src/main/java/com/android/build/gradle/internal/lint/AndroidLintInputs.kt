@@ -742,7 +742,7 @@ abstract class VariantInputs {
                 creationConfig.services.newInstance(JavaArtifactInput::class.java)
                     .initialize(
                         unitTest as UnitTestImpl,
-                        checkDependencies,
+                        checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
                         // analyzing test bytecode is expensive, without much benefit
@@ -756,7 +756,7 @@ abstract class VariantInputs {
                 creationConfig.services.newInstance(AndroidArtifactInput::class.java)
                     .initialize(
                         androidTest as ComponentImpl,
-                        checkDependencies,
+                        checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
                         // analyzing test bytecode is expensive, without much benefit
@@ -844,6 +844,7 @@ abstract class VariantInputs {
         project: Project,
         javaConvention: JavaPluginConvention,
         projectOptions: ProjectOptions,
+        fatalOnly: Boolean,
         checkDependencies: Boolean,
         isForAnalysis: Boolean
     ) {
@@ -880,10 +881,21 @@ abstract class VariantInputs {
                     unitTestOnly = false
                 )
         ))
-        testSourceProviders.setDisallowChanges(listOf(
-            project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, testSourceSet, isForAnalysis, unitTestOnly = true)
-        ))
+        if (fatalOnly) {
+            testSourceProviders.setDisallowChanges(listOf())
+        } else {
+            testSourceProviders.setDisallowChanges(
+                listOf(
+                    project.objects.newInstance(SourceProviderInput::class.java)
+                        .initializeForStandalone(
+                            project,
+                            testSourceSet,
+                            isForAnalysis,
+                            unitTestOnly = true
+                        )
+                )
+            )
+        }
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))

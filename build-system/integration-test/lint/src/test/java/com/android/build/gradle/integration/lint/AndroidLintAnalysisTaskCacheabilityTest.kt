@@ -56,9 +56,19 @@ class AndroidLintAnalysisTaskCacheabilityTest {
         )
     }
 
+    private val extraTestSourceDirMap by lazy {
+        mapOf(
+            ":app" to tmp.newFolder(),
+            ":feature" to tmp.newFolder(),
+            ":lib" to tmp.newFolder(),
+            ":java-lib" to tmp.newFolder(),
+        )
+    }
+
     /**
      * Add source directories that are outside the project directories. Add debug source directories
-     * to the Android modules, and add an extra java source directory to the java library.
+     * to the Android modules, and add an extra java source directory to the java library. Add an
+     * extra test java source directory to all the modules.
      */
     @Before
     fun before() {
@@ -73,6 +83,12 @@ class AndroidLintAnalysisTaskCacheabilityTest {
             FileUtils.copyFile(oldJavaFile, newJavaFile)
             FileUtils.delete(oldJavaFile)
             TestFileUtils.searchAndReplace(newJavaFile, "Foo", "Extra")
+            val extraTestSourceDir = extraTestSourceDirMap[moduleName]!!
+            val extraTestJavaFile =
+                FileUtils.join(extraTestSourceDir, "java", "com", "example", "Test.java")
+            extraTestJavaFile.parentFile.mkdirs()
+            FileUtils.copyFile(newJavaFile, extraTestJavaFile)
+            TestFileUtils.searchAndReplace(extraTestJavaFile, "Extra", "Test")
             if (moduleName != ":java-lib") {
                 val manifestFile = FileUtils.join(extraSourceDir, "AndroidManifest.xml")
                 TestFileUtils.searchAndReplace(manifestFile, "<app", "<!--\ufeff--><app")
@@ -89,6 +105,8 @@ class AndroidLintAnalysisTaskCacheabilityTest {
             listOf(project1, project2).forEach { project ->
                 val extraSourceDirPath =
                     FileUtils.toSystemIndependentPath(extraSourceDir.absolutePath)
+                val extraTestSourceDirPath =
+                    FileUtils.toSystemIndependentPath(extraTestSourceDir.absolutePath)
                 if (moduleName == ":java-lib") {
                     TestFileUtils.appendToFile(
                         project.getSubproject(moduleName).buildFile,
@@ -97,6 +115,9 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                             sourceSets {
                                 main {
                                     java.srcDirs += '$extraSourceDirPath/java'
+                                }
+                                test {
+                                    java.srcDirs += '$extraTestSourceDirPath/java'
                                 }
                             }
                         """.trimIndent()
@@ -109,6 +130,9 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                             android {
                                 sourceSets {
                                     debug.setRoot('$extraSourceDirPath')
+                                    test {
+                                        java.srcDirs += '$extraTestSourceDirPath/java'
+                                    }
                                 }
                             }
                         """.trimIndent()
@@ -142,6 +166,9 @@ class AndroidLintAnalysisTaskCacheabilityTest {
             listOf(lintReport1, lintReport2).forEach { lintReport ->
                 assertThat(lintReport).contains(
                     "${extraSourceDirMap[moduleName]!!.name}${slash}java${slash}com${slash}example${slash}Extra.java"
+                )
+                assertThat(lintReport).contains(
+                    "${extraTestSourceDirMap[moduleName]!!.name}${slash}java${slash}com${slash}example${slash}Test.java"
                 )
                 if (moduleName != ":java-lib") {
                     assertThat(lintReport).contains(
@@ -206,6 +233,10 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                     .contains("{$moduleName*main*sourceProvider*0*javaDir*1}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                     .contains("{$moduleName*main*sourceProvider*0*javaDir*2}")
+                assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                    .contains("{$moduleName*main*testSourceProvider*0*javaDir*1}")
+                assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                    .contains("{$moduleName*main*testSourceProvider*0*javaDir*2}")
             } else {
                 // There are no lint issues in the java library's build directory, so only check for
                 // the build directory encoding in the android modules.
@@ -219,17 +250,31 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                     .contains("{$moduleName*debug*sourceProvider*1*javaDir*0}")
                 assertThat(File(partialResultsDir1, lintPartialFileName).readText())
                     .contains("{$moduleName*debug*sourceProvider*1*resDir*0}")
+                assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                    .contains("{$moduleName*debug*testSourceProvider*0*javaDir*0}")
+                assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                    .contains("{$moduleName*debug*testSourceProvider*0*javaDir*1}")
+                assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                    .contains("{$moduleName*debug*testSourceProvider*2*javaDir*0}")
             }
 
             // assert that the lint analysis outputs do not contain the extra source paths.
             assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                 .doesNotContain(extraSourceDirMap[moduleName]!!.name)
+            assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
+                .doesNotContain(extraTestSourceDirMap[moduleName]!!.name)
             assertThat(File(partialResultsDir1, lintPartialFileName).readText())
                 .doesNotContain(extraSourceDirMap[moduleName]!!.name)
+            assertThat(File(partialResultsDir1, lintPartialFileName).readText())
+                .doesNotContain(extraTestSourceDirMap[moduleName]!!.name)
             assertThat(File(partialResultsDir2, lintDefiniteFileName).readText())
                 .doesNotContain(extraSourceDirMap[moduleName]!!.name)
+            assertThat(File(partialResultsDir2, lintDefiniteFileName).readText())
+                .doesNotContain(extraTestSourceDirMap[moduleName]!!.name)
             assertThat(File(partialResultsDir2, lintPartialFileName).readText())
                 .doesNotContain(extraSourceDirMap[moduleName]!!.name)
+            assertThat(File(partialResultsDir2, lintPartialFileName).readText())
+                .doesNotContain(extraTestSourceDirMap[moduleName]!!.name)
         }
     }
 
