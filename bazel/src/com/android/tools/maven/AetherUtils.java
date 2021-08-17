@@ -41,9 +41,7 @@ public class AetherUtils {
 
     static final RemoteRepository GRADLE =
             new RemoteRepository.Builder(
-                            "Gradle",
-                            "default",
-                            "https://repo.gradle.org/gradle/libs-releases-local/")
+                            "Gradle", "default", "https://repo.gradle.org/gradle/libs-releases/")
                     .build();
 
     static final RemoteRepository INTELLIJ =

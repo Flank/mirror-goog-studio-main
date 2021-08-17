@@ -186,7 +186,7 @@ local_maven_repository(
         "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
         "org.glassfish.jaxb:jaxb-runtime:2.3.2",
         "org.glassfish.jaxb:jaxb-xjc:2.3.2",
-        "org.gradle:gradle-tooling-api:7.1",
+        "org.gradle:gradle-tooling-api:7.2",
         "org.jacoco:org.jacoco.agent:0.7.9",
         "org.jacoco:org.jacoco.core:0.7.9",
         "org.jacoco:org.jacoco.report:0.7.9",
