@@ -153,6 +153,10 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(
                 "Android Codename Preview",
                 getVersionWithCodename(new AndroidVersion(500, "Codename")));
+        assertEquals("Android 11.0 (R)",
+                     getVersionWithCodename(new AndroidVersion(30, null, 1, true)));
+        assertEquals("Android 11.0 (R), Extension Level 2",
+                     getVersionWithCodename(new AndroidVersion(30, null, 2, false)));
     }
 
     public void testHighestStableApiInTestUtils() throws Exception {
