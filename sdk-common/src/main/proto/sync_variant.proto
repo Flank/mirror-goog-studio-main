@@ -24,6 +24,7 @@ message Variant {
 // Common model information for all variant types.
 //
 message CommonVariantModel {
+    map<string, string> placeholders = 1;
 }
 
 //

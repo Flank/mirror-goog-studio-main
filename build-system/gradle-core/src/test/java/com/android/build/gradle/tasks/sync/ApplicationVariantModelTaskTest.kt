@@ -16,26 +16,17 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
-import org.gradle.api.tasks.TaskProvider
-import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.FileInputStream
 
@@ -46,22 +37,11 @@ import java.io.FileInputStream
  * The task is not incremental and not cacheable as execution should be so fast, that it outweighs
  * the benefits in performance.
  */
-internal class ApplicationVariantModelTaskTest {
-    @get: Rule
-    val temporaryFolder = TemporaryFolder()
-
-    private lateinit var project: Project
-    private lateinit var taskProvider: TaskProvider<ApplicationVariantModelTask>
-    private lateinit var task: ApplicationVariantModelTask
+internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<ApplicationVariantModelTask>() {
 
     @Before
     fun setUp() {
-        project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        taskProvider = project.tasks.register(
-            "applicationVariantModelTaskTest",
-            ApplicationVariantModelTask::class.java,
-        )
-        task = taskProvider.get()
+        super.setUp(ApplicationVariantModelTask::class.java)
     }
 
     @Test
@@ -81,24 +61,9 @@ internal class ApplicationVariantModelTaskTest {
                 assertThat(variant.variantCase).isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
                 assertThat(variant.applicationVariantModel).isNotNull()
                 assertThat(variant.applicationVariantModel.applicationId)
-                    .isEqualTo("testApplicationId")
+                        .isEqualTo("testApplicationId")
             }
         }
-    }
-
-    @Test
-    fun testHandleProvider() {
-        val creationConfig = Mockito.mock(ApplicationCreationConfig::class.java)
-        val artifacts = Mockito.mock(ArtifactsImpl::class.java)
-        val providerRequestImpl = Mockito.mock(SingleInitialProviderRequestImpl::class.java)
-        val creationAction = ApplicationVariantModelTask.CreationAction(creationConfig)
-        Mockito.`when`(creationConfig.artifacts).thenReturn(artifacts)
-        @Suppress("UNCHECKED_CAST")
-        Mockito.`when`(artifacts.setInitialProvider(taskProvider, ApplicationVariantModelTask::outputModelFile))
-            .thenReturn(providerRequestImpl as SingleInitialProviderRequestImpl<ApplicationVariantModelTask, RegularFile>?)
-        creationAction.handleProvider(taskProvider)
-
-        Mockito.verify(providerRequestImpl).on(InternalArtifactType.VARIANT_MODEL)
     }
 
     @Test

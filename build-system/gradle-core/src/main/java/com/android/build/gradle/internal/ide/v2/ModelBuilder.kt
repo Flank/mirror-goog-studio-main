@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -70,6 +71,7 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
@@ -590,11 +592,11 @@ class ModelBuilder<
         val maxSdkVersion =
                 if (component is VariantCreationConfig) component.maxSdkVersion else null
 
-        val modelSyncFiles = if (component is ApplicationCreationConfig) {
+        val modelSyncFiles = if (component is ApplicationCreationConfig || component is LibraryCreationConfig) {
             listOf(
                 ModelSyncFileImpl(
                     ModelSyncFile.ModelSyncType.BASIC,
-                    ApplicationVariantModelTask.getTaskName(component),
+                    AbstractVariantModelTask.getTaskName(component),
                     component.artifacts.get(InternalArtifactType.VARIANT_MODEL).get().asFile
                 )
             )
