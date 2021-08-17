@@ -540,7 +540,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             createJacocoTask(testFixturesComponent)
         }
 
-        maybeCreateTransformClassesWithAsmTask(testFixturesComponent, instrumented)
+        maybeCreateTransformClassesWithAsmTask(
+            testFixturesComponent,
+            instrumented /* Unit Tests do not use offline instrumentation */,
+            false /* Legacy transforms do not apply to test fixtures / unit tests */)
 
         // packaging tasks
 
@@ -1545,7 +1548,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // This should be done automatically by the classpath
         //        TaskFactoryUtils.dependsOn(javacTask,
         // testedVariantScope.getTaskContainer().getJavacTask());
-        maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig, false)
+        maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig,
+            isTestCoverageEnabled = false,
+            legacyTransformsEnabled = false /* Instrumentation isn't needed for unit tests */
+        )
 
 
         // TODO: use merged java res for unit tests (bug 118690729)
@@ -1984,57 +1990,35 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val transformManager = creationConfig.transformManager
         taskFactory.register(MergeGeneratedProguardFilesCreationAction(creationConfig))
 
-        // ---- Code Coverage first -----
-        val isTestCoverageEnabled = (variantDslInfo.isTestCoverageEnabled
-                && !creationConfig.variantType.isForTesting)
-        if (isTestCoverageEnabled) {
-            createJacocoTask(creationConfig)
-        }
-        maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled)
-        val extension = creationConfig.globalScope.extension
-
         // Merge Java Resources.
         createMergeJavaResTask(creationConfig)
 
-        // ----- External Transforms -----
-        // apply all the external transforms.
-        val customTransforms = extension.transforms
-        val customTransformsDependencies = extension.transformsDependencies
-        var registeredLegacyTransform = false
-        var i = 0
-        while (i < customTransforms.size) {
-            val transform = customTransforms[i]
-            val deps = customTransformsDependencies[i]
-            registeredLegacyTransform = registeredLegacyTransform or transformManager
-                    .addTransform(
-                            taskFactory,
-                            creationConfig,
-                            transform,
-                            null,
-                            object : TaskConfigAction<TransformTask> {
-                                override fun configure(task: TransformTask) {
-                                    if (deps.isNotEmpty()) {
-                                        task.dependsOn(deps)
-                                    }
-                                }
+        val jacocoTransformEnabled = creationConfig.services
+                .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
+        val isTestCoverageEnabled =
+            variantDslInfo.isTestCoverageEnabled && !creationConfig.variantType.isForTesting
 
-                            },
-                            object : TaskProviderCallback<TransformTask> {
-                                override fun handleProvider(taskProvider: TaskProvider<TransformTask>) {
-                                    // if the task is a no-op then we make assemble task depend
-                                    // on it.
-                                    if (transform.scopes.isEmpty()) {
-                                        creationConfig
-                                                .taskContainer
-                                                .assembleTask.dependsOn<Task>(taskProvider)
-                                    }
-                                }
-
-                            }
-                    )
-                    .isPresent
-            i++
+        // Previous (non-gradle-transform) jacoco instrumentation (pre-legacy-transform).
+        if (isTestCoverageEnabled && !jacocoTransformEnabled) {
+            createJacocoTask(creationConfig)
         }
+
+        // ----- External Transforms -----
+        val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
+
+        // New gradle-transform jacoco instrumentation support.
+        if (isTestCoverageEnabled && jacocoTransformEnabled) {
+            if (registeredLegacyTransform) {
+                createJacocoTaskWithLegacyTransformSupport(creationConfig)
+            } else {
+                createJacocoTask(creationConfig)
+            }
+        }
+        maybeCreateTransformClassesWithAsmTask(
+            creationConfig,
+            isTestCoverageEnabled,
+            registeredLegacyTransform
+        )
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -2070,6 +2054,52 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     /**
+     * Adds any transforms registered in a module build file. Returns true if any transforms have
+     * been added.
+     */
+    private fun addExternalLegacyTransforms(
+        transformManager: TransformManager,
+        creationConfig: ApkCreationConfig
+    ): Boolean {
+        val customTransforms = extension.transforms
+        val customTransformsDependencies = extension.transformsDependencies
+        var registeredLegacyTransform = false
+        for (i in customTransforms.indices) {
+            val transform = customTransforms[i]
+            val deps = customTransformsDependencies[i]
+            registeredLegacyTransform = registeredLegacyTransform or transformManager
+                .addTransform(
+                    taskFactory,
+                    creationConfig,
+                    transform,
+                    null,
+                    object : TaskConfigAction<TransformTask> {
+                        override fun configure(task: TransformTask) {
+                            if (deps.isNotEmpty()) {
+                                task.dependsOn(deps)
+                            }
+                        }
+
+                    },
+                    object : TaskProviderCallback<TransformTask> {
+                        override fun handleProvider(taskProvider: TaskProvider<TransformTask>) {
+                            // if the task is a no-op then we make assemble task depend
+                            // on it.
+                            if (transform.scopes.isEmpty()) {
+                                creationConfig
+                                    .taskContainer
+                                    .assembleTask.dependsOn<Task>(taskProvider)
+                            }
+                        }
+
+                    }
+                )
+                .isPresent
+        }
+        return registeredLegacyTransform
+    }
+
+    /**
      * Creates tasks used for DEX generation. This will use an incremental pipeline that uses dex
      * archives in order to enable incremental dexing support.
      */
@@ -2090,7 +2120,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 && !registeredLegacyTransforms
                 && supportsDesugaringViaArtifactTransform)
         taskFactory.register(
-                DexArchiveBuilderTask.CreationAction(enableDexingArtifactTransform, creationConfig))
+                DexArchiveBuilderTask.CreationAction(
+                    creationConfig,enableDexingArtifactTransform, registeredLegacyTransforms))
         maybeCreateDesugarLibTask(creationConfig, enableDexingArtifactTransform)
         createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform)
     }
@@ -2237,8 +2268,26 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createJacocoTask(creationConfig: ComponentCreationConfig) {
+    private fun createJacocoTaskWithLegacyTransformSupport(creationConfig: ComponentCreationConfig) {
+        // Assume the following is true
+        // * test coverage is enabled
+        // * BooleanOption ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION=true
+        // * a legacy transform is registered
 
+        val classesFromLegacyTransforms =
+            creationConfig.transformManager.getPipelineOutputAsFileCollection(
+                { _, _ -> true},
+                { _, scopes -> scopes == setOf(
+                    com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES) }
+            )
+
+        if (creationConfig is ApplicationCreationConfig) {
+        taskFactory.register(
+            JacocoTask.CreationActionLegacyTransform(creationConfig, classesFromLegacyTransforms))
+        }
+    }
+
+    fun createJacocoTask(creationConfig: ComponentCreationConfig) {
         @Suppress("DEPRECATION") // Legacy support (b/195153220)
         creationConfig
             .transformManager
@@ -2249,7 +2298,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val jacocoTransformEnabled =
             projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
 
-        taskFactory.register(JacocoTask.CreationAction(creationConfig))
+        // Instrumented refers to ASM and not Jacoco in this case.
+        if (creationConfig.projectClassesAreInstrumented) {
+            taskFactory.register(JacocoTask.CreationActionWithTransformSupport(creationConfig))
+        } else {
+            taskFactory.register(JacocoTask.CreationAction(creationConfig))
+        }
 
         val instrumentedClasses: FileCollection =
             if (jacocoTransformEnabled &&
@@ -2264,6 +2318,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     project.files(creationConfig.artifacts.get(JACOCO_INSTRUMENTED_JARS)).asFileTree
                 )
             }
+
         @Suppress("DEPRECATION") // Legacy support (b/195153220)
         creationConfig
             .transformManager
@@ -2272,7 +2327,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
                     .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                     .setFileCollection(instrumentedClasses)
-                    .build())
+                    .build()
+            )
     }
 
     protected fun createDataBindingTasksIfNecessary(creationConfig: ComponentCreationConfig) {
@@ -3129,7 +3185,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     @Suppress("DEPRECATION") // Legacy support (b/195153220)
     protected fun maybeCreateTransformClassesWithAsmTask(
-            creationConfig: ComponentCreationConfig, isTestCoverageEnabled: Boolean) {
+        creationConfig: ComponentCreationConfig,
+        isTestCoverageEnabled: Boolean,
+        legacyTransformsEnabled: Boolean
+    ) {
         if (creationConfig.projectClassesAreInstrumented) {
             creationConfig
                     .transformManager
@@ -3138,8 +3197,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
             taskFactory.register(
                     TransformClassesWithAsmTask.CreationAction(
-                            creationConfig,
-                            isTestCoverageEnabled
+                        creationConfig,
+                        isTestCoverageEnabled
                     )
             )
             if (creationConfig.asmFramesComputationMode

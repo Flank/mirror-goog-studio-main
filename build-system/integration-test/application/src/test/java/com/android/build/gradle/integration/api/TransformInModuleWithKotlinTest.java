@@ -22,21 +22,30 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.zip.ZipFile;
+import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TransformInModuleWithKotlinTest {
 
@@ -47,6 +56,50 @@ public class TransformInModuleWithKotlinTest {
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("transformInModuleWithKotlin")
                     .create();
+
+    @Rule public TemporaryFolder temporaryDirectory = new TemporaryFolder();
+
+    /* Test to verify that AARs do not include Jacoco dependencies when published. */
+    @Test
+    public void canPublishLibraryAarWithCoverageEnabled()
+            throws IOException, InterruptedException, ClassNotFoundException {
+        GradleTestProject librarySubproject = project.getSubproject(":lib");
+        Files.append(
+                "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
+                project.getSubproject("lib").getBuildFile(),
+                Charsets.UTF_8);
+        project.executor()
+                .with(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION, true)
+                .run("lib:assembleDebug");
+        File libraryPublishedAar =
+                FileUtils.join(librarySubproject.getOutputDir(), "aar", "lib-debug.aar");
+        File tempTestData = temporaryDirectory.newFolder("testData");
+        File extractedJar = new File(tempTestData, "classes.jar");
+        // Extracts the zipped BuildConfig.class in library-debug.aar/classes.jar to
+        // the extractedBuildConfigClass temporary file, so it can be later loaded
+        // into a classloader.
+        ZipFile zippedLibPublishedAar = new ZipFile(libraryPublishedAar);
+        InputStream classesJar =
+                zippedLibPublishedAar.getInputStream(zippedLibPublishedAar.getEntry("classes.jar"));
+        try (FileOutputStream fos = new FileOutputStream(extractedJar)) {
+            IOUtils.copy(classesJar, fos);
+        }
+
+        try (URLClassLoader it =
+                URLClassLoader.newInstance(new URL[] {(extractedJar.toURI().toURL())})) {
+            Class<?> buildConfig = it.loadClass("com.android.tests.libstest.lib.BuildConfig");
+            try {
+                // Invoking the constructor will throw a ClassNotFoundException for
+                // Jacoco agent classes if the classes contain a call to Jacoco.
+                // If there is no issues with invoking the constructor,
+                // then there are no Jacoco dependencies in the AAR classes.
+                buildConfig.getConstructor().newInstance();
+            } catch (Exception e) {
+                throw new AssertionError(
+                        "This AAR is not publishable as it contains a dependency on Jacoco.", e);
+            }
+        }
+    }
 
     @Test
     public void testTransform() throws IOException, InterruptedException, ProcessException {
