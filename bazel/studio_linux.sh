@@ -218,6 +218,10 @@ function collect_logs() {
 run_bazel_test
 readonly BAZEL_STATUS=$?
 
+readonly BAZEL_EXITCODE_SUCCESS=0
+readonly BAZEL_EXITCODE_TEST_FAILURES=3
+readonly BAZEL_EXITCODE_NO_TESTS_FOUND=4
+
 # Save bazel worker logs.
 # Common bazel codes fall into the single digit range. If a less common exit
 # code happens, then we copy extra bazel logs.
@@ -235,6 +239,15 @@ then
   readonly SKIP_BAZEL_ARTIFACTS=1
 fi
 
+# Artifacts should only be copied when the build succeeds. Test failures and no
+# tests found are considered to be successful builds.
+if [[ $BAZEL_STATUS -ne $BAZEL_EXITCODE_SUCCESS && \
+      $BAZEL_STATUS -ne $BAZEL_EXITCODE_TEST_FAILURES && \
+      $BAZEL_STATUS -ne $BAZEL_EXITCODE_NO_TESTS_FOUND ]];
+then
+  readonly SKIP_BAZEL_ARTIFACTS=1
+fi
+
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then
 
@@ -248,9 +261,6 @@ if [[ -d "${DIST_DIR}" ]]; then
     copy_bazel_artifacts
   fi
 fi
-
-readonly BAZEL_EXITCODE_TEST_FAILURES=3
-readonly BAZEL_EXITCODE_NO_TESTS_FOUND=4
 
 # It is OK if no tests are found when using --flaky.
 if [[ $IS_FLAKY_RUN && $BAZEL_STATUS -eq $BAZEL_EXITCODE_NO_TESTS_FOUND  ]]; then
