@@ -199,11 +199,6 @@ public class DeploymentCacheDatabaseTest {
         Assert.assertEquals("mychecksum", entry.getApks().get(0).checksum);
 
         db = new DeploymentCacheDatabase(10, persistFile);
-        db.store(
-                "serialXYZ",
-                "com.example.xyz",
-                Lists.newArrayList(makeApk("mychecksum")),
-                mockOverLayId());
         entry = db.get("serialXYZ", "com.example.xyz");
         Assert.assertEquals(1, entry.getApks().size());
         Assert.assertEquals("mychecksum", entry.getApks().get(0).checksum);
