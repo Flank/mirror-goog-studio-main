@@ -770,8 +770,6 @@ com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.buil
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
-com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
-com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
 com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)
