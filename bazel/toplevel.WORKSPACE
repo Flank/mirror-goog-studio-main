@@ -203,6 +203,7 @@ local_maven_repository(
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
         "org.jetbrains.kotlin:kotlin-test:1.4.32",
+        "org.jetbrains.kotlinx:kotlinx-cli-jvm:0.3.1",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8",
         "org.mockito:mockito-all:1.9.5",
         "org.mockito:mockito-core:3.4.6",

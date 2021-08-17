@@ -21,9 +21,9 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":profgen",
-        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
-        "//prebuilts/tools/common/m2:junit.junit.4.12",
         "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
         "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
 )
