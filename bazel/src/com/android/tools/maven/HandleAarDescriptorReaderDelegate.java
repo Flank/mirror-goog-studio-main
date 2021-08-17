@@ -29,16 +29,13 @@ public class HandleAarDescriptorReaderDelegate extends ArtifactDescriptorReaderD
             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
         super.populateResult(session, result, model);
 
-        if (model.getPackaging().equals("pom") && result.getArtifact().getExtension().equals("exe")) {
+        if (model.getPackaging().equals("pom")) {
             // This is the case for downloading protoc exes.
             return;
         }
 
         if (!MavenRepository.getArtifactExtension(model)
                 .equals(result.getArtifact().getExtension())) {
-            // When the dependency type is not expressed, but the target has a specific packaging type that
-            // requires a certain dependency type (e.g., groovy-all has pom packaging, but lint-gradle depends
-            // on it without expressing <type>pom</pom>, which defaults to "jar" dependency).
             // This is something that Gradle seems to handle automatically, we have to do the same.
             result.setArtifact(
                     new DifferentExtensionArtifact(
