@@ -442,11 +442,18 @@ enum class TextFormat {
                 val d = text[end]
                 if (terminatesUrl(d)) {
                     break
+                } else if (d == ')') {
+                    // Parenthesis characters are allowed in URLs, but if the URL was immediately
+                    // preceded by an opening parenthesis, this is probably just the whole URL
+                    // being parenthesized.
+                    if (start > 0 && text[start - 1] == '(') {
+                        break
+                    }
                 }
                 end++
             }
             val last = text[end - 1]
-            if (last == '.' || last == ')' || last == '!') {
+            if (last == '.' || last == ')' || last == '!' || last == ',') {
                 end--
             }
             return end
@@ -457,7 +464,8 @@ enum class TextFormat {
                 in 'a'..'z' -> false
                 in 'A'..'Z' -> false
                 in '0'..'9' -> false
-                '-', '_', '.', '*', '+', '%', '/', '#', ':', '@', '!', '$', '&', '\'' -> false
+                '-', '_', '.', '*', '+', '%', '/', '#', ':', '@', '!', '$', '&', '\'',
+                '~', '[', ']', '(', ')', ';', '?', '=', ',' -> false
                 else -> true
             }
         }

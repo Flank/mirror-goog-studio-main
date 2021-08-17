@@ -140,6 +140,27 @@ public class TextFormatTest extends TestCase {
                 convertMarkup("<ignore path=\\\"\\*/test/\\*\\\" />\\n\"", HTML));
     }
 
+    public void testUrlTerminators() {
+        assertEquals(
+                "<a href=\"https://issuetracker.google.com/issues/new?component=192731\">https://issuetracker.google.com/issues/new?component=192731</a>",
+                convertMarkup("https://issuetracker.google.com/issues/new?component=192731", HTML));
+        assertEquals(
+                "URL is <a href=\"http://example.,)\">http://example.,)</a>.",
+                convertMarkup("URL is http://example.,).", HTML));
+        assertEquals(
+                "URL is <a href=\"http://example\">http://example</a>, and only that.",
+                convertMarkup("URL is http://example, and only that.", HTML));
+        assertEquals(
+                "See the example (<a href=\"http://example\">http://example</a>).",
+                convertMarkup("See the example (http://example).", HTML));
+        assertEquals(
+                "The URL is <a href=\"http://developer.android.com/\">http://developer.android.com/</a>.",
+                convertMarkup("The URL is http://developer.android.com/.", HTML));
+        assertEquals(
+                "The URL is <a href=\"http://developer.android.com/\">http://developer.android.com/</a>. That's it.",
+                convertMarkup("The URL is http://developer.android.com/. That's it.", HTML));
+    }
+
     public void testEndUrl() {
         // Regression test for 65713835: Invalid link when click tooltip
         assertEquals(
