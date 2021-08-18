@@ -30,6 +30,7 @@ import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -452,4 +453,52 @@ fun UElement.findSelector(): UElement {
         }
     }
     return curr
+}
+
+/**
+ * For an element in an expression, returns the next expression in the
+ * same block if any.
+ */
+fun UElement.nextStatement(): UExpression? {
+    var prev = this
+    var curr = prev.uastParent
+    while (curr != null) {
+        if (curr is UBlockExpression) {
+            val expressions = curr.expressions
+            val index = expressions.indexOf(prev)
+            return if (index != -1 && index < expressions.size - 1) {
+                expressions[index + 1]
+            } else {
+                null
+            }
+        }
+        prev = curr
+        curr = curr.uastParent
+    }
+
+    return null
+}
+
+/**
+ * For an element in an expression, returns the previous expression in
+ * the same block if any.
+ */
+fun UElement.previousStatement(): UExpression? {
+    var prev = this
+    var curr = prev.uastParent
+    while (curr != null) {
+        if (curr is UBlockExpression) {
+            val expressions = curr.expressions
+            val index = expressions.indexOf(prev)
+            return if (index > 0) {
+                expressions[index - 1]
+            } else {
+                null
+            }
+        }
+        prev = curr
+        curr = curr.uastParent
+    }
+
+    return null
 }
