@@ -694,7 +694,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             """
             src/test/pkg/test.kt:10: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
                 if (testRoot == other) {
-                    ~~~~~~~~~~~~~~~~~
+                             ~~
             0 errors, 1 warnings
             """
         )

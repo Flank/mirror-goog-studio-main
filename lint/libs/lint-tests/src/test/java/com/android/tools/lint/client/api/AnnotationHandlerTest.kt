@@ -550,6 +550,263 @@ class AnnotationHandlerTest {
         )
     }
 
+    @Test
+    fun test195014464() {
+        lint().files(
+            kotlin(
+                """
+                package test.usage
+                import pkg.kotlin.MyKotlinAnnotation
+
+                class FooBar {
+                    infix fun infixFun(@MyKotlinAnnotation foo: Int) {  }
+                    operator fun plus(@MyKotlinAnnotation foo: Int) {  }
+                    infix fun String.extensionInfixFun(@MyKotlinAnnotation foo: Int) {  }
+                    infix fun @receiver:MyKotlinAnnotation String.extensionInfixFun2(foo: Int) {  }
+                    operator fun plusAssign(@MyKotlinAnnotation foo: Int) {  }
+
+                    fun testBinary() {
+                        val bar = ""
+                        this infixFun 0 // visit 0
+                        this + 0 // visit 0
+                        bar extensionInfixFun 0 // visit 0
+                        bar extensionInfixFun2 0 // visit bar
+                        this += 0 // visit 0
+                    }
+                }
+                """
+            ).indented(),
+            javaAnnotation,
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/usage/FooBar.kt:13: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                    this infixFun 0 // visit 0
+                                  ~
+            src/test/usage/FooBar.kt:14: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                    this + 0 // visit 0
+                           ~
+            src/test/usage/FooBar.kt:15: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                    bar extensionInfixFun 0 // visit 0
+                                          ~
+            src/test/usage/FooBar.kt:16: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                    bar extensionInfixFun2 0 // visit bar
+                    ~~~
+            src/test/usage/FooBar.kt:17: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                    this += 0 // visit 0
+                            ~
+            5 errors, 0 warnings
+            """
+        )
+    }
+
+    @Test
+    fun testBinaryOperators() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import pkg.kotlin.MyKotlinAnnotation
+
+                class Resource {
+                    operator fun contains(@MyKotlinAnnotation id: Int): Boolean = false
+                    operator fun times(@MyKotlinAnnotation id: Int): Int = 0
+                    operator fun rangeTo(@MyKotlinAnnotation id: Int): Int = 0
+                }
+                class Resource2
+
+                operator fun Resource2.contains(@MyKotlinAnnotation id: Int): Boolean = false
+                operator fun Resource2.rangeTo(@MyKotlinAnnotation id: Int): Int = 0
+                operator fun @receiver:MyKotlinAnnotation Resource2.times(id: Int): Int = 0
+
+                fun testBinary(resource: Resource, resource2: Resource2, color: Int) {
+                    // Here we should only be visiting the "color" argument, except for in the
+                    // last multiplication where we've annotated the receiver instead
+                    println(color in resource) // visit color
+                    println(color !in resource) // visit color
+                    println(resource * color) // visit color
+                    println(resource..color) // visit color
+
+                    println(color in resource2) // visit color
+                    println(resource2..color) // visit color
+                    println(resource2 * color) // visit *resource*
+                }
+                """
+            ).indented(),
+            javaAnnotation,
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/pkg/Resource.kt:18: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(color in resource) // visit color
+                        ~~~~~
+            src/test/pkg/Resource.kt:19: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(color !in resource) // visit color
+                        ~~~~~
+            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(resource * color) // visit color
+                                   ~~~~~
+            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(resource..color) // visit color
+                                  ~~~~~
+            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(color in resource2) // visit color
+                        ~~~~~
+            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(resource2..color) // visit color
+                                   ~~~~~
+            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                println(resource2 * color) // visit *resource*
+                        ~~~~~~~~~
+            7 errors, 0 warnings
+            """
+        )
+    }
+
+    @Test
+    fun testArrayAccess() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import pkg.kotlin.MyKotlinAnnotation
+
+                class Resource {
+                    operator fun get(@MyKotlinAnnotation key: Int): String = ""
+                    operator fun set(@MyKotlinAnnotation key: Int, value: String) {}
+                }
+                class Resource2 {
+                    operator fun get(@MyKotlinAnnotation key: Int): String = ""
+                    operator fun set(key: Int, @MyKotlinAnnotation value: String) {}
+                }
+                class Resource3
+                operator fun Resource3.get(@MyKotlinAnnotation id: Int): String = ""
+                operator fun Resource3.set(@MyKotlinAnnotation id: Int, value: String) {}
+                class Resource4
+                operator fun Resource4.get(id0: Int, @MyKotlinAnnotation id: Int): String = ""
+                operator fun Resource4.set(id0: Int, @MyKotlinAnnotation id: Int, value: String) {}
+
+                fun testArray(resource: Resource, resource2: Resource2, resource3: Resource3, resource4: Resource4) {
+                    val x = resource[5] // visit 5
+                    resource[5] = x // visit 5
+                    val y = resource2[5] // visit 5
+                    resource2[5] = y // visit y
+                    val z = resource3[5] // visit 5
+                    resource3[5] = z // visit 5
+                    val w = resource4[0, 5] // visit 5
+                    resource4[0, 5] = w // visit 5
+                }
+                """
+            ).indented(),
+            javaAnnotation,
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                val x = resource[5] // visit 5
+                                 ~
+            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                resource[5] = x // visit 5
+                         ~
+            src/test/pkg/Resource.kt:22: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                val y = resource2[5] // visit 5
+                                  ~
+            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                resource2[5] = y // visit y
+                               ~
+            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                val z = resource3[5] // visit 5
+                                  ~
+            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                resource3[5] = z // visit 5
+                          ~
+            src/test/pkg/Resource.kt:26: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                val w = resource4[0, 5] // visit 5
+                                     ~
+            src/test/pkg/Resource.kt:27: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                resource4[0, 5] = w // visit 5
+                             ~
+            8 errors, 0 warnings
+            """
+        )
+    }
+
+    @Test
+    fun testResolveExtensionArrayAccessFunction() {
+        lint().files(
+            bytecode(
+                "libs/library.jar",
+                kotlin(
+                    """
+                    package test.pkg1
+                    import pkg.kotlin.MyKotlinAnnotation
+                    class Resource
+                    operator fun Resource.get(@MyKotlinAnnotation id: Int): String = ""
+                    operator fun Resource.set(@MyKotlinAnnotation id: Int, value: String) {}
+                """
+                ),
+                0x96bee228,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcIlz
+                ccLEDIW4glKL80uLklO9S5QYtBgA5F2hGUUAAAA=
+                """,
+                """
+                test/pkg1/Resource.class:
+                H4sIAAAAAAAAAGVRwU4CMRScdmHRFWVBVFDjWT24QLxpTNTEhGTVBA0XTgUa
+                LCxdQwvxyLf4B55MPBji0Y8yvl31ZA+TNzOvr/PSz6+3dwDH2GUoWWls8Dga
+                1IOWNPF00pM5MAZ/KGYiiIQeBLfdoezZHBwG91RpZc8YnP2Ddh5ZuB4yyDFk
+                7IMyDOXw/7gThmI4im2kdHAtregLK0jj45lDIVgCWQY2IulJJaxGVb/OsLeY
+                ex6vcI/7VC3mlcW8wWvsIvvx7HKfJ10NRhOw8vfU0chSlMu4LxkKodLyZjru
+                ysm96EaklMK4J6K2mKiE/4reXXrzSiWk2ppqq8ayrYwi91zr2AqrYm1QB6dN
+                k0NZk8UJt4gFKacVDl+x9EIFR4XQTcUMqoT5nwYsw0v97RQ3sZP+AcUnL9+B
+                08RqE2uEKCTgN1FEqQNmsI4y+QaewYaB+w30FRU7wAEAAA==
+                """,
+                """
+                test/pkg1/ResourceKt.class:
+                H4sIAAAAAAAAAG1Sz08TQRT+Zpe22/JrqUUoKCBUoRXZQryhJobEuKGgAcMF
+                L9N2Uqbd7prdaaM3Tv49ejMeDPHoH2V8s1uKhc7hve+9+eZ9897Mn78/fwF4
+                jl2GghKRcj51WrvOiYiCXtgQhyoDxmC3eZ87Hvdbzrt6WzQoazKYLaEYylu1
+                u+f23XLt5sypCqXf2mfYqAVhy2kLVQ+59COH+36guJIB4eNAHfc8j1irNarl
+                dALlSd85+nIYg9dDKjHSL9SFjF5ZyDKsDIjtfteRvhKhzz3H9bVkJBtRBpMM
+                840L0egMFN7zkHcFERk2t2q3O9u/e+/y2RSmMZPDFGYZYGGOIVvSNyjFEyiM
+                GwCDIZsMzKU5RZpVGT+ncXIMqT73esJCcagU18iPG+pc7XpUQvEmV1xrd/sm
+                PSvTJkW36GhgUP6z1KhKqEkv/vHqcjF3dZkz7JmcsWgk0EqcjpYWbDJGlVWM
+                qrFnWcw2KZp4+/ursbRqpwinR3f20nZG8zVDa+wxTF73utOhDiYOgqZgmK1J
+                Xxz3unURfuB1T+jWggb3zngodTxILp/0fCW7wvX7MpKUuvkFEcP6YPcs2Ru+
+                6wipdLvEeFruNL7jG6lli6OF/yNiFwYmoJeBIlJIU1Sm6CXFBvlsJZ/7ATuf
+                /xZTKmTToA9L1KeE7yck3EMhLpLFPOUYtge8DPlnOq9pjL4asJOEyR5IdAGL
+                MGPRQ6qmn3M6Ed3OL5H9PiI8RVYLryVELA+EpwfCGhXxgE5o2UlzKJsIz5pD
+                4cQbcGK7hSr5A8o+pNZWzmG6WHWxRhaPXKxjw0UJj8/BIjzB5jmsCKkIcxEK
+                EeZjsBDb4j8xfuP2ggQAAA==
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+                import test.pkg1.Resource
+                import test.pkg1.get
+                import test.pkg1.set
+                fun testArray(resource: Resource) {
+                    val x = resource[5] // visit 5
+                    resource[5] = x // visit 5
+                }
+                """
+            ).indented(),
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:6: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                val x = resource[5] // visit 5
+                                 ~
+            src/test/pkg/test.kt:7: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                resource[5] = x // visit 5
+                         ~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     // Simple detector which just flags annotation references
     @SuppressWarnings("ALL")
     class MyAnnotationDetector : Detector(), Detector.UastScanner {

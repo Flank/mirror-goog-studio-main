@@ -199,21 +199,23 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (node.isAssignment()) {
             // We're only processing fields, not local variables, since those are
             // already visited
-            val resolved = node.leftOperand.tryResolve() as? PsiField ?: return
-            val evaluator = context.evaluator
-            val annotations = filterRelevantAnnotations(
-                evaluator,
-                evaluator.getAllAnnotations(resolved, true)
-            )
-            checkAnnotations(
-                context = context,
-                argument = node.rightOperand,
-                type = AnnotationUsageType.ASSIGNMENT_RHS,
-                method = null,
-                annotations = annotations,
-                annotated = resolved,
-                referenced = resolved
-            )
+            val resolved = node.leftOperand.tryResolve() as? PsiField
+            if (resolved != null) {
+                val evaluator = context.evaluator
+                val annotations = filterRelevantAnnotations(
+                    evaluator,
+                    evaluator.getAllAnnotations(resolved, true)
+                )
+                checkAnnotations(
+                    context = context,
+                    argument = node.rightOperand,
+                    type = AnnotationUsageType.ASSIGNMENT_RHS,
+                    method = null,
+                    annotations = annotations,
+                    annotated = resolved,
+                    referenced = resolved
+                )
+            }
         }
 
         // Overloaded operators
@@ -859,40 +861,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (method != null) {
             val mapping: Map<UExpression, PsiModifierListOwner> = when (call) {
                 is UCallExpression -> evaluator.computeArgumentMapping(call, method)
-                is UBinaryExpression -> {
-                    val operator = call.operator
-                    // See https://kotlinlang.org/docs/operator-overloading.html#binary-operations
-                    // All the operators are "a.something(b)" except for the containment operators
-                    // which are "b.contains(a)"
-                    val text = operator.text
-                    val operand =
-                        if (evaluator.isInfix(method) || text == "in" || text == "!in") {
-                            call.leftOperand
-                        } else {
-                            call.rightOperand
-                        }
-                    mapOf(operand to method.parameterList.parameters[0])
-                }
                 is UUnaryExpression -> return
-                is UArrayAccessExpression -> {
-                    val indices = call.indices
-                    val parent = call.uastParent as? UBinaryExpression
-                    val isSetter = parent != null && parent.isAssignment()
-                    val parameters = method.parameterList.parameters
-                    if (indices.size > parameters.size) {
-                        // Should not happen but technically possible since we're doing
-                        // our own method resolve for UArrayAccessExpression until UAST supports it
-                        // and we could have pointed to the wrong method
-                        return
-                    }
-                    val indexMap = indices.mapIndexed { index, argument -> Pair(argument, parameters[index]) }
-                    if (isSetter) {
-                        val operand = parent!!.rightOperand
-                        (indexMap + (operand to parameters[indices.size])).toMap()
-                    } else {
-                        indexMap.toMap()
-                    }
-                }
                 else -> {
                     error("Unexpected call type $call")
                 }

@@ -16,7 +16,11 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiType;
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.psi.KtElement;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.uast.UElement;
@@ -34,7 +38,21 @@ class LintJavaUtils {
     }
 
     @SuppressWarnings("KotlinInternalInJava")
-    static PsiType getType(KotlinType type, UElement source, KtElement ktElement, boolean boxed) {
+    @NonNull
+    static PsiType getType(
+            @NonNull KotlinType type,
+            @Nullable UElement source,
+            @NonNull KtElement ktElement,
+            boolean boxed) {
         return KotlinInternalUastUtilsKt.toPsiType(type, source, ktElement, boxed);
+    }
+
+    @Nullable
+    static PsiElement resolveToPsiMethod(
+            @NonNull KtElement context,
+            @NonNull DeclarationDescriptor descriptor,
+            @Nullable PsiElement source) {
+        //noinspection KotlinInternalInJava
+        return KotlinInternalUastUtilsKt.resolveToPsiMethod(context, descriptor, source);
     }
 }

@@ -50,6 +50,7 @@ class UImplicitCallExpressionTest {
                     operator fun set(index1: Int, index2: Int, index3: Int, value: String) { }
                     infix fun combine(other: Resource) { }
                 }
+                operator fun Resource.div(x: Int): Int = 0
 
                 fun testBinary(resource: Resource, resource2: Resource, color: Int, string: Int) {
                     println(resource[1, 2, 3])
@@ -60,6 +61,7 @@ class UImplicitCallExpressionTest {
                     println(resource..string)
                     println(resource.combine(resource2))
                     println(resource combine resource2)
+                    println(resource / color)
                 }
                 """
             ).indented()
@@ -92,17 +94,19 @@ class UImplicitCallExpressionTest {
                   from "resource[1, 2, 3]"
                 resource.set(1,2,3,hello)
                   from "resource[1, 2, 3]"
-                color.contains(color,resource)
+                resource.contains(color)
                   from "color in resource"
-                string.contains(string,resource)
+                resource.contains(string)
                   from "string !in resource"
-                resource.times(resource,string)
+                resource.times(string)
                   from "resource * string"
-                resource.rangeTo(resource,string)
+                resource.rangeTo(string)
                   from "resource..string"
                 resource.combine(resource2)
-                resource.combine(resource,resource2)
+                resource.combine(resource2)
                   from "resource combine resource2"
+                div(resource,color)
+                  from "resource / color"
                 """.trimIndent().trim(),
                 sb.toString().trim()
             )
@@ -219,25 +223,25 @@ class UImplicitCallExpressionTest {
             """
             src/test/pkg/Test.kt:11: Error: Found overloaded function call get [_DispatchTestIssue]
                 test[string]
-                ~~~~~~~~~~~~
+                    ~
             src/test/pkg/Test.kt:12: Error: Found overloaded function call set [_DispatchTestIssue]
                 test[string] = color
-                ~~~~~~~~~~~~~~~~~~~~
+                    ~
             src/test/pkg/Test.kt:26: Error: Found overloaded function call inc [_DispatchTestIssue]
                 point++
-                ~~~~~~~
+                     ~~
             src/test/pkg/Test.kt:43: Error: Found overloaded function call plus [_DispatchTestIssue]
                 val x = counter + 5
-                        ~~~~~~~~~~~
+                                ~
             src/test/pkg/Test.kt:53: Error: Found overloaded function call contains [_DispatchTestIssue]
                 println(color in resource)
-                        ~~~~~~~~~~~~~~~~~
+                              ~~
             src/test/pkg/Test.kt:54: Error: Found overloaded function call contains [_DispatchTestIssue]
                 println(string !in resource)
-                        ~~~~~~~~~~~~~~~~~~~
+                               ~~~
             src/test/pkg/Test.kt:56: Error: Found overloaded function call rangeTo [_DispatchTestIssue]
                 println(resource..string)
-                        ~~~~~~~~~~~~~~~~
+                                ~~
             7 errors, 0 warnings
             """
         )
@@ -248,7 +252,10 @@ class UImplicitCallExpressionTest {
             listOf("get", "set", "compareTo", "inc", "in", "rangeTo", "contains", "plus", "minus")
 
         override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
-            context.report(ISSUE, context.getLocation(node), "Found overloaded function call ${node.methodName}")
+            context.report(
+                ISSUE, context.getCallLocation(node, includeReceiver = false, includeArguments = false),
+                "Found overloaded function call ${node.methodName}"
+            )
         }
 
         companion object {

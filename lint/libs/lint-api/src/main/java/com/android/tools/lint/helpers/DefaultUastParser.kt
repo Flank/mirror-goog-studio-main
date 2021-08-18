@@ -52,6 +52,7 @@ import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getIoFile
 import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
 import org.jetbrains.uast.psi.UElementWithLocation
+import org.jetbrains.uast.textRange
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.log10
@@ -420,6 +421,11 @@ open class DefaultUastParser(
         val fromRange = getTextRange(from)
         val toRange = getTextRange(to)
 
+        if (fromRange != null && toRange != null && fromRange.startOffset > toRange.startOffset) {
+            // Not common, but for example for the "contains" operator whe receiver and
+            // argument are reversed
+            return getRangeLocation(context, to, toDelta, from, fromDelta)
+        }
         // Make sure this element is reported in the correct file
         var file = context.file
         val psi = findPsi(from)
