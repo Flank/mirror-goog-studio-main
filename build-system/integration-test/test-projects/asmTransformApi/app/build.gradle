@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'instrumentation-plugin'
+    id 'jacoco'
 }
 
 android {
@@ -11,6 +12,12 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
     }
 
     lintOptions {
