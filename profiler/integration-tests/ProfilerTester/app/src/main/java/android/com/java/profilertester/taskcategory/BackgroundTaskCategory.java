@@ -18,8 +18,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class BackgroundTaskCategory extends TaskCategory {
+
     private static final String NUM_OF_WAKEUPS = "Number of Wakeups";
 
     // Repeating alarms have system-enforced minimum interval so we need a longer task time.
@@ -42,6 +45,7 @@ public final class BackgroundTaskCategory extends TaskCategory {
             Arrays.asList(
                     new WakeLockTask(),
                     new AlarmTask(),
+                    new RepeatingAlarmTask(),
                     new SingleJobTask(),
                     new PeriodicJobTask());
 
@@ -92,7 +96,8 @@ public final class BackgroundTaskCategory extends TaskCategory {
         }
     }
 
-    private final class AlarmTask extends Task {
+    private final class RepeatingAlarmTask extends Task {
+
         @NonNull
         @Override
         protected String execute() {
@@ -133,7 +138,40 @@ public final class BackgroundTaskCategory extends TaskCategory {
         @NonNull
         @Override
         protected String getTaskDescription() {
-            return "Alarm";
+            return "Repeating Alarm";
+        }
+    }
+
+    private final class AlarmTask extends Task {
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        @NonNull
+        @Override
+        protected String execute() {
+            Context context = mHostActivity.getApplicationContext();
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+            if (alarmManager == null) {
+                return "Error setting alarm!";
+            }
+            AlarmManager.OnAlarmListener listener = () -> {};
+            alarmManager.set(
+                    AlarmManager.RTC_WAKEUP, TimeUnit.SECONDS.toMillis(5), "TEST", listener, null);
+
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(4));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
+            }
+
+            alarmManager.cancel(listener);
+            return "Alarms cancelled normally.";
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "1-shot Alarm";
         }
     }
 
