@@ -27,6 +27,7 @@ import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import com.google.testing.platform.runtime.android.controller.ext.deviceShell
+import java.util.logging.Logger
 import org.junit.Before
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -37,6 +38,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.quality.Strictness
 
 /**
@@ -50,6 +52,7 @@ class AndroidTestLogcatPluginTest {
     @Mock private lateinit var mockCommandHandle: CommandHandle
     @Mock private lateinit var mockConfig: ConfigBase
     @Mock private lateinit var mockDeviceController: DeviceController
+    @Mock private lateinit var mockLogger: Logger
 
     private lateinit var androidTestLogcatPlugin: AndroidTestLogcatPlugin
     private lateinit var emptyTestResult: TestResult
@@ -69,7 +72,7 @@ class AndroidTestLogcatPluginTest {
         environment = Environment(tempFolder.root.path, "", "", "", null)
         emptyTestResult = TestResult.newBuilder().build()
         emptyTestSuiteResult = TestSuiteResult.newBuilder().build()
-        androidTestLogcatPlugin = AndroidTestLogcatPlugin()
+        androidTestLogcatPlugin = AndroidTestLogcatPlugin(mockLogger)
 
         `when`(mockConfig.environment).thenReturn(environment)
         `when`(mockDeviceController.deviceShell(listOf("date", "+%m-%d\\ %H:%M:%S")))
@@ -129,5 +132,15 @@ class AndroidTestLogcatPluginTest {
     @Test
     fun canRun_isTrue() {
         assertThat(androidTestLogcatPlugin.canRun()).isTrue()
+    }
+
+    @Test
+    fun doNotDisplayWarningIfAfterAllIsCalledWithoutBeforeAll() {
+        androidTestLogcatPlugin.configure(mockConfig)
+        // afterAll() may be invoked without beforeAll() when there is a runtime error
+        // in other UTP plugins.
+        androidTestLogcatPlugin.afterAll(emptyTestSuiteResult, mockDeviceController)
+
+        verifyNoInteractions(mockLogger)
     }
 }
