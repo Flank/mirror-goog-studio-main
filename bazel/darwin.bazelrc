@@ -18,3 +18,7 @@ build:release --cxxopt=-ffunction-sections
 # Disable Clang diagnostics for release builds, to reduce the amount of noise
 # in the output in continuous builds and --config=remote runs.
 build:release --copt=-w
+
+# TODO(b/196437640) move this configuration to a user/system bazelrc file
+# to avoid using a checked-in credential.
+build --google_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
