@@ -93,6 +93,7 @@ import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionConstraint;
 import org.eclipse.aether.version.VersionRange;
 import org.eclipse.aether.version.VersionScheme;
@@ -699,12 +700,16 @@ public class LocalMavenRepositoryGenerator {
                                     if (!version.isDirectory())
                                         continue;
                                     try {
-                                        result.addVersion(versionScheme.parseVersion(version.getName()));
+                                        Version parsedVersion = versionScheme.parseVersion(version.getName());
+                                        if (versionConstraint.containsVersion(parsedVersion)) {
+                                            result.addVersion(parsedVersion);
+                                        }
                                     } catch (InvalidVersionSpecificationException e) {
                                         // Ignore invalid versions.
                                     }
                                 }
                                 if (!result.getVersions().isEmpty()) {
+                                    result.setVersionConstraint(versionConstraint);
                                     return result;
                                 }
                             }
@@ -716,6 +721,8 @@ public class LocalMavenRepositoryGenerator {
                         throw new VersionRangeResolutionException(result);
                     }
 
+                    result.addException(new Exception("Failed to resolve version"));
+                    throw new VersionRangeResolutionException(result);
                 }
             }
 
