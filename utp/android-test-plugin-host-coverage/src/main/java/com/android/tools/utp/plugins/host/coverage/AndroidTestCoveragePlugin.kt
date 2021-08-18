@@ -136,7 +136,9 @@ class AndroidTestCoveragePlugin(
         deviceController: DeviceController
     ): TestSuiteResult {
         try {
-            retrieveCoverageFiles(deviceController)
+            if (testSuiteResult.testResultCount > 0) {
+                retrieveCoverageFiles(deviceController)
+            }
         } catch (e: Exception) {
             logger.log(Level.WARNING, e) {
                 "Failed to retrieve code coverage data from device."
