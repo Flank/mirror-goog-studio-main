@@ -230,47 +230,6 @@ java_test(
     ],
 )
 
-# See README.md
-java_binary(
-    name = "java_import_generator",
-    srcs = ["src/com/android/tools/binaries/JavaImportGenerator.java"],
-    main_class = "com.android.tools.binaries.JavaImportGenerator",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
-    ],
-    deps = [
-        ":bazel_generator",
-        ":maven",
-        ":utils",
-        "@maven//:com.google.code.findbugs.jsr305",
-        "@maven//:com.google.guava.guava",
-        "@maven//:org.apache.maven.maven-aether-provider",
-    ],
-)
-
-# See README.md
-java_binary(
-    name = "add_dependency",
-    srcs = [
-        "src/com/android/tools/binaries/AddDependency.java",
-        "src/com/android/tools/binaries/JavaImportGenerator.java",
-    ],
-    main_class = "com.android.tools.binaries.AddDependency",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
-    ],
-    deps = [
-        ":bazel_generator",
-        ":maven",
-        ":utils",
-        "@maven//:com.google.code.findbugs.jsr305",
-        "@maven//:com.google.guava.guava",
-        "@maven//:org.apache.maven.maven-aether-provider",
-    ],
-)
-
 java_binary(
     name = "jarjar",
     main_class = "com.tonicsystems.jarjar.Main",
