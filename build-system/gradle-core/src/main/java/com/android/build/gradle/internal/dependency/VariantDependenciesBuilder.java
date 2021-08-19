@@ -32,8 +32,10 @@ import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
 import static org.gradle.api.attributes.LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE;
 import static org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.attributes.AgpVersionAttr;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -209,6 +211,8 @@ public class VariantDependenciesBuilder {
         final Usage reverseMetadataUsage = factory.named(Usage.class, "android-reverse-meta-data");
         final TargetJvmEnvironment jvmEnvironment =
                 factory.named(TargetJvmEnvironment.class, TargetJvmEnvironment.ANDROID);
+        final AgpVersionAttr agpVersion =
+                factory.named(AgpVersionAttr.class, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
         String variantName = variantDslInfo.getComponentIdentity().getName();
         VariantType variantType = variantDslInfo.getVariantType();
@@ -254,6 +258,7 @@ public class VariantDependenciesBuilder {
         applyVariantAttributes(compileAttributes, buildType, consumptionFlavorMap);
         compileAttributes.attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
         compileAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
+        compileAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
 
         Configuration annotationProcessor =
                 configurations.maybeCreate(variantName + "AnnotationProcessorClasspath");
@@ -266,6 +271,7 @@ public class VariantDependenciesBuilder {
         // all the runtime graph.
         final AttributeContainer annotationAttributes = annotationProcessor.getAttributes();
         annotationAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+        annotationAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
         applyVariantAttributes(annotationAttributes, buildType, consumptionFlavorMap);
 
         final String runtimeClasspathName = variantName + "RuntimeClasspath";
@@ -291,6 +297,7 @@ public class VariantDependenciesBuilder {
         applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
         runtimeAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
+        runtimeAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
 
         if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
             Provider<StringCachingBuildService> stringCachingService =
@@ -332,6 +339,7 @@ public class VariantDependenciesBuilder {
             final AttributeContainer testedApksAttributes = testedApks.getAttributes();
             applyVariantAttributes(testedApksAttributes, buildType, consumptionFlavorMap);
             testedApksAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+            testedApksAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
             // For the test only classpath find the packaged dependencies through this testedApks
             // configuration.
             providedClasspath = testedApks;
@@ -354,6 +362,7 @@ public class VariantDependenciesBuilder {
             applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
             // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
             wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+            wearAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
         }
 
         VariantAttr variantNameAttr =
@@ -378,7 +387,8 @@ public class VariantDependenciesBuilder {
                             publicationFlavorMap,
                             variantNameAttr,
                             runtimeUsage,
-                            null);
+                            null,
+                            agpVersion);
 
             // always extend from the runtimeClasspath. Let the FilteringSpec handle what
             // should be packaged.
@@ -394,7 +404,8 @@ public class VariantDependenciesBuilder {
                             publicationFlavorMap,
                             variantNameAttr,
                             apiUsage,
-                            null);
+                            null,
+                            agpVersion);
 
             // apiElements only extends the api classpaths.
             apiElements.setExtendsFrom(apiClasspaths);
@@ -546,7 +557,8 @@ public class VariantDependenciesBuilder {
                                             null /*Usage*/,
                                             factory.named(
                                                     LibraryElements.class,
-                                                    AndroidArtifacts.ArtifactType.APK.getType()));
+                                                    AndroidArtifacts.ArtifactType.APK.getType()),
+                                            null);
                             elements.put(
                                     new PublishedConfigSpec(
                                             APK_PUBLICATION, component.getComponentName(), false),
@@ -569,8 +581,8 @@ public class VariantDependenciesBuilder {
                                             null /*Usage*/,
                                             factory.named(
                                                     LibraryElements.class,
-                                                    AndroidArtifacts.ArtifactType.BUNDLE
-                                                            .getType()));
+                                                    AndroidArtifacts.ArtifactType.BUNDLE.getType()),
+                                            null);
                             elements.put(
                                     new PublishedConfigSpec(
                                             AAB_PUBLICATION, component.getComponentName(), false),
@@ -596,6 +608,7 @@ public class VariantDependenciesBuilder {
                             publicationFlavorMap,
                             variantNameAttr,
                             reverseMetadataUsage,
+                            null,
                             null);
             elements.put(
                     new PublishedConfigSpec(REVERSE_METADATA_ELEMENTS), reverseMetadataElements);
@@ -634,6 +647,7 @@ public class VariantDependenciesBuilder {
             final AttributeContainer reverseMetadataValuesAttributes =
                     reverseMetadataValues.getAttributes();
             reverseMetadataValuesAttributes.attribute(Usage.USAGE_ATTRIBUTE, reverseMetadataUsage);
+            reverseMetadataValuesAttributes.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
             applyVariantAttributes(
                     reverseMetadataValuesAttributes, buildType, consumptionFlavorMap);
         }
@@ -680,7 +694,8 @@ public class VariantDependenciesBuilder {
             @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap,
             @Nullable VariantAttr variantNameAttr,
             @Nullable Usage usage,
-            @Nullable LibraryElements libraryElements) {
+            @Nullable LibraryElements libraryElements,
+            @Nullable AgpVersionAttr agpVersion) {
         Configuration config = configurations.maybeCreate(configName);
         config.setDescription(configDesc);
         config.setCanBeResolved(false);
@@ -699,6 +714,10 @@ public class VariantDependenciesBuilder {
 
         if (libraryElements != null) {
             attrContainer.attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
+        }
+
+        if (agpVersion != null) {
+            attrContainer.attribute(AgpVersionAttr.ATTRIBUTE, agpVersion);
         }
 
         return config;

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.ComponentImpl
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
+import com.android.build.gradle.internal.dependency.AgpVersionCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule
 import com.android.build.gradle.internal.dependency.AndroidXDependencyCheck
@@ -509,6 +511,7 @@ class DependencyConfigurator(
         setBuildTypeStrategy(schema)
         setupFlavorStrategy(schema)
         setupModelStrategy(schema)
+        setUpAgpVersionStrategy(schema)
 
         return this
     }
@@ -586,6 +589,12 @@ class DependencyConfigurator(
 
     private fun setupModelStrategy(attributesSchema: AttributesSchema) {
         setUp(attributesSchema)
+    }
+
+    /** This is to enforce AGP version across a single or composite build. */
+    private fun setUpAgpVersionStrategy(attributesSchema: AttributesSchema) {
+        val strategy = attributesSchema.attribute(AgpVersionAttr.ATTRIBUTE)
+        strategy.compatibilityRules.add(AgpVersionCompatibilityRule::class.java)
     }
 
     private fun handleMissingDimensions(

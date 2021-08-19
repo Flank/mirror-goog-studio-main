@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
+import com.android.Version;
+import com.android.build.api.attributes.AgpVersionAttr;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -26,6 +28,7 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.gradle.api.attributes.LibraryElements;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -78,6 +81,8 @@ public class AppPublishingTest {
 
         Path aabFile = groupIdFolder.resolve("app/1.0/app-1.0.aab");
         assertThat(aabFile).isFile();
+        ensureNoAgpVersionAttributeOnConfigurations(
+                groupIdFolder.resolve("app/1.0/app-1.0.module").toFile());
     }
 
     @Test
@@ -98,6 +103,8 @@ public class AppPublishingTest {
                 it -> {
                     it.contains("mapping.txt");
                 });
+        File moduleFile = FileUtils.join(groupIdFolder, "app", "1.0", "app-1.0.module");
+        ensureNoAgpVersionAttributeOnConfigurations(moduleFile);
     }
 
     @Test
@@ -201,5 +208,12 @@ public class AppPublishingTest {
                         + "        }\n"
                         + "    }\n"
                         + "}");
+    }
+
+    private void ensureNoAgpVersionAttributeOnConfigurations(File module) {
+        assertThat(module).exists();
+        assertThat(module).contains(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE.getName());
+        assertThat(module).doesNotContain(AgpVersionAttr.ATTRIBUTE.getName());
+        assertThat(module).doesNotContain(Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 }

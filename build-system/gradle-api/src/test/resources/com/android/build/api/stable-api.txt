@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-12711976532a375a6b3c0fed36846b620ff184f01af91b078baf46f4ec49cf1f
+4c550c057898b61d33e1822f20bb6e19e2916b9dde50cce9114087357205d261
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -87,6 +87,8 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.a
 com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.api.artifact.OutOperationRequest<FileTypeT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithDirectories: com.android.build.api.artifact.InAndOutDirectoryOperationRequest<TaskT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.build.api.artifact.InAndOutFileOperationRequest (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>)
+com.android.build.api.attributes.AgpVersionAttr implements org.gradle.api.Named
+com.android.build.api.attributes.AgpVersionAttr$Companion
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
