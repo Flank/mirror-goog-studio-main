@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.api;
 
-import static com.android.build.gradle.internal.utils.AgpVersionChecker.ANDROID_GRADLE_PLUGIN_ID;
+import static com.android.build.gradle.internal.utils.GradlePluginUtils.ANDROID_GRADLE_PLUGIN_ID;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.fixture.TestProjects;

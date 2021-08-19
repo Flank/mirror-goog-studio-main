@@ -5,30 +5,31 @@
       - runtimeDependencies = []
    - androidTestArtifact:
       - compileDependencies:
-         - :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies = []
    - unitTestArtifact:
       - compileDependencies:
-         - :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
+         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
    - testFixturesArtifact = (null)
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
          - type                = PROJECT
          - artifact            = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":"
             - attributes:
+               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
                * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.libraryelements -> jar"
@@ -51,19 +52,21 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified
-      > :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
+      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified
+      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
          - type                = PROJECT
          - artifact            = (null)
-         - projectInfo:
+         > projectInfo:
             - buildId     = ":"
             - projectPath = ":"
             - attributes:
+               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
                * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
                * ":project:unspecified"
+         < projectInfo
          - libraryInfo         = (null)
          - compileJarFiles     = (null)
          - runtimeJarFiles     = (null)
@@ -79,6 +82,6 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < :|:|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
+      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
    < libraries
 < GlobalLibraryMap

@@ -98,7 +98,6 @@ import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
-import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.utils.KgpUtils;
 import com.android.build.gradle.internal.utils.PublishingUtils;
@@ -320,8 +319,6 @@ public abstract class BasePlugin<
         DependencyResolutionChecks.registerDependencyCheck(project, projectOptions);
 
         checkPathForErrors();
-
-        AgpVersionChecker.enforceTheSamePluginVersions(project);
 
         String attributionFileLocation =
                 projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION);
