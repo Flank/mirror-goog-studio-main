@@ -433,12 +433,8 @@ coverage_report(
 )
 
 # Coverage report for suggested import.
-# The explicitly excluded source file is for legacy mode.
 coverage_report(
     name = "suggested-import",
-    srcpath_exclude = [
-        "tools/adt/idea/android/src/com/android/tools/idea/imports/MavenClassRegistryFromHardcodedMap.kt",
-    ],
     srcpath_include = [
         "tools/adt/idea/android/src/com/android/tools/idea/imports",
         "tools/adt/idea/android/src/org/jetbrains/android/dom/inspections/AndroidUnresolvableTagInspection.kt",
