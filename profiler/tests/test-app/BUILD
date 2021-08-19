@@ -7,10 +7,10 @@ transport_app(
     name = "test-app",
     srcs = glob(["src/main/java/**/*.java"]),
     deps = [
-        "//prebuilts/tools/common/m2:com.squareup.okhttp.okhttp.2.5.0",
-        "//prebuilts/tools/common/m2:com.squareup.okhttp3.okhttp.3.3.0",
-        "//prebuilts/tools/common/m2:com.squareup.okio.okio.1.6.0",
         "//tools/base/transport/test-framework/test-app:libtest-app",
+        "@maven//:com.squareup.okhttp.okhttp",
+        "@maven//:com.squareup.okhttp3.okhttp",
+        "@maven//:com.squareup.okio.okio",
     ],
 )
 
