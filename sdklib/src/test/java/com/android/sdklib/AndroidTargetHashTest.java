@@ -25,10 +25,26 @@ public class AndroidTargetHashTest extends TestCase {
 
     public final void testGetPlatformHashString() {
         assertEquals("android-10",
-                AndroidTargetHash.getPlatformHashString(new AndroidVersion(10, null)));
+                     AndroidTargetHash.getPlatformHashString(new AndroidVersion(10,
+                                                                                null,
+                                                                                null,
+                                                                                true)));
+
+        //Base SDKs with extension levels are equals to SDKs where the extension level is not known.
+        assertEquals("android-10",
+                     AndroidTargetHash.getPlatformHashString(new AndroidVersion(10,
+                                                                                null,
+                                                                                3,
+                                                                                true)));
 
         assertEquals("android-CODE_NAME",
-                AndroidTargetHash.getPlatformHashString(new AndroidVersion(10, "CODE_NAME")));
+                     AndroidTargetHash.getPlatformHashString(new AndroidVersion(10, "CODE_NAME")));
+
+        assertEquals("android-10-ext3",
+                     AndroidTargetHash.getPlatformHashString(new AndroidVersion(10,
+                                                                                null,
+                                                                                3,
+                                                                                false)));
     }
 
     public final void testGetAddonHashString() {
@@ -50,40 +66,54 @@ public class AndroidTargetHashTest extends TestCase {
         assertNull(AndroidTargetHash.getPlatformVersion("blah-5"));
         assertNull(AndroidTargetHash.getPlatformVersion("5-blah"));
         assertNull(AndroidTargetHash.getPlatformVersion("android-"));
+        assertNull(AndroidTargetHash.getPlatformVersion("android-2-ext"));
 
         AndroidVersion version = AndroidTargetHash.getPlatformVersion("android-5");
         assertNotNull(version);
         assertEquals(5, version.getApiLevel());
+        assertTrue(version.isBaseExtension());
         assertNull(version.getCodename());
 
         version = AndroidTargetHash.getPlatformVersion("5");
         assertNotNull(version);
         assertEquals(5, version.getApiLevel());
         assertEquals(5, version.getFeatureLevel());
+        assertTrue(version.isBaseExtension());
         assertNull(version.getCodename());
 
         version = AndroidTargetHash.getPlatformVersion("android-CUPCAKE");
         assertNotNull(version);
         assertEquals(2, version.getApiLevel());
         assertEquals(3, version.getFeatureLevel());
+        assertTrue(version.isBaseExtension());
         assertEquals("CUPCAKE", version.getCodename());
 
         version = AndroidTargetHash.getPlatformVersion("android-KITKAT");
         assertNotNull(version);
         assertEquals(18, version.getApiLevel());
         assertEquals(19, version.getFeatureLevel());
+        assertTrue(version.isBaseExtension());
         assertEquals("KITKAT", version.getCodename());
 
         version = AndroidTargetHash.getPlatformVersion("android-N");
         assertNotNull(version);
         assertEquals(23, version.getApiLevel());
         assertEquals(24, version.getFeatureLevel());
+        assertTrue(version.isBaseExtension());
         assertEquals("N", version.getCodename());
 
         version = AndroidTargetHash.getPlatformVersion("android-UNKNOWN");
         assertNotNull(version);
         assertEquals(SdkVersionInfo.HIGHEST_KNOWN_API, version.getApiLevel());
         assertEquals(SdkVersionInfo.HIGHEST_KNOWN_API + 1, version.getFeatureLevel());
+        assertTrue(version.isBaseExtension());
         assertEquals("UNKNOWN", version.getCodename());
+
+        version = AndroidTargetHash.getPlatformVersion("android-10-ext3");
+        assertNotNull(version);
+        assertEquals(10, version.getApiLevel());
+        assertEquals(3, version.getExtensionLevel().intValue());
+        assertFalse(version.isBaseExtension());
+        assertNull(version.getCodename());
     }
 }
