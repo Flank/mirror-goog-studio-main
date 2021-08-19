@@ -54,6 +54,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         val line = getLocation(error).start?.line ?: -1
 
         val sb = StringBuilder()
+        sb.append(TestLintClient.testModePrefix(task.runner.currentTestMode))
         val location = getLocation(error)
         val source = root.sourcePsi.text.toString()
         val lines = location.getErrorLines { source }

@@ -123,4 +123,34 @@ class BodyRemovalTestModeTest {
         val parenthesized = convertKotlin(kotlin)
         assertEquals(expected, parenthesized)
     }
+
+    @Test
+    fun test196881523() {
+        @Language("kotlin")
+        val kotlin = """
+            package test.pkg
+            class TimeProviderKt {
+                internal companion object {
+                    @JvmStatic
+                    fun getTimeStatically(): Int {
+                        return -1
+                    }
+                }
+            }
+        """.trimIndent().trim()
+
+        @Language("kotlin")
+        val expected = "" +
+            "package test.pkg\n" +
+            "class TimeProviderKt {\n" +
+            "    internal companion object {\n" +
+            "        @JvmStatic\n" +
+            "        fun getTimeStatically(): Int =\n" +
+            "            -1\n" +
+            "        \n" +
+            "    }\n" +
+            "}"
+        val parenthesized = convertKotlin(kotlin)
+        assertEquals(expected, parenthesized)
+    }
 }
