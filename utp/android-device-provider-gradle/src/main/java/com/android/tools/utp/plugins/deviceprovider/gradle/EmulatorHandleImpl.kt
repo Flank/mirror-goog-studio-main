@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit
  */
 class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) : EmulatorHandle {
     private companion object {
-        /** Max length of time to wait for the emulator to finish booting */
-        private const val EMULATOR_BOOT_TIMEOUT_SECONDS = 80L
         private const val EMULATOR_NO_WINDOW = "-no-window"
         private const val EMULATOR_NO_BOOT_ANIM = "-no-boot-anim"
         private const val EMULATOR_READ_ONLY = "-read-only"
@@ -65,23 +63,12 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
         args.add("-id")
         args.add(avdId)
 
-        val bootCountDown = CountDownLatch(1)
-
         val emulatorEnvironment = System.getenv().toMutableMap()
         emulatorEnvironment["ANDROID_AVD_HOME"] = avdFolder
         processHandle = subprocessComponent.subprocess().executeAsync(
                 args = args,
-                environment = emulatorEnvironment,
-                stdoutProcessor = { line ->
-                    if (bootCountDown.getCount() != 0L) {
-                        if (line.contains("boot completed")) {
-                            bootCountDown.countDown()
-                        }
-                    }
-                }
+                environment = emulatorEnvironment
         )
-
-        bootCountDown.await(EMULATOR_BOOT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 
         // In case the processHandle errored out.
         if (!processHandle.isAlive()) {

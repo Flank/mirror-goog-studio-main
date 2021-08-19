@@ -130,6 +130,13 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
             )
         }
 
+        if (!establishBootCheck(targetSerial)) {
+            releaseDevice()
+            throw DeviceProviderException(
+                    "Emulator failed to boot. Check logs for details."
+            )
+        }
+
         val emulatorPort = targetSerial.substring("emulator-".length).toInt()
         device = AndroidDevice(
                 host = "localhost",
@@ -180,6 +187,32 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         }
 
         return null
+    }
+
+    /**
+     * Establishes the device is booted properly with retries or returns false.
+     *
+     * After the serial is detected for the device, we can then query it to
+     * ensure that the device is booted properly. This needs to occur before
+     * we attempt to install the test apk, therefore we need it to be
+     * established before we supply the Device to the rest of AGP
+     */
+    private fun establishBootCheck(
+        deviceSerial: String,
+        numberOfRetries: Int = MAX_ADB_ATTEMPTS
+    ): Boolean {
+        // We may need to retry if we default to cold boot.
+        var retries = 0
+        while (retries < numberOfRetries) {
+            if (adbManager.isBootLoaded(deviceSerial)) {
+                return true
+            }
+            if (!skipRetryDelay) {
+                Thread.sleep(ADB_RETRY_DELAY_SECONDS.pow(retries).toLong() * MS_PER_SECOND)
+            }
+            ++retries
+        }
+        return false
     }
 
     override fun provideDevice(): DeviceController {

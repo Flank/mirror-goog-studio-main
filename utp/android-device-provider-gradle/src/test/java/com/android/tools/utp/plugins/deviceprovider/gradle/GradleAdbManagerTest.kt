@@ -126,6 +126,21 @@ class GradleAdbManagerTest {
         assertThat(id).isEqualTo("someDeviceIdHere")
     }
 
+    @Test
+    fun isBootLoaded_allCases() {
+        // Successful boot
+        setAdbOutput(listOf("1"))
+        assertThat(adbManager.isBootLoaded("emulator-5554")).isTrue()
+
+        // Not booted yet
+        setAdbOutput(listOf("0"))
+        assertThat(adbManager.isBootLoaded("emulator-5554")).isFalse()
+
+        // Device disconnected
+        setAdbOutput(listOf("adb: device 'emulator-5554' not found"))
+        assertThat(adbManager.isBootLoaded("emulator-5554")).isFalse()
+    }
+
     private fun setAdbOutput(output: List<String>) {
         `when`(
                 subprocess.executeAsync(

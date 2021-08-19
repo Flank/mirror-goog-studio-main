@@ -26,6 +26,9 @@ interface GradleAdbManager {
     /** Returns the list of serials for all online devices.*/
     fun getAllSerials(): List<String>
 
+    /** Returns whether the given device has booted or not.*/
+    fun isBootLoaded(deviceSerial: String): Boolean
+
     /** Returns the id associated with the corresponding serial */
     fun getId(deviceSerial: String): String?
 
