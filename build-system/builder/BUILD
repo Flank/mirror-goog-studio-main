@@ -158,12 +158,12 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":benchmarks_utils",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.27.0.1-jre",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
 )
@@ -181,12 +181,12 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":benchmarks_utils",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.27.0.1-jre",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
 )
@@ -204,12 +204,12 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":benchmarks_utils",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.27.0.1-jre",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
 )
@@ -227,12 +227,12 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":benchmarks_utils",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.27.0.1-jre",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
 )

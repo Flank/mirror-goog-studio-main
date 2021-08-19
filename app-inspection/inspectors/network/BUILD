@@ -26,18 +26,17 @@ app_inspection_jar(
     inspection_resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
     inspection_resources = glob(["resources/META-INF/**"]),
     proto = ":network_inspector_java_proto",
-    # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [
         ":network_inspector_java_proto",
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         "//prebuilts/tools/common/m2:androidx.inspection.inspection.1.0.0",
-        "//tools/base/bazel:studio-proto",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-coroutines-core.1.4.1",
-        "//prebuilts/tools/common/m2:com.squareup.okhttp.okhttp.2.5.0",
-        "//prebuilts/tools/common/m2:com.squareup.okhttp3.okhttp.3.3.0",
-        "//prebuilts/tools/common/m2:com.squareup.okio.okio.1.6.0",
         "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+        "//tools/base/bazel:studio-proto",
+        "@maven//:androidx.annotation.annotation",
+        "@maven//:com.squareup.okhttp.okhttp",
+        "@maven//:com.squareup.okhttp3.okhttp",
+        "@maven//:com.squareup.okio.okio",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
     ],
 )
 

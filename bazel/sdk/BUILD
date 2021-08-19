@@ -40,8 +40,8 @@ java_test(
     test_class = "com.android.tools.utils.CombineNoticesTest",
     deps = [
         ":combine_notices_lib",
-        "//prebuilts/tools/common/m2:com.google.jimfs.jimfs.1.1",
         "@maven//:com.google.guava.guava",
+        "@maven//:com.google.jimfs.jimfs",
         "@maven//:junit.junit",
     ],
 )

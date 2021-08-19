@@ -51,7 +51,7 @@ java_library(
     }),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
+        "@maven//:androidx.annotation.annotation",
     ],
 )
 
@@ -64,9 +64,9 @@ java_library(
     ],
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         # TODO(b/77923456): Track version changes and revisit.
         "//prebuilts/tools/common/m2:com.google.android.gms.play-services-location.11.8.0",
+        "@maven//:androidx.annotation.annotation",
     ],
 )
 
@@ -95,10 +95,10 @@ java_library(
     deps = [
         ":perfa_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
-        "//prebuilts/tools/common/m2:com.squareup.okhttp.okhttp.2.5.0",
-        "//prebuilts/tools/common/m2:com.squareup.okhttp3.okhttp.3.3.0",
-        "//prebuilts/tools/common/m2:com.squareup.okio.okio.1.6.0",
+        "@maven//:androidx.annotation.annotation",
+        "@maven//:com.squareup.okhttp.okhttp",
+        "@maven//:com.squareup.okhttp3.okhttp",
+        "@maven//:com.squareup.okio.okio",
     ],
 )
 

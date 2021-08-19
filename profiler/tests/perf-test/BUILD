@@ -16,7 +16,7 @@ perf_test(
     size = "small",
     srcs = ["testSrcs/com/android/tools/profiler/BasicTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = ["@maven//:com.google.truth.truth"],
 )
 
 perf_test(
@@ -29,7 +29,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineOkHttpTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = ["@maven//:com.google.truth.truth"],
 )
 
 perf_test(
@@ -43,7 +43,7 @@ perf_test(
     ],
     app_runtime_deps = ["//tools/base/profiler/tests/test-app:libmemorynativetest.so"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = ["@maven//:com.google.truth.truth"],
 )
 
 perf_test(
@@ -51,7 +51,7 @@ perf_test(
     size = "large",
     srcs = ["testSrcs/com/android/tools/profiler/event/EventProfilerTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = ["@maven//:com.google.truth.truth"],
 )
 
 perf_test(
@@ -64,7 +64,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = ["@maven//:com.google.truth.truth"],
 )
 
 perf_test(
@@ -73,8 +73,8 @@ perf_test(
     srcs = ["testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
-        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
+        "@maven//:com.google.truth.truth",
     ],
 )
 

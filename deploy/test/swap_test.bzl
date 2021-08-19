@@ -34,12 +34,11 @@ def swap_test(name, srcs):
             "-Dapk2.location=$(location //tools/base/deploy/test/data/apk2:apk)",
         ],
         deps = [
-            "//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java.3.4.0",
-            "//prebuilts/tools/common/m2:junit.junit.4.12",
             "//tools/base/bazel:langtools",
             "//tools/base/bazel:studio-proto",
             "//tools/base/deploy/deployer:tools.deployer",
             "//tools/base/deploy/proto:deploy_java_proto",
             "//tools/base/fakeandroid",
+            "@maven//:com.google.protobuf.protobuf-java",
         ],
     )

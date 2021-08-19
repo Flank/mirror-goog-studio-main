@@ -11,12 +11,12 @@ kotlin_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
-        "//prebuilts/tools/common/m2:junit.junit.4.12",
         "//tools/base/bazel:studio-grpc",
         "//tools/base/bazel:studio-proto",
         "//tools/base/fakeandroid",
         "//tools/base/transport/proto:transport_java_proto",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
     ],
 )
 
@@ -24,7 +24,9 @@ transport_test(
     name = "SimpleTest",
     srcs = glob(["src/test/**/*.java"]),
     app_dexes = ["//tools/base/transport/test-framework/test-app:test-app"],
-    deps = ["//prebuilts/tools/common/m2:com.google.truth.truth.0.42"],
+    deps = [
+        "@maven//:com.google.truth.truth",
+    ],
 )
 
 cc_library(

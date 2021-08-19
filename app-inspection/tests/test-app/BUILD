@@ -8,7 +8,7 @@ app_inspection_app(
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["src/main/resources/**/*.version"]),
     deps = [
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         "//tools/base/transport/test-framework/test-app:libtest-app",
+        "@maven//:androidx.annotation.annotation",
     ],
 )
