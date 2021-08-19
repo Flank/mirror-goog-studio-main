@@ -155,7 +155,7 @@ class AvdSnapshotHandler(
                         logger.verbose(line)
                         if (line.contains("boot completed")) {
                             Thread.sleep(WAIT_AFTER_BOOT_MS)
-                            process.destroyForcibly()
+                            process.destroy()
                         }
                     }
 
