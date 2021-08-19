@@ -234,6 +234,21 @@ abstract class SdkComponentsBuildService @Inject constructor(
             sdkLoadStrategy.getOptionalLibraries()
         }
 
+        /**
+         * The API versions file from the platform being compiled against.
+         *
+         * Historically this was distributed in platform-tools. It has been moved to platforms, so it
+         * is versioned now. (There was some overlap, so this is available in platforms since platform
+         * api 26, and was removed in the platform-tools several years later in 31.x)
+         *
+         * This will not be present if the compile-sdk version is less than 26 (a fallback to
+         * platform-tools would not help for users that update their SDK, as it is removed in recent
+         * platform-tools)
+         */
+        val apiVersionsFile: Provider<RegularFile> = objectFactory.fileProperty().fileProvider(
+            providerFactory.provider { sdkLoadStrategy.getApiVersionsFile() }
+        )
+
         fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
             objectFactory.directoryProperty().fileProvider(providerFactory.provider {
                 sdkLoadStrategy.getSystemImageLibFolder(imageHash)
@@ -513,3 +528,7 @@ fun NdkHandlerInput.initialize(creationConfig: ComponentCreationConfig) {
     ndkVersion.setDisallowChanges(creationConfig.globalScope.extension.ndkVersion)
     ndkPath.setDisallowChanges(creationConfig.globalScope.extension.ndkPath)
 }
+
+internal const val API_VERSIONS_FILE_NAME = "api-versions.xml"
+internal const val PLATFORM_API_VERSIONS_FILE_PATH = "data/$API_VERSIONS_FILE_NAME"
+internal const val PLATFORM_TOOLS_API_VERSIONS_FILE_PATH = "api/$API_VERSIONS_FILE_NAME"
