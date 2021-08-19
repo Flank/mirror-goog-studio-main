@@ -51,10 +51,11 @@ public class RepoLinker {
             Path src = Paths.get(split[1]).toAbsolutePath().normalize();
             Path dest = destination.resolve(split[0]);
 
-            Files.createDirectories(dest.getParent());
-            if (Files.exists(dest)) {
-                Files.delete(dest);
+            if (Files.isSymbolicLink(dest) && Files.readSymbolicLink(dest) == src) {
+                continue;
             }
+            Files.createDirectories(dest.getParent());
+            Files.deleteIfExists(dest);
             Files.createSymbolicLink(dest, src);
         }
     }
