@@ -453,4 +453,26 @@ public class MethodBodyEvaluatorTest {
                         .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
         Assert.assertTrue("Expected void value", result == null);
     }
+
+    @org.junit.Test
+    public void testTryFinally() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+        Integer result =
+                (Integer)
+                        new MethodBodyEvaluator(classInput, "tryFinally")
+                                .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Assert.assertEquals("finally block missed", result.intValue(), owner.tryFinally());
+    }
+
+    @org.junit.Test
+    public void testTryCatch() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        TestTarget owner = new TestTarget();
+        Integer result =
+                (Integer)
+                        new MethodBodyEvaluator(classInput, "tryCatch")
+                                .eval(owner, TestTarget.class.getTypeName(), new Object[] {});
+        Assert.assertEquals("catch block missed", result.intValue(), owner.tryCatch());
+    }
 }
