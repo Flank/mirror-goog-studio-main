@@ -64,9 +64,6 @@ coverage_java_library(
     deps = [
         ":java_version",
         "//prebuilts/r8",
-        "//prebuilts/tools/common/m2:com.google.guava.guava.23.0",
-        "//prebuilts/tools/common/m2:com.google.protobuf.protobuf-java.3.4.0",
-        "//prebuilts/tools/common/m2:org.xerial.sqlite-jdbc.3.21.0.1",
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/bazel:langtools",
@@ -77,6 +74,9 @@ coverage_java_library(
         "//tools/base/manifest-parser:tools.manifest-parser",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.xerial.sqlite-jdbc",
     ],
 )
 

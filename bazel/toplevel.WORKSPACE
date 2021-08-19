@@ -220,6 +220,7 @@ local_maven_repository(
         "org.smali:baksmali:2.2.4",
         "org.smali:dexlib2:2.2.4",
         "org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2",
+        "org.xerial:sqlite-jdbc:3.21.0.1",
         "xerces:xercesImpl:2.12.0",
     ],
 )
