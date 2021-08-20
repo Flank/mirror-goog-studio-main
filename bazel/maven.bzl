@@ -355,20 +355,6 @@ def maven_java_import(
         source = pom,
     )
 
-def maven_aar(name, aar, pom, visibility = None):
-    native.filegroup(
-        name = name,
-        srcs = [aar],
-        visibility = visibility,
-    )
-
-    maven_pom(
-        name = name + "_maven",
-        file = aar,
-        visibility = visibility,
-        source = pom,
-    )
-
 def _zipper(actions, zipper, desc, map_file, files, out):
     zipper_args = ["c", out.path]
     zipper_args += ["@" + map_file.path]
