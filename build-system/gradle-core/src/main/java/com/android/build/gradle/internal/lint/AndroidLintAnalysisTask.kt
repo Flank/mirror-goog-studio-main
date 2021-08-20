@@ -373,7 +373,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory
             .setDisallowChanges(
-                project.layout.buildDirectory.dir("intermediates/android-lint-model")
+                project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
             )
         this.lintClassLoaderBuildService.setDisallowChanges(
             getBuildService(project.gradle.sharedServices)
