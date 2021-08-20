@@ -17,23 +17,31 @@
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
 import com.android.ddmlib.IDevice
+import com.android.ddmlib.InstallException
 import com.android.ddmlib.MultiLineReceiver
 import com.android.sdklib.AndroidVersion
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceController.DdmlibAndroidDeviceControllerErrorCode
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.api.device.CommandHandle
+import com.google.testing.platform.core.error.UtpException
 import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertThrows
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.anyBoolean
+import org.mockito.Mockito.anyLong
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations.initMocks
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import org.mockito.junit.MockitoJUnit
 
 /**
  * Unit tests for [DdmlibAndroidDeviceController].
@@ -47,25 +55,35 @@ class DdmlibAndroidDeviceControllerTest {
         private const val EXIT_CODE_REPORT = "; echo ${EXIT_CODE_REPORT_TAG}=$?"
     }
 
+    @get:Rule val mockitoJUnitRule = MockitoJUnit.rule()
+
     @Mock
     private lateinit var mockDevice: IDevice
+    @Mock
+    private lateinit var mockApkPackageNameResolver: ApkPackageNameResolver
 
     private lateinit var artifactNonAndroidApk: TestArtifactProto.Artifact
     private lateinit var artifactNoSourcePath: TestArtifactProto.Artifact
     private lateinit var artifactNoDestinationPath: TestArtifactProto.Artifact
     private lateinit var properArtifact: TestArtifactProto.Artifact
 
-    private lateinit var controller: DdmlibAndroidDeviceController
+    private var uninstallIncompatibleApks: Boolean = false
+
+    private val controller: DdmlibAndroidDeviceController by lazy {
+        DdmlibAndroidDeviceController(
+            mockApkPackageNameResolver,
+            uninstallIncompatibleApks
+        ).apply {
+            setDevice(DdmlibAndroidDevice(mockDevice))
+        }
+    }
 
     @Before
     fun setUp() {
-        initMocks(this)
-
         `when`(mockDevice.serialNumber).thenReturn("serial-1234")
         `when`(mockDevice.version).thenReturn(AndroidVersion(22))
-
-        controller = DdmlibAndroidDeviceController()
-        controller.setDevice(DdmlibAndroidDevice(mockDevice))
+        `when`(mockApkPackageNameResolver.getPackageNameFromApk(anyString()))
+            .thenReturn("packageName")
     }
 
     @Before
@@ -164,6 +182,71 @@ class DdmlibAndroidDeviceControllerTest {
         val ret = controller.execute(listOf("install", "apk.apk"))
         assertThat(ret.statusCode).isEqualTo(0)
         verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+    }
+
+    @Test
+    fun executeInstallCommandFailed() {
+        `when`(mockDevice.installPackage(
+            anyString(), anyBoolean(), any(), anyLong(), anyLong(), any())).then {
+            throw InstallException("error", "INSTALL_FAILED_UPDATE_INCOMPATIBLE")
+        }
+
+        val exception = assertThrows(UtpException::class.java) {
+            controller.execute(listOf("install", "apk.apk"))
+        }
+
+        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.errorSummary.errorName)
+            .isEqualTo("INSTALL_FAILED_UPDATE_INCOMPATIBLE")
+        assertThat(exception.errorSummary.errorCode)
+            .isEqualTo(DdmlibAndroidDeviceControllerErrorCode.ERROR_APK_INSTALL.errorCode)
+    }
+
+    @Test
+    fun executeInstallCommandWithUninstallIncompatibleApks() {
+        uninstallIncompatibleApks = true
+
+        var installAttempt = 0
+        `when`(mockDevice.installPackage(
+            anyString(), anyBoolean(), any(), anyLong(), anyLong(), any())).then {
+            installAttempt++
+            if (installAttempt == 1) {
+                throw InstallException("error", "INSTALL_FAILED_UPDATE_INCOMPATIBLE")
+            }
+        }
+
+        val ret = controller.execute(listOf("install", "apk.apk"))
+
+        assertThat(ret.statusCode).isEqualTo(0)
+        inOrder(mockDevice).apply {
+            verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+            verify(mockDevice).uninstallPackage(eq("packageName"))
+            verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+        }
+    }
+
+    @Test
+    fun executeInstallCommandWithUninstallIncompatibleApksFailedByUnsupportedErrorName() {
+        uninstallIncompatibleApks = true
+
+        var installAttempt = 0
+        `when`(mockDevice.installPackage(
+            anyString(), anyBoolean(), any(), anyLong(), anyLong(), any())).then {
+            installAttempt++
+            if (installAttempt == 1) {
+                throw InstallException("error", "UNKNOWN")
+            }
+        }
+
+        val exception = assertThrows(UtpException::class.java) {
+            controller.execute(listOf("install", "apk.apk"))
+        }
+
+        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.errorSummary.errorName)
+            .isEqualTo("UNKNOWN")
+        assertThat(exception.errorSummary.errorCode)
+            .isEqualTo(DdmlibAndroidDeviceControllerErrorCode.ERROR_APK_INSTALL.errorCode)
     }
 
     @Test(expected = UnsupportedOperationException::class)

@@ -30,6 +30,8 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
 import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto.AndroidTestCoverageConfig
@@ -88,6 +90,9 @@ class UtpConfigFactory {
      * Creates a runner config proto which you can pass into the Unified Test Platform's
      * test executor.
      *
+     * @param uninstallIncompatibleApks uninstalls APKs on the device when an installation failure
+     * occurs due to incompatible APKs such as INSTALL_FAILED_UPDATE_INCOMPATIBLE,
+     * INCONSISTENT_CERTIFICATES, etc.
      * @param additionalTestOutputDir an additional test output directory on host machine, or null
      *     when disabled.
      */
@@ -97,6 +102,7 @@ class UtpConfigFactory {
         appApks: Iterable<File>,
         additionalInstallOptions: Iterable<String>,
         helperApks: Iterable<File>,
+        uninstallIncompatibleApks: Boolean,
         utpDependencies: UtpDependencies,
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
@@ -119,7 +125,7 @@ class UtpConfigFactory {
         }
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
-            addDevice(createLocalDevice(device, utpDependencies))
+            addDevice(createLocalDevice(device, uninstallIncompatibleApks, utpDependencies))
             addTestFixture(
                 createTestFixture(
                     grpcInfo.port,
@@ -228,23 +234,29 @@ class UtpConfigFactory {
 
     private fun createLocalDevice(
         device: DeviceConnector,
+        uninstallIncompatibleApks: Boolean,
         utpDependencies: UtpDependencies
     ): DeviceProto.Device {
         return DeviceProto.Device.newBuilder().apply {
             deviceIdBuilder.apply {
                 id = device.serialNumber
             }
-            provider = createLocalDeviceProvider(device, utpDependencies)
+            provider = createLocalDeviceProvider(device, uninstallIncompatibleApks, utpDependencies)
         }.build()
     }
 
     private fun createLocalDeviceProvider(
         device: DeviceConnector,
+        uninstallIncompatibleApks: Boolean,
         utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
-        return ANDROID_DEVICE_PROVIDER_DDMLIB.toExtensionProto(
-            utpDependencies, LocalAndroidDeviceProvider::newBuilder) {
+        val localConfig =  LocalAndroidDeviceProvider.newBuilder().apply {
             serial = device.serialNumber
+        }.build()
+        return ANDROID_DEVICE_PROVIDER_DDMLIB.toExtensionProto(
+            utpDependencies, DdmlibAndroidDeviceProviderConfig::newBuilder) {
+            localAndroidDeviceProviderConfig = Any.pack(localConfig)
+            this.uninstallIncompatibleApks = uninstallIncompatibleApks
         }
     }
 

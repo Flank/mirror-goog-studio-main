@@ -1547,6 +1547,21 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/deviceprovider/ddmlib/");
 
         expected.putAll(
+                "com/android/tools/utp/android-device-provider-ddmlib-proto",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE",
+                "android_device_provider_ddmlib_config.proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/deviceprovider/",
+                "com/android/tools/utp/plugins/deviceprovider/ddmlib/",
+                "com/android/tools/utp/plugins/deviceprovider/ddmlib/proto/");
+
+        expected.putAll(
                 "com/android/tools/utp/android-device-provider-gradle-proto",
                 "com/",
                 "com/android/",

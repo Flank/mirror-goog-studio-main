@@ -16,30 +16,59 @@
 
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
+import com.android.ddmlib.InstallException
 import com.android.ddmlib.InstallReceiver
 import com.android.ddmlib.MultiLineReceiver
 import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
+import com.google.testing.platform.api.error.ErrorSummary
+import com.google.testing.platform.core.error.ErrorType
+import com.google.testing.platform.core.error.UtpException
+import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
 import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType.ANDROID_APK
 import com.google.testing.platform.runtime.android.device.AndroidDevice
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.logging.Logger
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import java.util.concurrent.TimeoutException
-import java.util.concurrent.TimeUnit
 
 /**
  * Android specific implementation of [DeviceController] using DDMLIB.
  */
-class DdmlibAndroidDeviceController : DeviceController {
+class DdmlibAndroidDeviceController(
+    private val apkPackageNameResolver: ApkPackageNameResolver,
+    private val uninstallIncompatibleApks: Boolean,
+    private val logger: Logger = getLogger()
+) : DeviceController {
 
     companion object {
         private const val DEFAULT_ADB_TIMEOUT_SECONDS = 120L
         private const val SHELL_EXIT_CODE_TAG = "utp_shell_exit_code="
+
+        // This list is copied from the com.android.tools.deployer.ApkInstaller. These errors are
+        // known error names that are caused by an incompatible APK installation attempt.
+        private val INCOMPATIBLE_APK_INSTALLATION_ERROR_NAMES: Set<String> = setOf(
+            "INSTALL_FAILED_UPDATE_INCOMPATIBLE",
+            "INCONSISTENT_CERTIFICATES",
+            "INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE",
+            "INSTALL_FAILED_VERSION_DOWNGRADE",
+            "INSTALL_FAILED_DEXOPT",
+        )
+    }
+
+    /**
+     * Error code to be reported in result proto as a platform error when
+     * unexpected error happens in this device controller.
+     */
+    enum class DdmlibAndroidDeviceControllerErrorCode(val errorCode: Int) {
+        ERROR_UNKNOWN(0),
+        ERROR_APK_INSTALL(1),
     }
 
     private lateinit var controlledDevice: DdmlibAndroidDevice
@@ -119,22 +148,56 @@ class DdmlibAndroidDeviceController : DeviceController {
                 "install" -> {
                     val installArgs = commandArgs.take(commandArgs.size - 1)
                     val apkPath = commandArgs.last()
-                    val receiver = object: InstallReceiver() {
-                        override fun isCancelled(): Boolean = isCancelled
-                        override fun processNewLines(lines: Array<out String>) {
-                            super.processNewLines(lines)
-                            lines.forEach(processor)
+
+                    var retryInstall = true
+                    lateinit var receiver: InstallReceiver
+                    while (retryInstall) {
+                        retryInstall = false
+                        receiver = object : InstallReceiver() {
+                            override fun isCancelled(): Boolean = isCancelled
+                            override fun processNewLines(lines: Array<out String>) {
+                                super.processNewLines(lines)
+                                lines.forEach(processor)
+                            }
+                        }
+                        try {
+                            controlledDevice.installPackage(
+                                apkPath,
+                                /*reinstall=*/true,
+                                receiver,
+                                /*maxTimeout=*/0,
+                                /*maxTimeToOutputResponse=*/0,
+                                TimeUnit.SECONDS,
+                                *installArgs.toTypedArray()
+                            )
+                        } catch (e: InstallException) {
+                            val errorSummary = object : ErrorSummary {
+                                override val errorCode: Int =
+                                    DdmlibAndroidDeviceControllerErrorCode.ERROR_APK_INSTALL.errorCode
+                                override val errorName: String = e.errorCode ?: "UNKNOWN"
+                                override val errorType: Enum<*> = ErrorType.TEST
+                                override val namespace: String = "DdmlibAndroidDeviceController"
+                            }
+
+                            if (uninstallIncompatibleApks &&
+                                INCOMPATIBLE_APK_INSTALLATION_ERROR_NAMES.contains(errorSummary.errorName)
+                            ) {
+                                apkPackageNameResolver.getPackageNameFromApk(apkPath)?.let { uninstallPackageName ->
+                                    logger.warning("Uninstalling package: ${uninstallPackageName}")
+                                    controlledDevice.uninstallPackage(uninstallPackageName)
+                                    retryInstall = true
+                                }
+                            }
+
+                            if (!retryInstall) {
+                                throw UtpException(
+                                    errorSummary,
+                                    "Failed to install APKs: " + e.errorCode,
+                                    e
+                                )
+                            }
                         }
                     }
-                    controlledDevice.installPackage(
-                            apkPath,
-                            /*reinstall=*/true,
-                            receiver,
-                            /*maxTimeout=*/0,
-                            /*maxTimeToOutputResponse=*/0,
-                            TimeUnit.SECONDS,
-                            *installArgs.toTypedArray()
-                    )
                     receiver
                 }
                 else -> {

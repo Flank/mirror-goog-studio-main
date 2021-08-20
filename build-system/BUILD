@@ -299,6 +299,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/signflinger:agp_gradle_build_files",
     "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
+    "//tools/base/utp/android-device-provider-ddmlib-proto:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle-proto:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-host-additional-test-output:agp_gradle_build_files",

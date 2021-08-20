@@ -19,6 +19,7 @@ package com.android.tools.utp.plugins.deviceprovider.ddmlib
 import com.android.ddmlib.IDevice
 import com.android.testutils.MockitoKt.eq
 import com.android.testutils.MockitoKt.mock
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.provider.DeviceProviderConfigImpl
@@ -29,17 +30,21 @@ import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderPr
 import com.google.testing.platform.proto.api.config.SetupProto
 import org.junit.Assert.assertThrows
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.anyLong
-import org.mockito.MockitoAnnotations.initMocks
+import org.mockito.junit.MockitoJUnit
 
 /**
  * Unit tests for [DdmlibAndroidDeviceProvider].
  */
 class DdmlibAndroidDeviceProviderTest {
+
+    @get:Rule
+    val mockitoJUnitRule = MockitoJUnit.rule()
 
     @Mock
     private lateinit var mockDeviceFinder: DdmlibAndroidDeviceFinder
@@ -50,14 +55,16 @@ class DdmlibAndroidDeviceProviderTest {
 
     @Before
     fun setup() {
-        initMocks(this)
-
         environmentProto = EnvironmentProto.Environment.getDefaultInstance()
         testSetupProto = SetupProto.TestSetup.getDefaultInstance()
         androidSdkProto = AndroidSdkProto.AndroidSdk.getDefaultInstance()
     }
 
-    private fun createProvider(config: LocalAndroidDeviceProvider): DdmlibAndroidDeviceProvider {
+    private fun createProvider(localConfig: LocalAndroidDeviceProvider): DdmlibAndroidDeviceProvider {
+        val config = DdmlibAndroidDeviceProviderConfig.newBuilder().apply {
+            localAndroidDeviceProviderConfig = Any.pack(localConfig)
+            uninstallIncompatibleApks = false
+        }.build()
         val provider = DdmlibAndroidDeviceProvider(mockDeviceFinder)
         provider.configure(DeviceProviderConfigImpl(
                 environmentProto, testSetupProto, androidSdkProto, Any.pack(config)))
