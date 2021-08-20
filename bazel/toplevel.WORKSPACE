@@ -123,6 +123,8 @@ local_maven_repository(
         "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09",
         "com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta09",
         "com.android.tools.build:transform-api:2.0.0-deprecated-use-gradle-api",
+        "com.android.tools:desugar_jdk_libs:1.1.5",
+        "com.android.tools:desugar_jdk_libs_configuration:1.1.5",
         "com.github.javaparser:javaparser-core:3.18.0",
         "com.google.apis:google-api-services-storage:v1-rev82-1.22.0",
         "com.google.auto:auto-common:0.10",

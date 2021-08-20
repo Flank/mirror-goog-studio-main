@@ -102,8 +102,6 @@ kotlin_test(
     deps = [
         ":builder",
         ":fixtures",
-        "//prebuilts/tools/common/m2:com.android.tools.desugar_jdk_libs.1.1.5",
-        "//prebuilts/tools/common/m2:com.android.tools.desugar_jdk_libs_configuration.1.1.5",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.apksig",
@@ -120,6 +118,8 @@ kotlin_test(
         "//tools/base/signflinger",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/zipflinger",
+        "@maven//:com.android.tools.desugar_jdk_libs",
+        "@maven//:com.android.tools.desugar_jdk_libs_configuration",
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
