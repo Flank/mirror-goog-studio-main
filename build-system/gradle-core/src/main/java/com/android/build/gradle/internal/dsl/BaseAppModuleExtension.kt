@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ComposeOptions
-import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
@@ -29,7 +27,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 /** The `android` extension for base feature module (application plugin).  */

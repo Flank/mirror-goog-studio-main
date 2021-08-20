@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.repository.Revision
 import com.android.sdklib.SdkVersionInfo
@@ -282,9 +283,21 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
      * Return the [Int] API version, given a string representation, or
      * [SdkVersionInfo.HIGHEST_KNOWN_API] + 1 if an unknown version.
      */
-    private fun getApiIntFromString(sdkVersion: String): Int =
-        sdkVersion.removePrefix("android-").toIntOrNull()
-            ?: SdkVersionInfo.getApiByPreviewName(sdkVersion, true)
+    private fun getApiIntFromString(sdkVersion: String): Int {
+        val compileData = parseTargetHash(sdkVersion)
+        if (compileData.apiLevel != null) {
+            // this covers normal compileSdk + addons.
+            return compileData.apiLevel
+        }
+
+        if (compileData.codeName != null) {
+            return SdkVersionInfo.getApiByPreviewName(compileData.codeName, true)
+        }
+
+        // this should not happen since the target hash should be valid (this is running inside a
+        // task).
+        throw RuntimeException("Unsupported target hash: $sdkVersion")
+    }
 }
 
 /** [WorkParameters] for [CheckAarMetadataWorkAction] */
