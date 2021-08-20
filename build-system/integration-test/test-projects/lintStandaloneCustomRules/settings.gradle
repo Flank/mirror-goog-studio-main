@@ -1,1 +1,1 @@
-include ':library', ':lint'
+include ':library', ':lint', ':app'

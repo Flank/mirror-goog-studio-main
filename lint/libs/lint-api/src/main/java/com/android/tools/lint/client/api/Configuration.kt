@@ -346,11 +346,16 @@ abstract class Configuration(
      * additional issues available in downstream app modules as well.)
      */
     fun getConfiguredIssues(registry: IssueRegistry, specificOnly: Boolean): Map<String, Severity> {
-        val map = mutableMapOf<String, Severity>()
-        overrides?.addConfiguredIssues(map, registry, specificOnly)
-        addConfiguredIssues(map, registry, specificOnly)
-        return map
+        return configuredIssues ?: run {
+            val map = mutableMapOf<String, Severity>()
+            overrides?.addConfiguredIssues(map, registry, specificOnly)
+            addConfiguredIssues(map, registry, specificOnly)
+            configuredIssues = map
+            map
+        }
     }
+
+    private var configuredIssues: Map<String, Severity>? = null
 
     /**
      * Helper method overridden in most configurations to provide

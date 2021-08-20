@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.editDistance
+import com.android.tools.lint.detector.api.isApplicableTo
 import com.google.common.annotations.Beta
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
@@ -188,10 +189,7 @@ protected constructor() {
         val detectorToScope = HashMap<Class<out Detector>, EnumSet<Scope>>()
 
         for (issue in issues) {
-            if (!issue.platforms.isEmpty() && !issue.platforms.containsAll(platforms)) {
-                // This check does not apply in this context. For example, if we're
-                // analyzing an Android project, and the check does not specify Scope.ANDROID
-                // in its platforms, we skip it. As a special case, empty platforms is allowed.
+            if (!platforms.isApplicableTo(issue)) {
                 continue
             }
 

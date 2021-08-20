@@ -47,6 +47,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -1602,12 +1603,19 @@ public class Main {
             }
 
             // Set up lint project dependencies based on the model
+            boolean isReporting = argumentState.mode == LintDriver.DriverMode.MERGE;
             List<LintModelModuleProject> roots =
-                    LintModelModuleProject.resolveDependencies(
-                            projects, argumentState.mode == LintDriver.DriverMode.MERGE);
+                    LintModelModuleProject.resolveDependencies(projects, isReporting);
 
             lintRequest = new LintRequest(client, Collections.emptyList());
             lintRequest.setProjects(roots);
+
+            if (isReporting) {
+                EnumSet<Platform> platforms =
+                        roots.get(0).isAndroidProject() ? Platform.ANDROID_SET : Platform.JDK_SET;
+                lintRequest.setPlatform(platforms);
+            }
+
             // TODO: What about dynamic features? See LintGradleProject#configureLintRequest
         } else {
             lintRequest = client.createLintRequest(argumentState.files);

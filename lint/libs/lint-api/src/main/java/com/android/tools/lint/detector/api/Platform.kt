@@ -74,3 +74,14 @@ enum class Platform {
         val UNSPECIFIED: EnumSet<Platform> = EnumSet.noneOf(Platform::class.java)
     }
 }
+
+/**
+ * Checks whether the given issue is applicable to this set of platforms
+ * For example, if we're analyzing an Android project, and the check
+ * does not specify [Platform.ANDROID] in its platforms, we skip it. As
+ * a special case, empty platforms is allowed.
+ */
+fun EnumSet<Platform>.isApplicableTo(issue: Issue): Boolean {
+    val platforms = issue.platforms
+    return platforms.isEmpty() || platforms.containsAll(this)
+}
