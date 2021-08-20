@@ -149,9 +149,11 @@ class DdmlibAndroidDeviceController(
                     val installArgs = commandArgs.take(commandArgs.size - 1)
                     val apkPath = commandArgs.last()
 
+                    var installAttempts = 0
                     var retryInstall = true
                     lateinit var receiver: InstallReceiver
                     while (retryInstall) {
+                        installAttempts++
                         retryInstall = false
                         receiver = object : InstallReceiver() {
                             override fun isCancelled(): Boolean = isCancelled
@@ -185,7 +187,9 @@ class DdmlibAndroidDeviceController(
                                 apkPackageNameResolver.getPackageNameFromApk(apkPath)?.let { uninstallPackageName ->
                                     logger.warning("Uninstalling package: ${uninstallPackageName}")
                                     controlledDevice.uninstallPackage(uninstallPackageName)
-                                    retryInstall = true
+                                    // Only retry installation after initial failure, otherwise
+                                    // it potentially goes into an infinite loop.
+                                    retryInstall = installAttempts == 1
                                 }
                             }
 

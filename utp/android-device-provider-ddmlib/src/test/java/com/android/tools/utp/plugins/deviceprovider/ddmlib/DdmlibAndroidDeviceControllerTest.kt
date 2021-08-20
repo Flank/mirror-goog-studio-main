@@ -226,6 +226,32 @@ class DdmlibAndroidDeviceControllerTest {
     }
 
     @Test
+    fun executeInstallCommandWithUninstallIncompatibleApks_retryFailedAfterUninstall() {
+        uninstallIncompatibleApks = true
+
+        `when`(mockDevice.installPackage(
+            anyString(), anyBoolean(), any(), anyLong(), anyLong(), any())).then {
+            throw InstallException("error", "INSTALL_FAILED_UPDATE_INCOMPATIBLE")
+        }
+
+        val exception = assertThrows(UtpException::class.java) {
+            controller.execute(listOf("install", "apk.apk"))
+        }
+
+        assertThat(exception.message).contains("Failed to install APKs")
+        assertThat(exception.errorSummary.errorName)
+            .isEqualTo("INSTALL_FAILED_UPDATE_INCOMPATIBLE")
+        assertThat(exception.errorSummary.errorCode)
+            .isEqualTo(DdmlibAndroidDeviceControllerErrorCode.ERROR_APK_INSTALL.errorCode)
+
+        inOrder(mockDevice).apply {
+            verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+            verify(mockDevice).uninstallPackage(eq("packageName"))
+            verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+        }
+    }
+
+    @Test
     fun executeInstallCommandWithUninstallIncompatibleApksFailedByUnsupportedErrorName() {
         uninstallIncompatibleApks = true
 
