@@ -298,10 +298,3 @@ merged_zip = rule(
     },
     implementation = _merged_zip_impl,
 )
-
-def zip_merger(name, srcs = [], **kwargs):
-    merged_zip(
-        name = name,
-        srcs = srcs,
-        **kwargs
-    )
