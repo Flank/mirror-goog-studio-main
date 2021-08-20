@@ -266,15 +266,42 @@ replace_manifest = rule(
     implementation = _replace_manifest_iml,
 )
 
+def _merged_zip_impl(ctx):
+    merged_zip = ctx.actions.declare_file(ctx.label.name + ".zip")
+    args = ctx.actions.args()
+    args.add("c")  # Don't compress
+    args.add(merged_zip)
+    args.add_all(ctx.files.srcs)
+    ctx.actions.run(
+        inputs = ctx.files.srcs,
+        outputs = [merged_zip],
+        arguments = [args],
+        mnemonic = "MergedZip",
+        executable = ctx.executable._zip_merger,
+    )
+
+merged_zip = rule(
+    attrs = {
+        "srcs": attr.label_list(
+            mandatory = True,
+            allow_empty = False,
+            allow_files = [".jar", ".zip"],
+        ),
+        "_zip_merger": attr.label(
+            default = Label("//tools/base/bazel:zip_merger"),
+            cfg = "exec",
+            executable = True,
+        ),
+    },
+    outputs = {
+        "merged_zip": "%{name}.zip",
+    },
+    implementation = _merged_zip_impl,
+)
+
 def zip_merger(name, srcs = [], **kwargs):
-    native.genrule(
+    merged_zip(
         name = name,
         srcs = srcs,
-        outs = [name + ".zip"],
-        tools = ["//tools/base/bazel:zip_merger"],
-        cmd = " ".join([
-            "$(location //tools/base/bazel:zip_merger)",
-            "c '$@'",
-        ] + ["$(location " + src + ")" for src in srcs]),
         **kwargs
     )
