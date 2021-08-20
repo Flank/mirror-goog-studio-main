@@ -210,7 +210,11 @@ private fun parseChild(
     val resourceType = ResourceType.fromXmlTag(child)
                        ?: throw ResourceValuesXmlParseException("Unknown resource value XML element '${toXml(child)}'")
 
-    if (resourceType == ResourceType.PUBLIC || resourceType == ResourceType.OVERLAYABLE) {
+    // Synthetic tags do not declare a resource type, so it's fine to omit them. However, the <item>
+    // tag should either be handled above in "resourceType.fromXmlTag(child)" call and resolved to
+    // the "type" tag inside the node instead, or passed down and result in an error if it's missing
+    // the actual type. Style items are handled separately under styles.
+    if (resourceType.isSynthetic && resourceType != ResourceType.STYLE_ITEM) {
         // Doesn't declare a resource.
         return
     }
