@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
@@ -20,11 +20,10 @@ filegroup(
 )
 
 maven_library(
-    name = "annotations_bzl",
+    name = "annotations",
     srcs = glob(["src/main/java/**"]),
     coordinates = "com.android.tools:annotations:" + BASE_VERSION,
     enable_scopes = True,
-    legacy_name = "annotations",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/annotations",
     visibility = ["//visibility:public"],

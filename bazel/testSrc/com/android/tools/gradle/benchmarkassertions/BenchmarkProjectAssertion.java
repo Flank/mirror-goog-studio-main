@@ -19,5 +19,5 @@ package com.android.tools.gradle.benchmarkassertions;
 import java.nio.file.Path;
 
 public interface BenchmarkProjectAssertion {
-    void checkProject(Path projectRoot) throws Exception;
+    void checkProject(Path projectRoot, boolean fromStudio) throws Exception;
 }

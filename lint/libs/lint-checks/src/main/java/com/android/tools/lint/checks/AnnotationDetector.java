@@ -59,6 +59,7 @@ import com.android.tools.lint.detector.api.ExternalReferenceExpression;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
@@ -81,6 +82,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.impl.source.PsiImmediateClassType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -585,6 +587,34 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             }
 
             PsiType originalType = type;
+
+            // Workaround for b/132782238: Property delegates in UAST sometimes do not contain
+            // the type variables; in that case we'll have false positives. Try to find the
+            // actual type variables, and if they can't be found, don't check type compatibility.
+            if (type instanceof PsiImmediateClassType
+                    && type.getCanonicalText().equals("kotlin.properties.ReadWriteProperty")) {
+                boolean unknownDelegateType = true;
+                if (parent instanceof UVariable) {
+                    PsiType accurateType =
+                            Lint.getKotlinDelegatePropertyType(
+                                    parent.getSourcePsi(), (UVariable) parent);
+                    if (accurateType instanceof PsiClassType) {
+                        PsiClassType classType = (PsiClassType) accurateType;
+                        PsiType[] parameters = classType.getParameters();
+                        if (parameters.length >= 1) {
+                            type = parameters[parameters.length - 1];
+                            unknownDelegateType = false;
+                            // Normally we use originalType in the error message, but here since
+                            // it's
+                            // misleading use the actual type instead
+                            originalType = type;
+                        }
+                    }
+                }
+                if (unknownDelegateType) {
+                    return;
+                }
+            }
 
             if (allowCollection) {
                 if (type instanceof PsiArrayType) {

@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEF
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.StringOption;
@@ -115,7 +116,7 @@ public class CmakeGradleTargetsTest {
         project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
 
         Set<Target> shouldNotBeFound = Sets.newHashSet(Target.values());
         if (targets.isEmpty()) {

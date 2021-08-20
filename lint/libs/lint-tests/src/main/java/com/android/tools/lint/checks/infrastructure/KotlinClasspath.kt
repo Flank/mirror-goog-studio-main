@@ -28,7 +28,7 @@ fun findKotlinStdlibPath(): List<String> {
             name.startsWith("kotlin-reflect") ||
             name.startsWith("kotlin-script-runtime")
         ) {
-            paths.add(file.path)
+            paths.add(file.absolutePath)
         }
     }
     if (paths.isEmpty()) {

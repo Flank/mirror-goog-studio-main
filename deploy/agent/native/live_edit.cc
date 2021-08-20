@@ -34,6 +34,12 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
                                  const proto::LiveEditRequest& req) {
   proto::LiveEditResponse resp;
 
+  if (SetUpInstrumentationJar(jvmti, jni, req.package_name()).empty()) {
+    resp.set_status(proto::LiveEditResponse::INSTRUMENTATION_FAILED);
+    resp.set_error_message("Could not set up instrumentation jar");
+    return resp;
+  }
+
   // class_name is in the format of "com.example.Target"
   if (primed_classes.find(req.class_name()) == primed_classes.end()) {
     TransformCache cache = TransformCache::Create("BROKEN");
@@ -63,11 +69,10 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   Recompose recompose(jvmti, jni);
   jobject reloader = recompose.GetComposeHotReload();
-  if (reloader == nullptr) {
-    ErrEvent("GetComposeHotReload was not found.");
+  if (reloader) {
+    jobject state = recompose.SaveStateAndDispose(reloader);
+    recompose.LoadStateAndCompose(reloader, state);
   }
-  jobject state = recompose.SaveStateAndDispose(reloader);
-  recompose.LoadStateAndCompose(reloader, state);
 
   return resp;
 }

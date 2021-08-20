@@ -478,7 +478,7 @@ public class BenchmarkTest {
             assertions = pre_mutate_assertions;
         }
         for (BenchmarkProjectAssertion assertion : assertions) {
-            assertion.checkProject(projectRoot.toPath());
+            assertion.checkProject(projectRoot.toPath(), fromStudio);
         }
     }
 }

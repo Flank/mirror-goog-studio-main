@@ -17,9 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent.DefaultContentType
-import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -68,6 +65,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import java.nio.file.Path
+import kotlin.math.max
 
 /**
  * Task that converts CLASS files to dex archives, [com.android.builder.dexing.DexArchive].
@@ -303,26 +301,32 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         private val dexExternalLibsInArtifactTransform: Boolean
 
         init {
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             val classesFilter =
-                StreamFilter { types, _ -> DefaultContentType.CLASSES in types }
+                StreamFilter { types, _ -> com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES in types }
 
             val transformManager = creationConfig.transformManager
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             projectClasses = transformManager.getPipelineOutputAsFileCollection(
-                StreamFilter { _, scopes -> scopes == setOf(Scope.PROJECT) },
+                { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT) },
                 classesFilter
             )
 
-            val desugaringClasspathScopes: MutableSet<ScopeType> = mutableSetOf(Scope.PROVIDED_ONLY)
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            val desugaringClasspathScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> = mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
                 subProjectsClasses = creationConfig.services.fileCollection()
                 externalLibraryClasses = creationConfig.services.fileCollection()
                 mixedScopeClasses = creationConfig.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
-                desugaringClasspathScopes.add(Scope.EXTERNAL_LIBRARIES)
-                desugaringClasspathScopes.add(Scope.TESTED_CODE)
-                desugaringClasspathScopes.add(Scope.SUB_PROJECTS)
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                run {
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
+                }
             } else if (creationConfig.variantScope.consumesFeatureJars()) {
                 subProjectsClasses = creationConfig.services.fileCollection()
                 externalLibraryClasses = creationConfig.services.fileCollection()
@@ -330,32 +334,37 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
                 // Get all classes from the scopes we are interested in.
                 mixedScopeClasses = transformManager.getPipelineOutputAsFileCollection(
-                    StreamFilter { _, scopes ->
+                    { _, scopes ->
                         scopes.isNotEmpty() && scopes.subtract(
                             TransformManager.SCOPE_FULL_WITH_FEATURES
                         ).isEmpty()
                     },
                     classesFilter
                 )
-                desugaringClasspathScopes.add(Scope.TESTED_CODE)
-                desugaringClasspathScopes.add(Scope.EXTERNAL_LIBRARIES)
-                desugaringClasspathScopes.add(Scope.SUB_PROJECTS)
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                run {
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                    desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
+                }
                 desugaringClasspathScopes.add(InternalScope.FEATURES)
             } else {
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
                 subProjectsClasses =
                     transformManager.getPipelineOutputAsFileCollection(
-                        StreamFilter { _, scopes -> scopes == setOf(Scope.SUB_PROJECTS) },
+                        { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS) },
                         classesFilter
                     )
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
                 externalLibraryClasses =
                     transformManager.getPipelineOutputAsFileCollection(
-                        StreamFilter { _, scopes -> scopes == setOf(Scope.EXTERNAL_LIBRARIES) },
+                        { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES) },
                         classesFilter
                     )
                 // Get all classes that have more than 1 scope. E.g. project & subproject, or
                 // project & subproject & external libs.
                 mixedScopeClasses = transformManager.getPipelineOutputAsFileCollection(
-                    StreamFilter { _, scopes -> scopes.size > 1 && scopes.subtract(TransformManager.SCOPE_FULL_PROJECT).isEmpty() },
+                    { _, scopes -> scopes.size > 1 && scopes.subtract(TransformManager.SCOPE_FULL_PROJECT).isEmpty() },
                     classesFilter
                 )
                 dexExternalLibsInArtifactTransform =
@@ -387,7 +396,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
                 creationConfig.services.fileCollection(
                     creationConfig.transformManager.getPipelineOutputAsFileCollection(
-                        StreamFilter { _, scopes ->
+                        { _, scopes ->
                             scopes.subtract(desugaringClasspathScopes).isEmpty()
                         },
                         classesFilter
@@ -397,15 +406,17 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 creationConfig.services.fileCollection()
             }
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             desugaringClasspathClasses =
                 creationConfig.transformManager.getPipelineOutputAsFileCollection(
-                    StreamFilter { _, scopes ->
-                        scopes.contains(Scope.TESTED_CODE)
+                    { _, scopes ->
+                        scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
                                 || scopes.subtract(desugaringClasspathScopes).isEmpty()
                     },
                     classesFilter
                 )
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             transformManager.consumeStreams(
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
@@ -573,8 +584,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     }
 }
 
-private const val DEFAULT_BUFFER_SIZE_IN_KB = 100
-private val DEFAULT_NUM_BUCKETS = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1)
+private val DEFAULT_NUM_BUCKETS = max(Runtime.getRuntime().availableProcessors() / 2, 1)
 
 /** Parameters required for dexing (with D8). */
 abstract class DexParameterInputs {

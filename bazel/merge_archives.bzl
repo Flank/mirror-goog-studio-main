@@ -1,7 +1,5 @@
 """Utilities for merging jar files quickly and deterministically"""
 
-load("@bazel_skylib//lib:shell.bzl", "shell")
-
 def run_singlejar(ctx, jars, out, manifest_lines = [], extra_inputs = [], allow_duplicates = False):
     """Merge jars using the singlejar tool.
 
@@ -75,28 +73,3 @@ merge_jars = rule(
     },
     implementation = _merge_jars_impl,
 )
-
-def create_manifest_argfile(ctx, name, manifests):
-    """
-    Merges Java manifest files into a single argfile that can be passed to
-    singlejar via the --deploy_manifest_lines flag. This is useful because
-    singlejar ignores manifest files in the input jars.
-    """
-    if not manifests:
-        fail("No Java manifest files given")
-    argfile = ctx.actions.declare_file(name)
-    ctx.actions.run_shell(
-        inputs = manifests,
-        outputs = [argfile],
-        # Note: we ignore 'Manifest-Version' entries because we don't want them duplicated in the output.
-        # Note: singlejar delimits argfile tokens by whitespace, so we surround every manifest line with quotes.
-        command = "cat {srcs} | grep -v '^Manifest-Version:' | sed -E 's/(.+)/\"\\1\"/' > {out}".format(
-            srcs = " ".join([shell.quote(m.path) for m in manifests]),
-            out = shell.quote(argfile.path),
-        ),
-        progress_message = "Merging {count} Java manifest files into {out}".format(
-            count = len(manifests),
-            out = argfile.short_path,
-        ),
-    )
-    return argfile

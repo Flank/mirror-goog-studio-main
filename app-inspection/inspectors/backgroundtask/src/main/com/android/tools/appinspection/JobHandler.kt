@@ -26,6 +26,7 @@ import backgroundtask.inspection.BackgroundTaskInspectorProtocol.JobInfo.Backoff
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.JobInfo.NetworkType
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.JobScheduled
 import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
+import com.android.tools.appinspection.common.getStackTrace
 
 /**
  * A handler class that adds necessary hooks to track job related events.
@@ -101,6 +102,7 @@ class JobHandlerImpl(private val connection: Connection) : JobHandler {
         val eventId = jobIdToEventId.getOrPut(jobInfo.id) { BackgroundTaskUtil.nextId() }
 
         connection.sendBackgroundTaskEvent(eventId) {
+            stacktrace = getStackTrace(2)
             jobScheduledBuilder.apply {
                 jobBuilder.apply {
                     jobId = jobInfo.id
@@ -170,6 +172,7 @@ class JobHandlerImpl(private val connection: Connection) : JobHandler {
     override fun wrapJobFinished(params: JobParameters, wantsReschedule: Boolean) {
         val eventId = jobIdToEventId.getOrPut(params.jobId) { BackgroundTaskUtil.nextId() }
         connection.sendBackgroundTaskEvent(eventId) {
+            stacktrace = getStackTrace(1)
             jobFinishedBuilder.apply {
                 paramsBuilder.setUp(params)
                 needsReschedule = wantsReschedule

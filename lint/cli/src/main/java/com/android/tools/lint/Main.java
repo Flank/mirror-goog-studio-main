@@ -55,6 +55,7 @@ import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelSerialization;
 import com.android.tools.lint.model.LintModelSeverity;
+import com.android.tools.lint.model.LintModelSourceProvider;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.tools.lint.model.PathVariables;
 import com.android.utils.SdkUtils;
@@ -300,10 +301,93 @@ public class Main {
                         "{" + module.getModulePath() + "*buildDir}",
                         module.getBuildFolder(),
                         false);
+                for (LintModelVariant variant : module.getVariants()) {
+                    int sourceProviderIndex = 0;
+                    for (LintModelSourceProvider sourceProvider : variant.getSourceProviders()) {
+                        addSourceProviderPathVariables(
+                                pathVariables,
+                                sourceProvider,
+                                "sourceProvider",
+                                sourceProviderIndex++,
+                                module.getModulePath(),
+                                variant.getName());
+                    }
+                }
             }
 
             // Create some default variables
             pathVariables.add("HOME", new File(System.getProperty("user.home")), true);
+        }
+    }
+
+    /** Adds necessary path variables to pathVariables. */
+    private static void addSourceProviderPathVariables(
+            PathVariables pathVariables,
+            LintModelSourceProvider sourceProvider,
+            String sourceProviderType,
+            int sourceProviderIndex,
+            String modulePath,
+            String variantName) {
+        addSourceProviderPathVariables(
+                pathVariables,
+                Arrays.asList(sourceProvider.getManifestFile()),
+                modulePath,
+                variantName,
+                sourceProviderType,
+                sourceProviderIndex,
+                "manifest");
+        addSourceProviderPathVariables(
+                pathVariables,
+                sourceProvider.getJavaDirectories(),
+                modulePath,
+                variantName,
+                sourceProviderType,
+                sourceProviderIndex,
+                "javaDir");
+        addSourceProviderPathVariables(
+                pathVariables,
+                sourceProvider.getResDirectories(),
+                modulePath,
+                variantName,
+                sourceProviderType,
+                sourceProviderIndex,
+                "resDir");
+        addSourceProviderPathVariables(
+                pathVariables,
+                sourceProvider.getAssetsDirectories(),
+                modulePath,
+                variantName,
+                sourceProviderType,
+                sourceProviderIndex,
+                "assetsDir");
+    }
+
+    /** Adds necessary path variables to pathVariables. */
+    private static void addSourceProviderPathVariables(
+            PathVariables pathVariables,
+            Collection<File> files,
+            String modulePath,
+            String variantName,
+            String sourceProviderType,
+            int sourceProviderIndex,
+            String sourceType) {
+        int index = 0;
+        for (File file : files) {
+            String name =
+                    "{"
+                            + modulePath
+                            + "*"
+                            + variantName
+                            + "*"
+                            + sourceProviderType
+                            + "*"
+                            + sourceProviderIndex
+                            + "*"
+                            + sourceType
+                            + "*"
+                            + index++
+                            + "}";
+            pathVariables.add(name, file, false);
         }
     }
 

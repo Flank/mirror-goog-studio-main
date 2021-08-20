@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
@@ -57,7 +58,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
-import com.android.utils.cxx.streamCompileCommands
 import com.android.utils.cxx.streamCompileCommandsV2
 import com.google.common.truth.Truth
 import org.junit.Assume
@@ -394,7 +394,7 @@ class CmakeBasicProjectTest(
         project.executor()
             .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64")
             .run("clean", "assembleDebug")
-        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates)
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so")
         assertThatApk(apk).contains("lib/x86_64/libhello-jni.so")
 
@@ -402,23 +402,40 @@ class CmakeBasicProjectTest(
         TruthHelper.assertThatNativeLib(lib).isStripped()
     }
 
+    private val expectedBuildProducts =
+        """
+        {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+        {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+        {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+        {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+        """.trimIndent()
+
     @Test
     fun `build product golden locations`() {
         project.execute("assembleDebug")
         val golden = project.goldenBuildProducts()
-        println(golden)
-        Truth.assertThat(golden).isEqualTo("""
-            {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
-            """.trimIndent())
+        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
+    }
+
+    @Test
+    fun `build product golden locations with forced task order`() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            // ------------------------------------------------------------------------
+            // b/195318431 whenTaskAdded can change the task evaluation order
+            tasks.whenTaskAdded { }
+            """.trimIndent()
+        )
+        project.execute("assembleDebug")
+        val golden = project.goldenBuildProducts()
+        Truth.assertThat(golden).isEqualTo(expectedBuildProducts)
     }
 
     @Test

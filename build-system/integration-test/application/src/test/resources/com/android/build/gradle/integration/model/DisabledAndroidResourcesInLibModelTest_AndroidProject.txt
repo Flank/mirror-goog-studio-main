@@ -15,11 +15,6 @@
             * {PROJECT}/src/test/rs{!}{REMOVED}
          - resDirectories:
             * {PROJECT}/src/test/res{!}{REMOVED}
-      - testFixturesSourceProvider:
-         - renderscriptDirectories:
-            * {PROJECT}/src/testFixtures/rs{!}{REMOVED}
-         - resDirectories:
-            * {PROJECT}/src/testFixtures/res{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
@@ -38,11 +33,6 @@
                * {PROJECT}/src/testDebug/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/testDebug/res{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesDebug/rs{!}{REMOVED}
-            - resDirectories:
-               * {PROJECT}/src/testFixturesDebug/res{!}{REMOVED}
       < debug
       > release:
          - sourceProvider:
@@ -60,11 +50,6 @@
                * {PROJECT}/src/testRelease/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/testRelease/res{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesRelease/rs{!}{REMOVED}
-            - resDirectories:
-               * {PROJECT}/src/testFixturesRelease/res{!}{REMOVED}
       < release
    < buildTypes
    > variants:

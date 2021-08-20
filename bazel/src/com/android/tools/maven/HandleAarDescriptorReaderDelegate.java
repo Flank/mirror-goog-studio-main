@@ -29,14 +29,29 @@ public class HandleAarDescriptorReaderDelegate extends ArtifactDescriptorReaderD
             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
         super.populateResult(session, result, model);
 
-        if (model.getPackaging().equals("pom")) {
-            // This is the case for downloading protoc exes.
+        if (model.getPackaging().equals("pom") &&!result.getArtifact().getClassifier().isEmpty()) {
+            // We consider it OK to have a JAR dependency to an artifact that has packaging=pom as long as the
+            // dependency also has a classifier. In this case, we don't need to overwrite the dependency type.
+            //
+            // For instance, the artifact com.google.protobuf:protoc:3.10.0 contains protoc compiler
+            // executables as classified files, such as protoc-3.10.0-linux-x86_64.exe. As long as the
+            // dependency is specified as com.google.protobuf:exe:linux-x86_64:protoc:3.10.0, we are fine.
             return;
         }
 
         if (!MavenRepository.getArtifactExtension(model)
                 .equals(result.getArtifact().getExtension())) {
-            // This is something that Gradle seems to handle automatically, we have to do the same.
+            // When the dependency type does not match the packaging type of the target, we use the packaging
+            // type of the target to clarify the dependency type.
+            //
+            // Example: An aar artifact can refer to other aar artifacts without explicitly stating the
+            // dependency type to be "aar". Aether default is "jar", so here we have to convert it back to "aar".
+            //
+            // Example: lint-gradle depends on groovy-all without expressing a dependency type. This defaults to
+            // "jar" dependency type, but groovy-all has packaging type "pom", so we have to convert it to "pom".
+            //
+            // This is something that Gradle handles automatically by looking at the packaging type of the target
+            // artifact, so we do the same here.
             result.setArtifact(
                     new DifferentExtensionArtifact(
                             MavenRepository.getArtifactExtension(model), result.getArtifact()));

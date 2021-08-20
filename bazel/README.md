@@ -164,68 +164,43 @@ More details on the implementation of the `iml_module` rule can be found in
 _Just don't_. IntelliJ has support for circular dependencies of modules, but we
 do not use it in our code base.
 
-## Additional tools
+## Fetching new Maven Dependencies
 
-There are several other tools in this package that can be used to manage
-dependencies in prebuilts.
+In order to fetch new Maven artifacts into the local Maven repository under
+`//prebuilts/tools/common/m2/`, follow these steps:
 
-### third\_party\_build\_generator
 
-Used to generate `//tools/base/third_party/BUILD`. Computes effective versions
-of all necessary dependencies and creates a `java_library` rule for each one of
-them. It will also download missing jars into
-`//prebuilts/tools/common/m2/repository`.
+1. Add the dependency to the `artifacts` section of one of the two
+`local_maven_repository` rules in the `tools/base/bazel/toplevel.WORKSPACE`
+file.
 
-Invoked by running:
+  * If the artifact is needed as a compile or runtime Java dependency in Bazel,
+    then add it to the rule named `maven`.
 
-```
-bazel run //tools/base/bazel:third_party_build_generator
-```
+  * If the artifact will only be used in tests as data (i.e., passed into
+    `maven_repository` rules), then add it to the rule named `maven_tests`.
 
-The tool looks for names and versions of libraries in `//tools/buildSrc/base/dependencies.properties`.
-The same file is read by our Gradle scripts, to keep the set of dependencies consistent between the
-two.
-
-### add\_dependency
-
-Can be used to download one or more Maven artifacts (JARs, AARs or APKs) into
-prebuilts, including all transitive dependencies.
-
-Invoked by running:
+2. Use `MAVEN_FETCH=1` when running your next Bazel command.
+This will download the artifact.
 
 ```
-bazel run //tools/base/bazel:add_dependency com.example:foo:1.0 com.example:android-lib:aar:1.0
+MAVEN_FETCH=1 bazel build //tools/base/build-system/gradle-core
 ```
 
-You can also use it to download protoc binaries, like this:
+3. In order to use the new artifact, use `@maven//:` prefix without the
+   artifact version, or `@maven_tests//:` prefix with artifact version.
+   E.g., `@maven//:com.google.guava.guava" or
+   `@maven_tests//:com.google.guava.guava_30.1-jre`.
 
-```
-bazel run //tools/base/bazel:add_dependency com.google.protobuf:protoc:exe:linux-x86_64:3.0.0
-```
+   * The `@maven//` prefix points to a dynamically generated Bazel-external
+     repository. You can access the generated file at
+     `$REPO/bazel-studio-main/external/maven/BUILD`.
 
-It can also be used to download sources and javadoc, like this:
+4. Check-in your new artifact (and any new transitive dependencies)
+   under `//prebuilts/tools/common/m2/`.
 
-```
-bazel run //tools/base/bazel:add_dependency com.google.truth:truth:jar:sources:0.42
-bazel run //tools/base/bazel:add_dependency com.google.truth:truth:jar:javadoc:0.42
-```
+See the `toplevel.WORKSPACE` file for examples on how to express non-jar dependency
+types and classifiers (e.g., `linux-x86_64`).
 
-The tool by default uses Maven Central, JCenter and the Google Maven
-repository. You can add more (like a staging repository for libraries to be
-pushed to maven.google.com) using a flag:
 
-```
-bazel run //tools/base/bazel:add_dependency -- --repo=https://example.com/m2 com.example:foo:1.0
-```
 
-### java\_import\_generator
-
-Creates a BUILD file for every POM file in the prebuilts maven repo. Both of the
-binaries above do the same, but this can be useful if prebuilts was modified
-using Gradle's `cloneArtifacts` tasks or manually.
-
-Invoked by running:
-
-```
-bazel run //tools/base/bazel:java_import_generator
-```

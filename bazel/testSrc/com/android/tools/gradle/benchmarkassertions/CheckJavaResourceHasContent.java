@@ -24,19 +24,22 @@ import java.nio.file.Path;
 public class CheckJavaResourceHasContent implements BenchmarkProjectAssertion {
 
     private final String apk;
+    private final String apkFromStudio;
     private final String name;
     private final String value;
 
-    public CheckJavaResourceHasContent(String apk, String name, String value) {
+    public CheckJavaResourceHasContent(
+            String apk, String apkFromStudio, String name, String value) {
         this.apk = apk;
+        this.apkFromStudio = apkFromStudio;
         this.name = name;
         this.value = value;
     }
 
     @Override
-    public void checkProject(Path projectRoot) throws Exception {
+    public void checkProject(Path projectRoot, boolean fromStudio) throws Exception {
         assertThat(
-                projectRoot.resolve(this.apk),
+                projectRoot.resolve(fromStudio ? this.apkFromStudio : this.apk),
                 it -> {
                     it.containsFileWithContent(name, value);
                 });

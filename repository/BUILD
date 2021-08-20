@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
-load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("xjc.bzl", "xsd_to_java")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
@@ -48,22 +48,21 @@ fileset(
 )
 
 maven_library(
-    name = "tools.repository_bzl",
+    name = "tools.repository",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:repository:" + BASE_VERSION,
-    legacy_name = "tools.repository",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/repository",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library/protos/src/main/proto:proto_bzl",
-        "//tools/analytics-library/shared:tools.analytics-shared_bzl",
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/analytics-library/protos/src/main/proto",
+        "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.guava.guava",
         "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
         "@maven//:org.apache.commons.commons-compress",

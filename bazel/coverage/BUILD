@@ -626,6 +626,26 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Device Manager" tool window
+coverage_report(
+    name = "device-manager",
+    srcpath_exclude = [
+        # "Groups" tab is currently disabled via a feature flag
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/groupstab",
+        # "CycleAction" is not used
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/CycleAction.kt",
+        # "Preconfigured virtual devices" tab is not enabled yet
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/PreconfiguredDisplayList.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager/virtualtab/PreconfiguredDisplayListModel.kt",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/devicemanager",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -641,6 +661,7 @@ combine_report_definitions(
         "dagger-editing",
         "databinding",
         "designtools",
+        "device-manager",
         "dsl",
         "dynamic-layout-inspector",
         "emulator",
@@ -709,6 +730,7 @@ coverage_report(
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+        "//tools/adt/idea/device-explorer:intellij.android.device-explorer.tests_tests",
         "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",
         "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
@@ -755,7 +777,6 @@ coverage_report(
         "//tools/base/aspects_agent:agent_tests",
         "//tools/base/bazel:bin2c_tests",
         "//tools/base/bazel:iml_to_build_tests",
-        "//tools/base/bazel:third_party_up_to_date",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
         "//tools/base/build-system:tools.manifest-merger_tests.test",
         "//tools/base/build-system/builder:tests.test",

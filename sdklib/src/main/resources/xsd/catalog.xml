@@ -29,5 +29,7 @@
             uri="sdk-common-01.xsd"/>
     <public publicId="http://schemas.android.com/sdk/android/repo/common/02"
             uri="sdk-common-02.xsd"/>
+    <public publicId="http://schemas.android.com/sdk/android/repo/common/03"
+            uri="sdk-common-03.xsd"/>
     <nextCatalog catalog="../../../../../repository/src/main/resources/xsd/catalog.xml"/>
 </catalog>

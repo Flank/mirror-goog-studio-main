@@ -359,6 +359,10 @@ class VersionChecks(
                             element = case,
                             and = true,
                             apiLookup = apiLookup
+                        ) ?: getVersionCheckConditional(
+                            element = case,
+                            and = false,
+                            apiLookup = apiLookup
                         )
 
                         prevConstraint = if (prevConstraint == null) constraint else prevConstraint and constraint

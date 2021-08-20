@@ -7,8 +7,8 @@ kotlin_library(
         "src/main/kotlin/**/*.kt",
     ]),
     deps = [
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-cli-jvm.0.3.1",
         "//tools/base/profgen/profgen",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-cli-jvm",
     ],
 )
 
@@ -30,9 +30,9 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":profgen-cli-lib",
-        "//prebuilts/tools/common/m2:com.google.truth.truth.0.42",
-        "//prebuilts/tools/common/m2:junit.junit.4.12",
         "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
         "@maven//:org.jetbrains.kotlin.kotlin-test",
     ],
 )

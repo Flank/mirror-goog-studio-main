@@ -7,8 +7,13 @@ import static org.eclipse.aether.util.graph.transformer.ConflictResolver.Version
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
@@ -40,6 +45,21 @@ public class HighestVersionSelector extends VersionSelector {
 
         //noinspection OptionalGetWithoutIsPresent - if the context was not empty, there's a max element.
         ConflictItem winner = context.getItems().stream().max(VERSION_ORDERING).get();
+
+        // Check if there are multiple candidates with the same version.
+        Version winnerVersion = getVersion(winner);
+        List<ConflictItem> allWinners =
+                context.getItems().stream().filter(item -> getVersion(item).compareTo(winnerVersion) == 0).collect(Collectors.toList());
+        if (allWinners.size() > 1) {
+            // We have more than one item that has the max version. We need to decide whether one is
+            // better than the other. Ideally, we probably would want to merge them, but it's likely
+            // that this will break Aether's assumptions about the dependency graph. So, here we apply
+            // a heuristic that picks the most number of children.
+            // This heuristic is preferred because some of the items might be lacking some dependencies
+            // due toe <excludes> sections.
+            winner = allWinners.stream().max(
+                    Comparator.comparingInt(o -> o.getNode().getChildren().size())).get();
+        }
 
         context.setWinner(winner);
 

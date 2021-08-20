@@ -25,9 +25,13 @@ public class AbstractValue<T> extends Value {
 
     protected T value;
 
-    protected AbstractValue(@Nullable T value, @NonNull Type asmType) {
-        super(asmType, true);
+    protected AbstractValue(@Nullable T value, @NonNull Type asmType, boolean valid) {
+        super(asmType, valid);
         this.value = value;
+    }
+
+    protected AbstractValue(@Nullable T value, @NonNull Type asmType) {
+        this(value, asmType, true);
     }
 
     @Override

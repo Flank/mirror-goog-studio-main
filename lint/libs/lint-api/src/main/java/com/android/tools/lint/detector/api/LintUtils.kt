@@ -117,8 +117,12 @@ import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
+import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -126,10 +130,12 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.skipParenthesizedExprUp
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -609,6 +615,15 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
                 return method
             }
         }
+
+        // Extension functions can be in a different compilation unit and therefore class.
+        // Try to find it more directly.
+        if (source is KtNamedFunction && source.isExtensionDeclaration()) {
+            val method = source.toUElement()
+            if (method is UMethod) {
+                return method
+            }
+        }
     }
 
     val expectedCount = if (isSetter) parameterCount + 1 else parameterCount
@@ -694,6 +709,33 @@ internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
     val bindingContext = service.getBindingContext(ktElement)
     val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
     return resolvedCall.resultingDescriptor.toSource()
+        ?: LintJavaUtils.resolveToPsiMethod(ktElement, resolvedCall.resultingDescriptor, null)
+}
+
+/**
+ * Workaround for UAST not returning the parameter types for delegated
+ * properties
+ */
+fun getKotlinDelegatePropertyType(sourcePsi: PsiElement?, element: UVariable): PsiType? {
+    val ktElement = sourcePsi as? KtElement ?: return null
+    val service = ServiceManager.getService(sourcePsi.project, KotlinUastResolveProviderService::class.java)
+        ?: return null
+    val bindingContext = service.getBindingContext(ktElement)
+
+    if (ktElement is KtProperty) {
+        val delegate = ktElement.delegate
+        if (delegate != null) {
+            val expression = delegate.expression
+            if (expression != null) {
+                val newType: KotlinType? = bindingContext.getType(expression)
+                if (newType != null) {
+                    return LintJavaUtils.getType(newType, element, ktElement, false)
+                }
+            }
+        }
+    }
+
+    return element.type
 }
 
 // See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
@@ -2201,6 +2243,10 @@ fun isNumberString(s: String?): Boolean {
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     Map<UExpression, PsiParameter>? {
+        if (call is UImplicitCallExpression) {
+            return call.getArgumentMapping()
+        }
+
         if (method.parameterList.parametersCount <= 1) {
             // When there is at most one parameter the mapping is easy to figure out!
             return null

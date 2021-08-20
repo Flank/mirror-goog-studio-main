@@ -1,5 +1,6 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
+load(":kotlin.bzl", "kotlin_library")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
 
 def generate_pom(
@@ -368,19 +369,6 @@ def maven_aar(name, aar, pom, visibility = None):
         source = pom,
     )
 
-MavenRepoInfo = provider(fields = {
-    "artifacts": "The list of files in the repo",
-    "build_manifest": "The repo's manifest file with full paths for build rules",
-})
-
-def _collect_pom_provider(pom, jars, clsjars, include_sources):
-    collected = [(pom, None)]
-    collected += [(jar, None) for jar in jars.to_list()]
-    for classifier, jars in clsjars.items():
-        if include_sources or classifier != "sources":
-            collected += [(jar, classifier) for jar in jars.to_list()]
-    return collected
-
 def _zipper(actions, zipper, desc, map_file, files, out):
     zipper_args = ["c", out.path]
     zipper_args += ["@" + map_file.path]
@@ -391,125 +379,6 @@ def _zipper(actions, zipper, desc, map_file, files, out):
         arguments = zipper_args,
         progress_message = desc,
         mnemonic = "zipper",
-    )
-
-# Collects all parent and dependency artifacts for a given list of artifacts.
-# Each artifact is represented as a tuple (artifact, classifier), with classifier = None if there is no classifier.
-#
-# If include_deps = False, the collected artifacts do not include dependency artifacts.
-def _collect_artifacts(artifacts, include_sources, include_deps):
-    seen = {}
-    collected = []
-
-    for artifact in artifacts:
-        if seen.get(artifact.maven.pom):
-            continue
-
-        # Always include parent artifacts even when include_deps=False. Otherwise, Maven
-        # model builders won't accept the set of collected artifacts as a valid Maven repo.
-        # Note that this also includes the dependencies of parent.
-        for pom in artifact.maven.parent.poms.to_list():
-            if seen.get(pom):
-                continue
-            jars = artifact.maven.parent.jars[pom]
-            clsjars = artifact.maven.parent.clsjars[pom]
-            collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
-            seen[pom] = True
-
-        collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars, include_sources)
-        seen[artifact.maven.pom] = True
-
-        if include_deps:
-            for pom in artifact.maven.deps.poms.to_list():
-                if seen.get(pom):
-                    continue
-                jars = artifact.maven.deps.jars[pom]
-                clsjars = artifact.maven.deps.clsjars[pom]
-                collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
-                seen[pom] = True
-
-    return collected
-
-def _maven_repo_impl(ctx):
-    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources, ctx.attr.include_transitive_deps)
-    args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    inputs = [artifact for artifact, _ in artifacts]
-
-    args = [artifact.path + "," + artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
-    artifact_lst = ctx.actions.declare_file(ctx.label.name + ".artifact.lst")
-    ctx.actions.write(artifact_lst, "\n".join(args))
-
-    # Generate manifests of where files should be located in the repository.
-    # The format is the same used by @bazel_tools//tools/zip:zipper, where
-    # each line is"path_to_target_location=path_to_file"
-    build_manifest = ctx.actions.declare_file(ctx.label.name + ".build.manifest")
-    ctx.actions.run(
-        inputs = [artifact_lst] + inputs,
-        outputs = [build_manifest, ctx.outputs.manifest],
-        mnemonic = "mavenrepobuilder",
-        arguments = [artifact_lst.path, build_manifest.path, ctx.outputs.manifest.path],
-        executable = ctx.executable._repo_builder,
-    )
-    _zipper(ctx.actions, ctx.executable._zipper, "Creating repo zip...", build_manifest, inputs, ctx.outputs.zip)
-
-    runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
-    return [
-        DefaultInfo(
-            # Do not include the zip as a default output (like _deploy.jar)
-            files = depset([ctx.outputs.manifest]),
-            runfiles = runfiles,
-        ),
-        MavenRepoInfo(
-            artifacts = inputs,
-            build_manifest = build_manifest,
-        ),
-    ]
-
-_maven_repo = rule(
-    attrs = {
-        "artifacts": attr.label_list(),
-        "include_sources": attr.bool(),
-        "include_transitive_deps": attr.bool(),
-        "_zipper": attr.label(
-            default = Label("@bazel_tools//tools/zip:zipper"),
-            cfg = "exec",
-            executable = True,
-        ),
-        "_repo_builder": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//tools/base/bazel:repo_builder"),
-            allow_files = True,
-        ),
-    },
-    outputs = {
-        "manifest": "%{name}.manifest",
-        "zip": "%{name}.zip",
-    },
-    implementation = _maven_repo_impl,
-)
-
-# Creates a maven repo with the given artifacts and all their transitive dependencies.
-#
-# The rule exposes a MavenRepoInfo provider and outputs a manifest file. The manifest file contains
-# relative runfile paths, which are available only during bazel run/test (see
-# https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
-# If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
-# full paths to each of the artifacts.
-#
-# Usage:
-# maven_repo(
-#     name = The name of the rule. The output of the rule will be ${name}.manifest.
-#     artifacts = A list of all maven_java_libraries to add to the repo.
-#     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
-#     include_sources = Add source jars to the repo as well (useful for tests).
-# )
-def maven_repo(artifacts = [], include_sources = False, include_transitive_deps = True, **kwargs):
-    _maven_repo(
-        artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
-        include_sources = include_sources,
-        include_transitive_deps = include_transitive_deps,
-        **kwargs
     )
 
 def _local_maven_repository_impl(repository_ctx):
@@ -735,6 +604,16 @@ def maven_import(
         parent = None,
         classified_only = False,
         **kwargs):
+    if repo_root_path and repo_path:
+        files = native.glob([repo_root_path + "/" + repo_path + "/**"])
+        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE"
+    elif repo_path:
+        files = native.glob([repo_path + "/**"])
+        notice = repo_path + "/NOTICE"
+    else:
+        files = []
+        notice = "NOTICE"
+
     _maven_import(
         name = name,
         visibility = visibility,
@@ -743,11 +622,16 @@ def maven_import(
         repo_path = repo_path,
         repo_root_path = repo_root_path,
         parent = parent,
-        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
-        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE",
+        files = files,
+        notice = notice,
         tags = ["require_license"],
         **kwargs
     )
+
+MavenRepoInfo = provider(fields = {
+    "artifacts": "The list of files in the repo",
+    "build_manifest": "The repo's manifest file with full paths for build rules",
+})
 
 def _maven_repository_impl(ctx):
     rel_paths = []
@@ -802,6 +686,20 @@ def _maven_repository_impl(ctx):
         ),
     ]
 
+# Creates a maven repo with the given artifacts and all their transitive dependencies.
+#
+# The rule exposes a MavenRepoInfo provider and outputs a manifest file. The manifest file contains
+# relative runfile paths, which are available only during bazel run/test (see
+# https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
+# If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
+# full paths to each of the artifacts.
+#
+# Usage:
+# maven_repository(
+#     name = The name of the rule. The output of the rule will be ${name}.manifest.
+#     artifacts = A list of all maven_java_libraries to add to the repo.
+#     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
+# )
 maven_repository = rule(
     attrs = {
         "artifacts": attr.label_list(providers = [MavenInfo]),
@@ -832,22 +730,178 @@ def split_coordinates(coordinates):
         repo_path = "/".join(segments),
     )
 
-# A bridge between the two maven rule sets.
-# This allows the old rules to import the jars
-# created by the new rules, so we do not need rule
-# duplication. Once all artifacts have been
-# migrated we can delete the old rules and this bridge.
-def import_maven_library(maven_java_library_rule, maven_library_rule, notice = None):
-    maven_java_import(
-        name = maven_java_library_rule,
-        exports = [":" + maven_library_rule],
-        jars = [":" + maven_library_rule + ".jar"],
-        notice = notice,
-        pom = ":" + maven_java_library_rule + ".pom",
-        visibility = ["//visibility:public"],
+def _maven_library_impl(ctx):
+    infos_deps = [dep[MavenInfo] for dep in ctx.attr.deps]
+    infos_exports = [dep[MavenInfo] for dep in ctx.attr.exports]
+    pom_deps = [info.pom for info in infos_deps]
+    pom_exports = [info.pom for info in infos_exports]
+
+    coordinates = split_coordinates(ctx.attr.coordinates)
+    basename = coordinates.artifact_id + "-" + coordinates.version
+    pom_name = ctx.attr.pom_name if ctx.attr.pom_name else coordinates.group_id + "." + coordinates.artifact_id
+    generate_pom(
+        ctx,
+        source = ctx.file.template_pom,
+        output_pom = ctx.outputs.pom,
+        group = coordinates.group_id,
+        artifact = coordinates.artifact_id,
+        version = coordinates.version,
+        description = ctx.attr.description,
+        pom_name = pom_name,
+        deps = pom_deps,
+        exports = pom_exports,
     )
 
-    maven_pom(
-        name = maven_java_library_rule + ".pom",
-        source = ":" + maven_library_rule + ".pom",
+    repo_files = [(coordinates.repo_path + "/" + n, f.files.to_list()[0]) for f, n in ctx.attr.files.items()]
+
+    repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
+    if ctx.attr.library:
+        repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
+
+    if ctx.file.notice:
+        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
+
+    transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
+
+    default_files = [ctx.attr.library[DefaultInfo].files] if ctx.attr.library else []
+    providers = [
+        DefaultInfo(files = depset(direct = [ctx.outputs.pom], transitive = default_files)),
+        MavenInfo(pom = ctx.outputs.pom, files = repo_files, transitive = transitive),
+    ]
+    if ctx.attr.library:
+        providers += [ctx.attr.library[JavaInfo]]
+    return providers
+
+_maven_library = rule(
+    attrs = {
+        "notice": attr.label(allow_single_file = True),
+        "library": attr.label(providers = [JavaInfo], allow_single_file = True),
+        "files": attr.label_keyed_string_dict(allow_files = True),
+        "coordinates": attr.string(),
+        "description": attr.string(),
+        "pom_name": attr.string(),
+        "template_pom": attr.label(
+            default = Label("//tools/base/bazel:maven/android.pom"),
+            allow_single_file = True,
+        ),
+        "deps": attr.label_list(providers = [MavenInfo]),
+        "exports": attr.label_list(providers = [MavenInfo]),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_singlejar": attr.label(
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
+            cfg = "host",
+            executable = True,
+        ),
+        "_pom": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:pom_generator"),
+            allow_files = True,
+        ),
+    },
+    outputs = {
+        "pom": "%{name}.pom",
+    },
+    fragments = ["java"],
+    implementation = _maven_library_impl,
+)
+
+def maven_library(
+        name,
+        srcs,
+        javacopts = [],
+        resources = [],
+        resource_strip_prefix = None,
+        data = [],
+        deps = [],
+        exports = [],
+        enable_scopes = False,
+        runtime_deps = [],
+        bundled_deps = [],
+        friends = [],
+        notice = None,
+        coordinates = None,
+        jar_name = None,
+        description = None,
+        pom_name = None,
+        exclusions = None,
+        lint_baseline = None,
+        lint_classpath = [],
+        lint_is_test_sources = False,
+        lint_timeout = None,
+        module_name = None,
+        plugins = [],
+        manifest_lines = None,
+        **kwargs):
+    """Compiles a library jar from Java and Kotlin sources
+
+    Args:
+        srcs: The sources of the library.
+        javacopts: Additional javac options.
+        resources: Resources to add to the jar.
+        resources_strip_prefix: The prefix to strip from the resources path.
+        deps: The dependencies of this library.
+        exports: The exported dependencies of this library.
+        runtime_deps: The runtime dependencies.
+        bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
+        friends: The list of kotlin-friends.
+        notice: An optional notice file to be included in the jar.
+        coordinates: The maven coordinates of this artifact.
+        exclusions: Files to exclude from the generated pom file.
+        lint_*: Lint configuration arguments
+        module_name: The kotlin module name.
+    """
+
+    neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink")]
+    bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
+
+    kotlin_library(
+        name = name + ".lib",
+        jar_name = jar_name if jar_name else name + ".jar",
+        srcs = srcs,
+        data = data,
+        deps = deps + neverlink_deps,
+        exports = exports,
+        bundled_deps = bundled_deps,
+        friends = friends,
+        notice = notice,
+        module_name = module_name,
+        resources = resources,
+        resource_strip_prefix = resource_strip_prefix,
+        runtime_deps = runtime_deps,
+        plugins = plugins,
+        manifest_lines = manifest_lines,
+        **kwargs
+    )
+
+    _maven_library(
+        name = name,
+        notice = notice,
+        deps = deps if enable_scopes else [],
+        exports = ([] if enable_scopes else deps) + exports,
+        coordinates = coordinates,
+        description = description,
+        pom_name = pom_name,
+        library = ":" + name + ".lib",
+        **kwargs
+    )
+
+def custom_maven_library(
+        name,
+        files,
+        **kwargs):
+    """A rule to create a custom maven library with provided files.
+
+    Args:
+        name: the name of the rule
+        files: a map of <file> -> <string> for all files to have the given name in maven.
+    """
+    _maven_library(
+        name = name,
+        files = files,
+        **kwargs
     )

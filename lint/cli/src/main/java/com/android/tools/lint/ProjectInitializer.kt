@@ -345,7 +345,7 @@ private class ProjectInitializer(
                 TAG_ROOT -> {
                     val dir = File(child.getAttribute(ATTR_DIR))
                     if (dir.isDirectory) {
-                        root = dir
+                        root = dir.canonicalFile
                     } else {
                         reportError("$dir does not exist", child)
                     }

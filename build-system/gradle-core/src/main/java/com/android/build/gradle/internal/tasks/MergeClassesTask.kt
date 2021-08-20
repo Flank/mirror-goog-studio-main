@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -106,11 +105,12 @@ abstract class MergeClassesTask : NonIncrementalTask() {
 
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
         private val inputFiles =
             creationConfig
                 .transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
-                    contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
+                    contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
                             && scopes.intersect(TransformManager.SCOPE_FULL_PROJECT).isNotEmpty()
                 }
 

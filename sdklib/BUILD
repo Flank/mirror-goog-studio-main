@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_test", "maven_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 load("//tools/base/repository:xjc.bzl", "xsd_to_java")
@@ -41,32 +42,29 @@ fileset(
     name = "tools.resources",
     srcs = glob([
         "src/main/resources/**",
-        "src/main/java/com/android/sdklib/devices/*.xml",
     ]),
     mappings = {
         "src/main/resources/": "",
-        "src/main/java/": "",
     },
 )
 
 maven_library(
-    name = "tools.sdklib_bzl",
+    name = "tools.sdklib",
     srcs = glob(
         ["src/main/java/**/*.java"],
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
     coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
-    legacy_name = "tools.sdklib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
-        "//tools/base/device_validator:tools.dvlib_bzl",
-        "//tools/base/layoutlib-api:tools.layoutlib-api_bzl",
-        "//tools/base/repository:tools.repository_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/device_validator:tools.dvlib",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
         # TODO(emrekultursay): These dependency upgrade manipulations should no longer be
@@ -89,23 +87,13 @@ maven_library(
 
 kotlin_test(
     name = "tools.tests",
-    # TODO: Why are the xml files not under resources?
     srcs = glob([
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
     data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
-    resources = glob(
-        include = [
-            "src/test/java/**",
-            "src/test/resources/**",
-        ],
-        exclude = [
-            "src/test/java/**/*.java",
-            "src/test/java/**/*.kt",
-        ],
-    ),
+    resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
@@ -279,12 +267,88 @@ xsd_to_java(
     ],
 )
 
+xsd_to_java(
+    name = "sdk-common-3",
+    binding_deps = ["//tools/base/repository:repo-common-02.xjb"],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    custom_binding = "src/main/resources/xsd/sdk-common-custom-03.xjb",
+    episode = "sdk-common-03.xjb",
+    package = "com.android.sdklib.repository.generated.common.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-common-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-repository-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        "//tools/base/repository:generic-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.repository.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-repository-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-addon-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.addon.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-addon-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-sysimg-3",
+    binding_deps = [
+        "//tools/base/repository:repo-common-02.xjb",
+        ":sdk-common-03.xjb",
+    ],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.generated.sysimg.v3",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sdk-sys-img-03.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
+xsd_to_java(
+    name = "sdk-sites-list-5",
+    binding_deps = ["//tools/base/repository:sources/repo-sites-common-1.xjb"],
+    catalog = "src/main/resources/xsd/catalog.xml",
+    package = "com.android.sdklib.repository.sources.generated.v5",
+    src_location = "tools/base/sdklib/src/main/java",
+    xsd = "src/main/resources/xsd/sources/sdk-sites-list-5.xsd",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/repository:tools.repository",
+    ],
+)
+
 filegroup(
     name = "agp_gradle_build_files",
     srcs = glob([
         "src/main/**/*.java",
         "src/main/**/*.kt",
-        "src/main/java/com/android/sdklib/devices/*.xml",
         "src/main/resources/**",
     ]) + [
         "build.gradle",

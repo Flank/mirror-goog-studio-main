@@ -16,6 +16,7 @@
 
 package com.android.tools.binaries;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.io.ByteStreams;
@@ -35,6 +36,39 @@ import java.util.zip.ZipOutputStream;
 import org.junit.Test;
 
 public class ZipMergerTest {
+
+    @Test
+    public void testDirectoryDuplication() throws Exception {
+        File zip1 = createZipFile("zip1.zip",
+                "com/", "",
+                "com/example/", "",
+                "com/example/a/", "",
+                "com/example/a/a.txt", "A");
+        File zip2 = createZipFile("zip2.zip",
+                // Add spurious content to the directory entries that conflict here to verify
+                // the merger is deterministic - it picks the directory from the first zip.
+                "com/", "--invalid--",
+                "com/example/", "--invalid--",
+                "com/example/b/", "",
+                "com/example/b/b.txt", "B");
+
+        File res = newFile("res.zip");
+        ZipMerger.main(new String[]{
+                "c",
+                res.getAbsolutePath(),
+                zip1.getAbsolutePath(),
+                zip2.getAbsolutePath(),
+        });
+
+        assertZipEquals(res,
+                "com/", "",
+                "com/example/", "",
+                "com/example/a/", "",
+                "com/example/a/a.txt", "A",
+                "com/example/b/", "",
+                "com/example/b/b.txt", "B");
+    }
+
 
     @Test
     public void testMergeTwoZips() throws Exception {
@@ -83,10 +117,10 @@ public class ZipMergerTest {
         assertZipEquals(res,
                 "prefix/place/here/b.txt", "BB",
                 "prefix/place/here/c.txt", "CC",
-                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/d.zip!one.txt", "11",
                 "prefix/place/here/e.zip!two.txt", "22",
                 "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/g.zip!four.txt", "44");
     }
 
@@ -137,10 +171,10 @@ public class ZipMergerTest {
         assertZipEquals(res,
                 "prefix/place/here/b.txt", "BB",
                 "prefix/place/here/c.txt", "CC",
-                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/d.zip!one.txt", "11",
                 "prefix/place/here/e.zip!two.txt", "OO",
                 "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/f.txt", "FF",
                 "prefix/place/here/g.zip!four.txt", "44");
     }
 
@@ -150,7 +184,9 @@ public class ZipMergerTest {
         for (int i = 0; i < args.length; i += 2) {
             expected.put(args[i], args[i + 1]);
         }
-        assertEquals(expected, readZip(zip));
+        assertThat(readZip(zip).entrySet())
+                .containsExactlyElementsIn(expected.entrySet())
+                .inOrder();
     }
 
     private Map<String, String> readZip(File zip) throws Exception {

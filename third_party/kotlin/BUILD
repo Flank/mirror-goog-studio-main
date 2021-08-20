@@ -1,11 +1,11 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 
-maven_repo(
+maven_repository(
     name = "kotlin-m2repository",
     artifacts = [
-        "//tools/base/third_party:org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
     visibility = ["//visibility:public"],
 )

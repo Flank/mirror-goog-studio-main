@@ -24,6 +24,7 @@ import androidx.inspection.InspectorEnvironment
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.WakeLockAcquired
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.WakeLockReleased
 import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
+import com.android.tools.appinspection.common.getStackTrace
 import java.lang.reflect.Field
 
 private const val DEFAULT_TAG = "UNKNOWN"
@@ -143,6 +144,7 @@ class WakeLockHandler(
             val eventId =
                 eventIdMap.getOrPut(releaseParams.wakeLock) { BackgroundTaskUtil.nextId() }
             connection.sendBackgroundTaskEvent(eventId) {
+                stacktrace = getStackTrace(2)
                 wakeLockReleasedBuilder.apply {
                     if (releaseParams.flag and RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY != 0) {
                         addFlags(WakeLockReleased.ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
@@ -185,6 +187,7 @@ class WakeLockHandler(
             }
         }
         connection.sendBackgroundTaskEvent(eventId) {
+            stacktrace = getStackTrace(1)
             wakeLockAcquiredBuilder.apply {
                 level = when (creationParams.levelAndFlags and WAKE_LOCK_LEVEL_MASK) {
                     PARTIAL_WAKE_LOCK -> WakeLockAcquired.Level.PARTIAL_WAKE_LOCK

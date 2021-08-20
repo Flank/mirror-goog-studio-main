@@ -18,22 +18,15 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.BaseTestRunner
-import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
-import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
-import com.google.testing.platform.proto.api.core.TestStatusProto
-import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
+import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.util.concurrent.ConcurrentHashMap
 import org.gradle.workers.WorkerExecutor
 
 /**
@@ -49,11 +42,16 @@ class UtpTestRunner @JvmOverloads constructor(
         private val retentionConfig: RetentionConfig,
         private val useOrchestrator: Boolean,
         private val utpTestResultListener: UtpTestResultListener?,
-        private val configFactory: UtpConfigFactory = UtpConfigFactory())
-    : BaseTestRunner(splitSelectExec, processExecutor, executor), UtpTestResultListener {
-
-    private val testResultReporters: ConcurrentHashMap<String, UtpTestResultListener> =
-        ConcurrentHashMap()
+        private val configFactory: UtpConfigFactory = UtpConfigFactory(),
+        private val runUtpTestSuiteAndWaitFunc: (
+            List<UtpRunnerConfig>, String, String, File, ILogger
+        ) -> List<Boolean> = { runnerConfigs, projectName, variantName, resultsDir, logger ->
+            runUtpTestSuiteAndWait(
+                runnerConfigs, workerExecutor, projectName, variantName, resultsDir, logger,
+                utpTestResultListener, utpDependencies)
+        }
+)
+    : BaseTestRunner(splitSelectExec, processExecutor, executor) {
 
     override fun scheduleTests(
             projectName: String,
@@ -68,121 +66,63 @@ class UtpTestRunner @JvmOverloads constructor(
             additionalTestOutputDir: File?,
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
-        UtpTestResultListenerServerRunner(this).use { resultListenerServerRunner ->
-            val resultListenerServerMetadata = resultListenerServerRunner.metadata
-            val workQueue = workerExecutor.noIsolation()
-
-            val postProcessCallback = apksForDevice.map { (deviceConnector, apks) ->
-                val utpOutputDir = File(resultsDir, deviceConnector.name).apply {
-                    if (!exists()) {
-                        mkdirs()
-                    }
+        val runnerConfigs = apksForDevice.map { (deviceConnector, apks) ->
+            val utpOutputDir = File(resultsDir, deviceConnector.name).apply {
+                if (!exists()) {
+                    mkdirs()
                 }
-                val utpTmpDir = Files.createTempDir()
-                val runnerConfigProtoFile =
-                        File.createTempFile("runnerConfig", ".pb").also { file ->
-                            FileOutputStream(file).use { writer ->
-                                configFactory.createRunnerConfigProtoForLocalDevice(
-                                        deviceConnector,
-                                        testData,
-                                        apks,
-                                        installOptions,
-                                        helperApks,
-                                        utpDependencies,
-                                        versionedSdkLoader,
-                                        utpOutputDir,
-                                        utpTmpDir,
-                                        retentionConfig,
-                                        coverageDir,
-                                        useOrchestrator,
-                                        if (additionalTestOutputEnabled) {
-                                            additionalTestOutputDir
-                                        } else {
-                                            null
-                                        },
-                                        resultListenerServerMetadata.serverPort,
-                                        resultListenerServerMetadata.clientCert,
-                                        resultListenerServerMetadata.clientPrivateKey,
-                                        resultListenerServerMetadata.serverCert).writeTo(writer)
-                            }
-                        }
-
-                lateinit var resultsProto: TestSuiteResult
-                val ddmlibTestResultAdapter = DdmlibTestResultAdapter(
-                        deviceConnector.name,
-                        CustomTestRunListener(
-                                deviceConnector.name,
-                                projectName,
-                                variantName,
-                                logger).apply {
-                            setReportDir(resultsDir)
-                        }
-                )
-                testResultReporters[deviceConnector.serialNumber] = object: UtpTestResultListener {
-                    override fun onTestResultEvent(testResultEvent: TestResultEvent) {
-                        ddmlibTestResultAdapter.onTestResultEvent(testResultEvent)
-
-                        if (testResultEvent.hasTestSuiteFinished()) {
-                            resultsProto = testResultEvent.testSuiteFinished.testSuiteResult
-                                    .unpack(TestSuiteResult::class.java)
-                        }
-                    }
-                }
-
-                runUtpTestSuite(
-                    runnerConfigProtoFile,
-                    configFactory,
-                    utpDependencies,
-                    workQueue)
-
-                val postProcessFunc: () -> TestResult = {
-                    testResultReporters.remove(deviceConnector.serialNumber)
-
-                    val testResultPbFile = File(utpOutputDir, "test-result.pb")
-                    resultsProto.writeTo(testResultPbFile.outputStream())
-
-                    try {
-                        FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-                        FileUtils.deleteRecursivelyIfExists(utpTmpDir)
-                    } catch (e: IOException) {
-                        logger.warning("Failed to cleanup temporary directories: $e")
-                    }
-
-                    if (resultsProto.hasPlatformError()) {
-                        logger.error(null, "Platform error occurred when running the UTP test suite")
-                    }
-                    logger.quiet(
-                        "\nTest results saved as ${testResultPbFile.toURI()}. " +
-                                "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                                "From File from the menu bar and importing test-result.pb."
-                    )
-                    val testFailed = resultsProto.hasPlatformError() ||
-                            resultsProto.testResultList.any { testCaseResult ->
-                                testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                                        || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
-                            }
-                    TestResult().apply {
-                        testResult = if (testFailed) {
-                            TestResult.Result.FAILED
-                        } else {
-                            TestResult.Result.SUCCEEDED
-                        }
-                    }
-                }
-                postProcessFunc
             }
+            val utpTmpDir = Files.createTempDir()
+            val runnerConfig: (UtpTestResultListenerServerMetadata) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata ->
+                configFactory.createRunnerConfigProtoForLocalDevice(
+                    deviceConnector,
+                    testData,
+                    apks,
+                    installOptions,
+                    helperApks,
+                    utpDependencies,
+                    versionedSdkLoader,
+                    utpOutputDir,
+                    utpTmpDir,
+                    retentionConfig,
+                    coverageDir,
+                    useOrchestrator,
+                    if (additionalTestOutputEnabled) {
+                        additionalTestOutputDir
+                    } else {
+                        null
+                    },
+                    resultListenerServerMetadata.serverPort,
+                    resultListenerServerMetadata.clientCert,
+                    resultListenerServerMetadata.clientPrivateKey,
+                    resultListenerServerMetadata.serverCert
+                )
+            }
+            UtpRunnerConfig(
+                deviceConnector.name,
+                deviceConnector.serialNumber,
+                utpOutputDir,
+                utpTmpDir,
+                runnerConfig,
+                configFactory.createServerConfigProto())
+        }.toList()
 
-            workQueue.await()
+        val testSuiteResults = runUtpTestSuiteAndWaitFunc(
+            runnerConfigs,
+            projectName,
+            variantName,
+            resultsDir,
+            logger
+        )
 
-            return postProcessCallback.map {
-                it()
-            }.toMutableList()
-        }
-    }
-
-    @Synchronized
-    override fun onTestResultEvent(testResultEvent: TestResultEvent) {
-        testResultReporters[testResultEvent.deviceId]?.onTestResultEvent(testResultEvent)
-        utpTestResultListener?.onTestResultEvent(testResultEvent)
+        return testSuiteResults.map { testSuitePassed ->
+            TestResult().apply {
+                testResult = if (testSuitePassed) {
+                    TestResult.Result.SUCCEEDED
+                } else {
+                    TestResult.Result.FAILED
+                }
+            }
+        }.toMutableList()
     }
 }

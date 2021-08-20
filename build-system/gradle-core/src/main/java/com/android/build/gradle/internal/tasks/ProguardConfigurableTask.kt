@@ -17,20 +17,17 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -170,38 +167,40 @@ abstract class ProguardConfigurableTask(
 
         private val resources: FileCollection
 
-        protected val inputScopes: MutableSet<QualifiedContent.ScopeType> =
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        protected val inputScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
             when {
                 variantType.isAar -> mutableSetOf(
-                    Scope.PROJECT,
+                    com.android.build.api.transform.QualifiedContent.Scope.PROJECT,
                     InternalScope.LOCAL_DEPS
                 )
                 includeFeaturesInScopes -> mutableSetOf(
-                    Scope.PROJECT,
-                    Scope.SUB_PROJECTS,
-                    Scope.EXTERNAL_LIBRARIES,
+                    com.android.build.api.transform.QualifiedContent.Scope.PROJECT,
+                    com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS,
+                    com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES,
                     InternalScope.FEATURES
                 )
                 else -> mutableSetOf(
-                    Scope.PROJECT,
-                    Scope.SUB_PROJECTS,
-                    Scope.EXTERNAL_LIBRARIES
+                    com.android.build.api.transform.QualifiedContent.Scope.PROJECT,
+                    com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS,
+                    com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
                 )
             }
 
         init {
-            val referencedScopes: Set<Scope> = run {
-                val set = Sets.newHashSetWithExpectedSize<Scope>(5)
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            val referencedScopes: Set<com.android.build.api.transform.QualifiedContent.Scope> = run {
+                val set = Sets.newHashSetWithExpectedSize<com.android.build.api.transform.QualifiedContent.Scope>(5)
                 if (variantType.isAar) {
-                    set.add(Scope.SUB_PROJECTS)
-                    set.add(Scope.EXTERNAL_LIBRARIES)
+                    set.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
+                    set.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                 }
 
                 if (variantType.isTestComponent) {
-                    set.add(Scope.TESTED_CODE)
+                    set.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
                 }
 
-                set.add(Scope.PROVIDED_ONLY)
+                set.add(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
 
                 Sets.immutableEnumSet(set)
             }
@@ -217,23 +216,28 @@ abstract class ProguardConfigurableTask(
             )
 
             val transformManager = creationConfig.transformManager
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             classes = transformManager
-                .getPipelineOutputAsFileCollection(createStreamFilter(CLASSES, inputScopes))
+                .getPipelineOutputAsFileCollection(createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, inputScopes))
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             resources = transformManager
-                .getPipelineOutputAsFileCollection(createStreamFilter(RESOURCES, inputScopes))
+                .getPipelineOutputAsFileCollection(createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES, inputScopes))
 
             // Consume non referenced inputs
-            transformManager.consumeStreams(inputScopes, setOf(CLASSES, RESOURCES))
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            transformManager.consumeStreams(inputScopes, setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             referencedClasses = transformManager
                 .getPipelineOutputAsFileCollection(
-                    createStreamFilter(CLASSES, referencedScopes.toMutableSet())
+                    createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, referencedScopes.toMutableSet())
                 )
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             referencedResources = transformManager
                 .getPipelineOutputAsFileCollection(
-                    createStreamFilter(RESOURCES, referencedScopes.toMutableSet())
+                    createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES, referencedScopes.toMutableSet())
                 )
         }
 
@@ -262,9 +266,9 @@ abstract class ProguardConfigurableTask(
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.APK_MAPPING
+                        COMPILE_CLASSPATH,
+                        ALL,
+                        APK_MAPPING
                     )
                 )
             }
@@ -304,7 +308,7 @@ abstract class ProguardConfigurableTask(
             when {
                 testedConfig != null -> {
                     // This is an androidTest variant inside an app/library.
-                    applyProguardDefaultsForTest(task)
+                    applyProguardDefaultsForTest()
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
@@ -319,7 +323,7 @@ abstract class ProguardConfigurableTask(
                 }
                 creationConfig.variantType.isForTesting && !creationConfig.variantType.isTestComponent -> {
                     // This is a test-only module and the app being tested was obfuscated with ProGuard.
-                    applyProguardDefaultsForTest(task)
+                    applyProguardDefaultsForTest()
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
@@ -348,7 +352,7 @@ abstract class ProguardConfigurableTask(
             }
         }
 
-        private fun applyProguardDefaultsForTest(task: ProguardConfigurableTask) {
+        private fun applyProguardDefaultsForTest() {
             // Don't remove any code in tested app.
             // Obfuscate is disabled by default.
             // It is enabled in Proguard since it would ignore the mapping file otherwise.
@@ -435,9 +439,10 @@ abstract class ProguardConfigurableTask(
          *  Convenience function. Returns a StreamFilter that checks for the given contentType and a
          *  nonempty intersection with the given set of Scopes .
          */
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
         private fun createStreamFilter(
-            desiredType: QualifiedContent.ContentType,
-            desiredScopes: MutableSet<in QualifiedContent.ScopeType>
+            desiredType: com.android.build.api.transform.QualifiedContent.ContentType,
+            desiredScopes: MutableSet<in com.android.build.api.transform.QualifiedContent.ScopeType>
         ): StreamFilter {
             return StreamFilter { contentTypes, scopes ->
                 desiredType in contentTypes && desiredScopes.intersect(scopes).isNotEmpty()

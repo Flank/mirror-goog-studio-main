@@ -170,7 +170,8 @@ void HookToStub::BuildStub(lir::CodeIr* code_ir, lir::Bytecode* invoke_static) {
   // The interpreter stub accepts the method name and the original method's
   // parameters packaged into an Object array.
   auto param_types =
-      builder.GetTypeList({builder.GetType("[Ljava/lang/Object;")});
+      builder.GetTypeList({builder.GetType("Ljava/lang/Class;"),
+                           builder.GetType("[Ljava/lang/Object;")});
 
   std::string stub_method_name = stub_prefix_;
   stub_method_name += return_type->descriptor->c_str()[0];
@@ -182,7 +183,17 @@ void HookToStub::BuildStub(lir::CodeIr* code_ir, lir::Bytecode* invoke_static) {
   auto stub_method = code_ir->Alloc<lir::Method>(stub_method_decl,
                                                  stub_method_decl->orig_index);
 
+  auto class_type = code_ir->ir_method->decl->parent;
+  auto const_class = code_ir->Alloc<lir::Bytecode>();
+  const_class->opcode = dex::OP_CONST_CLASS;
+  const_class->operands.push_back(code_ir->Alloc<lir::VReg>(0));
+  const_class->operands.push_back(
+      code_ir->Alloc<lir::Type>(class_type, class_type->orig_index));
+
+  code_ir->instructions.InsertBefore(invoke_static, const_class);
+
   // Modify the fake entry hook invoke to call the correct interpreter stub.
+  invoke_static->operands[0] = code_ir->Alloc<lir::VRegRange>(0, 2);
   invoke_static->operands[1] = stub_method;
 
   dex::Opcode move_op;

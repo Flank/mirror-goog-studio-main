@@ -3,7 +3,7 @@ load(":functions.bzl", "create_option_file", "explicit_target", "label_workspace
 load(":kotlin.bzl", "kotlin_compile")
 load(":kotlin.bzl", "test_kotlin_use_ir")
 load(":lint.bzl", "lint_test")
-load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
+load(":merge_archives.bzl", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 # This is a custom implementation of label "tags".
@@ -68,7 +68,6 @@ def _iml_module_jar_impl(
         kotlin_srcs,
         form_srcs,
         resources,
-        manifests,
         res_zips,
         output_jar,
         java_deps,
@@ -168,16 +167,10 @@ def _iml_module_jar_impl(
     if form_srcs and not java_srcs:
         fail("Forms only supported with java sources")
 
-    manifest_argfile = None
-    if ctx.files.manifests:
-        manifest_argfile = create_manifest_argfile(ctx, name + ".manifest.lst", ctx.files.manifests)
-
     run_singlejar(
         ctx = ctx,
         jars = jars,
         out = output_jar,
-        manifest_lines = ["@" + manifest_argfile.path] if manifest_argfile else [],
-        extra_inputs = [manifest_argfile] if manifest_argfile else [],
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
@@ -272,7 +265,6 @@ def _iml_module_impl(ctx):
         kotlin_srcs = ctx.files.kotlin_srcs,
         form_srcs = ctx.files.form_srcs,
         resources = ctx.files.resources,
-        manifests = ctx.attr.manifests,
         res_zips = ctx.files.res_zips,
         output_jar = ctx.outputs.production_jar,
         java_deps = java_deps,
@@ -291,7 +283,6 @@ def _iml_module_impl(ctx):
         kotlin_srcs = ctx.files.kotlin_test_srcs,
         form_srcs = ctx.files.form_test_srcs,
         resources = ctx.files.test_resources,
-        manifests = [],
         res_zips = [],
         output_jar = ctx.outputs.test_jar,
         java_deps = [main_provider] + test_java_deps,
@@ -517,7 +508,6 @@ def iml_module(
         kotlin_use_ir = test_kotlin_use_ir(),
         form_srcs = srcs.forms,
         resources = srcs.resources,
-        manifests = srcs.manifests,
         res_zips = res_zips,
         roots = srcs.roots,
         java_test_srcs = split_test_srcs.javas,
@@ -777,7 +767,7 @@ def _gen_split_test_excludes(split_name, split_test_targets):
 
 def split_srcs(src_dirs, res_dirs, exclude):
     roots = src_dirs + res_dirs
-    exts = ["java", "kt", "groovy", "DS_Store", "form", "flex", "MF"]
+    exts = ["java", "kt", "groovy", "DS_Store", "form", "flex"]
     excludes = []
     for root in roots:
         excludes += [root + "/**/*." + ext for ext in exts]
@@ -793,12 +783,11 @@ def split_srcs(src_dirs, res_dirs, exclude):
     javas = native.glob([src + "/**/*.java" for src in src_dirs], exclude)
     kotlins = native.glob([src + "/**/*.kt" for src in src_dirs], exclude)
     forms = native.glob([src + "/**/*.form" for src in src_dirs], exclude)
-    manifests = native.glob([src + "/**/*.MF" for src in src_dirs], exclude)
+
     return struct(
         roots = roots,
         resources = resources,
         javas = javas,
         kotlins = kotlins,
         forms = forms,
-        manifests = manifests,
     )

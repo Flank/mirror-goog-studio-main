@@ -652,6 +652,7 @@ message LiveEditResponse {
     UNKNOWN = 0;
     OK = 1;
     ERROR = 2;
+    INSTRUMENTATION_FAILED = 3;
   }
 
   Status status = 1;

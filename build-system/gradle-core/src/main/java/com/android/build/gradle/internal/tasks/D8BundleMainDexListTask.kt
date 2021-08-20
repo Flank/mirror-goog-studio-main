@@ -17,9 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY
-import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -154,15 +151,17 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
         private val libraryClasses: FileCollection
 
         init {
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             val libraryScopes = setOf(
-                PROVIDED_ONLY,
-                TESTED_CODE
+                com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY,
+                com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
             )
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             libraryClasses = creationConfig.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
-                        QualifiedContent.DefaultContentType.CLASSES
+                        com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
                     ) && libraryScopes.intersect(scopes).isNotEmpty()
                 }
         }

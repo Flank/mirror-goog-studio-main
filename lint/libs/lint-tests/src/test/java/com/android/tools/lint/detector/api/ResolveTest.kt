@@ -250,6 +250,54 @@ class ResolveTest : TestCase() {
         Disposer.dispose(pair.second)
     }
 
+    fun testKt47846() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-47846:
+        // Stack overflow when handling enhanced recursive type parameter.
+        val pair = LintUtilsTest.parse(
+            java(
+                """
+                import org.checkerframework.checker.nullness.qual.NonNull;
+                public interface I1<@NonNull T> {}
+                """
+            ).indented(),
+            java(
+                """
+                public interface I2<T extends I1<T>> {}
+                """
+            ).indented(),
+            kotlin(
+                """
+                fun foo(): I2<*> { throw RuntimeException() }
+                """
+            ).indented(),
+            java(
+                """
+                    package org.checkerframework.checker.nullness.qual;
+
+                    import java.lang.annotation.ElementType;
+                    import java.lang.annotation.Retention;
+                    import java.lang.annotation.RetentionPolicy;
+                    import java.lang.annotation.Target;
+
+                    @Retention(RetentionPolicy.RUNTIME)
+                    @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
+                    public @interface NonNull {}
+                """
+            ).indented(),
+        )
+
+        val uastFile = pair.first.uastFile
+        assertEquals(
+            """
+            UFile (package = ) [import org.checkerframework.checker.nullness.qual.NonNull...]
+                UImportStatement (isOnDemand = false) [import org.checkerframework.checker.nullness.qual.NonNull] => PsiClass:NonNull
+                UClass (name = I1) [public abstract interface I1 {...}]
+            """.trimIndent().trim(),
+            uastFile?.asResolveString()?.trim()
+        )
+        Disposer.dispose(pair.second)
+    }
+
     /*
     Compiled from
         $ cat lib/Bar.kt lib/Bar2.java

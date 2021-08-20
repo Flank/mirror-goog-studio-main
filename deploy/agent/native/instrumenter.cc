@@ -53,6 +53,51 @@ const std::string kInstrumentationJarName =
 
 namespace {
 
+const HookTransform kThreadTransform(
+    /* target class */ "java/lang/Thread",
+    /* target method */ "dispatchUncaughtException",
+    /* target signature */ "(Ljava/lang/Throwable;)V", "logUnhandledException",
+    MethodHooks::kNoHook);
+
+const HookTransform kActivityThreadTransform(
+    /* target class */ "android/app/ActivityThread",
+    /* target method */ "handleDispatchPackageBroadcast",
+    /* target signature */ "(I[Ljava/lang/String;)V",
+    "handleDispatchPackageBroadcastEntry",
+    "handleDispatchPackageBroadcastExit");
+
+const HookTransform kDexPathListElementTransform(
+    /* target class */ "dalvik/system/DexPathList$Element",
+    /* target method */ "findResource",
+    /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
+    "handleFindResourceEntry", MethodHooks::kNoHook);
+
+// Instrumentation for IWI w/ dex files.
+const HookTransform kDexPathListTransform(
+    /* target class */ "dalvik/system/DexPathList",
+    /* target method */ "splitDexPath",
+    /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
+    MethodHooks::kNoHook, "handleSplitDexPathExit");
+
+// Instrumentation for IWI w/ native libraries.
+const ModifyParameterTransform kApplicationLoadersTransform(
+    /* target class */ "android/app/ApplicationLoaders",
+    /* target method */ "getClassLoader",
+    /* target signature */
+    "(Ljava/lang/String;IZLjava/lang/String;Ljava/lang/String;Ljava/lang/"
+    "ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Ljava/"
+    "lang/ClassLoader;",
+    /* parameter index to modify */ 3,
+    /* parameter transform function */ "modifyNativeSearchPath");
+
+// Instrumentation for IWI w/ resources.
+const HookTransform kLoadedApkTransform(
+    /* target class */ "android/app/LoadedApk",
+    /* target method */ "getResources",
+    /* target signature */
+    "()Landroid/content/res/Resources;", MethodHooks::kNoHook,
+    "addResourceOverlays");
+
 // Holds the transform that will be applied by Agent_ClassFileLoadHook.
 const Transform* current_transform = nullptr;
 
@@ -284,77 +329,46 @@ bool Instrumenter::ApplyTransforms(
   return failed_classes.empty();
 }
 
-bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
-  const ModifyParameterTransform loaders(
-      /* target class */ "android/app/ApplicationLoaders",
-      /* target method */ "getClassLoader",
-      /* target signature */
-      "(Ljava/lang/String;IZLjava/lang/String;Ljava/lang/String;Ljava/lang/"
-      "ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Ljava/"
-      "lang/ClassLoader;",
-      /* parameter index to modify */ 3,
-      /* parameter transform function */ "modifyNativeSearchPath");
+std::string SetUpInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
+                                    const std::string& package_name) {
+  std::string instrument_jar_path =
+      Sites::AppStudio(package_name) + kInstrumentationJarName;
+  if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
+    Log::E("Error writing instrumentation.jar to disk.");
+    return "";
+  }
 
-  const HookTransform thread(
-      /* target class */ "java/lang/Thread",
-      /* target method */ "dispatchUncaughtException",
-      /* target signature */ "(Ljava/lang/Throwable;)V",
-      "logUnhandledException", MethodHooks::kNoHook);
+  if (!LoadInstrumentationJar(jvmti, jni, instrument_jar_path)) {
+    Log::E("Error loading instrumentation dex.");
+    return "";
+  }
 
-  const HookTransform activity_thread(
-      /* target class */ "android/app/ActivityThread",
-      /* target method */ "handleDispatchPackageBroadcast",
-      /* target signature */ "(I[Ljava/lang/String;)V",
-      "handleDispatchPackageBroadcastEntry",
-      "handleDispatchPackageBroadcastExit");
+  return instrument_jar_path;
+}
 
-  const HookTransform dex_path_list_element(
-      /* target class */ "dalvik/system/DexPathList$Element",
-      /* target method */ "findResource",
-      /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
-      "handleFindResourceEntry", MethodHooks::kNoHook);
+HookTransform GetResourceManagerTransform(JNIEnv* jni) {
+  JniClass version(jni, "android/os/Build$VERSION");
+  jint sdk = version.GetStaticIntField("SDK_INT", "I");
 
-  const HookTransform dex_path_list(
-      /* target class */ "dalvik/system/DexPathList",
-      /* target method */ "splitDexPath",
-      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
-      MethodHooks::kNoHook, "handleSplitDexPathExit");
-
-  const HookTransform res_manager(
-      /* target class */ "android/app/ResourcesManager",
-      /* target method */ "applyNewResourceDirsLocked",
+  // This method was renamed in Android S.
+  const char* target_method;
+  if (sdk < 31) {
+    target_method = "applyNewResourceDirsLocked";
+  } else {
+    target_method = "applyNewResourceDirs";
+  }
+  return HookTransform(
+      /* target class */ "android/app/ResourcesManager", target_method,
       /* target signature */
       "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
       "addResourceOverlays", MethodHooks::kNoHook);
-
-  const HookTransform loaded_apk(
-      /* target class */ "android/app/LoadedApk",
-      /* target method */ "getResources",
-      /* target signature */
-      "()Landroid/content/res/Resources;", MethodHooks::kNoHook,
-      "addResourceOverlays");
-
-  if (overlay_swap) {
-    return instrumenter.Instrument(
-        {&loaders, &thread, &dex_path_list, &loaded_apk, &res_manager});
-  } else {
-    return instrumenter.Instrument({&activity_thread, &dex_path_list_element});
-  }
 }
 
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                            const std::string& package_name, bool overlay_swap) {
   std::string instrument_jar_path =
-      Sites::AppStudio(package_name) + kInstrumentationJarName;
-
-  // Make sure the instrumentation jar is ready on disk.
-  if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
-    Log::E("Error writing instrumentation.jar to disk.");
-    return false;
-  }
-
-  if (!LoadInstrumentationJar(jvmti, jni, instrument_jar_path)) {
-    Log::E("Error loading instrumentation dex.");
+      SetUpInstrumentationJar(jvmti, jni, package_name);
+  if (instrument_jar_path.empty()) {
     return false;
   }
 
@@ -367,13 +381,21 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
   auto cache = TransformCache::Create(instrument_jar_path + ".cache");
   Instrumenter instrumenter(jvmti, jni, cache);
 
-  // Disable caching for non-overlay swap, as the cache directory gets cleared
-  // on installation.
-  if (!overlay_swap) {
+  bool success = false;
+  if (overlay_swap) {
+    auto res_manager = GetResourceManagerTransform(jni);
+    success = instrumenter.Instrument(
+        {&kApplicationLoadersTransform, &kThreadTransform,
+         &kDexPathListTransform, &kLoadedApkTransform, &res_manager});
+  } else {
+    // Disable caching for non-overlay swap, as the cache directory gets cleared
+    // on installation.
     instrumenter.SetCachingEnabled(false);
+    success = instrumenter.Instrument(
+        {&kActivityThreadTransform, &kDexPathListElementTransform});
   }
 
-  if (!Instrument(instrumenter, overlay_swap)) {
+  if (!success) {
     Log::E("Error instrumenting application.");
     return false;
   }

@@ -27,6 +27,7 @@ import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmFired
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmListener
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmSet
 import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
+import com.android.tools.appinspection.common.getStackTrace
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -88,6 +89,7 @@ internal class AlarmHandler(
             }
 
             connection.sendBackgroundTaskEvent(taskId) {
+                stacktrace = getStackTrace(1)
                 alarmSet = builder.build()
             }
         }
@@ -99,6 +101,7 @@ internal class AlarmHandler(
             val operation = args[0] as PendingIntent
             val taskId = operationIdMap[operation] ?: return@registerEntryHook
             connection.sendBackgroundTaskEvent(taskId) {
+                stacktrace = getStackTrace(1)
                 alarmCancelled = AlarmCancelled.getDefaultInstance()
             }
         }
@@ -110,6 +113,7 @@ internal class AlarmHandler(
             val listener = args[0] as OnAlarmListener
             val taskId = listenerIdMap[listener] ?: return@registerEntryHook
             connection.sendBackgroundTaskEvent(taskId) {
+                stacktrace = getStackTrace(1)
                 alarmCancelled = AlarmCancelled.getDefaultInstance()
             }
         }

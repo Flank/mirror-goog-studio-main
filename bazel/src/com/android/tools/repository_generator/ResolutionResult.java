@@ -18,6 +18,7 @@ package com.android.tools.repository_generator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,13 @@ public class ResolutionResult {
             this.originalDependencies = originalDependencies;
             this.directDependencies = directDependencies;
             this.conflictResolution = conflictResolution;
+
+            if (this.originalDependencies == null) {
+                this.originalDependencies = new String[0];
+            }
+            if (this.directDependencies == null) {
+                this.directDependencies = new HashMap<>();
+            }
         }
     }
 
@@ -78,5 +86,47 @@ public class ResolutionResult {
         dependencies.sort(Comparator.comparing(d -> d.coord));
         conflictLosers.sort(Comparator.comparing(d -> d.coord));
         parents.sort(Comparator.comparing(d -> d.coord));
+    }
+
+    public void addDependency(Dependency dependency) {
+        for (Dependency existingDependency : dependencies) {
+            if (existingDependency.coord.equals(dependency.coord)) {
+                mergeDependencies(existingDependency, dependency);
+                return;
+            }
+        }
+
+        dependencies.add(dependency);
+    }
+
+    public void addConflictLoser(Dependency dependency) {
+        for (Dependency existingDependency : conflictLosers) {
+            if (existingDependency.coord.equals(dependency.coord)) {
+                mergeDependencies(existingDependency, dependency);
+                return;
+            }
+        }
+
+        conflictLosers.add(dependency);
+    }
+
+    /**
+     * Existing and other represent the same dependency, but one of them might
+     * be missing some dependencies due to Maven dependency exclusions.
+     *
+     * If other has more dependencies than existing, then overwrites existing's
+     * dependencies with other's dependencies.
+     *
+     * Ideally, we would want to merge, but Aether conflict resolution does not
+     * merge, so we prefer to be consistent with Aether.
+     */
+    private void mergeDependencies(Dependency existing, Dependency other) {
+        if (existing.directDependencies.size() < other.directDependencies.size()) {
+            existing.directDependencies = other.directDependencies;
+        }
+
+        if (existing.originalDependencies.length < other.originalDependencies.length) {
+            existing.originalDependencies = other.originalDependencies;
+        }
     }
 }

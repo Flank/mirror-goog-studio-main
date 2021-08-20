@@ -14,14 +14,9 @@ com.android.build.api.dsl.AdbOptions implements com.android.build.api.dsl.Instal
 com.android.build.api.dsl.AndroidResources.additionalParameters: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.additionalParameters: void (java.lang.String[])
 com.android.build.api.dsl.AndroidResources.getAdditionalParameters: java.util.List<java.lang.String> ()
-com.android.build.api.dsl.AndroidResources.getFailOnMissingConfigEntry: boolean ()
-com.android.build.api.dsl.AndroidResources.getIgnoreAssetsPattern: java.lang.String ()
 com.android.build.api.dsl.AndroidResources.getNamespaced: boolean ()
-com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.noCompress: void (java.lang.String[])
-com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)
-com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidResources.setNamespaced: void (boolean)
 com.android.build.api.dsl.AndroidSourceDirectorySet implements org.gradle.api.Named, org.gradle.api.tasks.util.PatternFilterable
 com.android.build.api.dsl.AndroidSourceDirectorySet.getName: java.lang.String ()
@@ -64,16 +59,12 @@ com.android.build.api.dsl.AndroidSourceSet.res: void (kotlin.jvm.functions.Funct
 com.android.build.api.dsl.AndroidSourceSet.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidSourceDirectorySet, kotlin.Unit>)
 com.android.build.api.dsl.AndroidSourceSet.setRoot: java.lang.Object (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidSourceDirectorySet, kotlin.Unit>)
-com.android.build.api.dsl.AnnotationProcessorOptions
 com.android.build.api.dsl.AnnotationProcessorOptions.argument: void (java.lang.String, java.lang.String)
 com.android.build.api.dsl.AnnotationProcessorOptions.arguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.AnnotationProcessorOptions.className: void (java.lang.String)
 com.android.build.api.dsl.AnnotationProcessorOptions.classNames: void (java.lang.String[])
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProvider: void (org.gradle.process.CommandLineArgumentProvider)
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: void (org.gradle.process.CommandLineArgumentProvider[])
-com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApkSigningConfig.getEnableV1Signing: java.lang.Boolean ()
 com.android.build.api.dsl.ApkSigningConfig.getEnableV2Signing: java.lang.Boolean ()
@@ -398,8 +389,6 @@ com.android.build.api.dsl.Installation.setTimeOutInMs: void (int)
 com.android.build.api.dsl.JacocoOptions implements com.android.build.api.dsl.TestCoverage
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
-com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
-com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.JniLibsPackagingOptions
 com.android.build.api.dsl.JniLibsPackagingOptions.getExcludes: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.JniLibsPackagingOptions.getKeepDebugSymbols: java.util.Set<java.lang.String> ()
@@ -781,8 +770,6 @@ com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.buil
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
-com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
-com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.DslExtension
 com.android.build.api.variant.DslExtension$Builder
 com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)

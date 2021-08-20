@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.packaging.PackagingFileAction
@@ -43,8 +41,9 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.function.Predicate
 
-private fun isHighPriorityScope(scope: ScopeType?): Boolean {
-    return scope == Scope.PROJECT || scope == InternalScope.FEATURES
+@Suppress("DEPRECATION") // Legacy support (b/195153220)
+private fun isHighPriorityScope(scope: com.android.build.api.transform.QualifiedContent.ScopeType?): Boolean {
+    return scope == com.android.build.api.transform.QualifiedContent.Scope.PROJECT || scope == InternalScope.FEATURES
 }
 
 /**
@@ -54,7 +53,8 @@ private fun isHighPriorityScope(scope: ScopeType?): Boolean {
 class MergeJavaResourcesDelegate(
     inputs: List<IncrementalFileMergerInput>,
     private val outputFile: File,
-    private val scopeMap: MutableMap<IncrementalFileMergerInput, ScopeType>,
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    private val scopeMap: MutableMap<IncrementalFileMergerInput, com.android.build.api.transform.QualifiedContent.ScopeType>,
     private val packagingOptions: ParsedPackagingOptions,
     private val incrementalStateFile: File,
     private val isIncremental: Boolean,
@@ -111,7 +111,8 @@ class MergeJavaResourcesDelegate(
          */
 
         // Sort inputs to move project scopes to the start.
-        inputs.sortBy { if (scopeMap[it] == Scope.PROJECT) 0 else 1 }
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        inputs.sortBy { if (scopeMap[it] == com.android.build.api.transform.QualifiedContent.Scope.PROJECT) 0 else 1 }
 
         // Filter inputs.
         val inputFilter =

@@ -16,11 +16,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
-import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
-import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
-import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -42,7 +37,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -92,7 +86,8 @@ abstract class MergeJavaResourceTask
         private set
 
     @get:Input
-    lateinit var mergeScopes: Collection<ScopeType>
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    lateinit var mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>
         private set
 
     @get:Input
@@ -172,7 +167,8 @@ abstract class MergeJavaResourceTask
     }
 
     class CreationAction(
-        private val mergeScopes: Collection<ScopeType>,
+        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        private val mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>,
         creationConfig: VariantCreationConfig
     ) : VariantTaskCreationAction<MergeJavaResourceTask, VariantCreationConfig>(
         creationConfig
@@ -195,8 +191,9 @@ abstract class MergeJavaResourceTask
                         .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
                 // We must also consume corresponding streams to avoid duplicates; any downstream
                 // transforms will use the merged-java-res stream instead.
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
                 creationConfig.transformManager
-                    .consumeStreams(mutableSetOf(PROJECT), setOf(RESOURCES))
+                    .consumeStreams(mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT), setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
             } else {
                 projectJavaResFromStreams = null
             }
@@ -235,18 +232,24 @@ abstract class MergeJavaResourceTask
             }
             task.projectJavaRes.disallowChanges()
 
-            if (mergeScopes.contains(SUB_PROJECTS)) {
-                task.subProjectJavaRes =
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.JAVA_RES
-                    )
-            }
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            run {
+                if (mergeScopes.contains(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)) {
+                    task.subProjectJavaRes =
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.JAVA_RES
+                        )
+                }
 
-            if (mergeScopes.contains(EXTERNAL_LIBRARIES) || mergeScopes.contains(LOCAL_DEPS)) {
-                // Local jars are treated the same as external libraries
-                task.externalLibJavaRes = getExternalLibJavaRes(creationConfig, mergeScopes)
+                if (mergeScopes.contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES) || mergeScopes.contains(
+                        LOCAL_DEPS
+                    )
+                ) {
+                    // Local jars are treated the same as external libraries
+                    task.externalLibJavaRes = getExternalLibJavaRes(creationConfig, mergeScopes)
+                }
             }
 
             if (mergeScopes.contains(FEATURES)) {
@@ -322,10 +325,12 @@ fun getProjectJavaRes(
 
 private fun getExternalLibJavaRes(
     creationConfig: VariantCreationConfig,
-    mergeScopes: Collection<ScopeType>
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>
 ): FileCollection {
     val externalLibJavaRes = creationConfig.services.fileCollection()
-    if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
+    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    if (mergeScopes.contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
         externalLibJavaRes.from(
             creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

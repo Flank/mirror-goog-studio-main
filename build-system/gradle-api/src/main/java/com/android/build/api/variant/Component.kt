@@ -52,9 +52,6 @@ interface Component: ComponentIdentity {
      *  })
      * ```
      *
-     * This API is experimental and subject to breaking change and we strongly suggest you don't
-     * publish plugins that depend on it yet.
-     *
      * @param classVisitorFactoryImplClass the factory class implementing [AsmClassVisitorFactory]
      * @param scope either instrumenting the classes of the current project or the project and its
      * dependencies
@@ -62,7 +59,6 @@ interface Component: ComponentIdentity {
      * instantiated [InstrumentationParameters] object before passed to
      * [AsmClassVisitorFactory.createClassVisitor].
      */
-    @Incubating
     fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
         scope: InstrumentationScope,
@@ -76,6 +72,5 @@ interface Component: ComponentIdentity {
      *
      * When setting this multiple times, the mode with the highest enum value will be selected.
      */
-    @Incubating
     fun setAsmFramesComputationMode(mode: FramesComputationMode)
 }

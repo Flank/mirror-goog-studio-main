@@ -671,14 +671,13 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import com.google.errorprone.annotations.CheckReturnValue;
+                import com.google.errorprone.annotations.CheckReturnValue
 
                 @Suppress("RedundantUnitReturnType")
                 @CheckReturnValue
                 interface LoggingApiKotlin {
                     fun log(msg: String, p1: Any): Unit
                 }
-
                 """
             ),
             kotlin(

@@ -1,7 +1,7 @@
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_import")
+load("//tools/base/bazel:maven.bzl", "maven_import")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
@@ -78,7 +78,7 @@ def app_inspection_aar_import(name, aar, **kwargs):
         tools = ["//tools/base/bazel:unzipper"],
         cmd = "$(location //tools/base/bazel:unzipper) $< classes.jar:$@",
     )
-    maven_java_import(
+    maven_import(
         name = name,
         jars = [unpacked_jar],
         **kwargs
@@ -112,6 +112,7 @@ def app_inspection_jar(
         ":" + name + "-sources_undexed",
         "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib.1.4.21",
         "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-coroutines-core.1.4.1",
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
     ]
     for src in jarjar_srcs:
         if src not in jarjar_srcs_dedup:

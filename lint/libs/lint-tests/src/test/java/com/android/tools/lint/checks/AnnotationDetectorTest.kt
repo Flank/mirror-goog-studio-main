@@ -1192,6 +1192,40 @@ class AnnotationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testDelegates() {
+        // Regression test for 132782238
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import androidx.annotation.ColorRes
+                import androidx.annotation.FloatRange
+                import kotlin.properties.Delegates
+
+                @delegate:ColorRes // OK 1
+                var textColor: Int by Delegates.observable(0) { _, _, newValue ->
+                }
+
+                @delegate:FloatRange(from=1.0, to=2.0) // OK 2
+                var textColor2: Double by Delegates.observable(0.0) { _, _, newValue ->
+                }
+
+                @delegate:FloatRange(from=1.0, to=2.0) // ERROR
+                var textColor3: String by Delegates.observable("") { _, _, newValue ->
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:14: Error: This annotation does not apply for type String; expected float or double [SupportAnnotationUsage]
+            @delegate:FloatRange(from=1.0, to=2.0) // ERROR
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     override fun getDetector(): Detector {
         return AnnotationDetector()
     }

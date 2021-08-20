@@ -47,29 +47,25 @@ class AndroidEval implements Eval {
             Type elementType = array.getAsmType().getElementType();
             switch (elementType.getSort()) {
                 case Type.BOOLEAN:
-                    boolean b = Array.getBoolean(valueToObject(array), index.getInt());
+                    boolean b = Array.getBoolean(array.obj(), index.getInt());
                     return new IntValue(b ? 1 : 0, Type.BOOLEAN_TYPE);
                 case Type.CHAR:
-                    return new IntValue(
-                            Array.getChar(valueToObject(array), index.getInt()), Type.CHAR_TYPE);
+                    return new IntValue(Array.getChar(array.obj(), index.getInt()), Type.CHAR_TYPE);
                 case Type.BYTE:
-                    return new IntValue(
-                            Array.getByte(valueToObject(array), index.getInt()), Type.BYTE_TYPE);
+                    return new IntValue(Array.getByte(array.obj(), index.getInt()), Type.BYTE_TYPE);
                 case Type.SHORT:
                     return new IntValue(
-                            Array.getShort(valueToObject(array), index.getInt()), Type.SHORT_TYPE);
+                            Array.getShort(array.obj(), index.getInt()), Type.SHORT_TYPE);
                 case Type.INT:
-                    return new IntValue(
-                            Array.getInt(valueToObject(array), index.getInt()), Type.INT_TYPE);
+                    return new IntValue(Array.getInt(array.obj(), index.getInt()), Type.INT_TYPE);
                 case Type.FLOAT:
-                    return new FloatValue(Array.getFloat(valueToObject(array), index.getInt()));
+                    return new FloatValue(Array.getFloat(array.obj(), index.getInt()));
                 case Type.LONG:
-                    return new LongValue(Array.getLong(valueToObject(array), index.getInt()));
+                    return new LongValue(Array.getLong(array.obj(), index.getInt()));
                 case Type.DOUBLE:
-                    return new DoubleValue(Array.getDouble(valueToObject(array), index.getInt()));
+                    return new DoubleValue(Array.getDouble(array.obj(), index.getInt()));
                 case Type.OBJECT:
-                    return new ObjectValue(
-                            Array.get(valueToObject(array), index.getInt()), elementType);
+                    return new ObjectValue(Array.get(array.obj(), index.getInt()), elementType);
                 default:
                     String msg =
                             String.format(
@@ -86,20 +82,19 @@ class AndroidEval implements Eval {
     @NonNull
     @Override
     public Value getArrayLength(@NonNull Value array) {
-        return new IntValue(Array.getLength(valueToObject(array)), Type.INT_TYPE);
+        return new IntValue(Array.getLength(array.obj()), Type.INT_TYPE);
     }
 
     @NonNull
     @Override
     public Value getField(@NonNull Value value, FieldDescription description) {
-        Object owner = valueToObject(value);
+        Object owner = value.obj();
         String name = description.getName();
         String type = description.getDesc();
         try {
             Field field = owner.getClass().getDeclaredField(name);
             field.setAccessible(true);
-            Value result = makeValue(field.get(owner), Type.getType(type));
-            return result;
+            return makeValue(field.get(owner), Type.getType(type));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             handleThrowable(e);
         }
@@ -115,8 +110,7 @@ class AndroidEval implements Eval {
         try {
             Field field = forName(owner).getDeclaredField(name);
             field.setAccessible(true);
-            Value result = makeValue(field.get(owner), Type.getType(type));
-            return result;
+            return makeValue(field.get(owner), Type.getType(type));
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
         }
@@ -150,9 +144,7 @@ class AndroidEval implements Eval {
                 Class klass = typeToClass(objTarget.getAsmType());
                 Constructor constructor = klass.getDeclaredConstructor(parameterClass);
                 constructor.setAccessible(true);
-                Object obj =
-                        constructor.newInstance(
-                                args.stream().map(AndroidEval::valueToObject).toArray());
+                Object obj = constructor.newInstance(args.stream().map(Value::obj).toArray());
                 objTarget.setValue(obj);
                 return new ObjectValue(obj, objTarget.getAsmType());
             }
@@ -166,10 +158,7 @@ class AndroidEval implements Eval {
             }
 
             method.setAccessible(true);
-            Object result =
-                    method.invoke(
-                            valueToObject(target),
-                            args.stream().map(AndroidEval::valueToObject).toArray());
+            Object result = method.invoke(target.obj(), args.stream().map(Value::obj).toArray());
             return makeValue(result, Type.getReturnType(method));
         } catch (Throwable t) {
             handleThrowable(t);
@@ -199,8 +188,7 @@ class AndroidEval implements Eval {
             }
 
             method.setAccessible(true);
-            Object result =
-                    method.invoke(null, list.stream().map(AndroidEval::valueToObject).toArray());
+            Object result = method.invoke(null, list.stream().map(Value::obj).toArray());
             return makeValue(result, Type.getReturnType(method));
         } catch (Exception e) {
             handleThrowable(e);
@@ -212,7 +200,7 @@ class AndroidEval implements Eval {
     public boolean isInstanceOf(@NonNull Value target, @NonNull Type type) {
         try {
             Class<?> c = typeToClass(type);
-            return c.isInstance(valueToObject(target));
+            return c.isInstance(target.obj());
         } catch (ClassNotFoundException e) {
             handleThrowable(e);
         }
@@ -272,7 +260,7 @@ class AndroidEval implements Eval {
     public void setArrayElement(Value array, Value index, @NonNull Value newValue) {
         try {
             Type elementType = array.getAsmType().getElementType();
-            Object arrayObject = valueToObject(array);
+            Object arrayObject = array.obj();
             int arrayIndex = index.getInt();
 
             switch (elementType.getSort()) {
@@ -325,25 +313,23 @@ class AndroidEval implements Eval {
             Field field = Class.forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
             if (description.getDesc().equals("I")) {
-                field.setInt(valueToObject(owner), ((IntValue) value).getValue());
+                field.setInt(owner.obj(), ((IntValue) value).getValue());
             } else if (description.getDesc().equals("Z")) {
-                field.setBoolean(
-                        valueToObject(owner), ((IntValue) value).getValue() == 1 ? true : false);
+                field.setBoolean(owner.obj(), ((IntValue) value).getValue() == 1);
             } else if (description.getDesc().equals("B")) {
-                field.setByte(valueToObject(owner), ((IntValue) value).getValue().byteValue());
+                field.setByte(owner.obj(), ((IntValue) value).getValue().byteValue());
             } else if (description.getDesc().equals("C")) {
-                field.setChar(
-                        valueToObject(owner), (char) ((IntValue) value).getValue().intValue());
+                field.setChar(owner.obj(), (char) ((IntValue) value).getValue().intValue());
             } else if (description.getDesc().equals("S")) {
-                field.setShort(valueToObject(owner), ((IntValue) value).getValue().shortValue());
+                field.setShort(owner.obj(), ((IntValue) value).getValue().shortValue());
             } else if (description.getDesc().equals("D")) {
-                field.setDouble(valueToObject(owner), ((DoubleValue) value).getValue());
+                field.setDouble(owner.obj(), ((DoubleValue) value).getValue());
             } else if (description.getDesc().equals("F")) {
-                field.setFloat(valueToObject(owner), ((FloatValue) value).getValue());
+                field.setFloat(owner.obj(), ((FloatValue) value).getValue());
             } else if (description.getDesc().equals("J")) {
-                field.setLong(valueToObject(owner), ((LongValue) value).getValue());
+                field.setLong(owner.obj(), ((LongValue) value).getValue());
             } else {
-                field.set(valueToObject(owner), valueToObject(value));
+                field.set(owner.obj(), value.obj());
             }
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
@@ -363,7 +349,7 @@ class AndroidEval implements Eval {
             if (description.getDesc().equals("I")) {
                 field.setInt(ownerClass, ((IntValue) value).getValue());
             } else if (description.getDesc().equals("Z")) {
-                field.setBoolean(ownerClass, ((IntValue) value).getValue() == 1 ? true : false);
+                field.setBoolean(ownerClass, ((IntValue) value).getValue() == 1);
             } else if (description.getDesc().equals("B")) {
                 field.setByte(ownerClass, ((IntValue) value).getValue().byteValue());
             } else if (description.getDesc().equals("C")) {
@@ -377,17 +363,13 @@ class AndroidEval implements Eval {
             } else if (description.getDesc().equals("J")) {
                 field.setLong(ownerClass, ((LongValue) value).getValue());
             } else {
-                field.set(ownerClass, valueToObject(value));
+                field.set(ownerClass, value.obj());
             }
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
         }
         throw new IllegalStateException();
-    }
-
-    public static Object valueToObject(Value v) {
-        return v.obj();
     }
 
     public static Value makeValue(Object v, Type type) {

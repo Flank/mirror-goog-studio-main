@@ -550,6 +550,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 variant,
                 checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = true,
+                isForAnalysis = false,
                 includeDynamicFeatureSourceProviders = includeDynamicFeatureSourceProviders
             )
             if (reportOnly) {
@@ -821,7 +822,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             this.projectInputs.lintOptions.baselineFile.orNull?.asFile?.exists() ?: true
         }
         // Do not support check dependencies in the standalone lint plugin
-        this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, checkDependencies=false)
+        this.variantInputs
+            .initializeForStandalone(
+                project,
+                javaPluginConvention,
+                projectOptions,
+                checkDependencies = false,
+                isForAnalysis = false
+            )
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(
             project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")

@@ -22,7 +22,6 @@ import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -700,6 +699,125 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(expected);
+    }
+
+    public void test173468525() {
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "private fun PackageState.appDerivedApkId() =\n"
+                                        + "    AppDerivedApkId(\n"
+                                        + "        with(installedDerivedApkId()) {\n"
+                                        + "            when {\n"
+                                        + "                isPresent -> asInt\n"
+                                        + "                else -> null\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    )\n"
+                                        + "inline class AppDerivedApkId(val value: Int?)\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "import java.util.OptionalInt;\n"
+                                        + "\n"
+                                        + "public abstract class PackageState {\n"
+                                        + "    public abstract OptionalInt installedDerivedApkId();\n"
+                                        + "\n"
+                                        + "}"))
+                .run()
+                .expectClean();
+    }
+
+    public void testValueOfLongArgumentQuickfix() {
+        // Makes sure we're correctly using source elements in quickfix
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg.play\n"
+                                        + "\n"
+                                        + "import java.util.*\n"
+                                        + "\n"
+                                        + "private fun foo(installedDerivedApkId: OptionalInt) =\n"
+                                        + "    Integer(\n"
+                                        + "        with(installedDerivedApkId) {\n"
+                                        + "            when {\n"
+                                        + "                isPresent -> asInt\n"
+                                        + "                else -> 0\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    )\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/play/test.kt:6: Warning: Use Integer.valueOf(...) instead [UseValueOf]\n"
+                                + "    Integer(\n"
+                                + "    ^\n"
+                                + "0 errors, 1 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/play/test.kt line 6: Replace with valueOf():\n"
+                                + "@@ -6 +6\n"
+                                + "-     Integer(\n"
+                                + "+     Integer.valueOf(");
+    }
+
+    public void testValueOfKotlinQuickfixes() {
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "fun factories() {\n"
+                                        + "    val i1 = Integer(42);\n"
+                                        + "    val l1 = java.lang.Long(42L);\n"
+                                        + "    val b1 = java.lang.Boolean(true);\n"
+                                        + "    val c1 = Character('c');\n"
+                                        + "    val f1 = java.lang.Float(1.0f);\n"
+                                        + "    val d1 = java.lang.Double(1.0);\n"
+                                        + "\n"
+                                        + "    // The following should not generate errors:\n"
+                                        + "    val i2 = foo.bar.Integer(42);\n"
+                                        + "    val i3 = Integer.valueOf(42);\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "class foo {\n"
+                                        + "    class bar {\n"
+                                        + "        class Integer(`val`: Int)\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/foo.kt:4: Warning: Use Integer.valueOf(42) instead [UseValueOf]\n"
+                                + "    val i1 = Integer(42);\n"
+                                + "             ~~~~~~~~~~~\n"
+                                + "src/test/pkg/foo.kt:5: Warning: Use Long.valueOf(42L) instead [UseValueOf]\n"
+                                + "    val l1 = java.lang.Long(42L);\n"
+                                + "             ~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/foo.kt:6: Warning: Use Boolean.valueOf(true) instead [UseValueOf]\n"
+                                + "    val b1 = java.lang.Boolean(true);\n"
+                                + "             ~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/foo.kt:7: Warning: Use Character.valueOf('c') instead [UseValueOf]\n"
+                                + "    val c1 = Character('c');\n"
+                                + "             ~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/foo.kt:8: Warning: Use Float.valueOf(1.0f) instead [UseValueOf]\n"
+                                + "    val f1 = java.lang.Float(1.0f);\n"
+                                + "             ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/foo.kt:9: Warning: Use Double.valueOf(1.0) instead [UseValueOf]\n"
+                                + "    val d1 = java.lang.Double(1.0);\n"
+                                + "             ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 6 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/foo.kt line 4: Replace with valueOf():\n"
+                                + "@@ -4 +4\n"
+                                + "-     val i1 = Integer(42);\n"
+                                + "+     val i1 = Integer.valueOf(42);\n"
+                                + "Fix for src/test/pkg/foo.kt line 7: Replace with valueOf():\n"
+                                + "@@ -7 +7\n"
+                                + "-     val c1 = Character('c');\n"
+                                + "+     val c1 = Character.valueOf('c');");
     }
 
     @SuppressWarnings("all") // Sample code

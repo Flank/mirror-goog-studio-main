@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:utils.bzl", "fileset")
-load("//tools/base/bazel:kotlin.bzl", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
@@ -28,19 +28,18 @@ fileset(
 )
 
 maven_library(
-    name = "tools.dvlib_bzl",
+    name = "tools.dvlib",
     srcs = glob([
         "dvlib/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:dvlib:" + BASE_VERSION,
-    legacy_name = "tools.dvlib",
     notice = "dvlib/NOTICE",
     resource_strip_prefix = "tools/base/device_validator/dvlib",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
     ],
 )
 

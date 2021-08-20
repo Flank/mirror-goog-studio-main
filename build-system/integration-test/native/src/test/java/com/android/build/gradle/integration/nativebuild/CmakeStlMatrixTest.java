@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
@@ -145,7 +146,7 @@ public class CmakeStlMatrixTest {
         project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64")
                 .run("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates);
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86_64/libhello-jni.so");
 

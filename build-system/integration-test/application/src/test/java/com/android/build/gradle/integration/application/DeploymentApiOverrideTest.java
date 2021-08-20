@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
@@ -31,10 +33,13 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import kotlin.Unit;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +106,11 @@ public class DeploymentApiOverrideTest {
                         .run("clean", "assembleIcsDebug");
 
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isFalse();
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
+        assertThat(
+                        project.getApk(
+                                GradleTestProject.ApkType.DEBUG,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_21);
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
     }
@@ -147,7 +156,11 @@ public class DeploymentApiOverrideTest {
                         .run("clean", "assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
-        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
+        assertThat(
+                        project.getApk(
+                                GradleTestProject.ApkType.RELEASE,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_21);
         assertDexTask(result, genExpectedTaskStatesFor("IcsRelease", true));
     }
@@ -160,17 +173,27 @@ public class DeploymentApiOverrideTest {
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 19)
                         .run("clean", "assembleIcsDebug");
 
-        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        Apk apk =
+                project.getApk(
+                        GradleTestProject.ApkType.DEBUG,
+                        GradleTestProject.ApkLocation.Intermediates,
+                        "ics");
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isTrue();
         assertThat(apk).hasDexVersion(DEX_VERSION_FOR_MIN_SDK_14);
         // because minSdkVersion = 14 and targetApi = 19
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", false));
         List<String> userClasses = new ArrayList<>();
-        for (Dex dex : apk.getAllDexes()) {
-            ImmutableSet<String> classNames = dex.getClasses().keySet();
-            for (String className : classNames) {
-                if (className.startsWith("Lcom/android/tests/basic")) {
-                    userClasses.add(className);
+
+        Map<String, BuiltArtifacts> outputModels =
+                executeWithDeviceApiVersionAndReturnOutputModels(project, 19, "assembleIcsDebug");
+        try (Apk apkFromModel = getApkforVariant(outputModels, "icsDebug")) {
+            assertThat(apkFromModel).exists();
+            for (Dex dex : apkFromModel.getAllDexes()) {
+                ImmutableSet<String> classNames = dex.getClasses().keySet();
+                for (String className : classNames) {
+                    if (className.startsWith("Lcom/android/tests/basic")) {
+                        userClasses.add(className);
+                    }
                 }
             }
         }
@@ -179,7 +202,11 @@ public class DeploymentApiOverrideTest {
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
                         .run("assembleIcsDebug");
-        apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        apk =
+                project.getApk(
+                        GradleTestProject.ApkType.DEBUG,
+                        GradleTestProject.ApkLocation.Intermediates,
+                        "ics");
         // We skip the getMainDexListFile() assertion here, because since we didn't cleaned the
         // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
         // even if we are executing in Native Multidex now.
@@ -205,7 +232,11 @@ public class DeploymentApiOverrideTest {
                         .run("clean", "assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
-        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
+        assertThat(
+                        project.getApk(
+                                GradleTestProject.ApkType.RELEASE,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         assertDexTask(result24, genExpectedTaskStatesFor("IcsRelease", true));
 
@@ -218,13 +249,18 @@ public class DeploymentApiOverrideTest {
                         .run("assembleIcsRelease");
 
         assertThat(getMainDexListFile(project, "icsRelease").exists()).isFalse();
-        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "ics"))
+        assertThat(
+                        project.getApk(
+                                GradleTestProject.ApkType.RELEASE,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         assertDexTask(result25, genExpectedTaskStatesFor("IcsRelease", true, false));
     }
 
     @Test
     public void testDexingUsesDeviceApi() throws Exception {
+
         GradleBuildResult result = project.executor().run("clean", "assembleIcsDebug");
         assertThat(getMainDexListFile(project, "icsDebug").exists()).isTrue();
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
@@ -239,7 +275,11 @@ public class DeploymentApiOverrideTest {
         // We skip the getMainDexListFile() assertion here, because since we didn't cleaned the
         // project before running with IDE_TARGET_DEVICE_API >= 21, the output is still there
         // even if we are executing in Native Multidex now.
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics"))
+        assertThat(
+                        project.getApk(
+                                GradleTestProject.ApkType.DEBUG,
+                                GradleTestProject.ApkLocation.Intermediates,
+                                "ics"))
                 .hasDexVersion(DEX_VERSION_FOR_MIN_SDK_24);
         // because IDE_TARGET_DEVICE_API
         assertDexTask(result, genExpectedTaskStatesFor("IcsDebug", true));
@@ -292,5 +332,23 @@ public class DeploymentApiOverrideTest {
                     ":dexBuilder" + target, expectedState,
                     ":mergeDex" + target, expectedState);
         }
+    }
+
+    private static Map<String, BuiltArtifacts> executeWithDeviceApiVersionAndReturnOutputModels(
+            GradleTestProject project, int deviceApiVersion, String... tasks) {
+        return project.executeAndReturnOutputModels(
+                (BaseGradleExecutor<?> bge) -> {
+                    bge.with(IntegerOption.IDE_TARGET_DEVICE_API, deviceApiVersion);
+                    return Unit.INSTANCE;
+                },
+                tasks);
+    }
+
+    private static Apk getApkforVariant(
+            Map<String, BuiltArtifacts> outputModels, String variantName) throws IOException {
+        String apkFileName =
+                Iterables.getOnlyElement(outputModels.get(variantName).getElements())
+                        .getOutputFile();
+        return new Apk(new File(apkFileName));
     }
 }

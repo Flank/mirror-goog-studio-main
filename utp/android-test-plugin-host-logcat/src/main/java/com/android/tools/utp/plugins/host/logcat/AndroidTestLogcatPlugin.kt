@@ -29,17 +29,24 @@ import com.google.testing.platform.runtime.android.controller.ext.deviceShell
 import java.io.BufferedWriter
 import java.io.File
 import java.util.Collections
+import java.util.logging.Logger
 
 /**
  * This plugin updates [TestSuiteResult] proto with logcat artifacts
  */
-class AndroidTestLogcatPlugin : HostPlugin {
+class AndroidTestLogcatPlugin(
+    private val logger: Logger = getLogger()) : HostPlugin {
+
+    // Empty companion object is needed to call getLogger() method
+    // from the constructor's default parameter. If you remove it,
+    // the Kotlin compiler fails with an error.
+    companion object {}
+
     private lateinit var outputDir: String
     private lateinit var tempLogcatFile: File
     private lateinit var tempLogcatWriter: BufferedWriter
     private lateinit var logcatCommandHandle: CommandHandle
 
-    private val logger = getLogger()
     private var logcatFilePaths: MutableList<String> = Collections.synchronizedList(mutableListOf())
     private var logcatOptions: List<String> = mutableListOf()
 
@@ -154,8 +161,10 @@ class AndroidTestLogcatPlugin : HostPlugin {
     /** Stop logcat stream. */
     private fun stopLogcat() {
         try {
-            logcatCommandHandle.stop()
-            logcatCommandHandle.waitFor() // Wait for the command to exit gracefully.
+            if (this::logcatCommandHandle.isInitialized) {
+                logcatCommandHandle.stop()
+                logcatCommandHandle.waitFor() // Wait for the command to exit gracefully.
+            }
         } catch (t: Throwable) {
             logger.warning("Stopping logcat failed with the following error: $t")
         } finally {

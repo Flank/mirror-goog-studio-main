@@ -20,6 +20,7 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KOTLIN_MODULE
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.currentPlatform
@@ -352,7 +353,7 @@ internal class CompiledSourceFile(
 
         val binaryFiles = findFiles(classesDir) { _: File, name: String ->
             name.endsWith(DOT_CLASS) ||
-                target.endsWith(DOT_KT) && name.endsWith(".kotlin_module")
+                target.endsWith(DOT_KT) && name.endsWith(DOT_KOTLIN_MODULE)
         }
             .sortedBy { it.path.replace(File.separatorChar, '/') }
             .map { Pair(it, it.readBytes()) }
@@ -489,7 +490,7 @@ internal class CompiledSourceFile(
                     if (end != -1) {
                         val name = encodedFile.substring(0, end)
                         if (!paths.add(name)) {
-                            if (name.endsWith(".kotlin_module")) {
+                            if (name.endsWith(DOT_KOTLIN_MODULE)) {
                                 // Ok redundancy
                                 continue
                             }

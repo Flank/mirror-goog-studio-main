@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.xml.AndroidManifest;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,6 +39,8 @@ public class ManifestInfo {
 
     private int versionCode;
 
+    private boolean debuggable;
+
     private ManifestInfo() {
         activities = new ArrayList<>();
         services = new ArrayList<>();
@@ -47,6 +48,7 @@ public class ManifestInfo {
         instrumentationTargetPackages = new ArrayList<>();
         split = null;
         versionCode = 0;
+        debuggable = false;
     }
 
     @NonNull
@@ -76,6 +78,10 @@ public class ManifestInfo {
 
     public int getVersionCode() {
         return versionCode;
+    }
+
+    public boolean getDebuggable() {
+        return debuggable;
     }
 
     private void parseNode(@NonNull XmlNode node) {
@@ -109,6 +115,10 @@ public class ManifestInfo {
     }
 
     private void parseApplication(@NonNull XmlNode node) {
+        debuggable =
+                Boolean.parseBoolean(
+                        node.attributes()
+                                .getOrDefault(AndroidManifest.ATTRIBUTE_DEBUGGABLE, "false"));
         for (XmlNode child : node.children()) {
             if (AndroidManifest.NODE_ACTIVITY.equals(child.name()) ||
                 AndroidManifest.NODE_ACTIVITY_ALIAS.equals(child.name())) {

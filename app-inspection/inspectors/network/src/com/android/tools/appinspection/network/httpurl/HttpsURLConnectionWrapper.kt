@@ -32,7 +32,7 @@ import javax.net.ssl.SSLSocketFactory
  */
 class HttpsURLConnectionWrapper(
     private val wrappedHttps: HttpsURLConnection,
-    callstack: Array<StackTraceElement>,
+    callstack: String,
     trackerFactory: HttpTrackerFactory
 ) : HttpsURLConnection(wrappedHttps.url) {
 

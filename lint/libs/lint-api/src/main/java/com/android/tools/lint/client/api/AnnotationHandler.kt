@@ -148,7 +148,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
         } else if (call is UVariable) {
             val variable = call
-            val variablePsi = call.psi
+            val variablePsi = call.sourcePsi
             // TODO: What about fields?
             call.getContainingUMethod()?.accept(object : AbstractUastVisitor() {
                 override fun visitSimpleNameReferenceExpression(
@@ -199,21 +199,23 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (node.isAssignment()) {
             // We're only processing fields, not local variables, since those are
             // already visited
-            val resolved = node.leftOperand.tryResolve() as? PsiField ?: return
-            val evaluator = context.evaluator
-            val annotations = filterRelevantAnnotations(
-                evaluator,
-                evaluator.getAllAnnotations(resolved, true)
-            )
-            checkAnnotations(
-                context = context,
-                argument = node.rightOperand,
-                type = AnnotationUsageType.ASSIGNMENT_RHS,
-                method = null,
-                annotations = annotations,
-                annotated = resolved,
-                referenced = resolved
-            )
+            val resolved = node.leftOperand.tryResolve() as? PsiField
+            if (resolved != null) {
+                val evaluator = context.evaluator
+                val annotations = filterRelevantAnnotations(
+                    evaluator,
+                    evaluator.getAllAnnotations(resolved, true)
+                )
+                checkAnnotations(
+                    context = context,
+                    argument = node.rightOperand,
+                    type = AnnotationUsageType.ASSIGNMENT_RHS,
+                    method = null,
+                    annotations = annotations,
+                    annotated = resolved,
+                    referenced = resolved
+                )
+            }
         }
 
         // Overloaded operators
@@ -454,6 +456,66 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     }
                 })
             }
+
+            //noinspection ExternalAnnotations
+            val localAnnotations = method.uAnnotations
+            // Were any of the annotations on this method inherited? (methodAnnotations include
+            // annotations from super implementations)
+            if (localAnnotations.size < methodAnnotations.size) {
+                val inheritedAnnotations = filterRelevantAnnotations(
+                    evaluator,
+                    evaluator.getAllAnnotations(method as UAnnotated, inHierarchy = true)
+                ).filter { annotation ->
+                    localAnnotations.none { it == annotation || it.sourcePsi === annotation.sourcePsi }
+                }
+                if (inheritedAnnotations.isNotEmpty()) {
+                    // Check return values
+                    checkAnnotations(
+                        context = context,
+                        argument = method,
+                        type = AnnotationUsageType.METHOD_OVERRIDE,
+                        method = method,
+                        referenced = method,
+                        annotations = inheritedAnnotations,
+                        allMethodAnnotations = inheritedAnnotations,
+                        annotated = method
+                    )
+                }
+            }
+        }
+
+        val superMethod = evaluator.getSuperMethod(method) ?: return
+
+        // Look for annotations on the class as well: these trickle
+        // down to all the methods in the class
+        val containingClass: PsiClass? = superMethod.containingClass
+        val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(containingClass, evaluator, method)
+
+        if (classAnnotations.isNotEmpty()) {
+            checkAnnotations(
+                context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null,
+                method, classAnnotations, emptyList(), classAnnotations, pkgAnnotations, containingClass
+            )
+        }
+
+        var outer = containingClass?.containingClass
+        while (outer != null) {
+            val allOuterAnnotations = evaluator.getAllAnnotations(outer, inHierarchy = true)
+            val outerAnnotations = filterRelevantAnnotations(evaluator, allOuterAnnotations, method)
+            if (outerAnnotations.isNotEmpty()) {
+                checkAnnotations(
+                    context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null,
+                    method, outerAnnotations, emptyList(), outerAnnotations, pkgAnnotations, outer
+                )
+            }
+            outer = outer.containingClass
+        }
+
+        if (pkgAnnotations.isNotEmpty()) {
+            checkAnnotations(
+                context, method, AnnotationUsageType.METHOD_OVERRIDE_OUTER, null, method, pkgAnnotations,
+                emptyList(), classAnnotations, pkgAnnotations, null
+            )
         }
     }
 
@@ -859,40 +921,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (method != null) {
             val mapping: Map<UExpression, PsiModifierListOwner> = when (call) {
                 is UCallExpression -> evaluator.computeArgumentMapping(call, method)
-                is UBinaryExpression -> {
-                    val operator = call.operator
-                    // See https://kotlinlang.org/docs/operator-overloading.html#binary-operations
-                    // All the operators are "a.something(b)" except for the containment operators
-                    // which are "b.contains(a)"
-                    val text = operator.text
-                    val operand =
-                        if (evaluator.isInfix(method) || text == "in" || text == "!in") {
-                            call.leftOperand
-                        } else {
-                            call.rightOperand
-                        }
-                    mapOf(operand to method.parameterList.parameters[0])
-                }
                 is UUnaryExpression -> return
-                is UArrayAccessExpression -> {
-                    val indices = call.indices
-                    val parent = call.uastParent as? UBinaryExpression
-                    val isSetter = parent != null && parent.isAssignment()
-                    val parameters = method.parameterList.parameters
-                    if (indices.size > parameters.size) {
-                        // Should not happen but technically possible since we're doing
-                        // our own method resolve for UArrayAccessExpression until UAST supports it
-                        // and we could have pointed to the wrong method
-                        return
-                    }
-                    val indexMap = indices.mapIndexed { index, argument -> Pair(argument, parameters[index]) }
-                    if (isSetter) {
-                        val operand = parent!!.rightOperand
-                        (indexMap + (operand to parameters[indices.size])).toMap()
-                    } else {
-                        indexMap.toMap()
-                    }
-                }
                 else -> {
                     error("Unexpected call type $call")
                 }

@@ -105,6 +105,7 @@ class AndroidTestCoveragePluginTest {
     }
 
     private fun runAndroidTestCoveragePlugin(
+        emptyTestResults: Boolean = false,
         configFunc: AndroidTestCoverageConfig.Builder.() -> Unit) {
         val config = AndroidTestCoverageConfig.newBuilder().apply {
             configFunc(this)
@@ -113,7 +114,11 @@ class AndroidTestCoveragePluginTest {
             beforeAll(mockDeviceController)
             beforeEach(null, mockDeviceController)
             afterEach(TestResult.getDefaultInstance(), mockDeviceController)
-            afterAll(TestSuiteResult.getDefaultInstance(), mockDeviceController)
+            afterAll(TestSuiteResult.newBuilder().apply {
+                if (!emptyTestResults) {
+                    addTestResultBuilder()
+                }
+            }.build(), mockDeviceController)
         }
     }
 
@@ -383,6 +388,27 @@ class AndroidTestCoveragePluginTest {
         }
 
         verify(mockLogger).warning(contains("TestStorageService is not installed"))
+        verifyNoMoreInteractions(mockLogger)
+    }
+
+    @Test
+    fun noWarningsWhenTestResultsAreEmpty() {
+        val coverageFile = "/data/data/${TESTED_APP}/coverage.ec"
+        val outputDir = "coverageOutputDir/deviceName/"
+
+        runAndroidTestCoveragePlugin(emptyTestResults = true) {
+            runAsPackageName = TESTED_APP
+            singleCoverageFile = coverageFile
+            outputDirectoryOnHost = outputDir
+        }
+
+        inOrder(mockDeviceController).apply {
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "run-as", TESTED_APP, "rm -f \"${coverageFile}\""))
+            verifyNoMoreInteractions()
+        }
+
         verifyNoMoreInteractions(mockLogger)
     }
 }

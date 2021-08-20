@@ -9,9 +9,6 @@
       - unitTestSourceProvider:
          - renderscriptDirectories:
             * {PROJECT}/src/test/rs{!}{REMOVED}
-      - testFixturesSourceProvider:
-         - renderscriptDirectories:
-            * {PROJECT}/src/testFixtures/rs{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
@@ -24,9 +21,6 @@
          - unitTestSourceProvider:
             - renderscriptDirectories:
                * {PROJECT}/src/testDebug/rs{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesDebug/rs{!}{REMOVED}
       < debug
       > release:
          - sourceProvider:
@@ -38,9 +32,6 @@
          - unitTestSourceProvider:
             - renderscriptDirectories:
                * {PROJECT}/src/testRelease/rs{!}{REMOVED}
-         - testFixturesSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesRelease/rs{!}{REMOVED}
       < release
    < buildTypes
    > variants:

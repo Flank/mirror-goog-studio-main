@@ -22,6 +22,7 @@ import com.android.apksig.ApkVerifier
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
@@ -467,7 +468,8 @@ class DynamicAppTest {
             .with(StringOption.IDE_BUILD_TARGET_ABI, SdkConstants.ABI_ARMEABI_V7A)
             .run("assembleDebug")
 
-        val baseApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+        val baseApk = project.getSubproject(":app")
+                .getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates)
         assertThat(baseApk.file).exists()
         ApkSubject.assertThat(baseApk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so"
@@ -476,7 +478,8 @@ class DynamicAppTest {
             "/lib/${SdkConstants.ABI_INTEL_ATOM64}/libbase.so"
         )
 
-        val feature1Apk = project.getSubproject(":feature1").getApk(GradleTestProject.ApkType.DEBUG)
+        val feature1Apk = project.getSubproject(":feature1")
+                .getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates)
         assertThat(feature1Apk.file).exists()
         ApkSubject.assertThat(feature1Apk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"

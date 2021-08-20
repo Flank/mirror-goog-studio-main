@@ -25,8 +25,6 @@ interface AndroidResources {
      *
      * See `aapt --help`
      */
-    @get:Incubating
-    @set:Incubating
     var ignoreAssetsPattern: String?
 
     /**
@@ -36,7 +34,6 @@ interface AndroidResources {
      *
      * Equivalent of the -0 flag. See `aapt --help`
      */
-    @get:Incubating
     val noCompress: MutableCollection<String>
 
     /**
@@ -60,8 +57,6 @@ interface AndroidResources {
      *
      * See `aapt --help`
      */
-    @get:Incubating
-    @set:Incubating
     var failOnMissingConfigEntry: Boolean
 
     /** List of additional parameters to pass to `aapt`. */

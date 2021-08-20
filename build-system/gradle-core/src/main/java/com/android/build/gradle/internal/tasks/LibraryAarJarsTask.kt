@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
@@ -123,7 +121,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             mainScopeClassFiles.files,
             mainScopeResourceFiles.files,
             mainClassLocation.asFile.get(),
-            Predicate { archivePath: String -> excludePatterns.any {
+            { archivePath: String -> excludePatterns.any {
                 it.matcher(archivePath).matches() }.not() },
             if (typedefRecipe.isPresent) {
                 TypedefRemover()
@@ -343,17 +341,18 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
+                    @Suppress("DEPRECATION") // Legacy support (b/195153220)
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
                             { contentTypes, scopes ->
-                                contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
-                                        && scopes.contains(Scope.PROJECT)
+                                contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                                        && scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                             },
                             { contentTypes, scopes ->
-                                (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
+                                (contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
                                         && !contentTypes.contains(
-                                    QualifiedContent.DefaultContentType.RESOURCES))
-                                        && scopes.contains(Scope.PROJECT)
+                                    com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
+                                        && scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                             })
                 }
             )
@@ -364,23 +363,25 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
+                    @Suppress("DEPRECATION") // Legacy support (b/195153220)
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->
-                            contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)
-                                    && scopes.contains(Scope.PROJECT)
+                            contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                                    && scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                         }
                 }
             )
             task.mainScopeResourceFiles.disallowChanges()
 
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             task.localScopeInputFiles.from(
                 creationConfig.transformManager
                     .getPipelineOutputAsFileCollection { contentTypes, scopes ->
-                        (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
-                                || contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))
+                        (contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                                || contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
                                 && scopes.intersect(
                             TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS).isNotEmpty()
-                                && !scopes.contains(Scope.PROJECT)
+                                && !scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                     }
             )
             task.localScopeInputFiles.disallowChanges()

@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.coverage
 
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -79,10 +78,11 @@ abstract class JacocoPropertiesTask : NonIncrementalTask() {
             if (creationConfig.variantScope.needsJavaResStreams) {
                 val taskOutput =
                     creationConfig.artifacts.get(InternalArtifactType.JACOCO_CONFIG_RESOURCES_JAR)
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
                 creationConfig.transformManager.addStream(
                     OriginalStream.builder("jacoco-properties-file")
-                        .addContentType(QualifiedContent.DefaultContentType.RESOURCES)
-                        .addScope(QualifiedContent.Scope.PROJECT)
+                        .addContentType(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                         .setFileCollection(creationConfig.services.fileCollection(taskOutput))
                         .build()
                 )

@@ -48,6 +48,9 @@ message Event {
 
 message BackgroundTaskEvent {
     int64 task_id = 1;
+    // Only applies to WakeLockAcquired, WakeLockReleased, JobScheduled, JobFinished,
+    // AlarmScheduled, AlarmCancelled events.
+    string stacktrace = 2;
     oneof metadata {
         // A wake lock was acquired, forcing the device to stay awake.
         WakeLockAcquired wake_lock_acquired = 101;

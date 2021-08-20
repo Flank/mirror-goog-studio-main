@@ -49,6 +49,10 @@ public class ActivityThread {
         return sActivityThread;
     }
 
+    public static String currentPackageName() {
+        return "currentPackageName";
+    }
+
     public ApplicationThread getApplicationThread() {
         return new ApplicationThread();
     }

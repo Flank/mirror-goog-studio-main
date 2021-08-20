@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_CLASSES_JAR
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
@@ -31,7 +30,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirF
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_SINGLE_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -40,10 +38,8 @@ import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -51,7 +47,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -160,10 +155,11 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
         init {
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             inputs =
                 creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
-                    types.contains(QualifiedContent.DefaultContentType.CLASSES)
-                            && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
+                    types.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                            && scopes.size == 1 && scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                 }
         }
 
@@ -217,10 +213,11 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
             ) { "Library classes bundling is supported only for api and runtime." }
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
+            @Suppress("DEPRECATION") // Legacy support (b/195153220)
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
                 creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
-                    types.contains(QualifiedContent.DefaultContentType.CLASSES)
-                            && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
+                    types.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                            && scopes.size == 1 && scopes.contains(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                 }
             } else {
                 creationConfig.artifacts.getAllClasses()

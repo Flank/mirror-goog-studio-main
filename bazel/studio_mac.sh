@@ -14,8 +14,6 @@ fi
 declare -a conditional_flags
 if [[ $IS_POST_SUBMIT ]]; then
   conditional_flags+=(--nocache_test_results)
-  # Let CI builds populate the remote cache for mac builds.
-  conditional_flags+=(--remote_upload_local_results=true)
 fi
 
 readonly script_dir="$(dirname "$0")"

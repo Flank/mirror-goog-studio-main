@@ -396,6 +396,8 @@ public final class SdkConstants {
     public static final String FD_TEST = "androidTest";
     /** Default unit test source set folder name, i.e. "test" */
     public static final String FD_UNIT_TEST = "test";
+    /** Default test fixtures source set folder name, i.e. "testFixtures" */
+    public static final String FD_TEST_FIXTURES = "testFixtures";
     /** Default java code folder name, i.e. "java" */
     public static final String FD_JAVA = "java";
     /** Default native code folder name, i.e. "jni" */
@@ -2165,6 +2167,7 @@ public final class SdkConstants {
     public static final String DOT_KTS = ".kts";
     public static final String DOT_CLASS = ".class";
     public static final String DOT_JAR = ".jar";
+    public static final String DOT_KOTLIN_MODULE = ".kotlin_module";
     public static final String DOT_SRCJAR = ".srcjar";
     public static final String DOT_GRADLE = ".gradle";
     public static final String DOT_PROPERTIES = ".properties";
@@ -2819,7 +2822,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.2-rc-1";
+    public static final String GRADLE_LATEST_VERSION = "7.2-rc-3";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

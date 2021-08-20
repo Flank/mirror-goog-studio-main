@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
@@ -74,7 +75,7 @@ android {
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run(":app:assembleDebug")
         assertThat(project.getSubproject(":app")
-                .getApk(GradleTestProject.ApkType.DEBUG))
+                .getApk(GradleTestProject.ApkType.DEBUG, ApkLocation.Intermediates))
                 .containsFile("lib/x86/libhello-jni.so")
     }
 

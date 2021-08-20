@@ -26,6 +26,7 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPER;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.Lint.isKotlin;
 import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 
 import com.android.annotations.NonNull;
@@ -37,7 +38,6 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
@@ -225,22 +225,43 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                                 || typeName.equals(TYPE_LONG_WRAPPER)
                                 || typeName.equals(TYPE_DOUBLE_WRAPPER)
                                 || typeName.equals(TYPE_BYTE_WRAPPER))
-                        // && node.astTypeReference().astParts().size() == 1
                         && node.getValueArgumentCount() == 1) {
-                    String argument = node.getValueArguments().get(0).asSourceString();
+                    UExpression firstArg = node.getValueArguments().get(0);
+                    PsiElement sourcePsi = firstArg.getSourcePsi();
+                    String argument =
+                            sourcePsi != null ? sourcePsi.getText() : firstArg.asSourceString();
 
                     String replacedType = typeName.substring(typeName.lastIndexOf('.') + 1);
-                    LintFix fix = null;
-                    if (!Lint.isKotlin(node.getSourcePsi())) {
-                        fix =
-                                LintFix.create()
-                                        .name("Replace with valueOf()", true)
-                                        .replace()
-                                        .pattern("(new.+)\\(")
-                                        .with(replacedType + ".valueOf")
-                                        .autoFix()
-                                        .build();
+                    LintFix.ReplaceStringBuilder fixBuilder =
+                            LintFix.create()
+                                    .name("Replace with valueOf()", true)
+                                    .replace()
+                                    .with(replacedType + ".valueOf")
+                                    .autoFix();
+
+                    LintFix fix;
+                    if (!isKotlin(node.getSourcePsi())) {
+                        fix = fixBuilder.pattern("(new.+)\\(").build();
+                    } else if (typeName.equals(TYPE_INTEGER_WRAPPER)
+                            || typeName.equals(TYPE_CHARACTER_WRAPPER)) {
+                        fix = fixBuilder.pattern("(.*)\\(").build();
+                    } else {
+                        fix = null;
                     }
+
+                    PsiMethod resolved = node.resolve();
+                    if (resolved != null) {
+                        PsiClass containingClass = resolved.getContainingClass();
+                        if (containingClass != null) {
+                            String qualifiedName = containingClass.getQualifiedName();
+                            if (qualifiedName != null && !qualifiedName.startsWith("java.lang.")) {
+                                // Some other integer constructor call -- most likely an inline
+                                // class.
+                                return;
+                            }
+                        }
+                    }
+
                     mContext.report(
                             USE_VALUE_OF,
                             node,
@@ -501,6 +522,9 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
     }
 
     private static String getUseValueOfErrorMessage(String typeName, String argument) {
+        if (argument.indexOf('\n') != -1) {
+            argument = "...";
+        }
         return String.format(
                 "Use `%1$s.valueOf(%2$s)` instead",
                 typeName.substring(typeName.lastIndexOf('.') + 1), argument);

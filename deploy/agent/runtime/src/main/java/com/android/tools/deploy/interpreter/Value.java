@@ -83,8 +83,8 @@ public abstract class Value implements org.jetbrains.org.objectweb.asm.tree.anal
         return ((AbstractValue) this).value;
     }
 
-    public static Value NOT_A_VALUE =
-            new Value(Type.getObjectType("<invalid>"), false) {
+    public static AbstractValue<Object> NOT_A_VALUE =
+            new AbstractValue<Object>(null, Type.getObjectType("<invalid>"), false) {
                 @Override
                 public String toString() {
                     return "NOT_A_VALUE";
@@ -96,8 +96,8 @@ public abstract class Value implements org.jetbrains.org.objectweb.asm.tree.anal
                 }
             };
 
-    public static Value VOID_VALUE =
-            new Value(Type.VOID_TYPE, false) {
+    public static AbstractValue<Object> VOID_VALUE =
+            new AbstractValue(null, Type.VOID_TYPE, false) {
                 @Override
                 public String toString() {
                     return "VOID_VALUE";

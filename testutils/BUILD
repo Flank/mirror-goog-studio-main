@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "maven_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
@@ -47,7 +48,7 @@ iml_module(
 )
 
 maven_library(
-    name = "tools.testutils_bzl",
+    name = "tools.testutils",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
@@ -57,14 +58,13 @@ maven_library(
         # For TestUtils.getKotlinVersionForTests.
         "//tools/buildSrc/base:dependencies.properties",
     ],
-    legacy_name = "tools.testutils",
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations:annotations_bzl",
-        "//tools/base/common:common_bzl",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",

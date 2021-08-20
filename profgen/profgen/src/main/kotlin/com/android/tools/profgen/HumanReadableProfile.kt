@@ -150,8 +150,12 @@ internal sealed class Part {
         override fun toString(): String = parsed
     }
     object WildChar : Pattern("[\\w<>\\[\\]]", "?")
-    object WildPart : Pattern("(\\-(?!\\>)|[\\w\\$<>\\[\\]])*", "*")
-    object WildParts : Pattern("(\\-(?!\\>)|[\\w\\$<>/;\\[\\]])*", "**")
+    // Note that this regex will match `->` even though the HRP syntax will prevent wild parts from
+    // matching with the method separator. This is okay because we only ever build regular
+    // expressions to match the method name, parameters, and class name separately, so the parser
+    // itself will guarantee that only a single `->` token per line is actually allowed.
+    object WildPart : Pattern("[-\\w\\$<>\\[\\]]*", "*")
+    object WildParts : Pattern("[-\\w\\$<>/;\\[\\]]*", "**")
 }
 
 internal class Flags(var flags: Int = 0)

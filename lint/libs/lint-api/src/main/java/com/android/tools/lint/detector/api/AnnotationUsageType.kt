@@ -64,6 +64,15 @@ enum class AnnotationUsageType {
     /** A return from a method that was annotated. */
     METHOD_RETURN,
 
+    /** A method which overrides an annotated method */
+    METHOD_OVERRIDE,
+
+    /**
+     * A method which overrides an annotated method where the
+     * surrounding class, outer class or package was annotated
+     */
+    METHOD_OVERRIDE_OUTER,
+
     /** A variable whose declaration was annotated. */
     VARIABLE_REFERENCE,
 

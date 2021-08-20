@@ -70,6 +70,7 @@ import org.jetbrains.uast.UastContext
 import org.jetbrains.uast.UastLanguagePlugin
 import org.jetbrains.uast.evaluation.UEvaluatorExtension
 import org.jetbrains.uast.java.JavaUastLanguagePlugin
+import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.evaluation.KotlinEvaluatorExtension
@@ -351,6 +352,10 @@ private fun configureProjectEnvironment(
     AnalysisHandlerExtension.registerExtension(project, UastAnalysisHandlerExtension())
     project.registerService(
         KotlinUastResolveProviderService::class.java,
+        CliKotlinUastResolveProviderService::class.java
+    )
+    project.registerService(
+        BaseKotlinUastResolveProviderService::class.java,
         CliKotlinUastResolveProviderService::class.java
     )
 

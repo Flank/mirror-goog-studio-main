@@ -155,6 +155,7 @@ class ImportAliasTestMode : SourceTransformationTestMode(
     }
 
     override fun messagesMatch(original: String, modified: String): Boolean {
+        if (original == modified) return true
         val index = modified.indexOf("IMPORT_ALIAS_")
         if (index == -1) {
             return false

@@ -108,7 +108,10 @@ class DesugarFileDependencyTest(var tool: Tool) {
         executor()
             .with(IntegerOption.IDE_TARGET_DEVICE_API, 24)
             .run("assembleDebug")
-        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+        project.getApk(
+            GradleTestProject.ApkType.DEBUG,
+            GradleTestProject.ApkLocation.Intermediates
+        ).use { apk ->
             assertThat(apk)
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
                 .that()

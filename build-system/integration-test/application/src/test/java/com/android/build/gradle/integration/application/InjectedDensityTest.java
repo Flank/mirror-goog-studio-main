@@ -91,7 +91,10 @@ public class InjectedDensityTest {
         project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_DENSITY, "xxhdpi")
                 .run("assembleDebug");
-        Apk debug = project.getApk(GradleTestProject.ApkType.DEBUG);
+        Apk debug =
+                project.getApk(
+                        GradleTestProject.ApkType.DEBUG,
+                        GradleTestProject.ApkLocation.Intermediates);
         assertThat(debug)
                 .doesNotContainResource("drawable-xxxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");
         assertThat(debug).containsResource("drawable-xxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png");

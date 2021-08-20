@@ -21,7 +21,7 @@ import com.android.zipflinger.Source;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipRepo;
 import com.android.zipflinger.ZipSource;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.ByteStreams;
 import java.io.File;
@@ -117,7 +117,7 @@ public class ZipMerger {
         Path outFile = Paths.get(out);
         Files.deleteIfExists(outFile);
 
-        ListMultimap<String, Entry> entries = ArrayListMultimap.create();
+        ListMultimap<String, Entry> entries = LinkedListMultimap.create();
         for (ZipFile add : files) {
             try (ZipRepo zip = new ZipRepo(add.file)) {
                 for (String s : zip.getEntries().keySet()) {
@@ -128,7 +128,7 @@ public class ZipMerger {
         }
 
         // Merge
-        ListMultimap<ZipFile, String> merged = ArrayListMultimap.create();
+        ListMultimap<ZipFile, String> merged = LinkedListMultimap.create();
         for (Map.Entry<String, Collection<Entry>> e : entries.asMap().entrySet()) {
             String newName = e.getKey();
             Collection<Entry> zips = e.getValue();
@@ -163,6 +163,10 @@ public class ZipMerger {
                 createZip(mergedZip, tmp, newName, compressionLevel);
                 merged.put(new ZipFile("", mergedZip, false), newName);
                 mergedZip.toFile().deleteOnExit();
+            } else if (newName.endsWith("/")) {
+                // Directory entries should not have content, just pick the first.
+                Entry chosen = zips.iterator().next();
+                merged.put(chosen.zip, chosen.entry);
             } else {
                 // Merging files - Pick the one override, or fail.
                 Entry chosen = null;

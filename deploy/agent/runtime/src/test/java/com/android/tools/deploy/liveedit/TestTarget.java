@@ -194,4 +194,11 @@ class TestTarget {
     public int callParentStaticPlusFive() {
         return Child.parentStaticPlusFive();
     }
+
+    public void functionReturningVoid() {
+        String x = "Hello";
+        String y = " World";
+        String helloWorld = x + y;
+        return;
+    }
 }

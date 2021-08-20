@@ -1,11 +1,8 @@
 load("//tools/base/bazel:proto.bzl", "maven_proto_library")
-load("//tools/base/bazel:maven.bzl", "import_maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
-import_maven_library("android-test-plugin-host-additional-test-output-proto", "android-test-plugin-host-additional-test-output-proto_bzl")
-
 maven_proto_library(
-    name = "android-test-plugin-host-additional-test-output-proto_bzl",
+    name = "android-test-plugin-host-additional-test-output-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-additional-test-output-proto:" + BASE_VERSION,
     protoc_grpc_version = "1.21.1",

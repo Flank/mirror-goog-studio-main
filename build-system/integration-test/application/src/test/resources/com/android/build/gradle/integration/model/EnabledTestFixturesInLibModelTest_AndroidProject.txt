@@ -1,5 +1,85 @@
 > AndroidProject:
    - testFixturesNamespace = "pkg.name.testFixtures"
+   > defaultConfig:
+      > testFixturesSourceProvider{ADDED}:
+         - name                = "testFixtures"
+         - manifestFile        = {PROJECT}/src/testFixtures/AndroidManifest.xml{!}
+         - javaDirectories:
+            * {PROJECT}/src/testFixtures/java{!}
+         - kotlinDirectories:
+            * {PROJECT}/src/testFixtures/java{!}
+            * {PROJECT}/src/testFixtures/kotlin{!}
+         - resourcesDirectories:
+            * {PROJECT}/src/testFixtures/resources{!}
+         - aidlDirectories:
+            * {PROJECT}/src/testFixtures/aidl{!}
+         - renderscriptDirectories:
+            * {PROJECT}/src/testFixtures/rs{!}
+         - resDirectories:
+            * {PROJECT}/src/testFixtures/res{!}
+         - assetsDirectories:
+            * {PROJECT}/src/testFixtures/assets{!}
+         - jniLibsDirectories:
+            * {PROJECT}/src/testFixtures/jniLibs{!}
+         - shadersDirectories:
+            * {PROJECT}/src/testFixtures/shaders{!}
+         - mlModelsDirectories = (null)
+      < testFixturesSourceProvider{ADDED}
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         > testFixturesSourceProvider{ADDED}:
+            - name                = "testFixturesDebug"
+            - manifestFile        = {PROJECT}/src/testFixturesDebug/AndroidManifest.xml{!}
+            - javaDirectories:
+               * {PROJECT}/src/testFixturesDebug/java{!}
+            - kotlinDirectories:
+               * {PROJECT}/src/testFixturesDebug/java{!}
+               * {PROJECT}/src/testFixturesDebug/kotlin{!}
+            - resourcesDirectories:
+               * {PROJECT}/src/testFixturesDebug/resources{!}
+            - aidlDirectories:
+               * {PROJECT}/src/testFixturesDebug/aidl{!}
+            - renderscriptDirectories:
+               * {PROJECT}/src/testFixturesDebug/rs{!}
+            - resDirectories:
+               * {PROJECT}/src/testFixturesDebug/res{!}
+            - assetsDirectories:
+               * {PROJECT}/src/testFixturesDebug/assets{!}
+            - jniLibsDirectories:
+               * {PROJECT}/src/testFixturesDebug/jniLibs{!}
+            - shadersDirectories:
+               * {PROJECT}/src/testFixturesDebug/shaders{!}
+            - mlModelsDirectories = (null)
+         < testFixturesSourceProvider{ADDED}
+      < debug
+      > release:
+         > testFixturesSourceProvider{ADDED}:
+            - name                = "testFixturesRelease"
+            - manifestFile        = {PROJECT}/src/testFixturesRelease/AndroidManifest.xml{!}
+            - javaDirectories:
+               * {PROJECT}/src/testFixturesRelease/java{!}
+            - kotlinDirectories:
+               * {PROJECT}/src/testFixturesRelease/java{!}
+               * {PROJECT}/src/testFixturesRelease/kotlin{!}
+            - resourcesDirectories:
+               * {PROJECT}/src/testFixturesRelease/resources{!}
+            - aidlDirectories:
+               * {PROJECT}/src/testFixturesRelease/aidl{!}
+            - renderscriptDirectories:
+               * {PROJECT}/src/testFixturesRelease/rs{!}
+            - resDirectories:
+               * {PROJECT}/src/testFixturesRelease/res{!}
+            - assetsDirectories:
+               * {PROJECT}/src/testFixturesRelease/assets{!}
+            - jniLibsDirectories:
+               * {PROJECT}/src/testFixturesRelease/jniLibs{!}
+            - shadersDirectories:
+               * {PROJECT}/src/testFixturesRelease/shaders{!}
+            - mlModelsDirectories = (null)
+         < testFixturesSourceProvider{ADDED}
+      < release
+   < buildTypes
    > variants:
       > debug:
          > testFixturesArtifact{ADDED}:

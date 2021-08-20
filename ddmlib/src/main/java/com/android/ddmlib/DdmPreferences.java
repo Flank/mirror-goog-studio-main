@@ -76,6 +76,13 @@ public final class DdmPreferences {
     /** Port used by JdwpProxy feature */
     private static int sJdwpProxyPort =
             getPropertyOrDefault("DDMLIB_JDWP_PROXY_PORT", 8599, Integer::parseInt);
+    /** Enable / Disable the Ddmlib Command service feature. */
+    private static boolean sDdmlibCommandServiceEnabled =
+            getPropertyOrDefault("DDMLIB_COMMAND_SERVICE_ENABLED", false, Boolean::parseBoolean);
+    /** Port used by JdwpProxy feature */
+    private static int sDdmCommandPort =
+            getPropertyOrDefault("DDMLIB_COMMAND_PORT", 8598, Integer::parseInt);
+
 
   /**
    * Returns the initial {@link Client} flag for thread updates.
@@ -214,6 +221,32 @@ public final class DdmPreferences {
 
     public static int getJdwpProxyPort() {
         return sJdwpProxyPort;
+    }
+
+    /**
+     * Set the port used by the ddmlib command service. This port is fixed so external services,
+     * can send commands to any running instances of ddmlib.
+     *
+     * @param port
+     */
+    public static void setDdmCommandPort(int port) {
+        sDdmCommandPort = port;
+    }
+
+    public static int getDdmCommandPort() {
+        return sDdmCommandPort;
+    }
+
+    /**
+     * Enable ddmlib command service allowing for external processes (eg ICEBOX) to issue commands
+     * to ddmlib.
+     */
+    public static void enableDdmlibCommandService(boolean enabled) {
+        sDdmlibCommandServiceEnabled = enabled;
+    }
+
+    public static boolean isDdmlibCommandServiceEnabled() {
+        return sDdmlibCommandServiceEnabled;
     }
 
     private static <T> T getPropertyOrDefault(String property, T def, Function<String, T> parser) {

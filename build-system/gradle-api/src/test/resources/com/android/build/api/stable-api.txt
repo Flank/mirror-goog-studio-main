@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b917a0b77ad113c614dfa94ccc27f2dd7d481d52b9757d2ba3f954c0fc212cf5
+751b4c43c62bc3930b0272ec2d435e5e131bf60aa4e6dd8eae7b9b4f3dcf8aad
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -99,7 +99,16 @@ com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
+com.android.build.api.dsl.AndroidResources.getFailOnMissingConfigEntry: boolean ()
+com.android.build.api.dsl.AndroidResources.getIgnoreAssetsPattern: java.lang.String ()
+com.android.build.api.dsl.AndroidResources.getNoCompress: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.AndroidResources.setFailOnMissingConfigEntry: void (boolean)
+com.android.build.api.dsl.AndroidResources.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AndroidSourceSet$DefaultImpls
+com.android.build.api.dsl.AnnotationProcessorOptions
+com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.dsl.ApkSigningConfig implements com.android.build.api.dsl.SigningConfig, org.gradle.api.Named
 com.android.build.api.dsl.ApkSigningConfig$DefaultImpls
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
@@ -189,6 +198,8 @@ com.android.build.api.dsl.FailureRetention$DefaultImpls
 com.android.build.api.dsl.Installation
 com.android.build.api.dsl.JacocoOptions$DefaultImpls
 com.android.build.api.dsl.JavaCompileOptions
+com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)
+com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.api.dsl.AnnotationProcessorOptions ()
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
@@ -437,6 +448,8 @@ com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.v
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.Component implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
+com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
 com.android.build.api.variant.ComponentBuilder.getEnabled: boolean ()
 com.android.build.api.variant.ComponentBuilder.setEnabled: void (boolean)

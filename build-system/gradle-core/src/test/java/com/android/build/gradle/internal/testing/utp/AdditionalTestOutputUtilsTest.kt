@@ -70,6 +70,18 @@ class AdditionalTestOutputUtilsTest {
     }
 
     @Test
+    fun findAdditionalTestOutputDirectoryOnDeviceWhenQueryReturnsNull() {
+        `when`(device.executeShellCommand(eq(QUERY), any(), anyLong(), any())).then {
+            val receiver: MultiLineReceiver = it.getArgument(1)
+            receiver.processNewLines(arrayOf(""))
+        }
+
+        val dir = findAdditionalTestOutputDirectoryOnDevice(device, testData)
+
+        assertThat(dir).isNull()
+    }
+
+    @Test
     fun findAdditionalTestOutputDirectoryOnDeviceWithApi16() {
         `when`(device.apiLevel).thenReturn(16)
 

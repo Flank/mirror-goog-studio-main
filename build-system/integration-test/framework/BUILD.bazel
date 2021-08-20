@@ -1,4 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 kotlin_library(

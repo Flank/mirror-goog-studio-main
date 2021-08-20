@@ -99,7 +99,14 @@ class R8TaskTest {
 
         project.executor().run(":assembleDebug")
         val missingRules = project.buildDir.resolve("outputs/mapping/debug/missing_rules.txt")
-        assertThat(missingRules).containsAllOf("-dontwarn test.B", "-dontwarn test.C")
+        assertThat(missingRules).contentWithUnixLineSeparatorsIsExactly(
+                """
+                    # Please add these rules to your existing keep rules in order to suppress warnings.
+                    # This is generated automatically by the Android Gradle plugin.
+                    -dontwarn test.B
+                    -dontwarn test.C
+                """.trimIndent()
+        )
 
         val result =
                 project.executor()

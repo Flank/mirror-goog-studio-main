@@ -18,7 +18,6 @@ package com.android.tools.deploy.instrument;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
-import android.util.Log;
 import com.android.tools.deploy.liveedit.MethodBodyEvaluator;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,11 +54,13 @@ public final class LiveEditStubs {
         // TODO: This is a super helpful message as it tells us rather or not
         // we actually trampoline to AndroidEval. Remove this later once when
         // we are more confident that this always WAI.
-        Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
+
+        // TODO: This occasionally crashes with class not found. Not sure why yet.
+        // Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
         return result;
     }
 
-    public static Object stubL(Object[] parameters) {
+    public static Object stubL(Class<?> clazz, Object[] parameters) {
         // First parameter is the class + method name + signature
         String methodKey = parameters[0].toString();
         int idx = methodKey.indexOf("->");
@@ -80,47 +81,47 @@ public final class LiveEditStubs {
         return evaluator.eval(thisObject, methodClass, arguments);
     }
 
-    public static byte stubB(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static byte stubB(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (byte) value : 0;
     }
 
-    public static short stubS(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static short stubS(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (short) value : 0;
     }
 
-    public static int stubI(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static int stubI(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (int) value : 0;
     }
 
-    public static long stubJ(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static long stubJ(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (long) value : 0;
     }
 
-    public static float stubF(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static float stubF(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (float) value : 0;
     }
 
-    public static double stubD(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static double stubD(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (double) value : 0;
     }
 
-    public static boolean stubZ(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static boolean stubZ(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (boolean) value : false;
     }
 
-    public static char stubC(Object[] parameters) {
-        Object value = stubL(parameters);
+    public static char stubC(Class<?> clazz, Object[] parameters) {
+        Object value = stubL(clazz, parameters);
         return value != null ? (char) value : 0;
     }
 
-    public static void stubV(Object[] parameters) {
-        stubL(parameters);
+    public static void stubV(Class<?> clazz, Object[] parameters) {
+        stubL(clazz, parameters);
     }
 }

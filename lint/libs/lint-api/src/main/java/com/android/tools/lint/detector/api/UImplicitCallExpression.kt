@@ -17,9 +17,13 @@
 package com.android.tools.lint.detector.api
 
 import com.intellij.lang.Language
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -82,6 +86,7 @@ abstract class UImplicitCallExpression(
     override fun equals(other: Any?): Boolean = expression == other
     override fun hashCode(): Int = expression.hashCode()
     override fun toString(): String = expression.toString()
+    abstract fun getArgumentMapping(): Map<UExpression, PsiParameter>
 
     override val uAnnotations: List<UAnnotation>
         @Suppress("ExternalAnnotations")
@@ -105,7 +110,16 @@ abstract class UImplicitCallExpression(
     override val typeArguments: List<PsiType> get() = emptyList()
     override val uastParent: UElement? get() = expression.uastParent
     override val valueArgumentCount: Int get() = valueArguments.size
-    override fun getArgumentForParameter(i: Int): UExpression = valueArguments[i]
+    override fun getArgumentForParameter(i: Int): UExpression {
+        val parameter = operator.parameterList.parameters[i]
+        val argumentMapping = getArgumentMapping()
+        for ((argument, p) in argumentMapping) {
+            if (parameter == p) {
+                return argument
+            }
+        }
+        return valueArguments[i]
+    }
     override fun resolve(): PsiMethod = operator
 }
 
@@ -194,16 +208,15 @@ private class UnaryExpressionAsCallExpression(
     private val unary: UUnaryExpression,
     operator: PsiMethod
 ) : UImplicitCallExpression(unary, operator) {
-    override val receiver: UExpression?
-        get() = null
+    override val receiver: UExpression
+        get() = unary.operand
     override val receiverType: PsiType?
-        get() = receiver?.getExpressionType()
+        get() = receiver.getExpressionType()
     override val valueArguments: List<UExpression>
-        get() = listOf(unary)
-
-    override fun getArgumentForParameter(i: Int): UExpression {
-        return unary
-    }
+        get() = emptyList()
+    override val methodIdentifier: UIdentifier?
+        get() = unary.operatorIdentifier
+    override fun getArgumentMapping(): Map<UExpression, PsiParameter> = emptyMap()
 }
 
 /**
@@ -215,20 +228,54 @@ private class BinaryExpressionAsCallExpression(
     private val binary: UBinaryExpression,
     operator: PsiMethod
 ) : UImplicitCallExpression(binary, operator) {
-    override val receiver: UExpression
-        get() = binary.leftOperand // TODO: does inFix affect this
-    override val receiverType: PsiType?
-        get() = receiver.getExpressionType()
-    override val valueArguments: List<UExpression>
-        get() = listOf(binary.leftOperand, binary.rightOperand)
+    // See https://kotlinlang.org/docs/operator-overloading.html#binary-operations
+    // All the operators are "a.something(b)" except for the containment operators
+    // which are "b.contains(a)"
+    private val isReversed: Boolean = binary.operator.text.let { text -> text == "in" || text == "!in" }
 
-    override fun getArgumentForParameter(i: Int): UExpression {
-        // TODO: Infix?
-        return if (i == 0) binary.leftOperand else binary.rightOperand
-    }
+    /** Infix or extension function? */
+    private val isSingleParameter: Boolean = operator.parameterList.parameters.size == 1
+
+    override val methodIdentifier: UIdentifier?
+        get() = binary.operatorIdentifier
+    override val receiver: UExpression?
+        get() = if (isSingleParameter) if (isReversed) binary.rightOperand else binary.leftOperand else null
+    override val receiverType: PsiType?
+        get() = receiver?.getExpressionType()
+    override val valueArguments: List<UExpression>
+        get() {
+            return if (isReversed) {
+                if (isSingleParameter)
+                // extension function, second parameter is receiver
+                    listOf(binary.leftOperand)
+                else {
+                    listOf(binary.rightOperand, binary.leftOperand)
+                }
+            } else {
+                if (isSingleParameter) {
+                    // extension function, first parameter is receiver
+                    listOf(binary.rightOperand)
+                } else {
+                    listOf(binary.leftOperand, binary.rightOperand)
+                }
+            }
+        }
 
     override fun resolve(): PsiMethod {
         return operator
+    }
+
+    override fun getArgumentMapping(): Map<UExpression, PsiParameter> {
+        val method = resolve()
+        val parameters = method.parameterList.parameters
+        val arguments = this.valueArguments
+        val argumentCount = arguments.size
+        val start = when (parameters.size) {
+            argumentCount -> 0
+            argumentCount + 1 -> 1
+            else -> return emptyMap()
+        }
+        return arguments.mapIndexed { index, value -> value to parameters[index + start] }.toMap()
     }
 }
 
@@ -244,6 +291,17 @@ private class ArrayAccessAsCallExpression(
 ) : UImplicitCallExpression(accessExpression, operator) {
     override val receiver: UExpression get() = accessExpression.receiver
     override val receiverType: PsiType? get() = accessExpression.getExpressionType()
+    override val methodIdentifier: UIdentifier?
+        get() {
+            var bracket = accessExpression.indices.firstOrNull()?.sourcePsi?.prevSibling
+            while (bracket is PsiWhiteSpace || bracket is PsiComment) {
+                bracket = bracket.prevSibling
+            }
+            if (bracket is LeafPsiElement && bracket.text == "[") {
+                return UIdentifier(bracket, null)
+            }
+            return null
+        }
 
     private var _arguments: List<UExpression>? = null
     override val valueArguments: List<UExpression>
@@ -256,6 +314,27 @@ private class ArrayAccessAsCallExpression(
             _arguments = newArguments
             return newArguments
         }
+
+    override fun getArgumentMapping(): Map<UExpression, PsiParameter> {
+        val arguments = valueArguments
+        val parameters = operator.parameterList.parameters
+        if (parameters.isEmpty()) {
+            return emptyMap()
+        }
+
+        val argumentCount = arguments.size
+        val parameterCount = parameters.size
+        val start = if (parameters[0].isReceiver()) 1 else 0
+        val indices = arguments.asSequence().mapIndexed { index, value -> value to parameters[start + index] }
+        if (parameterCount - start == argumentCount) {
+            return indices.toMap()
+        }
+
+        // Should not happen but technically possible since we're doing
+        // our own method resolve for UArrayAccessExpression until UAST supports it
+        // and we could have pointed to the wrong method
+        return emptyMap()
+    }
 }
 
 /**
