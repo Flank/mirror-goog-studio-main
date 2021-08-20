@@ -28,6 +28,7 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.IssueReporter
@@ -36,6 +37,7 @@ import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import java.io.File
+import java.util.regex.Pattern
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
@@ -119,34 +121,104 @@ abstract class CommonExtensionImpl<
         action(buildFeatures)
     }
 
-    override abstract var compileSdkVersion: String?
+    protected abstract var _compileSdkVersion: String?
+
+    override var compileSdkVersion: String?
+        get() = _compileSdkVersion
+
+        set(value) {
+            // set this first to enforce lockdown with right name
+            _compileSdkVersion = value
+
+            // then set the other values
+            _compileSdk = null
+            _compileSdkPreview = null
+            _compileSdkAddon = null
+
+            if (value == null) {
+                return
+            }
+
+            val compileData = parseTargetHash(value)
+
+            if (compileData.isAddon()) {
+                _compileSdkAddon = "${compileData.vendorName}:${compileData.addonName}:${compileData.apiLevel}"
+            } else {
+                _compileSdk = compileData.apiLevel
+                _compileSdkExtension = compileData.sdkExtension
+                _compileSdkPreview = compileData.codeName
+            }
+        }
+
+    protected abstract var _compileSdk: Int?
 
     override var compileSdk: Int?
-        get() {
-            if (compileSdkVersion == null) {
-                return null
-            }
-            if (compileSdkVersion!!.startsWith("android-")) {
-                return try {
-                    Integer.valueOf(compileSdkVersion!!.substring(8))
-                } catch (e: Exception) {
-                    null
+        get() = _compileSdk
+        set(value) {
+            _compileSdk = value
+
+            _compileSdkVersion = _compileSdk?.let { api ->
+                if (_compileSdkExtension != null) {
+                    "android-$api-ext$_compileSdkExtension"
+                } else {
+                    "android-$api"
                 }
             }
-            return null
-        }
-        set(value) {
-            compileSdkVersion = if (value == null) null
-            else "android-$value"
-        }
-    override var compileSdkPreview: String?
-        get() = compileSdkVersion?.let { if(it.startsWith("android-")) it.removePrefix("android-") else null }
-        set(value) {
-            compileSdkVersion = value?.removePrefix("android-")?.let { "android-$it" }
+
+            _compileSdkPreview = null
+            _compileSdkAddon = null
         }
 
+    protected abstract var _compileSdkExtension: Int?
+
+    override var compileSdkExtension: Int?
+        get() = _compileSdkExtension
+        set(value) {
+            _compileSdkExtension = value
+
+            _compileSdkVersion = _compileSdk?.let { api ->
+                if (value != null) {
+                    "android-$api-ext$value"
+                } else {
+                    "android-$api"
+                }
+            }
+
+            _compileSdkPreview = null
+            _compileSdkAddon = null
+        }
+
+    private var _compileSdkPreview: String? = null
+
+    override var compileSdkPreview: String?
+        get() = _compileSdkPreview
+        set(value) {
+            val preview = value?.removePrefix("android-")
+            _compileSdkPreview = preview?.let {
+                if (it.matches(Regex("[A-Z]+"))) {
+                    it
+                } else {
+                    dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, RuntimeException("Invalid Preview value '$preview'."))
+                    // has to set the value to something in case of sync
+                    "INVALID"
+                }
+            }
+
+            _compileSdkVersion = "android-$preview"
+            _compileSdk = null
+            _compileSdkExtension = null
+            _compileSdkAddon = null
+        }
+
+    private var _compileSdkAddon: String? = null
+
     override fun compileSdkAddon(vendor: String, name: String, version: Int) {
-        compileSdkVersion = "$vendor:$name:$version"
+        _compileSdkAddon = "$vendor:$name:$version"
+
+        _compileSdkVersion = _compileSdkAddon
+        _compileSdk = null
+        _compileSdkExtension = null
+        _compileSdkPreview = null
     }
 
     override fun compileSdkVersion(apiLevel: Int) {

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-751b4c43c62bc3930b0272ec2d435e5e131bf60aa4e6dd8eae7b9b4f3dcf8aad
+12711976532a375a6b3c0fed36846b620ff184f01af91b078baf46f4ec49cf1f
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -159,6 +159,7 @@ com.android.build.api.dsl.CommonExtension.getAndroidResources: com.android.build
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<? extends BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
+com.android.build.api.dsl.CommonExtension.getCompileSdkExtension: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
@@ -173,6 +174,7 @@ com.android.build.api.dsl.CommonExtension.lint: void (kotlin.jvm.functions.Funct
 com.android.build.api.dsl.CommonExtension.productFlavors: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.release: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
+com.android.build.api.dsl.CommonExtension.setCompileSdkExtension: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)

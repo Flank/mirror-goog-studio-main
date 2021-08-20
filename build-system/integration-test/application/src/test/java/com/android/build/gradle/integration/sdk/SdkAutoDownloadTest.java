@@ -262,7 +262,7 @@ public class SdkAutoDownloadTest {
 
         GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Failed to find target with hash string 'MadeUp'");
+                .contains("Unsupported value: MadeUp. Format must be one of:");
     }
 
     /**
