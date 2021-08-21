@@ -744,9 +744,6 @@ def _maven_library_impl(ctx):
     if ctx.attr.library:
         repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
 
-    if ctx.file.notice:
-        repo_files.append((coordinates.repo_path + "/" + ctx.file.notice.basename, ctx.file.notice))
-
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
 
     default_files = [ctx.attr.library[DefaultInfo].files] if ctx.attr.library else []
