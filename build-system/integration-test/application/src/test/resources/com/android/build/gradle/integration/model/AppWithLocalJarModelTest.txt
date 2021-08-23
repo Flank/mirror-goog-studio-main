@@ -22,29 +22,17 @@
             - dependencies = "*visited*"
    > libraries:
       > __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
-         - type                = JAVA_LIBRARY
-         - artifact            = {PROJECT}/libs/foo.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {PROJECT}/libs/foo.jar{F}
+         - projectInfo        = (null)
          - libraryInfo:
             - group        = "__local_aars__"
             - name         = {PROJECT}/libs/foo.jar{F}
             - version      = "unspecified"
             - attributes   = []
             - capabilities = []
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}
    < libraries
 < VariantDependencies

@@ -52,8 +52,8 @@
    - testFixturesArtifact = (null)
    > libraries:
       > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":app"
@@ -66,25 +66,13 @@
             - capabilities:
                * "project:app:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
       > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":app"
@@ -96,25 +84,13 @@
             - capabilities:
                * "project:app:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
       > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":lib"
@@ -127,25 +103,13 @@
             - capabilities:
                * "project:lib-test-fixtures:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified
       > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":lib"
@@ -158,25 +122,13 @@
             - capabilities:
                * "project:lib:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified
       > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":lib"
@@ -189,25 +141,13 @@
             - capabilities:
                * "project:lib-test-fixtures:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified
       > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":lib"
@@ -220,21 +160,9 @@
             - capabilities:
                * "project:lib:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified
    < libraries
 < VariantDependencies

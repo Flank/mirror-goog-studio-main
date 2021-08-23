@@ -876,8 +876,8 @@
    - testFixturesArtifact = (null)
    > libraries:
       > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":"
@@ -890,25 +890,13 @@
             - capabilities:
                * ":basic:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified
       > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":"
@@ -920,26 +908,14 @@
             - capabilities:
                * ":basic:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified
       > android.arch.core|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|android.arch.core:common:1.1.1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "android.arch.core"
             - name    = "common"
@@ -952,25 +928,13 @@
             - capabilities:
                * "android.arch.core:common:1.1.1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < android.arch.core|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|android.arch.core:common:1.1.1
       > android.arch.core|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|android.arch.core:common:1.1.1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "android.arch.core"
             - name    = "common"
@@ -983,25 +947,13 @@
             - capabilities:
                * "android.arch.core:common:1.1.1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < android.arch.core|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|android.arch.core:common:1.1.1
       > android.arch.core|runtime|1.1.1|org.gradle.status>release|android.arch.core:runtime:1.1.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/core/runtime/1.1.1/runtime-1.1.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/android/arch/core/runtime/1.1.1/runtime-1.1.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "android.arch.core"
             - name    = "runtime"
@@ -1010,25 +962,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.core:runtime:1.1.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
+         < androidLibraryData
       < android.arch.core|runtime|1.1.1|org.gradle.status>release|android.arch.core:runtime:1.1.1
       > android.arch.lifecycle|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|android.arch.lifecycle:common:1.1.1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "common"
@@ -1041,25 +995,13 @@
             - capabilities:
                * "android.arch.lifecycle:common:1.1.1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < android.arch.lifecycle|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|android.arch.lifecycle:common:1.1.1
       > android.arch.lifecycle|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|android.arch.lifecycle:common:1.1.1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "common"
@@ -1072,25 +1014,13 @@
             - capabilities:
                * "android.arch.lifecycle:common:1.1.1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < android.arch.lifecycle|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|android.arch.lifecycle:common:1.1.1
       > android.arch.lifecycle|livedata-core|1.1.1|org.gradle.status>release|android.arch.lifecycle:livedata-core:1.1.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/livedata-core/1.1.1/livedata-core-1.1.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/android/arch/lifecycle/livedata-core/1.1.1/livedata-core-1.1.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "livedata-core"
@@ -1099,25 +1029,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:livedata-core:1.1.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/R.txt{F}
+         < androidLibraryData
       < android.arch.lifecycle|livedata-core|1.1.1|org.gradle.status>release|android.arch.lifecycle:livedata-core:1.1.1
       > android.arch.lifecycle|livedata|1.1.1|org.gradle.status>release|android.arch.lifecycle:livedata:1.1.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/livedata/1.1.1/livedata-1.1.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/android/arch/lifecycle/livedata/1.1.1/livedata-1.1.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "livedata"
@@ -1126,25 +1058,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:livedata:1.1.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/R.txt{F}
+         < androidLibraryData
       < android.arch.lifecycle|livedata|1.1.1|org.gradle.status>release|android.arch.lifecycle:livedata:1.1.1
       > android.arch.lifecycle|runtime|1.1.1|org.gradle.status>release|android.arch.lifecycle:runtime:1.1.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/runtime/1.1.1/runtime-1.1.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/android/arch/lifecycle/runtime/1.1.1/runtime-1.1.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "runtime"
@@ -1153,25 +1087,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:runtime:1.1.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
+         < androidLibraryData
       < android.arch.lifecycle|runtime|1.1.1|org.gradle.status>release|android.arch.lifecycle:runtime:1.1.1
       > android.arch.lifecycle|viewmodel|1.1.1|org.gradle.status>release|android.arch.lifecycle:viewmodel:1.1.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/android/arch/lifecycle/viewmodel/1.1.1/viewmodel-1.1.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/android/arch/lifecycle/viewmodel/1.1.1/viewmodel-1.1.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "android.arch.lifecycle"
             - name    = "viewmodel"
@@ -1180,25 +1116,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:viewmodel:1.1.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/R.txt{F}
+         < androidLibraryData
       < android.arch.lifecycle|viewmodel|1.1.1|org.gradle.status>release|android.arch.lifecycle:viewmodel:1.1.1
       > com.android.support.test|monitor|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:monitor:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "monitor"
@@ -1211,25 +1149,27 @@
             - capabilities:
                * "com.android.support.test:monitor:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|monitor|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:monitor:1.0.2
       > com.android.support.test|monitor|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:monitor:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "monitor"
@@ -1242,25 +1182,27 @@
             - capabilities:
                * "com.android.support.test:monitor:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|monitor|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:monitor:1.0.2
       > com.android.support.test|rules|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:rules:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "rules"
@@ -1273,25 +1215,27 @@
             - capabilities:
                * "com.android.support.test:rules:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|rules|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:rules:1.0.2
       > com.android.support.test|rules|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:rules:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "rules"
@@ -1304,25 +1248,27 @@
             - capabilities:
                * "com.android.support.test:rules:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|rules|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:rules:1.0.2
       > com.android.support.test|runner|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:runner:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "runner"
@@ -1335,25 +1281,27 @@
             - capabilities:
                * "com.android.support.test:runner:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|runner|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support.test:runner:1.0.2
       > com.android.support.test|runner|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:runner:1.0.2:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support.test"
             - name    = "runner"
@@ -1366,25 +1314,27 @@
             - capabilities:
                * "com.android.support.test:runner:1.0.2"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/R.txt{F}
+         < androidLibraryData
       < com.android.support.test|runner|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:runner:1.0.2
       > com.android.support|asynclayoutinflater|28.0.0|org.gradle.status>release|com.android.support:asynclayoutinflater:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/asynclayoutinflater/28.0.0/asynclayoutinflater-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/asynclayoutinflater/28.0.0/asynclayoutinflater-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "asynclayoutinflater"
@@ -1393,25 +1343,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:asynclayoutinflater:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|asynclayoutinflater|28.0.0|org.gradle.status>release|com.android.support:asynclayoutinflater:28.0.0
       > com.android.support|collections|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:collections:28.0.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "collections"
@@ -1424,25 +1376,13 @@
             - capabilities:
                * "com.android.support:collections:28.0.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.android.support|collections|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:collections:28.0.0
       > com.android.support|collections|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:collections:28.0.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "collections"
@@ -1455,25 +1395,13 @@
             - capabilities:
                * "com.android.support:collections:28.0.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.android.support|collections|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:collections:28.0.0
       > com.android.support|coordinatorlayout|28.0.0|org.gradle.status>release|com.android.support:coordinatorlayout:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/coordinatorlayout/28.0.0/coordinatorlayout-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/coordinatorlayout/28.0.0/coordinatorlayout-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "coordinatorlayout"
@@ -1482,25 +1410,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:coordinatorlayout:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/public.txt{F}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/public.txt{F}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|coordinatorlayout|28.0.0|org.gradle.status>release|com.android.support:coordinatorlayout:28.0.0
       > com.android.support|cursoradapter|28.0.0|org.gradle.status>release|com.android.support:cursoradapter:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/cursoradapter/28.0.0/cursoradapter-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/cursoradapter/28.0.0/cursoradapter-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "cursoradapter"
@@ -1509,25 +1439,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:cursoradapter:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|cursoradapter|28.0.0|org.gradle.status>release|com.android.support:cursoradapter:28.0.0
       > com.android.support|customview|28.0.0|org.gradle.status>release|com.android.support:customview:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/customview/28.0.0/customview-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/customview/28.0.0/customview-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "customview"
@@ -1536,25 +1468,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:customview:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|customview|28.0.0|org.gradle.status>release|com.android.support:customview:28.0.0
       > com.android.support|documentfile|28.0.0|org.gradle.status>release|com.android.support:documentfile:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/documentfile/28.0.0/documentfile-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/documentfile/28.0.0/documentfile-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "documentfile"
@@ -1563,25 +1497,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:documentfile:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|documentfile|28.0.0|org.gradle.status>release|com.android.support:documentfile:28.0.0
       > com.android.support|drawerlayout|28.0.0|org.gradle.status>release|com.android.support:drawerlayout:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/drawerlayout/28.0.0/drawerlayout-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/drawerlayout/28.0.0/drawerlayout-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "drawerlayout"
@@ -1590,25 +1526,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:drawerlayout:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|drawerlayout|28.0.0|org.gradle.status>release|com.android.support:drawerlayout:28.0.0
       > com.android.support|interpolator|28.0.0|org.gradle.status>release|com.android.support:interpolator:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/interpolator/28.0.0/interpolator-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/interpolator/28.0.0/interpolator-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "interpolator"
@@ -1617,25 +1555,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:interpolator:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|interpolator|28.0.0|org.gradle.status>release|com.android.support:interpolator:28.0.0
       > com.android.support|loader|28.0.0|org.gradle.status>release|com.android.support:loader:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/loader/28.0.0/loader-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/loader/28.0.0/loader-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "loader"
@@ -1644,25 +1584,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:loader:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|loader|28.0.0|org.gradle.status>release|com.android.support:loader:28.0.0
       > com.android.support|localbroadcastmanager|28.0.0|org.gradle.status>release|com.android.support:localbroadcastmanager:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/localbroadcastmanager/28.0.0/localbroadcastmanager-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/localbroadcastmanager/28.0.0/localbroadcastmanager-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "localbroadcastmanager"
@@ -1671,25 +1613,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:localbroadcastmanager:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|localbroadcastmanager|28.0.0|org.gradle.status>release|com.android.support:localbroadcastmanager:28.0.0
       > com.android.support|print|28.0.0|org.gradle.status>release|com.android.support:print:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/print/28.0.0/print-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/print/28.0.0/print-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "print"
@@ -1698,25 +1642,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:print:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|print|28.0.0|org.gradle.status>release|com.android.support:print:28.0.0
       > com.android.support|slidingpanelayout|28.0.0|org.gradle.status>release|com.android.support:slidingpanelayout:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/slidingpanelayout/28.0.0/slidingpanelayout-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/slidingpanelayout/28.0.0/slidingpanelayout-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "slidingpanelayout"
@@ -1725,25 +1671,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:slidingpanelayout:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|slidingpanelayout|28.0.0|org.gradle.status>release|com.android.support:slidingpanelayout:28.0.0
       > com.android.support|support-annotations|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-annotations:28.0.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-annotations"
@@ -1756,25 +1704,13 @@
             - capabilities:
                * "com.android.support:support-annotations:28.0.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.android.support|support-annotations|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-annotations:28.0.0
       > com.android.support|support-annotations|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-annotations:28.0.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-annotations"
@@ -1787,25 +1723,13 @@
             - capabilities:
                * "com.android.support:support-annotations:28.0.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.android.support|support-annotations|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-annotations:28.0.0
       > com.android.support|support-compat|28.0.0|org.gradle.status>release|com.android.support:support-compat:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-compat/28.0.0/support-compat-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-compat/28.0.0/support-compat-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "support-compat"
@@ -1814,25 +1738,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-compat:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/aidl{D}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/public.txt{F}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/aidl{D}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/public.txt{F}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-compat|28.0.0|org.gradle.status>release|com.android.support:support-compat:28.0.0
       > com.android.support|support-core-ui|28.0.0|org.gradle.status>release|com.android.support:support-core-ui:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-core-ui/28.0.0/support-core-ui-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-core-ui/28.0.0/support-core-ui-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "support-core-ui"
@@ -1841,25 +1767,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-core-ui:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-core-ui|28.0.0|org.gradle.status>release|com.android.support:support-core-ui:28.0.0
       > com.android.support|support-core-utils|28.0.0|org.gradle.status>release|com.android.support:support-core-utils:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-core-utils/28.0.0/support-core-utils-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-core-utils/28.0.0/support-core-utils-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "support-core-utils"
@@ -1868,25 +1796,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-core-utils:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-core-utils|28.0.0|org.gradle.status>release|com.android.support:support-core-utils:28.0.0
       > com.android.support|support-fragment|28.0.0|org.gradle.status>release|com.android.support:support-fragment:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-fragment/28.0.0/support-fragment-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-fragment/28.0.0/support-fragment-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "support-fragment"
@@ -1895,25 +1825,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-fragment:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-fragment|28.0.0|org.gradle.status>release|com.android.support:support-fragment:28.0.0
       > com.android.support|support-media-compat|28.0.0|org.gradle.status>release|com.android.support:support-media-compat:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-media-compat/28.0.0/support-media-compat-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-media-compat/28.0.0/support-media-compat-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "support-media-compat"
@@ -1922,25 +1854,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-media-compat:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/aidl{D}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/public.txt{F}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/aidl{D}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/public.txt{F}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-media-compat|28.0.0|org.gradle.status>release|com.android.support:support-media-compat:28.0.0
       > com.android.support|support-v13|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v13:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-v13"
@@ -1953,25 +1887,27 @@
             - capabilities:
                * "com.android.support:support-v13:28.0.0"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-v13|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v13:28.0.0
       > com.android.support|support-v13|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-v13:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-v13"
@@ -1984,25 +1920,27 @@
             - capabilities:
                * "com.android.support:support-v13:28.0.0"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-v13|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-v13:28.0.0
       > com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-v4"
@@ -2015,25 +1953,27 @@
             - capabilities:
                * "com.android.support:support-v4:28.0.0"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0
       > com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-v4:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.android.support"
             - name    = "support-v4"
@@ -2046,25 +1986,27 @@
             - capabilities:
                * "com.android.support:support-v4:28.0.0"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-v4:28.0.0
       > com.android.support|swiperefreshlayout|28.0.0|org.gradle.status>release|com.android.support:swiperefreshlayout:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/swiperefreshlayout/28.0.0/swiperefreshlayout-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/swiperefreshlayout/28.0.0/swiperefreshlayout-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "swiperefreshlayout"
@@ -2073,25 +2015,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:swiperefreshlayout:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/annotations.zip{F}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/annotations.zip{F}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|swiperefreshlayout|28.0.0|org.gradle.status>release|com.android.support:swiperefreshlayout:28.0.0
       > com.android.support|versionedparcelable|28.0.0|org.gradle.status>release|com.android.support:versionedparcelable:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/versionedparcelable/28.0.0/versionedparcelable-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/versionedparcelable/28.0.0/versionedparcelable-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "versionedparcelable"
@@ -2100,25 +2044,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:versionedparcelable:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/aidl{D}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/aidl{D}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|versionedparcelable|28.0.0|org.gradle.status>release|com.android.support:versionedparcelable:28.0.0
       > com.android.support|viewpager|28.0.0|org.gradle.status>release|com.android.support:viewpager:28.0.0:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/android/support/viewpager/28.0.0/viewpager-28.0.0.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/android/support/viewpager/28.0.0/viewpager-28.0.0.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.android.support"
             - name    = "viewpager"
@@ -2127,25 +2073,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:viewpager:28.0.0"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/R.txt{F}
+         < androidLibraryData
       < com.android.support|viewpager|28.0.0|org.gradle.status>release|com.android.support:viewpager:28.0.0
       > com.google.android.gms|play-services-basement|15.0.1|org.gradle.status>release|com.google.android.gms:play-services-basement:15.0.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-basement/15.0.1/play-services-basement-15.0.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-basement/15.0.1/play-services-basement-15.0.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.google.android.gms"
             - name    = "play-services-basement"
@@ -2154,25 +2102,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.google.android.gms:play-services-basement:15.0.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/R.txt{F}
+         < androidLibraryData
       < com.google.android.gms|play-services-basement|15.0.1|org.gradle.status>release|com.google.android.gms:play-services-basement:15.0.1
       > com.google.android.gms|play-services-base|15.0.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.google.android.gms:play-services-base:15.0.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.google.android.gms"
             - name    = "play-services-base"
@@ -2185,25 +2135,27 @@
             - capabilities:
                * "com.google.android.gms:play-services-base:15.0.1"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/R.txt{F}
+         < androidLibraryData
       < com.google.android.gms|play-services-base|15.0.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.google.android.gms:play-services-base:15.0.1
       > com.google.android.gms|play-services-base|15.0.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.google.android.gms:play-services-base:15.0.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.google.android.gms"
             - name    = "play-services-base"
@@ -2216,25 +2168,27 @@
             - capabilities:
                * "com.google.android.gms:play-services-base:15.0.1"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res{D}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/proguard.txt{F}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res{D}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/proguard.txt{F}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/R.txt{F}
+         < androidLibraryData
       < com.google.android.gms|play-services-base|15.0.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.google.android.gms:play-services-base:15.0.1
       > com.google.android.gms|play-services-tasks|15.0.1|org.gradle.status>release|com.google.android.gms:play-services-tasks:15.0.1:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {LOCAL_REPO}/com/google/android/gms/play-services-tasks/15.0.1/play-services-tasks-15.0.1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-tasks/15.0.1/play-services-tasks-15.0.1.aar{F}
+         - projectInfo = (null)
          - libraryInfo:
             - group   = "com.google.android.gms"
             - name    = "play-services-tasks"
@@ -2243,25 +2197,27 @@
                * "org.gradle.status -> release"
             - capabilities:
                * "com.google.android.gms:play-services-tasks:15.0.1"
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/R.txt{F}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/R.txt{F}
+         < androidLibraryData
       < com.google.android.gms|play-services-tasks|15.0.1|org.gradle.status>release|com.google.android.gms:play-services-tasks:15.0.1
       > junit|junit|4.12|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|junit:junit:4.12:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "junit"
             - name    = "junit"
@@ -2274,25 +2230,13 @@
             - capabilities:
                * "junit:junit:4.12"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < junit|junit|4.12|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|junit:junit:4.12
       > junit|junit|4.12|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|junit:junit:4.12:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "junit"
             - name    = "junit"
@@ -2305,25 +2249,13 @@
             - capabilities:
                * "junit:junit:4.12"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < junit|junit|4.12|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|junit:junit:4.12
       > net.sf.kxml|kxml2|2.3.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|net.sf.kxml:kxml2:2.3.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "net.sf.kxml"
             - name    = "kxml2"
@@ -2336,25 +2268,13 @@
             - capabilities:
                * "net.sf.kxml:kxml2:2.3.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < net.sf.kxml|kxml2|2.3.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|net.sf.kxml:kxml2:2.3.0
       > net.sf.kxml|kxml2|2.3.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|net.sf.kxml:kxml2:2.3.0:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "net.sf.kxml"
             - name    = "kxml2"
@@ -2367,25 +2287,13 @@
             - capabilities:
                * "net.sf.kxml:kxml2:2.3.0"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < net.sf.kxml|kxml2|2.3.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|net.sf.kxml:kxml2:2.3.0
       > org.hamcrest|hamcrest-core|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|org.hamcrest:hamcrest-core:1.3:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "org.hamcrest"
             - name    = "hamcrest-core"
@@ -2398,25 +2306,13 @@
             - capabilities:
                * "org.hamcrest:hamcrest-core:1.3"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < org.hamcrest|hamcrest-core|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|org.hamcrest:hamcrest-core:1.3
       > org.hamcrest|hamcrest-core|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.hamcrest:hamcrest-core:1.3:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "org.hamcrest"
             - name    = "hamcrest-core"
@@ -2429,25 +2325,13 @@
             - capabilities:
                * "org.hamcrest:hamcrest-core:1.3"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < org.hamcrest|hamcrest-core|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.hamcrest:hamcrest-core:1.3
       > org.hamcrest|hamcrest-library|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|org.hamcrest:hamcrest-library:1.3:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "org.hamcrest"
             - name    = "hamcrest-library"
@@ -2460,25 +2344,13 @@
             - capabilities:
                * "org.hamcrest:hamcrest-library:1.3"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < org.hamcrest|hamcrest-library|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|org.hamcrest:hamcrest-library:1.3
       > org.hamcrest|hamcrest-library|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.hamcrest:hamcrest-library:1.3:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "org.hamcrest"
             - name    = "hamcrest-library"
@@ -2491,25 +2363,13 @@
             - capabilities:
                * "org.hamcrest:hamcrest-library:1.3"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < org.hamcrest|hamcrest-library|1.3|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.hamcrest:hamcrest-library:1.3
       > org.jacoco|org.jacoco.agent|0.8.3|org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.jacoco:org.jacoco.agent:0.8.3:
-         - type                = JAVA_LIBRARY
-         - artifact            = {LOCAL_REPO}/org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/org/jacoco/org.jacoco.agent/0.8.3/org.jacoco.agent-0.8.3-runtime.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "org.jacoco"
             - name    = "org.jacoco.agent"
@@ -2521,20 +2381,8 @@
             - capabilities:
                * "org.jacoco:org.jacoco.agent:0.8.3"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < org.jacoco|org.jacoco.agent|0.8.3|org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.jacoco:org.jacoco.agent:0.8.3
    < libraries
 < VariantDependencies

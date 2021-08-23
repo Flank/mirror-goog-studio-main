@@ -50,92 +50,10 @@ interface Library: AndroidModel {
     /**
      * The artifact location.
      *
-     * Only valid for instances where [type] is [LIBRARY_JAVA]
+     * Only valid for instances where [type] is [LibraryType.LIBRARY_JAVA] or
+     * [LibraryType.ANDROID_LIBRARY]
      */
     val artifact: File?
-
-    /**
-     * The location of the manifest file.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val manifest: File?
-
-    /**
-     * The list of jar files for compilation.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val compileJarFiles: List<File>?
-
-    /**
-     * The list of jar files for runtime/packaging.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val runtimeJarFiles: List<File>?
-
-    /**
-     * The android resource folder.
-     *
-     * The folder may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val resFolder: File?
-
-    /**
-     * The namespaced resources static library (res.apk).
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]. This can still be null if the
-     * library is not namespaced.
-     */
-    val resStaticLibrary: File?
-
-    /**
-     * The assets folder.
-     *
-     * The folder may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val assetsFolder: File?
-
-    /**
-     * The jni libraries folder.
-     *
-     * The folder may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val jniFolder: File?
-
-    /**
-     * The AIDL import folder
-     *
-     * The folder may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val aidlFolder: File?
-
-    /**
-     * The RenderScript import folder
-     *
-     * The folder may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val renderscriptFolder: File?
-
-    /**
-     * The proguard file rule.
-     *
-     * The file may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val proguardRules: File?
 
     /**
      * The jar containing custom lint checks for consumers to use. This is filled by the
@@ -148,29 +66,7 @@ interface Library: AndroidModel {
     val lintJar: File?
 
     /**
-     * the zip file with external annotations
-     *
-     * The file may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
+     * Data for libraries of type [LibraryType.ANDROID_LIBRARY]. It is null in other cases.
      */
-    val externalAnnotations: File?
-
-    /**
-     * The file listing the public resources
-     *
-     * The file may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val publicResources: File?
-
-    /**
-     * The symbol list file
-     *
-     * The file may not exist.
-     *
-     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
-     */
-    val symbolFile: File?
+    val androidLibraryData: AndroidLibraryData?
 }

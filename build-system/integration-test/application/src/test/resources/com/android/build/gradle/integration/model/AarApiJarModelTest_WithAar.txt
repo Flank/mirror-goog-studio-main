@@ -29,9 +29,9 @@
    < unitTestArtifact
    > libraries:
       > com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:myaar:1{ADDED}:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "myaar"
@@ -44,25 +44,27 @@
             - capabilities:
                * "com.example:myaar:1"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/api.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/classes.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl1.jar.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl2.jar.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/api.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/classes.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl1.jar.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl2.jar.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
+         < androidLibraryData
       < com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:myaar:1{ADDED}
       > com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:myaar:1{ADDED}:
-         - type                = ANDROID_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
-         - projectInfo         = (null)
+         - type        = ANDROID_LIBRARY
+         - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
+         - projectInfo = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "myaar"
@@ -75,20 +77,22 @@
             - capabilities:
                * "com.example:myaar:1"
          < libraryInfo
-         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/api.jar{F}]
-         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/classes.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl1.jar.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl2.jar.jar{F}]
-         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/AndroidManifest.xml{F}
-         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res{!}
-         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res.apk{!}
-         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/assets{!}
-         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jni{!}
-         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}
-         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/rs{!}
-         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/proguard.txt{!}
-         - lintJar             = (null)
-         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
-         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
-         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
+         - lintJar     = (null)
+         > androidLibraryData:
+            - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/api.jar{F}]
+            - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/classes.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl1.jar.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl2.jar.jar{F}]
+            - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/AndroidManifest.xml{F}
+            - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res{!}
+            - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res.apk{!}
+            - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/assets{!}
+            - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jni{!}
+            - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}
+            - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/rs{!}
+            - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/proguard.txt{!}
+            - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
+            - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
+            - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
+         < androidLibraryData
       < com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:myaar:1{ADDED}
    < libraries
 < VariantDependencies

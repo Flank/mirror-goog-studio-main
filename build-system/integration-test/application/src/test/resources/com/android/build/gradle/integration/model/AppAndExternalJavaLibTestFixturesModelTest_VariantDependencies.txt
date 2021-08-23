@@ -52,8 +52,8 @@
    - testFixturesArtifact = (null)
    > libraries:
       > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":app"
@@ -66,25 +66,13 @@
             - capabilities:
                * "project:app:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
       > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
+         - type               = PROJECT
+         - artifact           = (null)
          > projectInfo:
             - buildId     = ":"
             - projectPath = ":app"
@@ -96,26 +84,14 @@
             - capabilities:
                * "project:app:unspecified"
          < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - libraryInfo        = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "random-lib"
@@ -129,25 +105,13 @@
             - capabilities:
                * "com.example:random-lib-test-fixtures:1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "random-lib"
@@ -161,25 +125,13 @@
             - capabilities:
                * "com.example:random-lib:1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1-test-fixtures.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "random-lib"
@@ -193,25 +145,13 @@
             - capabilities:
                * "com.example:random-lib-test-fixtures:1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib-test-fixtures:1
       > com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
-         - type                = JAVA_LIBRARY
-         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
-         - projectInfo         = (null)
+         - type               = JAVA_LIBRARY
+         - artifact           = {ADDITIONAL_MAVEN_REPO}/com/example/random-lib/1/random-lib-1.jar{F}
+         - projectInfo        = (null)
          > libraryInfo:
             - group   = "com.example"
             - name    = "random-lib"
@@ -225,20 +165,8 @@
             - capabilities:
                * "com.example:random-lib:1"
          < libraryInfo
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
+         - lintJar            = (null)
+         - androidLibraryData = (null)
       < com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1
    < libraries
 < VariantDependencies

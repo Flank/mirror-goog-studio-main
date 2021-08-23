@@ -21,10 +21,8 @@ import com.android.build.gradle.internal.ide.v2.LibraryImpl
 import com.android.build.gradle.internal.ide.v2.LibraryInfoImpl
 import com.android.build.gradle.internal.ide.v2.ProjectInfoImpl
 import com.android.builder.model.v2.ide.Library
-import com.android.builder.model.v2.ide.LibraryType
 import com.android.ide.common.caching.CreatingCache
 import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedVariantResult
@@ -212,9 +210,8 @@ class LibraryServiceImpl(
                 )
 
                 val runtimeJarFiles = listOf(runtimeJar) + (localJarCache.getLocalJarsForAar(folder) ?: listOf())
-                LibraryImpl(
+                LibraryImpl.createAndroidLibrary(
                     key = stringCache.cacheString(libraryInfo.computeKey()),
-                    type = LibraryType.ANDROID_LIBRARY,
                     libraryInfo = libraryInfo,
                     manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
                     compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
@@ -234,31 +231,20 @@ class LibraryServiceImpl(
                     artifact = artifact.artifactFile,
                 )
             } else {
-                LibraryImpl(
-                    key = stringCache.cacheString(libraryInfo.computeKey()),
-                    type = LibraryType.JAVA_LIBRARY,
-                    libraryInfo = libraryInfo,
-                    artifact = artifact.artifactFile,
+                LibraryImpl.createJavaLibrary(
+                    stringCache.cacheString(libraryInfo.computeKey()),
+                    libraryInfo,
+                    artifact.artifactFile,
                 )
             }
         } else {
             val projectInfo = getProjectInfo(artifact.variant)
 
-            if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
-                LibraryImpl(
-                    key = stringCache.cacheString(projectInfo.computeKey()),
-                    type = LibraryType.PROJECT,
-                    projectInfo = projectInfo,
-                    lintJar = artifact.publishedLintJar,
-                )
-            } else {
-                LibraryImpl(
-                    key = stringCache.cacheString(projectInfo.computeKey()),
-                    type = LibraryType.PROJECT,
-                    projectInfo = projectInfo,
-                    lintJar = artifact.publishedLintJar,
-                )
-            }
+            LibraryImpl.createProjectLibrary(
+                stringCache.cacheString(projectInfo.computeKey()),
+                projectInfo,
+                lintJar = artifact.publishedLintJar,
+            )
         }
     }
 

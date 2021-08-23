@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-bd52d122548a4589eb440a8e52f24447f473d91c2f0c2f9b58521ef2e5506768
+012184a824b119528354e586d3454ceda1060c87e162840b3156482d02660db3
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -585,6 +585,20 @@ com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.get
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.valueOf: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag (java.lang.String)
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.values: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag[] ()
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.getBooleanFlagMap: java.util.Map<com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag, java.lang.Boolean> ()
+com.android.builder.model.v2.ide.AndroidLibraryData
+com.android.builder.model.v2.ide.AndroidLibraryData.getAidlFolder: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getAssetsFolder: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getCompileJarFiles: java.util.List<java.io.File> ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getExternalAnnotations: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getJniFolder: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getManifest: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getProguardRules: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getPublicResources: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getRenderscriptFolder: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getResFolder: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getResStaticLibrary: java.io.File ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getRuntimeJarFiles: java.util.List<java.io.File> ()
+com.android.builder.model.v2.ide.AndroidLibraryData.getSymbolFile: java.io.File ()
 com.android.builder.model.v2.ide.ApiVersion implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.ApiVersion.getApiLevel: int ()
 com.android.builder.model.v2.ide.ApiVersion.getCodename: java.lang.String ()
@@ -624,24 +638,12 @@ com.android.builder.model.v2.ide.JavaCompileOptions.getSourceCompatibility: java
 com.android.builder.model.v2.ide.JavaCompileOptions.getTargetCompatibility: java.lang.String ()
 com.android.builder.model.v2.ide.JavaCompileOptions.isCoreLibraryDesugaringEnabled: boolean ()
 com.android.builder.model.v2.ide.Library implements com.android.builder.model.v2.AndroidModel
-com.android.builder.model.v2.ide.Library.getAidlFolder: java.io.File ()
+com.android.builder.model.v2.ide.Library.getAndroidLibraryData: com.android.builder.model.v2.ide.AndroidLibraryData ()
 com.android.builder.model.v2.ide.Library.getArtifact: java.io.File ()
-com.android.builder.model.v2.ide.Library.getAssetsFolder: java.io.File ()
-com.android.builder.model.v2.ide.Library.getCompileJarFiles: java.util.List<java.io.File> ()
-com.android.builder.model.v2.ide.Library.getExternalAnnotations: java.io.File ()
-com.android.builder.model.v2.ide.Library.getJniFolder: java.io.File ()
 com.android.builder.model.v2.ide.Library.getKey: java.lang.String ()
 com.android.builder.model.v2.ide.Library.getLibraryInfo: com.android.builder.model.v2.ide.LibraryInfo ()
 com.android.builder.model.v2.ide.Library.getLintJar: java.io.File ()
-com.android.builder.model.v2.ide.Library.getManifest: java.io.File ()
-com.android.builder.model.v2.ide.Library.getProguardRules: java.io.File ()
 com.android.builder.model.v2.ide.Library.getProjectInfo: com.android.builder.model.v2.ide.ProjectInfo ()
-com.android.builder.model.v2.ide.Library.getPublicResources: java.io.File ()
-com.android.builder.model.v2.ide.Library.getRenderscriptFolder: java.io.File ()
-com.android.builder.model.v2.ide.Library.getResFolder: java.io.File ()
-com.android.builder.model.v2.ide.Library.getResStaticLibrary: java.io.File ()
-com.android.builder.model.v2.ide.Library.getRuntimeJarFiles: java.util.List<java.io.File> ()
-com.android.builder.model.v2.ide.Library.getSymbolFile: java.io.File ()
 com.android.builder.model.v2.ide.Library.getType: com.android.builder.model.v2.ide.LibraryType ()
 com.android.builder.model.v2.ide.LibraryInfo implements com.android.builder.model.v2.ide.ComponentInfo
 com.android.builder.model.v2.ide.LibraryInfo.getGroup: java.lang.String ()

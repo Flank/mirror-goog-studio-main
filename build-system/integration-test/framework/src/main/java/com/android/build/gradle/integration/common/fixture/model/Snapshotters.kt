@@ -27,6 +27,7 @@ import com.android.builder.model.v2.dsl.ProductFlavor
 import com.android.builder.model.v2.dsl.SigningConfig
 import com.android.builder.model.v2.ide.AaptOptions
 import com.android.builder.model.v2.ide.AndroidArtifact
+import com.android.builder.model.v2.ide.AndroidLibraryData
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BaseArtifact
@@ -550,20 +551,22 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
                 collection?.sortedBy { it }
             }
         }
-        list("compileJarFiles", Library::compileJarFiles)
-        list("runtimeJarFiles", Library::runtimeJarFiles)
-        item("manifest", Library::manifest)
-        item("resFolder", Library::resFolder)
-        item("resStaticLibrary", Library::resStaticLibrary)
-        item("assetsFolder", Library::assetsFolder)
-        item("jniFolder", Library::jniFolder)
-        item("aidlFolder", Library::aidlFolder)
-        item("renderscriptFolder", Library::renderscriptFolder)
-        item("proguardRules", Library::proguardRules)
         item("lintJar", Library::lintJar)
-        item("externalAnnotations", Library::externalAnnotations)
-        item("publicResources", Library::publicResources)
-        item("symbolFile", Library::symbolFile)
+        dataObject("androidLibraryData", Library::androidLibraryData) {
+            list("compileJarFiles", AndroidLibraryData::compileJarFiles)
+            list("runtimeJarFiles", AndroidLibraryData::runtimeJarFiles)
+            item("manifest", AndroidLibraryData::manifest)
+            item("resFolder", AndroidLibraryData::resFolder)
+            item("resStaticLibrary", AndroidLibraryData::resStaticLibrary)
+            item("assetsFolder", AndroidLibraryData::assetsFolder)
+            item("jniFolder", AndroidLibraryData::jniFolder)
+            item("aidlFolder", AndroidLibraryData::aidlFolder)
+            item("renderscriptFolder", AndroidLibraryData::renderscriptFolder)
+            item("proguardRules", AndroidLibraryData::proguardRules)
+            item("externalAnnotations", AndroidLibraryData::externalAnnotations)
+            item("publicResources", AndroidLibraryData::publicResources)
+            item("symbolFile", AndroidLibraryData::symbolFile)
+        }
     }
 }
 
