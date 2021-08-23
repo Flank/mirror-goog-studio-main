@@ -44,7 +44,6 @@ maven_library(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 

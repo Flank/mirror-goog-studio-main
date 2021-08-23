@@ -31,7 +31,6 @@ maven_library(
         "//tools/base/build-system/builder-model",  # Only present for legacy reasons.
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "@maven//:com.google.guava.guava",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.ow2.asm.asm",
     ],
 )

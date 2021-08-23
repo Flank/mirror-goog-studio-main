@@ -46,7 +46,6 @@ maven_library(
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "@maven//:net.sf.kxml.kxml2",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 
@@ -117,7 +116,6 @@ maven_library(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-tree",
     ],
@@ -174,7 +172,6 @@ maven_library(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-analysis",
         "@maven//:org.ow2.asm.asm-tree",
@@ -228,7 +225,6 @@ maven_library(
         "@maven//:org.codehaus.groovy.groovy-all",
         "@maven//:org.jetbrains.annotations",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 

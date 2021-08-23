@@ -236,8 +236,8 @@ def _kotlin_library_impl(ctx):
     jars = []
     kotlin_providers = []
     if kotlin_srcs:
-        deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
-        java_info_deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
+        deps.append(ctx.attr.stdlib[JavaInfo])
+        java_info_deps.append(ctx.attr.stdlib[JavaInfo])
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -342,6 +342,10 @@ _kotlin_library = rule(
         "plugins": attr.label_list(
             providers = [JavaInfo],
         ),
+        "stdlib": attr.label(
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
+            allow_files = True,
+        ),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_bootclasspath": attr.label(
@@ -353,10 +357,6 @@ _kotlin_library = rule(
             executable = True,
             cfg = "host",
             default = Label("//tools/base/bazel:kotlinc"),
-            allow_files = True,
-        ),
-        "_kotlin_stdlib": attr.label(
-            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
         ),
         "_zipper": attr.label(

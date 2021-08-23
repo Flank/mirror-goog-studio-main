@@ -18,7 +18,6 @@ maven_library(
         "@maven//:com.google.guava.guava",
         "@maven//:commons-io.commons-io",
         "@maven//:io.grpc.grpc-all",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx

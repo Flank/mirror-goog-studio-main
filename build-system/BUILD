@@ -42,7 +42,6 @@ maven_library(
         "//tools/base/sdklib:tools.sdklib",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 
@@ -75,7 +74,6 @@ kotlin_test(
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.mockito.mockito-core",
     ],
 )

@@ -32,7 +32,6 @@ maven_library(
         "@maven//:org.jetbrains.annotations",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.mockito.mockito-core",
         "@maven//:org.ow2.asm.asm",
     ],

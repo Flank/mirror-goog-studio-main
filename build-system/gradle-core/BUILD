@@ -104,7 +104,6 @@ maven_library(
         "@maven//:org.apache.httpcomponents.httpmime",
         "@maven//:org.bouncycastle.bcpkix-jdk15on",
         "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.annotations",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-analysis",
@@ -212,7 +211,6 @@ kotlin_test(
         "@maven//:org.jacoco.org.jacoco.core",
         "@maven//:org.jacoco.org.jacoco.report",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlin.kotlin-test",
         "@maven//:org.jsoup.jsoup",
         "@maven//:org.mockito.mockito-core",
