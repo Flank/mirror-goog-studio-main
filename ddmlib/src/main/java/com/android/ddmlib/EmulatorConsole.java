@@ -31,10 +31,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
-import java.security.InvalidParameterException;
-import java.util.Formatter;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,16 +64,6 @@ public final class EmulatorConsole {
     private static final String COMMAND_AVD_NAME = "avd name\r\n"; //$NON-NLS-1$
     private static final String COMMAND_AVD_PATH = "avd path\r\n";
     private static final String COMMAND_KILL = "kill\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GSM_STATUS = "gsm status\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GSM_CALL = "gsm call %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GSM_CANCEL_CALL = "gsm cancel %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GSM_DATA = "gsm data %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GSM_VOICE = "gsm voice %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_SMS_SEND = "sms send %1$s %2$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_NETWORK_STATUS = "network status\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_NETWORK_SPEED = "network speed %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_NETWORK_LATENCY = "network delay %1$s\r\n"; //$NON-NLS-1$
-    private static final String COMMAND_GPS = "geo fix %1$f %2$f %3$f\r\n"; //$NON-NLS-1$
     private static final String COMMAND_AUTH = "auth %1$s\r\n"; //$NON-NLS-1$
     private static final String COMMAND_SCREENRECORD_START =
             "screenrecord start %1$s\r\n"; //$NON-NLS-1$
@@ -86,130 +73,15 @@ public final class EmulatorConsole {
     private static final String RE_AUTH_REQUIRED = "Android Console: Authentication required"; //$NON-NLS-1$
 
     private static final String EMULATOR_CONSOLE_AUTH_TOKEN = ".emulator_console_auth_token";
-    /**
-     * Array of delay values: no delay, gprs, edge/egprs, umts/3d
-     */
-    public static final int[] MIN_LATENCIES = new int[] {
-        0,      // No delay
-        150,    // gprs
-        80,     // edge/egprs
-        35      // umts/3g
-    };
-
-    /**
-     * Array of download speeds: full speed, gsm, hscsd, gprs, edge/egprs, umts/3g, hsdpa.
-     */
-    public static final int[] DOWNLOAD_SPEEDS = new int[] {
-        0,          // full speed
-        14400,      // gsm
-        43200,      // hscsd
-        80000,      // gprs
-        236800,     // edge/egprs
-        1920000,    // umts/3g
-        14400000    // hsdpa
-    };
-
-    /** Arrays of valid network speeds */
-    public static final String[] NETWORK_SPEEDS = new String[] {
-        "full", //$NON-NLS-1$
-        "gsm", //$NON-NLS-1$
-        "hscsd", //$NON-NLS-1$
-        "gprs", //$NON-NLS-1$
-        "edge", //$NON-NLS-1$
-        "umts", //$NON-NLS-1$
-        "hsdpa", //$NON-NLS-1$
-    };
-
-    /** Arrays of valid network latencies */
-    public static final String[] NETWORK_LATENCIES = new String[] {
-        "none", //$NON-NLS-1$
-        "gprs", //$NON-NLS-1$
-        "edge", //$NON-NLS-1$
-        "umts", //$NON-NLS-1$
-    };
-
-    /** Gsm Mode enum. */
-    public enum GsmMode {
-        UNKNOWN((String)null),
-        UNREGISTERED(new String[] { "unregistered", "off" }),
-        HOME(new String[] { "home", "on" }),
-        ROAMING("roaming"),
-        SEARCHING("searching"),
-        DENIED("denied");
-
-        private final String[] tags;
-
-        GsmMode(String tag) {
-            if (tag != null) {
-                this.tags = new String[] { tag };
-            } else {
-                this.tags = new String[0];
-            }
-        }
-
-        GsmMode(String[] tags) {
-            this.tags = tags;
-        }
-
-        public static GsmMode getEnum(String tag) {
-            for (GsmMode mode : values()) {
-                for (String t : mode.tags) {
-                    if (t.equals(tag)) {
-                        return mode;
-                    }
-                }
-            }
-            return UNKNOWN;
-        }
-
-        /**
-         * Returns the first tag of the enum.
-         */
-        public String getTag() {
-            if (tags.length > 0) {
-                return tags[0];
-            }
-            return null;
-        }
-    }
 
     public static final String RESULT_OK = null;
 
     private static final Pattern sEmulatorRegexp = Pattern.compile(IDevice.RE_EMULATOR_SN);
-    private static final Pattern sVoiceStatusRegexp =
-            Pattern.compile(
-                    "gsm\\s+voice\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static final Pattern sDataStatusRegexp =
-            Pattern.compile(
-                    "gsm\\s+data\\s+state:\\s*([a-z]+)", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static final Pattern sDownloadSpeedRegexp =
-            Pattern.compile(
-                    "\\s+download\\s+speed:\\s+(\\d+)\\s+bits.*",
-                    Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static final Pattern sMinLatencyRegexp = Pattern.compile(
-            "\\s+minimum\\s+latency:\\s+(\\d+)\\s+ms", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
     @GuardedBy(value = "sEmulators")
-    private static final HashMap<Integer, EmulatorConsole> sEmulators =
-        new HashMap<Integer, EmulatorConsole>();
+    private static final HashMap<Integer, EmulatorConsole> sEmulators = new HashMap<>();
 
     private static final String LOG_TAG = "EmulatorConsole";
-
-    /** Gsm Status class */
-    public static class GsmStatus {
-        /** Voice status. */
-        public GsmMode voice = GsmMode.UNKNOWN;
-        /** Data status. */
-        public GsmMode data = GsmMode.UNKNOWN;
-    }
-
-    /** Network Status class */
-    public static class NetworkStatus {
-        /** network speed status. This is an index in the {@link #DOWNLOAD_SPEEDS} array. */
-        public int speed = -1;
-        /** network latency status.  This is an index in the {@link #MIN_LATENCIES} array. */
-        public int latency = -1;
-    }
 
     private final int mPort;
 
@@ -436,215 +308,8 @@ public final class EmulatorConsole {
                         + String.join(separator, lines));
     }
 
-    /**
-     * Get the network status of the emulator.
-     * @return a {@link NetworkStatus} object containing the {@link GsmStatus}, or
-     * <code>null</code> if the query failed.
-     */
-    public synchronized NetworkStatus getNetworkStatus() {
-        if (sendCommand(COMMAND_NETWORK_STATUS)) {
-            /* Result is in the format
-                Current network status:
-                download speed:      14400 bits/s (1.8 KB/s)
-                upload speed:        14400 bits/s (1.8 KB/s)
-                minimum latency:  0 ms
-                maximum latency:  0 ms
-             */
-            String[] result = readLines();
-
-            if (isValid(result)) {
-                // we only compare against the min latency and the download speed
-                // let's not rely on the order of the output, and simply loop through
-                // the line testing the regexp.
-                NetworkStatus status = new NetworkStatus();
-                for (String line : result) {
-                    Matcher m = sDownloadSpeedRegexp.matcher(line);
-                    if (m.matches()) {
-                        // get the string value
-                        String value = m.group(1);
-
-                        // get the index from the list
-                        status.speed = getSpeedIndex(value);
-
-                        // move on to next line.
-                        continue;
-                    }
-
-                    m = sMinLatencyRegexp.matcher(line);
-                    if (m.matches()) {
-                        // get the string value
-                        String value = m.group(1);
-
-                        // get the index from the list
-                        status.latency = getLatencyIndex(value);
-
-                        // move on to next line.
-                        continue;
-                    }
-                }
-
-                return status;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the current gsm status of the emulator
-     * @return a {@link GsmStatus} object containing the gms status, or <code>null</code>
-     * if the query failed.
-     */
-    public synchronized GsmStatus getGsmStatus() {
-        if (sendCommand(COMMAND_GSM_STATUS)) {
-            /*
-             * result is in the format:
-             * gsm status
-             * gsm voice state: home
-             * gsm data state:  home
-             */
-
-            String[] result = readLines();
-            if (isValid(result)) {
-
-                GsmStatus status = new GsmStatus();
-
-                // let's not rely on the order of the output, and simply loop through
-                // the line testing the regexp.
-                for (String line : result) {
-                    Matcher m = sVoiceStatusRegexp.matcher(line);
-                    if (m.matches()) {
-                        // get the string value
-                        String value = m.group(1);
-
-                        // get the index from the list
-                        status.voice = GsmMode.getEnum(value.toLowerCase(Locale.US));
-
-                        // move on to next line.
-                        continue;
-                    }
-
-                    m = sDataStatusRegexp.matcher(line);
-                    if (m.matches()) {
-                        // get the string value
-                        String value = m.group(1);
-
-                        // get the index from the list
-                        status.data = GsmMode.getEnum(value.toLowerCase(Locale.US));
-
-                        // move on to next line.
-                        continue;
-                    }
-                }
-
-                return status;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Sets the GSM voice mode.
-     * @param mode the {@link GsmMode} value.
-     * @return RESULT_OK if success, an error String otherwise.
-     * @throws InvalidParameterException if mode is an invalid value.
-     */
-    public synchronized String setGsmVoiceMode(GsmMode mode) throws InvalidParameterException {
-        if (mode == GsmMode.UNKNOWN) {
-            throw new InvalidParameterException();
-        }
-
-        String command = String.format(COMMAND_GSM_VOICE, mode.getTag());
-        return processCommand(command);
-    }
-
-    /**
-     * Sets the GSM data mode.
-     * @param mode the {@link GsmMode} value
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     * @throws InvalidParameterException if mode is an invalid value.
-     */
-    public synchronized String setGsmDataMode(GsmMode mode) throws InvalidParameterException {
-        if (mode == GsmMode.UNKNOWN) {
-            throw new InvalidParameterException();
-        }
-
-        String command = String.format(COMMAND_GSM_DATA, mode.getTag());
-        return processCommand(command);
-    }
-
-    /**
-     * Initiate an incoming call on the emulator.
-     * @param number a string representing the calling number.
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     */
-    public synchronized String call(String number) {
-        String command = String.format(COMMAND_GSM_CALL, number);
-        return processCommand(command);
-    }
-
-    /**
-     * Cancels a current call.
-     * @param number the number of the call to cancel
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     */
-    public synchronized String cancelCall(String number) {
-        String command = String.format(COMMAND_GSM_CANCEL_CALL, number);
-        return processCommand(command);
-    }
-
-    /**
-     * Sends an SMS to the emulator
-     * @param number The sender phone number
-     * @param message The SMS message. \ characters must be escaped. The carriage return is
-     * the 2 character sequence  {'\', 'n' }
-     *
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     */
-    public synchronized String sendSms(String number, String message) {
-        String command = String.format(COMMAND_SMS_SEND, number, message);
-        return processCommand(command);
-    }
-
-    /**
-     * Sets the network speed.
-     * @param selectionIndex The index in the {@link #NETWORK_SPEEDS} table.
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     */
-    public synchronized String setNetworkSpeed(int selectionIndex) {
-        String command = String.format(COMMAND_NETWORK_SPEED, NETWORK_SPEEDS[selectionIndex]);
-        return processCommand(command);
-    }
-
-    /**
-     * Sets the network latency.
-     * @param selectionIndex The index in the {@link #NETWORK_LATENCIES} table.
-     * @return {@link #RESULT_OK} if success, an error String otherwise.
-     */
-    public synchronized String setNetworkLatency(int selectionIndex) {
-        String command = String.format(COMMAND_NETWORK_LATENCY, NETWORK_LATENCIES[selectionIndex]);
-        return processCommand(command);
-    }
-
-    public synchronized String sendLocation(double longitude, double latitude, double elevation) {
-
-        // need to make sure the string format uses dot and not comma
-        Formatter formatter = new Formatter(Locale.US);
-        try {
-            formatter.format(COMMAND_GPS, longitude, latitude, elevation);
-
-            return processCommand(formatter.toString());
-        } finally {
-            formatter.close();
-        }
-    }
-
     public synchronized String sendAuthentication() throws IOException {
         Path useHomeLocation = AndroidLocationsSingleton.INSTANCE.getUserHomeLocation();
-        if (useHomeLocation == null) {
-            throw new RuntimeException("Enable to query home location");
-        }
         File emulatorConsoleAuthTokenFile =
                 useHomeLocation.resolve(EMULATOR_CONSOLE_AUTH_TOKEN).toFile();
         String authToken =
@@ -791,7 +456,7 @@ public final class EmulatorConsole {
         }
 
         // now loop backward looking for the previous CRLF, or the beginning of the buffer
-        int i = 0;
+        int i;
         for (i = currentPosition-3 ; i >= 0; i--) {
             if (mBuffer[i] == '\n') {
                 // found \n!
@@ -810,51 +475,5 @@ public final class EmulatorConsole {
         }
 
         return false;
-    }
-
-    /**
-     * Returns true if the last line of the result does not start with KO
-     */
-    private boolean isValid(String[] result) {
-        if (result != null && result.length > 0) {
-            return !(RE_KO.matcher(result[result.length-1]).matches());
-        }
-        return false;
-    }
-
-    private int getLatencyIndex(String value) {
-        try {
-            // get the int value
-            int latency = Integer.parseInt(value);
-
-            // check for the speed from the index
-            for (int i = 0 ; i < MIN_LATENCIES.length; i++) {
-                if (MIN_LATENCIES[i] == latency) {
-                    return i;
-                }
-            }
-        } catch (NumberFormatException e) {
-            // Do nothing, we'll just return -1.
-        }
-
-        return -1;
-    }
-
-    private int getSpeedIndex(String value) {
-        try {
-            // get the int value
-            int speed = Integer.parseInt(value);
-
-            // check for the speed from the index
-            for (int i = 0 ; i < DOWNLOAD_SPEEDS.length; i++) {
-                if (DOWNLOAD_SPEEDS[i] == speed) {
-                    return i;
-                }
-            }
-        } catch (NumberFormatException e) {
-            // Do nothing, we'll just return -1.
-        }
-
-        return -1;
     }
 }
