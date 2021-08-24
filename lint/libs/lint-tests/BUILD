@@ -55,6 +55,7 @@ kotlin_test(
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
+    shard_count = 2,
     tags = [
         "no_test_windows",  # b/73306170
         "slow",
