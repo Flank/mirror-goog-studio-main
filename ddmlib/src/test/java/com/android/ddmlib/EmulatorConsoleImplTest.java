@@ -20,29 +20,27 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
-public final class EmulatorConsoleTest {
-    /** Test success case for {@link EmulatorConsole#getEmulatorPort(String)}. */
+public final class EmulatorConsoleImplTest {
+    /** Test success case for {@link EmulatorConsoleImpl#getEmulatorPort(String)}. */
     @Test
     public void getEmulatorPort() {
-        assertEquals(Integer.valueOf(5554), EmulatorConsole.getEmulatorPort("emulator-5554"));
+        assertEquals(Integer.valueOf(5554), EmulatorConsoleImpl.getEmulatorPort("emulator-5554"));
     }
 
     /**
-     * Test {@link EmulatorConsole#getEmulatorPort(String)} when input serial has invalid format.
+     * Test {@link EmulatorConsoleImpl#getEmulatorPort(String)} when input serial has invalid
+     * format.
      */
     @Test
     public void getEmulatorPort_invalid() {
-        assertNull(EmulatorConsole.getEmulatorPort("invalidserial"));
+        assertNull(EmulatorConsoleImpl.getEmulatorPort("invalidserial"));
     }
 
-    /** Test {@link EmulatorConsole#getEmulatorPort(String)} when port is not a number. */
+    /** Test {@link EmulatorConsoleImpl#getEmulatorPort(String)} when port is not a number. */
     @Test
     public void getEmulatorPort_nan() {
-        assertNull(EmulatorConsole.getEmulatorPort("emulator-NaN"));
+        assertNull(EmulatorConsoleImpl.getEmulatorPort("emulator-NaN"));
     }
 
     @Test
@@ -52,7 +50,7 @@ public final class EmulatorConsoleTest {
 
         // Act
         try {
-            EmulatorConsole.processOutput(lines);
+            EmulatorConsoleImpl.processOutput(lines);
             fail();
         }
         // Assert
@@ -91,7 +89,7 @@ public final class EmulatorConsoleTest {
 
         // Act
         try {
-            EmulatorConsole.processOutput(lines);
+            EmulatorConsoleImpl.processOutput(lines);
             fail();
         }
         // Assert
@@ -106,7 +104,7 @@ public final class EmulatorConsoleTest {
         String[] lines = {"/home/juancnuno/.android/avd/Pixel_4_API_30.avd", "OK"};
 
         // Act
-        Object output = EmulatorConsole.processOutput(lines);
+        Object output = EmulatorConsoleImpl.processOutput(lines);
 
         // Assert
         assertEquals("/home/juancnuno/.android/avd/Pixel_4_API_30.avd", output);
@@ -118,7 +116,7 @@ public final class EmulatorConsoleTest {
         String[] lines = {"C:\\Users\\rpaquay\\.android\\avd\\Pixel_2_API_29.avd", "OK"};
 
         // Act
-        Object output = EmulatorConsole.processOutput(lines);
+        Object output = EmulatorConsoleImpl.processOutput(lines);
 
         // Assert
         assertEquals("C:\\Users\\rpaquay\\.android\\avd\\Pixel_2_API_29.avd", output);
@@ -154,7 +152,7 @@ public final class EmulatorConsoleTest {
 
         // Act
         try {
-            EmulatorConsole.processOutput(lines);
+            EmulatorConsoleImpl.processOutput(lines);
             fail();
         }
         // Assert

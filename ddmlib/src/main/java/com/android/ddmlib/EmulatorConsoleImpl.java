@@ -38,19 +38,21 @@ import java.util.regex.Pattern;
 
 /**
  * Provides control over emulated hardware of the Android emulator.
+ *
  * <p>This is basically a wrapper around the command line console normally used with telnet.
- *<p>
- * Regarding line termination handling:<br>
+ *
+ * <p>Regarding line termination handling:<br>
  * One of the issues is that the telnet protocol <b>requires</b> usage of <code>\r\n</code>. Most
  * implementations don't enforce it (the dos one does). In this particular case, this is mostly
- * irrelevant since we don't use telnet in Java, but that means we want to make
- * sure we use the same line termination than what the console expects. The console
- * code removes <code>\r</code> and waits for <code>\n</code>.
+ * irrelevant since we don't use telnet in Java, but that means we want to make sure we use the same
+ * line termination than what the console expects. The console code removes <code>\r</code> and
+ * waits for <code>\n</code>.
+ *
  * <p>However this means you <i>may</i> receive <code>\r\n</code> when reading from the console.
- * <p>
- * <b>This API will change in the near future.</b>
+ *
+ * <p><b>This API will change in the near future.</b>
  */
-public final class EmulatorConsole {
+public final class EmulatorConsoleImpl extends EmulatorConsole {
 
     private static final String DEFAULT_ENCODING = "ISO-8859-1"; //$NON-NLS-1$
 
@@ -79,7 +81,7 @@ public final class EmulatorConsole {
     private static final Pattern sEmulatorRegexp = Pattern.compile(IDevice.RE_EMULATOR_SN);
 
     @GuardedBy(value = "sEmulators")
-    private static final HashMap<Integer, EmulatorConsole> sEmulators = new HashMap<>();
+    private static final HashMap<Integer, EmulatorConsoleImpl> sEmulators = new HashMap<>();
 
     private static final String LOG_TAG = "EmulatorConsole";
 
@@ -90,7 +92,7 @@ public final class EmulatorConsole {
     private final byte[] mBuffer = new byte[8192];
 
     /**
-     * Returns an {@link EmulatorConsole} object for the given {@link IDevice}. This can be an
+     * Returns an {@link EmulatorConsoleImpl} object for the given {@link IDevice}. This can be an
      * already existing console, or a new one if it hadn't been created yet. Note: emulator consoles
      * don't automatically close when an emulator exists. It is the responsibility of higher level
      * code to explicitly call {@link #close()} when the emulator corresponding to a open console is
@@ -100,7 +102,7 @@ public final class EmulatorConsole {
      * @return an <code>EmulatorConsole</code> object or <code>null</code> if the connection failed.
      */
     @Nullable
-    public static EmulatorConsole getConsole(IDevice d) {
+    static EmulatorConsoleImpl createConsole(IDevice d) {
         // we need to make sure that the device is an emulator
         // get the port number. This is the console port.
         Integer port = getEmulatorPort(d.getSerialNumber());
@@ -109,7 +111,7 @@ public final class EmulatorConsole {
             return null;
         }
 
-        EmulatorConsole console = retrieveConsole(port);
+        EmulatorConsoleImpl console = retrieveConsole(port);
 
         if (!console.checkConnection()) {
             console.close();
@@ -144,23 +146,21 @@ public final class EmulatorConsole {
         return null;
     }
 
-    /**
-     * Retrieve a console object for this port, creating if necessary.
-     */
+    /** Retrieve a console object for this port, creating if necessary. */
     @NonNull
-    private static EmulatorConsole retrieveConsole(int port) {
+    private static EmulatorConsoleImpl retrieveConsole(int port) {
         synchronized (sEmulators) {
-            EmulatorConsole console = sEmulators.get(port);
+            EmulatorConsoleImpl console = sEmulators.get(port);
             if (console == null) {
                 Log.v(LOG_TAG, "Creating emulator console for " + port);
-                console = new EmulatorConsole(port);
+                console = new EmulatorConsoleImpl(port);
                 sEmulators.put(port, console);
             }
             return console;
         }
     }
 
-    /** Disconnect the socket channel and remove self from emulator console cache. */
+    @Override
     public void close() {
         synchronized (sEmulators) {
             Log.v(LOG_TAG, "Removing emulator console for " + mPort);
@@ -177,7 +177,7 @@ public final class EmulatorConsole {
         }
     }
 
-    private EmulatorConsole(int port) {
+    private EmulatorConsoleImpl(int port) {
         mPort = port;
     }
 
@@ -236,16 +236,12 @@ public final class EmulatorConsole {
         return false;
     }
 
-    /**
-     * Sends a KILL command to the emulator.
-     */
+    @Override
     public synchronized void kill() {
         sendCommand(COMMAND_KILL);
     }
 
-    /**
-     * @return the AVD name. If the command failed returns the error message after "KO: " or null.
-     */
+    @Override
     @Nullable
     public synchronized String getAvdName() {
         try {
@@ -262,13 +258,7 @@ public final class EmulatorConsole {
         }
     }
 
-    /**
-     * Returns the absolute path to the virtual device in the file system. The path is operating
-     * system dependent; it will have / name separators on Linux and \ separators on Windows.
-     *
-     * @throws CommandFailedException If the subcommand failed or if the emulator's version is older
-     *     than 30.0.18
-     */
+    @Override
     @NonNull
     public synchronized String getAvdPath() throws CommandFailedException {
         return getOutput(COMMAND_AVD_PATH);
@@ -319,11 +309,13 @@ public final class EmulatorConsole {
         return processCommand(command);
     }
 
+    @Override
     public synchronized String startEmulatorScreenRecording(String args) {
         String command = String.format(COMMAND_SCREENRECORD_START, args);
         return processCommand(command);
     }
 
+    @Override
     public synchronized String stopScreenRecording() {
         return processCommand(COMMAND_SCREENRECORD_STOP);
     }
