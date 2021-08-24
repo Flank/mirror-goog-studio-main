@@ -22,11 +22,17 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
+import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.wireless.android.sdk.stats.GradleBuildProfile;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import kotlin.Unit;
 import org.junit.Rule;
@@ -45,19 +51,30 @@ public class BuilderTestingApiTest {
                     .fromTestProject("builderTestingApiUse")
                     // b/146163513
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .enableProfileOutput()
                     .create();
 
     @Test
-    public void deviceCheck() throws IOException, InterruptedException {
+    public void deviceCheck() throws Exception {
         assumeNotWindows(); // b/145233124
-        GradleBuildResult result =
-                project.executor()
-                        // The builder testing DeviceProvider API is not supported by UTP.
-                        .with(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM, false)
-                        .run("deviceCheck");
+        ProfileCapturer capturer = new ProfileCapturer(project, ".rawproto");
+        SettableFuture<GradleBuildResult> result = SettableFuture.create();
+        GradleBuildProfile profile =
+                Iterables.getOnlyElement(
+                        capturer.capture(
+                                () ->
+                                        result.set(
+                                                project.executor()
+                                                        // The builder testing DeviceProvider API is
+                                                        // not supported by UTP.
+                                                        .with(
+                                                                BooleanOption
+                                                                        .ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM,
+                                                                false)
+                                                        .run("deviceCheck"))));
         ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
         ScannerSubjectUtils.forEachLine(
-                result.getStdout(),
+                result.get().getStdout(),
                 it -> {
                     listBuilder.add(it);
                     return Unit.INSTANCE;
@@ -87,5 +104,31 @@ public class BuilderTestingApiTest {
         // Allow for interleaving of device1 and device2.
         assertThat(lines).containsAllIn(expectedActionsDevice1);
         assertThat(lines).containsAllIn(expectedActionsDevice2);
+
+        // And assert that the metrics were recorded for API use
+        Map<GradleBuildProject.PluginType, GradleBuildProject> projects =
+                profile.getProjectList().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        GradleBuildProject::getAndroidPlugin, Function.identity()));
+
+        GradleBuildProject appProject = projects.get(GradleBuildProject.PluginType.APPLICATION);
+        GradleBuildProject libraryProject = projects.get(GradleBuildProject.PluginType.LIBRARY);
+
+        assertThat(appProject.getProjectApiUse().getBuilderTestApiDeviceProvider())
+                .named("app projectApiUse.builderTestApiDeviceProvider")
+                .isTrue();
+
+        assertThat(libraryProject.getProjectApiUse().getBuilderTestApiDeviceProvider())
+                .named("lib projectApiUse.builderTestApiDeviceProvider")
+                .isTrue();
+
+        assertThat(appProject.getProjectApiUse().getBuilderTestApiTestServer())
+                .named("app projectApiUse.builderTestApiTestServer")
+                .isTrue();
+
+        assertThat(libraryProject.getProjectApiUse().getBuilderTestApiTestServer())
+                .named("lib projectApiUse.builderTestApiTestServer")
+                .isTrue();
     }
 }
