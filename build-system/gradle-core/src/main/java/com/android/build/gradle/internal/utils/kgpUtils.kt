@@ -142,7 +142,6 @@ fun addComposeArgsToKotlinCompile(
         it.kotlinOptions.useIR = true
         val extraFreeCompilerArgs = mutableListOf(
                 "-Xplugin=${compilerExtension.files.first().absolutePath}",
-                "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
                 "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
                 "-Xallow-unstable-dependencies"
         )
