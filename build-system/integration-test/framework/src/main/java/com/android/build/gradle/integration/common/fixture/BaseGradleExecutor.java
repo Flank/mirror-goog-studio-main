@@ -191,15 +191,17 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    /** Sets to run Gradle with a per-test class preference root.
+    /**
+     * Sets whether to run Gradle with a per-test preference root.
      *
-     * The preference root outside of test is normally ~/.android.
-     * Without this flag, the folder is located in the build output, common to all-tests.
+     * <p>The preference root outside of test is normally ~/.android.
      *
-     * Turning this flag on, will make each test class use their own directory.
+     * <p>If set to false, the folder is located in the build output, common to all tests.
+     *
+     * <p>If set to true, the test will use its own isolated folder.
      */
-    public final T withPerTestPrefsRoot() {
-        perTestPrefsRoot = true;
+    public final T withPerTestPrefsRoot(boolean perTestPrefsRoot) {
+        this.perTestPrefsRoot = perTestPrefsRoot;
         return (T) this;
     }
 

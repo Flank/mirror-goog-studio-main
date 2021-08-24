@@ -134,7 +134,7 @@ abstract class LintPlugin : Plugin<Project> {
             dslOperationsRegistrar.executeDslFinalizationBlocks(lintOptions!!)
 
             lintTask.configure { task ->
-                task.configureForStandalone(artifacts, lintOptions!!)
+                task.configureForStandalone(taskCreationServices, artifacts, lintOptions!!)
             }
             project.tasks.register("lintReport", AndroidLintTask::class.java) { task ->
                 task.description = "Generates the lint report for project `${project.name}`"
@@ -160,7 +160,12 @@ abstract class LintPlugin : Plugin<Project> {
             }
 
             project.tasks.register("lintVital", AndroidLintTextOutputTask::class.java) { task ->
-                task.configureForStandalone(artifacts, lintOptions!!, fatalOnly = true)
+                task.configureForStandalone(
+                    taskCreationServices,
+                    artifacts,
+                    lintOptions!!,
+                    fatalOnly = true
+                )
             }
             project.tasks.register("lintVitalReport", AndroidLintTask::class.java) { task ->
                 task.description =

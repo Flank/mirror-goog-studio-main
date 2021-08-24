@@ -1268,7 +1268,7 @@ allprojects { proj ->
 
     /** Fluent method to get the model.  */
     fun modelV2(): ModelBuilderV2 {
-        return applyOptions(ModelBuilderV2(this, projectConnection)).withPerTestPrefsRoot()
+        return applyOptions(ModelBuilderV2(this, projectConnection)).withPerTestPrefsRoot(true)
     }
 
     private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {

@@ -1232,7 +1232,8 @@ abstract class LintClient {
      * @return a list of rule jars (possibly empty).
      */
     open fun findGlobalRuleJars(driver: LintDriver?, warnDeprecated: Boolean): List<File> {
-        if (isUnitTest) {
+        // If isGradle, these jars are passed to lint via --lint-rule-jars.
+        if (isUnitTest || isGradle) {
             return emptyList()
         }
 
@@ -1255,6 +1256,9 @@ abstract class LintClient {
                             // Don't flag the same warnings for each analyzed module -- doing it in the reporting
                             // task is enough and avoids a lot of redundant/duplicate warnings
                             if (warnDeprecated && driver?.mode != LintDriver.DriverMode.ANALYSIS_ONLY) {
+                                // TODO(b/197755365) Once this behavior changes here in LintClient, update AGP's
+                                //  behavior in AndroidLintTask and AndroidLintAnalysisTask, and update the message in
+                                //  AndroidLintTextOutputTask accordingly.
                                 val message =
                                     "Loaded lint jar file from ${jarFile.parent} (${jarFile.name}); this will stop " +
                                         "working soon. If you need to push lint rules into a build, use the " +

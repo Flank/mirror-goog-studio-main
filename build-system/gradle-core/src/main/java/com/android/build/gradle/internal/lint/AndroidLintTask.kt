@@ -164,10 +164,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     abstract val lintCacheDirectory: DirectoryProperty
 
     @get:Classpath
-    abstract val lintRulesJar: ConfigurableFileCollection
-
-    @get:Classpath
-    abstract val globalRuleJars: ConfigurableFileCollection
+    abstract val lintRuleJars: ConfigurableFileCollection
 
     @get:Nested
     abstract val projectInputs: ProjectInputs
@@ -345,7 +342,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             arguments += listOf("--check", check)
         }
 
-        val rules = lintRulesJar.files.filter { it.isFile }.map { it.absolutePath }
+        val rules = lintRuleJars.files.filter { it.isFile }.map { it.absolutePath }
         if (rules.isNotEmpty()) {
             arguments += "--lint-rule-jars"
             arguments += rules.asLintPaths()
@@ -504,8 +501,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 isAndroid = true
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
-            task.lintRulesJar.from(creationConfig.globalScope.localCustomLintChecks)
-            task.lintRulesJar.from(
+            task.lintRuleJars.from(creationConfig.globalScope.localCustomLintChecks)
+            task.lintRuleJars.from(
                 creationConfig
                     .variantDependencies
                     .getArtifactFileCollection(
@@ -514,7 +511,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.LINT
                     )
             )
-            task.lintRulesJar.from(
+            task.lintRuleJars.from(
                 creationConfig
                     .variantDependencies
                     .getArtifactFileCollection(
@@ -523,7 +520,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.LINT
                     )
             )
-            task.lintRulesJar.disallowChanges()
+            task.lintRuleJars.disallowChanges()
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.autoFix.setDisallowChanges(autoFix)
             if (autoFix) {
@@ -751,18 +748,16 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
         val locationBuildService = getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
 
-        val globalLintJarsInPrefsDir: ConfigurableFileTree =
-            project.fileTree(locationBuildService.map {
-                it.prefsLocation.resolve("lint")
-            }).also { it.include("*$DOT_JAR") }
-        this.globalRuleJars.from(globalLintJarsInPrefsDir)
+        this.lintRuleJars.from(
+            // TODO(b/197755365) stop including these jars in AGP 7.2
+            getGlobalLintJarsInPrefsDir(project, locationBuildService)
+        )
         // Also include Lint jars set via the environment variable ANDROID_LINT_JARS
         val globalLintJarsFromEnvVariable: Provider<List<String>> =
                 project.providers.environmentVariable(ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE)
                         .orElse("")
                         .map { it.split(File.pathSeparator).filter(String::isNotEmpty) }
-        this.globalRuleJars.from(globalLintJarsFromEnvVariable)
-        this.globalRuleJars.disallowChanges()
+        this.lintRuleJars.from(globalLintJarsFromEnvVariable)
 
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)
@@ -830,7 +825,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 checkDependencies = false,
                 isForAnalysis = false
             )
-        this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
+        this.lintRuleJars.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(
             project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
         )
@@ -869,5 +864,15 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
         private const val ANDROID_LINT_JARS_ENVIRONMENT_VARIABLE = "ANDROID_LINT_JARS"
+
+        fun getGlobalLintJarsInPrefsDir(
+            project: Project,
+            androidLocationsBuildService: Provider<AndroidLocationsBuildService>
+        ): ConfigurableFileTree =
+            project.fileTree(
+                androidLocationsBuildService.map {
+                    it.prefsLocation.resolve("lint")
+                }
+            ).also { it.include("*$DOT_JAR") }
     }
 }

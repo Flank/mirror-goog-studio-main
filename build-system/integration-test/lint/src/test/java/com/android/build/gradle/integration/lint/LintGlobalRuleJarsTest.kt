@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -54,7 +55,8 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun `Jars in prefs directory affect up-to-date checking`() {
-        val executor = project.getExecutor().withPerTestPrefsRoot().apply {
+        // Use an isolated android_prefs_root folder so this test doesn't affect other lint tests.
+        val executor = project.getExecutor().withPerTestPrefsRoot(true).apply {
             // invoke a build to force initialization of preferencesRootDir
             run("tasks")
         }
@@ -70,16 +72,16 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).wasUpToDate()
         }
 
-        val file = prefsLintDir.resolve("abcdefg.jar")
-        try {
-            FileUtils.createFile(file, "FOO_BAR")
-            executor.run(lintTaskName).also { result ->
-                assertThat(result.getTask(lintReportTaskName)).didWork()
-                if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
-            }
-        } finally {
-            // Make sure we don't leave this jar around in a shared directory to affect later tests
-            file.delete()
+        FileUtils.createFile(prefsLintDir.resolve("abcdefg.jar"), "FOO_BAR")
+        executor.run(lintTaskName).also { result ->
+            assertThat(result.getTask(lintReportTaskName)).didWork()
+            if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+            assertThat(result.stdout).contains("(abcdefg.jar); this will stop working soon.")
+        }
+
+        // Now switch to the shared android_prefs_root folder to test we don't see the warning
+        executor.withPerTestPrefsRoot(false).run(lintTaskName).also { result ->
+            assertThat(result.stdout).doesNotContain("this will stop working soon.")
         }
     }
 
@@ -106,6 +108,7 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
         executor.run(lintTaskName).also { result ->
             assertThat(result.getTask(lintReportTaskName)).didWork()
             if (usePartialAnalysis) assertThat(result.getTask(lintAnalyzeTaskName)).didWork()
+            assertThat(result.stdout).doesNotContain("this will stop working soon.")
         }
     }
 

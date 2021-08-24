@@ -25,16 +25,22 @@ import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ma
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStderr
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStdout
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.dependsOn
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -71,7 +77,17 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     @get:Input
     abstract val abortOnError: Property<Boolean>
 
+    /**
+     * The lint rule jars found in .android/lint. These jars are currently passed to lint via
+     * --lint-rule-jars in [AndroidLintTask] and [AndroidLintAnalysisTask], but this behavior has
+     * been deprecated. We warn in this task in case those other tasks are UP-TO-DATE.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val deprecatedGlobalRuleJars: ConfigurableFileCollection
+
     override fun doTaskAction() {
+        maybeWarnAboutDeprecatedGlobalRuleJars()
         if (outputStream.get() != OutputStream.NONE) {
             textReportInputFile.get().asFile.let { textReportFile ->
                 if (!textReportFile.isFile) {
@@ -101,6 +117,20 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
                 }
                 maybeThrowException(returnValue, android.get(), fatalOnly.get())
             }
+        }
+    }
+
+    private fun maybeWarnAboutDeprecatedGlobalRuleJars() {
+        val deprecatedJars = deprecatedGlobalRuleJars.files.filter { it.isFile }
+        if (deprecatedJars.isNotEmpty()) {
+            val parent: String = deprecatedJars[0].parent
+            val jarNames = deprecatedJars.joinToString { it.name }
+            logger.warn(
+                "Loaded lint jar file from $parent ($jarNames); this will stop working soon. If " +
+                        "you need to push lint rules into a build, use the `ANDROID_LINT_JARS` " +
+                        "environment variable or a `lint.xml` file setting " +
+                        "`<lint lintJars=\"path\"...>`"
+            )
         }
     }
 
@@ -134,6 +164,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             task.description = "Print text output from the corresponding lint report task"
             task.android.setDisallowChanges(true)
             task.initializeCommonInputs(
+                creationConfig.services.projectInfo.getProject(),
                 creationConfig.artifacts,
                 creationConfig.globalScope.extension.lintOptions,
                 fatalOnly
@@ -142,6 +173,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     }
 
     internal fun initializeCommonInputs(
+        project: Project,
         artifacts: ArtifactsImpl,
         lintOptions: LintOptions,
         fatalOnly: Boolean
@@ -173,9 +205,15 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
                 outputStream.setDisallowChanges(OutputStream.STDOUT)
             else -> outputStream.setDisallowChanges(OutputStream.NONE)
         }
+        val locationsBuildService =
+            getBuildService<AndroidLocationsBuildService>(project.gradle.sharedServices)
+        this.deprecatedGlobalRuleJars.fromDisallowChanges(
+            AndroidLintTask.getGlobalLintJarsInPrefsDir(project, locationsBuildService)
+        )
     }
 
     internal fun configureForStandalone(
+        taskCreationServices: TaskCreationServices,
         artifacts: ArtifactsImpl,
         lintOptions: LintOptions,
         fatalOnly: Boolean = false
@@ -185,7 +223,12 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
         description = "Print text output from the corresponding lint report task"
         android.setDisallowChanges(false)
         variantName = ""
-        initializeCommonInputs(artifacts, lintOptions, fatalOnly)
+        initializeCommonInputs(
+            taskCreationServices.projectInfo.getProject(),
+            artifacts,
+            lintOptions,
+            fatalOnly
+        )
     }
 
     enum class OutputStream {
