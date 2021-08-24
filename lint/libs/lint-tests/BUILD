@@ -12,6 +12,9 @@ maven_library(
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
+    exports = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",

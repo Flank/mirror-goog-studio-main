@@ -11,6 +11,7 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint:" + BASE_VERSION,
+    enable_scopes = True,
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/cli",
@@ -22,6 +23,10 @@ maven_library(
         ],
     ),
     visibility = ["//visibility:public"],
+    exports = [
+        "//tools/base/lint:tools.lint-api",
+        "//tools/base/lint:tools.lint-checks",
+    ],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
@@ -34,8 +39,6 @@ maven_library(
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint:tools.lint-model",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
