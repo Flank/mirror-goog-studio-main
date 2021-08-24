@@ -110,7 +110,14 @@ public class FakeRepoManager extends RepoManager {
             @Nullable List<Runnable> onError,
             @NonNull ProgressRunner runner,
             @Nullable Downloader downloader,
-            @Nullable SettingsController settings) {}
+            @Nullable SettingsController settings) {
+        if (onLocalComplete != null) {
+            onLocalComplete.forEach(callback -> callback.loaded(mPackages));
+        }
+        if (onSuccess != null) {
+            onSuccess.forEach(callback -> callback.loaded(mPackages));
+        }
+    }
 
     @Override
     public void loadSynchronously(
@@ -120,7 +127,14 @@ public class FakeRepoManager extends RepoManager {
             @Nullable List<Runnable> onError,
             @NonNull ProgressRunner runner,
             @Nullable Downloader downloader,
-            @Nullable SettingsController settings) {}
+            @Nullable SettingsController settings) {
+        if (onLocalComplete != null) {
+            onLocalComplete.forEach(callback -> callback.loaded(mPackages));
+        }
+        if (onSuccess != null) {
+            onSuccess.forEach(callback -> callback.loaded(mPackages));
+        }
+    }
 
     @Override
     public void markInvalid() {
