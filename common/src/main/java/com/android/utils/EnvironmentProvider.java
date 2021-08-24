@@ -18,6 +18,10 @@ package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.annotations.VisibleForTesting;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Provides access to system properties and environment variables. Most of the time using {@link
@@ -31,18 +35,39 @@ public interface EnvironmentProvider {
     @Nullable
     String getEnvVariable(@NonNull String key);
 
-    EnvironmentProvider DIRECT =
-            new EnvironmentProvider() {
-                @Nullable
-                @Override
-                public String getSystemProperty(@NonNull String key) {
-                    return System.getProperty(key);
-                }
+    @NonNull
+    default FileSystem getFileSystem() {
+        return FileSystems.getDefault();
+    }
 
-                @Nullable
-                @Override
-                public String getEnvVariable(@NonNull String key) {
-                    return System.getenv(key);
-                }
-            };
+    @VisibleForTesting
+    class DirectEnvironmentProvider implements EnvironmentProvider {
+        @Nullable
+        @Override
+        public String getSystemProperty(@NonNull String key) {
+            return System.getProperty(key);
+        }
+
+        @Nullable
+        @Override
+        public String getEnvVariable(@NonNull String key) {
+            return System.getenv(key);
+        }
+
+        /**
+         * The filesystem to be used during tests. Should probably be set only via
+         * AndroidLocationsSingletonRule.
+         */
+        @Nullable @VisibleForTesting public FileSystem fileSystemOverrideForTests = null;
+
+        @NotNull
+        @Override
+        public FileSystem getFileSystem() {
+            return fileSystemOverrideForTests != null
+                    ? fileSystemOverrideForTests
+                    : EnvironmentProvider.super.getFileSystem();
+        }
+    }
+
+    DirectEnvironmentProvider DIRECT = new DirectEnvironmentProvider();
 }

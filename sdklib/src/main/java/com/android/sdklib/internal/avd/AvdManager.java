@@ -81,7 +81,7 @@ import java.util.stream.Stream;
  */
 public class AvdManager {
 
-    private File mBaseAvdFolder;
+    private Path mBaseAvdFolder;
 
     /**
      * Exception thrown when something is wrong with a target path.
@@ -446,7 +446,7 @@ public class AvdManager {
 
     protected AvdManager(
             @NonNull AndroidSdkHandler sdkHandler,
-            @NonNull File baseAvdFolder,
+            @NonNull Path baseAvdFolder,
             @NonNull ILogger log,
             @NonNull FileOp fop)
             throws AndroidLocationsException {
@@ -472,14 +472,13 @@ public class AvdManager {
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger log)
             throws AndroidLocationsException {
-        return getInstance(
-                sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile(), log);
+        return getInstance(sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation(), log);
     }
 
     @Nullable
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler,
-            @NonNull File avdHomeFolder,
+            @NonNull Path avdHomeFolder,
             @NonNull ILogger log)
             throws AndroidLocationsException {
         if (sdkHandler.getLocation() == null) {
@@ -489,8 +488,7 @@ public class AvdManager {
             AvdManager manager;
             FileOp fop = sdkHandler.getFileOp();
             AvdManagerCacheKey key =
-                    new AvdManagerCacheKey(
-                            sdkHandler.getLocation(), avdHomeFolder.toPath().toAbsolutePath());
+                    new AvdManagerCacheKey(sdkHandler.getLocation(), avdHomeFolder);
             WeakReference<AvdManager> ref = mManagers.get(key);
             if (ref != null && (manager = ref.get()) != null) {
                 return manager;
@@ -510,7 +508,7 @@ public class AvdManager {
 
     /** Returns the base folder where AVDs are created. */
     @NonNull
-    public File getBaseAvdFolder() {
+    public Path getBaseAvdFolder() {
         return mBaseAvdFolder;
     }
 
@@ -945,7 +943,7 @@ public class AvdManager {
 
             if (bootProps != null && !bootProps.isEmpty()) {
                 Path bootPropsFile = avdFolder.resolve(BOOT_PROP);
-                writeIniFile(mFop.toFile(bootPropsFile), bootProps, false);
+                writeIniFile(bootPropsFile, bootProps, false);
             }
 
             AvdInfo oldAvdInfo = getAvd(avdName, false /*validAvdOnly*/);
@@ -1033,7 +1031,7 @@ public class AvdManager {
                     parseIniFile(new PathFileWrapper(mFop.toPath(configIni)), log);
             configVals.put(AVD_INI_AVD_ID, newAvdName);
             configVals.put(AVD_INI_DISPLAY_NAME, newAvdName);
-            writeIniFile(configIni, configVals, true);
+            writeIniFile(mFop.toPath(configIni), configVals, true);
 
             // Update the AVD name and paths in the new copies of config.ini and hardware-qemu.ini
             String origAvdName = origAvd.getName().replace(".avd", "");
@@ -1090,7 +1088,7 @@ public class AvdManager {
                     iniVals.put(iniEntry.getKey(), newIniValue);
                 }
             }
-            writeIniFile(iniFile, iniVals, true);
+            writeIniFile(mFop.toPath(iniFile), iniVals, true);
         }
         return iniVals;
     }
@@ -1157,14 +1155,13 @@ public class AvdManager {
             boolean removePrevious,
             @NonNull AndroidVersion version)
             throws AndroidLocationsException, IOException {
-        File iniFile = AvdInfo.getDefaultIniFile(this, name);
+        Path iniFile = AvdInfo.getDefaultIniFile(this, name);
 
         if (removePrevious) {
-            if (mFop.isFile(iniFile)) {
-                mFop.delete(iniFile);
-            } else if (mFop.isDirectory(iniFile)) {
-                deleteContentOf(iniFile);
-                mFop.delete(iniFile);
+            if (CancellableFileIo.isRegularFile(iniFile)) {
+                Files.delete(iniFile);
+            } else if (CancellableFileIo.isDirectory(iniFile)) {
+                FileOpUtils.deleteFileOrFolder(iniFile);
             }
         }
 
@@ -1190,7 +1187,7 @@ public class AvdManager {
         values.put(AVD_INFO_TARGET, AndroidTargetHash.getPlatformHashString(version));
         writeIniFile(iniFile, values, true);
 
-        return iniFile;
+        return mFop.toFile(iniFile);
     }
 
     /**
@@ -1307,13 +1304,14 @@ public class AvdManager {
             }
 
             if (newName != null) {
-                File oldIniFile = avdInfo.getIniFile();
-                File newIniFile = AvdInfo.getDefaultIniFile(this, newName);
+                Path oldIniFile = mFop.toPath(avdInfo.getIniFile());
+                Path newIniFile = AvdInfo.getDefaultIniFile(this, newName);
 
-                log.warning("Moving '%1$s' to '%2$s'.", oldIniFile.getPath(), newIniFile.getPath());
-                if (!mFop.renameTo(oldIniFile, newIniFile)) {
-                    log.warning(null, "Failed to move '%1$s' to '%2$s'.",
-                            oldIniFile.getPath(), newIniFile.getPath());
+                log.warning("Moving '%1$s' to '%2$s'.", oldIniFile, newIniFile);
+                try {
+                    Files.move(oldIniFile, newIniFile);
+                } catch (IOException exception) {
+                    log.warning(null, "Failed to move '%1$s' to '%2$s'.", oldIniFile, newIniFile);
                     return false;
                 }
 
@@ -1376,24 +1374,36 @@ public class AvdManager {
      */
     private File[] buildAvdFilesList() throws AndroidLocationsException {
         // ensure folder validity.
-        if (mFop.isFile(mBaseAvdFolder)) {
+        if (CancellableFileIo.isRegularFile(mBaseAvdFolder)) {
             throw new AndroidLocationsException(
-                    String.format("%1$s is not a valid folder.", mBaseAvdFolder.getAbsolutePath()));
-        } else if (mFop.exists(mBaseAvdFolder) == false) {
+                    String.format("%1$s is not a valid folder.", mBaseAvdFolder.toAbsolutePath()));
+        } else if (CancellableFileIo.notExists(mBaseAvdFolder)) {
             // folder is not there, we create it and return
-            mFop.mkdirs(mBaseAvdFolder);
+            try {
+                Files.createDirectories(mBaseAvdFolder);
+            } catch (IOException ignore) {
+            }
             return null;
         }
 
-        File[] avds = mFop.listFiles(mBaseAvdFolder, (parent, name) -> {
-            if (INI_NAME_PATTERN.matcher(name).matches()) {
-                // check it's a file and not a folder
-                return mFop.isFile(new File(parent, name));
-            }
+        File[] avds = new File[0];
+        try (Stream<Path> contents = CancellableFileIo.list(mBaseAvdFolder)) {
+            avds =
+                    contents.filter(
+                                    path -> {
+                                        if (INI_NAME_PATTERN
+                                                .matcher(path.getFileName().toString())
+                                                .matches()) {
+                                            // check it's a file and not a folder
+                                            return Files.isRegularFile(path);
+                                        }
 
-            return false;
-        });
-
+                                        return false;
+                                    })
+                            .map(path -> mSdkHandler.getFileOp().toFile(path))
+                            .toArray(File[]::new);
+        } catch (IOException ignore) {
+        }
         return avds;
     }
 
@@ -1450,7 +1460,7 @@ public class AvdManager {
                     Path androidFolder = mSdkHandler.getAndroidFolder();
                     Path f =
                             androidFolder == null
-                                    ? mSdkHandler.getFileOp().toPath(relPath)
+                                    ? mSdkHandler.toCompatiblePath(relPath)
                                     : androidFolder.resolve(relPath);
                     if (CancellableFileIo.isDirectory(f)) {
                         avdPath = f.toAbsolutePath().toString();
@@ -1606,22 +1616,21 @@ public class AvdManager {
     }
 
     /**
-     * Writes a .ini file from a set of properties, using UTF-8 encoding.
-     * The keys are sorted.
-     * The file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
+     * Writes a .ini file from a set of properties, using UTF-8 encoding. The keys are sorted. The
+     * file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
      *
      * @param iniFile The file to generate.
      * @param values The properties to place in the ini file.
      * @param addEncoding When true, add a property {@link #AVD_INI_ENCODING} indicating the
-     *                    encoding used to write the file.
+     *     encoding used to write the file.
      * @throws IOException if {@link FileWriter} fails to open, write or close the file.
      */
-    private void writeIniFile(File iniFile, Map<String, String> values, boolean addEncoding)
+    private void writeIniFile(Path iniFile, Map<String, String> values, boolean addEncoding)
             throws IOException {
 
         Charset charset = Charsets.UTF_8;
-        try (OutputStreamWriter writer = new OutputStreamWriter(mFop.newFileOutputStream(iniFile),
-                charset)){
+        try (OutputStreamWriter writer =
+                new OutputStreamWriter(Files.newOutputStream(iniFile), charset)) {
             if (addEncoding) {
                 // Write down the charset we're using in case we want to use it later.
                 values.put(AVD_INI_ENCODING, charset.name());
@@ -1818,7 +1827,7 @@ public class AvdManager {
     @Slow
     public AvdInfo updateAvd(AvdInfo avd, Map<String, String> newProperties) throws IOException {
         // now write the config file
-        File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
+        Path configIniFile = mFop.toPath(avd.getDataFolderPath()).resolve(CONFIG_INI);
         writeIniFile(configIniFile, newProperties, true);
 
         // finally create a new AvdInfo for this unbroken avd and add it to the list.
@@ -2236,7 +2245,7 @@ public class AvdManager {
         values.putAll(finalHardwareValues);
 
         Path configIniFile = avdFolder.resolve(CONFIG_INI);
-        writeIniFile(mFop.toFile(configIniFile), values, true);
+        writeIniFile(configIniFile, values, true);
 
         return;
     }

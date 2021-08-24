@@ -19,7 +19,7 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
+import com.android.io.CancellableFileIo;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.devices.Abi;
@@ -28,6 +28,7 @@ import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.google.common.base.Strings;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
@@ -114,8 +115,10 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         mIniFile = iniFile;
         mFolderPath = folderPath;
         mSystemImage = systemImage;
-        mProperties = properties == null ? Collections.<String, String>emptyMap()
-                : Collections.unmodifiableMap(properties);
+        mProperties =
+                properties == null
+                        ? Collections.emptyMap()
+                        : Collections.unmodifiableMap(properties);
         mStatus = status;
         String psString = mProperties.get(AvdManager.AVD_INI_PLAYSTORE_ENABLED);
         mHasPlayStore = "true".equalsIgnoreCase(psString) || "yes".equalsIgnoreCase(psString);
@@ -265,21 +268,20 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param manager The AVD Manager, used to get the AVD storage path.
      * @param avdName The name of the desired AVD.
      * @param unique Whether to return the default or a unique variation of the default.
-     * @throws AndroidLocationException if there's a problem getting android root directory.
      */
     @NonNull
-    public static File getDefaultAvdFolder(
-            @NonNull AvdManager manager,
-            @NonNull String avdName,
-            @NonNull FileOp fileOp,
-            boolean unique) {
-        File base = manager.getBaseAvdFolder();
-        File result = new File(base, avdName + AvdManager.AVD_FOLDER_EXTENSION);
+    public static Path getDefaultAvdFolder(
+            @NonNull AvdManager manager, @NonNull String avdName, boolean unique) {
+        Path base = manager.getBaseAvdFolder();
+        Path result = base.resolve(avdName + AvdManager.AVD_FOLDER_EXTENSION);
         if (unique) {
             int suffix = 0;
-            while (fileOp.exists(result)) {
-                result = new File(base, String.format("%s_%d%s", avdName, (++suffix),
-                        AvdManager.AVD_FOLDER_EXTENSION));
+            while (CancellableFileIo.exists(result)) {
+                result =
+                        base.resolve(
+                                String.format(
+                                        "%s_%d%s",
+                                        avdName, (++suffix), AvdManager.AVD_FOLDER_EXTENSION));
             }
         }
         return result;
@@ -294,9 +296,9 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param avdName The name of the desired AVD.
      */
     @NonNull
-    public static File getDefaultIniFile(@NonNull AvdManager manager, @NonNull String avdName) {
-        File avdRoot = manager.getBaseAvdFolder();
-        return new File(avdRoot, avdName + AvdManager.INI_EXTENSION);
+    public static Path getDefaultIniFile(@NonNull AvdManager manager, @NonNull String avdName) {
+        Path avdRoot = manager.getBaseAvdFolder();
+        return avdRoot.resolve(avdName + AvdManager.INI_EXTENSION);
     }
 
     /**

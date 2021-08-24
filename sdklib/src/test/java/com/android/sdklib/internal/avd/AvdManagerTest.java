@@ -28,12 +28,15 @@ import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Maps;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -44,7 +47,7 @@ import junit.framework.TestCase;
 
 public class AvdManagerTest extends TestCase {
 
-    private static final String ANDROID_PREFS_ROOT = "/android-home";
+    private static final String ANDROID_PREFS_ROOT = "android-home";
 
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
@@ -57,32 +60,35 @@ public class AvdManagerTest extends TestCase {
     private SystemImage mSystemImageWear25;
     private SystemImage mSystemImageWearChina;
     private SystemImage mSystemImageChromeOs;
-    private final MockFileOp mFileOp = new MockFileOp();
+    private final FileSystem mMockFs = InMemoryFileSystems.createInMemoryFileSystem();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
-        mFileOp.recordExistingFile("/sdk/tools/lib/emulator/snapshots.img");
-        recordGoogleApisSysImg23(mFileOp);
-        recordPlayStoreSysImg24(mFileOp);
-        recordSysImg21(mFileOp);
-        recordSysImg23(mFileOp);
-        recordWearSysImg24(mFileOp);
-        recordWearSysImg25(mFileOp);
-        recordWearSysImgChina(mFileOp);
-        recordChromeOsSysImg(mFileOp);
+        Path root = InMemoryFileSystems.getSomeRoot(mMockFs);
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/tools/lib/emulator/snapshots.img"));
+        recordGoogleApisSysImg23(root);
+        recordPlayStoreSysImg24(root);
+        recordSysImg21(root);
+        recordSysImg23(root);
+        recordWearSysImg24(root);
+        recordWearSysImg25(root);
+        recordWearSysImgChina(root);
+        recordChromeOsSysImg(root);
+        Path prefsRoot = root.resolve(ANDROID_PREFS_ROOT);
         mAndroidSdkHandler =
                 new AndroidSdkHandler(
-                        mFileOp.toPath("/sdk"), mFileOp.toPath(ANDROID_PREFS_ROOT), mFileOp);
+                        root.resolve("sdk"),
+                        prefsRoot,
+                        new MockFileOp(mMockFs));
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
-                        new File(ANDROID_PREFS_ROOT, AbstractAndroidLocations.FOLDER_AVD)
-                                .getAbsoluteFile(),
+                        prefsRoot.resolve(AbstractAndroidLocations.FOLDER_AVD),
                         new NullLogger());
-        mAvdFolder =
-                mFileOp.toPath(AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false));
+        mAvdFolder = AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), false);
 
         for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
             final String tagId = si.getTag().getId();
@@ -374,8 +380,8 @@ public class AvdManagerTest extends TestCase {
         assertNotNull("Could not create AVD", origAvd);
         // Put some extra files in the AVD directory
         Files.createFile(mAvdFolder.resolve("foo.bar"));
-        mFileOp.recordExistingFile(
-                mAvdFolder + "/hardware-qemu.ini",
+        InMemoryFileSystems.recordExistingFile(
+                mAvdFolder.resolve("hardware-qemu.ini"),
                 "avd.name="
                         + this.getName()
                         + "\nhw.sdCard.path="
@@ -404,8 +410,7 @@ public class AvdManagerTest extends TestCase {
         // Verify that the duplicated AVD is correct
         assertNotNull("Could not duplicate AVD", duplicatedAvd);
         Path parentFolder = mAvdFolder.getParent();
-        String newFolderPath = parentFolder + File.separator + newName + ".avd";
-        Path newFolder = mFileOp.toPath(newFolderPath);
+        Path newFolder = parentFolder.resolve(newName + ".avd");
         String newNameIni = newName + ".ini";
         Path newIniFile = parentFolder.resolve(newNameIni);
         assertTrue("Expected " + newNameIni + " in " + parentFolder, Files.exists(newIniFile));
@@ -639,7 +644,8 @@ public class AvdManagerTest extends TestCase {
         String avdIniName = this.getName() + ".ini";
         Path avdIniFile = parentFolder.resolve(avdIniName).toAbsolutePath();
         assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
-        AvdInfo avdInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(avdIniFile), log);
+        AvdInfo avdInfo =
+                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(avdIniFile), log);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
         assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder.toAbsolutePath().toString());
 
@@ -651,14 +657,16 @@ public class AvdManagerTest extends TestCase {
                         new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
             corruptedWriter.write("[invalid syntax]\n");
         }
-        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(avdIniFile), log);
+        AvdInfo corruptedInfo =
+                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(avdIniFile), log);
         assertThat(corruptedInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check a non-existent AVD .ini file
         String noSuchIniName = "noSuch.ini";
         Path noSuchIniFile = parentFolder.resolve(noSuchIniName);
         assertFalse("Found unexpected noSuch.ini in " + parentFolder, Files.exists(noSuchIniFile));
-        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(noSuchIniFile), log);
+        AvdInfo noSuchInfo =
+                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(noSuchIniFile), log);
         assertThat(noSuchInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check an empty AVD .ini file
@@ -668,45 +676,57 @@ public class AvdManagerTest extends TestCase {
                 Files.createFile(emptyIniFile));
         assertTrue("Expected empty AVD .ini in " + parentFolder, Files.exists(emptyIniFile));
         assertThat(Files.size(emptyIniFile)).isEqualTo(0);
-        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(emptyIniFile), log);
+        AvdInfo emptyInfo =
+                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(emptyIniFile), log);
         assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
     }
 
-    private static void recordSysImg21(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/system.img");
+    private static void recordSysImg21(Path root) {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-21/default/x86/system.img"));
         // Include userdata.img, but no data/ directory
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/"
-                        + AvdManager.USERDATA_IMG);
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/sample");
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/skins/res2/layout");
-        fop.recordExistingFile("/sdk/system-images/android-21/default/x86/package.xml",
-                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                               + "<ns3:sdk-sys-img "
-                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
-                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
-                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
-                               + "<license id=\"license-A78C4257\" type=\"text\">Terms and Conditions\n"
-                               + "</license><localPackage path=\"system-images;android-21;default;x86\" "
-                               + "obsolete=\"false\">"
-                               + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>21</api-level>"
-                               + "<tag><id>default</id><display>Default</display></tag><abi>x86</abi>"
-                               + "</type-details><revision><major>5</major></revision>"
-                               + "<display-name>Intel x86 Atom System Image</display-name>"
-                               + "<uses-license ref=\"license-A78C4257\"/></localPackage>"
-                               + "</ns3:sdk-sys-img>\n");
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-21/default/x86/" + AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-21/default/x86/skins/res1/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-21/default/x86/skins/sample"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-21/default/x86/skins/res2/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-21/default/x86/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns3:sdk-sys-img "
+                        + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-A78C4257\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage path=\"system-images;android-21;default;x86\" "
+                        + "obsolete=\"false\">"
+                        + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>21</api-level>"
+                        + "<tag><id>default</id><display>Default</display></tag><abi>x86</abi>"
+                        + "</type-details><revision><major>5</major></revision>"
+                        + "<display-name>Intel x86 Atom System Image</display-name>"
+                        + "<uses-license ref=\"license-A78C4257\"/></localPackage>"
+                        + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordSysImg23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/system.img");
+    private static void recordSysImg23(Path root) throws IOException {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/default/x86/system.img"));
         // Include data/ directory, but no userdata.img file
-        fop.mkdirs(new File("/sdk/system-images/android-23/default/x86/data"));
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res1/layout");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/sample");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/skins/res2/layout");
-        fop.recordExistingFile("/sdk/system-images/android-23/default/x86/package.xml",
+        Files.createDirectories(root.resolve("sdk/system-images/android-23/default/x86/data"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/default/x86/skins/res1/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/default/x86/skins/sample"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/default/x86/skins/res2/layout"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/default/x86/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -725,10 +745,13 @@ public class AvdManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordGoogleApisSysImg23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/system.img");
-        fop.mkdirs(new File("/sdk/system-images/android-23/google_apis/x86_64/data"));
-        fop.recordExistingFile("/sdk/system-images/android-23/google_apis/x86_64/package.xml",
+    private static void recordGoogleApisSysImg23(Path root) throws IOException {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/google_apis/x86_64/system.img"));
+        Files.createDirectories(
+                root.resolve("sdk/system-images/android-23/google_apis/x86_64/data"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-23/google_apis/x86_64/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -749,107 +772,126 @@ public class AvdManagerTest extends TestCase {
                         + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordPlayStoreSysImg24(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/system.img");
-        fop.mkdirs(new File("/sdk/system-images/android-24/google_apis_playstore/x86_64/data"));
-        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/package.xml",
-                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                               + "<ns3:sdk-sys-img "
-                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
-                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
-                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
-                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
-                               + "</license><localPackage "
-                               + "path=\"system-images;android-24;google_apis_playstore;x86_64\" "
-                               + "obsolete=\"false\"><type-details "
-                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
-                               + "<tag><id>google_apis_playstore</id><display>Google Play</display></tag>"
-                               + "<vendor><id>google</id><display>Google Inc.</display></vendor>"
-                               + "<abi>x86_64</abi></type-details><revision><major>9</major></revision>"
-                               + "<display-name>Google APIs with Playstore Intel x86 Atom System Image</display-name>"
-                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
-                               + "</ns3:sdk-sys-img>\n");
+    private static void recordPlayStoreSysImg24(Path root) throws IOException {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-24/google_apis_playstore/x86_64/system.img"));
+        Files.createDirectories(
+                root.resolve("sdk/system-images/android-24/google_apis_playstore/x86_64/data"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-24/google_apis_playstore/x86_64/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns3:sdk-sys-img "
+                        + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage "
+                        + "path=\"system-images;android-24;google_apis_playstore;x86_64\" "
+                        + "obsolete=\"false\"><type-details "
+                        + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
+                        + "<tag><id>google_apis_playstore</id><display>Google Play</display></tag>"
+                        + "<vendor><id>google</id><display>Google Inc.</display></vendor>"
+                        + "<abi>x86_64</abi></type-details><revision><major>9</major></revision>"
+                        + "<display-name>Google APIs with Playstore Intel x86 Atom System Image</display-name>"
+                        + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                        + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordWearSysImg24(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/"
-                               + AvdManager.USERDATA_IMG);
-        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/package.xml",
-                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                               + "<ns3:sdk-sys-img "
-                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
-                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
-                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
-                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
-                               + "</license><localPackage "
-                               + "path=\"system-images;android-24;android-wear;x86\" "
-                               + "obsolete=\"false\"><type-details "
-                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
-                               + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
-                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
-                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
-                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
-                               + "</ns3:sdk-sys-img>\n");
+    private static void recordWearSysImg24(Path root) {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-24/android-wear/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-24/android-wear/x86/"
+                                + AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-24/android-wear/x86/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns3:sdk-sys-img "
+                        + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage "
+                        + "path=\"system-images;android-24;android-wear;x86\" "
+                        + "obsolete=\"false\"><type-details "
+                        + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
+                        + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
+                        + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                        + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
+                        + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                        + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordWearSysImg25(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/"
-                               + AvdManager.USERDATA_IMG);
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/package.xml",
-                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                               + "<ns3:sdk-sys-img "
-                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
-                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
-                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
-                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
-                               + "</license><localPackage "
-                               + "path=\"system-images;android-25;android-wear;x86\" "
-                               + "obsolete=\"false\"><type-details "
-                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
-                               + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
-                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
-                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
-                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
-                               + "</ns3:sdk-sys-img>\n");
+    private static void recordWearSysImg25(Path root) {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-25/android-wear/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-25/android-wear/x86/"
+                                + AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-25/android-wear/x86/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns3:sdk-sys-img "
+                        + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage "
+                        + "path=\"system-images;android-25;android-wear;x86\" "
+                        + "obsolete=\"false\"><type-details "
+                        + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
+                        + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
+                        + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                        + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
+                        + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                        + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordWearSysImgChina(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/"
-                               + AvdManager.USERDATA_IMG);
-        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/package.xml",
-                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                               + "<ns3:sdk-sys-img "
-                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
-                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
-                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
-                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
-                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
-                               + "</license><localPackage "
-                               + "path=\"system-images;android-25;android-wear-cn;x86\" "
-                               + "obsolete=\"false\"><type-details "
-                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
-                               + "<tag><id>android-wear</id><display>Android Wear for China</display></tag>"
-                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
-                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
-                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
-                               + "</ns3:sdk-sys-img>\n");
+    private static void recordWearSysImgChina(Path root) {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-25/android-wear-cn/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve(
+                        "sdk/system-images/android-25/android-wear-cn/x86/"
+                                + AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/android-25/android-wear-cn/x86/package.xml"),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                        + "<ns3:sdk-sys-img "
+                        + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                        + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                        + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                        + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                        + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                        + "</license><localPackage "
+                        + "path=\"system-images;android-25;android-wear-cn;x86\" "
+                        + "obsolete=\"false\"><type-details "
+                        + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                        + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
+                        + "<tag><id>android-wear</id><display>Android Wear for China</display></tag>"
+                        + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                        + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
+                        + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                        + "</ns3:sdk-sys-img>\n");
     }
 
-    private static void recordChromeOsSysImg(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/system-images/chromeos/m60/x86/system.img");
-        fop.recordExistingFile("/sdk/system-images/chromeos/m60/x86/" + AvdManager.USERDATA_IMG);
-        fop.recordExistingFile(
-                "/sdk/system-images/chromeos/m60/x86/package.xml",
+    private static void recordChromeOsSysImg(Path root) {
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/chromeos/m60/x86/system.img"));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/chromeos/m60/x86/" + AvdManager.USERDATA_IMG));
+        InMemoryFileSystems.recordExistingFile(
+                root.resolve("sdk/system-images/chromeos/m60/x86/package.xml"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns3:sdk-sys-img "
                         + "    xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\">"

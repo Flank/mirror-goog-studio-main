@@ -825,7 +825,7 @@ public final class AndroidSdkHandler {
     /** Converts a {@code File} into a {@code Path} on the {@code FileSystem} used by this SDK. */
     @NonNull
     public Path toCompatiblePath(@NonNull File file) {
-        Path localPath = mRepoManager.getLocalPath();
+        Path localPath = mRepoManager == null ? mLocation : mRepoManager.getLocalPath();
         if (localPath != null) {
             return localPath.getFileSystem().getPath(file.getPath());
         }
@@ -835,7 +835,7 @@ public final class AndroidSdkHandler {
     /** Converts a {@code String} into a {@code Path} on the {@code FileSystem} used by this SDK. */
     @NonNull
     public Path toCompatiblePath(@NonNull String file) {
-        Path localPath = mRepoManager.getLocalPath();
+        Path localPath = mRepoManager == null ? mLocation : mRepoManager.getLocalPath();
         if (localPath != null) {
             return localPath.getFileSystem().getPath(file);
         }

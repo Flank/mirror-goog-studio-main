@@ -114,7 +114,9 @@ public class AvdManagerCliTest {
                         mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mFileOp, mgr);
         mLogger = new MockLog();
         mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
-        mAvdManager = AvdManager.getInstance(mSdkHandler, new File(AVD_LOCATION), mLogger);
+        mAvdManager =
+                AvdManager.getInstance(
+                        mSdkHandler, mSdkHandler.toCompatiblePath(AVD_LOCATION), mLogger);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);

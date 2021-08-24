@@ -126,6 +126,7 @@ kotlin_library(
         ":tools.common",
         "//tools/base/annotations",
         "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 

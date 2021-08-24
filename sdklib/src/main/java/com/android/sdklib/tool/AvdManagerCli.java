@@ -38,7 +38,14 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.Storage;
-import com.android.sdklib.internal.avd.*;
+import com.android.sdklib.internal.avd.AvdCamera;
+import com.android.sdklib.internal.avd.AvdInfo;
+import com.android.sdklib.internal.avd.AvdManager;
+import com.android.sdklib.internal.avd.AvdNetworkLatency;
+import com.android.sdklib.internal.avd.AvdNetworkSpeed;
+import com.android.sdklib.internal.avd.EmulatedProperties;
+import com.android.sdklib.internal.avd.GpuMode;
+import com.android.sdklib.internal.avd.HardwareProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
@@ -146,7 +153,7 @@ class AvdManagerCli extends CommandLineParser {
     private AndroidSdkHandler mSdkHandler;
 
     private AvdManager mAvdManager;
-    private File mAvdFolder;
+    private Path mAvdFolder;
 
     /**
      * Action definitions for AvdManager command line.
@@ -260,7 +267,7 @@ class AvdManagerCli extends CommandLineParser {
     private void init() {
         if (mAvdFolder == null) {
             try {
-                mAvdFolder = AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile();
+                mAvdFolder = AndroidLocationsSingleton.INSTANCE.getAvdLocation();
             } catch (Throwable e) {
                 // We'll print an error out later since the folder isn't defined.
             }
@@ -573,7 +580,7 @@ class AvdManagerCli extends CommandLineParser {
                 }
             }
             // get the target tags & ABIs
-            Path targetLocation = mSdkHandler.getFileOp().toPath(target.getLocation());
+            Path targetLocation = mSdkHandler.toCompatiblePath(target.getLocation());
             ISystemImage image =
                     mSdkHandler.getSystemImageManager(progress).getImageAt(targetLocation);
             if (image != null) {
@@ -703,15 +710,7 @@ class AvdManagerCli extends CommandLineParser {
             if (paramFolderPath != null) {
                 avdFolder = mSdkHandler.getFileOp().toPath(paramFolderPath);
             } else {
-                avdFolder =
-                        mSdkHandler
-                                .getFileOp()
-                                .toPath(
-                                        AvdInfo.getDefaultAvdFolder(
-                                                avdManager,
-                                                avdName,
-                                                mSdkHandler.getFileOp(),
-                                                false));
+                avdFolder = AvdInfo.getDefaultAvdFolder(avdManager, avdName, false);
             }
 
             IdDisplay tag = SystemImage.DEFAULT_TAG;
@@ -1425,7 +1424,7 @@ class AvdManagerCli extends CommandLineParser {
         mSdkHandler = sdkHandler;
         mOsSdkFolder = sdkRoot;
         mInput = input;
-        mAvdFolder = new File(avdRoot);
+        mAvdFolder = sdkHandler.getFileOp().toPath(avdRoot);
     }
 
     private AvdManagerCli(ILogger logger) {
