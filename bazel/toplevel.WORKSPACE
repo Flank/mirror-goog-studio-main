@@ -110,6 +110,19 @@ local_repository(
     path = "tools/base/yourkit-controller",
 )
 
+
+_REMOTE_REPOSITORIES = {
+    "Maven Central": "https://repo1.maven.org/maven2/",
+    "JCenter": "https://jcenter.bintray.com/",
+    "Google": "https://maven.google.com/",
+    "IntelliJ deps": "https://repo.gradle.org/gradle/libs-releases/",
+    "GradlePlugins": "https://plugins.gradle.org/m2",
+}
+
+_REMOTE_DEV_REPOSITORIES = {
+    "Kotlin dev": "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/",
+}
+
 local_maven_repository(
     name = "maven",
     path = "prebuilts/tools/common/m2/repository/",
@@ -238,6 +251,7 @@ local_maven_repository(
         "org.xerial:sqlite-jdbc:3.21.0.1",
         "xerces:xercesImpl:2.12.0",
     ],
+    remote_repositories = _REMOTE_REPOSITORIES,
 )
 
 local_maven_repository(
@@ -446,4 +460,5 @@ local_maven_repository(
         "org.tensorflow:tensorflow-lite-support:0.1.0",
         "org.threeten:threetenbp:1.3.3",
     ],
+    remote_repositories = dict(_REMOTE_REPOSITORIES.items() + _REMOTE_DEV_REPOSITORIES.items()),
 )
