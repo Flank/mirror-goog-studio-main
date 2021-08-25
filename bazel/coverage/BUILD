@@ -160,8 +160,8 @@ coverage_report(
     name = "app-inspection",
     srcpath_include = ["tools/adt/idea/app-inspection"],
     tests = [
-        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
-        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
     ],
 )
 
@@ -171,8 +171,8 @@ coverage_report(
         "tools/adt/idea/app-inspection/inspectors/workmanager",
     ],
     tests = [
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
     ],
 )
 
@@ -185,9 +185,9 @@ coverage_report(
         "tools/base/app-inspection/inspectors/network/src",
     ],
     tests = [
-        "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
         "//tools/base/app-inspection/inspectors/network:agent_tests.test",
     ],
 )
@@ -705,15 +705,15 @@ coverage_report(
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
-        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
-        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
         # TODO(b/182573662) too flaky for coverage
-        #"//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
+        #"//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
