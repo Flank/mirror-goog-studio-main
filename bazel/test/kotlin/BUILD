@@ -45,7 +45,10 @@ maven_library(
     name = "test_maven_only_kotlin",
     srcs = ["kotlin0/pkg/K0.kt"],
     coordinates = "test_group:test_maven_only_kotlin:1.2.3",
-    deps = [":test_maven_only_java"],
+    deps = [
+        ":test_maven_only_java",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
 )
 
 # Test circular dependencies with kotlin and java
@@ -56,7 +59,10 @@ maven_library(
         "java1_kotlin1/pkg/K1.kt",
     ],
     coordinates = "test_group:test_maven_kotlin_and_java:1.2.3",
-    deps = [":test_maven_only_java"],
+    deps = [
+        ":test_maven_only_java",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    ],
 )
 
 maven_library(

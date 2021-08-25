@@ -38,7 +38,6 @@ maven_library(
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
     ],
 )

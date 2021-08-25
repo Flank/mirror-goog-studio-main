@@ -14,6 +14,9 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/common:tools.common",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:com.google.guava.guava",
         "@maven//:io.grpc.grpc-core",
         "@maven//:io.grpc.grpc-netty",
@@ -24,8 +27,7 @@ maven_library(
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "@maven//:com.google.testing.platform.android-device-provider-local",
-        "@maven//:com.google.testing.platform.core-proto",
-        "@maven//:com.google.testing.platform.launcher",
+        "@maven//:com.google.testing.platform.launcher",  # CompileOnly, should not be in the pom
     ],
 )
 

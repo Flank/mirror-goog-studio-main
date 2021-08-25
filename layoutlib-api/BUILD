@@ -36,7 +36,6 @@ maven_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "@maven//:com.google.guava.guava",
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.annotations",
     ],

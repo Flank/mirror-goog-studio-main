@@ -17,11 +17,12 @@ maven_library(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/utp/android-device-provider-ddmlib-proto",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "@maven//:com.google.protobuf.protobuf-java",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "@maven//:com.google.testing.platform.android-device-provider-local",
-        "@maven//:com.google.testing.platform.core-proto",
-        "@maven//:com.google.testing.platform.launcher",
+        "@maven//:com.google.testing.platform.launcher",  # CompileOnly should not be in the pom
     ],
 )
 

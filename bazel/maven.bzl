@@ -803,11 +803,9 @@ def maven_library(
         data = [],
         deps = [],
         exports = [],
-        enable_scopes = False,
         runtime_deps = [],
         bundled_deps = [],
         friends = [],
-        kotlin_stdlib = "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         notice = None,
         coordinates = None,
         jar_name = None,
@@ -860,7 +858,7 @@ def maven_library(
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
-        stdlib = kotlin_stdlib,
+        stdlib = None,  # Maven libraries use the stdlib in different scopes and versions.
         plugins = plugins,
         manifest_lines = manifest_lines,
         **kwargs
@@ -869,8 +867,8 @@ def maven_library(
     _maven_library(
         name = name,
         notice = notice,
-        deps = deps if enable_scopes else [],
-        exports = ([kotlin_stdlib] if kotlins else []) + ([] if enable_scopes else deps) + exports,
+        deps = deps,
+        exports = exports,
         coordinates = coordinates,
         description = description,
         pom_name = pom_name,

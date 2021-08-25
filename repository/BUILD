@@ -59,14 +59,13 @@ maven_library(
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "@maven//:com.google.guava.guava",
-        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
+        "@maven//:com.google.jimfs.jimfs",
+        "@maven//:com.sun.activation.javax.activation",
         "@maven//:org.apache.commons.commons-compress",
         "@maven//:org.glassfish.jaxb.jaxb-runtime",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

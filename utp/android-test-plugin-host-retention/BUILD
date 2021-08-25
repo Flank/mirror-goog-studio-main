@@ -9,26 +9,27 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-retention:" + BASE_VERSION,
-    enable_scopes = True,
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
-    exports = [
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
-    ],
     deps = [
         "//tools/base/common:tools.common",
         "//tools/base/emulator/proto",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:com.google.guava.guava",
         "@maven//:commons-io.commons-io",
-        "@maven//:io.grpc.grpc-all",
+        "@maven//:io.grpc.grpc-core",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.protobuf.protobuf-java",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.
         "@maven//:com.google.testing.platform.android-device-provider-local",
-        "@maven//:com.google.testing.platform.core-proto",
-        "@maven//:com.google.testing.platform.launcher",
+        "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-protobuf",
+        "@maven//:io.grpc.grpc-stub",
+        "@maven//:com.google.testing.platform.launcher",  # CompileOnly should not be in the pom
     ],
 )
 

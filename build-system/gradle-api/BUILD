@@ -21,7 +21,6 @@ maven_library(
         "//tools/base/build-system:gradle-api_neverlink",
     ],
     coordinates = "com.android.tools.build:gradle-api:" + BUILD_VERSION,
-    enable_scopes = True,
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
@@ -31,10 +30,11 @@ maven_library(
         "@maven//:org.ow2.asm.asm",
     ],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",  # Only present for legacy reasons.
+        "//tools/base/annotations",  # CompileOnly should not be in pom
+        "//tools/base/build-system/builder-model",  # Only present for legacy reasons. # CompileOnly should not be in pom
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

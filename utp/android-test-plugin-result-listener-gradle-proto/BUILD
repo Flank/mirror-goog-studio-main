@@ -6,11 +6,13 @@ maven_proto_library(
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-result-listener-gradle-proto:" + BASE_VERSION,
     grpc_support = 1,
-    java_exports = [
+    java_deps = [
         "@maven//:io.grpc.grpc-core",
         "@maven//:io.grpc.grpc-netty",
         "@maven//:io.grpc.grpc-protobuf",
         "@maven//:io.grpc.grpc-stub",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
     ],
     protoc_grpc_version = "1.21.1",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-result-listener-gradle-proto",

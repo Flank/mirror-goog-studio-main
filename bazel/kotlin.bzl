@@ -168,6 +168,7 @@ def kotlin_library(
         lint_timeout = None,
         compress_resources = False,
         testonly = False,
+        stdlib = "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -211,6 +212,7 @@ def kotlin_library(
         kotlin_use_ir = test_kotlin_use_ir(),
         javacopts = final_javacopts if javas else None,
         testonly = testonly,
+        stdlib = stdlib,
         **kwargs
     )
 
@@ -248,8 +250,9 @@ def _kotlin_library_impl(ctx):
     jars = []
     kotlin_providers = []
     if kotlin_srcs:
-        deps.append(ctx.attr.stdlib[JavaInfo])
-        java_info_deps.append(ctx.attr.stdlib[JavaInfo])
+        if ctx.attr.stdlib:
+            deps.append(ctx.attr.stdlib[JavaInfo])
+            java_info_deps.append(ctx.attr.stdlib[JavaInfo])
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -355,10 +358,7 @@ _kotlin_library = rule(
         "plugins": attr.label_list(
             providers = [JavaInfo],
         ),
-        "stdlib": attr.label(
-            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
-            allow_files = True,
-        ),
+        "stdlib": attr.label(),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_bootclasspath": attr.label(

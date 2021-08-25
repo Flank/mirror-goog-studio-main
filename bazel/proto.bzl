@@ -322,9 +322,9 @@ def maven_proto_library(
         visibility = visibility,
     )
 
-    grpc_extra_deps = ["@maven//:javax.annotation.javax.annotation-api"]
-    java_exports = list(java_exports) + (grpc_extra_deps if grpc_support else [])
-    java_exports += proto_java_runtime_library
+    grpc_extra_deps = ["@maven//:javax.annotation.javax.annotation-api"]  # CompileOnly should not make it into the pom
+    java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
+    java_deps += proto_java_runtime_library
 
     if coordinates:
         maven_library(
@@ -332,7 +332,6 @@ def maven_proto_library(
             srcs = outs,
             deps = java_deps,
             exports = java_exports,
-            enable_scopes = True,
             coordinates = coordinates,
             visibility = visibility,
             **kwargs

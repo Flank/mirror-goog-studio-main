@@ -59,7 +59,6 @@ maven_library(
     ]),
     coordinates = "com.android.tools:common:" + BASE_VERSION,
     description = "common library used by other Android tools libraries.",
-    enable_scopes = True,
     module_name = "common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",

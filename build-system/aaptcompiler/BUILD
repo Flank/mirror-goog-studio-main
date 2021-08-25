@@ -14,16 +14,11 @@ maven_library(
     resource_strip_prefix = "tools/base/build-system/aaptcompiler",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/build-system/aapt2-proto",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "@maven//:com.google.code.findbugs.jsr305",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.protobuf.protobuf-java",
-        "@maven//:org.bouncycastle.bcpkix-jdk15on",
-        "@maven//:org.bouncycastle.bcprov-jdk15on",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )

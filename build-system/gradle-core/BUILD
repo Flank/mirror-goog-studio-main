@@ -44,7 +44,6 @@ maven_library(
         "//tools/base/build-system:gradle-api_neverlink",
     ],
     coordinates = "com.android.tools.build:gradle:" + BUILD_VERSION,
-    enable_scopes = True,
     lint_baseline = "lint_baseline.xml",
     lint_timeout = "long",
     manifest_lines = ["Plugin-Version: unspecified"],
@@ -59,14 +58,10 @@ maven_library(
     ],
     deps = [
         "//tools/analytics-library/crash:tools.analytics-crash",
-        "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/apkzlib",
-        "//tools/base/annotations",
-        "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/common:tools.common",
+        "//tools/base/common:tools.common",  # TODO: Not in the pom, but required to compile (?)
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-model",
@@ -79,43 +74,38 @@ maven_library(
         "//tools/base/utp/android-test-plugin-host-coverage-proto",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
-        "//tools/base/zipflinger",
+        "//tools/data-binding:tools.baseLibrary",
+        "//tools/data-binding:tools.baseLibrarySupport",
         "//tools/data-binding:tools.compilerCommon",
-        # Note: This auto-value dependency is not actually used. Bundletool depends on an
-        # older version of auto-value which is then not copied into a maven_repo for building
-        # data binding's runtime libraries. This forces the newer version until bundletool
-        # can be updated once https://github.com/google/bundletool/pull/76 is released.
-        "@maven//:com.google.auto.value.auto-value",
-        "@maven//:com.google.auto.value.auto-value-annotations",
-        "@maven//:com.google.crypto.tink.tink",
-        "@maven//:com.google.testing.platform.core-proto",
-        "@maven//:com.android.tools.build.jetifier.jetifier-core",
-        "@maven//:com.android.tools.build.jetifier.jetifier-processor",
         "@maven//:com.android.tools.build.aapt2-proto",
         "@maven//:com.android.tools.build.bundletool",
+        "@maven//:com.android.tools.build.jetifier.jetifier-core",
+        "@maven//:com.android.tools.build.jetifier.jetifier-processor",
         "@maven//:com.android.tools.build.transform-api",
         "@maven//:com.google.code.gson.gson",
-        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.crypto.tink.tink",
+        "@maven//:com.google.flatbuffers.flatbuffers-java",  # For mlkit-common
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:com.google.protobuf.protobuf-java-util",
+        "@maven//:com.google.testing.platform.core-proto",
         "@maven//:com.squareup.javapoet",
-        "@maven//:com.squareup.javawriter",
-        "@maven//:com.sun.istack.istack-commons-runtime",
         "@maven//:commons-io.commons-io",  # TODO: remove?
+        "@maven//:io.grpc.grpc-core",
+        "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-protobuf",
+        "@maven//:io.grpc.grpc-stub",
         "@maven//:net.sf.jopt-simple.jopt-simple",
-        "@maven//:org.apache.commons.commons-compress",  # TODO: remove?
         "@maven//:org.apache.httpcomponents.httpmime",
         "@maven//:org.bouncycastle.bcpkix-jdk15on",
-        "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
-        "@maven//:org.jetbrains.annotations",
+        "@maven//:org.codehaus.groovy.groovy-all",  # TODO: Not in the pom, but required to compile (?)
+        "@maven//:org.glassfish.jaxb.jaxb-runtime",
+        "@maven//:org.jetbrains.dokka.dokka-core",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-analysis",
         "@maven//:org.ow2.asm.asm-commons",
         "@maven//:org.ow2.asm.asm-util",
         "@maven//:org.tensorflow.tensorflow-lite-metadata",  # For mlkit-common
-        "@maven//:com.google.flatbuffers.flatbuffers-java",  # For mlkit-common
-        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
-        "@maven//:org.jetbrains.dokka.dokka-core",
     ],
 )
 

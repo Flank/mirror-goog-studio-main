@@ -49,6 +49,7 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

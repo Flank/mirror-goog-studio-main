@@ -6,7 +6,14 @@ maven_proto_library(
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.emulator:proto:" + BASE_VERSION,
     grpc_support = 1,
-    java_deps = ["@maven//:io.grpc.grpc-all"],
+    java_deps = [
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:io.grpc.grpc-core",
+        "@maven//:io.grpc.grpc-netty",
+        "@maven//:io.grpc.grpc-protobuf",
+        "@maven//:io.grpc.grpc-stub",
+    ],
     protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
