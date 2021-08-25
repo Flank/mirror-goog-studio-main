@@ -475,7 +475,7 @@ coverage_report(
 coverage_report(
     name = "templates",
     srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
+        "tools/adt/idea/android/src/com/android-npw/tools/idea/npw/module/recipes",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/KeystoreUtils.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/ModuleTemplateDataBuilder.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/Parameter.kt",
@@ -701,6 +701,7 @@ coverage_report(
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
+        "//tools/adt/idea/android-npw:intellij.android.newProjectWizard.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
