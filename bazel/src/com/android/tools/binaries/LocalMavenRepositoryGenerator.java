@@ -137,6 +137,7 @@ public class LocalMavenRepositoryGenerator {
             List<String> coords,
             boolean resolve,
             boolean fetch,
+            Map<String, String> remoteRepositories,
             boolean verbose) {
         this.coords = coords;
         this.outputBuildFile = outputBuildFile;
@@ -153,7 +154,14 @@ public class LocalMavenRepositoryGenerator {
                         .build();
         List<RemoteRepository> repositories = new ArrayList<>();
         if (fetch) {
-            repositories.addAll(AetherUtils.REPOSITORIES);
+            repositories.addAll(
+                    remoteRepositories.entrySet().stream().map(entry -> {
+                            String name = entry.getKey();
+                            String url = entry.getValue();
+                            return new RemoteRepository.Builder(name, "default", url).build();
+                        }
+                    ).collect(Collectors.toList())
+            );
         }
         repositories.add(remoteRepository);
         repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
@@ -406,11 +414,12 @@ public class LocalMavenRepositoryGenerator {
         boolean verbose = false;
         boolean resolve = true;
         boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
+        Map<String, String> remoteRepositories = new TreeMap<>();
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-o")) {
-                if (args.length < i + 1) {
+                if (args.length <= i + 1) {
                     System.err.println("-o must be followed by a filename");
                     System.exit(1);
                 }
@@ -423,11 +432,25 @@ public class LocalMavenRepositoryGenerator {
                 continue;
             }
             if (arg.equals("--repo-path")) {
-                if (args.length < i + 1) {
+                if (args.length <= i + 1) {
                     System.err.println("--repo-path must be followed by a path");
                     System.exit(1);
                 }
                 repoPath = Paths.get(args[i + 1]);
+                i++;
+                continue;
+            }
+            if (arg.equals("--remote-repo")) {
+                if (args.length <= i + 1) {
+                    System.err.println("--remote-repo must be followed by a \"name=URL\" pair");
+                    System.exit(1);
+                }
+                String[] remoteRepo = args[i + 1].split("=", 2);
+                if (remoteRepo.length != 2) {
+                    System.err.println("Invalid argument after --remote-repo: " + args[i + 1]);
+                    System.exit(1);
+                }
+                remoteRepositories.put(remoteRepo[0], remoteRepo[1]);
                 i++;
                 continue;
             }
@@ -453,7 +476,7 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
-        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, verbose)
+        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, remoteRepositories, verbose)
                 .run();
     }
 

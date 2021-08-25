@@ -27,42 +27,6 @@ import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /** Constructs Aether objects. */
 public class AetherUtils {
-    static final RemoteRepository MAVEN_CENTRAL =
-            new RemoteRepository.Builder(
-                            "Maven Central", "default", "https://repo1.maven.org/maven2/")
-                    .build();
-
-    static final RemoteRepository JCENTER =
-            new RemoteRepository.Builder("JCenter", "default", "https://jcenter.bintray.com/")
-                    .build();
-
-    static final RemoteRepository GOOGLE =
-            new RemoteRepository.Builder("Google", "default", "https://maven.google.com/").build();
-
-    static final RemoteRepository GRADLE =
-            new RemoteRepository.Builder(
-                            "Gradle", "default", "https://repo.gradle.org/gradle/libs-releases/")
-                    .build();
-
-    static final RemoteRepository INTELLIJ =
-            new RemoteRepository.Builder(
-                            "IntelliJ deps",
-                            "default",
-                            "https://cache-redirector.jetbrains.com/intellij-dependencies/")
-                    .build();
-
-    static final RemoteRepository KOTLIN_DEV =
-            new RemoteRepository.Builder(
-                            "Kotlin dev", "default", "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
-                    .build();
-
-    static final RemoteRepository GRADLE_PLUGINS =
-            new RemoteRepository.Builder(
-                            "GradlePlugins", "default", "https://plugins.gradle.org/m2")
-                    .build();
-
-    public static final ImmutableList<RemoteRepository> REPOSITORIES =
-	ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ, KOTLIN_DEV, GRADLE_PLUGINS);
 
     private AetherUtils() {}
 
