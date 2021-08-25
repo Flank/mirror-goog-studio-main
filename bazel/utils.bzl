@@ -298,3 +298,9 @@ merged_zip = rule(
     },
     implementation = _merged_zip_impl,
 )
+
+def is_release():
+    return select({
+        "//tools/base/bazel:release": True,
+        "//conditions:default": False,
+    })

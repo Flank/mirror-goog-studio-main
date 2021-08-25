@@ -143,7 +143,7 @@ def _resources(ctx, resources, resources_jar):
             if short.startswith("/"):
                 short = short[1:]
         rel_paths.append((short, res))
-    zipper_args = ["c", resources_jar.path]
+    zipper_args = ["cC" if ctx.attr.compress_resources else "c", resources_jar.path]
     zipper_files = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
     zipper_list = create_option_file(ctx, resources_jar.basename + ".res.lst", zipper_files)
     zipper_args += ["@" + zipper_list.path]
@@ -166,6 +166,7 @@ def kotlin_library(
         lint_classpath = [],
         lint_is_test_sources = False,
         lint_timeout = None,
+        compress_resources = False,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -178,6 +179,7 @@ def kotlin_library(
         runtime_deps: The runtime dependencies.
         bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
         friends: The list of kotlin-friends.
+        compress_resources: Whether to compress resources.
         notice: An optional notice file to be included in the jar.
         coordinates: The maven coordinates of this artifact.
         exclusions: Files to exclude from the generated pom file.
@@ -197,6 +199,7 @@ def kotlin_library(
         deps = deps,
         kotlin_srcs = kotlins,
         source_jars = source_jars,
+        compress_resources = compress_resources,
         kotlin_use_ir = test_kotlin_use_ir(),
         javacopts = final_javacopts if javas else None,
         **kwargs
@@ -339,6 +342,7 @@ _kotlin_library = rule(
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
         "kotlin_use_ir": attr.bool(),
+        "compress_resources": attr.bool(),
         "plugins": attr.label_list(
             providers = [JavaInfo],
         ),

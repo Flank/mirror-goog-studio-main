@@ -1,6 +1,7 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
 load(":kotlin.bzl", "kotlin_library")
+load(":utils.bzl", "is_release")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
 
 def generate_pom(
@@ -848,6 +849,7 @@ def maven_library(
         name = name + ".lib",
         jar_name = jar_name if jar_name else name + ".jar",
         srcs = srcs,
+        compress_resources = is_release(),
         data = data,
         deps = deps + neverlink_deps,
         exports = exports,
