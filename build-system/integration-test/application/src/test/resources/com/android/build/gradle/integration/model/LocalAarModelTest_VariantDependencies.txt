@@ -8,7 +8,8 @@
       - runtimeDependencies:
          - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
-   - androidTestArtifact:
+      - unresolvedDependencies = []
+   > androidTestArtifact:
       - compileDependencies:
          - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
@@ -16,7 +17,9 @@
          - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-      - runtimeDependencies = []
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
+   < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
          - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
@@ -33,6 +36,7 @@
                   - dependencies = "*visited*"
          - __wrapped_aars__|:|:lib|unspecified||project:lib:unspecified:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:

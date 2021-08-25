@@ -1,9 +1,10 @@
 > VariantDependencies:
    - name                 = "debug"
    - mainArtifact:
-      - compileDependencies = []
-      - runtimeDependencies = []
-   - androidTestArtifact:
+      - compileDependencies    = []
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
+   > androidTestArtifact:
       - compileDependencies:
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
@@ -12,7 +13,9 @@
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-   - unitTestArtifact:
+      - unresolvedDependencies = []
+   < androidTestArtifact
+   > unitTestArtifact:
       - compileDependencies:
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
@@ -21,6 +24,8 @@
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
+      - unresolvedDependencies = []
+   < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
       > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|:project:unspecified:

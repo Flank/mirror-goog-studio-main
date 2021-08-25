@@ -18,13 +18,13 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.dependency.ResolutionResultProvider
-import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.v2.ArtifactDependenciesImpl
 import com.android.build.gradle.internal.ide.v2.GraphItemImpl
+import com.android.build.gradle.internal.ide.v2.UnresolvedDependencyImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.builder.errors.IssueReporter
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.GraphItem
+import com.android.builder.model.v2.ide.UnresolvedDependency
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -39,17 +39,13 @@ class FullDependencyGraphBuilder(
     private val libraryService: LibraryService
 ) {
 
-    private val unresolvedDependencies = mutableListOf<UnresolvedDependencyResult>()
+    private val unresolvedDependencies = mutableMapOf<String, UnresolvedDependency>()
 
-    fun build(
-        issueReporter: IssueReporter
-    ): ArtifactDependencies {
-
-        return ArtifactDependenciesImpl(
-            buildGraph(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH),
-            buildGraph(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH)
-        )
-    }
+    fun build(): ArtifactDependencies = ArtifactDependenciesImpl(
+        buildGraph(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH),
+        buildGraph(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH),
+        unresolvedDependencies.values.toList()
+    )
 
     private fun buildGraph(
         configType: AndroidArtifacts.ConsumedConfigType,
@@ -57,13 +53,11 @@ class FullDependencyGraphBuilder(
         // query for the actual graph, and get the first level children.
         val roots: Set<DependencyResult> = resolutionResultProvider.getResolutionResult(configType).root.dependencies
 
-        val dependencyFailureHandler = DependencyFailureHandler()
-
         // get the artifact first. This is a flat list of items that have been computed
         // to contain information about the actual artifacts (whether they are sub-projects
         // or external dependencies, whether they are java or android, whether they are
         // wrapper local jar/aar, etc...)
-        val artifacts = inputs.getAllArtifacts(configType, dependencyFailureHandler)
+        val artifacts = inputs.getAllArtifacts(configType)
 
         val artifactMap = artifacts.associateBy { it.variant.toKey() }
 
@@ -100,7 +94,15 @@ class FullDependencyGraphBuilder(
     ): GraphItem? {
 
         if (dependency !is ResolvedDependencyResult) {
-            (dependency as? UnresolvedDependencyResult)?.let { unresolvedDependencies.add(it) }
+            (dependency as? UnresolvedDependencyResult)?.let {
+                val name = it.attempted.toString()
+                if (!unresolvedDependencies.containsKey(name)) {
+                    unresolvedDependencies[name] = UnresolvedDependencyImpl(
+                        name,
+                        it.failure.cause?.message
+                    )
+                }
+            }
             return null
         }
 

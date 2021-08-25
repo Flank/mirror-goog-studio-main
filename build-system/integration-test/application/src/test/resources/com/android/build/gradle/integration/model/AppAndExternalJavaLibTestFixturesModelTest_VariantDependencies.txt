@@ -1,6 +1,6 @@
 > VariantDependencies:
    - name                 = "debug"
-   - mainArtifact:
+   > mainArtifact:
       - compileDependencies:
          - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib:1:
             - requestedCoordinates = (null)
@@ -9,6 +9,8 @@
          - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
             - requestedCoordinates = (null)
             - dependencies         = []
+      - unresolvedDependencies = []
+   < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
          - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:random-lib-test-fixtures:1:
@@ -30,6 +32,7 @@
                - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
                   - requestedCoordinates = (null)
                   - dependencies         = []
+      - unresolvedDependencies = []
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
@@ -48,6 +51,7 @@
                   - dependencies         = []
          - com.example|random-lib|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:random-lib:1:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:

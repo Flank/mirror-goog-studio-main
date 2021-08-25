@@ -677,8 +677,11 @@ class ModelBuilder<
             buildMapping = buildMapping
         )
 
-        return FullDependencyGraphBuilder(inputs, component.variantDependencies, libraryService).build(
-            syncIssueReporter)
+        return FullDependencyGraphBuilder(
+            inputs,
+            component.variantDependencies,
+            libraryService
+        ).build()
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {

@@ -1,15 +1,17 @@
 > VariantDependencies:
    - name                 = "debug"
    - mainArtifact:
-      - compileDependencies = []
-      - runtimeDependencies = []
+      - compileDependencies    = []
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
    - androidTestArtifact:
       - compileDependencies:
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-      - runtimeDependencies = []
-   - unitTestArtifact:
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
+   > unitTestArtifact:
       - compileDependencies:
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
@@ -18,6 +20,8 @@
          - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
+      - unresolvedDependencies = []
+   < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
       > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:

@@ -37,5 +37,12 @@ interface ArtifactDependencies: AndroidModel {
     /**
      * The runtime dependency graph.
      */
-    val runtimeDependencies: List<GraphItem>?
+    val runtimeDependencies: List<GraphItem>
+
+    val unresolvedDependencies: List<UnresolvedDependency>
+}
+
+interface UnresolvedDependency {
+    val name: String
+    val cause: String?
 }

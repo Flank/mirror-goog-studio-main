@@ -44,6 +44,7 @@ import com.android.builder.model.v2.ide.SourceProvider
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
+import com.android.builder.model.v2.ide.UnresolvedDependency
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ViewBindingOptions
@@ -586,6 +587,14 @@ private fun ModelSnapshotter<ArtifactDependencies>.snapshotArtifactDependencies(
         nameAction =  { it.normalizeArtifactAddress(key) },
     ) {
         snapshotGraphItem(visited)
+    }
+
+    objectList(
+        name = "unresolvedDependencies",
+        propertyAction = ArtifactDependencies::unresolvedDependencies,
+        nameAction =  { name },
+    ) {
+        item("cause", UnresolvedDependency::cause)
     }
 }
 

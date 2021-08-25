@@ -1,6 +1,6 @@
 > VariantDependencies:
    - name                 = "debug"
-   - mainArtifact:
+   > mainArtifact:
       - compileDependencies:
          - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
             - requestedCoordinates = (null)
@@ -9,6 +9,8 @@
          - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
+      - unresolvedDependencies = []
+   < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
          - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
@@ -30,6 +32,7 @@
                - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
                   - requestedCoordinates = (null)
                   - dependencies         = []
+      - unresolvedDependencies = []
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
@@ -48,6 +51,7 @@
                   - dependencies         = []
          - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:

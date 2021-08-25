@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-012184a824b119528354e586d3454ceda1060c87e162840b3156482d02660db3
+d93cd02ba789da8ad2d63a99b31c994ea0eac6aa5295ba811d585c22c48ffc9c
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -605,6 +605,7 @@ com.android.builder.model.v2.ide.ApiVersion.getCodename: java.lang.String ()
 com.android.builder.model.v2.ide.ArtifactDependencies implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.ArtifactDependencies.getCompileDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
 com.android.builder.model.v2.ide.ArtifactDependencies.getRuntimeDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
+com.android.builder.model.v2.ide.ArtifactDependencies.getUnresolvedDependencies: java.util.List<com.android.builder.model.v2.ide.UnresolvedDependency> ()
 com.android.builder.model.v2.ide.BaseArtifact
 com.android.builder.model.v2.ide.BaseArtifact.getAssembleTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.BaseArtifact.getClassesFolders: java.util.Set<java.io.File> ()
@@ -724,6 +725,9 @@ com.android.builder.model.v2.ide.TestInfo.getInstrumentedTestTaskName: java.lang
 com.android.builder.model.v2.ide.TestedTargetVariant implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.TestedTargetVariant.getTargetProjectPath: java.lang.String ()
 com.android.builder.model.v2.ide.TestedTargetVariant.getTargetVariant: java.lang.String ()
+com.android.builder.model.v2.ide.UnresolvedDependency
+com.android.builder.model.v2.ide.UnresolvedDependency.getCause: java.lang.String ()
+com.android.builder.model.v2.ide.UnresolvedDependency.getName: java.lang.String ()
 com.android.builder.model.v2.ide.Variant implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.Variant.getAndroidTestArtifact: com.android.builder.model.v2.ide.AndroidArtifact ()
 com.android.builder.model.v2.ide.Variant.getBuildType: java.lang.String ()

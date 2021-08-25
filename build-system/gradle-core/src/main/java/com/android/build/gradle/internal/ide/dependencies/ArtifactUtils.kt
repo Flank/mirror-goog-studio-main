@@ -70,7 +70,7 @@ interface ArtifactCollectionsInputs {
 
     fun getAllArtifacts(
         consumedConfigType: AndroidArtifacts.ConsumedConfigType,
-        dependencyFailureHandler: DependencyFailureHandler?
+        dependencyFailureHandler: DependencyFailureHandler? = null
     ): Set<ResolvedArtifact>
 }
 
@@ -340,8 +340,6 @@ private fun getAllArtifacts(
     projectPath: String,
     variantName: String,
 ): Set<ResolvedArtifact> {
-
-    // FIXME change the way we compare dependencies b/64387392
 
     // we need to figure out the following:
     // - Is it an external dependency or a sub-project?

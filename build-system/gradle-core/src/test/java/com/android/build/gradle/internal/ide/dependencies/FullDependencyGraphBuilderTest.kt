@@ -155,7 +155,7 @@ private fun buildModelGraph(action: DependencyBuilder.() -> Unit): ArtifactDepen
         libraryService
     )
 
-    return builder.build(FakeIssueReporter())
+    return builder.build()
 }
 
 private fun getInputs(artifacts: Set<ResolvedArtifact>): ArtifactCollectionsInputs =

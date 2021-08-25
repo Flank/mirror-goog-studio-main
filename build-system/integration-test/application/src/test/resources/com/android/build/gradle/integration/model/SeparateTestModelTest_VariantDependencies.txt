@@ -5,7 +5,8 @@
          - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-      - runtimeDependencies = []
+      - runtimeDependencies    = []
+      - unresolvedDependencies = []
    - androidTestArtifact  = (null)
    - unitTestArtifact     = (null)
    - testFixturesArtifact = (null)

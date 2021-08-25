@@ -264,6 +264,7 @@
             - requestedCoordinates = (null)
             - dependencies         = []
       < runtimeDependencies
+      - unresolvedDependencies = []
    < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
@@ -573,6 +574,7 @@
                - com.android.support.test|runner|1.0.2|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support.test:runner:1.0.2:
                   - dependencies = "*visited*"
       < runtimeDependencies
+      - unresolvedDependencies = []
    < androidTestArtifact
    > unitTestArtifact:
       > compileDependencies:
@@ -872,6 +874,7 @@
          - org.jacoco|org.jacoco.agent|0.8.3|org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|org.jacoco:org.jacoco.agent:0.8.3:
             - dependencies = "*visited*"
       < runtimeDependencies
+      - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:

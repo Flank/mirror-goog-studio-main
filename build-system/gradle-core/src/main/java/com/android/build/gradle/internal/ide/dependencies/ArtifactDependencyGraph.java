@@ -47,8 +47,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             @NonNull ArtifactCollectionsInputs artifactCollectionsInputs,
             boolean withFullDependency,
             @NonNull IssueReporter issueReporter) {
-        // FIXME change the way we compare dependencies b/64387392
-
         try {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =

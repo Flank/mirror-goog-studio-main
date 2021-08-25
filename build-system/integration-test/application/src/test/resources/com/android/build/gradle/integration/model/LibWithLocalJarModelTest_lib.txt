@@ -8,6 +8,7 @@
       - runtimeDependencies:
          - __local_aars__|{PROJECT}/lib/libs/foo.jar{F}|unspecified||:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    > androidTestArtifact:
       - compileDependencies:
          - :|:lib|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified:
@@ -22,6 +23,7 @@
             - dependencies         = []
          - __local_aars__|{PROJECT}/lib/libs/foo.jar{F}|unspecified||:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
@@ -37,6 +39,7 @@
             - dependencies         = []
          - __local_aars__|{PROJECT}/lib/libs/foo.jar{F}|unspecified||:
             - dependencies = "*visited*"
+      - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
