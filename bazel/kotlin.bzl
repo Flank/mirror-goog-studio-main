@@ -167,6 +167,7 @@ def kotlin_library(
         lint_is_test_sources = False,
         lint_timeout = None,
         compress_resources = False,
+        testonly = False,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -192,6 +193,13 @@ def kotlin_library(
     source_jars = [src for src in srcs if src.endswith(".srcjar")]
     final_javacopts = javacopts + ["--release", "8"]
 
+    # Include non-test kotlin libraries in coverage
+    if not testonly:
+        coverage_baseline(
+            name = name,
+            srcs = javas + kotlins,
+        )
+
     _kotlin_library(
         name = name,
         jar = jar_name if jar_name else "lib" + name + ".jar",
@@ -202,6 +210,7 @@ def kotlin_library(
         compress_resources = compress_resources,
         kotlin_use_ir = test_kotlin_use_ir(),
         javacopts = final_javacopts if javas else None,
+        testonly = testonly,
         **kwargs
     )
 
