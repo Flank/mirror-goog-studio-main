@@ -18,6 +18,7 @@ private const val ID_TAG = "id"
 private const val INTEGER_TAG = "integer"
 private const val INTERPOLATOR_TAG = "interpolator"
 private const val LAYOUT_TAG = "layout"
+private const val MACRO_TAG = "macro"
 private const val MENU_TAG = "menu"
 private const val MIPMAP_TAG = "mipmap"
 private const val NAVIGATION_TAG = "navigation"
@@ -47,6 +48,7 @@ fun resourceTypeFromTag(tag: String) =
     INTEGER_TAG -> AaptResourceType.INTEGER
     INTERPOLATOR_TAG -> AaptResourceType.INTERPOLATOR
     LAYOUT_TAG -> AaptResourceType.LAYOUT
+    MACRO_TAG -> AaptResourceType.MACRO
     MENU_TAG -> AaptResourceType.MENU
     MIPMAP_TAG -> AaptResourceType.MIPMAP
     NAVIGATION_TAG -> AaptResourceType.NAVIGATION
@@ -77,6 +79,7 @@ enum class AaptResourceType(val tagName: String) {
   INTEGER(INTEGER_TAG),
   INTERPOLATOR(INTERPOLATOR_TAG),
   LAYOUT(LAYOUT_TAG),
+  MACRO(MACRO_TAG),
   MENU(MENU_TAG),
   MIPMAP(MIPMAP_TAG),
   NAVIGATION(NAVIGATION_TAG),

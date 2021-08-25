@@ -429,6 +429,7 @@ class TableExtractor(
         "declare-styleable" -> ::parseDeclareStyleable
         "integer-array" -> ::parseIntegerArray
         "java-symbol" -> ::parseSymbol
+        "macro" -> ::parseMacro
         "overlayable" -> ::parseOverlayable
         "plurals" -> ::parsePlural
         "public" -> ::parsePublic
@@ -888,6 +889,30 @@ class TableExtractor(
 
     parsedResource.visibility = ResourceVisibility.PRIVATE
     return !error
+  }
+
+  private fun parseMacro(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    parsedResource.name = parsedResource.name.copy(type = AaptResourceType.MACRO)
+
+    // Macros can only be defined in the default config
+    val defaultConfig = ConfigDescription()
+    if (parsedResource.config != defaultConfig) {
+      logError(
+        blameSource(source, element.location),
+        "<macro> tags cannot be declared in configurations other than the default configuration")
+      return false
+    }
+
+    val flattenedXml = flattenXmlSubTree(element, eventReader)
+    if (!flattenedXml.success) {
+        return false
+    }
+
+    // TODO(198264572): extract namespaces
+    parsedResource.value = Macro(flattenedXml.rawString, flattenedXml.styleString, flattenedXml.untranslatableSections)
+
+    return true
   }
 
   /**

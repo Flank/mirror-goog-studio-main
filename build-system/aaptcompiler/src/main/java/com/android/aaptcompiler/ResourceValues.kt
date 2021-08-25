@@ -77,8 +77,15 @@ class Reference(var name: ResourceName = ResourceName.EMPTY): Item() {
   var referenceType : Reference.Type = Reference.Type.RESOURCE
   var isPrivate = false
   var isDynamic = false
+  // Only used for macros, which can contain any format type
+  var typeFlags: Int? = Resources.Attribute.FormatFlags.ANY_VALUE
+  // Only used for macros, allos macros to have raw strings in them, not just references.
+  var allowRaw = true
 
-  override fun flatten(): ResValue {
+  override fun flatten(): ResValue? {
+    if (name?.type == AaptResourceType.MACRO) {
+        return null
+    }
     val resId = id ?: 0
     val dynamic = resId.isValidDynamicId() && isDynamic
 
@@ -97,7 +104,9 @@ class Reference(var name: ResourceName = ResourceName.EMPTY): Item() {
       return referenceType == other.referenceType &&
         isPrivate == other.isPrivate &&
         id == other.id &&
-        name == other.name
+        name == other.name &&
+        allowRaw == other.allowRaw &&
+        typeFlags == other.typeFlags
     }
     return false
   }
@@ -528,4 +537,25 @@ class Styleable: Value() {
     }
     return false
   }
+}
+
+class Macro(
+    var rawValue: String? = null,
+    var styleString: StyleString? = null,
+    var untranslatables: List<UntranslatableSection> = listOf(),
+    var aliasNamespaces: List<Namespace> = listOf()): Value() {
+
+    class Namespace(
+        var alias: String? = null,
+        var packageName: String? = null,
+        var isPrivate: Boolean = false) {
+
+        override fun equals(other: Any?): Boolean {
+            if (other is Namespace) {
+                return alias == other.alias && packageName == other.packageName
+                        && isPrivate == isPrivate
+            }
+            return false
+        }
+    }
 }

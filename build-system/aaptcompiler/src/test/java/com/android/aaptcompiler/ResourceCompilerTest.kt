@@ -586,4 +586,32 @@ class ResourceCompilerTest {
         val sourcePath : String = entries[0].header.sourcePath
         Truth.assertThat(sourcePath).isEqualTo(path)
     }
+
+    @Test
+    fun testMacros() {
+        val input = """
+      <?xml version="1.0" encoding="utf-8"?>
+      <resources>
+        <macro name="m1">Hello world</macro>
+        <macro name="m2">@macro/m1</macro>
+      </resources>
+    """.trimIndent()
+
+        val result = ContainerReader(testValuesFile(input))
+        Truth.assertThat(result.entries).hasSize(1)
+
+        val entry = result.entries[0] as? TableEntry
+        Truth.assertThat(entry).isNotNull()
+
+        val newTable = ResourceTable()
+        Truth.assertThat(deserializeTableFromPb(entry!!.table, newTable, null)).isTrue()
+
+        val m1 = getValue(newTable, "macro/m1") as? Macro
+        Truth.assertThat(m1).isNotNull()
+        Truth.assertThat(m1!!.rawValue).isEqualTo("Hello world")
+
+        val m2 = getValue(newTable, "macro/m2") as? Macro
+        Truth.assertThat(m2).isNotNull()
+        Truth.assertThat(m2!!.rawValue).isEqualTo("@macro/m1")
+    }
 }

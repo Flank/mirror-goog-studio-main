@@ -350,7 +350,7 @@ fun extractResourceName(value: String): PossibleResourceName {
 fun tryParseItemForAttribute(
   value: String,
   resourceTypeMask: Int,
-  onCreateReference: ((name: ResourceName) -> Unit)? = null): Item? {
+  onCreateReference: ((name: ResourceName) -> Boolean)? = null): Item? {
 
   val nullOrEmpty = tryParseNullOrEmpty(value)
   if (nullOrEmpty != null) {
@@ -359,8 +359,12 @@ fun tryParseItemForAttribute(
 
   val reference = tryParseReference(value)
   if (reference != null) {
+    reference.reference.typeFlags = resourceTypeMask
     if (reference.createNew) {
-      onCreateReference?.invoke(reference.reference.name)
+      val result = onCreateReference?.invoke(reference.reference.name)
+        if (result != null && !result) {
+          return null
+      }
     }
     return reference.reference
   }
