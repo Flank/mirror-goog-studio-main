@@ -46,10 +46,10 @@ internal class JacocoInstrumentationServiceTest {
                 .replace(".", File.separator) + ".class"
         )
         val jacocoJars = listOf(
-            "prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.3/org.jacoco.core-0.8.3.jar",
-            "prebuilts/tools/common/m2/repository/org/ow2/asm/asm/7.0/asm-7.0.jar",
-            "prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/7.0/asm-commons-7.0.jar",
-            "prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/7.0/asm-tree-7.0.jar"
+            "org/jacoco/org.jacoco.core/0.8.3/org.jacoco.core-0.8.3.jar",
+            "org/ow2/asm/asm/9.1/asm-9.1.jar",
+            "org/ow2/asm/asm-commons/9.1/asm-commons-9.1.jar",
+            "org/ow2/asm/asm-tree/9.1/asm-tree-9.1.jar"
         ).map(this::getTestJar)
 
         val instrumented = mockJacocoInstrumentationService.instrument(
@@ -81,7 +81,7 @@ internal class JacocoInstrumentationServiceTest {
     }
 
     private fun getTestJar(path: String) : File {
-        return TestUtils.resolveWorkspacePath(path).toFile()
+        return TestUtils.getLocalMavenRepoFile(path).toFile()
     }
 
     class MockJacocoInstrumentationService : JacocoInstrumentationService() {

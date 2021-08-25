@@ -166,10 +166,6 @@ kotlin_test(
     # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
     deps = ["//tools/base/build-system:gradle-api"] + [
         ":gradle-core",
-        "//prebuilts/tools/common/m2:org.jacoco.org.jacoco.core.0.8.3",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm.7.0",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm-commons.7.0",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm-tree.7.0",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/apkzlib",
@@ -208,6 +204,7 @@ kotlin_test(
         "@maven//:org.jsoup.jsoup",
         "@maven//:org.mockito.mockito-core",
         "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
         "@maven//:org.ow2.asm.asm-tree",
         "@maven//:org.ow2.asm.asm-util",
     ],

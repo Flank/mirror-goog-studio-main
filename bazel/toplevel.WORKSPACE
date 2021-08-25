@@ -223,7 +223,7 @@ local_maven_repository(
         "org.gradle:gradle-tooling-api:7.2",
         "org.hamcrest:hamcrest-core:1.3",
         "org.jacoco:org.jacoco.agent:0.7.9",
-        "org.jacoco:org.jacoco.core:0.7.9",
+        "org.jacoco:org.jacoco.core:0.8.3",
         "org.jacoco:org.jacoco.report:0.7.9",
         "org.jetbrains.dokka:dokka-android-gradle-plugin:0.9.17-g004",
         "org.jetbrains.dokka:dokka-core:1.4.32",

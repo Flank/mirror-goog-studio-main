@@ -330,7 +330,7 @@ public class TestUtils {
      * @throws IllegalArgumentException if the path results in a file that's not found.
      */
     @NonNull
-    private static Path getLocalMavenRepoFile(@NonNull String path) {
+    public static Path getLocalMavenRepoFile(@NonNull String path) {
         if (runningFromBazel()) {
           return resolveWorkspacePath("../maven/repo/" + path);
         } else {
