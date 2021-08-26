@@ -592,4 +592,53 @@ class DslDecoratorUnitTest {
             FakeObjectFactory.factory.newInstance(decorated, dslServices)
         }
     }
+
+    abstract class WithCustomImpl() {
+
+        protected abstract val _list: MutableList<String>
+
+        // An example of a wrapping collection
+        class SortingList(private val delegate: MutableList<String>): AbstractMutableList<String>(){
+            override val size: Int = delegate.size
+            override fun get(index: Int): String = delegate[index]
+            override fun add(index: Int, element: String) = delegate.add(index, element).also { delegate.sort() }
+            override fun removeAt(index: Int): String = delegate.removeAt(index)
+            override fun set(index: Int, element: String): String = delegate.set(index, element).also { delegate.sort() }
+        }
+
+        val list: MutableList<String> get() = SortingList(_list)
+
+        protected abstract var _string: String?
+
+        var string: String?
+            get() = _string
+            set(value) {_string = value?.removeSurrounding("\"")}
+    }
+
+    @Test
+    fun `check error message for underlying managed properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String, SupportedPropertyType.Collection.List))
+        val decorated = decorator.decorate(WithCustomImpl::class)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+        o.string = "a"
+        o.list += listOf("c", "a", "f")
+        assertThat(o.string).isEqualTo("a")
+        assertThat(o.list).containsExactly("a", "c", "f").inOrder()
+
+        o.list += "e"
+        assertThat(o.list).containsExactly("a", "c", "e", "f").inOrder()
+
+        (o as Lockable).lock()
+        val failure = assertFailsWith<AgpDslLockedException> {
+            o.string = "b"
+        }
+        assertThat(failure).hasMessageThat().contains("It is too late to set string")
+        assertThat(o.string).isEqualTo("a")
+
+        val failure2 = assertFailsWith<AgpDslLockedException> {
+            o.list += "b"
+        }
+        assertThat(failure2).hasMessageThat().contains("It is too late to modify list")
+        assertThat(o.list).containsExactly("a", "c", "e", "f").inOrder()
+    }
 }
