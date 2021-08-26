@@ -687,45 +687,45 @@ public class LocalMavenRepositoryGenerator {
 
                 // Add support to resolve only if pointing locally
                 for (RemoteRepository repository : request.getRepositories()) {
-                    try {
-                        URI uri = new URL(repository.getUrl()).toURI();
-                        try {
-                            File repoPath = new File(uri);
-                            Artifact artifact = request.getArtifact();
-                            String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
-                            File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
-                            File[] versions = artifactPath.listFiles();
-                            if (versions != null) {
-                                for (File version : versions) {
-                                    if (!version.isDirectory())
-                                        continue;
-                                    try {
-                                        Version parsedVersion = versionScheme.parseVersion(version.getName());
-                                        if (versionConstraint.containsVersion(parsedVersion)) {
-                                            result.addVersion(parsedVersion);
-                                        }
-                                    } catch (InvalidVersionSpecificationException e) {
-                                        // Ignore invalid versions.
-                                    }
-                                }
-                                if (!result.getVersions().isEmpty()) {
-                                    result.setVersionConstraint(versionConstraint);
-                                    return result;
-                                }
-                            }
-                        } catch (IllegalArgumentException e) {
-                            // Ignore non local repositories
-                        }
-                    } catch (URISyntaxException | MalformedURLException e) {
-                        result.addException(e);
-                        throw new VersionRangeResolutionException(result);
+                    if (!repository.getUrl().startsWith("file://")) {
+                        // Ignore non-local repositories.
+                        continue;
                     }
 
+                    // Windows has trouble with "file://C:\\users\\..." style File paths.
+                    File repoPath = new File(repository.getUrl().substring("file://".length()));
+                    Artifact artifact = request.getArtifact();
+                    String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
+                    File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
+                    File[] versions = artifactPath.listFiles();
+                    if (versions != null) {
+                        for (File version : versions) {
+                            if (!version.isDirectory()) {
+                                continue;
+                            }
+                            try {
+                                Version parsedVersion = versionScheme.parseVersion(version.getName());
+                                if (versionConstraint.containsVersion(parsedVersion)) {
+                                    result.addVersion(parsedVersion);
+                                }
+                            } catch (InvalidVersionSpecificationException e) {
+                                // Ignore invalid versions.
+                                continue;
+                            }
+                        }
+                        if (!result.getVersions().isEmpty()) {
+                          result.setVersionConstraint(versionConstraint);
+                          return result;
+                        }
+                    }
+
+                    // This is a local repository, and we could not resolve the version range.
                     result.addException(new Exception("Failed to resolve version"));
                     throw new VersionRangeResolutionException(result);
                 }
             }
 
+            // If we are fetching, then we can use the default version range resolver.
             return super.resolveVersionRange(session, request);
         }
     }
