@@ -35,6 +35,7 @@ import com.android.tools.lint.LintCliFlags.ERRNO_APPLIED_SUGGESTIONS
 import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_INTERNAL_CONTINUE
+import com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
@@ -321,11 +322,16 @@ open class LintCliClient : LintClient {
         }
 
         // Baselines only consulted during reporting
-        val baselineFile = flags.baselineFile
+        val baselineFile = flags.outputBaselineFile ?: flags.baselineFile
         if (baselineFile != null && baseline != null) {
-            emitBaselineDiagnostics(baseline, baselineFile, stats)
+            emitBaselineDiagnostics(baseline, baseline.file, stats)
         }
-        if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing) {
+        val outputBaselineFile = flags.outputBaselineFile
+        if (outputBaselineFile != null && baseline != null) {
+            baseline.file = outputBaselineFile
+            baseline.close()
+            // Not setting exit code to ERRNO_CREATED_BASELINE; that's the contract for this flag
+        } else if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing) {
             val dir = baselineFile.parentFile
             var ok = true
             if (dir != null && !dir.isDirectory) {
@@ -333,6 +339,7 @@ open class LintCliClient : LintClient {
             }
             if (!ok) {
                 System.err.println("Couldn't create baseline folder $dir")
+                return ERRNO_INVALID_ARGS
             } else {
                 val reporter = Reporter.createXmlReporter(
                     this,
@@ -341,11 +348,14 @@ open class LintCliClient : LintClient {
                 )
                 reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
                 reporter.write(stats, definiteIncidents)
-                System.err.println(getBaselineCreationMessage(baselineFile))
-                return if (flags.isContinueAfterBaselineCreated) {
-                    ERRNO_SUCCESS
-                } else {
-                    ERRNO_CREATED_BASELINE
+                // With --write-reference-baseline we continue even if the baseline was written
+                if (outputBaselineFile == null) {
+                    System.err.println(getBaselineCreationMessage(baselineFile))
+                    return if (flags.isContinueAfterBaselineCreated) {
+                        ERRNO_SUCCESS
+                    } else {
+                        ERRNO_CREATED_BASELINE
+                    }
                 }
             }
         } else if (baseline != null &&

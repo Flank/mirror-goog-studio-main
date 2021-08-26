@@ -18,6 +18,8 @@ package com.android.tools.lint;
 
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.VALUE_NONE;
+import static com.android.tools.lint.LintCliFlags.ERRNO_APPLIED_SUGGESTIONS;
+import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_HELP;
@@ -174,6 +176,7 @@ public class Main {
     private static final String ARG_UPDATE_BASELINE = "--update-baseline";
     private static final String ARG_CONTINUE_AFTER_BASELINE_CREATED =
             "--continue-after-baseline-created";
+    private static final String ARG_WRITE_REF_BASELINE = "--write-reference-baseline";
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
@@ -900,7 +903,7 @@ public class Main {
                 flags.setQuiet(true);
             } else if (arg.equals(ARG_NO_LINES)) {
                 flags.setShowSourceLines(false);
-            } else if (arg.equals(ARG_EXIT_CODE)) {
+            } else if (arg.equals(ARG_EXIT_CODE) || arg.equals("--exit-code")) {
                 flags.setSetExitCode(true);
             } else if (arg.equals(ARG_FATAL_ONLY)) {
                 flags.setFatalOnly(true);
@@ -1433,6 +1436,16 @@ public class Main {
                 flags.setUpdateBaseline(true);
             } else if (arg.equals(ARG_CONTINUE_AFTER_BASELINE_CREATED)) {
                 flags.setContinueAfterBaselineCreated(true);
+            } else if (arg.equals(ARG_WRITE_REF_BASELINE)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing baseline file path");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String path = args[++index];
+                File output = getOutArgumentPath(path);
+                flags.setOutputBaselineFile(output);
+                flags.setUpdateBaseline(true);
+                flags.setContinueAfterBaselineCreated(true);
             } else if (arg.equals(ARG_ALLOW_SUPPRESS)) {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
@@ -1731,8 +1744,8 @@ public class Main {
     /**
      * Converts a relative or absolute command-line argument into an output file.
      *
-     * <p>The difference with {@code getInArgumentPath} is that we can't check whether the a
-     * relative path turned into an absolute compared to lint.workdir actually exists.
+     * <p>The difference with {@code getInArgumentPath} is that we can't check whether the relative
+     * path turned into an absolute compared to lint.workdir actually exists.
      *
      * @param filename The filename given as a command-line argument.
      * @return A File matching filename, either absolute or relative to lint.workdir if defined.
@@ -2073,6 +2086,16 @@ public class Main {
                     "Updates the baselines even if they already exist",
                     ARG_REMOVE_FIXED,
                     "Rewrite the baseline files to remove any issues that have been fixed",
+                    ARG_WRITE_REF_BASELINE,
+                    "Writes the current results, including issues that were filtered from the "
+                            + "input baseline if any. Does not set the exit code to indicate that "
+                            + "the baseline is created the way "
+                            + ARG_BASELINE
+                            + " would. Implies "
+                            + ARG_UPDATE_BASELINE
+                            + " and "
+                            + ARG_CONTINUE_AFTER_BASELINE_CREATED
+                            + ".",
                     ARG_ALLOW_SUPPRESS,
                     "Whether to allow suppressing issues that have been explicitly registered "
                             + "as not suppressible.",
@@ -2169,7 +2192,7 @@ public class Main {
                     "Sets the version of the client, such as 7.1.0-alpha01",
                     "",
                     "\nExit Status:",
-                    "0",
+                    Integer.toString(ERRNO_SUCCESS),
                     "Success.",
                     Integer.toString(ERRNO_ERRORS),
                     "Lint errors detected.",
@@ -2181,6 +2204,10 @@ public class Main {
                     "Lint help.",
                     Integer.toString(ERRNO_INVALID_ARGS),
                     "Invalid command-line argument.",
+                    Integer.toString(ERRNO_CREATED_BASELINE),
+                    "A new baseline file was created.",
+                    Integer.toString(ERRNO_APPLIED_SUGGESTIONS),
+                    "Quickfixes were applied.",
                 });
     }
 
