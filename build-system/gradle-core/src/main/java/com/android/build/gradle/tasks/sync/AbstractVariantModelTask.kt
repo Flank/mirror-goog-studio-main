@@ -69,5 +69,4 @@ abstract class AbstractVariantModelTask: NonIncrementalTask() {
             ).on(InternalArtifactType.VARIANT_MODEL)
         }
     }
-
 }

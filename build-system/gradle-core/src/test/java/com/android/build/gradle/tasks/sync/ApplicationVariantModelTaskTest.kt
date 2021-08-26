@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.ide.model.sync.Variant
+import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -31,11 +32,7 @@ import org.mockito.Mockito
 import java.io.FileInputStream
 
 /**
- * [org.gradle.api.Task] to create the sync model file for
- * [com.android.build.api.variant.ApplicationVariant].
- *
- * The task is not incremental and not cacheable as execution should be so fast, that it outweighs
- * the benefits in performance.
+ * Tests for [ApplicationVariantModelTask]
  */
 internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<ApplicationVariantModelTask>() {
 
@@ -46,30 +43,31 @@ internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<App
 
     @Test
     fun testTaskAction() {
-        val modelFile = project.objects.fileProperty().also {
-            it.set(temporaryFolder.newFile("variant_model.pb"))
-        }
-        task.outputModelFile.set(modelFile)
-        task.applicationId.set("testApplicationId")
-
-        task.taskAction()
-
-        modelFile.asFile.get().let { outputFile ->
-            assertThat(outputFile.exists()).isTrue()
-            FileInputStream(outputFile).use {
-                val variant = Variant.parseFrom(it)
-                assertThat(variant.variantCase).isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
-                assertThat(variant.applicationVariantModel).isNotNull()
-                assertThat(variant.applicationVariantModel.applicationId)
-                        .isEqualTo("testApplicationId")
-            }
-        }
+        super.testTaskAction(
+                given = {
+                    it.applicationId.set("testApplicationId")
+                    it.setupModuleTaskInputs()
+                },
+                expect = {
+                    assertThat(it.variantCase).isEqualTo(Variant.VariantCase.APPLICATIONVARIANTMODEL)
+                    it.applicationVariantModel.moduleCommonModel.testModuleFields()
+                    assertThat(it.applicationVariantModel).isNotNull()
+                    assertThat(it.applicationVariantModel.applicationId)
+                            .isEqualTo("testApplicationId")                }
+        )
     }
 
     @Test
     fun testConfigure() {
         val creationConfig = Mockito.mock(ApplicationCreationConfig::class.java)
         Mockito.`when`(creationConfig.applicationId).thenReturn(project.provider { "testAppId" })
+        Mockito.`when`(creationConfig.manifestPlaceholders).thenReturn(
+                project.objects.mapProperty(String::class.java, String::class.java).also {
+                    it.put("key1", "value1")
+                    it.put("key2", "value2")
+                }
+        )
+
         Mockito.`when`(creationConfig.name).thenReturn("debug")
         Mockito.`when`(creationConfig.services).thenReturn(
             createTaskCreationServices(
@@ -85,6 +83,7 @@ internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<App
         ) {}
         creationAction.configure(task)
 
+        task.assertModuleTaskInputs()
         assertThat(task.applicationId.get()).isEqualTo("testAppId")
     }
 }

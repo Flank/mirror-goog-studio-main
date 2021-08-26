@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
-import com.android.builder.model.ApiVersion
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory

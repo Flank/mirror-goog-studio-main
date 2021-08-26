@@ -24,18 +24,26 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.work.DisableCachingByDefault
 
+/**
+ * [org.gradle.api.Task] to create the sync model file for
+ * [com.android.build.api.variant.ApplicationVariant].
+ *
+ * The task is not incremental and not cacheable as execution should be so fast, that it outweighs
+ * the benefits in performance.
+ */
 @DisableCachingByDefault
-abstract class ApplicationVariantModelTask: AbstractVariantModelTask() {
+abstract class ApplicationVariantModelTask: ModuleVariantModelTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
     override fun addVariantContent(variant: Variant.Builder) {
+        super.addVariantContent(variant.applicationVariantModelBuilder.moduleCommonModelBuilder)
         variant.applicationVariantModelBuilder.applicationId = applicationId.get()
     }
 
-    class CreationAction(creationConfig: ApplicationCreationConfig) :
+    class CreationAction(private val applicationCreationConfig: ApplicationCreationConfig) :
         AbstractVariantModelTask.CreationAction<ApplicationVariantModelTask, VariantCreationConfig>(
-            creationConfig = creationConfig,
+            creationConfig = applicationCreationConfig,
         ) {
 
         override val type: Class<ApplicationVariantModelTask>
@@ -43,7 +51,8 @@ abstract class ApplicationVariantModelTask: AbstractVariantModelTask() {
 
         override fun configure(task: ApplicationVariantModelTask) {
             super.configure(task)
-            task.applicationId.setDisallowChanges(creationConfig.applicationId)
+            task.applicationId.setDisallowChanges(applicationCreationConfig.applicationId)
+            task.manifestPlaceholders.setDisallowChanges(applicationCreationConfig.manifestPlaceholders)
         }
     }
 }

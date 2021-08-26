@@ -13,10 +13,11 @@ message Variant {
     oneof variant {
         ApplicationVariantModel applicationVariantModel = 2;
         LibraryVariantModel libraryVariantModel = 3;
-        AndroidTestVariantModel androidTestVariantModel = 4;
-        UnitTestVariantModel unitTestVariantModel = 5;
-        TestVariantModel testVariantModel = 6;
-        TestFixturesVariantModel testFixtureVariantModel = 7;
+        DynamicFeatureVariantModel dynamicFeatureVariantModel = 4;
+        AndroidTestVariantModel androidTestVariantModel = 5;
+        UnitTestVariantModel unitTestVariantModel = 6;
+        TestVariantModel testVariantModel = 7;
+        TestFixturesVariantModel testFixtureVariantModel = 8;
     }
 }
 
@@ -24,27 +25,43 @@ message Variant {
 // Common model information for all variant types.
 //
 message CommonVariantModel {
-    map<string, string> placeholders = 1;
+}
+
+//
+// Common model information for variant types producing an APK or Bundle
+//
+message ModuleVariantModel {
+    map<string, string> manifestPlaceholders = 1;
 }
 
 //
 // Application VariantType specific model.
 //
 message ApplicationVariantModel {
-    string applicationId = 1;
+    ModuleVariantModel moduleCommonModel = 1;
+    string applicationId = 2;
 }
 
 //
 // Library VariantType specific model.
 //
 message LibraryVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
+}
+
+//
+// Dynamic Feature VariantType specific model.
+//
+message DynamicFeatureVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
 }
 
 //
 // AndroidTest VariantType specific model.
 //
 message AndroidTestVariantModel {
-    string applicationId = 1;
+    ModuleVariantModel moduleCommonModel = 1;
+    string applicationId = 2;
 }
 
 //
@@ -57,6 +74,7 @@ message UnitTestVariantModel {
 // Test VariantType specific model.
 //
 message TestVariantModel {
+    ModuleVariantModel moduleCommonModel = 1;
 }
 
 // TestFixture Variant type specific model

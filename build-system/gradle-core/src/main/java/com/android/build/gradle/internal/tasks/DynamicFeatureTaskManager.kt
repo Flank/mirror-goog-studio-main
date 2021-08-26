@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTas
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.sync.DynamicFeatureVariantModelTask
 
 internal class DynamicFeatureTaskManager(
         variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
@@ -59,6 +60,8 @@ internal class DynamicFeatureTaskManager(
         val variant = variantInfo.variant
 
         createDynamicBundleTask(variant)
+
+        taskFactory.register(DynamicFeatureVariantModelTask.CreationAction(variant))
 
         // Non-base feature specific task.
         // Task will produce artifacts consumed by the base feature

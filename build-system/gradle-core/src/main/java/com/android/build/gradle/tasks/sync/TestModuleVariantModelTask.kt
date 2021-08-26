@@ -16,30 +16,36 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.model.sync.Variant
 import org.gradle.work.DisableCachingByDefault
 
+/**
+ * [org.gradle.api.Task] to write variant sync model for Test only modules.
+ *
+ * Caching is disabled as writing the sync model file should be fast and outweighs benefits of
+ * caching.
+ */
 @DisableCachingByDefault
-abstract class DynamicFeatureVariantModelTask: ModuleVariantModelTask() {
+abstract class TestModuleVariantModelTask: ModuleVariantModelTask() {
 
     override fun addVariantContent(variant: Variant.Builder) {
-        super.addVariantContent(variant.dynamicFeatureVariantModelBuilder.moduleCommonModelBuilder)
+        super.addVariantContent(variant.testVariantModelBuilder.moduleCommonModelBuilder)
     }
 
-    class CreationAction(private val dynamicFeatureCreationConfig: DynamicFeatureCreationConfig):
-        AbstractVariantModelTask.CreationAction<DynamicFeatureVariantModelTask, DynamicFeatureCreationConfig>(
-            creationConfig = dynamicFeatureCreationConfig,
-        ) {
+    class CreationAction(private val testVariantCreationConfig: TestVariantCreationConfig):
+            AbstractVariantModelTask.CreationAction<TestModuleVariantModelTask, TestVariantCreationConfig>(
+                    creationConfig = testVariantCreationConfig,
+            ) {
 
-        override val type: Class<DynamicFeatureVariantModelTask>
-            get() = DynamicFeatureVariantModelTask::class.java
+        override val type: Class<TestModuleVariantModelTask>
+            get() = TestModuleVariantModelTask::class.java
 
-        override fun configure(task: DynamicFeatureVariantModelTask) {
+        override fun configure(task: TestModuleVariantModelTask) {
             super.configure(task)
             task.manifestPlaceholders.setDisallowChanges(
-                dynamicFeatureCreationConfig.manifestPlaceholders
+                testVariantCreationConfig.manifestPlaceholders
             )
         }
     }

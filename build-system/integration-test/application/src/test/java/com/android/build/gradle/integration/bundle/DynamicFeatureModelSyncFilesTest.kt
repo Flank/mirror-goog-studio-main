@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
@@ -25,8 +25,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.FileInputStream
 
-class LibraryModelSyncFilesTest {
-
+class DynamicFeatureModelSyncFilesTest {
     @get:Rule
     val project = createGradleProject {
         rootProject {
@@ -35,22 +34,23 @@ class LibraryModelSyncFilesTest {
                 setUpHelloWorld()
             }
         }
-        subProject(":lib") {
-            plugins.add(PluginType.ANDROID_LIB)
-            android {}
+        subProject(":feature1") {
+            plugins.add(PluginType.ANDROID_DYNAMIC_FEATURE)
+            android {
+            }
         }
     }
 
     @Test
-    fun testLibraryModel() {
-        val variantSyncFileModel = getLibrarySyncModel()
+    fun testTestModuleModel() {
+        val variantSyncFileModel = getTestModuleSyncFile()
         Truth.assertThat(variantSyncFileModel.variantCase)
-            .isEqualTo(Variant.VariantCase.LIBRARYVARIANTMODEL)
+                .isEqualTo(Variant.VariantCase.DYNAMICFEATUREVARIANTMODEL)
     }
 
     @Test
     fun testManifestPlaceholders() {
-        project.getSubproject(":lib").buildFile.appendText(
+        project.getSubproject(":feature1").buildFile.appendText(
                 """
                     android {
                         buildTypes {
@@ -61,16 +61,16 @@ class LibraryModelSyncFilesTest {
                     }
                 """.trimIndent()
         )
-        val variantSyncFileModel = getLibrarySyncModel()
-        val commonModel = variantSyncFileModel.libraryVariantModel.moduleCommonModel
+        val variantSyncFileModel = getTestModuleSyncFile()
+        val commonModel = variantSyncFileModel.dynamicFeatureVariantModel.moduleCommonModel
         Truth.assertThat(commonModel.manifestPlaceholdersCount).isEqualTo(1)
         Truth.assertThat(commonModel.manifestPlaceholdersMap["label"]).isEqualTo("some_value")
 
     }
 
 
-    private fun getLibrarySyncModel(): Variant {
-        val variant = getLibraryVariant()
+    private fun getTestModuleSyncFile(): Variant {
+        val variant = getTestModuleVariant()
         Truth.assertThat(variant.mainArtifact.modelSyncFiles.size).isEqualTo(1)
         val appModelSync = variant.mainArtifact.modelSyncFiles.first()
         return appModelSync.syncFile.let { appModelSyncFile ->
@@ -84,15 +84,17 @@ class LibraryModelSyncFilesTest {
         }
     }
 
-    private fun getLibraryVariant(): com.android.builder.model.v2.ide.Variant {
+    private fun getTestModuleVariant(): com.android.builder.model.v2.ide.Variant {
         val androidProject = project.modelV2()
             .fetchModels("debug")
             .container
-            .getProject(":lib")
+            .getProject(":feature1")
             .androidProject
-            ?: throw RuntimeException("No AndroidProject model for :lib")
+            ?: throw RuntimeException("No AndroidProject model for :feature1")
+
         return androidProject
             .variants
             .first { variant -> variant.name == "debug" }
+
     }
 }

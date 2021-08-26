@@ -16,28 +16,28 @@
 
 package com.android.build.gradle.tasks.sync
 
-import com.android.ide.model.sync.Variant
+import com.android.ide.model.sync.ModuleVariantModel
 import com.google.common.truth.Truth
-import org.junit.Before
-import org.junit.Test
 
-class LibraryVariantModelTaskTest: VariantModelTaskAbstractTest<LibraryVariantModelTask>() {
-
-    @Before
-    fun setUp() {
-        super.setUp(LibraryVariantModelTask::class.java)
-    }
-
-    @Test
-    fun testTaskAction() {
-        super.testTaskAction(
-            given = {
-                it.setupModuleTaskInputs()
-            },
-            expect = {
-                Truth.assertThat(it.variantCase).isEqualTo(Variant.VariantCase.LIBRARYVARIANTMODEL)
-                it.libraryVariantModel.moduleCommonModel.testModuleFields()
+fun ModuleVariantModelTask.setupModuleTaskInputs() {
+    manifestPlaceholders.set(
+            project.objects.mapProperty(String::class.java, String::class.java).also {
+                it.put("key1", "value1")
+                it.put("key2", "value2")
             }
-        )
-    }
+    )
+}
+
+fun ModuleVariantModelTask.assertModuleTaskInputs() {
+    Truth.assertThat(manifestPlaceholders.get()).containsExactly(
+            "key1", "value1",
+            "key2", "value2"
+    )
+}
+
+fun ModuleVariantModel.testModuleFields() {
+    Truth.assertThat(manifestPlaceholdersMap).containsExactly(
+            "key1", "value1",
+            "key2", "value2"
+    )
 }

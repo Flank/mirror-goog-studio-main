@@ -44,7 +44,7 @@ abstract class VariantModelTaskAbstractTest<T: AbstractVariantModelTask> {
 
     fun testTaskAction(given: (T)->Unit, expect: (Variant)->Unit) {
         val modelFile = project.objects.fileProperty().also {
-            it.set(temporaryFolder.newFile("variant_model"))
+            it.set(temporaryFolder.newFile("variant_model.proto"))
         }
         task.outputModelFile.set(modelFile)
         given.invoke(task)

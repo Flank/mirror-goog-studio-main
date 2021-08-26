@@ -21,26 +21,26 @@ import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
 
-internal class DynamicFeatureVariantModelTaskTest
-    : VariantModelTaskAbstractTest<DynamicFeatureVariantModelTask>() {
+internal class TestModuleVariantModelTaskTest
+    : VariantModelTaskAbstractTest<TestModuleVariantModelTask>() {
 
     @Before
     fun setUp() {
-        super.setUp(DynamicFeatureVariantModelTask::class.java)
+        super.setUp(TestModuleVariantModelTask::class.java)
     }
 
     @Test
     fun testTaskAction() {
         super.testTaskAction(
-            given = {
-                it.setupModuleTaskInputs()
-            },
-            expect = {
-                it.dynamicFeatureVariantModel.moduleCommonModel.testModuleFields()
-                Truth.assertThat(it.variantCase).isEqualTo(
-                        Variant.VariantCase.DYNAMICFEATUREVARIANTMODEL
-                )
-             },
+                given = {
+                    it.setupModuleTaskInputs()
+                },
+                expect = {
+                    it.testVariantModel.moduleCommonModel.testModuleFields()
+                    Truth.assertThat(it.variantCase).isEqualTo(
+                            Variant.VariantCase.TESTVARIANTMODEL
+                    )
+                },
         )
     }
 }

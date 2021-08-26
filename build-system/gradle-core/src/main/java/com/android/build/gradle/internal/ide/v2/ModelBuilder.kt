@@ -37,8 +37,10 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension
@@ -573,7 +575,7 @@ class ModelBuilder<
         val maxSdkVersion =
                 if (component is VariantCreationConfig) component.maxSdkVersion else null
 
-        val modelSyncFiles = if (component is ApplicationCreationConfig || component is LibraryCreationConfig) {
+        val modelSyncFiles = if (component is ApplicationCreationConfig || component is LibraryCreationConfig || component is TestVariantCreationConfig || component is DynamicFeatureCreationConfig) {
             listOf(
                 ModelSyncFileImpl(
                     ModelSyncFile.ModelSyncType.BASIC,

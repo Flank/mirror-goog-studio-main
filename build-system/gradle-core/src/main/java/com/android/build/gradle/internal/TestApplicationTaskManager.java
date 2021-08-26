@@ -41,6 +41,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
+import com.android.build.gradle.tasks.sync.TestModuleVariantModelTask;
 import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
 import java.util.List;
@@ -86,6 +87,8 @@ public class TestApplicationTaskManager
 
         Provider<Directory> testingApk =
                 testVariantProperties.getArtifacts().get(SingleArtifact.APK.INSTANCE);
+
+        taskFactory.register(new TestModuleVariantModelTask.CreationAction(testVariantProperties));
 
         // The APKs to be tested.
         FileCollection testedApks =
