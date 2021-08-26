@@ -27,10 +27,12 @@ import com.android.tools.deployer.model.component.WatchFace;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
+
 import java.util.List;
 import java.util.Optional;
 
 public class App {
+    static final String NO_FLAGS = "";
 
     private final List<Apk> apks;
 
@@ -57,7 +59,7 @@ public class App {
             @NonNull String componentName,
             @NonNull IShellOutputReceiver receiver)
             throws DeployerException {
-        activateComponent(type, componentName, "", AppComponent.Mode.RUN, receiver);
+        activateComponent(type, componentName, NO_FLAGS, AppComponent.Mode.RUN, receiver);
     }
 
     public void activateComponent(
@@ -67,6 +69,13 @@ public class App {
             @NonNull IShellOutputReceiver receiver)
             throws DeployerException {
         activateComponent(type, componentName, extraFlags, AppComponent.Mode.RUN, receiver);
+    }
+
+    public void activateComponent(
+            @NonNull ComponentType type, @NonNull String componentName,
+            @NonNull AppComponent.Mode mode, @NonNull IShellOutputReceiver receiver)
+            throws DeployerException {
+        activateComponent(type, componentName, NO_FLAGS, mode, receiver);
     }
 
     private void activateComponent(
