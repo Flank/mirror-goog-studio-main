@@ -23,7 +23,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
-import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
@@ -32,7 +31,6 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
@@ -148,12 +146,6 @@ fun runUtpTestSuiteAndWait(
                 } else {
                     logger.error(null, "Failed to receive the UTP test results")
                     false
-                }
-
-                try {
-                    FileUtils.deleteRecursivelyIfExists(config.utpOutputDir.resolve(TEST_LOG_DIR))
-                } catch (e: IOException) {
-                    logger.warning("Failed to cleanup temporary directories: $e")
                 }
 
                 testPassed

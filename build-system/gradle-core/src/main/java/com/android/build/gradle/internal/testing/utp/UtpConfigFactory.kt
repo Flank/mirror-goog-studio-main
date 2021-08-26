@@ -77,7 +77,7 @@ private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
 private  val AM_INSTRUMENT_COMMAND_TIME_OUT_SECONDS = TimeUnit.DAYS.toSeconds(365)
 
 // Relative path to the UTP outputDir for test log directory.
-const val TEST_LOG_DIR = "testlog"
+private const val TEST_LOG_DIR = "testlog"
 
 /**
  * A factory class to construct UTP runner and server configuration protos.
