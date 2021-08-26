@@ -23,6 +23,7 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
+import com.android.build.gradle.internal.lint.LintFromMaven;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
@@ -70,6 +71,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
 
         DeprecationReporterImpl deprecationReporter =
                 new DeprecationReporterImpl(syncIssueHandler, projectOptions, project.getPath());
+        LintFromMaven lintFromMaven = LintFromMaven.from(project, projectOptions, syncIssueHandler);
 
         ProjectServices projectServices =
                 new ProjectServices(
@@ -81,6 +83,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         project.getLayout(),
                         projectOptions,
                         project.getGradle().getSharedServices(),
+                        lintFromMaven,
                         null,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
                         new ProjectInfo(project),

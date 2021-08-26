@@ -32,7 +32,6 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.lang.IllegalStateException
 
 /**
  * Test mode which modifies Kotlin and Java source files in various
@@ -177,6 +176,9 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
             val source = file.sourcePsi.text
             val edits = transform(source, context, file, clientData)
             if (edits.isNotEmpty()) {
+                if (!ensureConflictFree(this, context, edits)) {
+                    return emptyList()
+                }
                 result.add(Pair(context, edits))
             }
         }
@@ -517,7 +519,7 @@ internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestM
 
         val contents = mutableMapOf<File, String>()
         val rootDir = testContext.rootDir
-        for (mode in this.validModes) {
+        modeLoop@ for (mode in this.validModes) {
             if (testContext.task.ignoredTestModes.contains(mode)) {
                 continue
             }
@@ -531,6 +533,12 @@ internal class TestModeGroup(vararg modes: TestMode) : SourceTransformationTestM
                 val edits = mode.transform(source, fileContext, file, clientData)
                 if (edits.isNotEmpty()) {
                     edits.sort()
+
+                    if (!ensureConflictFree(mode, fileContext, edits)) {
+                        // This individual mode is broken (returning overlapping edits within a single file); skip it
+                        continue@modeLoop
+                    }
+
                     pending[relativePath] = edits
                 }
             }
@@ -665,4 +673,55 @@ internal class MergedSourceTransformationTestMode(
     override fun toString(): String {
         return MergedSourceTransformationTestMode::class.java.simpleName + ":" + modes.joinToString()
     }
+}
+
+/**
+ * Checks that the given list of [edits] for a given test [mode]
+ * operating on a source file pointed to by the given [context] is a
+ * valid set of edits: no overlaps. This is normally the case, but
+ * there are some tricky situations where UAST will map a single source
+ * element into multiple separate AST elements (examples include
+ * `@JvmStatic` methods in companion objects and properties) so test
+ * modes need to be careful around these. This adds a safeguard
+ * mechianism such that if the test mode produces an invalid set of
+ * edits, we catch it, log it and resume (or if it's a built-in test,
+ * fail the test). This method should return true if there are no
+ * conflicts.
+ */
+private fun ensureConflictFree(
+    mode: TestMode,
+    context: JavaContext,
+    edits: List<SourceTransformationTestMode.Edit>
+): Boolean {
+    // Make sure the edits are valid
+    var prev: SourceTransformationTestMode.Edit? = null
+    for (edit in edits.sorted()) {
+        if (prev != null && prev.startOffset < edit.endOffset) {
+            val message = "" +
+                "Invalid source transform test mode (${mode.fieldName}):\n" +
+                "edits overlap; $prev and $edit.\n" +
+                "This means that the test mode is broken.\n" +
+                "Please file a bug with details; the source file where this happened is:\n" +
+                "${listFile(context.file.path, context.getContents()?.toString() ?: "")}\n" +
+                "and the list of edits is:\n" +
+                "$edits"
+            if (Throwable().fillInStackTrace().stackTrace.any {
+                val name = it.className
+                name.startsWith("com.android.tools.") &&
+                    (!name.contains(".infrastructure.") || name.endsWith("Test"))
+            }
+            ) {
+                // For built-in tests we want to fail
+                error(message)
+            } else {
+                // Don't cause external detector tests to fail because the test mode is broken;
+                // log and encourage people to submit bugs letting us know.
+                System.err.println(message)
+                return false
+            }
+        }
+        prev = edit
+    }
+
+    return true
 }

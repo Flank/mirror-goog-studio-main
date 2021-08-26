@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -83,15 +84,16 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     internal fun configureForStandalone(
-        project: Project,
-        projectOptions: ProjectOptions,
+        taskCreationServices: TaskCreationServices,
         javaConvention: JavaPluginConvention,
         lintOptions: LintOptions,
         partialResultsDir: File
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
-        this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        this.analyticsService.setDisallowChanges(
+            getBuildService(taskCreationServices.buildServiceRegistry)
+        )
         this.projectInputs
             .initializeForStandalone(
                 project,
@@ -104,7 +106,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             .initializeForStandalone(
                 project,
                 javaConvention,
-                projectOptions,
+                taskCreationServices.projectOptions,
+                fatalOnly = false,
                 checkDependencies = true,
                 isForAnalysis = false
             )
@@ -113,9 +116,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     class LintCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        variant: VariantWithTests,
         checkDependencies: Boolean = true
-    ) : BaseCreationAction(creationConfig, checkDependencies) {
+    ) : BaseCreationAction(variant, checkDependencies) {
 
         override val useLintVitalPartialResults: Boolean
             get() = false
@@ -125,9 +128,12 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     class LintVitalCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        variant: ConsumableCreationConfig,
         checkDependencies: Boolean = false
-    ) : BaseCreationAction(creationConfig, checkDependencies) {
+    ) : BaseCreationAction(
+        VariantWithTests(variant, androidTest = null, unitTest = null),
+        checkDependencies
+    ) {
 
         override val useLintVitalPartialResults: Boolean
             get() = true
@@ -137,11 +143,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     abstract class BaseCreationAction(
-        creationConfig: ConsumableCreationConfig,
+        val variant: VariantWithTests,
         private val checkDependencies: Boolean
-    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(
-        creationConfig
-    ) {
+    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(variant.main) {
         abstract val useLintVitalPartialResults: Boolean
 
         final override val type: Class<LintModelWriterTask>
@@ -160,11 +164,9 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
 
         override fun configure(task: LintModelWriterTask) {
             super.configure(task)
-            // Do not export test sources between projects
-            val variantWithoutTests = VariantWithTests(creationConfig, null, null)
-            task.projectInputs.initialize(variantWithoutTests, isForAnalysis = false)
+            task.projectInputs.initialize(variant, isForAnalysis = false)
             task.variantInputs.initialize(
-                variantWithoutTests,
+                variant,
                 checkDependencies = checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = false,
                 isForAnalysis = false,

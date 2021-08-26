@@ -41,6 +41,13 @@ class Level2DependencyModelBuilder(buildServiceRegistry: BuildServiceRegistry) :
         )
             .get()
 
+    private val mavenCoordinatesCacheBuildService =
+        getBuildService(
+            buildServiceRegistry,
+            MavenCoordinatesCacheBuildService::class.java
+        )
+            .get()
+
     override fun createModel() : DependencyGraphs = FullDependencyGraphsImpl(
         compileItems.build(),
         runtimeItems.build(),
@@ -54,7 +61,9 @@ class Level2DependencyModelBuilder(buildServiceRegistry: BuildServiceRegistry) :
         lintJarMap: Map<ComponentIdentifier, File>?,
         type: ClasspathType
     ) {
-        val graphItem = GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of())
+        val graphItem = GraphItemImpl(
+            artifact.computeModelAddress(mavenCoordinatesCacheBuildService),
+            ImmutableList.of())
 
         when (type) {
             ClasspathType.COMPILE -> {

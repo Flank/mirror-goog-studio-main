@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint;
 import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -54,7 +55,11 @@ public class LintLibraryModelTest {
 
     @Rule
     public final GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("lintLibraryModel").create();
+            GradleTestProject.builder()
+                    // FIXME(b/195978143)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .fromTestProject("lintLibraryModel")
+                    .create();
 
     private static final String APPLY_THE_PLUGIN_TO_JAVA_LIBRARY_PROJECT = "Apply the 'com.android.lint' plugin to java library project";
 

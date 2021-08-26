@@ -68,7 +68,8 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
             implementation = Implementation(
                 PendingIntentMutableFlagDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
-            )
+            ),
+            moreInfo = "https://developer.android.com/about/versions/12/behavior-changes-12#pending-intent-mutability"
         )
     }
 }

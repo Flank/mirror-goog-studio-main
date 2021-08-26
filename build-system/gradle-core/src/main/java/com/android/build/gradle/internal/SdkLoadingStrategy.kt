@@ -31,6 +31,7 @@ class SdkLoadingStrategy(
     fun getAnnotationsJar() = if (directLoad.loadedSuccessfully()) directLoad.getAnnotationsJar() else fullLoad.getAnnotationsJar()
     fun getAdditionalLibraries() = if (directLoad.loadedSuccessfully()) directLoad.getAdditionalLibraries() else fullLoad.getAdditionalLibraries()
     fun getOptionalLibraries() = if (directLoad.loadedSuccessfully()) directLoad.getOptionalLibraries() else fullLoad.getOptionalLibraries()
+    fun getApiVersionsFile(): File? = if (directLoad.loadedSuccessfully()) directLoad.getApiVersionsFile() else fullLoad.getApiVersionsFile()
     fun getTargetPlatformVersion() = if (directLoad.loadedSuccessfully()) directLoad.getTargetPlatformVersion() else fullLoad.getTargetPlatformVersion()
     fun getTargetBootClasspath() = if (directLoad.loadedSuccessfully()) directLoad.getTargetBootClasspath() else fullLoad.getTargetBootClasspath()
 

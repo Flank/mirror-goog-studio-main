@@ -19,23 +19,18 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.artifacts.component.BuildIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 
-class FakeProjectComponentIdentifier(
-    private val displayName: String
-)
-    : ProjectComponentIdentifier {
+data class FakeProjectComponentIdentifier(
+    private val projectPath: String,
+    private val displayName: String = projectPath,
+    private val buildIdentifier: BuildIdentifier,
+) : ProjectComponentIdentifier {
 
     override fun getDisplayName() = displayName
-
-    override fun getProjectPath(): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBuild(): BuildIdentifier {
-        TODO("Not yet implemented")
-    }
+    override fun getProjectPath(): String = projectPath
+    override fun getBuild(): BuildIdentifier = buildIdentifier
 
     override fun getProjectName(): String {
-        TODO("Not yet implemented")
+        if (projectPath == ":") return projectPath
+        return projectPath.split(":").last()
     }
-
 }

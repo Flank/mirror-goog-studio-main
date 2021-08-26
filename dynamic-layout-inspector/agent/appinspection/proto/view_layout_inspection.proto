@@ -251,6 +251,31 @@ message CaptureSnapshotResponse {
     WindowRootsEvent window_roots = 2;
 }
 
+// An event sent for metrics logging purposes when the inspector passes certain
+// checkpoints during initial connect.
+// These should be a subset of the events in studio_stats.proto, and in the
+// same order.
+message ProgressEvent {
+    enum ProgressCheckpoint {
+        NOT_STARTED = 0;
+        // The inspector received the request to start capturing
+        START_RECEIVED = 10;
+        // The inspector registered capture callbacks successfully
+        STARTED = 20;
+        // We found root views and registered invalidation callbacks
+        ROOTS_EVENT_SENT = 30;
+        // The inspector got a callback from the platform
+        VIEW_INVALIDATION_CALLBACK = 40;
+        // The inspector captured a screenshot or serialized an SKP
+        SCREENSHOT_CAPTURED = 50;
+        // The inspector executed the view hierarchy capture code
+        VIEW_HIERARCHY_CAPTURED = 60;
+        // The inspector sent a response
+        RESPONSE_SENT = 70;
+    }
+    ProgressCheckpoint checkpoint = 1;
+}
+
 // An event containing complete layout information about a single node tree
 message LayoutEvent {
     // A collection of all text referenced by other fields in this message
@@ -312,5 +337,6 @@ message Event {
         WindowRootsEvent roots_event = 2;
         LayoutEvent layout_event = 3;
         PropertiesEvent properties_event = 4;
+        ProgressEvent progress_event = 5;
     }
 }

@@ -72,7 +72,7 @@ class AvdSnapshotHandler(
         emulatorExecutable: File,
         avdLocation: File,
         logger: ILogger,
-        snapshotName: String = "default-boot"
+        snapshotName: String = "default_boot"
     ): Boolean {
         logger.info("Checking $snapshotName on device $avdName is loadable.")
         val processBuilder = processFactory(
@@ -155,7 +155,7 @@ class AvdSnapshotHandler(
                         logger.verbose(line)
                         if (line.contains("boot completed")) {
                             Thread.sleep(WAIT_AFTER_BOOT_MS)
-                            process.destroyForcibly()
+                            process.destroy()
                         }
                     }
 

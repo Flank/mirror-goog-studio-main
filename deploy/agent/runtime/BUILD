@@ -95,8 +95,8 @@ dex_library(
         ":runtime_java",
         ":eval4j",
         ":interpreter_common",
-        ":jetbrains_asm4",
-        ":kotlin-stdlib",
+        # ":jetbrains_asm4",
+        # ":kotlin-stdlib",
     ],
     visibility = ["//visibility:public"],
 )

@@ -41,6 +41,7 @@ class UtpTestRunner @JvmOverloads constructor(
         private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         private val retentionConfig: RetentionConfig,
         private val useOrchestrator: Boolean,
+        private val uninstallIncompatibleApks: Boolean,
         private val utpTestResultListener: UtpTestResultListener?,
         private val configFactory: UtpConfigFactory = UtpConfigFactory(),
         private val runUtpTestSuiteAndWaitFunc: (
@@ -80,6 +81,7 @@ class UtpTestRunner @JvmOverloads constructor(
                     apks,
                     installOptions,
                     helperApks,
+                    uninstallIncompatibleApks,
                     utpDependencies,
                     versionedSdkLoader,
                     utpOutputDir,

@@ -55,33 +55,23 @@ maven_library(
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
     coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
+    enable_scopes = True,
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],
     visibility = ["//visibility:public"],
+    exports = [
+        "//tools/base/repository:tools.repository",
+    ],
     deps = [
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/device_validator:tools.dvlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
         "@maven//:com.google.code.gson.gson",
-        "@maven//:com.google.guava.guava",
-        # TODO(emrekultursay): These dependency upgrade manipulations should no longer be
-        # necessary, because the @maven repository already does proper Maven dependency
-        # resolution.
-        # org.apache.httpcomponents:httpclient:4.2.6 depends on
-        # commons-logging:commons-logging:1.1.1, but other targets use a newer version.
-        # Include the dependeny explicitly to bump the version in gradle's resolved dependency
-        # graph, as the custom maven logic in tools/base resolves everything together.
-        "@maven//:commons-logging.commons-logging",
         "@maven//:org.apache.commons.commons-compress",
-        "@maven//:org.apache.httpcomponents.httpclient",
-        # Include explicitly in order to depend on httpcore 4.4.5 instead of 4.4.4
-        # TODO(emrekultursay): This dependency is required. It being listed here is not
-        # related (or no longer related) to version upgrade.
         "@maven//:org.apache.httpcomponents.httpcore",
-        "@maven//:jakarta.xml.bind.jakarta.xml.bind-api",
+        "@maven//:org.apache.httpcomponents.httpmime",
+        "@maven//:org.glassfish.jaxb.jaxb-runtime",
     ],
 )
 

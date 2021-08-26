@@ -1,3 +1,4 @@
+//noinspection JavaPluginLanguageLevel
 apply plugin: 'java-library'
 apply plugin: 'com.android.lint'
 apply plugin: 'idea'
@@ -8,4 +9,10 @@ dependencies {
     compileOnly "com.android.tools.lint:lint-checks:$baseVersion"
 }
 
-
+lintOptions {
+    textReport true
+    textOutput file("lint-results.txt")
+    disable 'DuplicatePlatformClasses'
+    absolutePaths false
+    abortOnError false
+}

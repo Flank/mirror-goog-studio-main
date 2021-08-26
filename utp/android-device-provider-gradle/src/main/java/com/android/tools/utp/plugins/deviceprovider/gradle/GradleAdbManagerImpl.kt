@@ -39,6 +39,16 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
                     "id"
             )
 
+    private fun getAdbBootCheckArgs(serial: String): List<String> =
+            listOf(
+                    adbPath,
+                    "-s",
+                    serial,
+                    "shell",
+                    "getprop",
+                    "sys.boot_completed"
+            )
+
     private fun getAdbCloseArgs(serial: String): List<String> =
             listOf(
                     adbPath,
@@ -68,6 +78,26 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
         )
 
         return serials
+    }
+
+    /**
+     * Returns whether the given device has booted or not
+     */
+    override fun isBootLoaded(deviceSerial: String): Boolean {
+        var success = false
+
+        subprocessComponent.subprocess().execute(
+                args = getAdbBootCheckArgs(deviceSerial),
+                environment = System.getenv(),
+                stdoutProcessor = { line ->
+                    val trimmed = line.trim()
+                    if (trimmed == "1") {
+                        success = true
+                    }
+                }
+        )
+
+        return success;
     }
 
     /**

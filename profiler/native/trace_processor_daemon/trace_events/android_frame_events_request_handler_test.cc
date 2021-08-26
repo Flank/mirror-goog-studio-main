@@ -94,7 +94,7 @@ TEST(AndroidFrameEventsRequestHandlerTest, PopulateEventsByLayerName) {
   EXPECT_EQ(app_event.timestamp_nanoseconds(), 2671665783520253L);
   EXPECT_EQ(app_event.duration_nanoseconds(), 1468542L);
   EXPECT_EQ(app_event.frame_number(), 433);
-  EXPECT_EQ(app_event.depth(), 0);
+  EXPECT_EQ(app_event.depth(), 2);
 
   auto gpu_phase = layer.phase(2);
   EXPECT_EQ(gpu_phase.phase_name(), "GPU");

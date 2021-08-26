@@ -125,6 +125,7 @@ class GradleManagedAndroidDeviceLauncherTest {
     fun provideDevice_ensureDeviceProvided() {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
         `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(true)
 
         managedDeviceLauncher.configure(
                 GradleManagedAndroidDeviceLauncher.DataBoundArgs(
@@ -149,6 +150,7 @@ class GradleManagedAndroidDeviceLauncherTest {
     fun provideDevice_ensureEnableDisplayWorks() {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
         `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(true)
 
         val enableDisplayConfig =
                 with(GradleManagedAndroidDeviceProviderConfig.newBuilder(deviceProviderConfig)) {
@@ -184,6 +186,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         )
         `when`(adbManager.getId("emulator-5554")).thenReturn("myapp_myDeviceAndroidVariantTest")
         `when`(adbManager.getId("emulator-5556")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
 
         managedDeviceLauncher.configure(
                 GradleManagedAndroidDeviceLauncher.DataBoundArgs(
@@ -211,6 +214,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         // a-device skipped: non-emulator devices skipped
         `when`(adbManager.getId("emulator-5556")).thenReturn(deviceId)
         // emulator-5558 skipped: correct device already found.
+        `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
 
         managedDeviceLauncher.configure(
                 GradleManagedAndroidDeviceLauncher.DataBoundArgs(
@@ -231,6 +235,8 @@ class GradleManagedAndroidDeviceLauncherTest {
         verify(adbManager).configure(any())
         verify(adbManager).getAllSerials()
         verify(adbManager).getId("emulator-5556")
+        verify(adbManager).isBootLoaded("emulator-5556")
+
         verifyNoMoreInteractions(adbManager)
     }
 
@@ -272,9 +278,29 @@ class GradleManagedAndroidDeviceLauncherTest {
     }
 
     @Test
+    fun provideDevice_failToBootThrowsProviderException() {
+        `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
+        `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(false)
+
+        managedDeviceLauncher.configure(
+                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                        deviceProviderConfig,
+                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+                )
+        )
+
+        assertThrows(DeviceProviderException::class.java) {
+            managedDeviceLauncher.provideDevice()
+        }
+        verify(emulatorHandle).closeInstance()
+    }
+
+    @Test
     fun releaseDevice_callsAdbManagerCloseDevice() {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5558"))
         `when`(adbManager.getId("emulator-5558")).thenReturn(deviceId)
+        `when`(adbManager.isBootLoaded("emulator-5558")).thenReturn(true)
 
         managedDeviceLauncher.configure(
             GradleManagedAndroidDeviceLauncher.DataBoundArgs(

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.lint.LintFromMaven
 import com.android.build.gradle.internal.res.Aapt2FromMaven
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.options.ProjectOptions
@@ -62,6 +63,7 @@ fun createProjectServices(
         projectLayout,
         projectOptions,
         buildServiceRegistry,
+        lintFromMaven = LintFromMaven(objectFactory.fileCollection(), "invalid lint"),
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
         maxWorkerCount = 1,
         projectInfo,

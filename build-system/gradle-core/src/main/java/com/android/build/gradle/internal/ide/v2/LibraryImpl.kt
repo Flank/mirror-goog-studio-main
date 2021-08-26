@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.ide.LibraryInfo
 import com.android.builder.model.v2.ide.LibraryType
+import com.android.builder.model.v2.ide.ProjectInfo
 import java.io.File
 import java.io.Serializable
 
@@ -25,26 +27,25 @@ import java.io.Serializable
  * Implementation of [Library] for serialization via the Tooling API.
  */
 data class LibraryImpl(
+    override val key: String,
     override val type: LibraryType,
-    override val artifactAddress: String,
-    override val artifact: File?,
-    override val buildId: String?,
-    override val projectPath: String?,
-    override val variant: String?,
-    override val manifest: File?,
-    override val compileJarFiles: List<File>?,
-    override val runtimeJarFiles: List<File>?,
-    override val resFolder: File?,
-    override val resStaticLibrary: File?,
-    override val assetsFolder: File?,
-    override val jniFolder: File?,
-    override val aidlFolder: File?,
-    override val renderscriptFolder: File?,
-    override val proguardRules: File?,
-    override val lintJar: File?,
-    override val externalAnnotations: File?,
-    override val publicResources: File?,
-    override val symbolFile: File?
+    override val projectInfo: ProjectInfo? = null,
+    override val libraryInfo: LibraryInfo? = null,
+    override val artifact: File? = null,
+    override val manifest: File? = null,
+    override val compileJarFiles: List<File>? = null,
+    override val runtimeJarFiles: List<File>? = null,
+    override val resFolder: File? = null,
+    override val resStaticLibrary: File? = null,
+    override val assetsFolder: File? = null,
+    override val jniFolder: File? = null,
+    override val aidlFolder: File? = null,
+    override val renderscriptFolder: File? = null,
+    override val proguardRules: File? = null,
+    override val lintJar: File? = null,
+    override val externalAnnotations: File? = null,
+    override val publicResources: File? = null,
+    override val symbolFile: File? = null
 ) : Library, Serializable {
     companion object {
         @JvmStatic

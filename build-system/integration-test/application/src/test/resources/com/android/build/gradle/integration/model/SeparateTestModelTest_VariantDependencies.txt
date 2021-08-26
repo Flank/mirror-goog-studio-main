@@ -2,8 +2,7 @@
    - name                 = "debug"
    - mainArtifact:
       - compileDependencies:
-         - {BUILD_0}@@:app::debug:
-            - artifactAddress      = {BUILD_0}@@:app::debug
+         - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies = []
@@ -13,13 +12,21 @@
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > {BUILD_0}@@:app::debug:
+      > :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
          - type                = PROJECT
-         - artifactAddress     = {BUILD_0}@@:app::debug
          - artifact            = (null)
-         - buildId             = {BUILD_0}
-         - projectPath         = ":app"
-         - variant             = "debug"
+         > projectInfo:
+            - buildId     = ":"
+            - projectPath = ":app"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "project:app:unspecified"
+         < projectInfo
+         - libraryInfo         = (null)
          - compileJarFiles     = (null)
          - runtimeJarFiles     = (null)
          - manifest            = (null)
@@ -34,6 +41,34 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < {BUILD_0}@@:app::debug
+      < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
+      > :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+         - type                = PROJECT
+         - artifact            = (null)
+         - projectInfo:
+            - buildId     = ":"
+            - projectPath = ":app"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "project:app:unspecified"
+         - libraryInfo         = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
    < libraries
 < GlobalLibraryMap

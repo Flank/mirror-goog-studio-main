@@ -35,6 +35,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -45,15 +46,17 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSync
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
+import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
-import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecksForModel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -68,8 +71,10 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
@@ -280,8 +285,24 @@ class ModelBuilder<
             createVariant(it, buildFeatures, instantAppResultMap)
         }
 
+        val currentGradle = project.gradle
+        val parentGradle = currentGradle.parent
+        val gradleName = if (parentGradle != null) {
+            // search for the parent included builds for the current gradle, matching by the
+            // root dir
+            parentGradle.includedBuilds.singleOrNull {
+                // these values already canonicalized
+                //noinspection FileComparisons
+                it.projectDir == currentGradle.rootProject.projectDir
+            }?.name
+        } else {
+            // this is top gradle so name is ":"
+            ":"
+        }
+
         return AndroidProjectImpl(
             path = project.path,
+            buildName = gradleName ?: throw RuntimeException("Failed to get Gradle name for ${project.path}"),
             buildFolder = project.layout.buildDirectory.get().asFile,
 
             projectType = projectType,
@@ -420,12 +441,6 @@ class ModelBuilder<
                 GlobalLibraryBuildService::class.java
             ).get()
 
-        val mavenCoordinatesBuildService =
-            getBuildService(
-                project.gradle.sharedServices,
-                MavenCoordinatesCacheBuildService::class.java
-            )
-
         val buildMapping = project.gradle.computeBuildMapping()
 
         return VariantDependenciesImpl(
@@ -434,14 +449,12 @@ class ModelBuilder<
                 variant,
                 buildMapping,
                 globalLibraryBuildService,
-                mavenCoordinatesBuildService
             ),
             androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
                 createDependencies(
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
@@ -449,7 +462,6 @@ class ModelBuilder<
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
@@ -457,7 +469,6 @@ class ModelBuilder<
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             }
         )
@@ -546,6 +557,18 @@ class ModelBuilder<
         val maxSdkVersion =
                 if (component is VariantCreationConfig) component.maxSdkVersion else null
 
+        val modelSyncFiles = if (component is ApplicationCreationConfig) {
+            listOf(
+                ModelSyncFileImpl(
+                    ModelSyncFile.ModelSyncType.BASIC,
+                    ApplicationVariantModelTask.getTaskName(component),
+                    component.artifacts.get(InternalArtifactType.VARIANT_MODEL).get().asFile
+                )
+            )
+        } else {
+            listOf()
+        }
+
         return AndroidArtifactImpl(
             minSdkVersion = minSdkVersion,
             targetSdkVersionOverride = targetSdkVersionOverride,
@@ -577,7 +600,8 @@ class ModelBuilder<
             assembleTaskOutputListingFile = if (component.variantType.isApk)
                 component.artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE).get().asFile
             else
-                null
+                null,
+            modelSyncFiles = modelSyncFiles,
         )
     }
 
@@ -616,7 +640,8 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
             runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
 
-            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull()
+            mockablePlatformJar = globalScope.mockableJarArtifact.files.singleOrNull(),
+            modelSyncFiles = listOf(),
         )
     }
 
@@ -624,28 +649,18 @@ class ModelBuilder<
         component: ComponentImpl,
         buildMapping: BuildMapping,
         globalLibraryBuildService: GlobalLibraryBuildService,
-        mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
     ): ArtifactDependencies {
-        val modelBuilder = DependencyModelBuilder(globalLibraryBuildService)
-        val graphBuilder = getDependencyGraphBuilder()
 
-        val inputs = ArtifactCollectionsInputs(
+        val inputs = ArtifactCollectionsInputsImpl(
             variantDependencies = component.variantDependencies,
             projectPath = component.services.projectInfo.getProject().path,
             variantName = component.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            mavenCoordinatesCache = mavenCoordinatesBuildService,
             buildMapping = buildMapping
         )
 
-        graphBuilder.createDependencies(
-            modelBuilder = modelBuilder,
-            artifactCollectionsProvider = inputs,
-            withFullDependency = true,
-            issueReporter = syncIssueReporter
-        )
-
-        return modelBuilder.createModel()
+        return FullDependencyGraphBuilder(inputs, component.variantDependencies, globalLibraryBuildService).build(
+            syncIssueReporter)
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {
@@ -787,9 +802,9 @@ class ModelBuilder<
             val apkArtifacts = component
                 .variantDependencies
                 .getArtifactCollection(
-                    COMPILE_CLASSPATH,
+                    PROVIDED_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.MANIFEST_METADATA
+                    AndroidArtifacts.ArtifactType.APK
                 )
 
             // while there should be a single result, the list may be empty if the variant

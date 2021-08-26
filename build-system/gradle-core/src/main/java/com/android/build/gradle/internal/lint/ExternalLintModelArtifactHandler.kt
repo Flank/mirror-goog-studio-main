@@ -21,7 +21,7 @@ import com.android.SdkConstants.MAVEN_ARTIFACT_ID_PROPERTY
 import com.android.SdkConstants.MAVEN_GROUP_ID_PROPERTY
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
-import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
@@ -50,7 +50,7 @@ import java.util.Properties
  */
 class ExternalLintModelArtifactHandler private constructor(
     private val localJarCache: CreatingCache<File, List<File>>,
-    mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>,
+    mavenCoordinatesCache: MavenCoordinatesCacheBuildService,
     private val projectExplodedAarsMap: Map<ProjectKey, File>,
     private val projectJarsMap: Map<ProjectKey, File>,
     private val baseModuleModelFileMap: Map<ProjectKey, File>,

@@ -29,16 +29,16 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
-import com.android.build.gradle.internal.lint.AndroidLintTask.Companion.LINT_CLASS_PATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -116,15 +116,14 @@ abstract class LintTool {
     @get:Optional
     abstract val workerHeapSize: Property<String>
 
-    fun initialize(project: Project, projectOptions: ProjectOptions) {
-        // TODO(b/160392650) Clean this up to use a detached configuration
-        classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
+    fun initialize(taskCreationServices: TaskCreationServices) {
+        classpath.fromDisallowChanges(taskCreationServices.lintFromMaven.files)
+        val projectOptions = taskCreationServices.projectOptions
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
-    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>
-    ) {
+    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
         submit(
             workerExecutor,
             mainClass,
@@ -744,7 +743,7 @@ abstract class VariantInputs {
                 creationConfig.services.newInstance(JavaArtifactInput::class.java)
                     .initialize(
                         unitTest as UnitTestImpl,
-                        checkDependencies,
+                        checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
                         // analyzing test bytecode is expensive, without much benefit
@@ -758,7 +757,7 @@ abstract class VariantInputs {
                 creationConfig.services.newInstance(AndroidArtifactInput::class.java)
                     .initialize(
                         androidTest as ComponentImpl,
-                        checkDependencies,
+                        checkDependencies = false,
                         addBaseModuleLintModel,
                         warnIfProjectTreatedAsExternalDependency,
                         // analyzing test bytecode is expensive, without much benefit
@@ -846,6 +845,7 @@ abstract class VariantInputs {
         project: Project,
         javaConvention: JavaPluginConvention,
         projectOptions: ProjectOptions,
+        fatalOnly: Boolean,
         checkDependencies: Boolean,
         isForAnalysis: Boolean
     ) {
@@ -882,10 +882,21 @@ abstract class VariantInputs {
                     unitTestOnly = false
                 )
         ))
-        testSourceProviders.setDisallowChanges(listOf(
-            project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, testSourceSet, isForAnalysis, unitTestOnly = true)
-        ))
+        if (fatalOnly) {
+            testSourceProviders.setDisallowChanges(listOf())
+        } else {
+            testSourceProviders.setDisallowChanges(
+                listOf(
+                    project.objects.newInstance(SourceProviderInput::class.java)
+                        .initializeForStandalone(
+                            project,
+                            testSourceSet,
+                            isForAnalysis,
+                            unitTestOnly = true
+                        )
+                )
+            )
+        }
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -898,7 +909,7 @@ abstract class VariantInputs {
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
-            mavenCoordinatesCache.get().cache)
+            mavenCoordinatesCache.get())
 
         val dynamicFeatureSourceProviders: List<LintModelSourceProvider> =
             dynamicFeatureLintModels.files.map {
@@ -1232,14 +1243,15 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 )
         }
 
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = componentImpl.variantDependencies,
-            projectPath = componentImpl.services.projectInfo.getProject().path,
-            variantName = componentImpl.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(componentImpl.services.buildServiceRegistry)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = componentImpl.variantDependencies,
+                projectPath = componentImpl.services.projectInfo.getProject().path,
+                variantName = componentImpl.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+            )
+        )
         return this
     }
 
@@ -1268,14 +1280,15 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             projectOptions = projectOptions,
             isSelfInstrumenting = false,
         )
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = variantDependencies,
-            projectPath = project.path,
-            variantName = sourceSet.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = project.gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = variantDependencies,
+                projectPath = project.path,
+                variantName = sourceSet.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = project.gradle.computeBuildMapping(),
+            )
+        )
         initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
     }
 
@@ -1340,14 +1353,15 @@ abstract class JavaArtifactInput : ArtifactInput() {
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
         }
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = unitTestImpl.variantDependencies,
-            projectPath = unitTestImpl.services.projectInfo.getProject().path,
-            variantName = unitTestImpl.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(unitTestImpl.services.buildServiceRegistry)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = unitTestImpl.variantDependencies,
+                projectPath = unitTestImpl.services.projectInfo.getProject().path,
+                variantName = unitTestImpl.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+            )
+        )
         return this
     }
 
@@ -1382,13 +1396,12 @@ abstract class JavaArtifactInput : ArtifactInput() {
             isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(
-            ArtifactCollectionsInputs(
+            ArtifactCollectionsInputsImpl(
                 variantDependencies = variantDependencies,
                 projectPath = project.path,
                 variantName = sourceSet.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = project.gradle.computeBuildMapping(),
-                mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
             )
         )
         initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
@@ -1563,7 +1576,9 @@ abstract class ArtifactInput {
                 )
             }
         val modelBuilder = LintDependencyModelBuilder(
-            artifactHandler = artifactHandler, libraryMap = dependencyCaches.libraryMap
+            artifactHandler = artifactHandler,
+            libraryMap = dependencyCaches.libraryMap,
+            mavenCoordinatesCache = dependencyCaches.mavenCoordinatesCache
         )
 
         val graph = getDependencyGraphBuilder()
@@ -1588,33 +1603,36 @@ abstract class ArtifactInput {
     }
 }
 
-fun createLintClasspathConfiguration(
-    project: Project,
-    projectServices: ProjectServices
-): FileCollection {
-    val config = project.configurations.create(LINT_CLASS_PATH)
-    config.isVisible = false
-    config.isTransitive = true
-    config.isCanBeConsumed = false
-    config.isCanBeResolved = true
-    config.description = "The lint embedded classpath"
-    val lintVersion =
-        getLintMavenArtifactVersion(
-            projectServices.projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
-            projectServices.issueReporter
-        )
-    project.dependencies.add(
-        config.name,
-        project.dependencies.create(
-            mapOf(
-                "group" to "com.android.tools.lint",
-                "name" to "lint-gradle",
-                "version" to lintVersion,
+class LintFromMaven(val files: FileCollection, val version: String) {
+
+    companion object {
+        @JvmStatic
+        fun from(
+            project: Project,
+            projectOptions: ProjectOptions,
+            issueReporter: IssueReporter,
+        ): LintFromMaven {
+            val lintVersion =
+                getLintMavenArtifactVersion(
+                    projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
+                    issueReporter
+                )
+            val config =  project.configurations.detachedConfiguration(
+                project.dependencies.create(
+                    mapOf(
+                        "group" to "com.android.tools.lint",
+                        "name" to "lint-gradle",
+                        "version" to lintVersion,
+                    )
+                )
             )
-        )
-    )
-    return config
+            config.isTransitive = true
+            config.isCanBeResolved = true
+            return LintFromMaven(config, lintVersion)
+        }
+    }
 }
+
 
 /**
  * The lint binary uses the same version numbers as AGP (see LintCliClient#getClientRevision()

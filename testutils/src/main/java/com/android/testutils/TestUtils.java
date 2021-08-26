@@ -323,10 +323,25 @@ public class TestUtils {
         return getDesugarLibJarWithVersion("1.1.5");
     }
 
+    /**
+     * Returns the path to a file in the local maven repository.
+     *
+     * @param path the path of the file relative to the maven repository root
+     * @throws IllegalArgumentException if the path results in a file that's not found.
+     */
+    @NonNull
+    private static Path getLocalMavenRepoFile(@NonNull String path) {
+        if (runningFromBazel()) {
+          return resolveWorkspacePath("../maven/repo/" + path);
+        } else {
+          return resolveWorkspacePath("prebuilts/tools/common/m2/repository/" + path);
+        }
+    }
+
     @NonNull
     private static Path getDesugarLibJarWithVersion(@NonNull String version) {
-        return resolveWorkspacePath(
-                "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/"
+        return getLocalMavenRepoFile(
+                "com/android/tools/desugar_jdk_libs/"
                         + version
                         + "/desugar_jdk_libs-"
                         + version
@@ -334,9 +349,9 @@ public class TestUtils {
     }
 
     @NonNull
-    private static Path getDesugarLibConfigJarWithVersion(String version) {
-        return resolveWorkspacePath(
-                "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/"
+    private static Path getDesugarLibConfigJarWithVersion(@NonNull String version) {
+        return getLocalMavenRepoFile(
+                "com/android/tools/desugar_jdk_libs_configuration/"
                         + version
                         + "/desugar_jdk_libs_configuration-"
                         + version

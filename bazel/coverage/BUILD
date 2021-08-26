@@ -160,8 +160,8 @@ coverage_report(
     name = "app-inspection",
     srcpath_include = ["tools/adt/idea/app-inspection"],
     tests = [
-        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
-        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
     ],
 )
 
@@ -171,8 +171,8 @@ coverage_report(
         "tools/adt/idea/app-inspection/inspectors/workmanager",
     ],
     tests = [
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
     ],
 )
 
@@ -185,9 +185,9 @@ coverage_report(
         "tools/base/app-inspection/inspectors/network/src",
     ],
     tests = [
-        "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
         "//tools/base/app-inspection/inspectors/network:agent_tests.test",
     ],
 )
@@ -433,12 +433,8 @@ coverage_report(
 )
 
 # Coverage report for suggested import.
-# The explicitly excluded source file is for legacy mode.
 coverage_report(
     name = "suggested-import",
-    srcpath_exclude = [
-        "tools/adt/idea/android/src/com/android/tools/idea/imports/MavenClassRegistryFromHardcodedMap.kt",
-    ],
     srcpath_include = [
         "tools/adt/idea/android/src/com/android/tools/idea/imports",
         "tools/adt/idea/android/src/org/jetbrains/android/dom/inspections/AndroidUnresolvableTagInspection.kt",
@@ -479,7 +475,7 @@ coverage_report(
 coverage_report(
     name = "templates",
     srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
+        "tools/adt/idea/android/src/com/android-npw/tools/idea/npw/module/recipes",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/KeystoreUtils.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/ModuleTemplateDataBuilder.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/Parameter.kt",
@@ -705,19 +701,20 @@ coverage_report(
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
+        "//tools/adt/idea/android-npw:intellij.android.newProjectWizard.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
-        "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
-        "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
+        "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
         # TODO(b/182573662) too flaky for coverage
-        #"//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
+        #"//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",

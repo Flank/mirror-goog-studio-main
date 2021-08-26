@@ -37,8 +37,6 @@ typedef ::perfetto::trace_processor::Config Config;
 const std::string TESTDATA_PATH(
     "tools/base/profiler/native/trace_processor_daemon/testdata/tank.trace");
 
-const long TANK_PROCESS_PID = 9796;
-
 std::unique_ptr<TraceProcessor> LoadTrace(std::string trace_path) {
   Config config;
   config.ingest_ftrace_in_raw_table = false;
@@ -58,8 +56,8 @@ TEST(TraceMetadataRequestHandlerTest, PopulateMetadataAllData) {
   TraceMetadataResult result;
   handler.PopulateTraceMetadata(params, &result);
 
-  // tank.trace has 7 rows of metadata
-  EXPECT_EQ(result.metadata_row_size(), 7);
+  // tank.trace has 8 rows of metadata
+  EXPECT_EQ(result.metadata_row_size(), 8);
 }
 
 TEST(TraceMetadataRequestHandlerTest, PopulateMetadataByName) {

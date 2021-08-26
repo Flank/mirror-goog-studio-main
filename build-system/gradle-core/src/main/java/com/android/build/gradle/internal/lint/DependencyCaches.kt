@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
-import com.android.builder.model.MavenCoordinates
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.LintModelLibrary
 import java.io.File
 
 internal class DependencyCaches(
     val localJarCache: CreatingCache<File, List<File>>,
-    val mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>,
+    val mavenCoordinatesCache: MavenCoordinatesCacheBuildService,
 ) {
     val libraryMap: MutableMap<String, LintModelLibrary> = mutableMapOf()
 }

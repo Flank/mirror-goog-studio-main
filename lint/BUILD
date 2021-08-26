@@ -46,7 +46,6 @@ maven_library(
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "@maven//:net.sf.kxml.kxml2",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 
@@ -89,6 +88,7 @@ maven_library(
         "libs/lint-api/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-api:" + BASE_VERSION,
+    enable_scopes = True,
     module_name = "lint-api",
     notice = "libs/lint-api/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
@@ -100,26 +100,28 @@ maven_library(
         ],
     ),
     visibility = ["//visibility:public"],
-    deps = [
-        ":tools.lint-model",
+    exports = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "@maven//:com.google.guava.guava",
         "@maven//:net.sf.kxml.kxml2",
-        "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-tree",
+    ],
+    deps = [
+        ":tools.lint-model",
+        "//tools/base/annotations",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/repository:tools.repository",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.jetbrains.intellij.deps.trove4j",
     ],
 )
 
@@ -147,6 +149,7 @@ maven_library(
         "libs/lint-checks/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-checks:" + BASE_VERSION,
+    enable_scopes = True,
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
     module_name = "lint-checks",
     notice = "libs/lint-checks/src/main/resources/NOTICE",
@@ -156,8 +159,11 @@ maven_library(
         exclude = ["libs/lint-checks/src/main/resources/NOTICE"],
     ),
     visibility = ["//visibility:public"],
-    deps = [
+    exports = [
         ":tools.lint-api",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
+    deps = [
         ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
@@ -174,7 +180,6 @@ maven_library(
         "@maven//:net.sf.kxml.kxml2",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-analysis",
         "@maven//:org.ow2.asm.asm-tree",
@@ -228,7 +233,6 @@ maven_library(
         "@maven//:org.codehaus.groovy.groovy-all",
         "@maven//:org.jetbrains.annotations",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 

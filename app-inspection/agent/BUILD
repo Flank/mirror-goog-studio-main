@@ -5,7 +5,7 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         "//prebuilts/tools/common/m2:androidx.inspection.inspection.1.0.0",
+        "@maven//:androidx.annotation.annotation",
     ],
 )

@@ -118,6 +118,11 @@ interface AndroidProject: AndroidModel {
     val path: String
 
     /**
+     * Then name of the build this project belongs to
+     */
+    val buildName: String
+
+    /**
      * The type of project: Android application, library, feature, instantApp.
      */
     val projectType: ProjectType

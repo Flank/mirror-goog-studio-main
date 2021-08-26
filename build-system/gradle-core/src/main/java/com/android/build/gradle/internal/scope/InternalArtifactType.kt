@@ -84,7 +84,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // External file library dex archives (Desugared separately from module & project dependencies)
     object EXTERNAL_FILE_LIB_DEX_ARCHIVES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // the packaged classes published by APK modules.
-    // This is for external usage. For usage inside a module use ALL_CLASSES
+    // This is for external compile/api usage. For usage inside a module use ALL_CLASSES
     object APP_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // Outputs of Desugar tool for project classes.
@@ -522,6 +522,9 @@ InternalArtifactType<T : FileSystemLocation>(
     // binary art profile artifacts.
     object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
 
+
+    // Sync dynamic properties file artifacts
+    object VARIANT_MODEL: InternalArtifactType<RegularFile>(FILE)
 
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()

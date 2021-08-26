@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
@@ -63,6 +64,7 @@ maven_library(
     ]),
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
+        "//tools/base/sdk-common:model.sync",
     ],
     coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
     notice = "NOTICE",
@@ -147,9 +149,16 @@ filegroup(
         "src/main/**/*.java",
         "src/main/**/*.kt",
         "src/main/resources/**",
+        "src/main/proto/**",
     ]) + [
         "build.gradle",
         "NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+java_proto_library(
+    name = "model.sync",
+    srcs = glob(["src/main/proto/*.proto"]),
+    visibility = ["//visibility:public"],
 )

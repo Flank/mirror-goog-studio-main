@@ -186,6 +186,7 @@ class SdkDirectLoadingStrategy(
     fun getAndroidJar() = components?.platform?.androidJar
     fun getAdditionalLibraries() = components?.platform?.additionalLibraries
     fun getOptionalLibraries() = components?.platform?.optionalLibraries
+    fun getApiVersionsFile(): File? = components?.platform?.apiVersionsFile
     fun getTargetPlatformVersion() = components?.platform?.targetPlatformVersion
     fun getTargetBootClasspath() = components?.platform?.targetBootClasspath
 
@@ -286,6 +287,18 @@ private class PlatformComponents(
     internal val additionalLibraries: List<OptionalLibrary>,
     /** This is the optional libraries of this platform. **/
     internal val optionalLibraries: List<OptionalLibrary>,
+    /**
+     * The API versions file from the platform being compiled against.
+     *
+     * Historically this was distributed in platform-tools. It has been moved to platforms, so it
+     * is versioned now. (There was some overlap, so this is available in platforms since platform
+     * api 26, and was removed in the platform-tools several years later in 31.x)
+     *
+     * This will not be present if the compile-sdk version is less than 26 (a fallback to
+     * platform-tools would not help for users that update their SDK, as it is removed in recent
+     * platform-tools)
+     */
+    val apiVersionsFile: File?,
     /** This is the System Modules jar included in Sdk 30+, usually $PLATFORM/core-for-system-modules.jar **/
     internal val coreForSystemModulesJar: File?) {
 
@@ -325,6 +338,7 @@ private class PlatformComponents(
                 parseOptionalLibraries(
                     platformPackage
                 ),
+                platformBase.resolve(PLATFORM_API_VERSIONS_FILE_PATH).takeIf { it.exists() },
                 platformBase.resolve(SdkConstants.FN_CORE_FOR_SYSTEM_MODULES).let {
                     if (it.exists()) it else null
                 }

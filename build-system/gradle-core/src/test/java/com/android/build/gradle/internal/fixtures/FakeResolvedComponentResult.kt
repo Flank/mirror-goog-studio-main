@@ -25,22 +25,21 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 
 class FakeResolvedComponentResult(
-    private val dependents: MutableSet<out ResolvedDependencyResult>? = null,
+    private val dependents: MutableSet<ResolvedDependencyResult> = mutableSetOf(),
     private val id: ComponentIdentifier? = null,
-    private val dependencies: MutableSet<out DependencyResult>? = null,
+    private val dependencies: MutableSet<DependencyResult> = mutableSetOf(),
     private val selectionReason: ComponentSelectionReason? = null,
     private val variant: ResolvedVariantResult? = null,
     private val moduleVersion: ModuleVersionIdentifier? = null
 ) : ResolvedComponentResult {
 
-    override fun getDependents() = dependents ?: error("value not set")
+    override fun getDependents() = dependents
     override fun getId() = id ?: error("value not set")
-    override fun getDependencies() = dependencies ?: error("value not set")
+    override fun getDependencies() = dependencies
     override fun getSelectionReason() = selectionReason ?: error("value not set")
     override fun getVariant() = variant ?: error("value not set")
     override fun getModuleVersion() = moduleVersion ?: error("value not set")
     override fun getVariants(): List<ResolvedVariantResult> = variant?.let { listOf(it) } ?: error("value not set")
-    override fun getDependenciesForVariant(p0: ResolvedVariantResult?): MutableList<out DependencyResult> {
-        return (dependencies ?: error("value not set")).toMutableList()
-    }
+    override fun getDependenciesForVariant(p0: ResolvedVariantResult): MutableList<out DependencyResult> =
+        dependencies.toMutableList()
 }

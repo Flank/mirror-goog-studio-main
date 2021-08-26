@@ -16,75 +16,30 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.SdkConstants
+import com.android.build.gradle.internal.ide.dependencies.LibraryService
+import com.android.build.gradle.internal.ide.dependencies.LibraryServiceImpl
+import com.android.build.gradle.internal.ide.dependencies.LocalJarCacheImpl
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
+import com.android.build.gradle.internal.ide.dependencies.StringCacheImpl
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.models.GlobalLibraryMap
-import com.android.ide.common.caching.CreatingCache
-import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.io.File
 
 /**
  * Build Service used to aggregate all instances of [Library], across all sub-projects, during sync.
  */
-abstract class GlobalLibraryBuildService: BuildService<GlobalLibraryBuildService.Parameters>, AutoCloseable {
+abstract class GlobalLibraryBuildService : BuildService<GlobalLibraryBuildService.Parameters>,
+        AutoCloseable,
+        LibraryService {
 
     interface Parameters: BuildServiceParameters {
         val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
-    }
-
-    fun addArtifact(artifact: ResolvedArtifact) {
-        libraryCache.get(artifact)
-    }
-
-    fun createModel(): GlobalLibraryMap {
-        return GlobalLibraryMapImpl(libraryCache.values().associateBy { it.artifactAddress })
-    }
-
-    /**
-     * The [CreatingCache] that converts [ResolvedArtifact] into [Library]
-     */
-    private val libraryCache =
-        CreatingCache(CreatingCache.ValueFactory<ResolvedArtifact, Library> {
-            artifactHandler.handleArtifact(
-                artifact = it,
-                isProvided = false, // not needed for v2
-                lintJarMap = null // not needed for v2
-            )
-        })
-
-    /**
-     * a [CreatingCache] that computes, and cache the list of jars in a extracted AAR folder
-     */
-    private val jarFromExtractedAarCache = CreatingCache<File, List<File>> {
-        val localJarRoot = FileUtils.join(it, SdkConstants.FD_JARS, SdkConstants.FD_AAR_LIBS)
-
-        if (!localJarRoot.isDirectory) {
-            ImmutableList.of()
-        } else {
-            val jarFiles = localJarRoot.listFiles { _, name -> name.endsWith(SdkConstants.DOT_JAR) }
-            if (!jarFiles.isNullOrEmpty()) {
-                // Sort by name, rather than relying on the file system iteration order
-                ImmutableList.copyOf(jarFiles.sortedBy(File::getName))
-            } else ImmutableList.of()
-        }
-    }
-
-    private val artifactHandler = ArtifactHandlerImpl(
-        jarFromExtractedAarCache,
-        parameters.mavenCoordinatesCache.get().cache)
-
-    override fun close() {
-        libraryCache.clear()
-        jarFromExtractedAarCache.clear()
     }
 
     class RegistrationAction(
@@ -98,4 +53,21 @@ abstract class GlobalLibraryBuildService: BuildService<GlobalLibraryBuildService
             parameters.mavenCoordinatesCache.set(mavenCoordinatesCache)
         }
     }
+
+    internal fun createModel(): GlobalLibraryMap {
+        return GlobalLibraryMapImpl(libraryService.getAllLibraries().associateBy { it.key })
+    }
+
+    override fun getLibrary(artifact: ResolvedArtifact): Library = libraryService.getLibrary(artifact)
+
+    private val stringCache = StringCacheImpl()
+    private val localJarCache = LocalJarCacheImpl()
+    private val libraryService = LibraryServiceImpl(stringCache, localJarCache)
+
+    override fun close() {
+        libraryService.clear()
+        stringCache.clear()
+        localJarCache.clear()
+    }
 }
+

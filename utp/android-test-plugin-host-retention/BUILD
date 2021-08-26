@@ -9,16 +9,19 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-retention:" + BASE_VERSION,
+    enable_scopes = True,
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention/src/main/resources/",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
+    exports = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
     deps = [
         "//tools/base/common:tools.common",
         "//tools/base/emulator/proto",
         "@maven//:com.google.guava.guava",
         "@maven//:commons-io.commons-io",
         "@maven//:io.grpc.grpc-all",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx

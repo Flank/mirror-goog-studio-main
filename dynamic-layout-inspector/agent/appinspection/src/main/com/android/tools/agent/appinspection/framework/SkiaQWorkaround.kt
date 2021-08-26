@@ -25,6 +25,7 @@ import dalvik.system.VMDebug
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
+import java.lang.UnsupportedOperationException
 import java.lang.reflect.Field
 import java.util.ArrayDeque
 import java.util.concurrent.Callable
@@ -62,7 +63,13 @@ object SkiaQWorkaround {
         callback: Callable<OutputStream?>,
         shouldSerialize: () -> Boolean
     ): AutoCloseable {
-        VMDebug.allowHiddenApiReflectionFrom(SkiaQWorkaround::class.java)
+        try {
+            VMDebug.allowHiddenApiReflectionFrom(SkiaQWorkaround::class.java)
+        }
+        catch (exception: SecurityException) {
+            throw UnsupportedOperationException("Unable to enable reflection. " +
+                    "App must be built with debugging enabled.")
+        }
         val attachInfo = getFieldValue(tree, "mAttachInfo")
             ?: throw IllegalArgumentException("Given view isn't attached")
         val handler = getFieldValue(attachInfo, "mHandler") as Handler?

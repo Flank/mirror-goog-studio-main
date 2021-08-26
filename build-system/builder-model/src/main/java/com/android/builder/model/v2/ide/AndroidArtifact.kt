@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.AndroidModel
 import java.io.File
 

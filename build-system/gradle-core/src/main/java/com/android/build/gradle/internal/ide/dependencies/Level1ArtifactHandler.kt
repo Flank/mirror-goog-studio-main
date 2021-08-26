@@ -41,7 +41,7 @@ class Level1ArtifactHandler(
     getBuildService(
         buildServiceRegistry,
         MavenCoordinatesCacheBuildService::class.java
-    ).get().cache
+    ).get()
 ) {
 
     private val _projects: ImmutableList.Builder<Dependencies.ProjectIdentifier> =

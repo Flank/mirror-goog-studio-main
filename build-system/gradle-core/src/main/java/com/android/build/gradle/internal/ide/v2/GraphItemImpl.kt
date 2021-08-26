@@ -23,7 +23,7 @@ import java.io.Serializable
  * Implementation of [GraphItem] for serialization via the Tooling API.
  */
 data class GraphItemImpl(
-    override val artifactAddress: String,
+    override val key: String,
     override val requestedCoordinates: String?,
     override val dependencies: List<GraphItem>
 ) : GraphItem, Serializable {

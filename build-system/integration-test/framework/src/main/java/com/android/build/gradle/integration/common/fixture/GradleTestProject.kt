@@ -88,8 +88,10 @@ import java.util.stream.Collectors
 class GradleTestProject @JvmOverloads internal constructor(
     /** Return the name of the test project.  */
     val name: String = DEFAULT_TEST_PROJECT_NAME,
+    val rootProjectName: String? = null,
     private val testProject: TestProject? = null,
-    private val targetGradleVersion: String,
+    private val targetGradleVersion: String?,
+    private val targetGradleInstallation: File?,
     private val withDependencyChecker: Boolean,
     val withConfigurationCaching: BaseGradleExecutor.ConfigurationCaching,
     private val gradleProperties: Collection<String>,
@@ -358,7 +360,10 @@ class GradleTestProject @JvmOverloads internal constructor(
     val ndkPath: String
         get() = androidNdkDir.absolutePath.replace("\\", "\\\\")
 
-    private var additionalMavenRepoDir: Path? = null
+    private var _additionalMavenRepoDir: Path? = null
+
+    val additionalMavenRepoDir: Path?
+        get() = _additionalMavenRepoDir
 
     /** \Returns the latest build result.  */
     private var _buildResult: GradleBuildResult? = null
@@ -376,18 +381,27 @@ class GradleTestProject @JvmOverloads internal constructor(
                 GRADLE_DEAMON_IDLE_TIME_IN_SECONDS,
                 TimeUnit.SECONDS
             )
-        val distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion)
-        val distributionZip =
-            File(gradleDistributionDirectory, distributionName)
-        assertThat(distributionZip).isFile()
-        val connection = connector
-            .useDistribution(distributionZip.toURI())
+
+        connector
             .useGradleUserHomeDir(location.testLocation.gradleUserHome.toFile())
             .forProjectDirectory(location.projectDir)
-            .connect()
-        rootProject.openConnections?.add(connection)
 
-        connection
+        if (targetGradleInstallation != null) {
+            connector.useInstallation(targetGradleInstallation)
+        } else {
+            val distributionName = String.format(
+                "gradle-%s-bin.zip",
+                targetGradleVersion ?: GRADLE_TEST_VERSION
+            )
+            val distributionZip = File(gradleDistributionDirectory, distributionName)
+            assertThat(distributionZip).isFile()
+
+            connector.useDistribution(distributionZip.toURI())
+        }
+
+        connector.connect().also { connection ->
+            rootProject.openConnections?.add(connection)
+        }
     }
 
     /**
@@ -402,8 +416,10 @@ class GradleTestProject @JvmOverloads internal constructor(
     ) :
         this(
             name = subProject.substring(subProject.lastIndexOf(':') + 1),
+            rootProjectName = null,
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
+            targetGradleInstallation = rootProject.targetGradleInstallation,
             withDependencyChecker = rootProject.withDependencyChecker,
             withConfigurationCaching = rootProject.withConfigurationCaching,
             gradleProperties = ImmutableList.of(),
@@ -570,15 +586,15 @@ class GradleTestProject @JvmOverloads internal constructor(
         if (additionalMavenRepo == null) {
             return null
         }
-        if (additionalMavenRepoDir == null) {
+        if (_additionalMavenRepoDir == null) {
             val moreMavenRepoDir = projectDir
                 .toPath()
                 .parent
                 .resolve("additional_maven_repo")
-            additionalMavenRepoDir = moreMavenRepoDir
+            _additionalMavenRepoDir = moreMavenRepoDir
             additionalMavenRepo.generate(moreMavenRepoDir)
         }
-        return additionalMavenRepoDir
+        return _additionalMavenRepoDir
     }
 
     private fun generateCommonHeader(): String {
@@ -1437,6 +1453,13 @@ buildCache {
     }
 }
 """
+        }
+
+        if (rootProjectName != null) {
+            settingsContent +=
+                    """
+                        rootProject.name = "$rootProjectName"
+                    """.trimIndent()
         }
 
         if (settingsContent.isNotEmpty()) {

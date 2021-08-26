@@ -78,6 +78,10 @@ enum class PluginType(
         isAndroid = true,
         useNewDsl = false
     ),
+    JAVA_TEST_FIXTURES(
+        id = "java-test-fixtures",
+        useNewDsl = true
+    )
 }
 
 internal fun Iterable<PluginType>.containsAndroid() = any { it.isAndroid }

@@ -42,7 +42,6 @@ maven_library(
         "//tools/base/sdklib:tools.sdklib",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
 
@@ -75,7 +74,6 @@ kotlin_test(
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.mockito.mockito-core",
     ],
 )
@@ -91,7 +89,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.2-rc-3"
+GRADLE_VERSION = "7.2"
 
 filegroup(
     name = "gradle-distrib",
@@ -299,6 +297,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/signflinger:agp_gradle_build_files",
     "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",
+    "//tools/base/utp/android-device-provider-ddmlib-proto:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle:agp_gradle_build_files",
     "//tools/base/utp/android-device-provider-gradle-proto:agp_gradle_build_files",
     "//tools/base/utp/android-test-plugin-host-additional-test-output:agp_gradle_build_files",

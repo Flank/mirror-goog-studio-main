@@ -14,7 +14,6 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/common:tools.common",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         "//tools/base/utp/android-device-provider-gradle-proto",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx

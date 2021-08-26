@@ -388,10 +388,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getServices()
                             .fileCollection(globalScope.getFilteredBootClasspath()));
 
-            task.getLintTool()
-                    .initialize(
-                            creationConfig.getServices().getProjectInfo().getProject(),
-                            creationConfig.getServices().getProjectOptions());
+            task.getLintTool().initialize(creationConfig.getServices());
             task.sourcesFileTree =
                     task.getProject()
                             .files((Callable<List<Object>>) () -> task.sources)

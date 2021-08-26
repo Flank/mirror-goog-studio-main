@@ -136,6 +136,7 @@ class UtpConfigFactoryTest {
     private fun createForLocalDevice(
             testData: StaticTestData = this.testData,
             useOrchestrator: Boolean = false,
+            uninstallIncompatibleApks: Boolean = false,
             additionalTestOutputDir: File? = null,
             shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
@@ -145,6 +146,7 @@ class UtpConfigFactoryTest {
                 listOf(mockAppApk, mockTestApk),
                 listOf("-additional_install_option"),
                 listOf(mockHelperApk),
+                uninstallIncompatibleApks,
                 utpDependencies,
                 versionedSdkLoader,
                 mockOutputDir,
@@ -434,6 +436,17 @@ class UtpConfigFactoryTest {
                 shard_count: 10
                 shard_index: 2
             """
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithUninstallIncompatibleApks() {
+        val runnerConfigProto = createForLocalDevice(
+            uninstallIncompatibleApks = true
+        )
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            uninstallIncompatibleApks = true,
         )
     }
 

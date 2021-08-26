@@ -37,7 +37,11 @@ fun createGradleProject(action: TestProjectBuilder.() -> Unit): GradleTestProjec
     val builder = TestProjectBuilderImpl()
     action(builder)
 
-    return GradleTestProject.builder().fromTestApp(builder).create()
+    return GradleTestProject
+        .builder()
+        .fromTestApp(builder)
+        .withAdditionalMavenRepo(builder.mavenRepoGenerator)
+        .create()
 }
 
 enum class BuildFileType(val extension: String) {
@@ -107,6 +111,11 @@ interface SubProjectBuilder {
      * Configures dependencies of the project
      */
     fun dependencies(action: DependenciesBuilder.() -> Unit)
+
+    /**
+     * Wraps a library binary with a module
+     */
+    fun wrap(library: ByteArray, fileName: String)
 }
 
 interface AndroidProjectBuilder {
@@ -167,12 +176,33 @@ interface DependenciesBuilder {
      * adds a dependency in the implementation scope.
      *
      * The instance being passed as a parameter must be:
-     * - a String: for maven coordinates. Should not be quoted.
+     * - a String (should not be quoted) or result of [externalLibrary]: for maven coordinates.
      * - result of [project] for sub-project dependency
      * - result of [localJar] for on-the-fly created local jars
      * - a [MavenRepoGenerator.Library] for on-the-fly created external AARs.
      */
     fun implementation(dependency: Any)
+
+    /**
+     * adds a dependency in the api scope.
+     *
+     * See [implementation] for details
+     */
+    fun api(dependency: Any)
+
+    /**
+     * adds a dependency in the testImplementation scope.
+     *
+     * See [implementation] for details
+     */
+    fun testImplementation(dependency: Any)
+
+    /**
+     * adds a dependency in the androidTestImplementation scope.
+     *
+     * See [implementation] for details
+     */
+    fun androidTestImplementation(dependency: Any)
 
     /**
      * adds a dependency in the lintPublish scope.
@@ -189,14 +219,25 @@ interface DependenciesBuilder {
     fun lintChecks(dependency: Any)
 
     /**
-     * Creates a [LocalJarBuilder] to be passed to [implementation] (or any other scope)
+     * Creates a [LocalJarBuilder] to be passed to [implementation] or any other scope
      */
     fun localJar(action: LocalJarBuilder.() -> Unit) : LocalJarBuilder
 
     /**
-     * Creates a [ProjectDependencyBuilder] to be passed to [implementation] (or any other scope)
+     * Creates a [ProjectDependencyBuilder] to be passed to [implementation] or any other scope
+     *
+     * @param path the project path
+     * @param testFixtures whether the dependency is on the test fixtures of the project.
      */
-    fun project(path: String): ProjectDependencyBuilder
+    fun project(path: String, testFixtures: Boolean = false): ProjectDependencyBuilder
+
+    /**
+     * Creates a [ExternalDependencyBuilder] to be passed to [implementation] or any other scope
+     *
+     * @param coordinate the external library coordinate
+     * @param testFixtures whether the dependency is on the test fixtures of the library.
+     */
+    fun externalLibrary(coordinate: String, testFixtures: Boolean = false): ExternalDependencyBuilder
 }
 
 interface LocalJarBuilder {
@@ -206,4 +247,10 @@ interface LocalJarBuilder {
 
 interface ProjectDependencyBuilder {
     val path: String
+    val testFixtures: Boolean
+}
+
+interface ExternalDependencyBuilder {
+    val coordinate: String
+    val testFixtures: Boolean
 }

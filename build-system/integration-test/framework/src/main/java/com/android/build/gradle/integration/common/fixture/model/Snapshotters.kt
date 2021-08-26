@@ -31,11 +31,14 @@ import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BaseArtifact
 import com.android.builder.model.v2.ide.BundleInfo
+import com.android.builder.model.v2.ide.ComponentInfo
 import com.android.builder.model.v2.ide.GraphItem
 import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.ide.LibraryInfo
 import com.android.builder.model.v2.ide.LintOptions
+import com.android.builder.model.v2.ide.ProjectInfo
 import com.android.builder.model.v2.ide.SourceProvider
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
@@ -506,42 +509,88 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
 }
 
 private fun ModelSnapshotter<ArtifactDependencies>.snapshotArtifactDependencies() {
-    val graphItemAction: ModelSnapshotter<GraphItem>.() -> Unit = {
-        artifactAddress("artifactAddress", GraphItem::artifactAddress)
-        item("requestedCoordinates", GraphItem::requestedCoordinates)
-        list("dependencies", GraphItem::dependencies)
-    }
-
+    val visited: MutableSet<String> = mutableSetOf()
     objectList(
         name = "compileDependencies",
         propertyAction = ArtifactDependencies::compileDependencies,
-        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
-        action = graphItemAction
-    )
+        nameAction =  { it.normalizeArtifactAddress(key) },
+    ) {
+        snapshotGraphItem(visited)
+    }
 
     objectList(
         name = "runtimeDependencies",
         propertyAction = ArtifactDependencies::runtimeDependencies,
-        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
-        action = graphItemAction
-    )
+        nameAction =  { it.normalizeArtifactAddress(key) },
+    ) {
+        snapshotGraphItem(visited)
+    }
+}
+
+private fun ModelSnapshotter<GraphItem>.snapshotGraphItem(visited: MutableSet<String>) {
+    val localKey = normalizeArtifactAddress(GraphItem::key)
+
+    if (visited.contains(localKey)) {
+        item("dependencies", { "*visited*" })
+    } else {
+        visited.add(localKey)
+        item("requestedCoordinates", GraphItem::requestedCoordinates)
+        objectList(
+            name = "dependencies",
+            propertyAction = GraphItem::dependencies,
+            nameAction =  { it.normalizeArtifactAddress(key) }
+        ) {
+            snapshotGraphItem(visited)
+        }
+    }
 }
 
 internal fun ModelSnapshotter<GlobalLibraryMap>.snapshotGlobalLibraryMap() {
     objectList(
         name = "libraries",
         propertyAction = { libraries.values },
-        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
-        sortAction = { collection -> collection?.sortedBy {it.artifactAddress} }
+        nameAction = { it.normalizeArtifactAddress(key) },
+        sortAction = { collection -> collection?.sortedBy {it.key} }
     ) {
         item("type", Library::type)
-        artifactAddress("artifactAddress", Library::artifactAddress)
         item("artifact", Library::artifact)
-        buildId("buildId", Library::buildId)
-        item("projectPath", Library::projectPath)
-        item("variant", Library::variant)
-        list("compileJarFiles", Library::compileJarFiles, sorted = false)
-        list("runtimeJarFiles", Library::runtimeJarFiles, sorted = false)
+        dataObject("projectInfo", Library::projectInfo) {
+            item("buildId", ProjectInfo::buildId)
+            item("projectPath", ProjectInfo::projectPath)
+            valueList(
+                name = "attributes",
+                propertyAction = { attributes.entries },
+                formatAction = { "$key -> $value" }
+            ) { collection ->
+                collection?.sortedBy { it.key }
+            }
+            valueList(
+                name = "capabilities",
+                propertyAction = ComponentInfo::capabilities
+            ) { collection ->
+                collection?.sortedBy { it }
+            }
+        }
+        dataObject("libraryInfo", Library::libraryInfo) {
+            item("group", LibraryInfo::group)
+            pathAsAString(name = "name", onlyIfPresent = true, propertyAction = LibraryInfo::name)
+            item("version", LibraryInfo::version)
+            valueList(
+                name = "attributes",
+                propertyAction = { attributes.entries },
+                formatAction = { "$key -> $value" }
+            ) { collection ->
+                collection?.sortedBy { it.key }
+            }
+            valueList(
+                name = "capabilities",
+                propertyAction = ComponentInfo::capabilities
+            ) { collection ->
+                collection?.sortedBy { it }
+            }
+        }
+        list("compileJarFiles", Library::compileJarFiles)
+        list("runtimeJarFiles", Library::runtimeJarFiles)
         item("manifest", Library::manifest)
         item("resFolder", Library::resFolder)
         item("resStaticLibrary", Library::resStaticLibrary)

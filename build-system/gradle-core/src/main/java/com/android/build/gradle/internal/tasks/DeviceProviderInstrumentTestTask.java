@@ -134,6 +134,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public abstract Property<Integer> getNumShards();
 
         @Input
+        public abstract Property<Boolean> getUninstallIncompatibleApks();
+
+        @Input
         public abstract Property<TestOptions.Execution> getExecutionEnum();
 
         @Input
@@ -201,6 +204,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                         getBuildTools().getBuildToolsRevision()),
                         getRetentionConfig().get(),
                         useOrchestrator,
+                        getUninstallIncompatibleApks().get(),
                         utpTestResultListener);
             } else {
                 switch (getExecutionEnum().get()) {
@@ -775,6 +779,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         task.getTestRunnerFactory().getUtpDependencies(),
                         task.getProject().getConfigurations());
             }
+
+            task.getTestRunnerFactory()
+                    .getUninstallIncompatibleApks()
+                    .set(projectOptions.get(BooleanOption.UNINSTALL_INCOMPATIBLE_APKS));
 
             task.getTestRunnerFactory()
                     .getRetentionConfig()

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.DependencyModelBuilder
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
 import com.android.tools.lint.model.DefaultLintModelDependencies
 import com.android.tools.lint.model.DefaultLintModelDependency
@@ -33,7 +34,8 @@ import java.io.File
 
 class LintDependencyModelBuilder(
     private val artifactHandler: ArtifactHandler<LintModelLibrary>,
-    private val libraryMap: MutableMap<String, LintModelLibrary> = mutableMapOf()
+    private val libraryMap: MutableMap<String, LintModelLibrary> = mutableMapOf(),
+    private val mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 ) : DependencyModelBuilder<LintModelDependencies> {
 
     private val libraryResolver = DefaultLintModelLibraryResolver(libraryMap)
@@ -67,7 +69,7 @@ class LintDependencyModelBuilder(
         // check if this particular artifact was created before, if not we create it and record it
         // Even though we are not yet handling full graph, and only flat list, this will happen
         // because most artifacts are in both compile and runtime
-        val lintModelLibrary = libraryMap.computeIfAbsent(artifact.computeModelAddress()) {
+        val lintModelLibrary = libraryMap.computeIfAbsent(artifact.computeModelAddress(mavenCoordinatesCache)) {
             artifactHandler.handleArtifact(artifact, isProvided, lintJarMap)
         }
 

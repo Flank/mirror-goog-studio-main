@@ -1,0 +1,30 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig {
+        applicationId "com.example.test.myapplication"
+        minSdkVersion 19
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
+        targetSdkVersion 31
+        versionCode 1
+        versionName "1.0"
+    }
+    lintOptions {
+        checkDependencies true
+        textReport true
+        textOutput file("lint-report.txt")
+        disable 'MissingApplicationIcon'
+    }
+}
+
+dependencies {
+    implementation project(':library')
+    // This doesn't make sense in a real app; we don't
+    // have code depending on the lint checks, but this
+    // simulates pulling in non-Android code in an Android
+    // app to make sure the incident filtering per platform
+    // works correctly
+    compileOnly project(':lint')
+}

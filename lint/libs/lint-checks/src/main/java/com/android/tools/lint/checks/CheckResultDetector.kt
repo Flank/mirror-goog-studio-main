@@ -30,13 +30,19 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
+import com.android.tools.lint.detector.api.findSelector
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.tools.lint.detector.api.nextStatement
+import com.android.tools.lint.detector.api.previousStatement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UBlockExpression
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -45,12 +51,14 @@ import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUTernaryIfExpression
 import org.jetbrains.uast.skipParenthesizedExprUp
+import java.util.EnumSet
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -108,6 +116,10 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>
     ) {
+        if (method.returnType == PsiType.VOID || method.isConstructor) {
+            return
+        }
+
         if (isExpressionValueUnused(element)) {
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
@@ -120,7 +132,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            if (method.returnType == PsiType.VOID || method.isConstructor) {
+            if (context.isTestSource && expectsSideEffect(context, element)) {
                 return
             }
 
@@ -170,6 +182,109 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             val location = context.getLocation(element)
             report(context, issue, element, location, message, fix)
+        }
+    }
+
+    /**
+     * In unit tests it's often acceptable to ignore the return
+     * value because you're either describing a mock of checking for
+     * exceptions being thrown.
+     */
+    private fun expectsSideEffect(context: JavaContext, element: UElement): Boolean {
+        val containingMethod = element.getParentOfType(UMethod::class.java)
+
+        // (1) try { annotated(); fail()/error()/throw X } catch { }
+        val nextStatement = element.nextStatement()?.findSelector()
+        if (nextStatement is UCallExpression) {
+            val methodName = nextStatement.methodName
+            // (Ideally we'd look for the Kotlin type `Nothing` here instead of checking
+            // for methods named error and TODO, but UAST does not expose Kotlin types,
+            // only the mapped types (e.g. both Unit and Nothing maps to void).
+            if (methodName == "fail" || methodName == "error" || methodName == "TODO") {
+                return true
+            }
+        }
+
+        // (2) @Test(expect=Exception.class) method() { ...; annotated(); ... }
+        //noinspection ExternalAnnotations
+        val annotations = containingMethod?.uAnnotations
+        if (annotations != null && annotations.any {
+            it.qualifiedName == "org.junit.Test" && it.findAttributeValue("expected")?.evaluate() != null
+        }
+        ) {
+            return true
+        }
+
+        // (3) Within the context of a ThrowingRunnable/Executable, which includes
+        //     assertThrows(Throwable.class, () => { me(); })
+        if (nextStatement == null) {
+            val lambda = skipParenthesizedExprUp(element.getParentOfType(ULambdaExpression::class.java))
+            if (lambda is UExpression) {
+                val call = lambda.uastParent
+                if (call is UCallExpression) {
+                    val resolved = call.resolve()
+                    if (resolved != null) {
+                        val parameter: PsiParameter? =
+                            context.evaluator.computeArgumentMapping(call, resolved)[lambda]
+                        if (parameter != null && isThrowingRunnable(parameter.type.canonicalText)) {
+                            return true
+                        }
+                    }
+                }
+            } else if (containingMethod != null) {
+                // Anonymous inner class?
+                //  assertThrows(Throwable.class, new ThrowingRunable() { ... me(); });
+                val containingClass = containingMethod.uastParent
+                if (containingClass is UAnonymousClass) {
+                    for (type in containingClass.superTypes) {
+                        if (isThrowingRunnable(type.canonicalText)) {
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+
+        // (4) expectedException.expect(Foo.class); me();
+        val previousStatement = element.previousStatement()?.findSelector()
+        if (previousStatement is UCallExpression) {
+            previousStatement.resolve()?.let { calledMethod ->
+                val containingClass = calledMethod.containingClass?.qualifiedName
+                if (containingClass == "org.junit.rules.ExpectedException") {
+                    return true
+                }
+            }
+        }
+
+        // (5) Mockito invocation
+        if (element is UCallExpression) {
+            val receiver = element.receiver
+            if (receiver is UResolvable) {
+                val resolved = receiver.resolve()
+                if (resolved is PsiMethod) {
+                    val containingClass = resolved.containingClass?.qualifiedName
+                    if (containingClass != null && containingClass.startsWith("org.mockito.")) {
+                        return true
+                    }
+                }
+            }
+        }
+
+        return false
+    }
+
+    private fun isThrowingRunnable(s: String): Boolean {
+        // See Matchers.CLASSES_CONSIDERED_THROWING in errorprone
+        return when (s) {
+            "org.junit.function.ThrowingRunnable",
+            "org.junit.jupiter.api.function.Executable",
+            "org.assertj.core.api.ThrowableAssert\$ThrowingCallable",
+            "com.google.devtools.build.lib.testutil.MoreAsserts\$ThrowingRunnable",
+            "com.google.truth.ExpectFailure.AssertionCallback",
+            "com.google.truth.ExpectFailure.DelegatedAssertionCallback",
+            "com.google.truth.ExpectFailure.StandardSubjectBuilderCallback",
+            "com.google.truth.ExpectFailure.SimpleSubjectBuilderCallback" -> true
+            else -> false
         }
     }
 
@@ -275,6 +390,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private val IMPLEMENTATION = Implementation(
             CheckResultDetector::class.java,
+            EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
             Scope.JAVA_FILE_SCOPE
         )
 

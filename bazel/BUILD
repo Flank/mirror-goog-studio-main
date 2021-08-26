@@ -235,13 +235,7 @@ java_binary(
     main_class = "com.tonicsystems.jarjar.Main",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2:net.sf.jopt-simple.jopt-simple.4.9",
-        "//prebuilts/tools/common/m2:org.anarres.jarjar.jarjar-command.1.0.0",
-        "//prebuilts/tools/common/m2:org.anarres.jarjar.jarjar-core.1.0.0",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm.5.0.4",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm-commons.5.0.4",
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-api.1.7.2",
-        "//prebuilts/tools/common/m2:org.slf4j.slf4j-simple.1.7.2",
+        "//prebuilts/tools/common/m2:jarjar_deps",
     ],
 )
 

@@ -133,6 +133,7 @@ dependencies {
     implementation project(':dataBinding:baseLibrarySupport')
     implementation project(':base:builder-test-api')
     implementation project(':base:layoutlib-api')
+    implementation project(':base:utp:android-device-provider-ddmlib-proto')
     implementation project(':base:utp:android-device-provider-gradle-proto')
     implementation project(':base:utp:android-test-plugin-host-additional-test-output-proto')
     implementation project(':base:utp:android-test-plugin-host-coverage-proto')
@@ -189,6 +190,7 @@ dependencies {
     testImplementation libs.jacoco_report
     testImplementation libs.kotlin_gradle_plugin
     testImplementation testFixtures(project(":base:repository"))
+    testImplementation testFixtures(project(":base:builder"))
     apiTestImplementation project(":base:apkparser:apkanalyzer")
     apiTestImplementation project(":base:apkparser:apkanalyzer-cli")
     testCompileOnly project(':base:profile')

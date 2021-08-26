@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
+import com.android.build.gradle.internal.lint.LintFromMaven
 import com.android.build.gradle.internal.res.Aapt2FromMaven
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -50,6 +51,7 @@ class ProjectServices constructor(
     val projectLayout: ProjectLayout,
     val projectOptions: ProjectOptions,
     val buildServiceRegistry: BuildServiceRegistry,
+    val lintFromMaven: LintFromMaven,
     private val aapt2FromMaven: Aapt2FromMaven? = null,
     private val maxWorkerCount: Int,
     val projectInfo: ProjectInfo,

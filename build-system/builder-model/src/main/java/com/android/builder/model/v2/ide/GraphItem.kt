@@ -24,19 +24,12 @@ import com.android.builder.model.v2.AndroidModel
  * information (transitive dependencies) as well as the usage of this particular dependency
  * in this node of the graph (ie what are its modifiers: what version was originally requested.)
  *
- * @since 4.2
  */
 interface GraphItem: AndroidModel {
     /**
-     * Returns the artifact address in a unique way.
-     *
-     * This is either a module path for sub-modules, or a maven coordinate for external
-     * dependencies.
-     *
-     * The maven coordinates are in the format: groupId:artifactId:version[:classifier][@extension]
-     *
+     * A Unique key representing the library, and allowing to match it with a [Library] instance
      */
-    val artifactAddress: String
+    val key: String
 
     /**
      * Returns this library's Maven coordinates, as requested in the build file.

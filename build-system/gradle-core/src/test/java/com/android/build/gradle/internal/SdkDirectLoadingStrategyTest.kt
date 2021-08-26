@@ -32,6 +32,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 
@@ -537,6 +538,12 @@ class SdkDirectLoadingStrategyTest {
             optionalJson.createNewFile()
             optionalJson.writeText(PLATFORM_28_OPTIONAL_JSON)
             createCoreForSystemModulesJar(platformRoot.resolve(FN_CORE_FOR_SYSTEM_MODULES).toPath(), platformApiLevel)
+
+            if (platformApiLevel >= 26) {
+                val apiVersionsFile = platformRoot.resolve("data/api-versions.xml")
+                Files.createDirectory(apiVersionsFile.toPath().parent)
+                apiVersionsFile.createNewFile()
+            }
         }
 
         if (configureBuildTools) {
@@ -649,10 +656,17 @@ class SdkDirectLoadingStrategyTest {
             AndroidTargetHash.getVersionFromHash(platformHash))
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
-        if (platformHash.largerThanAndroidSdk30()) {
+        if (platformHash.largerThanAndroidSdk(30)) {
             assertThat(sdkDirectLoadingStrategy.getCoreForSystemModulesJar()).isEqualTo(
                 sdkRoot.resolve("platforms/$platformHash/$FN_CORE_FOR_SYSTEM_MODULES")
             )
+        }
+        if (platformHash.largerThanAndroidSdk(26)) {
+            assertThat(sdkDirectLoadingStrategy.getApiVersionsFile()).isEqualTo(
+                sdkRoot.resolve("platforms/$platformHash/data/api-versions.xml")
+            )
+        } else {
+              assertThat(sdkDirectLoadingStrategy.getApiVersionsFile()).isNull()
         }
 
         val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.3")
@@ -682,7 +696,5 @@ class SdkDirectLoadingStrategyTest {
             "android.test.runner.jar").map { optionalDir.resolve(it) }
     }
 
-    private fun String.largerThanAndroidSdk30(): Boolean {
-        return this.split("-").last().toInt() >= 30
-    }
+    private fun String.largerThanAndroidSdk(value: Int ) = this.split("-").last().toInt() >= value
 }

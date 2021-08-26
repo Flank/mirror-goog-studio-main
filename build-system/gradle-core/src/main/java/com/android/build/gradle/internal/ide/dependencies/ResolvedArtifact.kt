@@ -26,6 +26,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
 import java.util.regex.Pattern
@@ -36,8 +37,9 @@ import java.util.regex.Pattern
  * This is generally computed from a [ResolvedArtifactResult] (which is not usable as a [Map]
  * key) plus additional information.
  */
-data class ResolvedArtifact(
+data class ResolvedArtifact internal constructor(
     val componentIdentifier: ComponentIdentifier,
+    val variant: ResolvedVariantResult,
     val variantName: String?,
     val artifactFile: File,
     /**
@@ -48,7 +50,6 @@ data class ResolvedArtifact(
     val dependencyType: DependencyType,
     val isWrappedModule: Boolean,
     val buildMapping: ImmutableMap<String, String>,
-    val mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 )  {
 
     constructor(
@@ -57,22 +58,34 @@ data class ResolvedArtifact(
         dependencyType: DependencyType,
         isWrappedModule: Boolean,
         buildMapping: ImmutableMap<String, String>,
-        mavenCoordinatesCache: MavenCoordinatesCacheBuildService
     ) :
             this(
                 mainArtifactResult.id.componentIdentifier,
+                mainArtifactResult.variant,
                 mainArtifactResult.getVariantName(),
                 mainArtifactResult.file,
                 secondaryArtifactResult?.file,
                 dependencyType,
                 isWrappedModule,
                 buildMapping,
-                mavenCoordinatesCache
             )
 
     enum class DependencyType constructor(val extension: String) {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR)
+    }
+
+    fun fixWithVariantResult(variant: ResolvedVariantResult): ResolvedArtifact {
+        return ResolvedArtifact(
+            this.componentIdentifier,
+            variant,
+            variantName,
+            artifactFile,
+            extractedFolder,
+            dependencyType,
+            isWrappedModule,
+            buildMapping,
+        )
     }
 
     /**
@@ -121,14 +134,16 @@ data class ResolvedArtifact(
             is OpaqueComponentArtifactIdentifier -> {
                 // We have a file based dependency
                 if (dependencyType == DependencyType.JAVA) {
-                    mavenCoordinatesCache.getMavenCoordForLocalFile(
-                        artifactFile
+                    MavenCoordinatesCacheBuildService.getMavenCoordForLocalFile(
+                        artifactFile,
+                        stringCachingService
                     )
                 } else {
                     // local aar?
                     assert(artifactFile.isDirectory)
-                    mavenCoordinatesCache.getMavenCoordForLocalFile(
-                        artifactFile
+                    MavenCoordinatesCacheBuildService.getMavenCoordForLocalFile(
+                        artifactFile,
+                        stringCachingService
                     )
                 }
             }
@@ -148,7 +163,9 @@ data class ResolvedArtifact(
     /**
      * Computes a unique address to use in the level 4 model
      */
-    fun computeModelAddress(): String = when (componentIdentifier) {
+    fun computeModelAddress(
+        mavenCoordinatesCache: MavenCoordinatesCacheBuildService
+    ): String = when (componentIdentifier) {
         is ProjectComponentIdentifier -> {
 
             StringBuilder(100)

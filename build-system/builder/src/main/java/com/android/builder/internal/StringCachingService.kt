@@ -28,3 +28,5 @@ interface StringCachingService {
      */
     fun cacheString(string: String): String
 }
+
+fun StringCachingService?.cacheString(string: String): String = this?.cacheString(string) ?: string

@@ -21,6 +21,7 @@ package com.android.build.gradle.internal.ide.dependencies
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.builder.dependency.MavenCoordinatesImpl
+import com.android.builder.internal.StringCachingService
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import org.gradle.api.Project
@@ -31,6 +32,7 @@ import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
 const val LOCAL_AAR_GROUPID = "__local_aars__"
+const val WRAPPED_AAR_GROUPID = "__wrapped_aars__"
 
 /** Build service used to cache maven coordinates for libraries. */
 abstract class MavenCoordinatesCacheBuildService :
@@ -46,13 +48,18 @@ abstract class MavenCoordinatesCacheBuildService :
                 it.computeMavenCoordinates(parameters.stringCache.get())
             })
 
-    fun getMavenCoordForLocalFile(artifactFile: File): MavenCoordinatesImpl {
-        return MavenCoordinatesImpl.create(
-            parameters.stringCache.get(),
-            LOCAL_AAR_GROUPID, artifactFile.path,
-            "unspecified"
-        )
+    companion object {
+        @JvmStatic
+        @JvmOverloads
+        fun getMavenCoordForLocalFile(artifactFile: File, stringCache: StringCachingService? = null): MavenCoordinatesImpl {
+            return MavenCoordinatesImpl.create(
+                stringCache,
+                LOCAL_AAR_GROUPID, artifactFile.path,
+                "unspecified"
+            )
+        }
     }
+
 
     fun getMavenCoordinates(resolvedArtifact: ResolvedArtifact): MavenCoordinates {
         return cache.get(resolvedArtifact)

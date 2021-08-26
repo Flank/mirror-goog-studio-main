@@ -15,7 +15,7 @@ maven_library(
     deps = [
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "//tools/base/utp/android-device-provider-ddmlib-proto",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         # Don't change dependency order or the test fails. Those plugins bundle kotlinx
         # coroutine jar which may be different version.

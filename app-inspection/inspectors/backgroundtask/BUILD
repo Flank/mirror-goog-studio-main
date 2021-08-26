@@ -28,10 +28,10 @@ app_inspection_jar(
         ":backgroundtask_inspector_java_proto",
         "//tools/base/app-inspection/inspectors/backgroundtask/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//prebuilts/tools/common/m2:androidx.annotation.annotation.1.1.0",
         "//prebuilts/tools/common/m2:androidx.inspection.inspection.1.0.0",
         "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
         "//tools/base/bazel:studio-proto",
+        "@maven//:androidx.annotation.annotation",
     ],
 )
 

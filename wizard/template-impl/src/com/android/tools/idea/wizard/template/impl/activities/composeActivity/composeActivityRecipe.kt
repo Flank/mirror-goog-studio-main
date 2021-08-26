@@ -39,7 +39,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
-  setExtVar(composeVersionVarName, "1.0.0")
+  setExtVar(composeVersionVarName, "1.0.1")
 
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
@@ -47,7 +47,7 @@ fun RecipeExecutor.composeActivityRecipe(
                 configuration = "debugImplementation")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
-  addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.0")
+  addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.1")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-test-junit4:\${$composeVersionVarName}", configuration="androidTestImplementation")
   generateManifest(
     moduleData = moduleData,

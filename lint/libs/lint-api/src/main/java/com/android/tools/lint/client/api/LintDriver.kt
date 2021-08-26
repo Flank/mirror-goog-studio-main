@@ -76,6 +76,7 @@ import com.android.tools.lint.detector.api.formatList
 import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getNextInstruction
 import com.android.tools.lint.detector.api.isAnonymousClass
+import com.android.tools.lint.detector.api.isApplicableTo
 import com.android.tools.lint.detector.api.isXmlFile
 import com.android.tools.lint.model.PathVariables
 import com.android.utils.Pair
@@ -860,6 +861,7 @@ class LintDriver(
         val configuration = project.getConfiguration(this)
         val map = EnumMap<Scope, MutableList<Detector>>(Scope::class.java)
         scopeDetectors = map
+        val platforms = if (mode == DriverMode.ANALYSIS_ONLY) Platform.UNSPECIFIED else platforms
         applicableDetectors = registry.createDetectors(client, configuration, scope, platforms, map)
 
         validateScopeList()
@@ -2519,6 +2521,17 @@ class LintDriver(
                 return true
             }
             incident.severity = severity
+
+            // When we analyze, we include all platforms, meaning that we'll collect issues
+            // for (as an example) both Android and JDK platforms, but in the merge phase,
+            // we filter on specifically allowed platforms for the reporting project.
+            if (mode == DriverMode.MERGE && !platforms.isApplicableTo(incident.issue) &&
+                // Allow explicitly enabling an issue such as an Android specific issue like
+                // SyntheticAccessor
+                !configuration.getConfiguredIssues(registry, true).containsKey(issue.id)
+            ) {
+                return true
+            }
 
             val baseline = baseline
             if (baseline != null && mode != DriverMode.ANALYSIS_ONLY) {

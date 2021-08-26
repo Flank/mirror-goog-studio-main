@@ -1,8 +1,8 @@
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
-load("//tools/base/bazel:utils.bzl", "zip_merger")
+load("//tools/base/bazel:utils.bzl", "merged_zip")
 
 # The Gmaven repository as built with the hybrid gradle/bazel build.
-zip_merger(
+merged_zip(
     name = "gmaven",
     srcs = [
         "//tools/base:agp_artifacts.zip",

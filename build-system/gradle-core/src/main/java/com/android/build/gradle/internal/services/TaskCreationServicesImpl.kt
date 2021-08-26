@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.services
 
+import com.android.build.gradle.internal.lint.LintFromMaven
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
@@ -46,4 +47,6 @@ class TaskCreationServicesImpl(
     override fun <T> provider(callable: () -> T): Provider<T> {
         return projectServices.providerFactory.provider(callable)
     }
+
+    override val lintFromMaven: LintFromMaven get() = projectServices.lintFromMaven
 }

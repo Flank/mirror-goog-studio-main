@@ -33,6 +33,18 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
         dependencies.add("implementation" to dependency)
     }
 
+    override fun api(dependency: Any) {
+        dependencies.add("api" to dependency)
+    }
+
+    override fun testImplementation(dependency: Any) {
+        dependencies.add("testImplementation" to dependency)
+    }
+
+    override fun androidTestImplementation(dependency: Any) {
+        dependencies.add("androidTestImplementation" to dependency)
+    }
+
     override fun lintPublish(dependency: Any) {
         dependencies.add("lintPublish" to dependency)
     }
@@ -44,15 +56,31 @@ class DependenciesBuilderImpl() : DependenciesBuilder {
     override fun localJar(action: LocalJarBuilder.() -> Unit): LocalJarBuilder =
             LocalJarBuilderImpl().also { action(it) }
 
-    override fun project(path: String): ProjectDependencyBuilder =
-            ProjectDependencyBuilderImpl(path)
+    override fun project(path: String, testFixtures: Boolean): ProjectDependencyBuilder =
+            ProjectDependencyBuilderImpl(path, testFixtures)
+
+    override fun externalLibrary(path: String, testFixtures: Boolean): ExternalDependencyBuilder =
+        ExternalDependencyBuilderImpl(path, testFixtures)
 
     fun writeBuildFile(sb: StringBuilder, projectDir: File) {
         sb.append("\ndependencies {\n")
         for ((scope, dependency) in dependencies) {
             when (dependency) {
                 is String -> sb.append("$scope '$dependency'\n")
-                is ProjectDependencyBuilder -> sb.append("$scope project('${dependency.path}')\n")
+                is ExternalDependencyBuilder -> {
+                    if (dependency.testFixtures) {
+                        sb.append("$scope testFixtures('${dependency.coordinate}')\n")
+                    } else {
+                        sb.append("$scope '${dependency.coordinate}'\n")
+                    }
+                }
+                is ProjectDependencyBuilder -> {
+                    if (dependency.testFixtures) {
+                        sb.append("$scope testFixtures(project('${dependency.path}'))\n")
+                    } else {
+                        sb.append("$scope project('${dependency.path}')\n")
+                    }
+                }
                 is MavenRepoGenerator.Library -> sb.append("$scope '${dependency.mavenCoordinate}'\n")
                 is LocalJarBuilderImpl -> {
                     val path = createLocalJar(dependency, projectDir)
@@ -88,4 +116,12 @@ private class LocalJarBuilderImpl(
     }
 }
 
-private class ProjectDependencyBuilderImpl(override val path: String): ProjectDependencyBuilder
+private class ProjectDependencyBuilderImpl(
+    override val path: String,
+    override val testFixtures: Boolean
+): ProjectDependencyBuilder
+
+private class ExternalDependencyBuilderImpl(
+    override val coordinate: String,
+    override val testFixtures: Boolean
+): ExternalDependencyBuilder

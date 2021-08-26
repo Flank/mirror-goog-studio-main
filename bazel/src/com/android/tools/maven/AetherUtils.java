@@ -41,21 +41,19 @@ public class AetherUtils {
 
     static final RemoteRepository GRADLE =
             new RemoteRepository.Builder(
-                            "Gradle",
-                            "default",
-                            "https://repo.gradle.org/gradle/libs-releases-local/")
+                            "Gradle", "default", "https://repo.gradle.org/gradle/libs-releases/")
                     .build();
 
     static final RemoteRepository INTELLIJ =
             new RemoteRepository.Builder(
                             "IntelliJ deps",
                             "default",
-                            "https://jetbrains.bintray.com/intellij-third-party-dependencies")
+                            "https://cache-redirector.jetbrains.com/intellij-dependencies/")
                     .build();
 
-    static final RemoteRepository KOTLIN_EAP =
+    static final RemoteRepository KOTLIN_DEV =
             new RemoteRepository.Builder(
-                            "Kotlin eap", "default", "https://dl.bintray.com/kotlin/kotlin-eap")
+                            "Kotlin dev", "default", "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
                     .build();
 
     static final RemoteRepository GRADLE_PLUGINS =
@@ -64,7 +62,7 @@ public class AetherUtils {
                     .build();
 
     public static final ImmutableList<RemoteRepository> REPOSITORIES =
-	ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ, KOTLIN_EAP, GRADLE_PLUGINS);
+	ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE, INTELLIJ, KOTLIN_DEV, GRADLE_PLUGINS);
 
     private AetherUtils() {}
 

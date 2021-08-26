@@ -29,7 +29,7 @@ import java.io.File
  */
 class Level2ArtifactHandler(
     localJarCache: CreatingCache<File, List<File>>,
-    mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
+    mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 ) : ArtifactHandler<Library>(
     localJarCache,
     mavenCoordinatesCache

@@ -1,0 +1,243 @@
+> VariantDependencies:
+   - name                 = "debug"
+   - mainArtifact:
+      - compileDependencies:
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+      - runtimeDependencies:
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+   > androidTestArtifact:
+      > compileDependencies:
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar-test-fixtures:1:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+         - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
+            - dependencies = "*visited*"
+      < compileDependencies
+      - runtimeDependencies:
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar-test-fixtures:1:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+   < androidTestArtifact
+   > unitTestArtifact:
+      - compileDependencies:
+         - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
+            - requestedCoordinates = (null)
+            - dependencies         = []
+      - runtimeDependencies:
+         - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+         - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
+            - dependencies = "*visited*"
+   < unitTestArtifact
+   - testFixturesArtifact = (null)
+< VariantDependencies
+> GlobalLibraryMap:
+   > libraries:
+      > :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+         - type                = PROJECT
+         - artifact            = (null)
+         > projectInfo:
+            - buildId     = ":"
+            - projectPath = ":app"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "project:app:unspecified"
+         < projectInfo
+         - libraryInfo         = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
+      > :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+         - type                = PROJECT
+         - artifact            = (null)
+         - projectInfo:
+            - buildId     = ":"
+            - projectPath = ":app"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "project:app:unspecified"
+         - libraryInfo         = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+      > com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar-test-fixtures:1:
+         - type                = ANDROID_LIBRARY
+         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1-test-fixtures.aar{F}
+         - projectInfo         = (null)
+         > libraryInfo:
+            - group   = "com.example"
+            - name    = "aar"
+            - version = "1"
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.libraryelements -> aar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "com.example:aar-test-fixtures:1"
+         < libraryInfo
+         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/classes.jar{F}]
+         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/classes.jar{F}]
+         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/AndroidManifest.xml{F}
+         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/res{D}
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/res.apk{!}
+         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/assets{!}
+         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jni{!}
+         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/aidl{!}
+         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/rs{!}
+         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/proguard.txt{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/lint.jar{!}
+         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/annotations.zip{!}
+         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/public.txt{!}
+         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/R.txt{!}
+      < com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar-test-fixtures:1
+      > com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
+         - type                = ANDROID_LIBRARY
+         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1.aar{F}
+         - projectInfo         = (null)
+         > libraryInfo:
+            - group   = "com.example"
+            - name    = "aar"
+            - version = "1"
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.libraryelements -> aar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "com.example:aar:1"
+         < libraryInfo
+         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/classes.jar{F}]
+         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/classes.jar{F}]
+         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/AndroidManifest.xml{F}
+         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/res{D}
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/res.apk{!}
+         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/assets{!}
+         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jni{!}
+         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/aidl{!}
+         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/rs{!}
+         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/proguard.txt{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/lint.jar{!}
+         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/annotations.zip{!}
+         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/public.txt{!}
+         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/R.txt{!}
+      < com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1
+      > com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar-test-fixtures:1:
+         - type                = ANDROID_LIBRARY
+         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1-test-fixtures.aar{F}
+         - projectInfo         = (null)
+         > libraryInfo:
+            - group   = "com.example"
+            - name    = "aar"
+            - version = "1"
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.libraryelements -> aar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "com.example:aar-test-fixtures:1"
+         < libraryInfo
+         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/classes.jar{F}]
+         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/classes.jar{F}]
+         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/AndroidManifest.xml{F}
+         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/res{D}
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/res.apk{!}
+         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/assets{!}
+         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jni{!}
+         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/aidl{!}
+         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/rs{!}
+         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/proguard.txt{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/jars/lint.jar{!}
+         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/annotations.zip{!}
+         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/public.txt{!}
+         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1-test-fixtures/R.txt{!}
+      < com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar-test-fixtures:1
+      > com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
+         - type                = ANDROID_LIBRARY
+         - artifact            = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1.aar{F}
+         - projectInfo         = (null)
+         > libraryInfo:
+            - group   = "com.example"
+            - name    = "aar"
+            - version = "1"
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.dependency.bundling -> external"
+               * "org.gradle.libraryelements -> aar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "com.example:aar:1"
+         < libraryInfo
+         - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/classes.jar{F}]
+         - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/classes.jar{F}]
+         - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/AndroidManifest.xml{F}
+         - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/res{D}
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/res.apk{!}
+         - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/assets{!}
+         - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jni{!}
+         - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/aidl{!}
+         - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/rs{!}
+         - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/proguard.txt{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/jars/lint.jar{!}
+         - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/annotations.zip{!}
+         - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/public.txt{!}
+         - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/R.txt{!}
+      < com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1
+   < libraries
+< GlobalLibraryMap

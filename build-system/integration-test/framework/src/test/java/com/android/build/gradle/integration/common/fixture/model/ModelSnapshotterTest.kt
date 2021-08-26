@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.ide.dependencies.LOCAL_AAR_GROUPID
 import com.google.common.truth.Truth
 import org.junit.Test
 import java.io.File
@@ -152,6 +153,85 @@ class ModelSnapshotterTest {
                - property9  = {IMPORTANT_PATH1}/with/some/leaf
                - property10 = [{IMPORTANT_PATH2}/, {IMPORTANT_PATH2}/with/a/leaf]
             < LargeObject
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun `pathAsAString with file check`() {
+        val smallObject = SmallObject("/some/important/path/with/some/leaf", null)
+
+        val snapshot = snapshot(smallObject) {
+            pathAsAString("property1", true, SmallObject::property1)
+        }
+
+        Truth.assertThat(snapshot).isEqualTo("""
+            - SmallObject:
+               - property1 = "/some/important/path/with/some/leaf"
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun `pathAsAString with no file check`() {
+        val smallObject = SmallObject("/some/important/path/with/some/leaf", null)
+
+        val snapshot = snapshot(smallObject) {
+            pathAsAString("property1", false, SmallObject::property1)
+        }
+
+        Truth.assertThat(snapshot).isEqualTo("""
+            - SmallObject:
+               - property1 = {IMPORTANT_PATH1}/with/some/leaf
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun `pathAsAString with null value`() {
+        val smallObject = SmallObject(null, null)
+
+        val snapshot = snapshot(smallObject) {
+            pathAsAString("property1", true, SmallObject::property1)
+        }
+
+        Truth.assertThat(snapshot).isEqualTo("""
+            - SmallObject:
+               - property1 = (null)
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun artifactKey() {
+        val smallObject = StringObject(
+            ":|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified"
+        )
+
+        val snapshot = snapshot(smallObject) {
+            artifactKey(StringObject::string)
+        }
+
+        Truth.assertThat(snapshot).isEqualTo("""
+            - StringObject:
+               - key = :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun `artifactKey for local jars`() {
+        val smallObject = StringObject(
+            "$LOCAL_AAR_GROUPID|/some/important/path/with/some/leaf|unspecified|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|?"
+        )
+
+        val snapshot = snapshot(smallObject) {
+            artifactKey(StringObject::string)
+        }
+
+        Truth.assertThat(snapshot).isEqualTo("""
+            - StringObject:
+               - key = $LOCAL_AAR_GROUPID|{IMPORTANT_PATH1}/with/some/leaf|unspecified|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|?
 
         """.trimIndent())
     }

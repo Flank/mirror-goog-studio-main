@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto
 import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto
@@ -32,6 +33,7 @@ import com.google.testing.platform.proto.api.core.PathProto
 private val protoPrinter: ProtoPrinter = ProtoPrinter(listOf(
     AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig::class.java,
     AndroidDevicePluginProto.AndroidDevicePlugin::class.java,
+    AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig::class.java,
     AndroidInstrumentationDriverProto.AndroidInstrumentationDriver::class.java,
     AndroidTestCoverageConfigProto.AndroidTestCoverageConfig::class.java,
     GradleAndroidTestResultListenerConfigProto.GradleAndroidTestResultListenerConfig::class.java,
@@ -55,7 +57,8 @@ fun assertRunnerConfigProto(
     useGradleManagedDeviceProvider: Boolean = false,
     testCoverageConfig: String = "",
     additionalTestOutputConfig: String = "",
-    shardingConfig: String = ""
+    shardingConfig: String = "",
+    uninstallIncompatibleApks: Boolean = false,
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
         label {
@@ -98,9 +101,15 @@ fun assertRunnerConfigProto(
           path: "path-to-DeviceControllerDdmlib.jar"
         }
         config {
-          type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
+          type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.DdmlibAndroidDeviceProviderConfig"
           value {
-            serial: "${deviceId}"
+            local_android_device_provider_config {
+              type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
+              value {
+                serial: "${deviceId}"
+              }
+            }
+            ${if (uninstallIncompatibleApks)  "uninstall_incompatible_apks: true"  else ""}
           }
         }
         """

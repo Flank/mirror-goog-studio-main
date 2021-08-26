@@ -143,7 +143,7 @@ def _resources(ctx, resources, resources_jar):
             if short.startswith("/"):
                 short = short[1:]
         rel_paths.append((short, res))
-    zipper_args = ["c", resources_jar.path]
+    zipper_args = ["cC" if ctx.attr.compress_resources else "c", resources_jar.path]
     zipper_files = "".join([k + "=" + v.path + "\n" for k, v in rel_paths])
     zipper_list = create_option_file(ctx, resources_jar.basename + ".res.lst", zipper_files)
     zipper_args += ["@" + zipper_list.path]
@@ -166,6 +166,8 @@ def kotlin_library(
         lint_classpath = [],
         lint_is_test_sources = False,
         lint_timeout = None,
+        compress_resources = False,
+        testonly = False,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -178,6 +180,7 @@ def kotlin_library(
         runtime_deps: The runtime dependencies.
         bundled_deps: The dependencies that are bundled inside the output jar and not treated as a maven dependency
         friends: The list of kotlin-friends.
+        compress_resources: Whether to compress resources.
         notice: An optional notice file to be included in the jar.
         coordinates: The maven coordinates of this artifact.
         exclusions: Files to exclude from the generated pom file.
@@ -190,6 +193,13 @@ def kotlin_library(
     source_jars = [src for src in srcs if src.endswith(".srcjar")]
     final_javacopts = javacopts + ["--release", "8"]
 
+    # Include non-test kotlin libraries in coverage
+    if not testonly:
+        coverage_baseline(
+            name = name,
+            srcs = javas + kotlins,
+        )
+
     _kotlin_library(
         name = name,
         jar = jar_name if jar_name else "lib" + name + ".jar",
@@ -197,8 +207,10 @@ def kotlin_library(
         deps = deps,
         kotlin_srcs = kotlins,
         source_jars = source_jars,
+        compress_resources = compress_resources,
         kotlin_use_ir = test_kotlin_use_ir(),
         javacopts = final_javacopts if javas else None,
+        testonly = testonly,
         **kwargs
     )
 
@@ -236,8 +248,8 @@ def _kotlin_library_impl(ctx):
     jars = []
     kotlin_providers = []
     if kotlin_srcs:
-        deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
-        java_info_deps.append(ctx.attr._kotlin_stdlib[JavaInfo])  # TODO why do we need stdlib
+        deps.append(ctx.attr.stdlib[JavaInfo])
+        java_info_deps.append(ctx.attr.stdlib[JavaInfo])
         kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = ctx.attr.module_name,
@@ -339,8 +351,13 @@ _kotlin_library = rule(
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
         "kotlin_use_ir": attr.bool(),
+        "compress_resources": attr.bool(),
         "plugins": attr.label_list(
             providers = [JavaInfo],
+        ),
+        "stdlib": attr.label(
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
+            allow_files = True,
         ),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
@@ -353,10 +370,6 @@ _kotlin_library = rule(
             executable = True,
             cfg = "host",
             default = Label("//tools/base/bazel:kotlinc"),
-            allow_files = True,
-        ),
-        "_kotlin_stdlib": attr.label(
-            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
         ),
         "_zipper": attr.label(

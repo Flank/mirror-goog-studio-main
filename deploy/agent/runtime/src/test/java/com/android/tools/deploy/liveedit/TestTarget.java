@@ -15,6 +15,8 @@
  */
 package com.android.tools.deploy.liveedit;
 
+import java.io.IOException;
+
 class TestTarget {
 
     private static int getPrivateStaticInt() {
@@ -200,5 +202,25 @@ class TestTarget {
         String y = " World";
         String helloWorld = x + y;
         return;
+    }
+
+    public int tryFinally() {
+        try {
+            return 1;
+        } finally {
+            return 2;
+        }
+    }
+
+    public int tryCatch() {
+        try {
+            throw new IOException();
+        } catch (IllegalStateException e) {
+            return 2;
+        } catch (RuntimeException e) {
+            return 3;
+        } catch (IOException e) {
+            return 4;
+        }
     }
 }

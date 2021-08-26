@@ -88,6 +88,7 @@ class UtpTestRunnerTest {
                 anyIterable(),
                 anyIterable(),
                 anyIterable(),
+                anyBoolean(),
                 any(),
                 any(),
                 any(),
@@ -117,6 +118,7 @@ class UtpTestRunnerTest {
             mockVersionedSdkLoader,
             mockRetentionConfig,
             useOrchestrator = false,
+            uninstallIncompatibleApks = false,
             mockTestResultListener,
             mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
             capturedRunnerConfigs = runnerConfigs

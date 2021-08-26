@@ -17,6 +17,7 @@
 package com.android.ddmlib.testing
 
 import com.android.ddmlib.AndroidDebugBridge
+import com.android.ddmlib.EmulatorConsole
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler
@@ -81,14 +82,21 @@ class FakeAdbRule : ExternalResource() {
    */
   fun closeServerDuringCleanUp(closeServer: Boolean) = apply { closeFakeAdbServerDuringCleanUp = closeServer }
 
-  fun attachDevice(deviceId: String,
-                   manufacturer: String,
-                   model: String,
-                   release: String,
-                   sdk: String,
-                   hostConnectionType: DeviceState.HostConnectionType): DeviceState {
+  fun attachDevice(
+      deviceId: String,
+      manufacturer: String,
+      model: String,
+      release: String,
+      sdk: String,
+      hostConnectionType: DeviceState.HostConnectionType,
+      avdName: String? = null,
+      avdPath: String? = null
+  ): DeviceState {
     val startLatch = CountDownLatch(1)
     startingDevices[deviceId] = startLatch
+    if (avdName != null && avdPath != null) {
+      EmulatorConsole.registerConsoleForTest(deviceId, FakeEmulatorConsole(avdName, avdPath))
+    }
     val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType).get()
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
     assertThat(startLatch.await(30, TimeUnit.SECONDS)).isTrue()
@@ -126,5 +134,25 @@ class FakeAdbRule : ExternalResource() {
         error("The adbServer didn't terminate in 30 seconds")
       }
     }
+    EmulatorConsole.clearConsolesForTest()
   }
+}
+
+class FakeEmulatorConsole(
+    override val avdName: String,
+    override val avdPath: String
+) : EmulatorConsole() {
+
+    override fun close() {}
+
+    override fun kill() {}
+
+    override fun startEmulatorScreenRecording(args: String?): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun stopScreenRecording(): String {
+        TODO("Not yet implemented")
+    }
+
 }

@@ -20,22 +20,32 @@ import java.io.File
 
 /**
  * Represent a variant/module/artifact dependency.
- *
- * @since 4.2
  */
 interface Library: AndroidModel {
+    /**
+     * A Unique key representing the library, and allowing to match it with [GraphItem] instances
+     */
+    val key: String
+
     /**
      * The type of the dependency.
      */
     val type: LibraryType
 
     /**
-     * The artifact address in a unique way.
+     * Returns the project info to uniquely identify it (and its variant)
      *
-     * This is either a module path for sub-modules (with optional variant name), or a maven
-     * coordinate for external dependencies.
+     * Only valid for instances where [type] is [LibraryType.PROJECT]. It is null in other cases.
      */
-    val artifactAddress: String
+    val projectInfo: ProjectInfo?
+
+    /**
+     * Returns the external library info to uniquely identify it (and its variant)
+     *
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY], or
+     * [LibraryType.JAVA_LIBRARY]. It is null in other cases.
+     */
+    val libraryInfo: LibraryInfo?
 
     /**
      * The artifact location.
@@ -45,48 +55,23 @@ interface Library: AndroidModel {
     val artifact: File?
 
     /**
-     * Returns the build id.
-     *
-     * Only valid for instances where [type] is [LIBRARY_MODULE]. Null in this case indicates
-     * the root build.
-     *
-     * @return the build id or null.
-     */
-    val buildId: String?
-
-    /**
-     * The gradle path.
-     *
-     * Only valid for instances where [type] is [LIBRARY_MODULE]
-     */
-    val projectPath: String?
-
-    /**
-     * On optional variant name if the consumed artifact of the library is associated
-     * to one.
-     *
-     * Only valid for instances where [type] is [LIBRARY_MODULE]
-     */
-    val variant: String?
-
-    /**
      * The location of the manifest file.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val manifest: File?
 
     /**
      * The list of jar files for compilation.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val compileJarFiles: List<File>?
 
     /**
      * The list of jar files for runtime/packaging.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val runtimeJarFiles: List<File>?
 
@@ -95,14 +80,14 @@ interface Library: AndroidModel {
      *
      * The folder may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val resFolder: File?
 
     /**
      * The namespaced resources static library (res.apk).
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]. This can still be null if the
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]. This can still be null if the
      * library is not namespaced.
      */
     val resStaticLibrary: File?
@@ -112,7 +97,7 @@ interface Library: AndroidModel {
      *
      * The folder may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val assetsFolder: File?
 
@@ -121,7 +106,7 @@ interface Library: AndroidModel {
      *
      * The folder may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val jniFolder: File?
 
@@ -130,7 +115,7 @@ interface Library: AndroidModel {
      *
      * The folder may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val aidlFolder: File?
 
@@ -139,7 +124,7 @@ interface Library: AndroidModel {
      *
      * The folder may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val renderscriptFolder: File?
 
@@ -148,7 +133,7 @@ interface Library: AndroidModel {
      *
      * The file may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val proguardRules: File?
 
@@ -157,7 +142,7 @@ interface Library: AndroidModel {
      *
      * The file may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val lintJar: File?
 
@@ -166,7 +151,7 @@ interface Library: AndroidModel {
      *
      * The file may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val externalAnnotations: File?
 
@@ -175,7 +160,7 @@ interface Library: AndroidModel {
      *
      * The file may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val publicResources: File?
 
@@ -184,7 +169,7 @@ interface Library: AndroidModel {
      *
      * The file may not exist.
      *
-     * Only valid for instances where [type] is [LIBRARY_ANDROID]
+     * Only valid for instances where [type] is [LibraryType.ANDROID_LIBRARY]
      */
     val symbolFile: File?
 }

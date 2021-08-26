@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.feature
 
-import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
@@ -137,53 +136,23 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            if (creationConfig.projectClassesAreInstrumented) {
-                if (creationConfig.asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
-                    task.inputDirs.from(
-                        creationConfig.artifacts.get(
-                            InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
-                        )
+            task.inputDirs.from(
+                creationConfig.artifacts.get(InternalArtifactType.JAVAC),
+                creationConfig.variantData.allPreJavacGeneratedBytecode,
+                creationConfig.variantData.allPostJavacGeneratedBytecode
+            )
+            if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
+                task.inputJars.from(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.COMPILE_R_CLASS_JAR
                     )
-                    task.inputJars.from(
-                        creationConfig.services.fileCollection(
-                            creationConfig.artifacts.get(
-                                InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
-                            )
-                        ).asFileTree
-                    )
-                } else {
-                    task.inputDirs.from(
-                        creationConfig.artifacts.get(
-                            InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES
-                        )
-                    )
-                    task.inputJars.from(
-                        creationConfig.services.fileCollection(
-                            creationConfig.artifacts.get(
-                                InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS
-                            )
-                        ).asFileTree
-                    )
-                }
-            } else {
-                task.inputDirs.from(
-                    creationConfig.artifacts.get(InternalArtifactType.JAVAC),
-                    creationConfig.variantData.allPreJavacGeneratedBytecode,
-                    creationConfig.variantData.allPostJavacGeneratedBytecode
                 )
-                if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
-                    task.inputJars.from(
-                        creationConfig.artifacts.get(
-                            InternalArtifactType.COMPILE_R_CLASS_JAR
-                        )
+            } else {
+                task.inputJars.from(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                     )
-                } else {
-                    task.inputJars.from(
-                        creationConfig.artifacts.get(
-                            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                        )
-                    )
-                }
+                )
             }
             task.modulePath = task.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType

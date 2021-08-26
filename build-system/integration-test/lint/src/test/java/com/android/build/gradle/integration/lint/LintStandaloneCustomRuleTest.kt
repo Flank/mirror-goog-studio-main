@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -63,10 +62,39 @@ class LintStandaloneCustomRuleTest {
             .containsExactly("library-0.1.jar", "library-0.1.module", "library-0.1.pom")
     }
 
-    private fun isCheckSum(fileName: String) : Boolean {
+    @Test
+    @Throws(Exception::class)
+    fun checkFiltering() {
+        // Make sure we properly filter issues based on the reporting type.
+        // In the report for the non-Android project (:library:lint) we include
+        // issues like lint detector warnings; these are *not* included in the
+        // Android report. Conversely, there are Android issues in the lint module
+        // (/sdcard references) which are not included in that report, but *are*
+        // included in the Android app report.
+        project.executor().run(":app:clean", ":lint:lint", ":app:lint")
+        project.executor().run(":app:clean", ":lint:lint", ":app:lint")
+
+        val lintReport = project.getSubproject("lint").file("lint-results.txt")
+        val appReport = project.getSubproject("app").file("lint-report.txt")
+        assertThat(lintReport).exists()
+        assertThat(appReport).exists()
+
+        // Incident in lint/ project which is Android specific and isn't reported there
+
+        val androidSpecific = "MyDetector.java:65: Warning: Do not hardcode \"/sdcard/\";"
+        assertThat(appReport).contains(androidSpecific)
+        assertThat(lintReport).doesNotContain(androidSpecific)
+
+        val jdkSpecific =
+            "MyDetector.java:38: Warning: New lint checks should be implemented in Kotlin to take advantage of a lot of Kotlin-specific mechanisms in the Lint API"
+        assertThat(lintReport).contains(jdkSpecific)
+        assertThat(appReport).doesNotContain(jdkSpecific)
+    }
+
+    private fun isCheckSum(fileName: String): Boolean {
         return fileName.endsWith("md5") ||
-                fileName.endsWith("sha1")||
-                fileName.endsWith("sha256")||
-                fileName.endsWith("sha512")
+            fileName.endsWith("sha1") ||
+            fileName.endsWith("sha256") ||
+            fileName.endsWith("sha512")
     }
 }

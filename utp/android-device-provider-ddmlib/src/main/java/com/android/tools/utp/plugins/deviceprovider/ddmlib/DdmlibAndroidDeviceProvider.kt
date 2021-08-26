@@ -17,6 +17,7 @@
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
 import com.android.ddmlib.AndroidDebugBridge
+import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto
 import com.google.testing.platform.api.config.AndroidSdk
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.Environment
@@ -28,6 +29,9 @@ import com.google.testing.platform.api.config.setup
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.config.v1.extension.hostOrDefault
 import com.google.testing.platform.core.device.DeviceProviderException
+import com.google.testing.platform.lib.process.inject.DaggerSubprocessComponent
+import com.google.testing.platform.lib.process.logger.DefaultSubprocessLogger
+import com.google.testing.platform.lib.process.logger.SubprocessLogger
 import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
 import com.google.testing.platform.runtime.android.AndroidDeviceProvider
 import com.google.testing.platform.runtime.android.device.AndroidDevice
@@ -45,6 +49,8 @@ class DdmlibAndroidDeviceProvider() : AndroidDeviceProvider {
     private lateinit var environment: Environment
     private lateinit var testSetup: Setup
     private lateinit var androidSdk: AndroidSdk
+    private lateinit var apkPackageNameResolver: ApkPackageNameResolver
+    private lateinit var ddmlibAndroidDeviceProviderConfig: AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
     private lateinit var deviceProviderConfig: LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider
 
     constructor(deviceFinder: DdmlibAndroidDeviceFinder) : this() {
@@ -60,8 +66,21 @@ class DdmlibAndroidDeviceProvider() : AndroidDeviceProvider {
         environment = config.environment
         testSetup = config.setup
         androidSdk = config.androidSdk
-        deviceProviderConfig =
-                validateLocalDeviceProviderConfig(requireNotNull(config.parseConfig()))
+
+        val subprocessLoggerFactory = object: SubprocessLogger.Factory {
+            override fun create() = DefaultSubprocessLogger(
+                config.environment.outputDirectory,
+                flushEagerly = true)
+        }
+        val subprocessComponent = DaggerSubprocessComponent.builder()
+            .subprocessLoggerFactory(subprocessLoggerFactory)
+            .build()
+        apkPackageNameResolver = ApkPackageNameResolver(androidSdk.aaptPath, subprocessComponent)
+
+        ddmlibAndroidDeviceProviderConfig = requireNotNull(config.parseConfig())
+        deviceProviderConfig = validateLocalDeviceProviderConfig(
+            LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider.parseFrom(
+                ddmlibAndroidDeviceProviderConfig.localAndroidDeviceProviderConfig.value))
 
         if (!this::deviceFinder.isInitialized) {
             AndroidDebugBridge.init(true)
@@ -90,7 +109,9 @@ class DdmlibAndroidDeviceProvider() : AndroidDeviceProvider {
     }
 
     override fun provideDevice(): DeviceController {
-        val deviceController = DdmlibAndroidDeviceController()
+        val deviceController = DdmlibAndroidDeviceController(
+            apkPackageNameResolver,
+            ddmlibAndroidDeviceProviderConfig.uninstallIncompatibleApks)
         val device = deviceFinder.findDevice(deviceProviderConfig.serial)
                 ?: throw DeviceProviderException(
                         "Android device (${deviceProviderConfig.serial}) is not found.")

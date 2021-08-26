@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class CheckResultDetectorTest : AbstractCheckTest() {
@@ -290,39 +291,372 @@ class CheckResultDetectorTest : AbstractCheckTest() {
     }
 
     fun testCheckResultInTests() {
-        // Make sure tests work with checkTestSources true
-        // Regression test for b/148841320
+        // Previously, this required turning on checkTestSources true (see b/148841320);
+        // now it's always on for tests (see b/196985792). checkTestSources behavior for
+        // checks in general is checked by for example SdCardDetectorTest#testMatchInTestIfEnabled.
         lint().files(
             kotlin(
-                "src/test/java/test/pkg/UnitTest.kt",
+                "src/test/java/test/pkg/misc.kt",
                 """
-                    package test.pkg
-                    import androidx.annotation.CheckResult
-                    fun something(list: List<String>) {
-                        fromNullable(list)
-                    }
-                    @CheckResult
-                    fun fromNullable(a: Any?): Any? = a
-                    """
+                package test.pkg
+                import androidx.annotation.CheckResult
+
+                fun something(): Boolean = TODO()
+                @CheckResult fun assertThat(subject: Boolean): Any = TODO()
+
+                fun test() {
+                    assertThat(something()) // ERROR 1
+                }
+                """
+            ).indented(),
+            java(
+                "src/test/java/Foo.java",
+                """
+                @javax.annotation.CheckReturnValue
+                public class Foo {
+                  public int f() {
+                    return 42;
+                  }
+                }
+                """
+            ).indented(),
+            java(
+                "src/test/java/Lib.java",
+                """
+                @javax.annotation.CheckReturnValue
+                public class Lib {
+                  public static void consume(Object o) {}
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInTests
+            java(
+                "src/test/java/Test.java",
+                """
+                class Test {
+                  void f(Foo foo) {
+                    try {
+                      foo.f(); // OK 1
+                      org.junit.Assert.fail();
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 2
+                      junit.framework.Assert.fail();
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 3
+                      junit.framework.TestCase.fail();
+                    } catch (Exception expected) {}
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInTestsWithRule
+            java(
+                "src/test/java/Test2.java",
+                """
+                class Test2 {
+                  private org.junit.rules.ExpectedException exception;
+                  void f(Foo foo) {
+                    exception.expect(IllegalArgumentException.class);
+                    foo.f(); // OK 4
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInTestsWithFailureMessage
+            java(
+                "src/test/java/Test3.java",
+                """
+                class Test3 {
+                  void f(Foo foo) {
+                    try {
+                      foo.f(); // OK 5
+                      org.junit.Assert.fail("message");
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 6
+                      junit.framework.Assert.fail("message");
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 7
+                      junit.framework.TestCase.fail("message");
+                    } catch (Exception expected) {}
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInTestsWithRule
+            java(
+                "src/test/java/Test4.java",
+                """
+                class Test4 {
+                  private org.junit.rules.ExpectedException exception;
+                  void f(Foo foo) {
+                    exception.expect(IllegalArgumentException.class);
+                    foo.f(); // OK 8
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInTestsWithFailureMessage
+            java(
+                "src/test/java/Test5.java",
+                """
+                class Test5 {
+                  void f(Foo foo) {
+                    try {
+                      foo.f(); // OK 9
+                      org.junit.Assert.fail("message");
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 10
+                      junit.framework.Assert.fail("message");
+                    } catch (Exception expected) {}
+                    try {
+                      foo.f(); // OK 11
+                      junit.framework.TestCase.fail("message");
+                    } catch (Exception expected) {}
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInThrowingRunnables
+            java(
+                "src/test/java/Test6.java",
+                """
+                class Test6 {
+                  void f(Foo foo) {
+                   org.junit.Assert.assertThrows(IllegalStateException.class,
+                     new org.junit.function.ThrowingRunnable() {
+                       @Override
+                       public void run() throws Throwable {
+                         foo.f(); // OK 12
+                       }
+                     });
+                   org.junit.Assert.assertThrows(IllegalStateException.class, () -> foo.f()); // OK 13
+                   org.junit.Assert.assertThrows(IllegalStateException.class, foo::f); // OK 14
+                   org.junit.Assert.assertThrows(IllegalStateException.class, () -> {
+                      int bah = foo.f(); // OK 15
+                      foo.f(); // OK 16
+                   });
+                   org.junit.Assert.assertThrows(IllegalStateException.class, () -> {
+                     // BUG: Diagnostic contains: Ignored return value
+                     foo.f();  // ERROR 2
+                     foo.f();  // OK 17
+                   });
+                   bar(() -> foo.f()); // OK 18
+                   // TODO: Stub this?
+                   //org.assertj.core.api.Assertions.assertThatExceptionOfType(IllegalStateException.class)
+                   //   .isThrownBy(() -> foo.f()); // OK 19
+                  }
+                  void bar(org.junit.function.ThrowingRunnable r) {}
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreTruthFailure
+            java(
+                "src/test/java/Test7.java",
+                """
+                import static com.google.common.truth.Truth.assert_;
+                class Test7 {
+                  void f(Foo foo) {
+                    try {
+                      foo.f(); // OK 20
+                      assert_().fail();
+                    } catch (Exception expected) {}
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#onlyIgnoreWithEnclosingTryCatch
+            java(
+                "src/test/java/Test8.java",
+                """
+                import static org.junit.Assert.fail;
+                class Test8 {
+                  void f(Foo foo) {
+                    foo.f(); // OK 23
+                    org.junit.Assert.fail();
+                    foo.f(); // OK 24
+                    junit.framework.Assert.fail();
+                    foo.f(); // OK 25
+                    junit.framework.TestCase.fail();
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreInOrderVerification
+            java(
+                "src/test/java/Test9.java",
+                """
+                import static org.mockito.Mockito.inOrder;
+                class Test9 {
+                  void m() {
+                    inOrder().verify(new Foo()).f(); // OK 21
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#ignoreVoidReturningMethodReferences
+            java(
+                "src/test/java/TestA.java",
+                """
+                class TestB {
+                  void m(java.util.List<Object> xs) {
+                    xs.forEach(Lib::consume); // OK 22
+                  }
+                }
+                """
+            ).indented(),
+            // From CheckReturnValueTest#testIgnoreCRVOnMockito() {
+            java(
+                "src/test/java/TestB.java",
+                """
+                import static org.mockito.Mockito.verify;
+                import static org.mockito.Mockito.doReturn;
+                import org.mockito.Mockito;
+                class TestB {
+                  void m() {
+                    Foo t = new Foo();
+                    Mockito.verify(t).f(); // OK 23
+                    verify(t).f(); // OK 24
+                    doReturn(1).when(t).f(); // OK 25
+                    Mockito.doReturn(1).when(t).f(); // OK 26
+                  }
+                }
+                """
+            ).indented(),
+            java(
+                "src/test/java/TestC.java",
+                """
+                import org.junit.Test;
+                class TestC {
+                  @Test(expected = IllegalArgumentException.class)
+                  void test() {
+                    Foo foo = new Foo();
+                    foo.f(); // OK 22
+                  }
+                }
+                """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR,
-            gradle(
+            gradle("android { }"),
+
+            // Stubs
+
+            java(
                 """
-                    android {
-                        lintOptions {
-                            checkTestSources true
-                        }
-                    }"""
-            ).indented()
+                package org.junit;
+                public @interface Test {
+                    Class<? extends Throwable> expected() default None.class;
+                    long timeout() default 0L;
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.junit;
+
+                import org.junit.function.ThrowingRunnable;
+
+                public class Assert {
+                    public static void fail() { }
+                    public static void fail(String message) { }
+                    public static <T extends Throwable> T assertThrows(Class<T> expectedThrowable, ThrowingRunnable runnable) { return null; }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package junit.framework;
+                public class Assert {
+                    public static void fail() { }
+                    public static void fail(String message) { }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package junit.framework;
+                public class TestCase {
+                    public static void fail() { }
+                    public static void fail(String message) { }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.junit.rules;
+                public class ExpectedException {
+                    public void expect(Class<? extends Throwable> type) { }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.junit.function;
+                public interface ThrowingRunnable {
+                    void run() throws Throwable;
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.common.truth;
+                public class Truth {
+                    public static StandardSubjectBuilder assert_() { return null; }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.common.truth;
+                public class StandardSubjectBuilder {
+                    public void fail() { }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.mockito;
+                import org.mockito.stubbing.Stubber;
+                public class Mockito {
+                    public static InOrder inOrder(Object... mocks) { return null; }
+                    public static <T> T verify(T mock) { return null; }
+                    public static Stubber doReturn(Object toBeReturned) { return null; }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.mockito;
+                public interface InOrder {
+                    <T> T verify(T mock);
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package org.mockito.stubbing;
+                public interface Stubber {
+                    <T> T when(T mock);
+                }
+                """
+            ).indented(),
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
+            .testModes(TestMode.DEFAULT)
             .run()
             .expect(
                 """
-                src/test/java/test/pkg/UnitTest.kt:4: Warning: The result of fromNullable is not used [CheckResult]
-                    fromNullable(list)
-                    ~~~~~~~~~~~~~~~~~~
-                0 errors, 1 warnings
+                src/test/java/Test6.java:18: Warning: The result of f is not used [CheckResult]
+                     foo.f();  // ERROR 2
+                     ~~~~~~~
+                src/test/java/test/pkg/misc.kt:8: Warning: The result of assertThat is not used [CheckResult]
+                    assertThat(something()) // ERROR 1
+                    ~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
                 """
             )
     }

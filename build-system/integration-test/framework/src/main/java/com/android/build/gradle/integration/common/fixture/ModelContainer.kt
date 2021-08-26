@@ -23,6 +23,7 @@ import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModule
 import org.gradle.tooling.model.BuildIdentifier
+import java.io.File
 import java.io.Serializable
 
 /**
@@ -33,6 +34,8 @@ import java.io.Serializable
 class ModelContainerV2(
     val rootBuildId: BuildIdentifier,
     val infoMaps: Map<BuildIdentifier, Map<String, ModelInfo>>,
+    /** mapOf(buildId, mapOf(Pair(projectPath, projectDir))) */
+    val projectMaps: Map<BuildIdentifier, List<Pair<String, File>>>,
     val globalLibraryMap: GlobalLibraryMap? = null
 ) : Serializable {
 

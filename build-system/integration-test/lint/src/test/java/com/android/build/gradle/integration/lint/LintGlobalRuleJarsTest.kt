@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
@@ -43,6 +44,8 @@ class LintGlobalRuleJarsTest(private val usePartialAnalysis: Boolean) {
     @get:Rule
     val project: GradleTestProject =
             GradleTestProject.builder()
+                    // FIXME(b/195978143)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                     .create()
 

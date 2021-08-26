@@ -1,6 +1,7 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
 load(":kotlin.bzl", "kotlin_library")
+load(":utils.bzl", "is_release")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
 
 def generate_pom(
@@ -351,20 +352,6 @@ def maven_java_import(
         classifiers = classifiers,
         classified_libraries = classified_libraries if not classified_only else None,
         classified_files = classified_libraries if classified_only else None,
-        visibility = visibility,
-        source = pom,
-    )
-
-def maven_aar(name, aar, pom, visibility = None):
-    native.filegroup(
-        name = name,
-        srcs = [aar],
-        visibility = visibility,
-    )
-
-    maven_pom(
-        name = name + "_maven",
-        file = aar,
         visibility = visibility,
         source = pom,
     )
@@ -820,6 +807,7 @@ def maven_library(
         runtime_deps = [],
         bundled_deps = [],
         friends = [],
+        kotlin_stdlib = "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         notice = None,
         coordinates = None,
         jar_name = None,
@@ -853,6 +841,7 @@ def maven_library(
         module_name: The kotlin module name.
     """
 
+    kotlins = [src for src in srcs if src.endswith(".kt")]
     neverlink_deps = [dep for dep in bundled_deps if dep.endswith("_neverlink")]
     bundled_deps = [dep for dep in bundled_deps if dep not in neverlink_deps]
 
@@ -860,6 +849,7 @@ def maven_library(
         name = name + ".lib",
         jar_name = jar_name if jar_name else name + ".jar",
         srcs = srcs,
+        compress_resources = is_release(),
         data = data,
         deps = deps + neverlink_deps,
         exports = exports,
@@ -870,6 +860,7 @@ def maven_library(
         resources = resources,
         resource_strip_prefix = resource_strip_prefix,
         runtime_deps = runtime_deps,
+        stdlib = kotlin_stdlib,
         plugins = plugins,
         manifest_lines = manifest_lines,
         **kwargs
@@ -879,7 +870,7 @@ def maven_library(
         name = name,
         notice = notice,
         deps = deps if enable_scopes else [],
-        exports = ([] if enable_scopes else deps) + exports,
+        exports = ([kotlin_stdlib] if kotlins else []) + ([] if enable_scopes else deps) + exports,
         coordinates = coordinates,
         description = description,
         pom_name = pom_name,

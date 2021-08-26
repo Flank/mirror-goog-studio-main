@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.detector.api.JavaContext
 import com.intellij.psi.JavaTokenType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaToken
 import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.uast.UBlockExpression
@@ -70,6 +71,7 @@ class BodyRemovalTestMode : SourceTransformationTestMode(
         clientData: MutableMap<String, Any>
     ): MutableList<Edit> {
         val edits = mutableListOf<Edit>()
+        val seen = mutableSetOf<PsiElement>()
         root.accept(object : EditVisitor() {
             override fun visitIfExpression(node: UIfExpression): Boolean {
                 if (node !is JavaUTernaryIfExpression) {
@@ -107,40 +109,48 @@ class BodyRemovalTestMode : SourceTransformationTestMode(
             }
 
             override fun visitReturnExpression(node: UReturnExpression): Boolean {
+                checkReturnExpression(node)
+                return super.visitReturnExpression(node)
+            }
+
+            private fun checkReturnExpression(node: UReturnExpression) {
+                // With something like @JvmStatic UAST will create two methods from
+                // the same source, and we risk attempting to edit the same source region
+                // twice, so catch this scenario
+                val sourcePsi = node.sourcePsi ?: return
+                if (!seen.add(sourcePsi)) {
+                    return
+                }
                 val parent = skipParenthesizedExprUp(node.uastParent)
                 if (parent is UBlockExpression && node is KotlinUReturnExpression) {
                     val count = parent.expressions.size
-                    if (count == 1) {
-                        val method = skipParenthesizedExprUp(parent.uastParent)
-                        if (method is UMethod) {
-                            val type = method.returnType?.canonicalText
-                            if (type != null && type != "void") {
-                                val blockRange = parent.textRange
-                                val returnExpressionRange = node.returnExpression?.textRange
-                                if (blockRange != null && returnExpressionRange != null) {
-                                    val blockStart = blockRange.startOffset
-                                    val expressionStart = returnExpressionRange.startOffset
-                                    val expressionEnd = returnExpressionRange.endOffset
-                                    val blockEnd = blockRange.endOffset
-                                    val openBrace = source.indexOf('{', blockStart)
-                                    val returnStart = source.lastIndexOf("return", expressionStart)
-                                    val closeBrace = source.indexOf('}', expressionEnd)
-                                    if (openBrace in blockStart until expressionStart &&
-                                        returnStart >= openBrace &&
-                                        closeBrace in expressionEnd until blockEnd
-                                    ) {
-                                        var returnEnd = returnStart + "return".length
-                                        if (source[returnEnd] == ' ') returnEnd++
-                                        edits.add(replace(openBrace, openBrace + 1, "="))
-                                        edits.add(remove(returnStart, returnEnd))
-                                        edits.add(remove(closeBrace, closeBrace + 1))
-                                    }
-                                }
+                    if (count != 1) return
+                    val method = skipParenthesizedExprUp(parent.uastParent) as? UMethod ?: return
+                    val type = method.returnType?.canonicalText
+                    if (type != null && type != "void") {
+                        val blockRange = parent.textRange
+                        val returnExpressionRange = node.returnExpression?.textRange
+                        if (blockRange != null && returnExpressionRange != null) {
+                            val blockStart = blockRange.startOffset
+                            val expressionStart = returnExpressionRange.startOffset
+                            val expressionEnd = returnExpressionRange.endOffset
+                            val blockEnd = blockRange.endOffset
+                            val openBrace = source.indexOf('{', blockStart)
+                            val returnStart = source.lastIndexOf("return", expressionStart)
+                            val closeBrace = source.indexOf('}', expressionEnd)
+                            if (openBrace in blockStart until expressionStart &&
+                                returnStart >= openBrace &&
+                                closeBrace in expressionEnd until blockEnd
+                            ) {
+                                var returnEnd = returnStart + "return".length
+                                if (source[returnEnd] == ' ') returnEnd++
+                                edits.add(replace(openBrace, openBrace + 1, "="))
+                                edits.add(remove(returnStart, returnEnd))
+                                edits.add(remove(closeBrace, closeBrace + 1))
                             }
                         }
                     }
                 }
-                return super.visitReturnExpression(node)
             }
         })
 

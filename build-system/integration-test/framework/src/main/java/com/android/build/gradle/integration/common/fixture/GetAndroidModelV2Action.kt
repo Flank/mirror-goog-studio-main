@@ -29,6 +29,7 @@ import org.gradle.tooling.BuildAction
 import org.gradle.tooling.BuildController
 import org.gradle.tooling.model.BuildIdentifier
 import org.gradle.tooling.model.gradle.BasicGradleProject
+import java.io.File
 
 /**
  * a Build Action that returns all the [AndroidProject]s and all [ProjectSyncIssues] for all the
@@ -46,6 +47,7 @@ class GetAndroidModelV2Action(
 
         // accumulate pairs of (build Id, project) to query.
         val projects = mutableListOf<Pair<BuildIdentifier, BasicGradleProject>>()
+        val projectMap = mutableMapOf<BuildIdentifier, List<Pair<String, File>>>()
 
         val rootBuild = buildController.buildModel
         val rootBuildId = rootBuild.buildIdentifier
@@ -55,6 +57,7 @@ class GetAndroidModelV2Action(
         for (project in projectList) {
             projects.add(rootBuildId to project)
         }
+        projectMap[rootBuildId] = rootBuild.projects.map { it.path to it.projectDirectory }
 
         // and the included builds
         for (build in rootBuild.includedBuilds) {
@@ -62,6 +65,7 @@ class GetAndroidModelV2Action(
             for (project in build.projects) {
                 projects.add(buildId to project)
             }
+            projectMap[buildId] = build.projects.map { it.path to it.projectDirectory }
         }
 
         val (modelMap, libraryMap) = getAndroidProjectMap(projects, buildController)
@@ -73,6 +77,7 @@ class GetAndroidModelV2Action(
         return ModelContainerV2(
             rootBuildId,
             modelMap,
+            projectMap,
             libraryMap
         )
     }

@@ -15,6 +15,7 @@
  */
 package com.android.builder.model.v2.ide
 
+import com.android.builder.model.v2.ModelSyncFile
 import java.io.File
 
 /**
@@ -72,4 +73,12 @@ interface BaseArtifact {
      * @since 1.2
      */
     val generatedSourceFolders: Collection<File>
+
+    /**
+     * Returns all the [ModelSyncFile] for this artifact.
+     *
+     * @return a list of [ModelSyncFile]
+     * @since 7.1
+     */
+    val modelSyncFiles: Collection<ModelSyncFile>
 }

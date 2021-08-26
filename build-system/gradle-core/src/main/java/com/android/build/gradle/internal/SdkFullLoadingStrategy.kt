@@ -66,6 +66,7 @@ class SdkFullLoadingStrategy(
     fun getAndroidJar() = getFileFromTarget(IAndroidTarget.ANDROID_JAR)
     fun getAdditionalLibraries(): List<OptionalLibrary>? = if (init()) targetInfo.target.additionalLibraries else null
     fun getOptionalLibraries(): List<OptionalLibrary>? = if (init()) targetInfo.target.optionalLibraries else null
+    fun getApiVersionsFile(): File? = if (init()) { getFileFromTarget(IAndroidTarget.DATA)?.resolve(API_VERSIONS_FILE_NAME)?.takeIf { it.exists() } } else null
     fun getTargetPlatformVersion() = if (init()) targetInfo.target.version else null
     fun getTargetBootClasspath() = if (init()) targetInfo.target.bootClasspath.map { File(it) } else null
 

@@ -12,6 +12,9 @@ maven_library(
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
+    exports = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
@@ -32,7 +35,6 @@ maven_library(
         "@maven//:org.jetbrains.annotations",
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         "@maven//:org.mockito.mockito-core",
         "@maven//:org.ow2.asm.asm",
     ],
@@ -56,6 +58,7 @@ kotlin_test(
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
+    shard_count = 2,
     tags = [
         "no_test_windows",  # b/73306170
         "slow",

@@ -46,12 +46,14 @@ import com.android.tools.layoutinspector.toBytes
 import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
@@ -102,12 +104,12 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun restartingInspectorResendsRootEvents() = createViewInspector { viewInspector ->
-        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        val responseQueue = ArrayBlockingQueue<ByteArray>(10)
         inspectorRule.commandCallback.replyListeners.add { bytes ->
             responseQueue.add(bytes)
         }
 
-        val eventQueue = ArrayBlockingQueue<ByteArray>(3)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -151,22 +153,21 @@ class ViewLayoutInspectorTest {
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
             }
-            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
             // In tests, invalidating a view does nothing. We need to trigger the capture manually.
             root.forcePictureCapture(fakePicture)
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
                 assertThat(event.rootsEvent.idsList).containsExactly(root.uniqueDrawingId)
             }
+
             // Consume additional events that are generated so they don't block the queue
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             }
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
             }
         }
@@ -212,7 +213,7 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun canCaptureTreeInContinuousMode() = createViewInspector { viewInspector ->
-        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(7)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -254,8 +255,7 @@ class ViewLayoutInspectorTest {
         val tree3FakePicture = Picture(byteArrayOf(3))
 
         tree1.forcePictureCapture(tree1FakePicture1)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -263,8 +263,7 @@ class ViewLayoutInspectorTest {
             )
         }
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
@@ -275,8 +274,7 @@ class ViewLayoutInspectorTest {
 
         tree2.forcePictureCapture(tree2FakePicture)
         // Roots event not resent, as roots haven't changed
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree2.uniqueDrawingId)
@@ -288,8 +286,7 @@ class ViewLayoutInspectorTest {
 
         tree1.forcePictureCapture(tree1FakePicture2)
         // As a side-effect, this capture discovers the newly added third tree
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -298,8 +295,7 @@ class ViewLayoutInspectorTest {
             )
         }
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
@@ -311,8 +307,7 @@ class ViewLayoutInspectorTest {
         WindowManagerGlobal.getInstance().rootViews.remove(tree2)
         tree1.forcePictureCapture(tree1FakePicture3)
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -320,8 +315,7 @@ class ViewLayoutInspectorTest {
             )
         }
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
@@ -342,8 +336,7 @@ class ViewLayoutInspectorTest {
         // Normally, stopping the inspector triggers invalidate calls, but in fake android, those
         // do nothing. Instead, we emulate this by manually firing capture events.
         tree1.forcePictureCapture(tree1FakePicture4)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
@@ -351,15 +344,13 @@ class ViewLayoutInspectorTest {
 
             }
         }
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
             assertThat(event.propertiesEvent.rootId).isEqualTo(tree1.uniqueDrawingId)
         }
 
         tree3.forcePictureCapture(tree3FakePicture)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree3.uniqueDrawingId)
@@ -367,8 +358,7 @@ class ViewLayoutInspectorTest {
 
             }
         }
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
             assertThat(event.propertiesEvent.rootId).isEqualTo(tree3.uniqueDrawingId)
         }
@@ -376,7 +366,7 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun checkRootsThreadIsStartedInContinuousMode() = createViewInspector { viewInspector ->
-        val eventQueue = ArrayBlockingQueue<ByteArray>(1)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(3)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -401,8 +391,7 @@ class ViewLayoutInspectorTest {
 
         // At this point, a check roots thread is running continuously...
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -411,8 +400,7 @@ class ViewLayoutInspectorTest {
         }
 
         WindowManagerGlobal.getInstance().rootViews.add(tree3)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -422,8 +410,7 @@ class ViewLayoutInspectorTest {
         }
 
         WindowManagerGlobal.getInstance().rootViews.remove(tree2)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
@@ -434,7 +421,7 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun nodeBoundsCapturedAsExpected() = createViewInspector { viewInspector ->
-        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(8)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -537,15 +524,13 @@ class ViewLayoutInspectorTest {
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
         mainScreen.forcePictureCapture(stubPicture)
-        eventQueue.take().let { bytes ->
+        checkNonProgressEvent(eventQueue) { event ->
             // In this test, we don't care that much about this event, but we consume io get to the
             // layout event
-            val event = Event.parseFrom(bytes)
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 layoutEvent.rootOffset.let { rootOffset ->
@@ -591,8 +576,7 @@ class ViewLayoutInspectorTest {
         }
 
         floatingDialog.forcePictureCapture(stubPicture)
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 layoutEvent.rootOffset.let { rootOffset ->
@@ -641,7 +625,7 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun correctBitmapTypesCaptured() = createViewInspector { viewInspector ->
-        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(5)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -681,12 +665,10 @@ class ViewLayoutInspectorTest {
         mainScreen.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
         mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
         }
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
             event.layoutEvent.screenshot.let { screenshot ->
@@ -718,8 +700,7 @@ class ViewLayoutInspectorTest {
         floatingDialog.viewRootImpl.mSurface.bitmapBytes = floatingFakeBitmapHeader
         floatingDialog.forcePictureCapture(Picture(byteArrayOf(2)))
 
-        eventQueue.take().let { bytes ->
-            val event = Event.parseFrom(bytes)
+        checkNonProgressEvent(eventQueue) { event ->
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
             event.layoutEvent.screenshot.let { screenshot ->
@@ -919,7 +900,7 @@ class ViewLayoutInspectorTest {
             responseQueue.add(bytes)
         }
 
-        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        val eventQueue = ArrayBlockingQueue<ByteArray>(5)
         inspectorRule.connection.eventListeners.add { bytes ->
             eventQueue.add(bytes)
         }
@@ -974,12 +955,10 @@ class ViewLayoutInspectorTest {
             root.viewRootImpl.mSurface = Surface()
             root.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
             root.forcePictureCapture(fakePicture1)
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
             }
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
                 event.layoutEvent.screenshot.let { screenshot ->
@@ -1020,8 +999,8 @@ class ViewLayoutInspectorTest {
 
             responseQueue.take()
             root.forcePictureCapture(fakePicture1)
-            eventQueue.take().let { bytes ->
-                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+            checkNonProgressEvent(eventQueue) { event ->
+                event.layoutEvent.screenshot.let { screenshot ->
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
                     // verify the newly scaled size
@@ -1043,8 +1022,8 @@ class ViewLayoutInspectorTest {
 
             responseQueue.take()
             root.forcePictureCapture(fakePicture1)
-            eventQueue.take().let { bytes ->
-                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+            checkNonProgressEvent(eventQueue) { event ->
+                event.layoutEvent.screenshot.let { screenshot ->
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.SKP)
                     // We don't have a good way to test that the scale is the same in the SKP case
                 }
@@ -1068,8 +1047,7 @@ class ViewLayoutInspectorTest {
             }
 
             root.forcePictureCapture(fakePicture2)
-            eventQueue.take().let { bytes ->
-                val event = Event.parseFrom(bytes)
+            checkNonProgressEvent(eventQueue) { event ->
                 assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
 
                 event.layoutEvent.screenshot.let { screenshot ->
@@ -1090,9 +1068,8 @@ class ViewLayoutInspectorTest {
 
             responseQueue.take()
             root.forcePictureCapture(fakePicture2)
-            eventQueue.take().let { bytes ->
-                assertThat(Event.parseFrom(bytes).layoutEvent.screenshot.type)
-                    .isEqualTo(Screenshot.Type.SKP)
+            checkNonProgressEvent(eventQueue) { event ->
+                assertThat(event.layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
             }
 
             // Send another event without the scale specified and verify it isn't changed
@@ -1107,9 +1084,9 @@ class ViewLayoutInspectorTest {
             )
 
             responseQueue.take()
-            root.forcePictureCapture(fakePicture2 )
-            eventQueue.take().let { bytes ->
-                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+            root.forcePictureCapture(fakePicture2)
+            checkNonProgressEvent(eventQueue) { event ->
+                event.layoutEvent.screenshot.let { screenshot ->
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
                     // verify the scaled size
@@ -1269,6 +1246,98 @@ class ViewLayoutInspectorTest {
             assertThat(response.startFetchResponse.error)
                 .isEqualTo("Given view isn't attached")
         }
+    }
+
+    @Test
+    fun progressEventsSent()  = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val root = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val fakePicture = Picture(byteArrayOf(1, 2, 3))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+        }
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                // Set continuous to false since we don't need it to be true to clear the root IDs
+                // as a side effect
+                continuous = false
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+        }
+
+        root.forcePictureCapture(fakePicture)
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        for ((case, checkpoint) in listOf(
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.START_RECEIVED,
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.STARTED,
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.VIEW_INVALIDATION_CALLBACK,
+            Event.SpecializedCase.ROOTS_EVENT to null,
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.SCREENSHOT_CAPTURED,
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.VIEW_HIERARCHY_CAPTURED,
+            Event.SpecializedCase.PROGRESS_EVENT to ProgressCheckpoint.RESPONSE_SENT,
+            Event.SpecializedCase.LAYOUT_EVENT to null,
+            Event.SpecializedCase.PROPERTIES_EVENT to null
+        )) {
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(case)
+                if (case == Event.SpecializedCase.PROGRESS_EVENT) {
+                    assertThat(event.progressEvent.checkpoint).isEqualTo(checkpoint)
+                }
+            }
+        }
+    }
+
+    private fun checkNonProgressEvent(
+        eventQueue: BlockingQueue<ByteArray>, block: (Event) -> Unit
+    ) {
+        val startTime = System.currentTimeMillis()
+        var found = false
+        while (startTime + TimeUnit.SECONDS.toMillis(10) > System.currentTimeMillis()) {
+            val bytes = eventQueue.take()
+            val event = Event.parseFrom(bytes)
+            if (event.specializedCase == Event.SpecializedCase.PROGRESS_EVENT) {
+                // skip progress events for this test
+                continue
+            }
+            block(event)
+            found = true
+            break
+        }
+        assertThat(found).isTrue()
     }
 
         // TODO: Add test for filtering system views and properties

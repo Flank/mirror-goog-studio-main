@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -44,7 +45,11 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @get:Rule
     val project: GradleTestProject =
-        GradleTestProject.builder().fromTestProject("dynamicApp").create()
+        GradleTestProject.builder()
+            // FIXME(b/195978143)
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .fromTestProject("dynamicApp")
+            .create()
 
     private val app =
         MinimalSubProject.app("com.example.test")

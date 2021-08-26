@@ -689,7 +689,7 @@ maven_repository(
         "@maven_tests//:androidx.appcompat.appcompat_1.3.0-beta01",
         "@maven_tests//:androidx.compose.compiler.compiler_1.0.0-beta07",
         "@maven_tests//:androidx.compose.material.material_1.0.0-beta07",
-        "@maven_tests//:androidx.compose.ui.ui-tooling_1.0.0",
+        "@maven_tests//:androidx.compose.ui.ui-tooling_1.0.1",
         "@maven_tests//:androidx.core.core-ktx_1.1.0",
         "@maven_tests//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
         "@maven_tests//:androidx.lifecycle.lifecycle-viewmodel-ktx_2.2.0",

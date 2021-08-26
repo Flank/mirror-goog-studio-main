@@ -63,12 +63,24 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     val minApi: Int,
 
-    // We can't set the sdkDir as an @InputDirectory because it is too large to compute a hash. We
-    // can't set it as an @Input either because it would break cache relocatability. Therefore, we
-    // annotate it with @Internal, expecting that the directory's contents should be stable and this
-    // won't affect correctness.
-    @get:Internal
-    val sdkDir: Provider<Directory>,
+    /**
+     * The API versions file from the platform being compiled against.
+     *
+     * Historically this was distributed in platform-tools. It has been moved to platforms, so it
+     * is versioned now. (There was some overlap, so this is available in platforms since platform
+     * api 26, and was removed in the platform-tools several years later in 31.x)
+     *
+     * This will not be present if the compile-sdk version is less than 26 (a fallback to
+     * platform-tools would not help for users that update their SDK, as it is removed in recent
+     * platform-tools)
+     *
+     * Data binding will fall back to a fixed api versions file shipped as a java resource in the
+     * unusual case of compiling against an older version.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    val apiVersionsFile: Provider<RegularFile>,
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -149,7 +161,7 @@ class DataBindingCompilerArguments constructor(
             artifactType = artifactType,
             modulePackage = packageName.get(),
             minApi = minApi,
-            sdkDir = sdkDir.get().asFile,
+            apiFile = apiVersionsFile.get().asFile,
             dependencyArtifactsDir = dependencyArtifactsDir.get().asFile,
             layoutInfoDir = layoutInfoDir.get().asFile,
             classLogDir = classLogDir.get().asFile,
@@ -213,7 +225,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = getModuleType(creationConfig),
                 packageName = creationConfig.namespace,
                 minApi = creationConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider },
+                apiVersionsFile = globalScope.versionedSdkLoader.flatMap { it.apiVersionsFile },
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir = artifacts.get(getLayoutInfoArtifactType(creationConfig)),
                 classLogDir = artifacts.get(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),

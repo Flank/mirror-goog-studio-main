@@ -21,8 +21,8 @@ package com.android.build.gradle.internal.ide.dependencies
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs.RuntimeType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.services.getBuildService
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Sets
@@ -30,8 +30,9 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
+import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -42,18 +43,48 @@ import org.gradle.api.tasks.PathSensitivity
 
 /**
  * This holder class exists to allow lint to depend on the artifact collections.
+ */
+interface ArtifactCollectionsInputs {
+    enum class RuntimeType { FULL, PARTIAL }
+
+    @get:Input
+    val projectPath: String
+    @get:Input
+    val variantName: String
+    @get:Internal
+    val buildMapping: ImmutableMap<String, String>
+    @get:Nested
+    val compileClasspath: ArtifactCollections
+    @get:Nested
+    @get:Optional
+    val runtimeClasspath: ArtifactCollections?
+
+    @get:Internal
+    val runtimeLintJars: ArtifactCollection
+    @get:Internal
+    val compileLintJars: ArtifactCollection
+
+    @get:Nested
+    val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections
+
+    fun getAllArtifacts(
+        consumedConfigType: AndroidArtifacts.ConsumedConfigType,
+        dependencyFailureHandler: DependencyFailureHandler?
+    ): Set<ResolvedArtifact>
+}
+
+/**
+ * This holder class exists to allow lint to depend on the artifact collections.
  *
  * It is used as a [org.gradle.api.tasks.Nested] input to the lint model generation task.
  */
-class ArtifactCollectionsInputs constructor(
+class ArtifactCollectionsInputsImpl constructor(
     variantDependencies: VariantDependencies,
-    @get:Input val projectPath: String,
-    @get:Input val variantName: String,
+    override val projectPath: String,
+    override val variantName: String,
     @get:Input val runtimeType: RuntimeType,
-    @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>,
-    @get:Internal val buildMapping: ImmutableMap<String, String>
-) {
-    enum class RuntimeType { FULL, PARTIAL }
+    override val buildMapping: ImmutableMap<String, String>
+): ArtifactCollectionsInputs {
 
     constructor(
         componentImpl: ComponentImpl,
@@ -64,20 +95,16 @@ class ArtifactCollectionsInputs constructor(
         componentImpl.services.projectInfo.getProject().path,
         componentImpl.name,
         runtimeType,
-        getBuildService(componentImpl.services.buildServiceRegistry),
         buildMapping
     )
 
-    @get:Nested
-    val compileClasspath: ArtifactCollections = ArtifactCollections(
+    override val compileClasspath: ArtifactCollections = ArtifactCollections(
         variantDependencies,
         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
     )
 
     /** The full runtime graphs for more complex dependency models */
-    @get:Nested
-    @get:Optional
-    val runtimeClasspath: ArtifactCollections? = if (runtimeType == RuntimeType.FULL) {
+    override val runtimeClasspath: ArtifactCollections? = if (runtimeType == RuntimeType.FULL) {
         ArtifactCollections(
             variantDependencies,
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -85,14 +112,12 @@ class ArtifactCollectionsInputs constructor(
     } else null
 
     /** The partial graphs for level 1 dependencies */
-    @get:Nested
-    val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections = Level1RuntimeArtifactCollections(variantDependencies)
+    override val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections = Level1RuntimeArtifactCollections(variantDependencies)
 
-    @get:Internal
     // This contains the list of all the lint jar provided by the runtime dependencies.
     // We'll match this to the component identifier of each artifact to find the lint.jar
     // that is coming via AARs.
-    val runtimeLintJars: ArtifactCollection =
+    override val runtimeLintJars: ArtifactCollection =
         variantDependencies.getArtifactCollectionForToolingModel(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.ALL,
@@ -104,10 +129,9 @@ class ArtifactCollectionsInputs constructor(
     val runtimeLintJarsFileCollection: FileCollection
         get() = runtimeLintJars.artifactFiles
 
-    @get:Internal
     // Similar to runtimeLintJars, but for compile dependencies; there will be overlap between the
     // two in most cases, but we need compileLintJars to support compileOnly dependencies.
-    val compileLintJars: ArtifactCollection =
+    override val compileLintJars: ArtifactCollection =
         variantDependencies.getArtifactCollectionForToolingModel(
             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
             AndroidArtifacts.ArtifactScope.ALL,
@@ -118,6 +142,24 @@ class ArtifactCollectionsInputs constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     val compileLintJarsFileCollection: FileCollection
         get() = compileLintJars.artifactFiles
+
+    override fun getAllArtifacts(
+        consumedConfigType: AndroidArtifacts.ConsumedConfigType,
+        dependencyFailureHandler: DependencyFailureHandler?
+    ): Set<ResolvedArtifact> {
+        val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
+            compileClasspath
+        } else {
+            runtimeClasspath!!
+        }
+        return getAllArtifacts(
+            collections,
+            dependencyFailureHandler,
+            buildMapping,
+            projectPath,
+            variantName
+        )
+    }
 }
 
 // This is the partial set of file collections used by the Level1 model builder
@@ -274,47 +316,21 @@ fun getAllArtifacts(
     buildMapping: ImmutableMap<String, String>
 ): Set<ResolvedArtifact> {
     val collections = ArtifactCollections(componentImpl, consumedConfigType)
-    val mavenCoordinatesCache =
-        getBuildService<MavenCoordinatesCacheBuildService>(
-            componentImpl.services.buildServiceRegistry
-        ).get()
     return getAllArtifacts(
         collections,
         dependencyFailureHandler,
         buildMapping,
         componentImpl.services.projectInfo.getProject().path,
         componentImpl.name,
-        mavenCoordinatesCache
     )
 }
 
-fun getAllArtifacts(
-    inputs: ArtifactCollectionsInputs,
-    consumedConfigType: AndroidArtifacts.ConsumedConfigType,
-    dependencyFailureHandler: DependencyFailureHandler?
-): Set<ResolvedArtifact> {
-    val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
-        inputs.compileClasspath
-    } else {
-        inputs.runtimeClasspath!!
-    }
-    return getAllArtifacts(
-        collections,
-        dependencyFailureHandler,
-        inputs.buildMapping,
-        inputs.projectPath,
-        inputs.variantName,
-        inputs.mavenCoordinatesCache.get()
-    )
-}
-
-fun getAllArtifacts(
+private fun getAllArtifacts(
     collections: ArtifactCollections,
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>,
     projectPath: String,
     variantName: String,
-    mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 ): Set<ResolvedArtifact> {
 
     // FIXME change the way we compare dependencies b/64387392
@@ -332,8 +348,10 @@ fun getAllArtifacts(
 
     val explodedAars = collections.explodedAars.asMultiMap()
 
+    val projectList = collections.projectJars
+
     /** See [ArtifactCollections.projectJars]. */
-    val projectJars = collections.projectJars.asMultiMap()
+    val projectJars = projectList.asMultiMap()
 
     // collect dependency resolution failures
     if (dependencyFailureHandler != null) {
@@ -350,7 +368,8 @@ fun getAllArtifacts(
     }
 
     // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
-    val aarWrappedAsProjects = explodedAars.keySet().filterIsInstance<ProjectComponentIdentifier>()
+    val aarWrappedAsProjects =
+        explodedAars.keySet().filter { it.owner is ProjectComponentIdentifier }
 
     // build a list of android dependencies based on them publishing a MANIFEST element
 
@@ -362,19 +381,19 @@ fun getAllArtifacts(
         Sets.newLinkedHashSetWithExpectedSize<ResolvedArtifact>(resolvedArtifactResults.size)
 
     for (resolvedComponentResult in resolvedArtifactResults) {
-        val componentIdentifier = resolvedComponentResult.id.componentIdentifier
+        val variantKey = resolvedComponentResult.variant.toKey()
 
         // check if this is a wrapped module
-        val isAarWrappedAsProject = aarWrappedAsProjects.contains(componentIdentifier)
+        val isAarWrappedAsProject = aarWrappedAsProjects.contains(variantKey)
 
         // check if this is an android external module. In this case, we want to use the exploded
         // aar as the artifact we depend on rather than just the JAR, so we swap out the
         // ResolvedArtifactResult.
         val dependencyType: ResolvedArtifact.DependencyType
 
-        val extractedAar: Collection<ResolvedArtifactResult> = explodedAars[componentIdentifier]
+        val extractedAar: Collection<ResolvedArtifactResult> = explodedAars[variantKey]
 
-        val manifest: Collection<ResolvedArtifactResult> = manifests[componentIdentifier]
+        val manifest: Collection<ResolvedArtifactResult> = manifests[variantKey]
 
         val mainArtifacts: Collection<ResolvedArtifactResult>
 
@@ -393,10 +412,8 @@ fun getAllArtifacts(
                     mainArtifacts = manifest
                 } else {
                     dependencyType = ResolvedArtifact.DependencyType.JAVA
-                    val projectJar = projectJars[componentIdentifier]
-                    mainArtifacts = if (projectJar.isNotEmpty()) {
-                        projectJar
-                    } else {
+                    val projectJar = projectJars[variantKey]
+                    mainArtifacts = projectJar.ifEmpty {
                         // Note use this component directly to handle classified artifacts
                         // This is tested by AppWithClassifierDepTest.
                         listOf<ResolvedArtifactResult>(resolvedComponentResult)
@@ -407,14 +424,13 @@ fun getAllArtifacts(
         }
 
         check(mainArtifacts.isNotEmpty()) {
-            """Internal Error: No artifact found for artifactType '$componentIdentifier'
-            | context: $projectPath ${variantName}
+            """Internal Error: No artifact found for artifactType '$variantKey'
+            | context: $projectPath $variantName
             | manifests = $manifests
             | explodedAars = $explodedAars
             | projectJars = $projectJars
         """.trimMargin()
         }
-
 
         for (mainArtifact in mainArtifacts) {
             artifacts.add(
@@ -424,7 +440,6 @@ fun getAllArtifacts(
                     dependencyType,
                     isAarWrappedAsProject,
                     buildMapping,
-                    mavenCoordinatesCache
                 )
             )
         }
@@ -438,11 +453,35 @@ fun getAllArtifacts(
  *
  * e.g. see `AppWithClassifierDepTest`
  */
-fun ArtifactCollection.asMultiMap(): ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> {
-    return ImmutableMultimap.builder<ComponentIdentifier, ResolvedArtifactResult>()
+private fun ArtifactCollection.asMultiMap(): ImmutableMultimap<VariantKey, ResolvedArtifactResult> {
+    return ImmutableMultimap.builder<VariantKey, ResolvedArtifactResult>()
         .also { builder ->
             for (artifact in artifacts) {
-                builder.put(artifact.id.componentIdentifier, artifact)
+                builder.put(artifact.variant.toKey(), artifact)
             }
         }.build()
 }
+
+/**
+ * A custom key for [ResolvedVariantResult].
+ *
+ * This is used when we want to compare artifacts to see if they are coming from the same
+ * dependency as we cannot use [ComponentIdentifier] (it does not handle multi-variant cases
+ * like test fixtures), and we cannot use [ResolvedVariantResult] directly because one of its
+ * attributes is artifactType which is tied to the query that returned the artifact.
+ *
+ * This key only takes into account the [ComponentIdentifier], the list of [Capability] and
+ * [ResolvedVariantResult.getExternalVariant]
+ */
+data class VariantKey(
+    val owner: ComponentIdentifier,
+    val capabilities: List<Capability>,
+    val externalVariant: VariantKey?
+)
+
+@Suppress("UnstableApiUsage")
+fun ResolvedVariantResult.toKey(): VariantKey = VariantKey(
+    owner,
+    capabilities,
+    externalVariant.orElse(null)?.toKey()
+)

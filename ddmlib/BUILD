@@ -86,9 +86,13 @@ maven_library(
         ":app-processes-proto",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
+    enable_scopes = True,
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
+    exports = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",

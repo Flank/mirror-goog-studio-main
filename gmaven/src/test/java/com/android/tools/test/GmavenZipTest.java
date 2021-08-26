@@ -462,6 +462,7 @@ public class GmavenZipTest {
                 "com/android/build/gradle/proguard-header.txt",
                 "com/android/build/gradle/proguard-optimizations.txt",
                 "com/android/build/gradle/tasks/",
+                "com/android/build/gradle/tasks/sync/",
                 "com/android/build/gradle/tasks/factory/",
                 "com/android/builder/",
                 "com/android/builder/core/",
@@ -533,6 +534,8 @@ public class GmavenZipTest {
                 "com/android/ide/common/vectordrawable/",
                 "com/android/ide/common/workers/",
                 "com/android/ide/common/xml/",
+                "com/android/ide/model/",
+                "com/android/ide/model/sync/",
                 "com/android/instantapp/",
                 "com/android/instantapp/provision/",
                 "com/android/instantapp/run/",
@@ -540,6 +543,7 @@ public class GmavenZipTest {
                 "com/android/instantapp/utils/",
                 "com/android/projectmodel/",
                 "manifest.proto",
+                "sync_variant.proto",
                 "versions-offline/",
                 "versions-offline/android/",
                 "versions-offline/android/arch/",
@@ -1545,6 +1549,21 @@ public class GmavenZipTest {
                 "com/android/tools/utp/plugins/",
                 "com/android/tools/utp/plugins/deviceprovider/",
                 "com/android/tools/utp/plugins/deviceprovider/ddmlib/");
+
+        expected.putAll(
+                "com/android/tools/utp/android-device-provider-ddmlib-proto",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE",
+                "android_device_provider_ddmlib_config.proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/deviceprovider/",
+                "com/android/tools/utp/plugins/deviceprovider/ddmlib/",
+                "com/android/tools/utp/plugins/deviceprovider/ddmlib/proto/");
 
         expected.putAll(
                 "com/android/tools/utp/android-device-provider-gradle-proto",
