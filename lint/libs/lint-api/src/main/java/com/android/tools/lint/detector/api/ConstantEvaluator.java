@@ -28,6 +28,7 @@ import com.intellij.psi.PsiArrayInitializerExpression;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiBinaryExpression;
+import com.intellij.psi.PsiBlockStatement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiConditionalExpression;
@@ -1086,22 +1087,22 @@ public class ConstantEvaluator {
                     return;
                 }
 
-                // Last assignment is unknown if we see an assignment inside
-                // some conditional or loop statement.
-                if (mCurrentLevel > mVariableLevel + 1) {
-                    mLastAssignment = null;
-                    mCurrentValue = null;
-                    return;
-                }
-
                 UExpression rightOperand = node.getRightOperand();
                 ConstantEvaluator constantEvaluator = mConstantEvaluator;
 
-                mCurrentValue =
-                        (constantEvaluator != null)
-                                ? constantEvaluator.evaluate(rightOperand)
-                                : null;
                 mLastAssignment = rightOperand;
+
+                // Last assigned value cannot be determined if we see an assignment inside
+                // some conditional or loop statement.
+                if (mCurrentLevel >= mVariableLevel + 1) {
+                    mCurrentValue = null;
+                    return;
+                } else {
+                    mCurrentValue =
+                            (constantEvaluator != null)
+                                    ? constantEvaluator.evaluate(rightOperand)
+                                    : null;
+                }
             }
 
             super.afterVisitBinaryExpression(node);
@@ -2506,6 +2507,11 @@ public class ConstantEvaluator {
                                         node)
                                 .getKotlinOrigin());
             }
+
+            if (node instanceof KtProperty) {
+                KtProperty property = (KtProperty) node;
+                return valueFromProperty(property);
+            }
         }
 
         // TODO: Check for MethodInvocation and perform some common operations -
@@ -2888,11 +2894,35 @@ public class ConstantEvaluator {
     @Nullable
     public static PsiExpression findLastAssignment(
             @NonNull PsiElement usage, @NonNull PsiVariable variable) {
+        return findLastAssignment(usage, variable, false);
+    }
+
+    /**
+     * Computes the last assignment to a given variable counting backwards from the given context
+     * element
+     *
+     * @param usage the usage site to search backwards from
+     * @param variable the variable
+     * @param allowNonConst If set to true and the returned assignment is non-null, this means that
+     *     the last assignment is inside an if/else block, whose execution may not be statically
+     *     determinable.
+     * @return the last assignment or null
+     */
+    @Nullable
+    private static PsiExpression findLastAssignment(
+            @NonNull PsiElement usage, @NonNull PsiVariable variable, boolean allowNonConst) {
         // Walk backwards through assignments to find the most recent initialization
         // of this variable
         PsiStatement statement = PsiTreeUtil.getParentOfType(usage, PsiStatement.class, false);
         if (statement != null) {
-            PsiStatement prev = PsiTreeUtil.getPrevSiblingOfType(statement, PsiStatement.class);
+            PsiStatement prev =
+                    allowNonConst
+                            ?
+                            // If allowNonConst is true, it means the search starts from the last
+                            // statement in an if/else
+                            // block, so don't skip the passed-in statement
+                            statement
+                            : PsiTreeUtil.getPrevSiblingOfType(statement, PsiStatement.class);
             String targetName = variable.getName();
             if (targetName == null) {
                 return null;
@@ -2916,6 +2946,37 @@ public class ConstantEvaluator {
                                     && reference.getQualifier() == null) {
                                 return assign.getRExpression();
                             }
+                        }
+                    }
+                } else if (prev instanceof PsiIfStatement) {
+                    PsiStatement thenBranch = ((PsiIfStatement) prev).getThenBranch();
+                    if (thenBranch instanceof PsiBlockStatement) {
+                        PsiStatement[] thenStatements =
+                                ((PsiBlockStatement) thenBranch).getCodeBlock().getStatements();
+                        PsiExpression assignmentInIf =
+                                thenStatements.length > 0
+                                        ? findLastAssignment(
+                                                thenStatements[thenStatements.length - 1],
+                                                variable,
+                                                true)
+                                        : null;
+                        if (assignmentInIf != null) {
+                            return allowNonConst ? assignmentInIf : null;
+                        }
+                    }
+                    PsiStatement elseBranch = ((PsiIfStatement) prev).getElseBranch();
+                    if (elseBranch instanceof PsiBlockStatement) {
+                        PsiStatement[] elseStatements =
+                                ((PsiBlockStatement) elseBranch).getCodeBlock().getStatements();
+                        PsiExpression assignmentInElse =
+                                elseStatements.length > 0
+                                        ? findLastAssignment(
+                                                elseStatements[elseStatements.length - 1],
+                                                variable,
+                                                true)
+                                        : null;
+                        if (assignmentInElse != null) {
+                            return allowNonConst ? assignmentInElse : null;
                         }
                     }
                 }

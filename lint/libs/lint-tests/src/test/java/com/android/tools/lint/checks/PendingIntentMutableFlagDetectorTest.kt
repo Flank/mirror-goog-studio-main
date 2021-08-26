@@ -175,4 +175,56 @@ class PendingIntentMutableFlagDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testFlagsVariable() {
+        // Regression test for https://issuetracker.google.com/197179112
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.app.PendingIntent;
+                import android.os.Build;
+
+                class TestClass {
+                    void test() {
+                        var pendingFlags;
+                        if (Build.VERSION.SDK_INT >= 23) {
+                            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+                        } else {
+                            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+                        }
+                        PendingIntent.getBroadcast(null, 0, null, pendingFlags);
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testFlagsVariableKt() {
+        // Regression test for https://issuetracker.google.com/197179112
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.PendingIntent
+                import android.os.Build
+
+                class TestClass {
+                    fun test() {
+                        var pendingFlags = 0
+                        if (Build.VERSION.SDK_INT >= 23) {
+                            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE;
+                        } else {
+                            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT
+                        }
+                        PendingIntent.getBroadcast(null, 0, null, pendingFlags)
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
