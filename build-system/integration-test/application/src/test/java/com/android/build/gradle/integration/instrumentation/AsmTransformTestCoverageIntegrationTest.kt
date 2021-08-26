@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.instrumentation
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -31,8 +30,7 @@ import org.junit.Test
 class AsmTransformTestCoverageIntegrationTest {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("asmTransformApi")
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+    val project = GradleTestProject.builder().fromTestProject("asmTransformApi").create()
 
     @Test
     fun runUnitTestsWithCoverage() {
