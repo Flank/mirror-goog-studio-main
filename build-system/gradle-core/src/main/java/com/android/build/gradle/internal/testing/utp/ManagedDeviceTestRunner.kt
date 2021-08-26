@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
 import com.android.builder.testing.api.TestException
 import com.android.utils.ILogger
-import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
 import org.gradle.workers.WorkerExecutor
@@ -68,9 +67,10 @@ class ManagedDeviceTestRunner(
                     mkdirs()
                 }
             }
-            val utpTmpDir = Files.createTempDir()
-            val runnerConfigProto: (UtpTestResultListenerServerMetadata) -> RunnerConfigProto.RunnerConfig =
-                { resultListenerServerMetadata ->
+            val runnerConfigProto: (
+                UtpTestResultListenerServerMetadata,
+                File
+            ) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata, utpTmpDir ->
                     configFactory.createRunnerConfigProtoForManagedDevice(
                         if (shardConfig == null) {
                             managedDevice
@@ -96,7 +96,6 @@ class ManagedDeviceTestRunner(
                 managedDevice.deviceName,
                 managedDevice.id,
                 utpOutputDir,
-                utpTmpDir,
                 runnerConfigProto,
                 configFactory.createServerConfigProto()
             ))

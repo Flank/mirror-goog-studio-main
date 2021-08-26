@@ -124,7 +124,9 @@ class ManagedDeviceTestRunnerTest {
         val result = runUtp(result = true)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
-        assertThat(capturedRunnerConfigs[0].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[0].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isTrue()
@@ -135,7 +137,9 @@ class ManagedDeviceTestRunnerTest {
         val result = runUtp(result = false)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
-        assertThat(capturedRunnerConfigs[0].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[0].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isFalse()
@@ -146,9 +150,13 @@ class ManagedDeviceTestRunnerTest {
         val result = runUtp(result = true, numShards = 2)
 
         assertThat(capturedRunnerConfigs).hasSize(2)
-        assertThat(capturedRunnerConfigs[0].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[0].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp1")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
-        assertThat(capturedRunnerConfigs[1].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[1].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp2")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isTrue()
