@@ -63,7 +63,7 @@ public class BuildFileWriter {
      */
     public void write(ResolutionResult result) throws Exception {
         fileWriter.append(
-                "load(\"@//tools/base/bazel:maven.bzl\", \"maven_artifact\", \"maven_import\", \"maven_pom\")\n\n");
+                "load(\"@//tools/base/bazel:maven.bzl\", \"maven_artifact\", \"maven_import\")\n\n");
         fileWriter.append("# Bazel rules auto-generated from maven repo.");
         for (ResolutionResult.Dependency dep : result.dependencies) {
             write(dep, false);
