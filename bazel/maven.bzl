@@ -70,164 +70,6 @@ def generate_pom(
         executable = ctx.executable._pom,
     )
 
-def _maven_pom_impl(ctx):
-    # Contains both *.jar and *.aar files.
-    jars = depset()
-
-    # classfied jars. Sources are in clsjars["sources"]
-    clsjars = {}  # classifier -> depset(jars)
-    clsjars["sources"] = depset()
-
-    if ctx.attr.library:
-        if ctx.attr.file or ctx.attr.classified_files:
-            fail("Cannot set both file and library for a maven_pom.")
-        jars = depset([jar.class_jar for jar in ctx.attr.library[JavaInfo].outputs.jars], transitive = [jars])
-        clsjars["sources"] = depset(ctx.attr.library[JavaInfo].source_jars, transitive = [clsjars["sources"]])
-        for classifier, library in zip(ctx.attr.classifiers, ctx.attr.classified_libraries):
-            if classifier not in clsjars:
-                clsjars[classifier] = depset()
-            clsjars[classifier] = depset(direct = [jar.class_jar for jar in library[JavaInfo].outputs.jars], transitive = [clsjars[classifier]])
-
-    if ctx.attr.file:
-        if ctx.attr.library or ctx.attr.classified_libraries:
-            fail("Cannot set both file and library for a maven_pom.")
-        jars = depset(transitive = [ctx.attr.file.files, jars])
-
-    if ctx.attr.classified_files:
-        for classifier, file in zip(ctx.attr.classifiers, ctx.attr.classified_files):
-            if classifier not in clsjars:
-                clsjars[classifier] = depset()
-            clsjars[classifier] = depset(transitive = [file.files, clsjars[classifier]])
-
-    if ctx.attr.properties and ctx.files.properties_files:
-        fail("Cannot set both properties and properties_files for a maven_pom.")
-
-    parent_poms = depset([], order = "postorder")
-    parent_jars = {}
-    parent_clsjars = {}  # pom -> classifier -> depset(jars)
-
-    deps_poms = depset([], order = "postorder")
-    deps_jars = {}
-    deps_clsjars = {}  # pom -> classifier -> depset(jars)
-
-    # Transitive deps through the parent attribute
-    if ctx.attr.parent:
-        parent_poms = depset(transitive = [ctx.attr.parent.maven.parent.poms, parent_poms], order = "postorder")
-        parent_poms = depset(transitive = [ctx.attr.parent.maven.deps.poms, parent_poms], order = "postorder")
-        parent_poms = depset(direct = [ctx.file.parent], transitive = [parent_poms], order = "postorder")
-        parent_jars.update(ctx.attr.parent.maven.parent.jars)
-        parent_jars.update(ctx.attr.parent.maven.deps.jars)
-        parent_jars[ctx.file.parent] = ctx.attr.parent.maven.jars
-        parent_clsjars.update(ctx.attr.parent.maven.parent.clsjars)
-        parent_clsjars.update(ctx.attr.parent.maven.deps.clsjars)
-        parent_clsjars[ctx.file.parent] = ctx.attr.parent.maven.clsjars
-    elif hasattr(ctx.attr.source, "maven"):
-        parent_poms = ctx.attr.source.maven.parent.poms
-        parent_jars = ctx.attr.source.maven.parent.jars
-        parent_clsjars = ctx.attr.source.maven.parent.clsjars
-        jars = depset([], transitive = [ctx.attr.source.maven.jars, jars])
-        clsjars.update(ctx.attr.source.maven.clsjars)
-
-    # Transitive deps through deps
-    if ctx.attr.deps:
-        for label in ctx.attr.deps:
-            deps_poms = depset(transitive = [label.maven.parent.poms, deps_poms], order = "postorder")
-            deps_poms = depset(transitive = [label.maven.deps.poms, deps_poms], order = "postorder")
-            deps_poms = depset(direct = [label.maven.pom], transitive = [deps_poms], order = "postorder")
-            deps_jars.update(label.maven.parent.jars)
-            deps_jars.update(label.maven.deps.jars)
-            deps_jars[label.maven.pom] = label.maven.jars
-            deps_clsjars.update(label.maven.parent.clsjars)
-            deps_clsjars.update(label.maven.deps.clsjars)
-            deps_clsjars[label.maven.pom] = label.maven.clsjars
-    elif hasattr(ctx.attr.source, "maven"):
-        deps_poms = ctx.attr.source.maven.deps.poms
-        deps_jars = ctx.attr.source.maven.deps.jars
-        deps_clsjars = ctx.attr.source.maven.deps.clsjars
-
-    generate_pom(
-        ctx,
-        source = ctx.file.source,
-        output_pom = ctx.outputs.pom,
-        export = ctx.attr.export_pom,
-        group = ctx.attr.group,
-        artifact = ctx.attr.artifact,
-        version = ctx.attr.version,
-        properties = ctx.file.properties if ctx.attr.properties else None,
-        properties_files = ctx.files.properties_files,
-        version_property = ctx.attr.version_property,
-        exclusions = ctx.attr.exclusions,
-        exports = ctx.files.deps,  # deps are compile dependencies in the legacy rule
-    )
-
-    return struct(maven = struct(
-        parent = struct(
-            poms = parent_poms,
-            jars = parent_jars,
-            clsjars = parent_clsjars,
-        ),
-        deps = struct(
-            poms = deps_poms,
-            jars = deps_jars,
-            clsjars = deps_clsjars,
-        ),
-        pom = ctx.outputs.pom,
-        jars = jars,
-        clsjars = clsjars,
-    ))
-
-maven_pom = rule(
-    attrs = {
-        "deps": attr.label_list(),
-        "library": attr.label(
-            allow_files = True,
-        ),
-        "export_pom": attr.label(),
-        "classifiers": attr.string_list(
-            default = [],
-        ),
-        "classified_libraries": attr.label_list(
-            allow_files = True,
-            default = [],
-        ),
-        "file": attr.label(
-            allow_files = True,
-        ),
-        "classified_files": attr.label_list(
-            allow_files = True,
-            default = [],
-        ),
-        "group": attr.string(),
-        "version": attr.string(),
-        "artifact": attr.string(),
-        "source": attr.label(
-            allow_single_file = True,
-        ),
-        "properties": attr.label(
-            allow_single_file = True,
-        ),
-        "properties_files": attr.label_list(
-            allow_files = True,
-            default = [],
-        ),
-        "version_property": attr.string(),
-        "parent": attr.label(
-            allow_single_file = True,
-        ),
-        "exclusions": attr.string_list_dict(),
-        "_pom": attr.label(
-            executable = True,
-            cfg = "host",
-            default = Label("//tools/base/bazel:pom_generator"),
-            allow_files = True,
-        ),
-    },
-    outputs = {
-        "pom": "%{name}.pom",
-    },
-    implementation = _maven_pom_impl,
-)
-
 def _import_with_license_impl(ctx):
     names = []
     for jar in ctx.attr.dep[DefaultInfo].files.to_list():
@@ -255,7 +97,6 @@ import_with_license = rule(
 # A java_import rule extended with pom and parent attributes for maven libraries.
 def maven_java_import(
         name,
-        pom,
         classifiers = [],
         visibility = None,
         jars = [],
@@ -287,16 +128,6 @@ def maven_java_import(
             **kwargs
         )
         classified_libraries += [classifier + "-" + name]
-
-    maven_pom(
-        name = name + "_maven",
-        library = None if classified_only else name,
-        classifiers = classifiers,
-        classified_libraries = classified_libraries if not classified_only else None,
-        classified_files = classified_libraries if classified_only else None,
-        visibility = visibility,
-        source = pom,
-    )
 
 def _zipper(actions, zipper, desc, map_file, files, out):
     zipper_args = ["c", out.path]
