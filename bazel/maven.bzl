@@ -495,6 +495,23 @@ _maven_artifact = rule(
     },
 )
 
+# Files that should be excluded from glob() expressions
+# when collecting files from repository.
+_REPO_GLOB_EXCLUDES = [
+    "resolver-status.properties",
+    "_remote.repositories",
+    "maven-metadata-*.xml",
+    "maven-metadata-*.xml.sha1",
+]
+
+def _get_artifact_dir(repo_root_path, repo_path):
+    if repo_root_path and repo_path:
+        return repo_root_path + "/" + repo_path + "/"
+    elif repo_path:
+        return repo_path + "/"
+    else:
+        return ""
+
 def maven_artifact(
         name,
         pom,
@@ -503,12 +520,16 @@ def maven_artifact(
         parent = None,
         deps = [],
         **kwargs):
+    artifact_dir = _get_artifact_dir(repo_root_path, repo_path)
     _maven_artifact(
         name = name,
         pom = pom,
         repo_path = repo_path,
         repo_root_path = repo_root_path,
-        files = native.glob([repo_root_path + "/" + repo_path + "/**"]),
+        files = native.glob(
+            include = [artifact_dir + "**"],
+            exclude = [artifact_dir + "**/" + exclude for exclude in _REPO_GLOB_EXCLUDES],
+        ),
         deps = ([parent] if parent else []) + deps,
         **kwargs
     )
@@ -591,16 +612,7 @@ def maven_import(
         parent = None,
         classified_only = False,
         **kwargs):
-    if repo_root_path and repo_path:
-        files = native.glob([repo_root_path + "/" + repo_path + "/**"])
-        notice = repo_root_path + "/" + repo_path + "/NOTICE" if repo_path else "NOTICE"
-    elif repo_path:
-        files = native.glob([repo_path + "/**"])
-        notice = repo_path + "/NOTICE"
-    else:
-        files = []
-        notice = "NOTICE"
-
+    artifact_dir = _get_artifact_dir(repo_root_path, repo_path)
     _maven_import(
         name = name,
         visibility = visibility,
@@ -609,8 +621,11 @@ def maven_import(
         repo_path = repo_path,
         repo_root_path = repo_root_path,
         parent = parent,
-        files = files,
-        notice = notice,
+        files = native.glob(
+            include = [artifact_dir + "**"],
+            exclude = [artifact_dir + "**/" + exclude for exclude in _REPO_GLOB_EXCLUDES],
+        ),
+        notice = artifact_dir + "NOTICE",
         tags = ["require_license"],
         **kwargs
     )
