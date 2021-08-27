@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
@@ -262,11 +261,11 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                         apiAtLeast,
                         if (isGreaterOrEquals) apiOperand else null
                     )
-                    val location = context.getNameLocation(method)
+                    val location = context.getNameLocation(method).withOriginalSource(method)
                     val args = "api=$buildCode${if (lambda != -1) ", lambda=$lambda" else ""}"
                     val message =
                         "This method should be annotated with `@ChecksSdkIntAtLeast($args)`"
-                    val fix = createAnnotationFix(context, args, context.getLocation(method))
+                    val fix = createAnnotationFix(context, args)
                     context.report(ISSUE, method, location, message, fix)
 
                     if (!context.isGlobalAnalysis()) {
@@ -288,8 +287,8 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                         val args = "parameter=$index${if (lambda != -1) ", lambda=$lambda" else ""}"
                         val message =
                             "This method should be annotated with `@ChecksSdkIntAtLeast($args)`"
-                        val location = context.getNameLocation(method)
-                        val fix = createAnnotationFix(context, args, context.getLocation(method))
+                        val location = context.getNameLocation(method).withOriginalSource(method)
+                        val fix = createAnnotationFix(context, args)
                         context.report(ISSUE, method, location, message, fix)
 
                         if (!context.isGlobalAnalysis()) {
@@ -308,15 +307,13 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
 
         private fun createAnnotationFix(
             context: JavaContext,
-            args: String,
-            location: Location
+            args: String
         ): LintFix? {
             // if not on classpath (older annotation library) don't suggest annotating
             if (context.evaluator.findClass(CHECKS_SDK_INT_AT_LEAST_ANNOTATION) == null) return null
 
             return LintFix.create()
                 .annotate("$CHECKS_SDK_INT_AT_LEAST_ANNOTATION($args)")
-                .range(location)
                 .build()
         }
 
@@ -344,8 +341,8 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                 val buildCode = getBuildCode(atLeast, if (isGreaterOrEquals) apiOperand else null)
                 val args = "api=$buildCode"
                 val message = "This field should be annotated with `ChecksSdkIntAtLeast($args)`"
-                val location = context.getLocation(field)
-                val fix = createAnnotationFix(context, args, location)
+                val location = context.getNameLocation(field).withOriginalSource(field)
+                val fix = createAnnotationFix(context, args)
                 context.report(ISSUE, field, location, message, fix)
 
                 if (!context.isGlobalAnalysis()) {

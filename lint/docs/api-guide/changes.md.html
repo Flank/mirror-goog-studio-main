@@ -75,6 +75,13 @@ Guide.
   declarations (which are needed in tests that reference the R fields
   to ensure that symbol resolution works.)
 
+* When you call `context.getLocation(UMethod)`, lint will now default
+  this method to be equivalent to `context.getNameLocation(UMethod)`
+  instead, which will highlight the method name. This might surface
+  itself as unit test failures where the location range moves from a
+  single `^` into a `~~~~~` range. This is because the location printer
+  uses `^` to just indicate the start offset when a range is multi-line.
+
 **7.0**
 
 * The API level has bumped to 10.

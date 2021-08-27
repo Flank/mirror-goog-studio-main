@@ -58,6 +58,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.LocationType
 import com.android.tools.lint.detector.api.OtherFileScanner
 import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Platform
@@ -2553,6 +2554,49 @@ class LintDriver(
         private fun Incident.ensureInitialized(context: Context) {
             if (project == null) {
                 project = context.project
+            }
+
+            // Update quickfix location ranges.
+            // Quickfixes are constructed without a dedicated location range (though
+            // one can be assigned); instead, the range is assumed to be the incident
+            // range. However, there are cases where lint's location (when you use
+            // the default location type) will pick a more narrow range -- for example
+            // if you point to a method. This is normally helpful, since it will point
+            // to the name of the method instead of potentially the first line containing
+            // just modifiers or annotations. However, it does mean that a quickfix is
+            // presented with a more narrow location range than the detector author
+            // may have intended. Therefore, lint will keep track of these cases where
+            // it's narrowing the original range, and store this in [Location.originalSource].
+            // If we detect that this happened and there's a quickfix without an explicitly
+            // configured range, we assign it a wider range corresponding to the original
+            // report. (For example, before this fix, reporting an error on a method
+            // and requesting an annotation fix without setting a range would cause the
+            // annotation to be placed right before the name instead of before the first
+            // modifiers.)
+            val fix = fix
+            val location = location
+            val originalSource = location.originalSource
+            if (originalSource != location.source && fix != null && fix.range == null) {
+                val range =
+                    (originalSource as? UElement)?.let { context.getLocation(it, LocationType.ALL) }
+                        ?: (originalSource as? PsiElement)?.let { context.getLocation(it, LocationType.ALL) }
+                range?.let {
+                    setMissingFixRange(fix, range)
+                }
+            }
+        }
+
+        /**
+         * Sets the given range on the given fix if it's missing a range
+         * (so its implicit range is the incident range).
+         */
+        private fun setMissingFixRange(fix: LintFix, range: Location) {
+            if (fix is LintFix.LintFixGroup) {
+                for (nestedFix in fix.fixes) {
+                    setMissingFixRange(nestedFix, range)
+                }
+            } else if (fix.range == null) {
+                fix.range = range
             }
         }
 

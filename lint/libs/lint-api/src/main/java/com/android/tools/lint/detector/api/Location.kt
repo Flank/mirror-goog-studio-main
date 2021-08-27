@@ -24,6 +24,8 @@ import com.android.utils.CharSequences.indexOf
 import com.android.utils.CharSequences.lastIndexOf
 import com.android.utils.CharSequences.startsWith
 import com.google.common.annotations.Beta
+import org.jetbrains.uast.UIdentifier
+import org.jetbrains.uast.UMethod
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
@@ -139,6 +141,15 @@ protected constructor(
     open var source: Any? = null
 
     /**
+     * Returns the source element for this location if it was originally
+     * requested for a broader range than the actual error. For example,
+     * if you ask for the location of a method, we'll return just
+     * the range for the method name, but the [originalSource] will
+     * point to the [UMethod] itself, instead of the [UIdentifier].
+     */
+    var originalSource: Any? = null
+
+    /**
      * Sets a secondary location with the given message and returns the
      * current location updated with the given secondary location.
      *
@@ -167,6 +178,15 @@ protected constructor(
      */
     fun withSource(source: Any): Location {
         this.source = source
+        return this
+    }
+
+    /**
+     * Sets an original source (AST element, XML node) associated with
+     * this location.
+     */
+    fun withOriginalSource(source: Any): Location {
+        this.originalSource = source
         return this
     }
 

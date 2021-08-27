@@ -175,7 +175,7 @@ open class Context(
                 }
                 return when (type) {
                     LocationType.DEFAULT -> context.getLocation(node)
-                    LocationType.ALL -> context.getLocation(node)
+                    LocationType.ALL -> context.uastParser.getLocation(context, node)
                     LocationType.NAME -> context.getNameLocation(node)
                     LocationType.CALL_WITH_ARGUMENTS -> context.getCallLocation(
                         node as UCallExpression,

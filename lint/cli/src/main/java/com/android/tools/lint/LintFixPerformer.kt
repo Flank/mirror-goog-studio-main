@@ -763,31 +763,8 @@ open class LintFixPerformer constructor(
     }
 
     companion object {
-        fun getLocation(incident: Incident): Location {
-            val fix = incident.fix
-            return getLocation(incident, fix)
-        }
-
-        fun getLocation(incident: Incident, fix: LintFix?): Location {
-            if (fix is ReplaceString) {
-                val range = fix.range
-                if (range != null) {
-                    return range
-                }
-            } else if (fix is SetAttribute) {
-                val range = fix.range
-                if (range != null) {
-                    return range
-                }
-            } else if (fix is AnnotateFix) {
-                val range = fix.range
-                if (range != null) {
-                    return range
-                }
-            } else if (fix is CreateFileFix) {
-                return Location.create(fix.file)
-            }
-            return incident.location
+        fun getLocation(incident: Incident, fix: LintFix? = incident.fix): Location {
+            return fix?.range ?: incident.location
         }
 
         fun isEditingFix(fix: LintFix): Boolean {
