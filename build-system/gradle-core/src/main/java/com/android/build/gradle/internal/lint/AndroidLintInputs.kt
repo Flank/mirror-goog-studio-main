@@ -845,7 +845,7 @@ abstract class VariantInputs {
         testArtifact.setDisallowChanges(project.objects.newInstance(JavaArtifactInput::class.java).initializeForStandalone(
             project,
             projectOptions,
-            mainSourceSet,
+            testSourceSet,
             checkDependencies,
             // analyzing test bytecode is expensive, without much benefit
             includeClassesOutputDirectories = false
