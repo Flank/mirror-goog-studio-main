@@ -2149,6 +2149,100 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         ).allowDuplicates().run().expectClean()
     }
 
+    fun test197123294() {
+        // 197123294: Lint is complaining about the wrong method when using += notation
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                class Navigator<D>
+                class NavDestination
+                class NavigatorProvider  {
+                    fun addNavigator(navigator: Navigator<out NavDestination>) { }
+                }
+
+                operator fun NavigatorProvider.plusAssign(navigator: Navigator<out NavDestination>) {
+                    addNavigator(navigator)
+                }
+
+                fun test1(navController: NavController, bottomSheetNavigator: Navigator<out NavDestination>) {
+                    navController.navigatorProvider += bottomSheetNavigator
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.VisibleForTesting;
+
+                public class NavController {
+                    public NavigatorProvider getNavigatorProvider() {
+                        return null;
+                    }
+
+                    @VisibleForTesting
+                    public void setNavigatorProvider(NavigatorProvider navigatorProvider) {
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testNonAssignmentLhs() {
+        // Similar to test197123294, but makes sure that we only filter out assignments.
+        // (The "to" infix function for example is a UastBinaryExpression in the AST so
+        // was getting picked up in the first version of the filter for 197123294.)
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import test.pkg.AbstractAaptOutputParser.AAPT_TOOL_NAME
+
+                private val toolNameToEnumMap = mapOf(
+                    "Java compiler" to BuildErrorMessage.ErrorType.JAVA_COMPILER,
+                    AAPT_TOOL_NAME to BuildErrorMessage.ErrorType.AAPT,
+                    "D8" to BuildErrorMessage.ErrorType.D8
+                )
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public class BuildErrorMessage {
+                    public enum ErrorType {
+                        JAVA_COMPILER,
+                        AAPT,
+                        D8
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import androidx.annotation.VisibleForTesting;
+                @VisibleForTesting
+                public class AbstractAaptOutputParser {
+                    public static final String AAPT_TOOL_NAME = "AAPT";
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:7: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                AAPT_TOOL_NAME to BuildErrorMessage.ErrorType.AAPT,
+                ~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     private val guavaVisibleForTestingAnnotation: TestFile = java(
         """
         package com.google.common.annotations;
