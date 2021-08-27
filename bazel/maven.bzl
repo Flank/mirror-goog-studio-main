@@ -228,64 +228,6 @@ maven_pom = rule(
     implementation = _maven_pom_impl,
 )
 
-# A java library that can be used in a maven_repo rule.
-#
-# Usage:
-# maven_java_library(
-#     name = "name",
-#     deps = A list of maven_java_library or maven_java_import dependencies
-#     # all java_library attriutes
-#     info = A maven coordinate for this artifact as a string
-# )
-def maven_java_library(
-        name,
-        deps = [],
-        runtime_deps = [],
-        exclusions = None,
-        export_artifact = None,
-        srcs = None,
-        resources = [],
-        java_exports = [],
-        exports = [],
-        pom = None,
-        baseline_coverage = True,
-        visibility = None,
-        **kwargs):
-    if srcs and export_artifact:
-        fail("Ony one of [srcs, export_artifact] can be used at a time")
-
-    if export_artifact and pom:
-        fail("If export_artifact is specified, the maven information cannot be changed.")
-
-    if srcs and baseline_coverage:
-        coverage_baseline(name, srcs)
-
-    java_exports = java_exports + exports + ([export_artifact] if export_artifact else [])
-    native.java_library(
-        name = name,
-        deps = deps,
-        runtime_deps = runtime_deps,
-        srcs = srcs,
-        javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
-        resources = native.glob(["NOTICE", "LICENSE"]) + resources,
-        exports = java_exports,
-        visibility = visibility,
-        **kwargs
-    )
-
-    # TODO: Properly exclude libraries from the pom instead of using _neverlink hacks.
-    maven_deps = deps + exports + runtime_deps
-
-    maven_pom(
-        name = name + "_maven",
-        deps = [explicit_target(dep) + "_maven" for dep in maven_deps if not dep.endswith("_neverlink")] if maven_deps else None,
-        exclusions = exclusions,
-        library = export_artifact if export_artifact else name,
-        visibility = visibility,
-        source = explicit_target(export_artifact) + "_maven" if export_artifact else pom,
-        export_pom = explicit_target(export_artifact) + "_maven" if export_artifact else None,
-    )
-
 def _import_with_license_impl(ctx):
     names = []
     for jar in ctx.attr.dep[DefaultInfo].files.to_list():
@@ -699,7 +641,7 @@ def _maven_repository_impl(ctx):
 # Usage:
 # maven_repository(
 #     name = The name of the rule. The output of the rule will be ${name}.manifest.
-#     artifacts = A list of all maven_java_libraries to add to the repo.
+#     artifacts = A list of all maven_library artifacts to add to the repo.
 #     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
 # )
 maven_repository = rule(

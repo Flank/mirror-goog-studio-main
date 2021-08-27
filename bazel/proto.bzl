@@ -1,5 +1,5 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
-load(":maven.bzl", "maven_java_library", "maven_library")
+load(":maven.bzl", "maven_library")
 load(":utils.bzl", "java_jarjar")
 load(":android.bzl", "select_android")
 
@@ -136,7 +136,6 @@ def java_proto_library(
         srcs = None,
         proto_deps = [],
         java_deps = [],
-        pom = None,
         visibility = None,
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
@@ -153,7 +152,6 @@ def java_proto_library(
       srcs:  A list of file names of the protobuf definition to compile.
       proto_deps: A list of dependent proto_library to compile the library.
       java_deps: An additional java libraries to be packaged into the library.
-      pom: A label of maven_pom target. If present, the rule creates maven artifact of the library.
       visibility: Visibility of the rule.
       grpc_support: True if the proto library requires grpc protoc plugin.
       protoc_version: The protoc version to use.
@@ -185,25 +183,14 @@ def java_proto_library(
     java_deps = list(java_deps) + (grpc_extra_deps if grpc_support else [])
     java_deps += proto_java_runtime_library
 
-    if pom:
-        maven_java_library(
-            name = name,
-            pom = pom,
-            srcs = outs,
-            deps = java_deps,
-            baseline_coverage = False,
-            visibility = visibility,
-            **kwargs
-        )
-    else:
-        native.java_library(
-            name = name,
-            srcs = outs,
-            deps = java_deps,
-            javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
-            visibility = visibility,
-            **kwargs
-        )
+    native.java_library(
+        name = name,
+        srcs = outs,
+        deps = java_deps,
+        javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
+        visibility = visibility,
+        **kwargs
+    )
 
 def android_java_proto_library(
         name,
