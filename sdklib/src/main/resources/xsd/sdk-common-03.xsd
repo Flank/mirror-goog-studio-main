@@ -63,7 +63,7 @@
                     <!-- The extension level for the current package -->
                     <xsd:element name="extension-level" type="xsd:int" minOccurs="0"/>
                     <!-- Whether the package is the base sdk for the current Api level -->
-                    <xsd:element name="base-extension" type="xsd:boolean"/>
+                    <xsd:element name="base-extension" type="xsd:boolean" default="true"/>
                 </xsd:sequence>
             </xsd:extension>
         </xsd:complexContent>
