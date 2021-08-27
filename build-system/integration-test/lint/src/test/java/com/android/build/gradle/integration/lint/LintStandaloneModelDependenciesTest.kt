@@ -34,8 +34,8 @@ class LintStandaloneModelDependenciesTest {
                     apply plugin: 'com.android.lint'
 
                     dependencies {
-                        implementation 'com.google.guava:guava:19.0'
-                        compileOnly 'junit:junit:4.12'
+                        compileOnly 'com.google.guava:guava:19.0'
+                        testImplementation 'junit:junit:4.12'
                         // Add gradleApi() dependency as regression test for b/198453608
                         implementation gradleApi()
                         // Add external Android dependency as regression test for b/198449627
@@ -66,14 +66,28 @@ class LintStandaloneModelDependenciesTest {
     @Test
     fun testLintModelDependencies() {
         project.executor().run("clean", ":java-lib1:lint")
-        val lintModelFile =
+
+        val mainArtifactDependenciesFile =
             FileUtils.join(
                 project.getSubproject("java-lib1").intermediatesDir,
                 "lintReport",
                 "android-lint-model",
                 "main-mainArtifact-dependencies.xml"
             )
-        assertThat(lintModelFile).exists()
-        assertThat(lintModelFile).containsAllOf("junit", "guava", "java-lib2", "java-lib3")
+        assertThat(mainArtifactDependenciesFile).exists()
+        assertThat(mainArtifactDependenciesFile).containsAllOf("guava", "java-lib2", "java-lib3")
+        assertThat(mainArtifactDependenciesFile).doesNotContain("junit")
+
+        val testArtifactDependenciesFile =
+            FileUtils.join(
+                project.getSubproject("java-lib1").intermediatesDir,
+                "lintReport",
+                "android-lint-model",
+                "main-testArtifact-dependencies.xml"
+            )
+        assertThat(testArtifactDependenciesFile).exists()
+        assertThat(testArtifactDependenciesFile).containsAllOf("junit", "java-lib2")
+        assertThat(testArtifactDependenciesFile).doesNotContain("guava")
+        assertThat(testArtifactDependenciesFile).doesNotContain("java-lib3")
     }
 }
