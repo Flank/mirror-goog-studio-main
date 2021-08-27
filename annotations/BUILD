@@ -13,12 +13,6 @@ iml_module(
     deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = ["build.gradle"],
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
 maven_library(
     name = "annotations",
     srcs = glob(["src/main/java/**"]),

@@ -10,7 +10,7 @@ project.startScripts.applicationName = archivesBaseName
 dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:common')
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     testImplementation project(':base:testutils')
     testImplementation libs.junit
 }

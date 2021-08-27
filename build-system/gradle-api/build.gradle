@@ -22,7 +22,7 @@ dependencies {
     implementation libs.kotlin_stdlib
     api libs.asm
 
-    compileOnly project(':base:annotations')
+    compileOnly libs.com.android.tools.annotations
     compileOnly gradleApi()
     compileOnly project(':base:builder-model') // Only present for legacy reasons.
 
@@ -31,7 +31,7 @@ dependencies {
     testImplementation project(':base:testutils')
     testImplementation gradleApi()
     testImplementation project(':base:builder-model')
-    testImplementation project(':base:annotations')
+    testImplementation libs.com.android.tools.annotations
     testImplementation libs.mockito_core
     testImplementation libs.equalsverifier
 

@@ -4,7 +4,7 @@ apply plugin: 'sdk-java-lib'
 dependencies {
     implementation(libs.jopt)
     implementation project(':base:apkparser:apkanalyzer')
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     implementation project(':base:sdk-common')
     implementation project(':base:common')
     implementation project(':base:sdklib')

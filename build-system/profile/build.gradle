@@ -2,7 +2,7 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 
 dependencies {
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     api project(':base:common')
     implementation project(':analytics-library:tracker')
     implementation libs.guava

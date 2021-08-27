@@ -30,7 +30,7 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:common')
     implementation project(':base:sdklib')
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     implementation project(':base:apkparser:binary-resources')
     implementation files(jardeps)
 

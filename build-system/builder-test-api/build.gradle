@@ -3,7 +3,7 @@ apply plugin: 'com.android.tools.publish'
 
 dependencies {
     implementation project(':base:ddmlib')
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     implementation project(':base:common')
     implementation libs.guava
 

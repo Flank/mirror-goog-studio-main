@@ -22,7 +22,7 @@ dependencies {
     testImplementation libs.mockito_core
     testImplementation project(':base:testutils')
 
-    testFixturesImplementation project(':base:annotations')
+    testFixturesImplementation libs.com.android.tools.annotations
     testFixturesImplementation project(':base:testutils')
     testFixturesImplementation libs.guava
     testFixturesImplementation libs.jimfs

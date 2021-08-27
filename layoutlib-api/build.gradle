@@ -9,7 +9,7 @@ version = rootProject.ext.baseVersion
 dependencies {
     implementation project(':base:common')
     implementation 'net.sf.kxml:kxml2:2.3.0'
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
     implementation 'org.jetbrains:annotations:13.0'
 
     testImplementation 'junit:junit:4.12'

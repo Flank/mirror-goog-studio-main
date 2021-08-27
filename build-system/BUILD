@@ -262,7 +262,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
     "//tools/base:agp_artifacts.zip",
-    "//tools/base/annotations:agp_gradle_build_files",
     "//tools/base/apkparser:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/apkparser/analyzer:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/build-system/aapt2:agp_gradle_build_files",

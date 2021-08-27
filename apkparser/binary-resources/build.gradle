@@ -5,7 +5,7 @@ apply plugin: 'sdk-java-lib'
 dependencies {
     implementation(libs.guava)
     implementation(libs.findbugs_jsr)
-    implementation project(':base:annotations')
+    implementation libs.com.android.tools.annotations
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

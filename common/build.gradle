@@ -5,7 +5,7 @@ apply plugin: 'sdk-java-lib'
 apply plugin: 'java-test-fixtures'
 
 dependencies {
-    api project(':base:annotations')
+    api libs.com.android.tools.annotations
     api libs.guava
     implementation libs.kotlin_stdlib
 
