@@ -130,7 +130,16 @@ def kotlin_test(
         tests = [name + ".test"],
     )
 
-# Rule set that supports both Java and Maven providers, still under development
+# Creates actions to generate the sources jar
+def _sources(ctx, srcs, source_jars, jar, java_toolchain, host_javabase):
+    java_common.pack_sources(
+        ctx.actions,
+        output_source_jar = jar,
+        sources = srcs,
+        source_jars = source_jars,
+        java_toolchain = java_toolchain,
+        host_javabase = host_javabase,
+    )
 
 # Creates actions to generate a resources_jar from the given resouces.
 def _resources(ctx, resources, resources_jar):
@@ -272,10 +281,11 @@ def _kotlin_library_impl(ctx):
         _resources(ctx, resources, resources_jar)
         jars += [resources_jar]
 
+    java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
+    host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase)
+
     # Java
     if java_srcs or source_jars:
-        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
-
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
@@ -284,7 +294,7 @@ def _kotlin_library_impl(ctx):
             deps = deps + kotlin_providers,
             javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
             java_toolchain = java_toolchain,
-            host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase),
+            host_javabase = host_javabase,
             plugins = [plugin[JavaInfo] for plugin in ctx.attr.plugins],
         )
 
@@ -305,25 +315,28 @@ def _kotlin_library_impl(ctx):
     ijar = java_common.run_ijar(
         actions = ctx.actions,
         jar = ctx.outputs.jar,
-        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+        java_toolchain = java_toolchain,
     )
 
-    providers = [JavaInfo(
+    _sources(ctx, java_srcs + kotlin_srcs, source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
+
+    java_info = JavaInfo(
         output_jar = ctx.outputs.jar,
         compile_jar = ijar,
+        source_jar = ctx.outputs.source_jar,
         deps = java_info_deps,
+        exports = [dep[JavaInfo] for dep in ctx.attr.exports],
         runtime_deps = java_info_deps,
-    )]
-    providers += [dep[JavaInfo] for dep in ctx.attr.exports]
+    )
 
     transitive_runfiles = depset(transitive = [
         dep[DefaultInfo].default_runfiles.files
-        for dep in ctx.attr.deps
+        for dep in ctx.attr.deps + ctx.attr.exports
         if dep[DefaultInfo].default_runfiles
     ])
     runfiles = ctx.runfiles(files = ctx.files.data, transitive_files = transitive_runfiles)
     return [
-        java_common.merge(providers),
+        java_info,
         DefaultInfo(files = depset([ctx.outputs.jar]), runfiles = runfiles),
     ]
 
@@ -384,5 +397,8 @@ _kotlin_library = rule(
         ),
     },
     fragments = ["java"],
+    outputs = {
+        "source_jar": "%{name}-src.jar",
+    },
     implementation = _kotlin_library_impl,
 )

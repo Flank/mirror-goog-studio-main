@@ -1,6 +1,7 @@
 load(":functions.bzl", "create_option_file", "explicit_target")
 load(":coverage.bzl", "coverage_baseline")
 load(":kotlin.bzl", "kotlin_library")
+load(":merge_archives.bzl", "run_singlejar")
 load(":utils.bzl", "is_release")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_toolchain")
 
@@ -543,6 +544,28 @@ def _maven_library_impl(ctx):
     repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
     if ctx.attr.library:
         repo_files.append((coordinates.repo_path + "/" + basename + ".jar", ctx.file.library))
+        source_jars = []
+        source_jars += ctx.attr.library[JavaInfo].source_jars
+        if ctx.attr.notice:
+            notice_jar = ctx.actions.declare_file(ctx.label.name + ".notice.jar")
+            ctx.actions.run(
+                inputs = [ctx.file.notice],
+                outputs = [notice_jar],
+                executable = ctx.executable._zipper,
+                arguments = ["c", notice_jar.path, ctx.file.notice.basename + "=" + ctx.file.notice.path],
+                progress_message = "Creating notice jar",
+                mnemonic = "zipper",
+            )
+            source_jars += [notice_jar]
+
+        if source_jars:
+            source_jar = ctx.actions.declare_file(ctx.label.name + ".src.jar")
+            run_singlejar(
+                ctx = ctx,
+                jars = source_jars,
+                out = source_jar,
+            )
+            repo_files.append((coordinates.repo_path + "/" + basename + "-sources.jar", source_jar))
 
     transitive = depset(direct = repo_files, transitive = [info.transitive for info in infos_deps + infos_exports])
 
