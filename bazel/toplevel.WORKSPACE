@@ -134,6 +134,9 @@ local_maven_repository(
         "com.google.code.findbugs:jsr305:3.0.2",
         "com.google.code.gson:gson:2.8.6",
         "com.google.crypto.tink:tink:1.3.0-rc2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.11.1",
+        "com.fasterxml.jackson.core:jackson-core:2.11.1",
+        "com.fasterxml.jackson.core:jackson-databind:2.11.1",
         "com.google.flatbuffers:flatbuffers-java:1.12.0",
         "com.google.guava:guava:23.0",  # TODO to be removed, needed by gradlew of agp
         "com.google.guava:guava:30.1-jre",
