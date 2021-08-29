@@ -644,8 +644,7 @@ public class AvdManagerTest extends TestCase {
         String avdIniName = this.getName() + ".ini";
         Path avdIniFile = parentFolder.resolve(avdIniName).toAbsolutePath();
         assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
-        AvdInfo avdInfo =
-                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(avdIniFile), log);
+        AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
         assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder.toAbsolutePath().toString());
 
@@ -657,16 +656,14 @@ public class AvdManagerTest extends TestCase {
                         new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
             corruptedWriter.write("[invalid syntax]\n");
         }
-        AvdInfo corruptedInfo =
-                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(avdIniFile), log);
+        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
         assertThat(corruptedInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check a non-existent AVD .ini file
         String noSuchIniName = "noSuch.ini";
         Path noSuchIniFile = parentFolder.resolve(noSuchIniName);
         assertFalse("Found unexpected noSuch.ini in " + parentFolder, Files.exists(noSuchIniFile));
-        AvdInfo noSuchInfo =
-                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(noSuchIniFile), log);
+        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(noSuchIniFile, log);
         assertThat(noSuchInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check an empty AVD .ini file
@@ -676,8 +673,7 @@ public class AvdManagerTest extends TestCase {
                 Files.createFile(emptyIniFile));
         assertTrue("Expected empty AVD .ini in " + parentFolder, Files.exists(emptyIniFile));
         assertThat(Files.size(emptyIniFile)).isEqualTo(0);
-        AvdInfo emptyInfo =
-                mAvdManager.parseAvdInfo(mAndroidSdkHandler.getFileOp().toFile(emptyIniFile), log);
+        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile, log);
         assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
     }
 
