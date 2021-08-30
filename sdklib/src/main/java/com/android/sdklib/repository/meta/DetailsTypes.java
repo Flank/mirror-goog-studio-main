@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository.meta;
 
+import static com.android.sdklib.repository.targets.SystemImage.DEFAULT_TAG;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -25,12 +27,9 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.IdDisplay;
-
-import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.android.sdklib.repository.targets.SystemImage.DEFAULT_TAG;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Container for the subclasses of {@link TypeDetails} used by the android SDK.
@@ -52,12 +51,11 @@ public final class DetailsTypes {
          */
         @NonNull
         default AndroidVersion getAndroidVersion() {
-            return new AndroidVersion(getApiLevel(), getCodename());
+            return new AndroidVersion(
+                    getApiLevel(), getCodename(), getExtensionLevel(), isBaseExtension());
         }
 
-        /**
-         * Sets the api level this package corresponds to.
-         */
+        /** Sets the api level this package corresponds to. */
         default void setApiLevel(int apiLevel) {
             // Implementation for schema v3 and above.
             if (isBaseExtension()) {

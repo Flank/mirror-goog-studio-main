@@ -244,7 +244,7 @@ public class AvdManagerCliTest {
                         + InMemoryFileSystems.getPlatformSpecificPath("/avd/testWearApi.avd")
                         + "\n"
                         + "P   Target: Google APIs\n"
-                        + "P           Based on: Android 8.0 (Oreo)P  Tag/ABI: android-wear/armeabi-v7a\n"
+                        + "P           Based on: Android 8.0 (Oreo), Extension Level 5P  Tag/ABI: android-wear/armeabi-v7a\n"
                         + "P   Sdcard: 512 MB\n",
                 Joiner.on("").join(mLogger.getMessages()));
     }

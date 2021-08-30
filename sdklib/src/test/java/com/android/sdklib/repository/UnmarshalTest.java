@@ -15,6 +15,8 @@
  */
 package com.android.sdklib.repository;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.Checksum;
@@ -29,19 +31,17 @@ import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
-/**
- * Tests for unmarshalling an xml repository
- */
+/** Tests for unmarshalling an xml repository */
 public class UnmarshalTest extends TestCase {
 
     public void testLoadRepoV3() throws Exception {
@@ -83,14 +83,16 @@ public class UnmarshalTest extends TestCase {
 
         assertTrue(platform22.getTypeDetails() instanceof DetailsTypes.PlatformDetailsType);
         DetailsTypes.PlatformDetailsType details =
-                (DetailsTypes.PlatformDetailsType)platform22.getTypeDetails();
+                (DetailsTypes.PlatformDetailsType) platform22.getTypeDetails();
         assertEquals(22, details.getApiLevel());
         assertEquals("22x", details.getApiLevelString());
         assertEquals(2, details.getExtensionLevel().intValue());
         assertFalse(details.isBaseExtension());
+        assertThat(details.getAndroidVersion()).isNotEqualTo(new AndroidVersion(1));
+        assertEquals(details.getAndroidVersion(), new AndroidVersion(22, null, 2, false));
         assertEquals(5, details.getLayoutlib().getApi());
 
-        List<Archive> archives = ((RemotePackageImpl)platform22).getAllArchives();
+        List<Archive> archives = ((RemotePackageImpl) platform22).getAllArchives();
         assertEquals(2, archives.size());
         Archive archive = archives.get(1);
         assertEquals("x64", archive.getHostArch());
@@ -108,14 +110,20 @@ public class UnmarshalTest extends TestCase {
         RemotePackage sourcePackage = packageMap.get("sources;android-1");
         Checksum checksum2 =
                 sourcePackage.getArchive().getComplete().getTypedChecksum();
-        DetailsTypes.SourceDetailsType
-                sourcePackageTypeDetails
-                = (DetailsTypes.SourceDetailsType)sourcePackage.getTypeDetails();
+        DetailsTypes.SourceDetailsType sourcePackageTypeDetails =
+                (DetailsTypes.SourceDetailsType) sourcePackage.getTypeDetails();
         assertEquals(1, sourcePackageTypeDetails.getApiLevel());
         assertEquals("1", sourcePackageTypeDetails.getApiLevelString());
         assertNull(sourcePackageTypeDetails.getExtensionLevel());
         assertTrue(sourcePackageTypeDetails.isBaseExtension());
         assertNull(sourcePackageTypeDetails.getExtensionLevel());
+        assertEquals(sourcePackageTypeDetails.getAndroidVersion(), new AndroidVersion(1));
+        assertEquals(
+                sourcePackageTypeDetails.getAndroidVersion(),
+                new AndroidVersion(1, null, null, true));
+        assertEquals(
+                sourcePackageTypeDetails.getAndroidVersion(),
+                new AndroidVersion(1, null, 101, true));
         assertEquals(
                 "1234ae37115ebf13412bbef91339ee0d945412341339ee0d9454123494541234",
                 checksum2.getValue());
