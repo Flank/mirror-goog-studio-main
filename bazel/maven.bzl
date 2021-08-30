@@ -71,65 +71,6 @@ def generate_pom(
         executable = ctx.executable._pom,
     )
 
-def _import_with_license_impl(ctx):
-    names = []
-    for jar in ctx.attr.dep[DefaultInfo].files.to_list():
-        name = jar.basename
-        if jar.extension:
-            name = jar.basename[:-len(jar.extension) - 1]
-        names.append(name)
-    return struct(
-        providers = [ctx.attr.dep[JavaInfo], ctx.attr.dep[DefaultInfo]],
-        java = ctx.attr.dep[JavaInfo],
-        notice = struct(
-            file = ctx.attr.notice,
-            name = ",".join(names),
-        ),
-    )
-
-import_with_license = rule(
-    implementation = _import_with_license_impl,
-    attrs = {
-        "dep": attr.label(),
-        "notice": attr.label(allow_files = True),
-    },
-)
-
-# A java_import rule extended with pom and parent attributes for maven libraries.
-def maven_java_import(
-        name,
-        classifiers = [],
-        visibility = None,
-        jars = [],
-        notice = None,
-        repo_path = "",
-        classified_only = False,
-        **kwargs):
-    if not classified_only:
-        native.java_import(
-            name = name + "_import",
-            jars = jars,
-            **kwargs
-        )
-
-        import_with_license(
-            name = name,
-            visibility = visibility,
-            dep = name + "_import",
-            notice = notice if notice else (repo_path + "/NOTICE" if repo_path else "NOTICE"),
-            tags = ["require_license"],
-        )
-
-    classified_libraries = []
-    for classifier in classifiers:
-        native.java_import(
-            name = classifier + "-" + name,
-            visibility = visibility,
-            jars = [jar.replace(".jar", "-" + classifier + ".jar") for jar in jars],
-            **kwargs
-        )
-        classified_libraries += [classifier + "-" + name]
-
 def _zipper(actions, zipper, desc, map_file, files, out):
     zipper_args = ["c", out.path]
     zipper_args += ["@" + map_file.path]

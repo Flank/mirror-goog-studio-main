@@ -28,7 +28,8 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  * To update:
  *
  * 1. Update this version string.
- * 2. Run bazel run //tools/base/bazel:add_dependency com.google.prefab:cli:jar:all:$VERSION
+ * 2. Update the artifact entry under toplevel.WORKSPACE file for
+ *    com.google.prefab:cli:jar:all:$VERSION to the new version.
  * 3. Add the following block to //prebuilts/tools/common/m2/BUILD:
  *
  *    maven_java_import(
