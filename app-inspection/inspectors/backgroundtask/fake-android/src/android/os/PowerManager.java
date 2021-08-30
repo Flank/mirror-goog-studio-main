@@ -17,9 +17,36 @@
 package android.os;
 
 public class PowerManager {
+
+    public WakeLock newWakeLock(int levelAndFlags, String tag) {
+        return new WakeLock(levelAndFlags, tag);
+    }
+
     public class WakeLock {
+
+        private final int mFlags;
+
+        private final String mTag;
+
+        private boolean mHeld;
+
+        WakeLock(int flags, String tag) {
+            mFlags = flags;
+            mTag = tag;
+            mHeld = false;
+        }
+
         public boolean isHeld() {
-            throw new RuntimeException("");
+            return mHeld;
+        }
+
+        /**
+         * This is not an actual API but just for mocking the value.
+         *
+         * @param isHeld new value for isHeld.
+         */
+        public void setHeld(boolean isHeld) {
+            mHeld = isHeld;
         }
     }
 }

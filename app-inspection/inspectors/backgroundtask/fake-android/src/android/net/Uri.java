@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package android.app;
+package android.net;
 
-import android.content.Intent;
+public class Uri {
 
-@SuppressWarnings("MethodMayBeStatic")
-public class ActivityThread {
-
-    public ReceiverData newReceiverData() {
-        return new ReceiverData();
-    }
-
-    public class ReceiverData {
-
-        private Intent intent;
-
-        public void setIntent(Intent intent) {
-            this.intent = intent;
-        }
+    @Override
+    public String toString() {
+        return "uri";
     }
 }

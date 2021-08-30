@@ -18,17 +18,24 @@ package android.content;
 
 @SuppressWarnings("MethodMayBeStatic")
 public class Intent {
-    public static String EXTRA_ALARM_COUNT = "";
+
+    public static String EXTRA_ALARM_COUNT = "EXTRA_ALARM_COUNT";
+
+    public int intExtra;
+
+    public void setIntExtra(int value) {
+        intExtra = value;
+    }
 
     public int getIntExtra(String name, int defaultValue) {
-        throw new RuntimeException("");
+        return intExtra;
     }
 
     public boolean filterEquals(Intent other) {
-        throw new RuntimeException("");
+        return equals(other);
     }
 
     public int filterHashCode() {
-        throw new RuntimeException("");
+        return hashCode();
     }
 }
