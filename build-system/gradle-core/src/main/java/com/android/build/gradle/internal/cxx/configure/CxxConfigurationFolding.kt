@@ -58,23 +58,20 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     /**
      * Unique names for C/C++ Gradle build tasks.
      *
-     * Key: A list of [Configuration]. One for each ABI folded together.
+     * Key: A [Configuration].
      * Value: The name of the task for this configuration.
      */
-    private val configurers = mutableMapOf<List<Configuration>, TaskName>()
+    private val configurers = mutableMapOf<Configuration, TaskName>()
 
     /**
      * Unique names for C/C++ Gradle configure tasks.
      *
-     * Key: A list of [Configuration], one for each ABI folded together, combined with the targets
+     * Key: A [Configuration] annotation name combined with the targets
      * built with this task
      *
      * Value: The name of the task for this configuration and these tasks.
      */
-    private val builders = mutableMapOf<Pair<List<Configuration>, Targets>, TaskName>()
-
-    // Just the active ABIs (those that are built)
-    private val activeAbis = abis.filter { it.isActiveAbi }.map { it.abi.tag }.distinct().sorted()
+    private val builders = mutableMapOf<Pair<Configuration, Targets>, TaskName>()
 
     // Task names seen so far
     private val namesSeen = mutableSetOf<TaskName>()
@@ -89,18 +86,32 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     }
 
     /**
-     * Configuration task name to ABIs.
-     * Key: The name of the configuration task (like 'configureCMakeDebug')
+     * Configuration task name to ABI.
+     * Key: The name of the configuration task (like 'configureCMakeDebug[x86]')
      * Value: The ABIs to configure when this task is run.
      */
-    val configureAbis = mutableMapOf<TaskName, List<CxxAbiModel>>()
+    val configureAbis = mutableMapOf<TaskName, CxxAbiModel>()
 
     /**
-     * Build task name to ABIs.
+     * Configure group task name to individual per-ABI configure tasks.
+     * Key: The name of a configuration group task (like 'configureCMakeDebug')
+     * Value: The names of the per-ABI configure tasks (like 'configureCMakeDebug[x86]')
+     */
+    val configureGroups = mutableMapOf<VariantName, MutableSet<TaskName>>()
+
+    /**
+     * Build task name to ABI.
      * Key: The name of the build task (like 'buildCMakeDebug')
      * Value: The ABIs to build when this task is run.
      */
-    val buildAbis = mutableMapOf<TaskName, List<CxxAbiModel>>()
+    val buildAbis = mutableMapOf<TaskName, CxxAbiModel>()
+
+    /**
+     * Build group task name to individual per-ABI build tasks.
+     * Key: The name of a configuration group task (like 'buildCMakeDebug')
+     * Value: The names of the per-ABI configure tasks (like 'buildCMakeDebug[x86]')
+     */
+    val buildGroups = mutableMapOf<VariantName, MutableSet<TaskName>>()
 
     /**
      * The configuration tasks for each variant.
@@ -121,49 +132,47 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
      * First: Name of a build task.
      * Second: Name of a configure task.
      */
-    val buildConfigureEdges = mutableListOf<Pair<TaskName, TaskName>>()
+    val buildConfigureEdges = mutableSetOf<Pair<TaskName, TaskName>>()
 
     init {
+        for (abi in abis) {
+            if (!abi.isActiveAbi) continue
+            val configureTaskName = createConfigurationTask(abi)
+            createBuildTask(abi, configureTaskName)
+        }
+    }
 
-        abis
-            .groupBy { it.fullConfigurationHash }
-            .forEach { (_, configurationAbis) ->
-                val representatives = configurationAbis
-                        .filter { it.isActiveAbi }
-                        .distinctBy { it.configurationArguments }
-                        .sortedBy { it.abi.ordinal }
-                if (representatives.isNotEmpty()) {
-                    val configureTaskName = configureTaskNameOf(
-                            representatives.map { it.configurationArguments })
-                    configureAbis[configureTaskName] = representatives
+    /**
+     * Create a configuration task for a single [CxxAbiModel].
+     */
+    private fun createConfigurationTask(abi: CxxAbiModel) : TaskName {
+        val (groupTaskName, configureTaskName) = configureTaskNameOf(abi.configurationArguments)
+        configureAbis.setRepresentativeAbiForTask(configureTaskName, abi)
+        configureGroups
+            .computeIfAbsent(groupTaskName) { mutableSetOf() }
+            .add(configureTaskName)
+        variantToConfiguration
+            .computeIfAbsent(abi.variant.variantName) { mutableSetOf() }
+            .add(configureTaskName)
+        return configureTaskName
+    }
 
-                    configurationAbis.forEach {
-                        variantToConfiguration
-                                .computeIfAbsent(it.variant.variantName) { mutableSetOf() }
-                                .add(configureTaskName)
-                    }
-
-                    configurationAbis
-                            .groupBy { it.variant.buildTargetSet }
-                            .forEach { (targets, configurationAbis) ->
-                                val representatives = configurationAbis
-                                        .filter { it.isActiveAbi }
-                                        .distinctBy { it.configurationArguments }
-                                        .sortedBy { it.abi.ordinal }
-                                val buildTaskName =
-                                        buildTaskNameOf(
-                                                representatives.map { it.configurationArguments },
-                                                targets)
-                                buildAbis[buildTaskName] = representatives
-                                buildConfigureEdges += buildTaskName to configureTaskName
-                                configurationAbis.forEach {
-                                    variantToBuild
-                                            .computeIfAbsent(it.variant.variantName) { mutableSetOf() }
-                                            .add(buildTaskName)
-                                }
-                            }
-                }
-            }
+    /**
+     * Create a build task for a single [CxxAbiModel].
+     */
+    private fun createBuildTask(abi: CxxAbiModel, configureTaskName : TaskName) {
+        val (groupTaskName, buildTaskName) =
+            buildTaskNameOf(
+                abi.configurationArguments,
+                abi.variant.buildTargetSet)
+        buildAbis.setRepresentativeAbiForTask(buildTaskName, abi)
+        buildConfigureEdges += buildTaskName to configureTaskName
+        buildGroups
+            .computeIfAbsent(groupTaskName) { mutableSetOf() }
+            .add(buildTaskName)
+        variantToBuild
+            .computeIfAbsent(abi.variant.variantName) { mutableSetOf() }
+            .add(buildTaskName)
     }
 
     /**
@@ -245,31 +254,62 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     /**
      * Create a human-readable task name suffix.
      */
-    private fun configurationNameAnnotation(configurations : List<Configuration>) : String {
-        val buildType = configurations.map { buildTypeOf(it) }.distinct().single()
-        val abis = configurations.map { abiOf(it) }.distinct().sorted()
-        return if (abis == activeAbis) "$buildSystemName$buildType"
-            else "$buildSystemName$buildType[${abis.joinToString()}]"
+    private fun taskNameAnnotation(configuration : Configuration) : String {
+        val buildType =  buildTypeOf(configuration)
+        return "$buildSystemName$buildType"
     }
 
     /**
-     * Create a configure task name based on the content of the configurations.
+     * Create a configure task name based on the content of the configuration.
+     * Returns a pair of [TaskName] where the first is a group task name for
+     * all ABIs (like configureCMakeDebug) and the second is a task name for
+     * the specific ABI (like configureCMakeDebug[x86]).
      */
-    private fun configureTaskNameOf(configurations: List<Configuration>) : String {
-        return configurers.computeIfAbsent(configurations) {
-            val annotation = configurationNameAnnotation(configurations)
-            uniquify(legalize("configure$annotation"))
+    private fun configureTaskNameOf(configuration: Configuration) : Pair<TaskName, TaskName> {
+        val annotation = taskNameAnnotation(configuration)
+        val groupTaskName = "configure$annotation"
+        return groupTaskName to configurers.computeIfAbsent(configuration) {
+            val abi = abiOf(configuration)
+            uniquify(legalize("$groupTaskName[$abi]"))
         }
     }
 
     /**
-     * Create a build task name based on the content of the configurations and build targets.
+     * Create a build task name based on the content of the configuration and list
+     * of targets.
+     * Returns a pair of [TaskName] where the first is a group task name for
+     * all ABIs (like buildCMakeDebug[target1, target2]) and the second is a task name for
+     * the specific ABI (like configureCMakeDebug[x86][target1, target2]).
      */
-    private fun buildTaskNameOf(configurations: List<Configuration>, targets: Targets) : String {
-        return builders.computeIfAbsent(configurations to targets) {
-            val annotation = configurationNameAnnotation(configurations)
+    private fun buildTaskNameOf(configuration: Configuration, targets: Targets)
+            : Pair<TaskName, TaskName> {
+        val annotation = taskNameAnnotation(configuration)
+        val groupTaskName = "build$annotation"
+        return groupTaskName to builders.computeIfAbsent(configuration to targets) {
+            val abi = abiOf(configuration)
             val targetAnnotation = targetAnnotation(targets)
-            uniquify(legalize("build$annotation$targetAnnotation"))
+            uniquify(legalize("$groupTaskName[$abi]$targetAnnotation"))
+        }
+    }
+
+    /**
+     * Utility method that sets a representative ABI for the given task. If there is already an ABI
+     * then this function verifies that the new ABI is accurately represented by the prior ABI.
+     */
+    private fun MutableMap<TaskName, CxxAbiModel>.setRepresentativeAbiForTask(
+        taskName : TaskName,
+        abi : CxxAbiModel) {
+        val map  = this
+        val prior = map[taskName]
+        if (prior == null) {
+            map[taskName] = abi
+        } else {
+            if (prior.abi != abi.abi) {
+                error("Expected ${prior.abi} but got ${abi.abi}")
+            }
+            if (prior.configurationArguments != abi.configurationArguments) {
+                error("Expected same configuration arguments")
+            }
         }
     }
 }

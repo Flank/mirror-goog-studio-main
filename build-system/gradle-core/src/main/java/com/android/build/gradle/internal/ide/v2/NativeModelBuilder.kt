@@ -17,11 +17,10 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.gradle.internal.cxx.configure.toConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
@@ -72,15 +71,15 @@ class NativeModelBuilder(
         scopes.map { scope -> scope.name to scope.taskContainer.cxxConfigurationModel!! }.distinct()
     }
     private val generators =
-            mutableMapOf<CxxConfigurationModel, CxxMetadataGenerator>()
+            mutableMapOf<CxxAbiModel, CxxMetadataGenerator>()
 
-    fun createGenerator(model: CxxConfigurationModel) : CxxMetadataGenerator {
-        return generators.computeIfAbsent(model) { model ->
+    fun createGenerator(abi: CxxAbiModel) : CxxMetadataGenerator {
+        return generators.computeIfAbsent(abi) { model ->
             val analyticsService =
                 getBuildService<AnalyticsService>(projectInfo.getProject().gradle.sharedServices).get()
-            IssueReporterLoggingEnvironment(issueReporter, analyticsService, model).use {
+            IssueReporterLoggingEnvironment(issueReporter, analyticsService, abi.variant).use {
                 createCxxMetadataGenerator(
-                    model,
+                    abi,
                     analyticsService
                 )
             }
@@ -107,7 +106,7 @@ class NativeModelBuilder(
         return IssueReporterLoggingEnvironment(
             issueReporter,
             analyticsService,
-            configurationModel
+            configurationModel.variant
         ).use {
             val cxxModuleModel = configurationModel.variant.module
 
@@ -151,7 +150,7 @@ class NativeModelBuilder(
                 .filter { (variantName, abi) -> filter(variantName, abi.abi.tag) }
                 .map { (_, abi) -> abi }
                 .forEach { abi ->
-                    createGenerator(abi.toConfigurationModel()).generate(ops, ideRefreshExternalNativeModel)
+                    createGenerator(abi).generate(ops, ideRefreshExternalNativeModel)
                 }
     }
 }

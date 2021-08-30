@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.string.StringEncoder
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.errors.IssueReporter
@@ -54,7 +54,7 @@ class IssueReporterLoggingEnvironment private constructor(
 
     private class CxxDiagnosticCodesTrackingInternals(
         val analyticsService: AnalyticsService,
-        val cxxConfigurationModel: CxxConfigurationModel,
+        val variant: CxxVariantModel,
         val cxxDiagnosticCodes: MutableList<Int>
     )
 
@@ -66,13 +66,13 @@ class IssueReporterLoggingEnvironment private constructor(
     constructor(
         issueReporter: IssueReporter,
         analyticsService: AnalyticsService,
-        cxxConfigurationModel: CxxConfigurationModel,
+        variant: CxxVariantModel
     ) : this(
         issueReporter,
-        cxxConfigurationModel.variant.module.project.rootBuildGradleFolder,
+        variant.module.project.rootBuildGradleFolder,
         CxxDiagnosticCodesTrackingInternals(
             analyticsService,
-            cxxConfigurationModel,
+            variant,
             mutableListOf()
         )
     )
@@ -126,7 +126,7 @@ class IssueReporterLoggingEnvironment private constructor(
                 structuredLogEncoder.close()
             }
             if (internals != null) {
-                val variant = internals.cxxConfigurationModel.variant
+                val variant = internals.variant
                 val builder = internals.analyticsService.getVariantBuilder(
                     variant.module.gradleModulePathName,
                     variant.variantName

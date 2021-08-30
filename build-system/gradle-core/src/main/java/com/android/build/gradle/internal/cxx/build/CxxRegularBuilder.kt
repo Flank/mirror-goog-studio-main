@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
 import com.android.build.gradle.internal.cxx.caching.CxxBuildCache
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -58,12 +57,11 @@ import kotlin.streams.toList
 /**
  * Build a C/C++ project.
  */
-class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuilder {
-    override val objFolder: File get() = configurationModel.activeAbis.first().objFolder
-    override val soFolder: File get() = configurationModel.activeAbis.first().soFolder
+class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
+    override val objFolder: File get() = abi.objFolder
+    override val soFolder: File get() = abi.soFolder
 
-    private val variant get() = configurationModel.variant
-    private val abis get() = configurationModel.activeAbis
+    private val variant get() = abi.variant
 
     /**
      * Get native build config minis. Also gather stats if they haven't already been gathered for
@@ -71,8 +69,8 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
      *
      * @return the mini configs
      */
-    private val nativeBuildConfigValueMinis: List<NativeBuildConfigValueMini>
-        get() = AndroidBuildGradleJsons.getNativeBuildMiniConfigs(abis, null)
+    private val nativeBuildConfigValueMini: NativeBuildConfigValueMini
+        get() = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(
@@ -89,7 +87,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
         buildCacheController: BuildCacheController) {
         infoln("starting build")
         infoln("reading expected JSONs")
-        val miniConfigs = nativeBuildConfigValueMinis
+        val config = nativeBuildConfigValueMini
         infoln("done reading expected JSONs")
 
         val targets = variant.buildTargetSet
@@ -97,64 +95,58 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
         if (targets.isEmpty()) {
             infoln("executing build commands for targets that produce .so files or executables")
         } else {
-            verifyTargetsExist(miniConfigs)
+            verifyTargetExists(config)
         }
 
         val buildCache = CxxBuildCache(buildCacheController, fileHasher)
         val buildSteps = Lists.newArrayList<BuildStep>()
 
-        for (miniConfigIndex in miniConfigs.indices) {
-            val config = miniConfigs[miniConfigIndex]
+        infoln("evaluate miniconfig")
+        if (config.libraries.isEmpty()) {
+            infoln("no libraries")
+            return
+        }
 
-            infoln("evaluate miniconfig")
-            if (config.libraries.isEmpty()) {
-                infoln("no libraries")
-                continue
-            }
-            val abi = (configurationModel.activeAbis + configurationModel.unusedAbis)
-                .single { it.abi.tag == config.libraries.values.first().abi }
+        val librariesToBuild = findLibrariesToBuild(config)
+        if (librariesToBuild.isEmpty()) {
+            infoln("no libraries to build")
+            return
+        }
 
-            val librariesToBuild = findLibrariesToBuild(config)
-            if (librariesToBuild.isEmpty()) {
-                infoln("no libraries to build")
-                continue
-            }
-
-            if (config.buildTargetsCommandComponents?.isNotEmpty() == true) {
-                // Build all libraries together in one step, using the names of the artifacts.
-                val artifactNames = librariesToBuild
-                    .mapNotNull { library -> library.artifactName }
-                    .distinct()
-                    .sorted()
-                val buildTargetsCommand =
-                    substituteBuildTargetsCommand(
-                        config.buildTargetsCommandComponents!!,
-                        artifactNames
-                    )
+        if (config.buildTargetsCommandComponents?.isNotEmpty() == true) {
+            // Build all libraries together in one step, using the names of the artifacts.
+            val artifactNames = librariesToBuild
+                .mapNotNull { library -> library.artifactName }
+                .distinct()
+                .sorted()
+            val buildTargetsCommand =
+                substituteBuildTargetsCommand(
+                    config.buildTargetsCommandComponents!!,
+                    artifactNames
+                )
+            buildSteps.add(
+                BuildStep(
+                    abi,
+                    buildTargetsCommand,
+                    librariesToBuild,
+                    variant.buildTargetSet,
+                    abi.jsonFile.parentFile
+                )
+            )
+            infoln("about to build targets " + artifactNames.joinToString(", "))
+        } else {
+            // Build each library separately using multiple steps.
+            for (libraryValue in librariesToBuild) {
                 buildSteps.add(
                     BuildStep(
                         abi,
-                        buildTargetsCommand,
-                        librariesToBuild,
+                        libraryValue.buildCommandComponents!!,
+                        listOf(libraryValue),
                         variant.buildTargetSet,
-                        abis[miniConfigIndex].jsonFile.parentFile
+                        abi.jsonFile.parentFile
                     )
                 )
-                infoln("about to build targets " + artifactNames.joinToString(", "))
-            } else {
-                // Build each library separately using multiple steps.
-                for (libraryValue in librariesToBuild) {
-                    buildSteps.add(
-                        BuildStep(
-                            abi,
-                            libraryValue.buildCommandComponents!!,
-                            listOf(libraryValue),
-                            variant.buildTargetSet,
-                            abis[miniConfigIndex].jsonFile.parentFile
-                        )
-                    )
-                    infoln("about to build ${libraryValue.buildCommandComponents!!.joinToString(" ")}")
-                }
+                infoln("about to build ${libraryValue.buildCommandComponents!!.joinToString(" ")}")
             }
         }
 
@@ -164,70 +156,66 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             buildSteps)
 
         infoln("check expected build outputs")
-        for (config in miniConfigs) {
-            for (library in config.libraries.values) {
-                Preconditions.checkState(!Strings.isNullOrEmpty(library.artifactName))
-                if (targets.isNotEmpty() && !targets.contains(library.artifactName)) {
-                    continue
-                }
-                if (buildSteps.stream().noneMatch { step -> step.libraries.contains(library) }) {
-                    // Only need to check existence of output files we expect to create
-                    continue
-                }
-                val output = library.output ?: continue
-                if (!output.exists()) {
-                    throw GradleException(
-                        "Expected output file at $output for target ${library.artifactName} but there was none")
-                }
-                if (library.abi == null) {
-                    throw GradleException("Expected NativeLibraryValue to have non-null abi")
-                }
+        for (library in config.libraries.values) {
+            Preconditions.checkState(!Strings.isNullOrEmpty(library.artifactName))
+            if (targets.isNotEmpty() && !targets.contains(library.artifactName)) {
+                continue
+            }
+            if (buildSteps.stream().noneMatch { step -> step.libraries.contains(library) }) {
+                // Only need to check existence of output files we expect to create
+                continue
+            }
+            val output = library.output ?: continue
+            if (!output.exists()) {
+                throw GradleException(
+                    "Expected output file at $output for target ${library.artifactName} but there was none")
+            }
+            if (library.abi == null) {
+                throw GradleException("Expected NativeLibraryValue to have non-null abi")
+            }
 
-                // If the build chose to write the library output somewhere besides objFolder
-                // then link or copy to objFolder (reference b.android.com/256515)
-                //
-                // Since there is now a hard link outside of the standard build/ folder we have to
-                // make sure `clean` deletes both the original .so file and the hard link to so
-                // that the ref count on the inode goes down from two to zero. Here's how the two
-                // files are covered.
-                // (1) Gradle plugin deletes the build/ folder. This covers the destination of the
-                //     copy.
-                // (2) ExternalNativeCleanTask calls the individual clean targets for everything
-                //     that was built. This is expected to delete the .so file but it is up to the
-                //     CMakeLists.txt or Android.mk author to ensure this.
-                val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
-                    "Unknown ABI seen ${library.abi}"
-                )
-                val expectedOutputFile = FileUtils.join(
-                    variant.soFolder,
-                    abi.tag,
-                    output.name
-                )
-                if (!FileUtils.isSameFile(output, expectedOutputFile)) {
-                    infoln("external build set its own library output location for " +
-                            "'${output.name}', hard link or copy to expected location")
+            // If the build chose to write the library output somewhere besides objFolder
+            // then link or copy to objFolder (reference b.android.com/256515)
+            //
+            // Since there is now a hard link outside of the standard build/ folder we have to
+            // make sure `clean` deletes both the original .so file and the hard link to so
+            // that the ref count on the inode goes down from two to zero. Here's how the two
+            // files are covered.
+            // (1) Gradle plugin deletes the build/ folder. This covers the destination of the
+            //     copy.
+            // (2) ExternalNativeCleanTask calls the individual clean targets for everything
+            //     that was built. This is expected to delete the .so file but it is up to the
+            //     CMakeLists.txt or Android.mk author to ensure this.
+            val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
+                "Unknown ABI seen ${library.abi}"
+            )
+            val expectedOutputFile = FileUtils.join(
+                variant.soFolder,
+                abi.tag,
+                output.name
+            )
+            if (!FileUtils.isSameFile(output, expectedOutputFile)) {
+                infoln("external build set its own library output location for " +
+                        "'${output.name}', hard link or copy to expected location")
 
-                    if (expectedOutputFile.parentFile.mkdirs()) {
-                        infoln("created folder ${expectedOutputFile.parentFile}")
-                    }
-                    hardLinkOrCopy(output, expectedOutputFile)
+                if (expectedOutputFile.parentFile.mkdirs()) {
+                    infoln("created folder ${expectedOutputFile.parentFile}")
                 }
+                hardLinkOrCopy(output, expectedOutputFile)
+            }
 
-                for (runtimeFile in library.runtimeFiles) {
-                    val dest = FileUtils.join(variant.soFolder, abi.tag, runtimeFile.name)
-                    hardLinkOrCopy(runtimeFile, dest)
-                }
+            for (runtimeFile in library.runtimeFiles) {
+                val dest = FileUtils.join(variant.soFolder, abi.tag, runtimeFile.name)
+                hardLinkOrCopy(runtimeFile, dest)
             }
         }
 
-        for(abi in abis) {
-            if (abi.stlLibraryFile == null) continue
-            if (!abi.stlLibraryFile.isFile) continue
-            if (!abi.soFolder.isDirectory) {
-                // A build failure can leave the obj/abi folder missing. Just note that case
-                // and continue without copying STL.
-                infoln("didn't copy STL file to ${abi.soFolder} because that folder wasn't created by the build ")
-            } else {
+        if (!abi.soFolder.isDirectory) {
+            // A build failure can leave the obj/abi folder missing. Just note that case
+            // and continue without copying STL.
+            infoln("didn't copy STL file to ${abi.soFolder} because that folder wasn't created by the build ")
+        } else {
+            if (abi.stlLibraryFile != null && abi.stlLibraryFile.isFile) {
                 val objAbi = abi.soFolder.resolve(abi.stlLibraryFile.name)
                 hardLinkOrCopy(abi.stlLibraryFile, objAbi)
             }
@@ -240,7 +228,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
      * Verifies that all targets provided by the user will be built. Throws GradleException if it
      * detects an unexpected target.
      */
-    private fun verifyTargetsExist(miniConfigs: List<NativeBuildConfigValueMini>) {
+    private fun verifyTargetExists(config: NativeBuildConfigValueMini) {
         // Check the resulting JSON targets against the targets specified in ndkBuild.targets or
         // cmake.targets. If a target name specified by the user isn't present then provide an
         // error to the user that lists the valid target names.
@@ -250,13 +238,11 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
         // Search libraries for matching targets.
         val matchingTargets = Sets.newHashSet<String>()
         val unmatchedTargets = Sets.newHashSet<String>()
-        for (config in miniConfigs) {
-            for (libraryValue in config.libraries.values) {
-                if (targets.contains(libraryValue.artifactName)) {
-                    matchingTargets.add(libraryValue.artifactName)
-                } else {
-                    unmatchedTargets.add(libraryValue.artifactName)
-                }
+        for (libraryValue in config.libraries.values) {
+            if (targets.contains(libraryValue.artifactName)) {
+                matchingTargets.add(libraryValue.artifactName)
+            } else {
+                unmatchedTargets.add(libraryValue.artifactName)
             }
         }
 

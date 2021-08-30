@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
@@ -49,13 +48,12 @@ import java.nio.charset.StandardCharsets
  * part of project configuration.
  */
 internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
-    variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
+    abi: CxxAbiModel,
     variantBuilder: GradleBuildVariant.Builder?
-) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
+) : ExternalNativeJsonGenerator(abi, variantBuilder) {
     init {
         variantBuilder?.nativeBuildSystemType = CMAKE
-        cmakeMakefileChecks(variant)
+        cmakeMakefileChecks(abi.variant)
     }
 
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
@@ -65,7 +63,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
                 "buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below."
             )
         }
-        val logPrefix = "${variant.variantName}|${abi.abi.tag} :"
+        val logPrefix = "${abi.variant.variantName}|${abi.abi.tag} :"
         createProcessOutputJunction(
             abi.metadataGenerationCommandFile,
             abi.metadataGenerationStdoutFile,
@@ -74,7 +72,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
             logPrefix)
             .logStderr()
             .logStdout()
-            .logFullStdout(variant.ifLogNativeConfigureToLifecycle { true } ?: false)
+            .logFullStdout(abi.variant.ifLogNativeConfigureToLifecycle { true } ?: false)
             .execute(ops::exec)
 
         postProcessForkCmakeOutput(abi)
@@ -125,7 +123,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
-        builder.setExecutable(variant.module.cmake?.cmakeExe!!)
+        builder.setExecutable(abi.variant.module.cmake?.cmakeExe!!)
         builder.addArgs(abi.configurationArguments)
         return builder
     }

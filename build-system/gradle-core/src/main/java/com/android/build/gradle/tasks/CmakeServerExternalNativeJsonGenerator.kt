@@ -71,16 +71,15 @@ import java.util.*
  * project and generate the android build JSON.
  */
 internal class CmakeServerExternalNativeJsonGenerator(
-    variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
+    abi: CxxAbiModel,
     variantBuilder: GradleBuildVariant.Builder?
-) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
+) : ExternalNativeJsonGenerator(abi, variantBuilder) {
     init {
         variantBuilder?.nativeBuildSystemType = CMAKE
-        cmakeMakefileChecks(variant)
+        cmakeMakefileChecks(abi.variant)
     }
 
-    private val cmake get() = variant.module.cmake!!
+    private val cmake get() = abi.variant.module.cmake!!
 
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
         executeProcessAndGetOutput(abi)
@@ -115,7 +114,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             val serverReceiver = ServerReceiver()
                 .setMessageReceiver { message: InteractiveMessage ->
                     logInteractiveMessage(
-                        message, variant.module.makeFile.parentFile
+                        message, abi.variant.module.makeFile.parentFile
                     )
                 }
                 .setDiagnosticReceiver { message: String? ->
@@ -156,7 +155,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 // Handshake
                 doHandshake(
                     arguments.getCmakeGenerator()!!,
-                    variant.module.makeFile.parentFile,
+                    abi.variant.module.makeFile.parentFile,
                     File(arguments.getCmakeBinaryOutputPath()!!),
                     cmakeServer
                 )
@@ -349,7 +348,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         return getNativeLibraryValue(
           cmake.cmakeExe!!,
           abi.cxxBuildFolder,
-          variant.isDebuggableEnabled,
+          abi.variant.isDebuggableEnabled,
           abi.abi.tag,
           target,
           additionalProjectFilesIndexWriter
@@ -365,15 +364,15 @@ internal class CmakeServerExternalNativeJsonGenerator(
         if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)
             || cmakeInputsResult.buildFiles == null) {
             // When CMake server doesn't return a result just use the CMakeLists.txt we know about.
-            return listOf(variant.module.makeFile.absoluteFile)
+            return listOf(abi.variant.module.makeFile.absoluteFile)
         }
 
         // The path to the build file source might be relative, so use the absolute path using
         // source directory information.
         val sourceDirectory= File(cmakeInputsResult.sourceDirectory
-            ?: variant.module.makeFile.absoluteFile.parent)
+            ?: abi.variant.module.makeFile.absoluteFile.parent)
 
-        val files = listOf(variant.module.makeFile) +
+        val files = listOf(abi.variant.module.makeFile) +
             cmakeInputsResult.buildFiles
                 // Combine multiple results from CMake server
                 .flatMap { buildFiles -> buildFiles.sources?.filterNotNull() ?: listOf() }

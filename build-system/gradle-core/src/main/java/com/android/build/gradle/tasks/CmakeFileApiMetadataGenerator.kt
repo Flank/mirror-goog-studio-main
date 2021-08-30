@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.parseCmakeFileApiReply
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
@@ -45,13 +43,12 @@ import org.gradle.process.ExecOperations
  * the result of CMake file API query.
  */
 internal class CmakeQueryMetadataGenerator(
-        variant: CxxVariantModel,
-        abis: List<CxxAbiModel>,
+        abi: CxxAbiModel,
         @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
-) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
+) : ExternalNativeJsonGenerator(abi, variantBuilder) {
     init {
         variantBuilder?.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
-        cmakeMakefileChecks(variant)
+        cmakeMakefileChecks(abi.variant)
     }
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
         // Request File API responses from CMake by creating placeholder files
@@ -67,15 +64,15 @@ internal class CmakeQueryMetadataGenerator(
           abi.metadataGenerationStdoutFile,
           abi.metadataGenerationStderrFile,
           getProcessBuilder(abi),
-          "${variant.variantName}|${abi.abi.tag} :")
+          "${abi.variant.variantName}|${abi.abi.tag} :")
           .logStderr()
           .logStdout()
-          .logFullStdout(variant.ifLogNativeConfigureToLifecycle { true } ?: false)
+          .logFullStdout(abi.variant.ifLogNativeConfigureToLifecycle { true } ?: false)
           .execute(ops::exec)
 
         // Build expected metadata
         val buildTargetsCommand = CmakeUtils.getBuildTargetsCommand(
-            variant.module.cmake!!.cmakeExe!!,
+            abi.variant.module.cmake!!.cmakeExe!!,
             abi.cxxBuildFolder,
             abi.getBuildCommandArguments()
         )
@@ -91,7 +88,7 @@ internal class CmakeQueryMetadataGenerator(
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
-        builder.setExecutable(variant.module.cmake!!.cmakeExe!!)
+        builder.setExecutable(abi.variant.module.cmake!!.cmakeExe!!)
         builder.addArgs(abi.configurationArguments)
         return builder
     }

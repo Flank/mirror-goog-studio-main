@@ -23,6 +23,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class CxxConfigurationFoldingTest {
+
     @Test
     fun `CMake variants that fold`() {
 
@@ -31,12 +32,13 @@ class CxxConfigurationFoldingTest {
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "debug2")
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug" to "configureCMakeDebug"
+                "buildCMakeDebug[x86]" to "configureCMakeDebug[x86]"
             )
         }
     }
@@ -48,9 +50,10 @@ class CxxConfigurationFoldingTest {
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "debug2")
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val result = createFoldedCxxTaskDependencyModel(allAbis)
             val variantBuild = result.tasks["externalNativeBuildDebug"] as VariantBuild
             assertThat(variantBuild.representatives).isNotEmpty()
@@ -66,17 +69,49 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    buildSystem = NativeBuildSystem.NDK_BUILD)
-            val config2 = configurationParameters.copy(variantName = "debug2",
-                    buildSystem = NativeBuildSystem.NDK_BUILD)
+                variantName = "debug",
+                buildSystem = NativeBuildSystem.NDK_BUILD
+            )
+            val config2 = configurationParameters.copy(
+                variantName = "debug2",
+                buildSystem = NativeBuildSystem.NDK_BUILD
+            )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildNdkBuildDebug" to "configureNdkBuildDebug"
+                "buildNdkBuildDebug[x86]" to "configureNdkBuildDebug[x86]"
+            )
+        }
+    }
+
+    @Test
+    fun `ndk-build variants with different arguments`() {
+        BasicCmakeMock().apply {
+            val configurationParameters = configurationParameters.copy()
+            val config1 = configurationParameters.copy(
+                variantName = "debug",
+                buildSystem = NativeBuildSystem.NDK_BUILD
+            )
+            val config2 = configurationParameters.copy(
+                variantName = "debug2",
+                buildSystem = NativeBuildSystem.NDK_BUILD,
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    arguments = listOf("-DDEBUG2")
+                )
+            )
+            val allAbis = createInitialCxxModel(
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
+            val namer = CxxConfigurationFolding(allAbis)
+            assertThat(namer.buildConfigureEdges).containsExactly(
+                "buildNdkBuildDebug[x86]" to "configureNdkBuildDebug[x86]",
+                "buildNdkBuildDebug[x86]-2" to "configureNdkBuildDebug[x86]-2",
             )
         }
     }
@@ -86,19 +121,23 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    buildSystem = NativeBuildSystem.NDK_BUILD)
-            val config2 = configurationParameters.copy(variantName = "release",
-                    buildSystem = NativeBuildSystem.NDK_BUILD,
-                    isDebuggable = false)
+                variantName = "debug",
+                buildSystem = NativeBuildSystem.NDK_BUILD
+            )
+            val config2 = configurationParameters.copy(
+                variantName = "release",
+                buildSystem = NativeBuildSystem.NDK_BUILD,
+                isDebuggable = false
+            )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildNdkBuildDebug" to "configureNdkBuildDebug",
-                    "buildNdkBuildRelease" to "configureNdkBuildRelease"
+                "buildNdkBuildDebug[x86]" to "configureNdkBuildDebug[x86]",
+                "buildNdkBuildRelease[x86]" to "configureNdkBuildRelease[x86]"
             )
         }
     }
@@ -110,13 +149,14 @@ class CxxConfigurationFoldingTest {
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "release")
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug" to "configureCMakeDebug",
-                    "buildCMakeRelWithDebInfo" to "configureCMakeRelWithDebInfo"
+                "buildCMakeDebug[x86]" to "configureCMakeDebug[x86]",
+                "buildCMakeRelWithDebInfo[x86]" to "configureCMakeRelWithDebInfo[x86]"
             )
         }
     }
@@ -126,25 +166,26 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("target-1")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("target-1")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("target-2")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("target-2")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[target-1]" to "configureCMakeDebug",
-                    "buildCMakeDebug[target-2]" to "configureCMakeDebug"
+                "buildCMakeDebug[x86][target-1]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86][target-2]" to "configureCMakeDebug[x86]"
             )
         }
     }
@@ -154,25 +195,26 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("nested/target-1")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("nested/target-1")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("nested/target-2")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("nested/target-2")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[nested_target-1]" to "configureCMakeDebug",
-                    "buildCMakeDebug[nested_target-2]" to "configureCMakeDebug"
+                "buildCMakeDebug[x86][nested_target-1]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86][nested_target-2]" to "configureCMakeDebug[x86]"
             )
         }
     }
@@ -182,25 +224,26 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("a", "b")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("a", "b")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("a", "c")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("a", "c")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[a,b]" to "configureCMakeDebug",
-                    "buildCMakeDebug[a,c]" to "configureCMakeDebug"
+                "buildCMakeDebug[x86][a,b]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86][a,c]" to "configureCMakeDebug[x86]"
             )
         }
     }
@@ -210,52 +253,84 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("a", "b", "c")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("a", "b", "c")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            targets = setOf("a", "b", "d")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("a", "b", "d")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[a,b,etc]" to "configureCMakeDebug",
-                    "buildCMakeDebug[a,b,etc]-2" to "configureCMakeDebug"
+                "buildCMakeDebug[x86][a,b,etc]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86][a,b,etc]-2" to "configureCMakeDebug[x86]"
             )
         }
     }
 
     @Test
-    fun `CMake equivalent variants with different ABIs fold`() {
+    fun `bug 195121515 -- ABIs built unnecessarily`() {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            ndkAbiFilters = setOf("x86")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    ndkAbiFilters = setOf("x86_64")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            ndkAbiFilters = setOf("x86_64")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    ndkAbiFilters = setOf("arm64-v8a")
+                )
+            )
+            val config3 = configurationParameters.copy(
+                variantName = "release",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2, config3)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug" to "configureCMakeDebug"
+                "buildCMakeDebug[x86_64]" to "configureCMakeDebug[x86_64]",
+                "buildCMakeDebug[arm64-v8a]" to "configureCMakeDebug[arm64-v8a]",
+                "buildCMakeRelWithDebInfo[x86]" to "configureCMakeRelWithDebInfo[x86]"
+            )
+            assertThat(namer.variantToBuild.keys).containsExactly(
+                "debug", "debug2", "release"
+            )
+            assertThat(namer.variantToBuild["debug"]).containsExactly(
+                "buildCMakeDebug[x86_64]"
+            )
+            assertThat(namer.variantToBuild["debug2"]).containsExactly(
+                "buildCMakeDebug[arm64-v8a]"
+            )
+            assertThat(namer.variantToBuild["release"]).containsExactly(
+                "buildCMakeRelWithDebInfo[x86]"
+            )
+            assertThat(namer.variantToConfiguration.keys).containsExactly(
+                "debug", "debug2", "release"
+            )
+            assertThat(namer.variantToConfiguration["debug"]).containsExactly(
+                "configureCMakeDebug[x86_64]"
+            )
+            assertThat(namer.variantToConfiguration["debug2"]).containsExactly(
+                "configureCMakeDebug[arm64-v8a]"
+            )
+            assertThat(namer.variantToConfiguration["release"]).containsExactly(
+                "configureCMakeRelWithDebInfo[x86]"
             )
         }
     }
@@ -265,27 +340,28 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            arguments = listOf("-DCONFIG1"),
-                            ndkAbiFilters = setOf("x86")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    arguments = listOf("-DCONFIG1"),
+                    ndkAbiFilters = setOf("x86")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            arguments = listOf("-DCONFIG2"),
-                            ndkAbiFilters = setOf("x86_64")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    arguments = listOf("-DCONFIG2"),
+                    ndkAbiFilters = setOf("x86_64")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[x86]" to "configureCMakeDebug[x86]",
-                    "buildCMakeDebug[x86_64]" to "configureCMakeDebug[x86_64]",
+                "buildCMakeDebug[x86]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86_64]" to "configureCMakeDebug[x86_64]",
             )
         }
     }
@@ -295,27 +371,57 @@ class CxxConfigurationFoldingTest {
         BasicCmakeMock().apply {
             val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
-                    variantName = "debug",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            ndkAbiFilters = setOf("x86"),
-                            targets = setOf("target-1")
-                    )
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    ndkAbiFilters = setOf("x86"),
+                    targets = setOf("target-1")
+                )
             )
             val config2 = configurationParameters.copy(
-                    variantName = "debug2",
-                    nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
-                            ndkAbiFilters = setOf("x86_64"),
-                            targets = setOf("target-2")
-                    )
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    ndkAbiFilters = setOf("x86_64"),
+                    targets = setOf("target-2")
+                )
             )
             val allAbis = createInitialCxxModel(
-                    sdkComponents,
-                    androidLocationProvider,
-                    listOf(config1, config2))
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
-                    "buildCMakeDebug[x86][target-1]" to "configureCMakeDebug",
-                    "buildCMakeDebug[x86_64][target-2]" to "configureCMakeDebug"
+                "buildCMakeDebug[x86][target-1]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86_64][target-2]" to "configureCMakeDebug[x86_64]"
+            )
+        }
+    }
+
+    @Test
+    fun `CMake equivalent variants with overlapping targets`() {
+        BasicCmakeMock().apply {
+            val configurationParameters = configurationParameters.copy()
+            val config1 = configurationParameters.copy(
+                variantName = "debug",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("target-1", "target-2")
+                )
+            )
+            val config2 = configurationParameters.copy(
+                variantName = "debug2",
+                nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
+                    targets = setOf("target-2", "target-3")
+                )
+            )
+            val allAbis = createInitialCxxModel(
+                sdkComponents,
+                androidLocationProvider,
+                listOf(config1, config2)
+            )
+            val namer = CxxConfigurationFolding(allAbis)
+            assertThat(namer.buildConfigureEdges).containsExactly(
+                "buildCMakeDebug[x86][target-1,target-2]" to "configureCMakeDebug[x86]",
+                "buildCMakeDebug[x86][target-2,target-3]" to "configureCMakeDebug[x86]"
             )
         }
     }
