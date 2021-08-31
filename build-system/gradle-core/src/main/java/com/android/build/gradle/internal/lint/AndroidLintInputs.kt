@@ -1171,8 +1171,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val generatedSourceFolders: ConfigurableFileCollection
 
-    @get:Internal
-    abstract val generatedResourceFolders: ListProperty<File>
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val generatedResourceFolders: ConfigurableFileCollection
 
     @get:Input
     abstract val shrinkable: Property<Boolean>
@@ -1195,7 +1196,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             )
         }
         generatedSourceFolders.disallowChanges()
-        generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
+        generatedResourceFolders.fromDisallowChanges(
+            ModelBuilder.getGeneratedResourceFoldersFileCollection(componentImpl)
+        )
         shrinkable.setDisallowChanges(
             componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
         )
@@ -1255,7 +1258,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet, checkDependencies: Boolean) {
         applicationId.setDisallowChanges("")
         generatedSourceFolders.disallowChanges()
-        generatedResourceFolders.setDisallowChanges(listOf())
+        generatedResourceFolders.disallowChanges()
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         shrinkable.setDisallowChanges(false)
@@ -1292,7 +1295,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     internal fun toLintModel(dependencyCaches: DependencyCaches): LintModelAndroidArtifact {
         return DefaultLintModelAndroidArtifact(
             applicationId.get(),
-            generatedResourceFolders.get(),
+            generatedResourceFolders.toList(),
             generatedSourceFolders.toList(),
             classesOutputDirectories.files.toList(),
             computeDependencies(dependencyCaches)
