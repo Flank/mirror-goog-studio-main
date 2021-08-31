@@ -84,6 +84,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.compiling.BuildConfigType;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
@@ -148,6 +149,7 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
@@ -157,6 +159,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.services.BuildServiceRegistry;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -1125,30 +1128,33 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     @NonNull
-    public static List<File> getGeneratedResourceFolders(@Nullable ComponentImpl component) {
-        if (component == null) {
-            return Collections.emptyList();
-        }
-
-        List<File> result;
-
-        final FileCollection extraResFolders =
-                component.getVariantData().getExtraGeneratedResFolders();
-        Set<File> extraFolders = extraResFolders != null ? extraResFolders.getFiles() : null;
-        if (extraFolders != null && !extraFolders.isEmpty()) {
-            result = Lists.newArrayListWithCapacity(extraFolders.size() + 2);
-            result.addAll(extraFolders);
-        } else {
-            result = Lists.newArrayListWithCapacity(2);
-        }
-
+    public static List<File> getGeneratedResourceFolders(@NonNull ComponentImpl component) {
+        return Streams.stream(getGeneratedResourceFoldersFileCollection(component))
+                .collect(Collectors.toList());
+    }
+    @NonNull
+    public static FileCollection getGeneratedResourceFoldersFileCollection(
+            @NonNull ComponentImpl component) {
+        ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
+        fileCollection.from(component.getVariantData().getExtraGeneratedResFolders());
         if (component.getBuildFeatures().getRenderScript()) {
-            result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
+            fileCollection.from(component.getPaths().getRenderscriptResOutputDir());
+            TaskProvider<? extends RenderscriptCompile> renderscriptCompileTask =
+                    component.getTaskContainer().getRenderscriptCompileTask();
+            if (renderscriptCompileTask != null) {
+                fileCollection.builtBy(renderscriptCompileTask);
+            }
         }
         if (component.getAndroidResourcesEnabled()) {
-            result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
+            fileCollection.from(component.getPaths().getGeneratedResOutputDir());
+            TaskProvider<? extends Task> generateResValuesTask =
+                    component.getTaskContainer().getGenerateResValuesTask();
+            if (generateResValuesTask != null) {
+                fileCollection.builtBy(generateResValuesTask);
+            }
         }
-        return result;
+        fileCollection.disallowChanges();
+        return fileCollection;
     }
 
     @NonNull
