@@ -429,10 +429,6 @@ abstract class SystemPropertyInputs {
     @get:Optional
     abstract val androidLintLogJarProblems: Property<String>
 
-    @get:Input
-    @get:Optional
-    abstract val gradleUserHome: Property<String>
-
     // Use @get:Internal because javaVendor and javaVersion act as proxy inputs for javaHome
     @get:Internal
     abstract val javaHome: Property<String>
@@ -498,7 +494,6 @@ abstract class SystemPropertyInputs {
         androidLintLogJarProblems.setDisallowChanges(
             providerFactory.systemProperty("android.lint.log-jar-problems")
         )
-        gradleUserHome.setDisallowChanges(providerFactory.systemProperty("gradle.user.home"))
         javaHome.setDisallowChanges(providerFactory.systemProperty("java.home"))
         javaVendor.setDisallowChanges(providerFactory.systemProperty("java.vendor"))
         javaVersion.setDisallowChanges(providerFactory.systemProperty("java.version"))
@@ -549,10 +544,6 @@ abstract class EnvironmentVariableInputs {
 
     @get:Input
     @get:Optional
-    abstract val javaHome: Property<String>
-
-    @get:Input
-    @get:Optional
     abstract val lintApiDatabase: Property<String>
 
     @get:Input
@@ -589,7 +580,6 @@ abstract class EnvironmentVariableInputs {
             providerFactory.environmentVariable("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED")
         )
         androidSdkRoot.setDisallowChanges(providerFactory.environmentVariable("ANDROID_SDK_ROOT"))
-        javaHome.setDisallowChanges(providerFactory.environmentVariable("JAVA_HOME"))
         lintApiDatabase.setDisallowChanges(providerFactory.environmentVariable("LINT_API_DATABASE"))
         lintOverrideConfiguration.setDisallowChanges(
             providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")

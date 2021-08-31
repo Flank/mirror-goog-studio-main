@@ -54,7 +54,6 @@ class LintEnvironmentVariablesTest {
                 "ANDROID_LINT_MAX_VIEW_COUNT",
                 "ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED",
                 "ANDROID_SDK_ROOT",
-                "JAVA_HOME",
                 "LINT_API_DATABASE",
                 "LINT_OVERRIDE_CONFIGURATION"
             )
