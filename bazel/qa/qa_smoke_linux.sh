@@ -19,6 +19,8 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
   config_options="--config=resultstore"
+  # Crostini will continue to use checked in credentials, refer b/196437640
+  bazel_flags="--google_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json"
   target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
@@ -53,6 +55,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --max_idle_secs=60 \
     build \
     ${config_options} \
+    ${bazel_flags} \
     --invocation_id=${logs_collector_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --tool_tag=${script_name} \
@@ -68,6 +71,7 @@ if [[ $lsb_release == "crostini" ]]; then
     test \
     --keep_going \
     ${config_options} \
+    ${bazel_flags} \
     --test_strategy=exclusive \
     --jobs=4 \
     --worker_verbose=true \
