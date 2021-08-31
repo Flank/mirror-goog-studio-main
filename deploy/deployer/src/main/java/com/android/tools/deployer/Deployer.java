@@ -31,10 +31,10 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class Deployer {
@@ -83,6 +83,7 @@ public class Deployer {
         COMPARE,
         SWAP,
         PARSE_PATHS,
+        APK_CHECK,
 
         // pipeline 2.0
         PARSE_APP_IDS,
@@ -167,6 +168,9 @@ public class Deployer {
                 return maybeOptimisticInstall(packageName, apks, options, installMode);
             }
 
+            String deploySessionUID = UUID.randomUUID().toString();
+            logger.info("Deploy Install Session %s", deploySessionUID);
+
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
 
             // Inputs
@@ -195,6 +199,8 @@ public class Deployer {
 
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
             runner.create(Tasks.CACHE, splitter::cache, apkList);
+            ApkChecker checker = new ApkChecker(deploySessionUID, logger);
+            runner.create(Tasks.APK_CHECK, checker::log, apkList);
             runner.runAsync(canceller);
 
             App app = new App(packageName, apkList.get(), adb.getDevice(), logger);
@@ -248,6 +254,8 @@ public class Deployer {
             TaskResult result = runner.run(canceller);
             installSuccess = result.isSuccess();
             if (installSuccess) {
+                String deploySessionUID = UUID.randomUUID().toString();
+                logger.info("Optimistic Deploy Install Session %s", deploySessionUID);
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
@@ -255,6 +263,9 @@ public class Deployer {
                         packageName,
                         apks,
                         overlayId);
+
+                ApkChecker checker = new ApkChecker(deploySessionUID, logger);
+                runner.create(Tasks.APK_CHECK, checker::log, apks);
             }
             result.getMetrics().forEach(metrics::add);
         }
@@ -358,6 +369,9 @@ public class Deployer {
             throw DeployerException.apiNotSupported();
         }
 
+        String deploySessionUID = UUID.randomUUID().toString();
+        logger.info("Deploy Apply " + (argRestart ? "" : "Code ") + "Session %s", deploySessionUID);
+
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
         Task<Boolean> restart = runner.create(argRestart);
@@ -412,6 +426,9 @@ public class Deployer {
         if (result.isSuccess()) {
             runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
 
+            ApkChecker checker = new ApkChecker(deploySessionUID, logger);
+            runner.create(Tasks.APK_CHECK, checker::log, newFiles);
+
             // Wait only for swap to finish
             runner.runAsync(canceller);
         } else {
@@ -434,6 +451,11 @@ public class Deployer {
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
             throw DeployerException.apiNotSupported();
         }
+
+        String deploySessionUID = UUID.randomUUID().toString();
+        logger.info(
+                "Deploy Optimistic Apply " + (argRestart ? "" : "Code ") + "Session %s",
+                deploySessionUID);
 
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
@@ -520,6 +542,9 @@ public class Deployer {
                 packageName,
                 newFiles,
                 swapResultTask);
+
+        ApkChecker checker = new ApkChecker(deploySessionUID, logger);
+        runner.create(Tasks.APK_CHECK, checker::log, newFiles);
 
         // Wait only for swap to finish
         runner.runAsync(canceller);
