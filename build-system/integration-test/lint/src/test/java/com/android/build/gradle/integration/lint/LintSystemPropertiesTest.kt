@@ -49,7 +49,6 @@ class LintSystemPropertiesTest {
         val systemProperties =
             listOf(
                 "android.lint.log-jar-problems",
-                "gradle.user.home",
                 "LINT_API_DATABASE",
                 "java.vendor",
                 "java.version",
