@@ -1382,45 +1382,43 @@ public class ManifestMerger2 {
                         ? Integer.parseInt(targetSdkVersion)
                         : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
         if (targetSdkApi > 30) {
-            NodeList activityList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
-            checkIfExportedIsNeeded(activityList, mergingReportBuilder, finalMergedDocument);
-            if (mergingReportBuilder.hasErrors()) {
+            Optional<XmlElement> element =
+                    finalMergedDocument
+                            .getRootNode()
+                            .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
+            if (!element.isPresent()) {
                 return;
             }
-            NodeList serviceList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
-            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, finalMergedDocument);
-            if (mergingReportBuilder.hasErrors()) {
-                return;
-            }
-            NodeList receiverList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
-            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, finalMergedDocument);
-            if (mergingReportBuilder.hasErrors()) {
-                return;
-            }
+            XmlElement applicationElement = element.get();
+
+            checkIfExportedIsNeeded(
+                    applicationElement.getAllNodesByType(ManifestModel.NodeTypes.ACTIVITY),
+                    mergingReportBuilder);
+
+            checkIfExportedIsNeeded(
+                    applicationElement.getAllNodesByType(ManifestModel.NodeTypes.SERVICE),
+                    mergingReportBuilder);
+
+            checkIfExportedIsNeeded(
+                    applicationElement.getAllNodesByType(ManifestModel.NodeTypes.RECEIVER),
+                    mergingReportBuilder);
         }
     }
 
     private void checkIfExportedIsNeeded(
-            NodeList list, MergingReport.Builder mergingReportBuilder, XmlDocument finalManifest) {
-        for (int i = 0; i < list.getLength(); i++) {
-            Element element = (Element) list.item(i);
-
-            if (element.getElementsByTagName(SdkConstants.TAG_INTENT_FILTER).getLength() > 0
-                    && element.getAttributes()
-                                    .getNamedItemNS(
-                                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
-                            == null) {
+            List<XmlElement> list, MergingReport.Builder mergingReportBuilder) {
+        for (XmlElement element : list) {
+            if (element.getAllNodesByType(ManifestModel.NodeTypes.INTENT_FILTER).size() > 0
+                    && !element.getXml()
+                            .hasAttributeNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)) {
                 mergingReportBuilder.addMessage(
-                        finalManifest.getSourceFile(),
+                        element,
                         MergingReport.Record.Severity.ERROR,
                         String.format(
-                                "android:exported needs to be explicitly specified for <%s>. Apps targeting Android 12 and higher are required to specify an explicit value "
+                                "android:exported needs to be explicitly specified for element <%s>. Apps targeting Android 12 and higher are required to specify an explicit value "
                                         + "for `android:exported` when the corresponding component has an intent filter defined. "
                                         + "See https://developer.android.com/guide/topics/manifest/activity-element#exported for details.",
-                                element.getTagName()));
+                                element.getId()));
             }
         }
     }
