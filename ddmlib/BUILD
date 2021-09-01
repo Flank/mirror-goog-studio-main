@@ -129,14 +129,12 @@ avd(name = "avd")
 java_proto_library(
     name = "am-instrumentation-data-proto",
     srcs = glob(["src/main/proto/instrumentation-data.proto"]),
-    protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )
 
 java_proto_library(
     name = "app-processes-proto",
     srcs = glob(["src/main/proto/app_processes.proto"]),
-    protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )
 
