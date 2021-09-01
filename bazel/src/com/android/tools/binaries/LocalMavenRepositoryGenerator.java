@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -413,7 +414,7 @@ public class LocalMavenRepositoryGenerator {
         Path repoPath = null;
         boolean verbose = false;
         boolean resolve = true;
-        boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
+        boolean fetch = !Strings.isNullOrEmpty(System.getenv("MAVEN_FETCH"));
         Map<String, String> remoteRepositories = new TreeMap<>();
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
