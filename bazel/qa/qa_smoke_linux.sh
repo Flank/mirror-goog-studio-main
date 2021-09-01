@@ -139,12 +139,15 @@ fi
 
 if [[ -d "${dist_dir}" ]]; then
   readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
-  mkdir "${dist_dir}"/testlogs
-  (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
-
-  echo "Remove any empty file in testlogs"
-  find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
-
+  readonly bazel_status=$?
+  if [[ ! -z "$testlogs_dir" ]]; then
+    mkdir "${dist_dir}"/testlogs
+    (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
+    echo "Remove any empty file in testlogs"
+    find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
+  else
+    exit $bazel_status
+  fi
 fi
 
 # See http://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
