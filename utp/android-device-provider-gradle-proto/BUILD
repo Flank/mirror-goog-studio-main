@@ -13,7 +13,6 @@ java_proto_library(
     name = "studio.android-device-provider-gradle-proto",
     srcs = glob(["*.proto"]),
     proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
-    protoc_version = "3.0.0",  # Should match the version used in Studio.
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
     visibility = ["//visibility:public"],
 )

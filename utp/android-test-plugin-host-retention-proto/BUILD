@@ -16,7 +16,6 @@ java_proto_library(
     name = "studio.android-test-plugin-host-retention-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
-    protoc_version = "3.0.0",  # Should match the version used in Studio.
     visibility = ["//visibility:public"],
 )
 
