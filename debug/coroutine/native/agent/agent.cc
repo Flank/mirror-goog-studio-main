@@ -28,7 +28,8 @@ using namespace profiler;
  *         created by a genrule, using resource/DebugProbesKt.bindex.
  *         resource/DebugProbesKt.bindex is a dexed version
  *         of DebugProbesKt.bin from kotlinx-coroutines-core.
- *   3.2 Set AgentPremain#isInstalledStatically to true. This tells
+ *   3.2 Set AgentInstallationType#isInstalledStatically or
+ *       AgentPremain#isInstalledStatically to true. This tells
  *       the coroutine lib that DebugProbesKt should not be replaced
  *       lazily when DebugProbesImpl#install is called.
  *       The lazy replacement uses ByteBuddy and Java instrumentation
@@ -239,6 +240,64 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
 }
 
 /**
+ * Try to set
+ * kotlinx.coroutines.debug.AgentInstallationType#isInstalledStatically to true.
+ */
+bool setAgentInstallationType(JNIEnv* jni) {
+  jclass klass_agentInstallationType =
+      jni->FindClass("kotlinx/coroutines/debug/internal/AgentInstallationType");
+  if (klass_agentInstallationType == nullptr) {
+    // clear exception thrown by failed FindClass
+    jni->ExceptionClear();
+
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentInstallationType not found.");
+    return false;
+  }
+
+  jfieldID instance_filedId = jni->GetStaticFieldID(
+      klass_agentInstallationType, "INSTANCE",
+      "Lkotlinx/coroutines/debug/internal/AgentInstallationType;");
+  // TODO catch exceptions here and elsewhere - everytime we try to find/use
+  // classes from the coroutine lib
+  if (instance_filedId == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "AgentInstallationType#INSTANCE not found.");
+    return false;
+  }
+
+  jobject obj_agentInstallationType =
+      jni->GetStaticObjectField(klass_agentInstallationType, instance_filedId);
+  if (obj_agentInstallationType == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Failed to retrieve AgentInstallationType#INSTANCE.");
+    return false;
+  }
+
+  jmethodID mid_setIsInstalledStatically = jni->GetMethodID(
+      klass_agentInstallationType, "setInstalledStatically", "(Z)V");
+  if (mid_setIsInstalledStatically == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "AgentInstallationType#setInstalledStatically(Z)V not found.");
+    return false;
+  }
+
+  jni->CallVoidMethod(obj_agentInstallationType, mid_setIsInstalledStatically,
+                      true);
+
+  if (jni->ExceptionOccurred()) {
+    Log::D(
+        Log::Tag::COROUTINE_DEBUGGER,
+        "AgentInstallationType#setInstalledStatically(Z)V threw an exception.");
+    printStackTrace(jni);
+    return false;
+  }
+
+  Log::D(Log::Tag::COROUTINE_DEBUGGER,
+         "AgentInstallationType#isInstalledStatically set to true.");
+  return true;
+}
+
+/**
  * Try to set kotlinx.coroutines.debug.AgentPremain#isInstalled statically to
  * true.
  */
@@ -302,12 +361,20 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
     return;
   }
 
-  // set AgentPremain#isInstalledStatically to true
-  bool setSuccessful = setAgentPremainInstalledStatically(jni);
-  if (!setSuccessful) {
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
-    return;
+  // set AgentInstallationType#isInstalledStatically to true
+  bool setAgentInstallationTypeSuccessful = setAgentInstallationType(jni);
+  if (!setAgentInstallationTypeSuccessful) {
+    // AgentInstallationType#isInstalledStatically was introduced on newer
+    // versions of coroutines
+    // see for more info: https://github.com/Kotlin/kotlinx.coroutines/pull/2912
+    // we should try to set that first, if it fails we can fall back to the
+    // older way, through AgentPremain.
+    bool setSuccessful = setAgentPremainInstalledStatically(jni);
+    if (!setSuccessful) {
+      SetEventNotification(jvmti, JVMTI_DISABLE,
+                           JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+      return;
+    }
   }
 
   // call DebugProbesImpl#install
