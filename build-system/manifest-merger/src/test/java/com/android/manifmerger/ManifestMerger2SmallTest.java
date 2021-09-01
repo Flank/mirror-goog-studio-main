@@ -2301,9 +2301,11 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.ERROR);
             assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertThat(mergingReport.getLoggingRecords().toString())
+            String loggingRecordsString = mergingReport.getLoggingRecords().toString();
+            assertThat(loggingRecordsString)
                     .contains(
-                            "Apps targeting Android 12 and higher are required to specify an explicit value");
+                            "android:exported needs to be explicitly specified for element <activity#com.example.myapplication.MainActivity>.");
+            assertThat(loggingRecordsString).contains(".xml:7:9-16:20 Error");
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
         }
@@ -2340,9 +2342,11 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.ERROR);
             assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertThat(mergingReport.getLoggingRecords().toString())
+            String loggingRecordsString = mergingReport.getLoggingRecords().toString();
+            assertThat(loggingRecordsString)
                     .contains(
-                            "Apps targeting Android 12 and higher are required to specify an explicit value");
+                            "android:exported needs to be explicitly specified for element <service#com.example.myapplication.MainActivity>.");
+            assertThat(loggingRecordsString).contains(".xml:7:10-14:20 Error");
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
         }
@@ -2379,9 +2383,11 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.ERROR);
             assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertThat(mergingReport.getLoggingRecords().toString())
+            String loggingRecordsString = mergingReport.getLoggingRecords().toString();
+            assertThat(loggingRecordsString)
                     .contains(
-                            "Apps targeting Android 12 and higher are required to specify an explicit value");
+                            "android:exported needs to be explicitly specified for element <receiver#com.example.myapplication.MainActivity>.");
+            assertThat(loggingRecordsString).contains(".xml:7:10-14:21 Error");
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
         }
