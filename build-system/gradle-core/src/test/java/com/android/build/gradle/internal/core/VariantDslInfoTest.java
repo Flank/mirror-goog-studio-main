@@ -345,9 +345,7 @@ public class VariantDslInfoTest {
                         FakeObjectFactory.getFactory(),
                         new FakeLogger(),
                         FakeProviderFactory.getFactory(),
-                        ProjectFactory.getProject().getLayout(),
                         projectOptions,
-                        ProjectFactory.getProject().getGradle().getSharedServices(),
                         new ProjectInfo(ProjectFactory.getProject()),
                         it -> new File(it.toString()));
         dslServices = FakeServices.createDslServices(projectServices);

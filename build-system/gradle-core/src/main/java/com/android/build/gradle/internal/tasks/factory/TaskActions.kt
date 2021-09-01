@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -87,7 +88,12 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreati
             val taskContainer: MutableTaskContainer = creationConfig.taskContainer
             task.dependsOn(taskContainer.preBuildTask)
         }
-        task.configureVariantProperties(creationConfig.name, task.project)
+
+        val project = creationConfig.services.projectInfo.getProject()
+        task.configureVariantProperties(creationConfig.name, project)
+        if (task is BaseTask) {
+            task.projectPath.setDisallowChanges(project.path)
+        }
     }
 }
 

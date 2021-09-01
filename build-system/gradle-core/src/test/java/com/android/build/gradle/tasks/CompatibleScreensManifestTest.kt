@@ -34,7 +34,9 @@ import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -95,7 +97,11 @@ class CompatibleScreensManifestTest {
         }
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
-        val services = createTaskCreationServices()
+        val services = createTaskCreationServices(
+            createProjectServices(
+                projectInfo = ProjectInfo(project)
+            )
+        )
 
         MockitoAnnotations.initMocks(this)
         `when`(appVariant.name).thenReturn("fullVariantName")

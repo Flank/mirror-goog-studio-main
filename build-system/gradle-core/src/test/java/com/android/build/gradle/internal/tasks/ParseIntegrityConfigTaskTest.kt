@@ -27,8 +27,10 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
@@ -67,13 +69,8 @@ class ParseIntegrityConfigTaskTest {
 
     private val gradleProperties = ImmutableMap.of<String, Any>()
 
-    private val projectServices = createProjectServices(
-        projectOptions = ProjectOptions(
-            ImmutableMap.of(),
-            FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
-        )
-    )
-    private val dslServices = createDslServices(projectServices)
+    private lateinit var taskCreationServices: TaskCreationServices
+    private lateinit var dslServices : DslServices
 
     @Before
     fun setup() {
@@ -81,6 +78,16 @@ class ParseIntegrityConfigTaskTest {
         task = project.tasks.create("test", ParseIntegrityConfigTask::class.java)
         project.gradle.sharedServices.registerIfAbsent(
             getBuildServiceName(AnalyticsService::class.java), AnalyticsService::class.java) {}
+
+        val projectServices = createProjectServices(
+            projectInfo = ProjectInfo(project),
+            projectOptions = ProjectOptions(
+                ImmutableMap.of(),
+                FakeProviderFactory(FakeProviderFactory.factory, gradleProperties)
+            )
+        )
+        taskCreationServices = createTaskCreationServices(projectServices)
+        dslServices = createDslServices(projectServices)
     }
 
     @Test
@@ -193,8 +200,6 @@ class ParseIntegrityConfigTaskTest {
     }
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {
-        val services = createTaskCreationServices(projectServices)
-
         val componentProperties = Mockito.mock(VariantCreationConfig::class.java)
         val variantType = Mockito.mock(VariantType::class.java)
         val extension = Mockito.mock(BaseAppModuleExtension::class.java)
@@ -203,7 +208,7 @@ class ParseIntegrityConfigTaskTest {
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
-        Mockito.`when`(componentProperties.services).thenReturn(services)
+        Mockito.`when`(componentProperties.services).thenReturn(taskCreationServices)
         Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)

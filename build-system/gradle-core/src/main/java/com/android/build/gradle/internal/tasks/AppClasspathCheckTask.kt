@@ -34,9 +34,6 @@ import org.gradle.api.tasks.Internal
 abstract class AppClasspathCheckTask : ClasspathComparisonTask() {
 
     @get:Internal("only for task execution")
-    abstract val projectPath: Property<String>
-
-    @get:Internal("only for task execution")
     abstract val projectBuildFile: RegularFileProperty
 
     override fun onDifferentVersionsFound(
@@ -103,7 +100,6 @@ dependencies {
                 name,
                 creationConfig.dirName
             )
-            task.projectPath.setDisallowChanges(task.project.path)
             task.projectBuildFile.set(task.project.buildFile)
             task.projectBuildFile.disallowChanges()
         }

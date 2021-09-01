@@ -48,9 +48,7 @@ fun createProjectServices(
     objectFactory: ObjectFactory = FakeObjectFactory.factory,
     logger: Logger = FakeLogger(),
     providerFactory: ProviderFactory = FakeProviderFactory.factory,
-    projectLayout: ProjectLayout = ProjectFactory.project.layout,
     projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of(), FakeProviderFactory(FakeProviderFactory.factory, ImmutableMap.of())),
-    buildServiceRegistry: BuildServiceRegistry = ProjectFactory.project.gradle.sharedServices,
     projectInfo: ProjectInfo = ProjectInfo(ProjectFactory.project),
     fileResolver: (Any) -> File = { File(it.toString()) }
 ): ProjectServices =
@@ -60,9 +58,9 @@ fun createProjectServices(
         objectFactory,
         logger,
         providerFactory,
-        projectLayout,
+        projectInfo.getProject().layout,
         projectOptions,
-        buildServiceRegistry,
+        projectInfo.getProject().gradle.sharedServices,
         lintFromMaven = LintFromMaven(objectFactory.fileCollection(), "invalid lint"),
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
         maxWorkerCount = 1,

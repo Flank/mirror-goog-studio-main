@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.internal.services.createProjectServices
@@ -242,7 +243,7 @@ class AutoNamespaceTransformFunctionalTest {
 
     private fun AutoNamespaceParameters.initialize() {
         projectName.set(project.name)
-        createProjectServices(buildServiceRegistry = project.gradle.sharedServices).initializeAapt2Input(aapt2)
+        createProjectServices(projectInfo = ProjectInfo(project)).initializeAapt2Input(aapt2)
     }
 
     companion object {

@@ -157,9 +157,6 @@ public abstract class TransformTask extends StreamBasedTask {
         return transform.getParameterInputs();
     }
 
-    @Internal
-    public abstract Property<String> getProjectPath();
-
     @TaskAction
     void transform(final IncrementalTaskInputs incrementalTaskInputs)
             throws IOException, TransformException, InterruptedException {

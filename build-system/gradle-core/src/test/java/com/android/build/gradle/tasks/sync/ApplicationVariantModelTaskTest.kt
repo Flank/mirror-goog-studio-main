@@ -19,10 +19,12 @@ package com.android.build.gradle.tasks.sync
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
+import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth.assertThat
@@ -104,6 +106,13 @@ internal class ApplicationVariantModelTaskTest {
         val creationConfig = Mockito.mock(ApplicationCreationConfig::class.java)
         Mockito.`when`(creationConfig.applicationId).thenReturn(project.provider { "testAppId" })
         Mockito.`when`(creationConfig.name).thenReturn("debug")
+        Mockito.`when`(creationConfig.services).thenReturn(
+            createTaskCreationServices(
+                createProjectServices(
+                    projectInfo = ProjectInfo(project)
+                )
+            )
+        )
         val creationAction = ApplicationVariantModelTask.CreationAction(creationConfig)
         project.gradle.sharedServices.registerIfAbsent(
             getBuildServiceName(AnalyticsService::class.java),

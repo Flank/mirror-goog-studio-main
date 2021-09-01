@@ -80,6 +80,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-28")
+        task.projectPath.set(":app")
         task.taskAction()
     }
 
@@ -104,6 +105,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set("1.0")
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-28")
+        task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
@@ -133,6 +135,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set("1.0")
         task.compileSdkVersion.set("android-28")
+        task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
@@ -162,12 +165,13 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-27")
+        task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertThat(e.message).contains(
-                "greater than this module's compileSdkVersion (android-27)"
+                "Dependency 'displayName' requires a compilation target of 28."
             )
         }
     }
@@ -193,6 +197,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-27")
+        task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
@@ -200,7 +205,7 @@ class CheckAarMetadataTaskTest {
             assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
             assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
             assertThat(e.message).contains(
-                "greater than this module's compileSdkVersion (android-27)"
+                "Dependency 'displayName' requires a compilation target of 28."
             )
         }
     }

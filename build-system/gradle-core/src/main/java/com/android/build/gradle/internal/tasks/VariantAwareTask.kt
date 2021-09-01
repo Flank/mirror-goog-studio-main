@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
@@ -39,5 +40,5 @@ fun VariantAwareTask.configureVariantProperties(
     project: Project
 ) {
     this.variantName = variantName
-    this.analyticsService.set(getBuildService(project.gradle.sharedServices))
+    this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
 }

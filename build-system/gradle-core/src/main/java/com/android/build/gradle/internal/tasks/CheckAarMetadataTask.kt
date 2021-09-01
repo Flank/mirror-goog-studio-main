@@ -48,7 +48,6 @@ import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
 import java.util.Properties
-import javax.inject.Inject
 
 /** A task that reads the dependencies' AAR metadata files and checks for compatibility */
 @CacheableTask
@@ -97,6 +96,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
+            it.projectPath.set(projectPath)
         }
     }
 
@@ -138,14 +138,12 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
 }
 
 /** [WorkAction] to check AAR metadata files */
-abstract class CheckAarMetadataWorkAction @Inject constructor(
-    private val checkAarMetadataWorkParameters: CheckAarMetadataWorkParameters
-): WorkAction<CheckAarMetadataWorkParameters> {
+abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParameters> {
 
     override fun execute() {
         val errorMessages: MutableList<String> =
             mutableListOf("One or more issues found when checking AAR metadata values:")
-        checkAarMetadataWorkParameters.aarMetadataArtifacts.get().forEach {
+        parameters.aarMetadataArtifacts.get().forEach {
             checkAarMetadataArtifact(it, errorMessages)
         }
         if (errorMessages.size > 1) {
@@ -177,7 +175,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
             try {
                 val majorAarVersion = Revision.parseRevision(aarFormatVersion).major
                 val maxMajorAarVersion =
-                    Revision.parseRevision(checkAarMetadataWorkParameters.aarFormatVersion.get())
+                    Revision.parseRevision(parameters.aarFormatVersion.get())
                         .major
                 if (majorAarVersion > maxMajorAarVersion) {
                     errorMessages.add(
@@ -219,7 +217,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
             try {
                 val majorAarMetadataVersion = Revision.parseRevision(aarMetadataVersion).major
                 val maxMajorAarMetadataVersion =
-                    Revision.parseRevision(checkAarMetadataWorkParameters.aarMetadataVersion.get())
+                    Revision.parseRevision(parameters.aarMetadataVersion.get())
                         .major
                 if (majorAarMetadataVersion > maxMajorAarMetadataVersion) {
                     errorMessages.add(
@@ -262,16 +260,13 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
 
                 )
             } else {
-                val compileSdkVersion = checkAarMetadataWorkParameters.compileSdkVersion.get()
+                val compileSdkVersion = parameters.compileSdkVersion.get()
                 val compileSdkVersionInt = getApiIntFromString(compileSdkVersion)
                 if (minCompileSdkInt > compileSdkVersionInt) {
                     errorMessages.add(
                         """
-                            The $MIN_COMPILE_SDK_PROPERTY ($minCompileSdk) specified in a
-                            dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is greater than this module's compileSdkVersion ($compileSdkVersion).
-                            Dependency: $displayName.
-                            AAR metadata file: ${aarMetadataFile.absolutePath}.
+                            Dependency '$displayName' requires a compilation target of $minCompileSdk.
+                            Compilation target for module '${parameters.projectPath.get()}' is '$compileSdkVersion'
                             """.trimIndent()
                     )
                 }
@@ -306,6 +301,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
+    abstract val projectPath: Property<String>
 }
 
 private data class AarMetadataReader(val file: File) {

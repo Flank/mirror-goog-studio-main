@@ -271,9 +271,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val featureName: Property<String>
 
     @get:Internal("only for task execution")
-    abstract val projectPath: Property<String?>
-
-    @get:Internal("only for task execution")
     abstract val projectBuildFile: RegularFileProperty
 
     @get:Nested
@@ -426,7 +423,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.manifestOverlays.disallowChanges()
             task.isFeatureSplitVariantType = creationConfig.variantType.isDynamicFeature
             task.buildTypeName = creationConfig.buildType
-            task.projectPath.setDisallowChanges(task.project.path)
             task.projectBuildFile.set(task.project.buildFile)
             task.projectBuildFile.disallowChanges()
             // TODO: here in the "else" block should be the code path for the namespaced pipeline

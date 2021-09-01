@@ -413,9 +413,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return apkCreatorType;
     }
 
-    @Internal
-    public abstract Property<String> getProjectPath();
-
     @Override
     public void doTaskAction(@NonNull InputChanges changes) {
         if (!changes.isIncremental()) {
@@ -1294,10 +1291,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());
             }
-
-            packageAndroidArtifact
-                    .getProjectPath()
-                    .set(packageAndroidArtifact.getProject().getPath());
 
             // If we're in a dynamic feature, we use FEATURE_SIGNING_CONFIG_VERSIONS, published from
             // the base. Otherwise, we use the SIGNING_CONFIG_VERSIONS internal artifact.

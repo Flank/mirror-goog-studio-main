@@ -35,8 +35,12 @@ import javax.inject.Inject
  */
 @DisableCachingByDefault
 abstract class BaseTask : DefaultTask() {
+    @Deprecated("Use projectPath instead", ReplaceWith("projectPath"))
     @get:Internal
     val projectName: String = project.name
+
+    @get:Internal("only for task execution")
+    abstract val projectPath: Property<String>
 
     @get:Inject
     abstract val workerExecutor: WorkerExecutor

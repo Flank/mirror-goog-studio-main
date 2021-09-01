@@ -32,9 +32,6 @@ import java.io.File
 @CacheableTask
 abstract class TestPreBuildTask : ClasspathComparisonTask() {
 
-    @get:Internal("only for task execution")
-    abstract val projectPath: Property<String>
-
     override fun onDifferentVersionsFound(
         group: String,
         module: String,
@@ -75,7 +72,6 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
                 creationConfig.services.projectInfo.getIntermediatesDir(),
                 "prebuild/${creationConfig.dirName}"
             )
-            task.projectPath.setDisallowChanges(task.project.path)
         }
     }
 }

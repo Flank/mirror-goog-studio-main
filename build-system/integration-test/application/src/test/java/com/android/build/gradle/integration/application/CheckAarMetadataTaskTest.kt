@@ -100,7 +100,10 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("greater than this module's compileSdkVersion (android-24)")
+                .contains("""
+                    Dependency ':lib' requires a compilation target of 28.
+                    Compilation target for module ':app' is 'android-24'
+                """.trimIndent())
         }
     }
 
@@ -160,7 +163,10 @@ class CheckAarMetadataTaskTest {
             Assert.fail("Expected build failure")
         } catch (e: Exception) {
             assertThat(Throwables.getRootCause(e).message)
-                .contains("greater than this module's compileSdkVersion (android-24)")
+                .contains("""
+                    Dependency 'library.aar' requires a compilation target of 28.
+                    Compilation target for module ':app' is 'android-24'
+                """.trimIndent())
         }
     }
 
