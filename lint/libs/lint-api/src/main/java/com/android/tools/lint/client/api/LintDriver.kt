@@ -3167,6 +3167,10 @@ class LintDriver(
             null
         }
 
+        if (scope?.sourcePsi is PsiCompiledElement) {
+            return false
+        }
+
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
             context != null && context.containsCommentSuppress()
@@ -3247,6 +3251,10 @@ class LintDriver(
             null
         }
 
+        if (scope is PsiCompiledElement) {
+            return false
+        }
+
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
             context != null && context.containsCommentSuppress()
@@ -3302,6 +3310,10 @@ class LintDriver(
             issue.suppressNames?.toSet()
         } else {
             null
+        }
+
+        if (scope.sourcePsi is PsiCompiledElement) {
+            return false
         }
 
         var currentScope: UAnnotated = scope

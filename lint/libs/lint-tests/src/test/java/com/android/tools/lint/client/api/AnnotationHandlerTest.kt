@@ -545,7 +545,8 @@ class AnnotationHandlerTest {
             src/test/usage/Usage.java:6: Error: FIELD_REFERENCE_PACKAGE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
                     use(api.field);
                             ~~~~~
-            1 errors, 0 warnings
+            libs/packageinfoclass.jar!/test/api/package-info.class: Error: Incident reported on package annotation [_AnnotationIssue]
+            2 errors, 0 warnings
             """
         )
     }
@@ -909,6 +910,11 @@ class AnnotationHandlerTest {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>
         ) {
+            if (allPackageAnnotations.contains(annotation)) {
+                // Regression test for https://issuetracker.google.com/191286558: Make sure we can report
+                // incidents on annotations from package info files without throwing an exception
+                context.report(TEST_ISSUE, context.getLocation(annotation), "Incident reported on package annotation")
+            }
             val name = qualifiedName.substring((qualifiedName.lastIndexOf('.') + 1))
             val message = "`${type.name}` usage of annotated element (`@$name`) "
             val location = context.getLocation(usage)
