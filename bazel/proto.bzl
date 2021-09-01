@@ -11,6 +11,7 @@ proto_languages = struct(
 )
 
 PROTOC_VERSION = "3.10.0"
+PROTOC_GRPC_VERSION = "1.21.1"
 
 ProtoPackageInfo = provider(fields = ["proto_src", "proto_path"])
 
@@ -139,7 +140,7 @@ def java_proto_library(
         visibility = None,
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
-        protoc_grpc_version = None,
+        protoc_grpc_version = PROTOC_GRPC_VERSION,
         proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
         **kwargs):
     """Compiles protobuf into a .jar file and optionally creates a maven artifact.
@@ -196,7 +197,7 @@ def android_java_proto_library(
         name,
         srcs = None,
         grpc_support = False,
-        protoc_grpc_version = None,
+        protoc_grpc_version = PROTOC_GRPC_VERSION,
         java_deps = [],
         proto_deps = [],
         visibility = None):
@@ -222,7 +223,14 @@ def android_java_proto_library(
       visibility: Visibility of the rule.
     """
     internal_name = "_" + name + "_internal"
-    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps, proto_deps = proto_deps)
+    java_proto_library(
+        name = internal_name,
+        srcs = srcs,
+        grpc_support = grpc_support,
+        protoc_grpc_version = protoc_grpc_version,
+        java_deps = java_deps,
+        proto_deps = proto_deps,
+    )
     java_jarjar(
         name = name,
         srcs = [":" + internal_name],
@@ -286,7 +294,7 @@ def maven_proto_library(
         visibility = None,
         grpc_support = False,
         protoc_version = PROTOC_VERSION,
-        protoc_grpc_version = None,
+        protoc_grpc_version = PROTOC_GRPC_VERSION,
         proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
         **kwargs):
     # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.

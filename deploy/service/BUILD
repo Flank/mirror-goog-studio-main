@@ -5,9 +5,8 @@ load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_l
 android_java_proto_library(
     name = "deploy-service-proto",
     srcs = glob(["proto/**/*.proto"]),
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
 

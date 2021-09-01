@@ -50,15 +50,13 @@ def app_inspection_proto(name, jar, proto_file_name, visibility = None):
     java_proto_library(
         name = name + "-nojarjar",
         srcs = [":" + unpack_name],
-        grpc_support = 1,
-        protoc_grpc_version = "1.21.1",
+        grpc_support = True,
         visibility = visibility,
     )
     android_java_proto_library(
         name = name,
         srcs = [":" + unpack_name],
-        grpc_support = 1,
-        protoc_grpc_version = "1.21.1",
+        grpc_support = True,
         visibility = visibility,
     )
 

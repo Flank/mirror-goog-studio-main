@@ -18,9 +18,8 @@ load("@//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "java_proto_libra
 java_proto_library(
     name = "java_proto",
     srcs = ["protos/perfetto/trace/perfetto_trace.proto"],
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["//external:grpc-all-java"],
-    protoc_grpc_version = "1.21.1",
 )
 
 cc_grpc_proto_library(

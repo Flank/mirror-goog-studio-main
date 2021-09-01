@@ -5,7 +5,7 @@ maven_proto_library(
     name = "proto",
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.emulator:proto:" + BASE_VERSION,
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = [
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
@@ -14,7 +14,6 @@ maven_proto_library(
         "@maven//:io.grpc.grpc-protobuf",
         "@maven//:io.grpc.grpc-stub",
     ],
-    protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
 
@@ -27,9 +26,8 @@ android_java_proto_library(
         "snapshot_service.proto",
         "ui_controller_service.proto",
     ],
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
 

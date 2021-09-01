@@ -5,7 +5,6 @@ maven_proto_library(
     name = "android-test-plugin-host-coverage-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-coverage-proto:" + BASE_VERSION,
-    protoc_grpc_version = "1.21.1",
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-coverage-proto",
     visibility = ["//visibility:public"],
 )

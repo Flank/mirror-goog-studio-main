@@ -23,9 +23,8 @@ cc_grpc_proto_library(
 android_java_proto_library(
     name = "fake_device_proto",
     srcs = ["fake_device.proto"],
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )
 

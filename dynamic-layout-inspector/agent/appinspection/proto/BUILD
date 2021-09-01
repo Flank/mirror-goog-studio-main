@@ -5,15 +5,13 @@ load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_l
 java_proto_library(
     name = "layout_inspector_view_java_proto-nojarjar",
     srcs = glob(["**/*.proto"]),
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
 )
 
 android_java_proto_library(
     name = "layout_inspector_view_java_proto",
     srcs = glob(["**/*.proto"]),
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
 )

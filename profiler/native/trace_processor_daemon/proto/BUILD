@@ -13,7 +13,6 @@ cc_grpc_proto_library(
 java_proto_library(
     name = "java_proto",
     srcs = glob(["**/*.proto"]),
-    grpc_support = 1,
+    grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
-    protoc_grpc_version = "1.21.1",
 )
