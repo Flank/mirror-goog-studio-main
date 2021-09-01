@@ -35,7 +35,8 @@ readonly CONFIG_OPTIONS="--config=dynamic --config=datasize_aspect"
 # Arguments:
 #   None
 ####################################
-function copy_bazel_artifacts() {
+function copy_bazel_artifacts() {(
+  set -e
   local -r artifacts_dir="${DIST_DIR}/artifacts"
   mkdir -p ${artifacts_dir}
   local -r bin_dir="$("${SCRIPT_DIR}"/bazel info ${CONFIG_OPTIONS} bazel-bin)"
@@ -59,7 +60,7 @@ function copy_bazel_artifacts() {
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/bazel/local_maven_repository_generator_deploy.jar ${artifacts_dir}/generator.jar
   cp -a ${bin_dir}/tools/base/gmaven/gmaven.zip ${artifacts_dir}/gmaven_repo.zip
-}
+)}
 
 ####################################
 # Download a flake retry bazelrc file from GCS.
@@ -261,6 +262,10 @@ if [[ -d "${DIST_DIR}" ]]; then
 
   if [[ ! $SKIP_BAZEL_ARTIFACTS ]]; then
     copy_bazel_artifacts
+    if [[ $? -ne 0 ]]; then
+      echo "Failed to copy artifacts!"
+      exit 1
+    fi
   fi
 fi
 
