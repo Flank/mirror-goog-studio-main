@@ -110,6 +110,7 @@ public class BuildFileWriter {
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
                             .map(BuildFileWriter::getMavenArtifactRuleName)
+                            .distinct()
                             .toArray(String[]::new);
 
             if (originalDepRuleNames.length != 0) {
@@ -165,6 +166,7 @@ public class BuildFileWriter {
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
                             .map(BuildFileWriter::getMavenArtifactRuleName)
+                            .distinct()
                             .toArray(String[]::new);
             if (originalDepRuleNames.length != 0) {
                 fileWriter.append("    original_deps = [\n");
