@@ -180,11 +180,10 @@ file.
   * If the artifact will only be used in tests as data (i.e., passed into
     `maven_repository` rules), then add it to the rule named `maven_tests`.
 
-2. Use `MAVEN_FETCH=1` when running your next Bazel command.
-This will download the artifact.
+2. Use the following script to download the artifacts:
 
 ```
-MAVEN_FETCH=1 bazel build //tools/base/build-system/gradle-core
+tools/base/bazel/maven/maven_fetch.sh
 ```
 
 3. In order to use the new artifact, use `@maven//:` prefix without the
