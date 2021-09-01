@@ -30,6 +30,8 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 
 class LintDependencyModelBuilder(
@@ -66,6 +68,18 @@ class LintDependencyModelBuilder(
         lintJarMap: Map<ComponentIdentifier, File>?,
         type: DependencyModelBuilder.ClasspathType
     ) {
+        // TODO(b/198453608) Handle OpaqueComponentIdentifier dependencies (e.g., gradleApi()).
+        if (artifact.componentIdentifier is OpaqueComponentIdentifier) {
+            return
+        }
+        // TODO(b/198449627) Handle java libraries with external Android library dependencies.
+        if ((artifact.componentIdentifier !is ProjectComponentIdentifier
+                    || artifact.isWrappedModule)
+            && artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID
+            && artifact.extractedFolder == null) {
+            return
+        }
+
         // check if this particular artifact was created before, if not we create it and record it
         // Even though we are not yet handling full graph, and only flat list, this will happen
         // because most artifacts are in both compile and runtime

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.testutils.truth.PathSubject.assertThat
@@ -32,10 +33,13 @@ class LintStandaloneModelDependenciesTest {
                 """
                     apply plugin: 'com.android.lint'
 
-                    // add random implementation and compileOnly dependencies
                     dependencies {
                         implementation 'com.google.guava:guava:19.0'
                         compileOnly 'junit:junit:4.12'
+                        // Add gradleApi() dependency as regression test for b/198453608
+                        implementation gradleApi()
+                        // Add external Android dependency as regression test for b/198449627
+                        implementation 'com.android.support:appcompat-v7:${SUPPORT_LIB_VERSION}'
                     }
                 """.trimIndent()
             )
@@ -60,7 +64,7 @@ class LintStandaloneModelDependenciesTest {
 
     // Regression test for b/197146610
     @Test
-    fun testLintWithCompileOnlyDependencies() {
+    fun testLintModelDependencies() {
         project.executor().run("clean", ":java-lib1:lint")
         val lintModelFile =
             FileUtils.join(
