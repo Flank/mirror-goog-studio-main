@@ -16,18 +16,14 @@
 
 package com.android.build.gradle.internal.cxx.build
 
-import org.gradle.caching.internal.controller.BuildCacheController
 import org.gradle.process.ExecOperations
 import java.io.File
-import org.gradle.internal.hash.FileHasher
+
 /**
  * Represents a C/C++ build operation independent of a Gradle task.
  */
 interface CxxBuilder {
     val objFolder: File
     val soFolder: File
-    fun build(
-        ops: ExecOperations,
-        fileHasher: FileHasher,
-        buildCacheController: BuildCacheController)
+    fun build(ops: ExecOperations)
 }

@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
-import com.android.build.gradle.internal.cxx.caching.CxxBuildCache
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -45,8 +44,6 @@ import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.gradle.api.GradleException
-import org.gradle.caching.internal.controller.BuildCacheController
-import org.gradle.internal.hash.FileHasher
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
@@ -81,10 +78,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
         val outputFolder: File
     )
 
-    override fun build(
-        ops: ExecOperations,
-        fileHasher: FileHasher,
-        buildCacheController: BuildCacheController) {
+    override fun build(ops: ExecOperations) {
         infoln("starting build")
         infoln("reading expected JSONs")
         val config = nativeBuildConfigValueMini
@@ -98,7 +92,6 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             verifyTargetExists(config)
         }
 
-        val buildCache = CxxBuildCache(buildCacheController, fileHasher)
         val buildSteps = Lists.newArrayList<BuildStep>()
 
         infoln("evaluate miniconfig")
@@ -151,7 +144,6 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
         }
 
         executeProcessBatch(
-            buildCache,
             ops,
             buildSteps)
 
@@ -326,7 +318,6 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
      * that point.
      */
     private fun executeProcessBatch(
-        buildCache: CxxBuildCache,
         ops: ExecOperations,
         buildSteps: List<BuildStep>) {
         for (buildStep in buildSteps) {
@@ -365,18 +356,16 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 abi.ninjaLogFile.useLines { it.count() }
             } else 0
 
-            buildCache.cacheBuild(abi, buildStep.targetsFromDsl) {
-                createProcessOutputJunction(
-                    buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
-                    buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
-                    buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
-                    processBuilder,
-                    "")
-                    .logStderr()
-                    .logStdout()
-                    .logFullStdout(abi.ifLogNativeBuildToLifecycle { true } ?: false)
-                    .execute(ops::exec)
-            }
+            createProcessOutputJunction(
+                buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
+                buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
+                processBuilder,
+                "")
+                .logStderr()
+                .logStdout()
+                .logFullStdout(abi.ifLogNativeBuildToLifecycle { true } ?: false)
+                .execute(ops::exec)
 
             // Build attribution reporting based on .ninja_log
             // This is best-effort because it appears that ninja does not guarantee

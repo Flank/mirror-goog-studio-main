@@ -63,15 +63,6 @@ abstract class ExternalNativeBuildTask :
     @Inject
     protected abstract fun getExecOperations(): ExecOperations
 
-    @Inject
-    protected abstract fun getBuildCacheController(): BuildCacheController
-
-    @Inject
-    protected abstract fun getFileWatcherFactory(): FileWatcherFactory
-
-    @Inject
-    protected abstract fun getFileHasher(): FileHasher
-
     override fun doTaskAction() {
         recordTaskAction(analyticsService.get()) {
             IssueReporterLoggingEnvironment(
@@ -79,10 +70,7 @@ abstract class ExternalNativeBuildTask :
                 analyticsService.get(),
                 configurationModel.variant
             ).use {
-                builder.build(
-                    getExecOperations(),
-                    getFileHasher(),
-                    getBuildCacheController())
+                builder.build(getExecOperations())
             }
         }
     }
