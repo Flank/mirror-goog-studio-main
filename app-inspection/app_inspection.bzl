@@ -108,19 +108,14 @@ def app_inspection_jar(
         **kwargs
     )
 
-    jarjar_srcs_dedup = [
-        ":" + name + "-sources_undexed",
-        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
-    ]
+    jarjar_srcs_dedup = [":" + name + "-sources_undexed"]
     for src in jarjar_srcs:
         if src not in jarjar_srcs_dedup:
             jarjar_srcs_dedup.append(src)
     java_jarjar(
         name = name + "-sources_jarjared",
         srcs = jarjar_srcs_dedup,
-        rules = "//tools/base/bazel:jarjar_rules.txt",
+        rules = "//tools/base/app-inspection:jarjar_rules.txt",
     )
 
     dex_library(
