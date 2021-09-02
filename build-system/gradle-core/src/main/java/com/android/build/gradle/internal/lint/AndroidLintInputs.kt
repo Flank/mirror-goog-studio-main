@@ -459,10 +459,6 @@ abstract class SystemPropertyInputs {
 
     @get:Input
     @get:Optional
-    abstract val lintBinDir: Property<String>
-
-    @get:Input
-    @get:Optional
     abstract val lintConfigurationOverride: Property<String>
 
     @get:Input
@@ -480,10 +476,6 @@ abstract class SystemPropertyInputs {
     @get:Input
     @get:Optional
     abstract val lintUnusedResourcesIncludeTests: Property<String>
-
-    @get:Input
-    @get:Optional
-    abstract val lintWorkDir: Property<String>
 
     @get:Input
     @get:Optional
@@ -511,9 +503,6 @@ abstract class SystemPropertyInputs {
         javaVendor.setDisallowChanges(providerFactory.systemProperty("java.vendor"))
         javaVersion.setDisallowChanges(providerFactory.systemProperty("java.version"))
         lintApiDatabase.setDisallowChanges(providerFactory.systemProperty("LINT_API_DATABASE"))
-        lintBinDir.setDisallowChanges(
-            providerFactory.systemProperty("com.android.tools.lint.bindir")
-        )
         lintConfigurationOverride.setDisallowChanges(
             providerFactory.systemProperty("lint.configuration.override")
         )
@@ -525,9 +514,6 @@ abstract class SystemPropertyInputs {
         )
         lintUnusedResourcesIncludeTests.setDisallowChanges(
             providerFactory.systemProperty("lint.unused-resources.include-tests")
-        )
-        lintWorkDir.setDisallowChanges(
-            providerFactory.systemProperty("com.android.tools.lint.workdir")
         )
     }
 }
@@ -584,8 +570,10 @@ abstract class EnvironmentVariableInputs {
     fun initialize(providerFactory: ProviderFactory, isForAnalysis: Boolean) {
         if (isForAnalysis) {
             lintHtmlPrefs.disallowChanges()
+            lintXmlRoot.disallowChanges()
         } else {
             lintHtmlPrefs.setDisallowChanges(providerFactory.environmentVariable("LINT_HTML_PREFS"))
+            lintXmlRoot.setDisallowChanges(providerFactory.environmentVariable("LINT_XML_ROOT"))
         }
         androidHome.setDisallowChanges(providerFactory.environmentVariable("ANDROID_HOME"))
         androidLintIncludeLdpi.setDisallowChanges(
@@ -603,7 +591,6 @@ abstract class EnvironmentVariableInputs {
         androidSdkRoot.setDisallowChanges(providerFactory.environmentVariable("ANDROID_SDK_ROOT"))
         javaHome.setDisallowChanges(providerFactory.environmentVariable("JAVA_HOME"))
         lintApiDatabase.setDisallowChanges(providerFactory.environmentVariable("LINT_API_DATABASE"))
-        lintXmlRoot.setDisallowChanges(providerFactory.environmentVariable("LINT_XML_ROOT"))
         lintOverrideConfiguration.setDisallowChanges(
             providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
         )

@@ -157,6 +157,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         containingClass: PsiClass,
         member: PsiMember?
     ): Boolean {
+        if (LintClient.isGradle) return false
         val binDir = System.getProperty("com.android.tools.lint.bindir") ?: return false
         if (!binDir.contains("third_party/java/android/")) return false
 
