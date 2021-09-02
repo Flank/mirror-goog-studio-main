@@ -19,6 +19,11 @@ app_inspection_jar(
         "src/**/*.java",
     ]),
     out = "network-inspector.jar",
+    bundle_srcs = [
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
     d8_flags = [
         "--min-api 26",  # Network inspector is only supported on O+ devices.
     ],

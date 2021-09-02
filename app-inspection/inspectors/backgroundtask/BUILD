@@ -16,6 +16,10 @@ app_inspection_jar(
     name = "agent",
     srcs = glob(["src/**/*.kt"]),
     out = "backgroundtask-inspection.jar",
+    bundle_srcs = [
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    ],
     d8_flags = [
         "--min-api 26",  # Background task inspector is only supported on O+ devices.
     ],

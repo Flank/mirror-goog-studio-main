@@ -86,18 +86,21 @@ def app_inspection_aar_import(name, aar, **kwargs):
 # of an inspector jar.
 #
 # This macro expands into several rules named after the *name* of this rule:
-#   name_undexed[.jar]
-#   name_jarjared[.jar]
-#   name_dexed[.jar]
+#   name-sources_undexed[.jar]
+#   name-bundled[.jar]
+#   name-bundled_dexed[.jar]
 #   name (the final rule that puts everything together)
 #
 # The resulting jar is named out.jar if out is provided. Otherwise name.jar.
+#
+# bundle_srcs represents dependencies that need to be bundled with the
+# inspector (via jarjar) because they are needed during runtime.
 def app_inspection_jar(
         name,
         proto,
         inspection_resources,
         inspection_resource_strip_prefix,
-        jarjar_srcs = [],
+        bundle_srcs = [],
         out = "",
         d8_flags = [],
         **kwargs):
@@ -106,27 +109,19 @@ def app_inspection_jar(
         **kwargs
     )
 
-    jarjar_srcs_dedup = [
-        ":" + name + "-sources_undexed",
-        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
-    ]
-    for src in jarjar_srcs:
-        if src not in jarjar_srcs_dedup:
-            jarjar_srcs_dedup.append(src)
+    bundle_srcs.append(":" + name + "-sources_undexed")
     java_jarjar(
-        name = name + "-sources_jarjared",
-        srcs = jarjar_srcs_dedup,
-        rules = "//tools/base/bazel:jarjar_rules.txt",
+        name = name + "-bundled",
+        srcs = bundle_srcs,
+        rules = "//tools/base/app-inspection:jarjar_rules.txt",
     )
 
     dex_library(
-        name = name + "-sources_dexed",
+        name = name + "-bundled_dexed",
         dexer = "D8",
         flags = d8_flags,
         jars = [
-            ":" + name + "-sources_jarjared",
+            ":" + name + "-bundled",
             "//tools/base/bazel:studio-proto",
             proto,
         ],
@@ -145,7 +140,7 @@ def app_inspection_jar(
         name = name,
         out = output_name,
         jars = [
-            ":" + name + "-sources_dexed",
+            ":" + name + "-bundled_dexed",
             ":" + name + "_inspection_resources",
         ],
     )

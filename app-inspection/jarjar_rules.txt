@@ -1,0 +1,2 @@
+rule kotlin.** com.android.tools.idea.kotlin.@1
+rule kotlinx.coroutines.** com.android.tools.idea.kotlinx.coroutines.@1
