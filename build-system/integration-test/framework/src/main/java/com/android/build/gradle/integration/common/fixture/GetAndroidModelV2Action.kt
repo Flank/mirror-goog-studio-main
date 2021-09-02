@@ -15,14 +15,16 @@
  */
 package com.android.build.gradle.integration.common.fixture
 
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2.BuildInfo
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BuildMap
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
-import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
 import com.android.builder.model.v2.models.ndk.NativeModule
 import org.gradle.tooling.BuildAction
@@ -68,62 +70,91 @@ class GetAndroidModelV2Action(
             projectMap[buildId] = build.projects.map { it.path to it.projectDirectory }
         }
 
-        val (modelMap, libraryMap) = getAndroidProjectMap(projects, buildController)
+        val (modelMap, buildMap, libraryMap) = getAndroidProjectMap(projects, buildController)
 
         val t2 = System.currentTimeMillis()
 
         println("GetAndroidModelV2Action: " + (t2 - t1) + "ms")
 
-        return ModelContainerV2(
-            rootBuildId,
-            modelMap,
-            projectMap,
-            libraryMap
-        )
+        val buildIdMap = buildMap?.buildIdMap ?: mapOf(":" to rootBuildId.rootDir)
+
+        val reverseBuildIdMap = buildIdMap.map { it.value to it.key}.toMap()
+
+        // build the final infoMaps and the final buildMap
+        val projectInfoMaps = mutableMapOf<String, Map<String, ModelInfo>>()
+        val buildInfoMap = mutableMapOf<String, BuildInfo>()
+        for ((buildId, modelInfoMap) in modelMap) {
+            val name = reverseBuildIdMap[buildId.rootDir]
+                ?: throw RuntimeException("Failed to find name for ${buildId.rootDir}\nbuildIdMap = $buildIdMap")
+            projectInfoMaps[name] = modelInfoMap.filter {
+                it.value.isAndroid()
+            }
+
+            buildInfoMap[name] = BuildInfo(
+                name,
+                buildId.rootDir,
+                modelInfoMap.map { it.key to it.value.projectDir }
+            )
+        }
+
+        return ModelContainerV2(projectInfoMaps, buildInfoMap, libraryMap)
     }
+
+    private data class Result(
+        val modelMap: Map<BuildIdentifier, Map<String, ModelInfo>>,
+        val buildMap: BuildMap?,
+        val libraryMap: GlobalLibraryMap?
+    )
 
     private fun getAndroidProjectMap(
         projects: List<Pair<BuildIdentifier, BasicGradleProject>>,
         buildController: BuildController
-    ): Pair<Map<BuildIdentifier, Map<String, ModelInfo>>, GlobalLibraryMap?> {
+    ): Result {
         val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo>>()
 
         // record an Android project, so that we can query the global Library Map at the end
         // TODO: Handle composite builds by possible querying one per build.
         var projectWithAndroidPlugin: BasicGradleProject? = null
 
+        var buildMap: BuildMap? = null
+
         for ((buildId, project) in projects) {
             // if we don't find ModelVersions, then it's not an AndroidProject, move on.
-            val modelVersions = buildController.findModel(project, Versions::class.java) ?: continue
-            val androidProject = buildController.findModel(project, AndroidProject::class.java)
-            val androidDsl = buildController.findModel(project, AndroidDsl::class.java)
-
-            val variantDependencies = if (variantName != null) {
-                buildController.findModel(
-                    project,
-                    VariantDependencies::class.java,
-                    ModelBuilderParameter::class.java
-                ) { it.variantName = variantName }
-            } else null
-
-            val nativeModule = if (nativeParams != null) {
-                buildController.findModel(
-                    project,
-                    NativeModule::class.java,
-                    NativeModelBuilderParameter::class.java
-                ) {
-                    it.variantsToGenerateBuildInformation = nativeParams.nativeVariants
-                    it.abisToGenerateBuildInformation = nativeParams.nativeAbis
+            val modelVersions = buildController.findModel(project, Versions::class.java)
+            if (modelVersions != null) {
+                if (buildMap == null) {
+                    buildMap = buildController.findModel(project, BuildMap::class.java)
                 }
-            } else null
+                val androidProject = buildController.findModel(project, AndroidProject::class.java)
+                val androidDsl = buildController.findModel(project, AndroidDsl::class.java)
 
-            val issues =
-                buildController.findModel(project, ProjectSyncIssues::class.java)
+                val variantDependencies = if (variantName != null) {
+                    buildController.findModel(
+                        project,
+                        VariantDependencies::class.java,
+                        ModelBuilderParameter::class.java
+                    ) { it.variantName = variantName }
+                } else null
+
+                val nativeModule = if (nativeParams != null) {
+                    buildController.findModel(
+                        project,
+                        NativeModule::class.java,
+                        NativeModelBuilderParameter::class.java
+                    ) {
+                        it.variantsToGenerateBuildInformation = nativeParams.nativeVariants
+                        it.abisToGenerateBuildInformation = nativeParams.nativeAbis
+                    }
+                } else null
+
+                val issues =
+                    buildController.findModel(project, ProjectSyncIssues::class.java)
                         ?: throw RuntimeException("No ProjectSyncIssue for ${project.path}")
 
-            val map = models.computeIfAbsent(buildId) { mutableMapOf() }
-            map[project.path] =
+                val map = models.computeIfAbsent(buildId) { mutableMapOf() }
+                map[project.path] =
                     ModelInfo(
+                        project.projectDirectory,
                         modelVersions,
                         androidProject,
                         androidDsl,
@@ -132,7 +163,20 @@ class GetAndroidModelV2Action(
                         issues
                     )
 
-            projectWithAndroidPlugin = project
+                projectWithAndroidPlugin = project
+            } else {
+                val map = models.computeIfAbsent(buildId) { mutableMapOf() }
+                map[project.path] =
+                    ModelInfo(
+                        project.projectDirectory,
+                        versions = null,
+                        androidProject = null,
+                        androidDsl = null,
+                        variantDependencies = null,
+                        nativeModule = null,
+                        issues = null
+                    )
+            }
         }
 
         val libraryMap: GlobalLibraryMap? = if (projectWithAndroidPlugin != null) {
@@ -141,6 +185,6 @@ class GetAndroidModelV2Action(
             null
         }
 
-        return models to libraryMap
+        return Result(models, buildMap, libraryMap)
     }
 }

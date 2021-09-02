@@ -67,6 +67,7 @@ public final class FolderTypeRelationship {
         add(ResourceType.FRACTION, ResourceFolderType.VALUES);
         add(ResourceType.ID, ResourceFolderType.VALUES);
         add(ResourceType.INTEGER, ResourceFolderType.VALUES);
+        add(ResourceType.MACRO, ResourceFolderType.VALUES);
         add(ResourceType.PLURALS, ResourceFolderType.VALUES);
         add(ResourceType.PUBLIC, ResourceFolderType.VALUES);
         add(ResourceType.STRING, ResourceFolderType.VALUES);

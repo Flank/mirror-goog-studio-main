@@ -95,7 +95,9 @@ public class AvdManagerCliTest {
         details2.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
         details2.setAbi("armeabi-v7a");
         details2.setApiLevel(26);
-        p2.setTypeDetails((TypeDetails) details2);
+        details2.setExtensionLevel(5);
+        details2.setBaseExtension(false);
+        p2.setTypeDetails((TypeDetails)details2);
         mFileOp.recordExistingFile(p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
@@ -114,7 +116,9 @@ public class AvdManagerCliTest {
                         mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mFileOp, mgr);
         mLogger = new MockLog();
         mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
-        mAvdManager = AvdManager.getInstance(mSdkHandler, new File(AVD_LOCATION), mLogger);
+        mAvdManager =
+                AvdManager.getInstance(
+                        mSdkHandler, mSdkHandler.toCompatiblePath(AVD_LOCATION), mLogger);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
@@ -240,7 +244,7 @@ public class AvdManagerCliTest {
                         + InMemoryFileSystems.getPlatformSpecificPath("/avd/testWearApi.avd")
                         + "\n"
                         + "P   Target: Google APIs\n"
-                        + "P           Based on: Android 8.0 (Oreo)P  Tag/ABI: android-wear/armeabi-v7a\n"
+                        + "P           Based on: Android 8.0 (Oreo), Extension Level 5P  Tag/ABI: android-wear/armeabi-v7a\n"
                         + "P   Sdcard: 512 MB\n",
                 Joiner.on("").join(mLogger.getMessages()));
     }

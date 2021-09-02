@@ -19,6 +19,7 @@ package com.android.tools.appinspection.backgroundtask
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.content.ComponentName
+import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.JobInfo.BackoffPolicy
@@ -59,6 +60,7 @@ class JobHandlerTest {
             .setRequiresStorageNotLow(true)
             .setExtras(PersistableBundle("Extra"))
             .setTransientExtras(Bundle("TransientExtras"))
+            .addTriggerContentUri(JobInfo.TriggerContentUri(Uri()))
             .build()
         jobHandler.onScheduleJobEntry(job)
         jobHandler.onScheduleJobExit(0)
@@ -82,6 +84,8 @@ class JobHandlerTest {
                 assertThat(isRequireStorageNotLow).isEqualTo(true)
                 assertThat(extras).isEqualTo("Extra")
                 assertThat(transientExtras).isEqualTo("TransientExtras")
+                assertThat(triggerContentUrisList.size).isEqualTo(1)
+                assertThat(triggerContentUrisList[0]).isEqualTo("uri")
             }
         }
     }

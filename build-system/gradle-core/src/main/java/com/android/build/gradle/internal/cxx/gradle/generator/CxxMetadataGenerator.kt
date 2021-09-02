@@ -33,9 +33,6 @@ interface CxxMetadataGenerator {
      * If [forceGeneration] is true then rebuild metadata regardless of whether
      * it is otherwise considered to be up-to-date. This flag will be set when
      * the user chose Build/Refresh Linked C++ Projects.
-     *
-     * If [abiName] is specified then only that ABI will be built. Otherwise,
-     * all available ABIs will be built.
      */
-    fun generate(ops: ExecOperations, forceGeneration: Boolean, abiName: String? = null)
+    fun generate(ops: ExecOperations, forceGeneration: Boolean)
 }

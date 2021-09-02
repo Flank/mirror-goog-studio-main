@@ -21,8 +21,8 @@ import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.prefs.AndroidLocationsSingleton
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
-import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
@@ -31,7 +31,6 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
@@ -43,7 +42,6 @@ import org.gradle.workers.WorkerExecutor
  * @property deviceName a displayable device name
  * @property deviceId an identifier for a device
  * @property utpOutputDir a path to the directory to store results from UTP
- * @property utpTmpDir a path to the directory to store temporary output files from UTP
  * @property runnerConfig a function that constructs and returns UTP runner config proto
  * @property serverConfig a UTP server config proto
  * @property shardConfig an information about test sharding, or null if sharding is not enabled
@@ -52,8 +50,10 @@ data class UtpRunnerConfig(
     val deviceName: String,
     val deviceId: String,
     val utpOutputDir: File,
-    val utpTmpDir: File,
-    val runnerConfig: (UtpTestResultListenerServerMetadata) -> RunnerConfigProto.RunnerConfig,
+    val runnerConfig: (
+        UtpTestResultListenerServerMetadata,
+        utpTmpDir: File,
+    ) -> RunnerConfigProto.RunnerConfig,
     val serverConfig: ServerConfigProto.ServerConfig,
     val shardConfig: ShardConfig? = null,
 )
@@ -148,13 +148,6 @@ fun runUtpTestSuiteAndWait(
                     false
                 }
 
-                try {
-                    FileUtils.deleteRecursivelyIfExists(config.utpOutputDir.resolve(TEST_LOG_DIR))
-                    FileUtils.deleteRecursivelyIfExists(config.utpTmpDir)
-                } catch (e: IOException) {
-                    logger.warning("Failed to cleanup temporary directories: $e")
-                }
-
                 testPassed
             }
             postProcessFunc
@@ -177,18 +170,19 @@ private fun runUtpTestSuite(
     utpDependencies: UtpDependencies,
     workQueue: WorkQueue
 ) {
+    val utpRunTempDir = createUtpTempDirectory("utpRunTemp")
     val runnerConfigProtoFile =
         File.createTempFile("runnerConfig", ".pb").also { file ->
             FileOutputStream(file).use { writer ->
-                config.runnerConfig(resultListenerServerMetadata).writeTo(writer)
+                config.runnerConfig(resultListenerServerMetadata, utpRunTempDir).writeTo(writer)
             }
         }
-    val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
+    val serverConfigProtoFile = createUtpTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
             config.serverConfig.writeTo(writer)
         }
     }
-    val loggingPropertiesFile = File.createTempFile("logging", "properties").also { file ->
+    val loggingPropertiesFile = createUtpTempFile("logging", "properties").also { file ->
         Files.asCharSink(file, Charsets.UTF_8).write("""
                 .level=WARNING
                 .handlers=java.util.logging.ConsoleHandler
@@ -202,6 +196,39 @@ private fun runUtpTestSuite(
         params.serverConfig.set(serverConfigProtoFile)
         params.loggingProperties.set(loggingPropertiesFile)
     }
+}
+
+/**
+ * Creates an empty temporary file for UTP in Android Preference directory.
+ */
+fun createUtpTempFile(fileNamePrefix: String, fileNameSuffix: String): File {
+    val utpPrefRootDir = getUtpPreferenceRootDir()
+    return File.createTempFile(fileNamePrefix, fileNameSuffix, utpPrefRootDir).apply {
+        deleteOnExit()
+    }
+}
+
+/**
+ * Creates an empty temporary directory for UTP in Android Preference directory.
+ */
+fun createUtpTempDirectory(dirNamePrefix: String): File {
+    val utpPrefRootDir = getUtpPreferenceRootDir()
+    return java.nio.file.Files.createTempDirectory(
+        utpPrefRootDir.toPath(), dirNamePrefix).toFile().apply {
+        deleteOnExit()
+    }
+}
+
+/**
+ * Returns the UTP preference root directory. Typically it is "~/.android/utp". If the preference
+ * directory dosen't exist, it creates and returns it.
+ */
+fun getUtpPreferenceRootDir(): File {
+    val utpPrefRootDir = File(AndroidLocationsSingleton.prefsLocation.toFile(), "utp")
+    if (!utpPrefRootDir.exists()) {
+        utpPrefRootDir.mkdirs()
+    }
+    return utpPrefRootDir
 }
 
 fun shouldEnableUtp(

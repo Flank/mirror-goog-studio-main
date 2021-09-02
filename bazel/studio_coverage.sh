@@ -118,6 +118,7 @@ fi
   --config=rcache \
   --remote_download_outputs=toplevel \
   --invocation_id=${report_invocation_id} \
+  --jobs=HOST_CPUS*.5 \
   ${auth_options} \
   -- \
   @cov//:comps.lcov_all \

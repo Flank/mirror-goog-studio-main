@@ -16,5 +16,21 @@
 
 package android.app;
 
+import android.content.Intent;
+
 @SuppressWarnings("MethodMayBeStatic")
-public class ActivityThread {}
+public class ActivityThread {
+
+    public ReceiverData newReceiverData() {
+        return new ReceiverData();
+    }
+
+    public class ReceiverData {
+
+        private Intent intent;
+
+        public void setIntent(Intent intent) {
+            this.intent = intent;
+        }
+    }
+}

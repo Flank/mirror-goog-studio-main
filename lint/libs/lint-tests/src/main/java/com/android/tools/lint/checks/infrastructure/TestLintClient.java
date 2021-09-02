@@ -111,6 +111,7 @@ import com.google.common.collect.Sets;
 import com.intellij.openapi.util.Computable;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiModifierListOwner;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -133,6 +134,7 @@ import java.util.stream.Collectors;
 import kotlin.Pair;
 import kotlin.io.FilesKt;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
+import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1109,6 +1111,17 @@ public class TestLintClient extends LintCliClient {
                 }
             }
         }
+
+        if (fix instanceof LintFix.AnnotateFix
+                && fix.getRange() == null
+                && !(location.getSource() instanceof UAnnotated)
+                && !(location.getSource() instanceof PsiModifierListOwner)) {
+            // We normally are able to compute the expected range in super.report,
+            // but not here so ask detector to explicitly provide one.
+            fail(
+                    "Could not find the associated modifier list location for the annotation lint fix.\n"
+                            + "Please explicitly initialize it using `annotate(...).range(context.getLocation(member))...`");
+        }
     }
 
     @NonNull
@@ -1216,7 +1229,13 @@ public class TestLintClient extends LintCliClient {
                         }
                     };
             XmlReader xmlReader = new XmlReader(this, registry, incident.getProject(), xmlFile);
+            Object original = incident.getLocation().getOriginalSource();
             incident = xmlReader.getIncidents().get(0);
+            // preserve originalSource; it's not persisted (like source isn't; this could
+            // point to any object, including complex PSI/UAST objects) but is needed
+            // briefly between location creation and incident reporting to correct the
+            // quickfix range if the highlighting range was narrowed from the intended element range
+            incident.getLocation().setOriginalSource(original);
             //noinspection ResultOfMethodCallIgnored
             xmlFile.delete();
         } catch (IOException e) {

@@ -48,6 +48,7 @@ import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BuildMap
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.Versions.Version
@@ -95,6 +96,7 @@ private fun normalizeAgpVersion(version: String): Any {
 internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     item("projectType", AndroidProject::projectType)
     item("path", AndroidProject::path)
+    item("buildName", AndroidProject::buildName)
     item("buildFolder", AndroidProject::buildFolder)
     item("namespace", AndroidProject::namespace)
     item("androidTestNamespace", AndroidProject::androidTestNamespace)

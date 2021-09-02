@@ -328,7 +328,10 @@ public class DeployerException extends Exception {
 
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
 
-        RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY);
+        RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY),
+
+        COMPONENT_ACTIVATION_EXCEPTION(
+                "Component activation exception", "%s", "", ResolutionAction.NONE);
 
         private final String message;
         private final String details;
@@ -626,6 +629,10 @@ public class DeployerException extends Exception {
                 new DeployerException(Error.RUN_TIME_EXCEPTION, NO_ARGS, e.toString());
         dx.initCause(e);
         return dx;
+    }
+
+    public static DeployerException componentActivationException(String reason) {
+        return new DeployerException(Error.COMPONENT_ACTIVATION_EXCEPTION, NO_ARGS, reason);
     }
 
     public static DeployerException apiNotSupported() {

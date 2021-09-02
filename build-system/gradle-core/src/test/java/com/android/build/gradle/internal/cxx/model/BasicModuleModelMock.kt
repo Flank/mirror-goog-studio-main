@@ -373,7 +373,7 @@ open class BasicModuleModelMock {
                 .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
 
             doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
-            doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
+            doReturn(listOf(Abi.X86, Abi.X86_64, Abi.ARMEABI_V7A, Abi.ARM64_V8A)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
 
             doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(

@@ -63,7 +63,7 @@ public class BuildFileWriter {
      */
     public void write(ResolutionResult result) throws Exception {
         fileWriter.append(
-                "load(\"@//tools/base/bazel:maven.bzl\", \"maven_artifact\", \"maven_import\", \"maven_pom\")\n\n");
+                "load(\"@//tools/base/bazel:maven.bzl\", \"maven_artifact\", \"maven_import\")\n\n");
         fileWriter.append("# Bazel rules auto-generated from maven repo.");
         for (ResolutionResult.Dependency dep : result.dependencies) {
             write(dep, false);
@@ -110,6 +110,7 @@ public class BuildFileWriter {
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
                             .map(BuildFileWriter::getMavenArtifactRuleName)
+                            .distinct()
                             .toArray(String[]::new);
 
             if (originalDepRuleNames.length != 0) {
@@ -165,6 +166,7 @@ public class BuildFileWriter {
             String[] originalDepRuleNames =
                     Arrays.stream(dep.originalDependencies)
                             .map(BuildFileWriter::getMavenArtifactRuleName)
+                            .distinct()
                             .toArray(String[]::new);
             if (originalDepRuleNames.length != 0) {
                 fileWriter.append("    original_deps = [\n");

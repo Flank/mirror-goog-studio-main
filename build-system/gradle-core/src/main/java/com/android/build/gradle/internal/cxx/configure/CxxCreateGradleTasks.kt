@@ -22,7 +22,9 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Build
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.BuildGroup
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Configure
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.ConfigureGroup
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.VariantBuild
 import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.VariantConfigure
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
@@ -129,13 +131,12 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
             val variantMap = variants.associate { it.variant.name to it.variant }
 
             for ((name, task) in taskModel.tasks) {
-                val configuration = task.representatives.toConfigurationModel()
-                val variant = variantMap.getValue(configuration.variant.variantName)
                 when (task) {
                     is Configure -> {
+                        val variant = variantMap.getValue(task.representative.variant.variantName)
                         val configureTask = taskFactory.register(createCxxConfigureTask(
                             global,
-                            configuration,
+                            task.representative,
                             name))
                         // Make sure any prefab configurations are generated first
                         configureTask.dependsOn(
@@ -146,7 +147,12 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                             ).artifactFiles
                         )
                     }
+                    is ConfigureGroup -> {
+                        taskFactory.register(name)
+                    }
                     is VariantConfigure -> {
+                        val configuration = task.representatives.toConfigurationModel()
+                        val variant = variantMap.getValue(configuration.variant.variantName)
                         val configureTask = taskFactory.register(name)
                         // Add prefab configure task
                         if (variant is LibraryVariantImpl &&
@@ -159,9 +165,10 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         }
                     }
                     is Build -> {
+                        val variant = variantMap.getValue(task.representative.variant.variantName)
                         val buildTask = taskFactory.register(createWorkingCxxBuildTask(
                                 global,
-                                configuration,
+                                task.representative,
                                 name))
                         // Make sure any prefab dependencies are built first
                         buildTask.dependsOn(
@@ -172,7 +179,12 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                             ).artifactFiles
                         )
                     }
+                    is BuildGroup -> {
+                        taskFactory.register(name)
+                    }
                     is VariantBuild -> {
+                        val configuration = task.representatives.toConfigurationModel()
+                        val variant = variantMap.getValue(configuration.variant.variantName)
                         val buildTask = variant.taskContainer.externalNativeBuildTask!!
                         variant.taskContainer.compileTask.dependsOn(buildTask)
                         buildTask.dependsOn(variant.variantDependencies.getArtifactFileCollection(
@@ -262,11 +274,23 @@ fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskD
     val variantAbis = globalAbis
             .groupBy { it.variant.variantName }
 
-    namer.configureAbis.forEach { (taskName, abis) ->
-        tasks[taskName] = Configure(abis)
+    namer.configureAbis.forEach { (taskName, abi) ->
+        tasks[taskName] = Configure(abi)
     }
-    namer.buildAbis.forEach { (taskName, abis) ->
-        tasks[taskName] = Build(abis)
+    namer.configureGroups.forEach { (groupingTask, configureTasks) ->
+        tasks[groupingTask] = ConfigureGroup
+        configureTasks.forEach { configureTask ->
+            edges += groupingTask to configureTask
+        }
+    }
+    namer.buildAbis.forEach { (taskName, abi) ->
+        tasks[taskName] = Build(abi)
+    }
+    namer.buildGroups.forEach { (groupingTask, buildTasks) ->
+        tasks[groupingTask] = BuildGroup
+        buildTasks.forEach { buildTask ->
+            edges += groupingTask to buildTask
+        }
     }
     namer.variantToConfiguration.forEach { (variantName, configureTasks) ->
         val taskName = "generateJsonModel".appendCapitalized(variantName)

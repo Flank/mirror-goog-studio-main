@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder
 import com.android.build.gradle.internal.cxx.build.CxxRepublishBuilder
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
@@ -76,7 +77,7 @@ abstract class ExternalNativeBuildTask :
             IssueReporterLoggingEnvironment(
                 DefaultIssueReporter(LoggerWrapper(logger)),
                 analyticsService.get(),
-                configurationModel
+                configurationModel.variant
             ).use {
                 builder.build(
                     getExecOperations(),
@@ -112,15 +113,19 @@ fun createRepublishCxxBuildTask(
  */
 fun createWorkingCxxBuildTask(
         globalScope: GlobalScope,
-        configurationModel : CxxConfigurationModel,
+        abi : CxxAbiModel,
         name : String
 ) = object : GlobalTaskCreationAction<ExternalNativeBuildTask>(globalScope) {
     override val name = name
     override val type = ExternalNativeBuildTask::class.java
     override fun configure(task: ExternalNativeBuildTask) {
         super.configure(task)
-        task.builder = CxxRegularBuilder(configurationModel)
-        task.variantName = configurationModel.variant.variantName
-        task.configurationModel = configurationModel
+        task.builder = CxxRegularBuilder(abi)
+        task.variantName = abi.variant.variantName
+        task.configurationModel = CxxConfigurationModel(
+            variant = abi.variant,
+            activeAbis = listOf(abi).filter { it.isActiveAbi },
+            unusedAbis = listOf(abi).filter { !it.isActiveAbi },
+        )
     }
 }

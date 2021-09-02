@@ -70,6 +70,7 @@ public class LintCliFlags {
     private List<File> lintRuleJars;
     private String compileSdkVersion;
     private File baselineFile;
+    private File outputBaselineFile;
 
     private File lintConfig;
     private File lintOverrideConfig;
@@ -634,6 +635,21 @@ public class LintCliFlags {
      */
     public void setBaselineFile(@Nullable File baselineFile) {
         this.baselineFile = baselineFile;
+    }
+
+    /** Returns the output baseline file to use, if any */
+    @Nullable
+    public File getOutputBaselineFile() {
+        return outputBaselineFile;
+    }
+
+    /**
+     * Sets the output baseline file, if any.
+     *
+     * @see #getOutputBaselineFile()
+     */
+    public void setOutputBaselineFile(@Nullable File outputBaselineFile) {
+        this.outputBaselineFile = outputBaselineFile;
     }
 
     /**

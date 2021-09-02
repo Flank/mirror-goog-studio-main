@@ -63,7 +63,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +83,7 @@ import java.util.stream.Stream;
  */
 public class AvdManager {
 
-    private File mBaseAvdFolder;
+    private Path mBaseAvdFolder;
 
     /**
      * Exception thrown when something is wrong with a target path.
@@ -446,7 +448,7 @@ public class AvdManager {
 
     protected AvdManager(
             @NonNull AndroidSdkHandler sdkHandler,
-            @NonNull File baseAvdFolder,
+            @NonNull Path baseAvdFolder,
             @NonNull ILogger log,
             @NonNull FileOp fop)
             throws AndroidLocationsException {
@@ -472,14 +474,13 @@ public class AvdManager {
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger log)
             throws AndroidLocationsException {
-        return getInstance(
-                sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile(), log);
+        return getInstance(sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation(), log);
     }
 
     @Nullable
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler,
-            @NonNull File avdHomeFolder,
+            @NonNull Path avdHomeFolder,
             @NonNull ILogger log)
             throws AndroidLocationsException {
         if (sdkHandler.getLocation() == null) {
@@ -489,8 +490,7 @@ public class AvdManager {
             AvdManager manager;
             FileOp fop = sdkHandler.getFileOp();
             AvdManagerCacheKey key =
-                    new AvdManagerCacheKey(
-                            sdkHandler.getLocation(), avdHomeFolder.toPath().toAbsolutePath());
+                    new AvdManagerCacheKey(sdkHandler.getLocation(), avdHomeFolder);
             WeakReference<AvdManager> ref = mManagers.get(key);
             if (ref != null && (manager = ref.get()) != null) {
                 return manager;
@@ -510,7 +510,7 @@ public class AvdManager {
 
     /** Returns the base folder where AVDs are created. */
     @NonNull
-    public File getBaseAvdFolder() {
+    public Path getBaseAvdFolder() {
         return mBaseAvdFolder;
     }
 
@@ -762,22 +762,26 @@ public class AvdManager {
     }
 
     private String getAvdPid(@NonNull AvdInfo info) throws IOException {
+        Path dataFolderPath = mBaseAvdFolder.resolve(info.getDataFolderPath());
         // this is a file on Unix, and a directory on Windows.
-        File f = new File(info.getDataFolderPath(), "hardware-qemu.ini.lock");   //$NON-NLS-1$
+        Path f = dataFolderPath.resolve("hardware-qemu.ini.lock"); // $NON-NLS-1$
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            f = new File(f, "pid");
+            f = f.resolve("pid");
         }
         // This is an alternative identifier for Unix and Windows when the above one is missing.
-        File alternative = new File(info.getDataFolderPath(), "userdata-qemu.img.lock");
+        Path alternative = dataFolderPath.resolve("userdata-qemu.img.lock");
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            alternative = new File(alternative, "pid");
+            alternative = alternative.resolve("pid");
         }
-        if (mFop.exists(f)) {
-            return mFop.readText(f).trim();
+        try {
+            return CancellableFileIo.readString(f).trim();
+        } catch (NoSuchFileException ignore) {
         }
-        if (mFop.exists(alternative)) {
-            return mFop.readText(alternative).trim();
+        try {
+            return CancellableFileIo.readString(alternative).trim();
+        } catch (NoSuchFileException ignore) {
         }
+
         return null;
     }
 
@@ -811,7 +815,7 @@ public class AvdManager {
      */
     @Slow
     public AvdInfo reloadAvd(@NonNull AvdInfo avdInfo, @NonNull ILogger log) {
-        AvdInfo newInfo = parseAvdInfo(avdInfo.getIniFile(), log);
+        AvdInfo newInfo = parseAvdInfo(mFop.toPath(avdInfo.getIniFile()), log);
         synchronized (mAllAvdList) {
             int index = mAllAvdList.indexOf(avdInfo);
             if (index >= 0) {
@@ -860,11 +864,7 @@ public class AvdManager {
             boolean removePrevious,
             boolean editExisting,
             @NonNull ILogger log) {
-        if (log == null) {
-            throw new IllegalArgumentException("log cannot be null");
-        }
-
-        File iniFile = null;
+        Path iniFile = null;
         boolean needCleanup = false;
         try {
             AvdInfo newAvdInfo = null;
@@ -872,7 +872,7 @@ public class AvdManager {
             if (!CancellableFileIo.exists(avdFolder)) {
                 // create the AVD folder.
                 Files.createDirectories(avdFolder);
-                inhibitCopyOnWrite(mFop.toFile(avdFolder), log);
+                inhibitCopyOnWrite(avdFolder, log);
                 // We're not editing an existing AVD.
                 editExisting = false;
             }
@@ -880,8 +880,8 @@ public class AvdManager {
                 // AVD already exists and removePrevious is set, try to remove the
                 // directory's content first (but not the directory itself).
                 try {
-                    deleteContentOf(mFop.toFile(avdFolder));
-                    inhibitCopyOnWrite(mFop.toFile(avdFolder), log);
+                    deleteContentOf(avdFolder);
+                    inhibitCopyOnWrite(avdFolder, log);
                 }
                 catch (SecurityException e) {
                     log.warning("Failed to delete %1$s: %2$s", avdFolder.toAbsolutePath(), e);
@@ -891,7 +891,7 @@ public class AvdManager {
                 // The AVD already exists, we want to keep it, and we're not
                 // editing it. We must be making a copy. Duplicate the folder.
                 String oldAvdFolderPath = avdFolder.toAbsolutePath().toString();
-                newAvdInfo = duplicateAvd(mFop.toFile(avdFolder), avdName, systemImage, log);
+                newAvdInfo = duplicateAvd(avdFolder, avdName, systemImage, log);
                 if (newAvdInfo == null) {
                     return null;
                 }
@@ -911,10 +911,7 @@ public class AvdManager {
             // Write the AVD ini file
             iniFile =
                     createAvdIniFile(
-                            avdName,
-                            mFop.toFile(avdFolder),
-                            removePrevious,
-                            systemImage.getAndroidVersion());
+                            avdName, avdFolder, removePrevious, systemImage.getAndroidVersion());
 
             needCleanup = true;
 
@@ -929,12 +926,8 @@ public class AvdManager {
             configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
             configValues.put(AVD_INI_ARC, Boolean.toString(SystemImage.CHROMEOS_TAG.equals(tag)));
 
-            createAvdSkin(
-                    skinFolder == null ? null : mFop.toFile(skinFolder),
-                    skinName,
-                    configValues,
-                    log);
-            createAvdSdCard(sdcard, editExisting, configValues, mFop.toFile(avdFolder), log);
+            createAvdSkin(skinFolder == null ? null : skinFolder, skinName, configValues, log);
+            createAvdSdCard(sdcard, editExisting, configValues, avdFolder, log);
 
             if (hardwareConfig == null) {
                 hardwareConfig = new HashMap<>();
@@ -945,7 +938,7 @@ public class AvdManager {
 
             if (bootProps != null && !bootProps.isEmpty()) {
                 Path bootPropsFile = avdFolder.resolve(BOOT_PROP);
-                writeIniFile(mFop.toFile(bootPropsFile), bootProps, false);
+                writeIniFile(bootPropsFile, bootProps, false);
             }
 
             AvdInfo oldAvdInfo = getAvd(avdName, false /*validAvdOnly*/);
@@ -958,7 +951,7 @@ public class AvdManager {
                                 removePrevious,
                                 editExisting,
                                 iniFile,
-                                mFop.toFile(avdFolder),
+                                avdFolder,
                                 oldAvdInfo,
                                 configValues);
             }
@@ -969,12 +962,9 @@ public class AvdManager {
                 log.warning("Removing previous AVD directory at %s",
                         oldAvdInfo.getDataFolderPath());
                 // Remove the old data directory
-                File dir = new File(oldAvdInfo.getDataFolderPath());
-                try {
-                    deleteContentOf(dir);
-                    mFop.delete(dir);
-                } catch (SecurityException e) {
-                    log.warning("Failed to delete %1$s: %2$s", dir.getAbsolutePath(), e);
+                if (!FileOpUtils.deleteFileOrFolder(
+                        mBaseAvdFolder.resolve(oldAvdInfo.getDataFolderPath()))) {
+                    log.warning("Failed to delete %1$s: %2$s", oldAvdInfo.getDataFolderPath());
                 }
             }
 
@@ -986,8 +976,8 @@ public class AvdManager {
             log.warning("%1$s", e);
         } finally {
             if (needCleanup) {
-                if (iniFile != null && mFop.exists(iniFile)) {
-                    mFop.delete(iniFile);
+                if (iniFile != null) {
+                    FileOpUtils.deleteFileOrFolder(iniFile);
                 }
 
                 try {
@@ -1002,9 +992,8 @@ public class AvdManager {
     }
 
     /**
-     * Duplicates an existing AVD.
-     * Update the 'config.ini' and 'hw-qemu.ini' files
-     * to reference the new name and path.
+     * Duplicates an existing AVD. Update the 'config.ini' and 'hw-qemu.ini' files to reference the
+     * new name and path.
      *
      * @param origAvd the AVD to be duplicated
      * @param newAvdName name of the new copy
@@ -1013,47 +1002,46 @@ public class AvdManager {
      */
     @Nullable
     private AvdInfo duplicateAvd(
-            @NonNull File         origAvd,
-            @NonNull String       newAvdName,
+            @NonNull Path origAvd,
+            @NonNull String newAvdName,
             @NonNull ISystemImage systemImage,
-            @NonNull ILogger      log) {
-
+            @NonNull ILogger log) {
         try {
-            File destAvdFolder = new File(origAvd.getParent(), newAvdName + AVD_FOLDER_EXTENSION);
+            Path destAvdFolder = origAvd.getParent().resolve(newAvdName + AVD_FOLDER_EXTENSION);
             inhibitCopyOnWrite(destAvdFolder, log);
 
             ProgressIndicator progInd = new ConsoleProgressIndicator();
             progInd.setText("Copying files");
             progInd.setIndeterminate(true);
-            FileOpUtils.recursiveCopy(origAvd, destAvdFolder, mFop, progInd);
+            FileOpUtils.recursiveCopy(origAvd, destAvdFolder, false, progInd);
 
             // Modify the ID and display name in the new config.ini
-            File configIni = new File(destAvdFolder, CONFIG_INI);
-            Map<String, String> configVals =
-                    parseIniFile(new PathFileWrapper(mFop.toPath(configIni)), log);
+            Path configIni = destAvdFolder.resolve(CONFIG_INI);
+            Map<String, String> configVals = parseIniFile(new PathFileWrapper(configIni), log);
             configVals.put(AVD_INI_AVD_ID, newAvdName);
             configVals.put(AVD_INI_DISPLAY_NAME, newAvdName);
             writeIniFile(configIni, configVals, true);
 
             // Update the AVD name and paths in the new copies of config.ini and hardware-qemu.ini
-            String origAvdName = origAvd.getName().replace(".avd", "");
-            String origAvdPath = origAvd.getAbsolutePath();
-            String newAvdPath = destAvdFolder.getAbsolutePath();
+            String origAvdName = origAvd.getFileName().toString().replace(".avd", "");
+            String origAvdPath = origAvd.toAbsolutePath().toString();
+            String newAvdPath = destAvdFolder.toAbsolutePath().toString();
 
             configVals = updateNameAndIniPaths(configIni, origAvdName, origAvdPath, newAvdName, newAvdPath, log);
 
-            File hwQemu = new File(destAvdFolder, HARDWARE_QEMU_INI);
+            Path hwQemu = destAvdFolder.resolve(HARDWARE_QEMU_INI);
             updateNameAndIniPaths(hwQemu, origAvdName, origAvdPath, newAvdName, newAvdPath, log);
 
             // Create <AVD name>.ini
-            File iniFile = createAvdIniFile(newAvdName, destAvdFolder, false,
-                                            systemImage.getAndroidVersion());
+            Path iniFile =
+                    createAvdIniFile(
+                            newAvdName, destAvdFolder, false, systemImage.getAndroidVersion());
 
             // Create an AVD object from these files
             return new AvdInfo(
                     newAvdName,
-                    iniFile,
-                    destAvdFolder.getAbsolutePath(),
+                    mFop.toFile(iniFile),
+                    destAvdFolder.toAbsolutePath().toString(),
                     systemImage,
                     configVals);
         } catch (AndroidLocationsException | IOException e) {
@@ -1071,14 +1059,14 @@ public class AvdManager {
      */
     @Nullable
     private Map<String, String> updateNameAndIniPaths(
-            @NonNull File iniFile,
+            @NonNull Path iniFile,
             @NonNull String oldName,
             @NonNull String oldPath,
             @NonNull String newName,
             @NonNull String newPath,
             @NonNull ILogger log)
             throws IOException {
-        Map<String, String> iniVals = parseIniFile(new PathFileWrapper(mFop.toPath(iniFile)), log);
+        Map<String, String> iniVals = parseIniFile(new PathFileWrapper(iniFile), log);
         if (iniVals != null) {
             for (Map.Entry<String, String> iniEntry : iniVals.entrySet()) {
                 String origIniValue = iniEntry.getValue();
@@ -1149,36 +1137,34 @@ public class AvdManager {
      * @param avdFolder path for the data folder of the AVD.
      * @param removePrevious True if an existing ini file should be removed.
      * @throws AndroidLocationsException if there's a problem getting android root directory.
-     * @throws IOException if {@link File#getAbsolutePath()} fails.
+     * @throws IOException if {@link Files#delete(Path)} ()} fails.
      */
-    private File createAvdIniFile(
+    private Path createAvdIniFile(
             @NonNull String name,
-            @NonNull File avdFolder,
+            @NonNull Path avdFolder,
             boolean removePrevious,
             @NonNull AndroidVersion version)
             throws AndroidLocationsException, IOException {
-        File iniFile = AvdInfo.getDefaultIniFile(this, name);
+        Path iniFile = AvdInfo.getDefaultIniFile(this, name);
 
         if (removePrevious) {
-            if (mFop.isFile(iniFile)) {
-                mFop.delete(iniFile);
-            } else if (mFop.isDirectory(iniFile)) {
-                deleteContentOf(iniFile);
-                mFop.delete(iniFile);
+            if (CancellableFileIo.isRegularFile(iniFile)) {
+                Files.delete(iniFile);
+            } else if (CancellableFileIo.isDirectory(iniFile)) {
+                FileOpUtils.deleteFileOrFolder(iniFile);
             }
         }
 
-        String absPath = avdFolder.getAbsolutePath();
+        String absPath = avdFolder.toAbsolutePath().toString();
         String relPath = null;
         Path androidFolder = mSdkHandler.getAndroidFolder();
         if (androidFolder == null) {
             throw new AndroidLocationsException(
                     "Can't locate Android SDK installation directory for the AVD .ini file.");
         }
-        String androidPath = androidFolder.toAbsolutePath().toString() + File.separator;
+        String androidPath = androidFolder.toAbsolutePath() + File.separator;
         if (absPath.startsWith(androidPath)) {
             // Compute the AVD path relative to the android path.
-            assert androidPath.endsWith(File.separator);
             relPath = absPath.substring(androidPath.length());
         }
 
@@ -1198,13 +1184,15 @@ public class AvdManager {
      *
      * @param info of the AVD.
      * @throws AndroidLocationsException if there's a problem getting android root directory.
-     * @throws IOException if {@link File#getAbsolutePath()} fails.
+     * @throws IOException if {@link Files#delete(Path)} fails.
      */
-    private File createAvdIniFile(@NonNull AvdInfo info)
+    private Path createAvdIniFile(@NonNull AvdInfo info)
             throws AndroidLocationsException, IOException {
-        return createAvdIniFile(info.getName(),
-          new File(info.getDataFolderPath()),
-          false, info.getAndroidVersion());
+        return createAvdIniFile(
+                info.getName(),
+                mBaseAvdFolder.resolve(info.getDataFolderPath()),
+                false,
+                info.getAndroidVersion());
     }
 
     /**
@@ -1227,24 +1215,20 @@ public class AvdManager {
         try {
             boolean error = false;
 
-            File f = avdInfo.getIniFile();
-            if (f != null && mFop.exists(f)) {
-                log.info("Deleting file %1$s\n", f.getCanonicalPath());
-                if (!mFop.delete(f)) {
-                    log.warning("Failed to delete %1$s\n", f.getCanonicalPath());
-                    error = true;
-                }
+            Path f = mFop.toPath(avdInfo.getIniFile());
+            try {
+                Files.deleteIfExists(f);
+            } catch (IOException exception) {
+                log.warning("Failed to delete %1$s\n", f);
+                error = true;
             }
 
             String path = avdInfo.getDataFolderPath();
-            if (path != null) {
-                f = new File(path);
-                if (mFop.exists(f)) {
-                    log.info("Deleting folder %1$s\n", f.getCanonicalPath());
-                    if (deleteContentOf(f) == false || mFop.delete(f) == false) {
-                        log.warning("Failed to delete %1$s\n", f.getCanonicalPath());
-                        error = true;
-                    }
+            f = mBaseAvdFolder.resolve(path);
+            if (!FileOpUtils.deleteFileOrFolder(f)) {
+                if (CancellableFileIo.exists(f)) {
+                    log.warning("Failed to delete %1$s\n", f);
+                    error = true;
                 }
             }
 
@@ -1258,14 +1242,15 @@ public class AvdManager {
                 return true;
             }
 
-        } catch (IOException | SecurityException e) {
+        } catch (SecurityException e) {
             log.warning("%1$s", e);
         }
         return false;
     }
 
     /**
-     * Moves and/or rename an existing AVD and its files. This also change it in the manager's list.
+     * Moves and/or renames an existing AVD and its files. This also change it in the manager's
+     * list.
      *
      * <p>The caller should make sure the name or path given are valid, do not exist and are
      * actually different than current values.
@@ -1285,11 +1270,16 @@ public class AvdManager {
             @NonNull ILogger log) {
         try {
             if (paramFolderPath != null) {
-                File f = new File(avdInfo.getDataFolderPath());
+                Path f = mBaseAvdFolder.resolve(avdInfo.getDataFolderPath());
                 log.info("Moving '%1$s' to '%2$s'.\n", avdInfo.getDataFolderPath(), paramFolderPath);
-                if (!mFop.renameTo(f, new File(paramFolderPath))) {
-                    log.error(null, "Failed to move '%1$s' to '%2$s'.\n",
-                            avdInfo.getDataFolderPath(), paramFolderPath);
+                try {
+                    Files.move(f, mBaseAvdFolder.resolve(paramFolderPath));
+                } catch (IOException exception) {
+                    log.error(
+                            exception,
+                            "Failed to move '%1$s' to '%2$s'.\n",
+                            avdInfo.getDataFolderPath(),
+                            paramFolderPath);
                     return false;
                 }
 
@@ -1307,13 +1297,14 @@ public class AvdManager {
             }
 
             if (newName != null) {
-                File oldIniFile = avdInfo.getIniFile();
-                File newIniFile = AvdInfo.getDefaultIniFile(this, newName);
+                Path oldIniFile = mFop.toPath(avdInfo.getIniFile());
+                Path newIniFile = AvdInfo.getDefaultIniFile(this, newName);
 
-                log.warning("Moving '%1$s' to '%2$s'.", oldIniFile.getPath(), newIniFile.getPath());
-                if (!mFop.renameTo(oldIniFile, newIniFile)) {
-                    log.warning(null, "Failed to move '%1$s' to '%2$s'.",
-                            oldIniFile.getPath(), newIniFile.getPath());
+                log.warning("Moving '%1$s' to '%2$s'.", oldIniFile, newIniFile);
+                try {
+                    Files.move(oldIniFile, newIniFile);
+                } catch (IOException exception) {
+                    log.warning(null, "Failed to move '%1$s' to '%2$s'.", oldIniFile, newIniFile);
                     return false;
                 }
 
@@ -1339,26 +1330,19 @@ public class AvdManager {
     }
 
     /**
-     * Helper method to recursively delete a folder's content (but not the folder itself).
+     * Recursively deletes a folder's content (but not the folder itself).
      *
      * @throws SecurityException like {@link File#delete()} does if file/folder is not writable.
      */
-    private boolean deleteContentOf(File folder) throws SecurityException {
-        File[] files = mFop.listFiles(folder);
-        if (files != null) {
-            for (File f : files) {
-                if (mFop.isDirectory(f)) {
-                    if (deleteContentOf(f) == false) {
-                        return false;
-                    }
-                }
-                if (mFop.delete(f) == false) {
-                    return false;
-                }
-
+    private boolean deleteContentOf(Path folder) throws SecurityException {
+        boolean success = true;
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(folder)) {
+            for (Path entry : entries) {
+                success &= FileOpUtils.deleteFileOrFolder(entry);
             }
+        } catch (IOException exception) {
+            return false;
         }
-
         return true;
     }
 
@@ -1371,29 +1355,40 @@ public class AvdManager {
      * <p>Note: the method is to be considered private. It is made protected so that unit tests can
      * easily override the AVD root.
      *
-     * @return A new {@link File} array or null. The array might be empty.
+     * @return A new {@link Path} array or null. The array might be empty.
      * @throws AndroidLocationsException if there's a problem getting android root directory.
      */
-    private File[] buildAvdFilesList() throws AndroidLocationsException {
+    private Path[] buildAvdFilesList() throws AndroidLocationsException {
         // ensure folder validity.
-        if (mFop.isFile(mBaseAvdFolder)) {
+        if (CancellableFileIo.isRegularFile(mBaseAvdFolder)) {
             throw new AndroidLocationsException(
-                    String.format("%1$s is not a valid folder.", mBaseAvdFolder.getAbsolutePath()));
-        } else if (mFop.exists(mBaseAvdFolder) == false) {
+                    String.format("%1$s is not a valid folder.", mBaseAvdFolder.toAbsolutePath()));
+        } else if (CancellableFileIo.notExists(mBaseAvdFolder)) {
             // folder is not there, we create it and return
-            mFop.mkdirs(mBaseAvdFolder);
+            try {
+                Files.createDirectories(mBaseAvdFolder);
+            } catch (IOException ignore) {
+            }
             return null;
         }
 
-        File[] avds = mFop.listFiles(mBaseAvdFolder, (parent, name) -> {
-            if (INI_NAME_PATTERN.matcher(name).matches()) {
-                // check it's a file and not a folder
-                return mFop.isFile(new File(parent, name));
-            }
+        Path[] avds = new Path[0];
+        try (Stream<Path> contents = CancellableFileIo.list(mBaseAvdFolder)) {
+            avds =
+                    contents.filter(
+                                    path -> {
+                                        if (INI_NAME_PATTERN
+                                                .matcher(path.getFileName().toString())
+                                                .matches()) {
+                                            // check it's a file and not a folder
+                                            return Files.isRegularFile(path);
+                                        }
 
-            return false;
-        });
-
+                                        return false;
+                                    })
+                            .toArray(Path[]::new);
+        } catch (IOException ignore) {
+        }
         return avds;
     }
 
@@ -1406,9 +1401,9 @@ public class AvdManager {
      */
     private void buildAvdList(ArrayList<AvdInfo> allList, ILogger log)
             throws AndroidLocationsException {
-        File[] avds = buildAvdFilesList();
+        Path[] avds = buildAvdFilesList();
         if (avds != null) {
-            for (File avd : avds) {
+            for (Path avd : avds) {
                 AvdInfo info = parseAvdInfo(avd, log);
                 if (info != null && !allList.contains(info)) {
                     allList.add(info);
@@ -1437,20 +1432,21 @@ public class AvdManager {
      */
     @VisibleForTesting
     @Slow
-    public AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
-        Map<String, String> map = parseIniFile(new PathFileWrapper(mFop.toPath(iniPath)), log);
+    public AvdInfo parseAvdInfo(@NonNull Path iniPath, @NonNull ILogger log) {
+        Map<String, String> map = parseIniFile(new PathFileWrapper(iniPath), log);
 
         String avdPath = null;
         if (map != null) {
             avdPath = map.get(AVD_INFO_ABS_PATH);
-            if (avdPath == null || !(mFop.isDirectory(new File(avdPath)))) {
+            if (avdPath == null
+                    || !(CancellableFileIo.isDirectory(mBaseAvdFolder.resolve(avdPath)))) {
                 // Try to fallback on the relative path, if present.
                 String relPath = map.get(AVD_INFO_REL_PATH);
                 if (relPath != null) {
                     Path androidFolder = mSdkHandler.getAndroidFolder();
                     Path f =
                             androidFolder == null
-                                    ? mSdkHandler.getFileOp().toPath(relPath)
+                                    ? mSdkHandler.toCompatiblePath(relPath)
                                     : androidFolder.resolve(relPath);
                     if (CancellableFileIo.isDirectory(f)) {
                         avdPath = f.toAbsolutePath().toString();
@@ -1458,13 +1454,19 @@ public class AvdManager {
                 }
             }
         }
-        if (avdPath == null || !(mFop.isDirectory(new File(avdPath)))) {
+        if (avdPath == null || !(CancellableFileIo.isDirectory(mBaseAvdFolder.resolve(avdPath)))) {
             // Corrupted .ini file
-            String avdName = iniPath.getName();
+            String avdName = iniPath.getFileName().toString();
             if (avdName.endsWith(".ini")) {
                 avdName = avdName.substring(0, avdName.length() - 4);
             }
-            return new AvdInfo(avdName, iniPath, iniPath.getPath(), null, null, AvdStatus.ERROR_CORRUPTED_INI);
+            return new AvdInfo(
+                    avdName,
+                    mFop.toFile(iniPath),
+                    iniPath.toString(),
+                    null,
+                    null,
+                    AvdStatus.ERROR_CORRUPTED_INI);
         }
 
         PathFileWrapper configIniFile = null;
@@ -1491,8 +1493,8 @@ public class AvdManager {
         }
 
         // get name
-        String name = iniPath.getName();
-        Matcher matcher = INI_NAME_PATTERN.matcher(iniPath.getName());
+        String name = iniPath.getFileName().toString();
+        Matcher matcher = INI_NAME_PATTERN.matcher(name);
         if (matcher.matches()) {
             name = matcher.group(1);
         }
@@ -1588,13 +1590,8 @@ public class AvdManager {
             }
         }
 
-        AvdInfo info = new AvdInfo(
-                name,
-                iniPath,
-                avdPath,
-                sysImage,
-                properties,
-                status);
+        AvdInfo info =
+                new AvdInfo(name, mFop.toFile(iniPath), avdPath, sysImage, properties, status);
 
         if (updateHashV2) {
             try {
@@ -1606,22 +1603,21 @@ public class AvdManager {
     }
 
     /**
-     * Writes a .ini file from a set of properties, using UTF-8 encoding.
-     * The keys are sorted.
-     * The file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
+     * Writes a .ini file from a set of properties, using UTF-8 encoding. The keys are sorted. The
+     * file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
      *
      * @param iniFile The file to generate.
      * @param values The properties to place in the ini file.
      * @param addEncoding When true, add a property {@link #AVD_INI_ENCODING} indicating the
-     *                    encoding used to write the file.
+     *     encoding used to write the file.
      * @throws IOException if {@link FileWriter} fails to open, write or close the file.
      */
-    private void writeIniFile(File iniFile, Map<String, String> values, boolean addEncoding)
+    private void writeIniFile(Path iniFile, Map<String, String> values, boolean addEncoding)
             throws IOException {
 
         Charset charset = Charsets.UTF_8;
-        try (OutputStreamWriter writer = new OutputStreamWriter(mFop.newFileOutputStream(iniFile),
-                charset)){
+        try (OutputStreamWriter writer =
+                new OutputStreamWriter(Files.newOutputStream(iniFile), charset)) {
             if (addEncoding) {
                 // Write down the charset we're using in case we want to use it later.
                 values.put(AVD_INI_ENCODING, charset.name());
@@ -1818,7 +1814,7 @@ public class AvdManager {
     @Slow
     public AvdInfo updateAvd(AvdInfo avd, Map<String, String> newProperties) throws IOException {
         // now write the config file
-        File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
+        Path configIniFile = mFop.toPath(avd.getDataFolderPath()).resolve(CONFIG_INI);
         writeIniFile(configIniFile, newProperties, true);
 
         // finally create a new AvdInfo for this unbroken avd and add it to the list.
@@ -2018,17 +2014,18 @@ public class AvdManager {
     }
 
     /**
-     * Link a skin with the new AVD
+     * Links a skin with the new AVD
+     *
      * @param skinFolder where the skin is
      * @param skinName the name of the skin
      * @param values settings for the AVD
      * @param log receives error messages
      */
     private void createAvdSkin(
-            @Nullable File               skinFolder,
-            @Nullable String             skinName,
-            @NonNull  Map<String,String> values,
-            @NonNull  ILogger            log)
+            @Nullable Path skinFolder,
+            @Nullable String skinName,
+            @NonNull Map<String, String> values,
+            @NonNull ILogger log)
             throws AvdMgrException {
 
         // Now the skin.
@@ -2041,22 +2038,22 @@ public class AvdManager {
 
         } else if (skinFolder != null && skinName == null) {
             // Skin folder is specified, but not skin name. Adjust it.
-            skinName = skinFolder.getName();
+            skinName = skinFolder.getFileName().toString();
         }
 
         if (skinFolder != null) {
             // skin does not exist!
-            if (!mFop.exists(skinFolder)) {
-                log.warning("Skin '%1$s' does not exist at %2$s.", skinName, skinFolder.getPath());
+            if (CancellableFileIo.notExists(skinFolder)) {
+                log.warning("Skin '%1$s' does not exist at %2$s.", skinName, skinFolder);
                 throw new AvdMgrException();
             }
 
             // if skinFolder is in the sdk, use the relative path
-            if (skinFolder.getPath().startsWith(mSdkHandler.getLocation().toString())) {
-                skinPath = mSdkHandler.getLocation().relativize(mFop.toPath(skinFolder)).toString();
+            if (skinFolder.startsWith(mSdkHandler.getLocation())) {
+                skinPath = mSdkHandler.getLocation().relativize(skinFolder).toString();
             } else {
                 // Skin isn't in the sdk. Just use the absolute path.
-                skinPath = skinFolder.getAbsolutePath();
+                skinPath = skinFolder.toAbsolutePath().toString();
             }
         }
 
@@ -2071,7 +2068,8 @@ public class AvdManager {
     }
 
     /**
-     * Create an SD card for the AVD
+     * Creates an SD card for the AVD
+     *
      * @param sdcard either a size indicator or the name of a file
      * @param editExisting true if modifying an existing AVD
      * @param values settings for the AVD
@@ -2079,11 +2077,11 @@ public class AvdManager {
      * @param log receives error messages
      */
     private void createAvdSdCard(
-            @Nullable String             sdcard,
-                      boolean            editExisting,
-            @NonNull  Map<String,String> values,
-            @NonNull  File               avdFolder,
-            @NonNull  ILogger            log)
+            @Nullable String sdcard,
+            boolean editExisting,
+            @NonNull Map<String, String> values,
+            @NonNull Path avdFolder,
+            @NonNull ILogger log)
             throws AvdMgrException {
 
         if (sdcard == null || sdcard.isEmpty()) {
@@ -2106,8 +2104,8 @@ public class AvdManager {
         }
 
         if (sdcardSize == SDCARD_NOT_SIZE_PATTERN) {
-            File sdcardFile = new File(sdcard);
-            if ( !mFop.isFile(sdcardFile) ) {
+            Path sdcardFile = mBaseAvdFolder.resolve(sdcard);
+            if (!CancellableFileIo.isRegularFile(sdcardFile)) {
                 log.warning("'%1$s' is not recognized as a valid sdcard value.\n"
                         + "Value should be:\n" + "1. path to an sdcard.\n"
                         + "2. size of the sdcard to create: <size>[K|M]", sdcard);
@@ -2119,16 +2117,21 @@ public class AvdManager {
         }
 
         // create the sdcard.
-        File sdcardFile = new File(avdFolder, SDCARD_IMG);
+        Path sdcardFile = avdFolder.resolve(SDCARD_IMG);
 
         boolean runMkSdcard = true;
-        if (mFop.exists(sdcardFile)) {
-            if (sdcardFile.length() == sdcardSize && editExisting) {
+        try {
+            if (CancellableFileIo.size(sdcardFile) == sdcardSize && editExisting) {
                 // There's already an sdcard file with the right size and we're
                 // not overriding it... so don't remove it.
                 runMkSdcard = false;
                 log.info("SD Card already present with same size, was not changed.\n");
             }
+        } catch (NoSuchFileException ignore) {
+        } catch (IOException exception) {
+            AvdMgrException wrapper = new AvdMgrException();
+            wrapper.initCause(exception);
+            throw wrapper;
         }
         if (mFop.getClass().getSimpleName().equals("MockFileOp")) {
             // We don't have a real filesystem, so we won't be able to run the tool. Skip.
@@ -2136,7 +2139,7 @@ public class AvdManager {
         }
 
         if (runMkSdcard) {
-            String path = sdcardFile.getAbsolutePath();
+            String path = sdcardFile.toAbsolutePath().toString();
 
             // execute mksdcard with the proper parameters.
             LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
@@ -2236,13 +2239,12 @@ public class AvdManager {
         values.putAll(finalHardwareValues);
 
         Path configIniFile = avdFolder.resolve(CONFIG_INI);
-        writeIniFile(mFop.toFile(configIniFile), values, true);
-
-        return;
+        writeIniFile(configIniFile, values, true);
     }
 
     /**
-     * Create an AvdInfo object from the new AVD.
+     * Creates an AvdInfo object from the new AVD.
+     *
      * @param systemImage the system image of the AVD
      * @param avdName the name of the AVD
      * @param removePrevious true if the existing AVD should be deleted
@@ -2254,23 +2256,24 @@ public class AvdManager {
      */
     @NonNull
     private AvdInfo createAvdInfoObject(
-            @NonNull  ISystemImage       systemImage,
-            @NonNull  String             avdName,
-                      boolean            removePrevious,
-                      boolean            editExisting,
-            @NonNull  File               iniFile,
-            @NonNull  File               avdFolder,
-            @Nullable AvdInfo            oldAvdInfo,
-            @Nullable Map<String,String> values)
+            @NonNull ISystemImage systemImage,
+            @NonNull String avdName,
+            boolean removePrevious,
+            boolean editExisting,
+            @NonNull Path iniFile,
+            @NonNull Path avdFolder,
+            @Nullable AvdInfo oldAvdInfo,
+            @Nullable Map<String, String> values)
             throws AvdMgrException {
 
         // create the AvdInfo object, and add it to the list
-        AvdInfo theAvdInfo = new AvdInfo(
-                avdName,
-                iniFile,
-                avdFolder.getAbsolutePath(),
-                systemImage,
-                values);
+        AvdInfo theAvdInfo =
+                new AvdInfo(
+                        avdName,
+                        mFop.toFile(iniFile),
+                        avdFolder.toAbsolutePath().toString(),
+                        systemImage,
+                        values);
 
         synchronized (mAllAvdList) {
             if (oldAvdInfo != null && (removePrevious || editExisting)) {
@@ -2282,21 +2285,18 @@ public class AvdManager {
         return theAvdInfo;
     }
 
-
     /**
      * (Linux only) Sets the AVD folder to not be "Copy on Write"
      *
-     * CoW at the file level conflicts with QEMU's explicit CoW
-     * operations and can hurt Emulator performance.
-     * NOTE: The "chatter +C" command does not impact existing
-     *       files in the folder. Thus this method should be
-     *       called before the folder is populated.
-     * This method is "best effort." Common failures are silently
-     * ignored. Other failures are logged and ignored.
+     * <p>CoW at the file level conflicts with QEMU's explicit CoW operations and can hurt Emulator
+     * performance. NOTE: The "chatter +C" command does not impact existing files in the folder.
+     * Thus this method should be called before the folder is populated. This method is "best
+     * effort." Common failures are silently ignored. Other failures are logged and ignored.
+     *
      * @param avdFolder where the AVD's files will be written
      * @param log the log object to receive action logs
      */
-    private static void inhibitCopyOnWrite(@NonNull File avdFolder, @NonNull ILogger log) {
+    private static void inhibitCopyOnWrite(@NonNull Path avdFolder, @NonNull ILogger log) {
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_LINUX) {
             return;
         }
@@ -2304,7 +2304,7 @@ public class AvdManager {
             String[] chattrCommand = new String[3];
             chattrCommand[0] = "chattr";
             chattrCommand[1] = "+C";
-            chattrCommand[2] = avdFolder.getAbsolutePath();
+            chattrCommand[2] = avdFolder.toAbsolutePath().toString();
             Process chattrProcess = Runtime.getRuntime().exec(chattrCommand);
 
             final ArrayList<String> errorOutput = new ArrayList<>();
@@ -2328,14 +2328,15 @@ public class AvdManager {
               });
 
             if (!errorOutput.isEmpty()) {
-                log.warning("Failed 'chattr' for %1$s:", avdFolder.getAbsolutePath());
+                log.warning("Failed 'chattr' for %1$s:", avdFolder.toAbsolutePath().toString());
                 for (String error : errorOutput) {
                     log.warning(" -- %1$s", error);
                 }
             }
         }
         catch (InterruptedException | IOException ee) {
-            log.warning("Failed 'chattr' for %1$s: %2$s", avdFolder.getAbsolutePath(), ee);
+            log.warning(
+                    "Failed 'chattr' for %1$s: %2$s", avdFolder.toAbsolutePath().toString(), ee);
         }
     }
 }

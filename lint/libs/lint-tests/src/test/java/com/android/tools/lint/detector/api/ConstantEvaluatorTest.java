@@ -20,16 +20,17 @@ import com.android.tools.lint.UastEnvironment;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
+import com.intellij.psi.PsiRecursiveElementVisitor;
 import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.kotlin.psi.KtProperty;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UReferenceExpression;
@@ -115,29 +116,33 @@ public class ConstantEvaluatorTest extends TestCase {
     }
 
     private static void checkPsi(
-            Object expected, @Language("JAVA") String source, final String targetVariable) {
-        Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
-        JavaContext context = pair.getFirst();
-        Disposable disposable = pair.getSecond();
-        assertNotNull(context);
-        PsiFile javaFile = context.getPsiFile();
-        assertNotNull(javaFile);
-
+            Object expected,
+            JavaContext context,
+            Disposable disposable,
+            String source,
+            String targetVariable) {
+        PsiFile file = context.getPsiFile();
         // Find the expression
-        final AtomicReference<PsiExpression> reference = new AtomicReference<>();
-        javaFile.accept(
-                new JavaRecursiveElementVisitor() {
+        final AtomicReference<PsiElement> reference = new AtomicReference<>();
+        file.accept(
+                new PsiRecursiveElementVisitor() {
                     @Override
-                    public void visitLocalVariable(PsiLocalVariable variable) {
-                        super.visitLocalVariable(variable);
-                        String name = variable.getName();
-                        if (name != null && name.equals(targetVariable)) {
-                            reference.set(variable.getInitializer());
+                    public void visitElement(@NotNull PsiElement element) {
+                        super.visitElement(element);
+                        if (element instanceof PsiLocalVariable) {
+                            PsiLocalVariable variable = (PsiLocalVariable) element;
+                            if (variable.getName().equals(targetVariable)) {
+                                reference.set(variable.getInitializer());
+                            }
+                        } else if (element instanceof KtProperty) {
+                            KtProperty property = (KtProperty) element;
+                            if (property.getName().equals(targetVariable)) {
+                                reference.set(property);
+                            }
                         }
                     }
                 });
-        PsiExpression expression = reference.get();
+        PsiElement expression = reference.get();
         Object actual = ConstantEvaluator.evaluate(context, expression);
         if (expected == null) {
             assertNull(actual);
@@ -173,10 +178,43 @@ public class ConstantEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
+    private static void checkJavaPsi(
+            Object expected, @Language("JAVA") String source, String targetVariable) {
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
+        assertNotNull(context);
+        PsiFile javaFile = context.getPsiFile();
+        assertNotNull(javaFile);
+
+        checkPsi(expected, context, disposable, source, targetVariable);
+    }
+
+    private static void checkKotlinPsi(
+            Object expected, @Language("Kt") String source, String targetVariable) {
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseKotlin(source, new File("src/test/pkg/Test.kt"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
+        assertNotNull(context);
+        PsiFile javaFile = context.getPsiFile();
+        assertNotNull(javaFile);
+
+        checkPsi(expected, context, disposable, source, targetVariable);
+    }
+
     private static void check(
             Object expected, @Language("JAVA") String source, final String targetVariable) {
         checkJavaUast(expected, source, targetVariable);
-        checkPsi(expected, source, targetVariable);
+        checkJavaPsi(expected, source, targetVariable);
+        UastEnvironment.disposeApplicationEnvironment();
+    }
+
+    private static void checkKotlin(
+            Object expected, @Language("Kt") String source, String targetVariable) {
+        checkKotlinUast(expected, source, targetVariable);
+        checkKotlinPsi(expected, source, targetVariable);
         UastEnvironment.disposeApplicationEnvironment();
     }
 
@@ -198,6 +236,28 @@ public class ConstantEvaluatorTest extends TestCase {
                         + "}\n";
 
         check(expected, source, targetVariable);
+    }
+
+    private static void checkKotlinStatements(
+            Object expected, String statements, String targetVariable) {
+        @Language("Kt")
+        String source =
+                ""
+                        + "package test.pkg\n"
+                        + "class Test {\n"
+                        + "    fun test() {\n"
+                        + statements
+                        + "\n"
+                        + "    }\n"
+                        + "    const val MY_INT_FIELD = 5;\n"
+                        + "    const val MY_BOOLEAN_FIELD = true;\n"
+                        + "    const val MY_STRING_FIELD = \"test\";\n"
+                        + "    companion object {\n"
+                        + "        val someField = \"something\";\n"
+                        + "    }\n"
+                        + "}\n";
+
+        checkKotlin(expected, source, targetVariable);
     }
 
     private static void checkExpression(Object expected, String expressionSource) {
@@ -471,5 +531,22 @@ public class ConstantEvaluatorTest extends TestCase {
                 "z");
         checkStatements(
                 -4, "boolean condition = true && false;\nint z = condition ? 5 : -4;\n", "z");
+    }
+
+    public void testIfStatement() {
+        checkStatements(
+                null,
+                ""
+                        + "var condition = true;\n"
+                        + "var trueBranch = 3;\n"
+                        + "var falseBranch = -3;\n"
+                        + "var z = 0;\n"
+                        + "if (condition) {\n"
+                        + "    z = trueBranch;\n"
+                        + "} else {\n"
+                        + "    z = falseBranch;\n"
+                        + "}\n"
+                        + "var y = z;\n",
+                "y");
     }
 }

@@ -353,7 +353,7 @@ private fun getProjectPath(config: ExternalNativeBuild)
  * deserialization.
  */
 fun createCxxMetadataGenerator(
-    configurationModel: CxxConfigurationModel,
+    abi: CxxAbiModel,
     analyticsService: AnalyticsService
 ): CxxMetadataGenerator {
     if(ENABLE_CHECK_CONFIG_TIME_CONSTRUCTION) {
@@ -362,15 +362,14 @@ fun createCxxMetadataGenerator(
         }
     }
 
-    val (variant, abis) = configurationModel
+    val variant = abi.variant
 
     val variantBuilder = analyticsService.getVariantBuilder(
         variant.module.gradleModulePathName, variant.variantName)
 
     return when (variant.module.buildSystem) {
         NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
-            variant,
-            abis,
+            abi,
             variantBuilder
         )
         CMAKE -> {
@@ -383,7 +382,7 @@ fun createCxxMetadataGenerator(
             val cmakeRevision = cmake.minimumCmakeVersion
             variantBuilder?.nativeCmakeVersion = cmakeRevision.toString()
             if (cmakeRevision.isCmakeForkVersion()) {
-                return CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, variantBuilder)
+                return CmakeAndroidNinjaExternalNativeJsonGenerator(abi, variantBuilder)
             }
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
@@ -397,9 +396,9 @@ fun createCxxMetadataGenerator(
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
             if (isPreCmakeFileApiVersion) {
-                return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
+                return CmakeServerExternalNativeJsonGenerator(abi, variantBuilder)
             }
-            return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)
+            return CmakeQueryMetadataGenerator(abi, variantBuilder)
         }
     }
 }

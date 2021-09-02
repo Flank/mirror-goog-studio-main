@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deployer;
 
-public class ComponentActivationException extends Exception {
+package com.android.build.gradle.internal.ide.v2
 
-    public ComponentActivationException(String s) {
-        super(s);
-    }
+import com.android.builder.model.v2.models.BuildMap
+import java.io.File
+import java.io.Serializable
 
-    public ComponentActivationException(String message, Throwable cause) {
-        super(message, cause);
+data class BuildMapImpl(
+    override val buildIdMap: Map<String, File>
+): BuildMap, Serializable {
+    companion object {
+        @JvmStatic
+        private val serialVersionUID: Long = 1L
     }
 }

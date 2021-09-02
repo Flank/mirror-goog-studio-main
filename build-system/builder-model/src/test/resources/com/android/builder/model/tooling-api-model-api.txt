@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b78142533a946caca01e29fb4bf8ec6980a938378d624255f14409010adbba5f
+84e1f6f2ade0b42713b9735b32c247a09a3b260e69306e4c749e8295067e22f0
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -771,6 +771,8 @@ com.android.builder.model.v2.models.AndroidProject.getResourcePrefix: java.lang.
 com.android.builder.model.v2.models.AndroidProject.getTestFixturesNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.v2.ide.Variant> ()
 com.android.builder.model.v2.models.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ide.ViewBindingOptions ()
+com.android.builder.model.v2.models.BuildMap implements com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.models.BuildMap.getBuildIdMap: java.util.Map<java.lang.String, java.io.File> ()
 com.android.builder.model.v2.models.GlobalLibraryMap implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.ModelBuilderParameter

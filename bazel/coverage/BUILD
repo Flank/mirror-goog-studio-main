@@ -193,6 +193,21 @@ coverage_report(
 )
 
 coverage_report(
+    name = "background-task-inspector",
+    srcpath_include = [
+        "tools/adt/idea/app-inspection/inspectors/backgroundtask/ide/src",
+        "tools/adt/idea/app-inspection/inspectors/backgroundtask/model/src",
+        "tools/adt/idea/app-inspection/inspectors/backgroundtask/view/src",
+        "tools/base/app-inspection/inspectors/backgroundtask/src",
+    ],
+    tests = [
+        "//tools/adt/idea/app-inspection/inspectors/backgroundtask/model:app-inspection.inspectors.backgroundtask.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/backgroundtask/view:app-inspection.inspectors.backgroundtask.view.tests_tests",
+        "//tools/base/app-inspection/inspectors/backgroundtask:agent_tests.test",
+    ],
+)
+
+coverage_report(
     name = "databinding",
     srcpath_include = [
         "tools/adt/idea/android-lang-databinding",
@@ -650,6 +665,7 @@ combine_report_definitions(
         "all",
         "android-apk",
         "app-inspection",
+        "background-task-inspector",
         "build-attribution",
         "cmake-vnext",
         "compose-ide-plugin",
@@ -710,6 +726,8 @@ coverage_report(
         "//tools/adt/idea/app-inspection/ide:app-inspection.ide.tests_tests",
         # TODO(b/182573662) too flaky for coverage
         #"//tools/adt/idea/app-inspection/inspectors/database:app-inspection.inspectors.database.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/backgroundtask/model:app-inspection.inspectors.backgroundtask.model_tests",
+        "//tools/adt/idea/app-inspection/inspectors/backgroundtask/view:app-inspection.inspectors.backgroundtask.view.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
@@ -770,6 +788,7 @@ coverage_report(
         "//tools/base/apkparser/analyzer:studio.android.sdktools.analyzer_tests",
         "//tools/base/apkparser/analyzer:tools.tests",
         "//tools/base/apkparser/cli:tools.tests",
+        "//tools/base/app-inspection/inspectors/backgroundtask:agent_tests.test",
         "//tools/base/app-inspection/inspectors/network:agent_tests.test",
         "//tools/base/aspects_agent:agent_tests",
         "//tools/base/bazel:bin2c_tests",

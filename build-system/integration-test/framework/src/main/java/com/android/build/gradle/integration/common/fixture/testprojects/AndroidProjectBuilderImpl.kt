@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
-import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder
 
 internal class AndroidProjectBuilderImpl(
     internal val subProject: SubProjectBuilderImpl,
@@ -119,6 +118,9 @@ internal class AndroidProjectBuilderImpl(
                 item.isDefault?.let {
                     sb.append("      isDefault = $it\n")
                 }
+                item.testCoverageEnabled?.let {
+                    sb.append("      testCoverageEnabled = $it\n")
+                }
                 sb.append("    }\n")
             }
             sb.append("  }\n") // BUILD-TYPES
@@ -204,6 +206,7 @@ internal class ProductFlavorContainerBuilderImpl: ContainerBuilder<ProductFlavor
 
 internal class BuildTypeBuilderImpl(override val name: String): BuildTypeBuilder {
     override var isDefault: Boolean? = null
+    override var testCoverageEnabled: Boolean? = null
 }
 
 internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {

@@ -41,12 +41,24 @@ public abstract class AndroidTargetHash {
     /**
      * Returns the hash string for a given platform version.
      *
+     * Base SDK AndroidVersion do not maintain the extension level when converting to hashString,
+     * and then back to AndroidVersion, to maintain backwards compatibility with versions of studio
+     * where extension levels of base SDKs are not known.
+     *
      * @param version A non-null platform version.
      * @return A non-null hash string uniquely representing this platform target.
      */
     @NonNull
     public static String getPlatformHashString(@NonNull AndroidVersion version) {
-        return PLATFORM_HASH_PREFIX + version.getApiString();
+        if (version.isBaseExtension()) {
+            return PLATFORM_HASH_PREFIX + version.getApiString();
+        }
+        else {
+            return PLATFORM_HASH_PREFIX
+                   + version.getApiString()
+                   + "-ext"
+                   + version.getExtensionLevel();
+        }
     }
 
     /**
@@ -65,10 +77,24 @@ public abstract class AndroidTargetHash {
             String suffix = hashString.substring(PLATFORM_HASH_PREFIX.length());
             if (!suffix.isEmpty()) {
                 if (Character.isDigit(suffix.charAt(0))) {
-                    try {
-                        int api = Integer.parseInt(suffix);
-                        return new AndroidVersion(api, null);
-                    } catch (NumberFormatException ignore) {}
+                    String[] strings = suffix.split("-");
+                    if (strings.length == 1) {
+                        try {
+                            int api = Integer.parseInt(strings[0]);
+                            return new AndroidVersion(api, null);
+                        }
+                        catch (NumberFormatException ignore) {
+                        }
+                    }
+                    else if (strings.length == 2 && strings[1].startsWith("ext")) {
+                        try {
+                            int api = Integer.parseInt(strings[0]);
+                            int extensionLevel = Integer.parseInt(strings[1].substring(3));
+                            return new AndroidVersion(api, null, extensionLevel, false);
+                        }
+                        catch (NumberFormatException ignore) {
+                        }
+                    }
                 } else {
                     // Note: getApiByPreviewName returns the api level for a build code,
                     // but it doesn't know whether a build code is in preview or not.

@@ -1,6 +1,7 @@
 > AndroidProject:
    - projectType           = LIBRARY
    - path                  = ":"
+   - buildName             = ":"
    - buildFolder           = {PROJECT}/build{!}
    - namespace             = "pkg.name"
    - androidTestNamespace  = "pkg.name.test"

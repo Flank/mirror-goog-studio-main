@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class LocalMavenRepositoryGeneratorTest {
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
                 new LocalMavenRepositoryGenerator(
-                        repoPath, outputBuildFile, coords, true, false, false);
+                        repoPath, outputBuildFile, coords, true, false, Collections.emptyMap(), false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.golden");
@@ -75,7 +76,7 @@ public class LocalMavenRepositoryGeneratorTest {
         String outputBuildFile = "generated.noresolve.BUILD";
         LocalMavenRepositoryGenerator generator =
                 new LocalMavenRepositoryGenerator(
-                        repoPath, outputBuildFile, coords, false, false, false);
+                        repoPath, outputBuildFile, coords, false, false, Collections.emptyMap(), false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.noresolve.golden");

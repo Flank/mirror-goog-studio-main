@@ -1,4 +1,4 @@
-load("@//tools/base/bazel:maven.bzl", "maven_artifact", "maven_import", "maven_pom")
+load("@//tools/base/bazel:maven.bzl", "maven_artifact", "maven_import")
 
 # Bazel rules auto-generated from maven repo.
 maven_artifact(

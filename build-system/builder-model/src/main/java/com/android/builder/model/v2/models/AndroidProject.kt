@@ -28,8 +28,6 @@ import java.io.File
  * Entry point for the model of the Android Projects. This models a single module, whether the
  * module is an app project, a library project, a Instant App feature project, an instantApp bundle
  * project, or a dynamic feature split project.
- *
- * @since 4.2
  */
 interface AndroidProject: AndroidModel {
     companion object {

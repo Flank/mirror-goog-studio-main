@@ -58,21 +58,21 @@ maven_library(
         # For TestUtils.getKotlinVersionForTests.
         "//tools/buildSrc/base:dependencies.properties",
     ],
-    enable_scopes = True,
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
     exports = [
+        "@maven//:com.google.truth.extensions.truth-java8-extension",
         "@maven//:com.google.truth.truth",
     ],
     deps = [
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:junit.junit",
         "@maven//:org.easymock.easymock",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "@maven//:org.jetbrains.kotlin.kotlin-test",
         "@maven//:org.mockito.mockito-core",
         "@maven//:org.ow2.asm.asm",
         "@maven//:org.smali.dexlib2",

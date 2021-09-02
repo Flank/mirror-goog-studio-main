@@ -110,6 +110,19 @@ local_repository(
     path = "tools/base/yourkit-controller",
 )
 
+
+_REMOTE_REPOSITORIES = {
+    "Maven Central": "https://repo1.maven.org/maven2/",
+    "JCenter": "https://jcenter.bintray.com/",
+    "Google": "https://maven.google.com/",
+    "IntelliJ deps": "https://repo.gradle.org/gradle/libs-releases/",
+    "GradlePlugins": "https://plugins.gradle.org/m2",
+}
+
+_REMOTE_DEV_REPOSITORIES = {
+    "Kotlin dev": "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/",
+}
+
 local_maven_repository(
     name = "maven",
     path = "prebuilts/tools/common/m2/repository/",
@@ -129,9 +142,15 @@ local_maven_repository(
         "com.google.apis:google-api-services-storage:v1-rev82-1.22.0",
         "com.google.auto:auto-common:0.10",
         "com.google.auto.value:auto-value:1.6.2",
+        "com.google.auto.value:auto-value-annotations:1.6.2",
+        "com.google.auth:google-auth-library-credentials:0.17.1",
+        "com.google.auth:google-auth-library-oauth2-http:0.17.1",
         "com.google.code.findbugs:jsr305:3.0.2",
         "com.google.code.gson:gson:2.8.6",
         "com.google.crypto.tink:tink:1.3.0-rc2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.11.1",
+        "com.fasterxml.jackson.core:jackson-core:2.11.1",
+        "com.fasterxml.jackson.core:jackson-databind:2.11.1",
         "com.google.flatbuffers:flatbuffers-java:1.12.0",
         "com.google.guava:guava:23.0",  # TODO to be removed, needed by gradlew of agp
         "com.google.guava:guava:30.1-jre",
@@ -165,12 +184,19 @@ local_maven_repository(
         "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:0.8.1",
         "io.grpc:grpc-all:1.21.1",
         "io.grpc:grpc-api:1.21.1",
+        "io.grpc:grpc-auth:1.21.1",
+        "io.grpc:grpc-context:1.21.1",
+        "io.grpc:grpc-core:1.21.1",
+        "io.grpc:grpc-netty-shaded:1.21.1",
+        "io.grpc:grpc-stub:1.21.1",
         "io.grpc:protoc-gen-grpc-java:exe:linux-x86_64:1.21.1",
         "io.netty:netty-all:4.1.13.Final",
+        "io.perfmark:perfmark-api:0.17.0",
         "it.unimi.dsi:fastutil:8.4.0",
         "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2",
         "javax.annotation:javax.annotation-api:1.3.2",
         "javax.inject:javax.inject:1",
+        "javax.xml.bind:jaxb-api:2.3.1",
         "junit:junit:4.13.2",
         "log4j:log4j:1.2.17",
         "net.java.dev.jna:jna:5.6.0",
@@ -195,8 +221,9 @@ local_maven_repository(
         "org.glassfish.jaxb:jaxb-runtime:2.3.2",
         "org.glassfish.jaxb:jaxb-xjc:2.3.2",
         "org.gradle:gradle-tooling-api:7.2",
+        "org.hamcrest:hamcrest-core:1.3",
         "org.jacoco:org.jacoco.agent:0.7.9",
-        "org.jacoco:org.jacoco.core:0.7.9",
+        "org.jacoco:org.jacoco.core:0.8.3",
         "org.jacoco:org.jacoco.report:0.7.9",
         "org.jetbrains.dokka:dokka-android-gradle-plugin:0.9.17-g004",
         "org.jetbrains.dokka:dokka-core:1.4.32",
@@ -227,6 +254,7 @@ local_maven_repository(
         "org.xerial:sqlite-jdbc:3.21.0.1",
         "xerces:xercesImpl:2.12.0",
     ],
+    remote_repositories = _REMOTE_REPOSITORIES,
 )
 
 local_maven_repository(
@@ -410,21 +438,26 @@ local_maven_repository(
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.0",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.20",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.21",
+        "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.30",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21",
+        "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.30",
         "org.jetbrains.kotlin:kotlin-reflect:1.4.31",
         "org.jetbrains.kotlin:kotlin-reflect:1.5.20",
         "org.jetbrains.kotlin:kotlin-reflect:1.5.21",
+        "org.jetbrains.kotlin:kotlin-reflect:1.5.30",
         "org.jetbrains.kotlin:kotlin-script-runtime:1.5.20",
         "org.jetbrains.kotlin:kotlin-script-runtime:1.5.21",
+        "org.jetbrains.kotlin:kotlin-script-runtime:1.5.30",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.31",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.20",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.30",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.6",
@@ -435,4 +468,5 @@ local_maven_repository(
         "org.tensorflow:tensorflow-lite-support:0.1.0",
         "org.threeten:threetenbp:1.3.3",
     ],
+    remote_repositories = dict(_REMOTE_REPOSITORIES.items() + _REMOTE_DEV_REPOSITORIES.items()),
 )

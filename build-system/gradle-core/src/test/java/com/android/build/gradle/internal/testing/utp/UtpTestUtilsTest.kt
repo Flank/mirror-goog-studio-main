@@ -93,8 +93,7 @@ class UtpTestUtilsTest {
             "deviceName",
             "deviceId",
             utpOutputDir,
-            utpTmpDir,
-            { RunnerConfigProto.RunnerConfig.getDefaultInstance() },
+            { _, _ -> RunnerConfigProto.RunnerConfig.getDefaultInstance() },
             ServerConfigProto.ServerConfig.getDefaultInstance(),
             shardConfig
         )

@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.prefs.AndroidLocationsSingleton
 import com.android.utils.FileUtils
-import org.gradle.api.logging.Logging
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
+import org.gradle.api.logging.Logging
 
 /**
  * Runner of the [UtpTestResultListenerServer].
@@ -60,14 +59,10 @@ class UtpTestResultListenerServerRunner(
     val metadata: UtpTestResultListenerServerMetadata
 
     init {
-        val utpRsaKeysDir = File(AndroidLocationsSingleton.prefsLocation.toFile(), "utp")
-        if (!utpRsaKeysDir.exists()) {
-            utpRsaKeysDir.mkdirs()
-        }
-        serverCert = File.createTempFile("resultListenerServerCert", ".pem", utpRsaKeysDir)
-        serverPrivateKey = File.createTempFile("resultListenerServer", ".key", utpRsaKeysDir)
-        clientCert = File.createTempFile("resultListenerClientCert", ".pem", utpRsaKeysDir)
-        clientPrivateKey = File.createTempFile("resultListenerClient", ".key", utpRsaKeysDir)
+        serverCert = createUtpTempFile("resultListenerServerCert", ".pem")
+        serverPrivateKey = createUtpTempFile("resultListenerServer", ".key")
+        clientCert = createUtpTempFile("resultListenerClientCert", ".pem")
+        clientPrivateKey = createUtpTempFile("resultListenerClient", ".key")
 
         generateRsaKeyPair(serverCert, serverPrivateKey)
         generateRsaKeyPair(clientCert, clientPrivateKey)

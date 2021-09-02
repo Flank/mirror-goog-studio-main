@@ -21,10 +21,34 @@ import com.android.testutils.MavenRepoGenerator
 import com.android.utils.FileUtils
 import java.io.File
 
-internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
+internal class RootTestProjectBuilderImpl: TestProjectBuilderImpl(":") {
 
-    private val rootProject = SubProjectBuilderImpl(":")
-    private val subprojects = mutableMapOf<String, SubProjectBuilderImpl>()
+    val mavenRepoGenerator: MavenRepoGenerator?
+        get() {
+            val allLibraries = accumulateExternalLibraries(this)
+            if (allLibraries.isEmpty()) {
+                return null
+            }
+            return MavenRepoGenerator(allLibraries)
+        }
+
+    private fun accumulateExternalLibraries(
+        build: TestProjectBuilderImpl
+    ): List<MavenRepoGenerator.Library> = mutableListOf<MavenRepoGenerator.Library>().also { list ->
+        list.addAll(build.includedBuilds.flatMap { accumulateExternalLibraries(it) })
+        list.addAll(build.rootProject.dependencies.externalLibraries)
+        list.addAll(build.subprojects.values.flatMap { it.dependencies.externalLibraries })
+    }
+}
+
+internal open class TestProjectBuilderImpl(override val name: String): TestProjectBuilder, TestProject {
+
+    private val _includedBuilds = mutableListOf<TestProjectBuilderImpl>()
+    override val includedBuilds: List<TestProjectBuilderImpl>
+        get() = _includedBuilds
+
+    val rootProject = SubProjectBuilderImpl(":")
+    val subprojects = mutableMapOf<String, SubProjectBuilderImpl>()
 
     override var buildFileType: BuildFileType = BuildFileType.GROOVY
 
@@ -44,15 +68,11 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
         }
     }
 
-    val mavenRepoGenerator: MavenRepoGenerator?
-        get() {
-            val allLibraries = rootProject.dependencies.externalLibraries +
-                    subprojects.values.flatMap { it.dependencies.externalLibraries }
-            if (allLibraries.isEmpty()) {
-                return null
-            }
-            return MavenRepoGenerator(allLibraries)
-        }
+    override fun includedBuild(name: String, action: TestProjectBuilder.() -> Unit) {
+        val build = TestProjectBuilderImpl(name)
+        action(build)
+        _includedBuilds.add(build)
+    }
 
     // --- TestProject ---
 
@@ -68,9 +88,13 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
         }
 
         // write settings.gradle
-        if (subprojects.isNotEmpty()) {
+        if (subprojects.isNotEmpty() || includedBuilds.isNotEmpty()) {
             val file = File(projectDir, "settings.gradle")
             val sb = StringBuilder()
+
+            for (build in includedBuilds) {
+                sb.append("includeBuild(\"${build.name}\")\n")
+            }
 
             for (project in subprojects.keys) {
                 sb.append("include '$project'\n")
@@ -78,10 +102,14 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
 
             file.writeText(sb.toString())
         }
+
+        // write the included builds
+        for (build in includedBuilds) {
+            build.write(File(projectDir, build.name), buildScriptContent)
+        }
     }
 
     override fun containsFullBuildScript(): Boolean {
         return subprojects[":"]?.plugins?.isNotEmpty() ?: false
     }
 }
-

@@ -24,7 +24,6 @@ import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
-import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
 import org.gradle.workers.WorkerExecutor
@@ -73,8 +72,10 @@ class UtpTestRunner @JvmOverloads constructor(
                     mkdirs()
                 }
             }
-            val utpTmpDir = Files.createTempDir()
-            val runnerConfig: (UtpTestResultListenerServerMetadata) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata ->
+            val runnerConfig: (
+                UtpTestResultListenerServerMetadata,
+                File
+            ) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata, utpTmpDir ->
                 configFactory.createRunnerConfigProtoForLocalDevice(
                     deviceConnector,
                     testData,
@@ -104,7 +105,6 @@ class UtpTestRunner @JvmOverloads constructor(
                 deviceConnector.name,
                 deviceConnector.serialNumber,
                 utpOutputDir,
-                utpTmpDir,
                 runnerConfig,
                 configFactory.createServerConfigProto())
         }.toList()

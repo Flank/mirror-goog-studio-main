@@ -35,13 +35,12 @@ maven_library(
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "@maven//:com.google.code.gson.gson",
-        "@maven//:com.google.guava.guava",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

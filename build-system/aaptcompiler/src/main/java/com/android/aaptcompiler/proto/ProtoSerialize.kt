@@ -11,6 +11,7 @@ import com.android.aaptcompiler.ConfigDescription
 import com.android.aaptcompiler.FileReference
 import com.android.aaptcompiler.Id
 import com.android.aaptcompiler.Item
+import com.android.aaptcompiler.Macro
 import com.android.aaptcompiler.Overlayable
 import com.android.aaptcompiler.OverlayableItem
 import com.android.aaptcompiler.Plural
@@ -440,6 +441,8 @@ fun serializeReferenceToPb(ref: Reference): Resources.Reference {
 
   refBuilder.setPrivate(ref.isPrivate)
   refBuilder.setType(serializeReferenceTypeToPb(ref.referenceType))
+  refBuilder.setAllowRaw(ref.allowRaw)
+  refBuilder.setTypeFlags(ref.typeFlags!!)
 
   return refBuilder.build()
 }
@@ -633,6 +636,40 @@ fun serializePluralToPb(
   return pluralBuilder.build()
 }
 
+fun serializeMacroToPb(macro: Macro): Resources.MacroBody {
+
+    val macroBuilder = Resources.MacroBody.newBuilder()
+    macroBuilder.rawString = macro.rawValue!!
+
+    val styleString = macroBuilder.styleStringBuilder
+    styleString.str = macro.styleString!!.str
+    for (span in macro.styleString!!.spans) {
+        val spansBuilder = styleString.addSpansBuilder()
+        spansBuilder.name = span.name
+        spansBuilder.startIndex = span.firstChar
+        spansBuilder.endIndex = span.lastChar
+        styleString.addSpans(spansBuilder.build())
+    }
+    macroBuilder.styleString = styleString.build()
+
+    for (untranslatables in macro.untranslatables) {
+        val section = macroBuilder.addUntranslatableSectionsBuilder()
+        section.startIndex = untranslatables.startIndex.toLong()
+        section.endIndex = untranslatables.endIndex.toLong()
+        macroBuilder.addUntranslatableSections(section.build())
+    }
+
+    for (aliasNamespace in macro.aliasNamespaces) {
+        val namespace = macroBuilder.addNamespaceStackBuilder()
+        namespace.prefix = aliasNamespace.alias
+        namespace.packageName = aliasNamespace.packageName
+        namespace.isPrivate = aliasNamespace.isPrivate
+        macroBuilder.addNamespaceStack(namespace.build())
+    }
+
+    return macroBuilder.build()
+}
+
 fun serializeItemToPb(item: Item, logger: ILogger?): Resources.Item {
   val itemBuilder = Resources.Item.newBuilder()
   when (item) {
@@ -643,6 +680,10 @@ fun serializeItemToPb(item: Item, logger: ILogger?): Resources.Item {
     is FileReference -> itemBuilder.setFile(serializeFileRefToPb(item))
     is Id -> itemBuilder.setId(Resources.Id.newBuilder().build())
     is BinaryPrimitive -> itemBuilder.setPrim(serializeBinPrimitiveToPb(item, logger))
+    else -> {
+      val errorMsg = "%s, Unrecognized item type %s, for value %s."
+      logger?.error(null, errorMsg, blameSource(item.source), item.javaClass, item)
+    }
   }
   return itemBuilder.build()
 }
@@ -660,8 +701,9 @@ fun serializeValueToPb(value: Value, sourcePool: StringPool, logger: ILogger?): 
       is Styleable -> compoundBuilder.setStyleable(serializeStyleableToPb(value, sourcePool))
       is ArrayResource -> compoundBuilder.setArray(serializeArrayToPb(value, sourcePool, logger))
       is Plural -> compoundBuilder.setPlural(serializePluralToPb(value, sourcePool, logger))
+      is Macro -> compoundBuilder.setMacro(serializeMacroToPb(value))
       else -> {
-        val errorMsg = "%s, Unrecognized type %s, for value %s."
+        val errorMsg = "%s, Unrecognized value type %s, for value %s."
         logger?.error(null, errorMsg, blameSource(value.source), value.javaClass, value)
       }
     }

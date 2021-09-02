@@ -12,6 +12,7 @@ import com.android.aaptcompiler.FileReference
 import com.android.aaptcompiler.Id
 import com.android.aaptcompiler.Item
 import com.android.aaptcompiler.LocaleValue
+import com.android.aaptcompiler.Macro
 import com.android.aaptcompiler.Overlayable
 import com.android.aaptcompiler.OverlayableItem
 import com.android.aaptcompiler.Plural
@@ -27,6 +28,7 @@ import com.android.aaptcompiler.Style
 import com.android.aaptcompiler.StyleString
 import com.android.aaptcompiler.Styleable
 import com.android.aaptcompiler.StyledString
+import com.android.aaptcompiler.UntranslatableSection
 import com.android.aaptcompiler.Value
 import com.android.aaptcompiler.Visibility
 import com.android.aaptcompiler.android.ResStringPool
@@ -518,6 +520,44 @@ fun deserializePluralFromPb(
   return pluralResource
 }
 
+fun deserializeMacroFromPb(
+  pbMacro: Resources.MacroBody,
+  valuePool: StringPool,
+  config: ConfigDescription,
+  sourcePool: ResStringPool,
+  logger: ILogger?): Macro {
+
+  val macro = Macro()
+  macro.rawValue = pbMacro.rawString
+
+  if (pbMacro.hasStyleString()) {
+      val spans = ArrayList<Span>()
+      for (span in pbMacro.styleString.spansList) {
+        spans.add(Span(span.name, span.startIndex, span.endIndex))
+      }
+      macro.styleString = StyleString(pbMacro.styleString.str, spans)
+  }
+
+  val untranslatableList = ArrayList<UntranslatableSection>()
+  for (untranslatable in pbMacro.untranslatableSectionsList) {
+      untranslatableList.add(
+              UntranslatableSection(
+                      untranslatable.startIndex.toInt(), untranslatable.endIndex.toInt())
+      )
+  }
+  macro.untranslatables = untranslatableList
+
+  val aliasNamespaces = ArrayList<Macro.Namespace>()
+  for (namespace in pbMacro.namespaceStackList) {
+    aliasNamespaces.add(
+            Macro.Namespace(namespace.prefix, namespace.packageName, namespace.isPrivate)
+    )
+  }
+  macro.aliasNamespaces = aliasNamespaces
+
+  return macro
+}
+
 fun deserializeItemFromPb(
   item: Resources.Item,
   valuePool: StringPool,
@@ -562,6 +602,8 @@ fun deserializeValueFromPb(
           deserializeArrayFromPb(compoundValue.getArray(), valuePool, config, sourcePool, logger)
         Resources.CompoundValue.ValueCase.PLURAL ->
           deserializePluralFromPb(compoundValue.getPlural(), valuePool, config, sourcePool, logger)
+        Resources.CompoundValue.ValueCase.MACRO ->
+          deserializeMacroFromPb(compoundValue.getMacro(), valuePool, config, sourcePool, logger)
         else -> {
           val errorMsg = "Unrecognized compoundValue value case %s"
           logger?.error(null, errorMsg, compoundValue.valueCase)

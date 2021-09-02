@@ -481,9 +481,9 @@ java_library(
     name = "json",
     srcs = glob(["src/com/android/tools/json/**/*.java"]),
     deps = [
-        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-annotations.2.11.1",
-        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-core.2.11.1",
-        "//prebuilts/tools/common/m2:com.fasterxml.jackson.core.jackson-databind.2.11.1",
+        "@maven//:com.fasterxml.jackson.core.jackson-annotations",
+        "@maven//:com.fasterxml.jackson.core.jackson-core",
+        "@maven//:com.fasterxml.jackson.core.jackson-databind",
     ],
 )
 

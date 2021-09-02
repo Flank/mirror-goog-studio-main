@@ -64,7 +64,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.Boolean,
     SupportedPropertyType.Var.NullableBoolean,
     SupportedPropertyType.Var.Int,
-
+    SupportedPropertyType.Var.NullableInt,
     SupportedPropertyType.Var.Enum(JavaVersion::class.java),
 
     SupportedPropertyType.Collection.List,

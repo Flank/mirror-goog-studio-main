@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.testutils.MavenRepoGenerator
 
@@ -24,7 +25,7 @@ import com.android.testutils.MavenRepoGenerator
  * Creates a [TestProject] with the provided configuration action
  */
 fun createProject(action: TestProjectBuilder.() -> Unit): TestProject {
-    val builder = TestProjectBuilderImpl()
+    val builder = RootTestProjectBuilderImpl()
     action(builder)
 
     return builder
@@ -34,14 +35,20 @@ fun createProject(action: TestProjectBuilder.() -> Unit): TestProject {
  * Creates a [GradleTestProject] with the provided configuration action
  */
 fun createGradleProject(action: TestProjectBuilder.() -> Unit): GradleTestProject {
-    val builder = TestProjectBuilderImpl()
+    return createGradleProjectBuilder(action).create()
+}
+
+/**
+ * Creates a [GradleTestProjectBuilder] with the provided configuration action
+ */
+fun createGradleProjectBuilder(action: TestProjectBuilder.() -> Unit): GradleTestProjectBuilder {
+    val builder = RootTestProjectBuilderImpl()
     action(builder)
 
     return GradleTestProject
         .builder()
         .fromTestApp(builder)
         .withAdditionalMavenRepo(builder.mavenRepoGenerator)
-        .create()
 }
 
 enum class BuildFileType(val extension: String) {
@@ -49,6 +56,8 @@ enum class BuildFileType(val extension: String) {
 }
 
 interface TestProjectBuilder {
+    val name: String
+
     var buildFileType: BuildFileType
 
     /**
@@ -60,10 +69,16 @@ interface TestProjectBuilder {
      * Configures the subProject, creating it if needed.
      */
     fun subProject(path: String, action: SubProjectBuilder.() -> Unit)
+
+    fun includedBuild(name: String, action: TestProjectBuilder.() -> Unit)
+
+    val includedBuilds: List<TestProjectBuilder>
 }
 
 interface SubProjectBuilder {
     val path: String
+    var group: String?
+    var version: String?
     var plugins: MutableList<PluginType>
 
     /**
@@ -162,6 +177,7 @@ interface ContainerBuilder<T> {
 interface BuildTypeBuilder {
     val name: String
     var isDefault: Boolean?
+    var testCoverageEnabled: Boolean?
 }
 
 interface ProductFlavorBuilder {

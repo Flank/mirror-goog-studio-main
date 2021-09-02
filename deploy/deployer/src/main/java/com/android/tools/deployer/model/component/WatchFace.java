@@ -18,7 +18,7 @@ package com.android.tools.deployer.model.component;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-import com.android.tools.deployer.ComponentActivationException;
+import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
 
@@ -52,8 +52,8 @@ public class WatchFace extends AppComponent {
     public void activate(
             @NonNull String extraFlags,
             @NonNull Mode activationMode,
-            @NonNull IShellOutputReceiver receiver
-    ) throws ComponentActivationException {
+            @NonNull IShellOutputReceiver receiver)
+            throws DeployerException {
         validate(extraFlags);
         logger.info("Activating WatchFace %s %s",
                     manifestServiceInfo.getQualifiedName(),
@@ -69,9 +69,10 @@ public class WatchFace extends AppComponent {
         runShellCommand(command, receiver);
     }
 
-    private void validate(String extraFlags) throws ComponentActivationException {
+    private void validate(String extraFlags) throws DeployerException {
         if (!extraFlags.isEmpty()) {
-            throw new ComponentActivationException("Extra flags are not supported by WatchFace");
+            throw DeployerException.componentActivationException(
+                    "Extra flags are not supported by WatchFace");
         }
         // TODO: write validation
     }

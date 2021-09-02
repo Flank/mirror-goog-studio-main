@@ -103,8 +103,16 @@ if not exist %DISTDIR%\ goto endscript
 
 @rem copy skia parser artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skia\skiaparser.zip %DISTDIR%
+if errorlevel 1 (
+  set /a EXITCODE=1
+  goto endscript
+)
 @rem copy trace processor daemon artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace_processor_daemon.exe %DISTDIR%
+if errorlevel 1 (
+  set /a EXITCODE=1
+  goto endscript
+)
 
 @echo studio_win.cmd time: %time%
 

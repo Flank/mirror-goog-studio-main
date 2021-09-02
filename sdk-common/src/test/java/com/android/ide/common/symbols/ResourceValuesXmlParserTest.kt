@@ -437,6 +437,27 @@ class ResourceValuesXmlParserTest {
     }
 
     @Test
+    fun parseMacro() {
+        val xml = """
+            <resources>
+                <macro name="foo">Hello</macro>
+                <macro name="bar">@string/foo</macro>
+                <macro name="reference">@macro/foo</macro>
+            </resources>""".trimIndent()
+
+        val table =
+                parseValuesResource(
+                        XmlUtils.parseDocument(xml, true),
+                        IdProvider.sequential(),
+                        platformAttrSymbols)
+
+        val expected = SymbolTable.builder().build()
+
+        // No resources are defined in a macro.
+        assertThat(table).isEqualTo(expected)
+    }
+
+    @Test
     fun parseItem() {
         val noItemXml = """
 <resources>
@@ -638,5 +659,25 @@ class ResourceValuesXmlParserTest {
                         .build()
 
         assertThat(table).isEqualTo(expected)
+    }
+
+    @Test
+    fun testEmptyItem() {
+        val xml = """
+<resources>
+    <item name="incorrect"/>
+</resources>""".trimIndent()
+
+        try {
+            parseValuesResource(
+                    XmlUtils.parseDocument(xml, true),
+                    IdProvider.sequential(),
+                    platformAttrSymbols)
+            fail()
+        } catch (e: ResourceValuesXmlParseException) {
+            // expected
+            assertThat(e.message).contains("Unknown resource value XML element")
+            assertThat(e.message).contains("<item name=\"incorrect\"/>")
+        }
     }
 }

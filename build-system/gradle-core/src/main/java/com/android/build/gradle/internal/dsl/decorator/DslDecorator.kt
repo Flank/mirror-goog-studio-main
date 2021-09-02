@@ -503,7 +503,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 // TODO: URL
                 throwException(
                     LOCKED_EXCEPTION,
-                    "It is too late to set ${property.name}\n" +
+                    "It is too late to set ${property.name.removePrefix("_")}\n" +
                             "It has already been read to configure this project.\n" +
                             "Consider either moving this call to be during evaluation,\n" +
                             "or using the variant API."

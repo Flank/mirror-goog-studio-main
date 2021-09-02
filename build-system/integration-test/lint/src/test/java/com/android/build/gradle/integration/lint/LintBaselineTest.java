@@ -193,63 +193,50 @@ public class LintBaselineTest {
 
     @Test
     public void checkBaselineFilteringJarWarnings() throws Exception {
-        // This test doesn't need to be parameterized; for the baseline filtering
-        // scenario, baseline-continue is unrelated (and won't work since we're
-        // reusing executors to use the preferences root dir, and putting
-        // expectFailure in there will break the last run), and running out
-        // of process does not properly set the preference directory.
+        // For the baseline filtering scenario, lintBaselineContinue is unrelated, but the test will
+        // fail as it's written when it's false, so we assume true.
         assumeTrue(lintBaselinesContinue);
-        assumeTrue(runLintInProcess);
 
+        // Use an isolated android_prefs_root folder so this test doesn't affect other lint tests.
+        GradleTaskExecutor executor = getExecutor().withPerTestPrefsRoot(true);
         // invoke a build to force initialization of preferencesRootDir
-        GradleTaskExecutor executor = getExecutor();
         executor.run("tasks");
 
         File prefsLintDir = FileUtils.join(executor.getPreferencesRootDir(), ".android", "lint");
         FileUtils.cleanOutputDir(prefsLintDir);
-        File file = new File(prefsLintDir, "sample-custom-checks.jar");
-        try {
-            FileUtils.createFile(file, "FOO_BAR");
+        FileUtils.createFile(new File(prefsLintDir, "sample-custom-checks.jar"), "FOO_BAR");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n\nandroid.lintOptions.textOutput file(\"lint-report.txt\")\n\n");
+        final GradleBuildResult result = executor.run(":app:lint");
 
-            TestFileUtils.appendToFile(
-                    project.getSubproject("app").getBuildFile(),
-                    "\n\nandroid.lintOptions.textOutput file(\"lint-report.txt\")\n\n");
-            final GradleBuildResult result = executor.run(":app:lint");
+        ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
 
-            ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
+        File baselineFile =
+                new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
+        assertThat(baselineFile).exists();
+        String baseline = FilesKt.readText(baselineFile, Charsets.UTF_8);
+        assertThat(baseline)
+                .contains(
+                        ""
+                                + "    <issue\n"
+                                + "        id=\"UselessLeaf\"\n"
+                                + "        message=\"This `LinearLayout` view is unnecessary (no children, no `background`, no `id`, no `style`)\"\n"
+                                + "        errorLine1=\"    &lt;LinearLayout android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot;>&lt;/LinearLayout>\"\n"
+                                + "        errorLine2=\"     ~~~~~~~~~~~~\">\n"
+                                + "        <location\n"
+                                + "            file=\"src/main/res/layout-land/my_layout.xml\"\n"
+                                + "            line=\"7\"\n"
+                                + "            column=\"6\"/>\n"
+                                + "    </issue>\n"
+                                + "\n");
 
-            File baselineFile =
-                    new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
-            assertThat(baselineFile).exists();
-            String baseline = FilesKt.readText(baselineFile, Charsets.UTF_8);
-            assertThat(baseline)
-                    .contains(
-                            ""
-                                    + "    <issue\n"
-                                    + "        id=\"UselessLeaf\"\n"
-                                    + "        message=\"This `LinearLayout` view is unnecessary (no children, no `background`, no `id`, no `style`)\"\n"
-                                    + "        errorLine1=\"    &lt;LinearLayout android:layout_width=&quot;match_parent&quot; android:layout_height=&quot;match_parent&quot;>&lt;/LinearLayout>\"\n"
-                                    + "        errorLine2=\"     ~~~~~~~~~~~~\">\n"
-                                    + "        <location\n"
-                                    + "            file=\"src/main/res/layout-land/my_layout.xml\"\n"
-                                    + "            line=\"7\"\n"
-                                    + "            column=\"6\"/>\n"
-                                    + "    </issue>\n"
-                                    + "\n");
-            assertThat(baseline)
-                    .contains("(sample-custom-checks.jar); this will stop working soon.");
-
-            // Check the written baseline means that a subsequent lint invocation passes.
-            executor.run("clean", ":app:lint");
-            File lintResults = project.file("app/lint-report.txt");
-            assertThat(lintResults)
-                    .doesNotContain(
-                            "errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project");
-        } finally {
-            // Make sure we don't leave this jar around in a shared directory to affect later tests
-            boolean deleted = file.delete();
-            assertThat(deleted).isTrue();
-        }
+        // Check the written baseline means that a subsequent lint invocation passes.
+        executor.run("clean", ":app:lint");
+        File lintResults = project.file("app/lint-report.txt");
+        assertThat(lintResults)
+                .doesNotContain(
+                        "errors/warnings were listed in the baseline file (lint-baseline.xml) but not found in the project");
     }
 
     private GradleTaskExecutor getExecutor() {

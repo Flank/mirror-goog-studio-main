@@ -219,6 +219,7 @@ open class JavaContext(
             return uastParser.getCallLocation(this, element, true, true)
         } else if (element is UMethod) {
             return uastParser.getNameLocation(this, element as UElement)
+                .withOriginalSource(element)
         }
         return uastParser.getLocation(this, element)
     }

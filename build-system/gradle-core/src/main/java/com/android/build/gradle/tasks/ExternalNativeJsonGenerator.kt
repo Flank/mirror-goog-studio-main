@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.toJsonString
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
@@ -70,8 +69,7 @@ const val ANDROID_GRADLE_BUILD_VERSION = "2"
  */
 abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    val variant: CxxVariantModel,
-    @get:Internal val abis: List<CxxAbiModel>,
+    val abi: CxxAbiModel,
     @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
 
@@ -91,7 +89,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
-        for (pkgDir in variant.prefabPackageDirectoryList) {
+        for (pkgDir in abi.variant.prefabPackageDirectoryList) {
             Files.walk(pkgDir.toPath())
                 .forEach {
                     result.add(it.toFile())
@@ -101,31 +99,28 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         return result
     }
 
-    override fun generate(ops: ExecOperations, forceGeneration: Boolean, abiName: String?) {
+    override fun generate(ops: ExecOperations, forceGeneration: Boolean) {
         requireExplicitLogger()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
-        variant.prefabPackageDirectoryList
-        variant.prefabClassPath
-        for (abi in abis) {
-            if (abiName != null && abiName != abi.abi.tag) continue
-            try {
-                buildForOneConfiguration(ops, forceGeneration, abi)
-            } catch (e: GradleException) {
-                errorln(
-                        METADATA_GENERATION_FAILURE,
-                        "exception while building Json %s",
-                        e.message!!
-                )
-            } catch (e: ProcessException) {
-                errorln(
-                        METADATA_GENERATION_FAILURE,
-                        "error when building with %s using %s: %s",
-                        variant.module.buildSystem.tag,
-                        variant.module.makeFile,
-                        e.message!!
-                )
-            }
+        abi.variant.prefabPackageDirectoryList
+        abi.variant.prefabClassPath
+        try {
+            buildForOneConfiguration(ops, forceGeneration, abi)
+        } catch (e: GradleException) {
+            errorln(
+                    METADATA_GENERATION_FAILURE,
+                    "exception while building Json %s",
+                    e.message!!
+            )
+        } catch (e: ProcessException) {
+            errorln(
+                    METADATA_GENERATION_FAILURE,
+                    "error when building with %s using %s: %s",
+                    abi.variant.module.buildSystem.tag,
+                    abi.variant.module.makeFile,
+                    e.message!!
+            )
         }
     }
 
@@ -147,7 +142,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 val variantStats =
                         NativeBuildConfigInfo.newBuilder()
                 variantStats.abi = AnalyticsUtil.getAbi(abi.abi.tag)
-                variantStats.debuggable = variant.isDebuggableEnabled
+                variantStats.debuggable = abi.variant.isDebuggableEnabled
                 val startTime = System.currentTimeMillis()
                 variantStats.generationStartMs = startTime
                 try {
@@ -169,7 +164,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     val prefabState = PrefabConfigurationState(
                             abi.variant.module.project.isPrefabEnabled,
                             abi.variant.prefabClassPath,
-                            variant.prefabPackageDirectoryList
+                            abi.variant.prefabPackageDirectoryList
                     )
                     val previousPrefabState =
                             getPreviousPrefabConfigurationState(abi.prefabConfigFile)
@@ -224,9 +219,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             infoln("created folder '%s'", abi.cxxBuildFolder)
                         }
 
-                        infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
+                        infoln("executing %s %s", abi.variant.module.buildSystem.tag, processBuilder)
                         time("execute-generate-process") { executeProcess(ops, abi) }
-                        infoln("done executing %s", variant.module.buildSystem.tag)
+                        infoln("done executing %s", abi.variant.module.buildSystem.tag)
 
                         if (!abi.jsonFile.exists()) {
                             throw GradleException(

@@ -7,7 +7,7 @@ java_library(
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm.7.0",
+        "@maven//:org.ow2.asm.asm",
     ],
 )
 
@@ -15,7 +15,7 @@ java_jarjar(
     name = "profilers-transform",
     srcs = [
         ":transform",
-        "//prebuilts/tools/common/m2:org.ow2.asm.asm.7.0",
+        "@maven//:org.ow2.asm.asm",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],

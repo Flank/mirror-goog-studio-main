@@ -20,7 +20,7 @@ import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.SyncIssue
-import com.google.api.client.repackaged.com.google.common.base.Throwables.getRootCause
+import com.google.common.base.Throwables.getRootCause
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test

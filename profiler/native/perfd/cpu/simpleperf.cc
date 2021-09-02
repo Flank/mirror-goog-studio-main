@@ -171,12 +171,18 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
 
   command << " -f " << (Clock::s_to_us(1) / sampling_interval_us);
 
-  // If the device is an emulator, it doesn't support cpu-cycles events, which
-  // are the default events used by simpleperf. In that case, we need to use
-  // cpu-clock events.
-  if (is_emulator_) {
-    command << " -e cpu-clock";
-  }
+  // Always use "cpu-clock" as the event to trigger sampling. It's available
+  // on both physical devices and emulators. Emulators don't support cpu-cycles.
+  // One event count of cpu-clock is 1 nanosecond. Compared to CPU cycles, it's
+  // easier to understand and easier to to relate the wall-clock time which is
+  // also measured in nanoseconds.
+  //
+  // cpu-clock is a software perf event. When using cpu-clock,
+  // event_count_of_a_sample =
+  //     current_clock_time - clock_time_of_the_previous_sample
+  // (and remove time not running on cpu). The used clock is sched_clock() in
+  // the kernel, which is in nanoseconds. So 1 event count of cpu-clock is 1 ns.
+  command << " -e cpu-clock";
 
   command << " --exit-with-parent";
 

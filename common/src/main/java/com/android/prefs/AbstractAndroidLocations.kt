@@ -20,9 +20,9 @@ import com.android.io.CancellableFileIo
 import com.android.prefs.AbstractAndroidLocations.Companion.FOLDER_DOT_ANDROID
 import com.android.utils.EnvironmentProvider
 import com.android.utils.ILogger
+import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * A class that computes various locations used by the Android tools.
@@ -77,8 +77,9 @@ abstract class AbstractAndroidLocations protected constructor(
      * To query the AVD Folder, use [avdLocation] as it could be be overridden
      */
     @get:Throws(AndroidLocationsException::class)
-    override val prefsLocation: Path by lazy {
-        computeAndroidFolder().also {
+    override val prefsLocation: Path
+        get() = internalPrefsLocation ?: computeAndroidFolder().also {
+            internalPrefsLocation = it
             if (CancellableFileIo.notExists(it)) {
                 try {
                     Files.createDirectories(it)
@@ -96,34 +97,42 @@ This is the path of preference folder expected by the Android tools."""
                 )
             }
         }
-    }
+    private var internalPrefsLocation: Path? = null
 
     /**
      * Computes, memoizes in the instance, and returns the location of the AVD folder.
      */
     @get:Throws(AndroidLocationsException::class)
-    override val avdLocation: Path by lazy {
-        // check if the location is overridden, if not use default
-        PathLocator(environmentProvider).singlePathOf(Global.ANDROID_AVD_HOME)
-                ?: prefsLocation.resolve(FOLDER_AVD)
-    }
+    override val avdLocation: Path
+        get() =
+            internalAvdLocation ?:
+            // check if the location is overridden, if not use default
+            (PathLocator(environmentProvider).singlePathOf(Global.ANDROID_AVD_HOME)
+                ?: prefsLocation.resolve(FOLDER_AVD)).also { internalAvdLocation = it }
+    private var internalAvdLocation: Path? = null
 
     @get:Throws(AndroidLocationsException::class)
-    override val gradleAvdLocation: Path by lazy {
-        prefsLocation.resolve(FOLDER_GRADLE).resolve(FOLDER_GRADLE_AVD)
-    }
+    override val gradleAvdLocation: Path
+        get() = internalGradleAvdLocation ?: prefsLocation.resolve(FOLDER_GRADLE)
+            .resolve(FOLDER_GRADLE_AVD)
+            .also { internalGradleAvdLocation = it }
+    private var internalGradleAvdLocation: Path? = null
 
     /**
      * Computes, memoizes in the instance, and returns the location of the home folder.
      */
-    override val userHomeLocation: Path by lazy {
-        val pathLocator = PathLocator(environmentProvider)
-        pathLocator.firstPathOf(
-            Global.TEST_TMPDIR,
-            Global.USER_HOME,
-            Global.HOME
-        ) ?: throw AndroidLocationsException.createForHomeLocation(pathLocator.visitedVariables)
-    }
+    override val userHomeLocation: Path
+        get() {
+            internalUserHomeLocation?.let { return it }
+            val pathLocator = PathLocator(environmentProvider)
+            return pathLocator.firstPathOf(
+                Global.TEST_TMPDIR,
+                Global.USER_HOME,
+                Global.HOME
+            )?.also { internalUserHomeLocation = it } ?:
+            throw AndroidLocationsException.createForHomeLocation(pathLocator.visitedVariables)
+        }
+    private var internalUserHomeLocation: Path? = null
 
     /**
      * Computes, and returns the root folder where the android folder
@@ -186,6 +195,18 @@ This is the path of preference folder expected by the Android tools."""
                         """.trimIndent()
                     )
                 )
+    }
+
+    /**
+     * Reset the cached paths so that they can be reinitialized as needed, e.g. if system properties
+     * are changed by a test.
+     */
+    @VisibleForTesting
+    fun resetPathsForTest() {
+        internalPrefsLocation = null
+        internalAvdLocation = null
+        internalGradleAvdLocation = null
+        internalUserHomeLocation = null
     }
 }
 
@@ -339,7 +360,7 @@ private open class PathLocator(
             VariableType.ENV_VAR -> environmentProvider.getEnvVariable(globalVar.propName)
         } ?: return null
 
-        val path = Paths.get(location)
+        val path = environmentProvider.fileSystem.getPath(location)
         visitedVariables.add(QueryResult(globalVar, queryType, path))
 
         val correctPath = handlePath(globalVar, path) ?: return null

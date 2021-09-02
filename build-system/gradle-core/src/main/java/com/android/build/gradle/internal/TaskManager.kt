@@ -121,7 +121,6 @@ import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.build.gradle.internal.tasks.LintCompile
-import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.ListingFileRedirectTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
@@ -1839,7 +1838,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             ) { connectedAndroidTest: Task -> connectedAndroidTest.dependsOn(reportTask) }
         }
         val providers = extension.deviceProviders
-
+        if (providers.isNotEmpty()) {
+            getBuildService(project.gradle.sharedServices, AnalyticsConfiguratorService::class.java)
+                .get()
+                .getProjectBuilder(project.path)
+                ?.projectApiUseBuilder
+                ?.builderTestApiDeviceProvider = true
+        }
         // now the providers.
         for (deviceProvider in providers) {
             val providerTask = taskFactory.register(
@@ -1852,6 +1857,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // now the test servers
         val servers = extension.testServers
+        if (servers.isNotEmpty()) {
+            getBuildService(project.gradle.sharedServices, AnalyticsConfiguratorService::class.java)
+                .get()
+                .getProjectBuilder(project.path)
+                ?.projectApiUseBuilder
+                ?.builderTestApiTestServer = true
+        }
         for (testServer in servers) {
             val serverTask = taskFactory.register(
                     TestServerTaskCreationAction(

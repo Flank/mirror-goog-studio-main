@@ -18,13 +18,9 @@ package com.android.tools.appinspection
 
 import android.app.Activity
 import android.app.ActivityThread
-import android.app.Instrumentation
-import android.app.IntentService
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Intent
-import androidx.inspection.InspectorEnvironment
-import com.android.tools.appinspection.PendingIntentHandler.IntentWrapper.Companion.wrap
+import com.android.tools.appinspection.PendingIntentHandlerImpl.IntentWrapper.Companion.wrap
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -103,10 +99,16 @@ const val SET_PENDING_RESULT_METHOD_NAME = "setPendingResult" +
  * A handler class that adds necessary hooks to track [Intent] and its related
  * [PendingIntent].
  */
-internal class PendingIntentHandler(
-    environment: InspectorEnvironment,
-    private val alarmHandler: AlarmHandler
-) {
+interface PendingIntentHandler {
+
+    fun onIntentCapturedEntry(intent: Intent)
+    fun onIntentCapturedExit(pendingIntent: PendingIntent): PendingIntent
+    fun onIntentReceived(intent: Intent)
+    fun onReceiverDataCreated(data: Any)
+    fun onReceiverDataResult(data: Any)
+}
+
+class PendingIntentHandlerImpl(private val alarmHandler: AlarmHandler) : PendingIntentHandler {
 
     /**
      * Wraps an [Intent] and overrides its `equals` and `hashCode` methods so we
@@ -146,74 +148,33 @@ internal class PendingIntentHandler(
      */
     private val receiverData = ThreadLocal<Any>()
 
-    init {
-        listOf(
-            GET_ACTIVITY_METHOD_NAME,
-            GET_SERVICES_METHOD_NAME,
-            GET_BROADCAST_METHOD_NAME
-        ).forEach { methodName ->
-            environment.artTooling().registerEntryHook(
-                PendingIntent::class.java,
-                methodName
-            ) { _, args ->
-                val intent = args[2] as Intent
-                intentData.set(intent)
-            }
-            environment.artTooling().registerExitHook(
-                PendingIntent::class.java,
-                methodName
-            ) { pendingIntent: PendingIntent ->
-                intentMap[intentData.get().wrap()] = pendingIntent
-                pendingIntent
-            }
-        }
+    override fun onIntentCapturedEntry(intent: Intent) {
+        intentData.set(intent)
+    }
 
-        listOf(
-            CALL_ACTIVITY_ON_CREATE_METHOD_NAME,
-            CALL_ACTIVITY_ON_CREATE_PERSISTABLE_BUNDLE_METHOD_NAME
-        ).forEach { methodName ->
-            environment.artTooling().registerEntryHook(
-                Instrumentation::class.java,
-                methodName
-            ) { _, args ->
-                val activity = args[0] as Activity
-                handleIntent(activity.intent);
-            }
-        }
+    override fun onIntentCapturedExit(pendingIntent: PendingIntent): PendingIntent {
+        intentMap[intentData.get().wrap()] = pendingIntent
+        return pendingIntent
+    }
 
-        environment.artTooling().registerEntryHook(
-            IntentService::class.java,
-            ON_START_COMMAND_METHOD_NAME
-        ) { _, args ->
-            val intent = args[0] as Intent
-            handleIntent(intent);
-        }
-
-        environment.artTooling().registerEntryHook(
-            ActivityThread::class.java,
-            HANDLE_RECEIVER_METHOD_NAME
-        ) { _, args ->
-            receiverData.set(args[0])
-        }
-
-        environment.artTooling().registerEntryHook(
-            BroadcastReceiver::class.java,
-            SET_PENDING_RESULT_METHOD_NAME
-        ) { _, args ->
-            val clazz = Class.forName("android.app.ActivityThread\$ReceiverData")
-            if (args[0] == receiverData.get()) {
-                val field = clazz.getDeclaredField("intent")
-                field.isAccessible = true
-                val intent = field.get(args[0]) as? Intent ?: return@registerEntryHook
-                handleIntent(intent)
-            }
+    override fun onIntentReceived(intent: Intent) {
+        val pendingIntent = intentMap[intent.wrap()] ?: return
+        if (intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) != 0) {
+            alarmHandler.onAlarmFired(pendingIntent)
         }
     }
 
-    private fun handleIntent(intent: Intent) {
-        val pendingIntent = intentMap[intent.wrap()] ?: return
-        if (intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, 0) != 0) {
-            alarmHandler.sendIntentAlarmFiredIfExists(pendingIntent)
+    override fun onReceiverDataCreated(data: Any) {
+        receiverData.set(data)
+    }
+
+    override fun onReceiverDataResult(data: Any) {
+        val clazz = Class.forName("android.app.ActivityThread\$ReceiverData")
+        if (data == receiverData.get()) {
+            val field = clazz.getDeclaredField("intent")
+            field.isAccessible = true
+            val intent = field.get(data) as? Intent ?: return
+            onIntentReceived(intent)
         }
     }
 }

@@ -22,7 +22,6 @@ import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +42,9 @@ public class Apk implements Serializable {
     // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
 
-    public final @NonNull List<ManifestActivityInfo> activities;
+    public final transient @NonNull List<ManifestActivityInfo> activities;
 
-    public final @NonNull List<ManifestServiceInfo> services;
+    public final transient @NonNull List<ManifestServiceInfo> services;
 
     public final Map<String, ApkEntry> apkEntries;
 

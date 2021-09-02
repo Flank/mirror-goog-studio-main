@@ -212,18 +212,22 @@ private fun compileTable(
       // Only print resources defined locally, e.g. don't write android attributes
       if (pkg.name.isEmpty()) {
         pkg.groups.forEach { group ->
-          val javaType = if (group.type == AaptResourceType.STYLEABLE) "int[]" else "int"
-          group.entries.forEach { entry ->
-            val visibility = getVisibility(entry.value.values, group.type)
-            builder.appendln("${visibility.getName()} $javaType ${group.type.tagName} ${entry.key}")
-            if (group.type == AaptResourceType.STYLEABLE) {
-                // We also need to write down styleable children (entries)
-                group.getStyleable(entry).entries.forEach {
-                    val childPackage = if (!it.name.pck.isNullOrEmpty()) "_${it.name.pck}" else ""
-                    // styleables and their children are always public
-                    builder.appendln("public int styleable ${entry.key}${childPackage}_${it.name.entry}")
+          // Macros do not define resources and therefore don't belong in the R.txt.
+          if (group.type != AaptResourceType.MACRO) {
+              val javaType = if (group.type == AaptResourceType.STYLEABLE) "int[]" else "int"
+              group.entries.forEach { entry ->
+                  val visibility = getVisibility(entry.value.values, group.type)
+                  builder.appendln("${visibility.getName()} $javaType ${group.type.tagName} ${entry.key}")
+                  if (group.type == AaptResourceType.STYLEABLE) {
+                      // We also need to write down styleable children (entries)
+                      group.getStyleable(entry).entries.forEach {
+                          val childPackage =
+                                  if (!it.name.pck.isNullOrEmpty()) "_${it.name.pck}" else ""
+                          // styleables and their children are always public
+                          builder.appendln("public int styleable ${entry.key}${childPackage}_${it.name.entry}")
+                      }
+                  }
               }
-            }
           }
         }
       }

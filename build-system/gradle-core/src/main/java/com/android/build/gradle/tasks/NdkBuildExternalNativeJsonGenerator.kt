@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
@@ -49,10 +48,9 @@ import java.nio.file.Files
  * JSON can be generated during configuration.
  */
 internal class NdkBuildExternalNativeJsonGenerator(
-    variant: CxxVariantModel,
-    abis: List<CxxAbiModel>,
+    abi: CxxAbiModel,
     variantBuilder: GradleBuildVariant.Builder?
-) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
+) : ExternalNativeJsonGenerator(abi, variantBuilder) {
 
     /**
      * Get the process builder with -n flag. This will tell ndk-build to emit the steps that it
@@ -88,7 +86,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         parseDryRunOutput(abi)
     }
 
-    fun parseDryRunOutput(abi: CxxAbiModel) {
+    private fun parseDryRunOutput(abi: CxxAbiModel) {
         // Write the captured ndk-build output to a file for diagnostic purposes.
         infoln("parse and convert ndk-build output to build configuration JSON")
 
@@ -121,13 +119,13 @@ internal class NdkBuildExternalNativeJsonGenerator(
         val builder =
           NativeBuildConfigValueBuilder(
             makeFile,
-            variant.module.moduleRootFolder,
+            abi.variant.module.moduleRootFolder,
             abi.compileCommandsJsonBinFile
           )
             .setCommands(
                     commandLine,
               commandLine.removeJobsFlagIfPresent()  + listOf("clean"),
-              variant.variantName,
+              abi.variant.variantName,
               buildOutput
             )
         builder.skipProcessingCompilerFlags = true
@@ -156,7 +154,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
             if (isWindows) {
                 tool += ".cmd"
             }
-            val toolFile = File(variant.module.ndkFolder.path, tool)
+            val toolFile = File(abi.variant.module.ndkFolder.path, tool)
             return try {
                 // Attempt to shorten ndkFolder which may have segments of "path\.."
                 // File#getAbsolutePath doesn't do this.
@@ -181,29 +179,29 @@ internal class NdkBuildExternalNativeJsonGenerator(
      * If the make file is a directory then get the implied file, otherwise return the path.
      */
     private val makeFile: File
-        get() = if (variant.module.makeFile.isDirectory) {
-            File(variant.module.makeFile, "Android.mk")
-        } else variant.module.makeFile
+        get() = if (abi.variant.module.makeFile.isDirectory) {
+            File(abi.variant.module.makeFile, "Android.mk")
+        } else abi.variant.module.makeFile
 
-    fun List<String>.removeJobsFlagIfPresent() =
+    private fun List<String>.removeJobsFlagIfPresent() =
             toNdkBuildArguments().removeNdkBuildJobs().toStringList()
 
     init {
         variantBuilder?.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
 
         // Do some basic sync time checks.
-        if (this.variant.module.makeFile.isDirectory) {
+        if (abi.variant.module.makeFile.isDirectory) {
             errorln(
                 INVALID_EXTERNAL_NATIVE_BUILD_CONFIG,
                 "Gradle project ndkBuild.path %s is a folder. "
                         + "Only files (like Android.mk) are allowed.",
-                this.variant.module.makeFile
+                abi.variant.module.makeFile
             )
-        } else if (!this.variant.module.makeFile.exists()) {
+        } else if (!abi.variant.module.makeFile.exists()) {
             errorln(
                 INVALID_EXTERNAL_NATIVE_BUILD_CONFIG,
                 "Gradle project ndkBuild.path is %s but that file doesn't exist",
-                this.variant.module.makeFile
+                abi.variant.module.makeFile
             )
         }
     }

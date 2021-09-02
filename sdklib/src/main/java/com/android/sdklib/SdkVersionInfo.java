@@ -466,6 +466,7 @@ public class SdkVersionInfo {
      * Returns a user-friendly description of this version, like "Android 5.1 (Lollipop)",
      * or "Android 6.X (N) Preview".
      */
+    @NonNull
     public static String getVersionWithCodename(AndroidVersion version) {
         StringBuilder result = new StringBuilder();
         result.append("Android ");
@@ -484,6 +485,10 @@ public class SdkVersionInfo {
                 result.append(codeName);
                 result.append(")");
             }
+        }
+        if (version.getExtensionLevel() != null && !version.isBaseExtension()) {
+            result.append(", Extension Level ");
+            result.append(version.getExtensionLevel());
         }
         return result.toString();
     }

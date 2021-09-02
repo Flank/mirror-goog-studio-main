@@ -18,11 +18,21 @@ package android.app;
 
 @SuppressWarnings("MethodMayBeStatic")
 public class PendingIntent {
+
+    private final String myCreatorPackage;
+
+    private final int myCreatorUid;
+
+    public PendingIntent(int userId, String packageName) {
+        myCreatorPackage = packageName;
+        myCreatorUid = userId;
+    }
+
     public String getCreatorPackage() {
-        throw new RuntimeException("");
+        return myCreatorPackage;
     }
 
     public int getCreatorUid() {
-        throw new RuntimeException("");
+        return myCreatorUid;
     }
 }

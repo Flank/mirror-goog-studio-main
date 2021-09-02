@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture
 
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.testutils.AssumeUtil
 import com.google.common.truth.Truth
@@ -30,7 +29,13 @@ import java.nio.file.Paths
 class FileNormalizerTest {
 
     private val normalizer = FileNormalizerImpl(
-        buildId = BuildIdentifierImpl(File("/path/to/Project")),
+        buildMap = mapOf(
+            ":" to ModelContainerV2.BuildInfo(
+                ":",
+                File("/path/to/Project"),
+                listOf()
+            )
+        ),
         gradleUserHome = File("/path/to/Gradle"),
         gradleCacheDir = File("/path/to/Gradle/caches/transforms-3/"),
         androidSdkDir = File("/path/to/Sdk"),
@@ -39,7 +44,6 @@ class FileNormalizerTest {
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
         additionalMavenRepo = Paths.get("/path/to/additional/maven/repo"),
         defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
-        projectBuildFolders = mapOf()
     )
 
     private val gson = Gson()
@@ -140,7 +144,13 @@ class FileNormalizerTest {
     fun `Test unscrupulouslyReplace(JsonElement) - windows`() {
         AssumeUtil.assumeWindows()
         val normalizer = FileNormalizerImpl(
-            buildId = BuildIdentifierImpl(File("C:\\path\\to\\Project")),
+            buildMap = mapOf(
+                ":" to ModelContainerV2.BuildInfo(
+                    ":",
+                    File("C:\\path\\to\\Project"),
+                    listOf()
+                )
+            ),
             gradleUserHome = File("C:\\path\\to\\Gradle"),
             gradleCacheDir = File("C:\\path\\to\\Gradle\\caches\\transforms-3"),
             androidSdkDir = File("C:\\path\\to\\Sdk"),
@@ -152,7 +162,6 @@ class FileNormalizerTest {
             ),
             additionalMavenRepo = Paths.get("C:\\additional\\maven\\repo"),
             defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
-            projectBuildFolders = mapOf()
         )
 
         Truth.assertThat(

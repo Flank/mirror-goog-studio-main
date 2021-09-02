@@ -62,7 +62,7 @@ class LintBaseline(
      * The file to read the baselines from, and if [writeOnClose] is
      * set, to write to when the baseline is [close]'ed.
      */
-    val file: File
+    var file: File
 ) {
 
     /**
@@ -479,50 +479,55 @@ class LintBaseline(
     /** Finishes writing the baseline. */
     fun close() {
         if (writeOnClose) {
-            val parentFile = file.parentFile
-            if (parentFile != null && !parentFile.exists()) {
-                val mkdirs = parentFile.mkdirs()
-                if (!mkdirs) {
-                    client!!.log(null, "Couldn't create %1\$s", parentFile)
-                    return
-                }
+            write(file)
+        }
+    }
+
+    /** Writes out the baseline listing exactly the incidents that were reported */
+    fun write(file: File) {
+        val parentFile = file.parentFile
+        if (parentFile != null && !parentFile.exists()) {
+            val mkdirs = parentFile.mkdirs()
+            if (!mkdirs) {
+                client!!.log(null, "Couldn't create %1\$s", parentFile)
+                return
             }
+        }
 
-            try {
-                file.bufferedWriter().use { writer ->
-                    writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-                    // Format 4: added urls= attribute with all more info links, comma separated
-                    writer.write("<")
-                    writer.write(TAG_ISSUES)
-                    writer.write(" format=\"5\"")
-                    val revision = client!!.getClientDisplayRevision()
-                    if (revision != null) {
-                        writer.write(String.format(" by=\"lint %1\$s\"", revision))
-                    }
-                    attributes?.let { map ->
-                        map.asSequence().sortedBy { it.key }.forEach {
-                            writer.write(" ${it.key}=\"${toXmlAttributeValue(it.value)}\"")
-                        }
-                    }
-                    writer.write(">\n")
-
-                    totalCount = 0
-                    if (entriesToWrite != null) {
-                        entriesToWrite!!.sort()
-                        for (entry in entriesToWrite!!) {
-                            entry.write(writer, client)
-                            totalCount++
-                        }
-                    }
-
-                    writer.write("\n</")
-                    writer.write(TAG_ISSUES)
-                    writer.write(">\n")
-                    writer.close()
+        try {
+            file.bufferedWriter().use { writer ->
+                writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+                // Format 4: added urls= attribute with all more info links, comma separated
+                writer.write("<")
+                writer.write(TAG_ISSUES)
+                writer.write(" format=\"5\"")
+                val revision = client!!.getClientDisplayRevision()
+                if (revision != null) {
+                    writer.write(String.format(" by=\"lint %1\$s\"", revision))
                 }
-            } catch (ioe: IOException) {
-                client!!.log(ioe, null)
+                attributes?.let { map ->
+                    map.asSequence().sortedBy { it.key }.forEach {
+                        writer.write(" ${it.key}=\"${toXmlAttributeValue(it.value)}\"")
+                    }
+                }
+                writer.write(">\n")
+
+                totalCount = 0
+                if (entriesToWrite != null) {
+                    entriesToWrite!!.sort()
+                    for (entry in entriesToWrite!!) {
+                        entry.write(writer, client)
+                        totalCount++
+                    }
+                }
+
+                writer.write("\n</")
+                writer.write(TAG_ISSUES)
+                writer.write(">\n")
+                writer.close()
             }
+        } catch (ioe: IOException) {
+            client!!.log(ioe, null)
         }
     }
 

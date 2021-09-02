@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_pom", "maven_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 load("//tools/base/common:version.bzl", "BASE_VERSION", "BUILD_VERSION")
 
@@ -59,7 +59,6 @@ maven_library(
     ]),
     coordinates = "com.android.tools:common:" + BASE_VERSION,
     description = "common library used by other Android tools libraries.",
-    enable_scopes = True,
     module_name = "common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/common",
@@ -126,6 +125,7 @@ kotlin_library(
         ":tools.common",
         "//tools/base/annotations",
         "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
     ],
 )
 

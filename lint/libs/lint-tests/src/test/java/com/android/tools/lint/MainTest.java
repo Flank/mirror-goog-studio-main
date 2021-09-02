@@ -41,7 +41,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import kotlin.io.FilesKt;
@@ -124,7 +123,7 @@ public class MainTest extends AbstractCheckTest {
                     assertEquals(expectedOutput.trim(), stdout.trim());
                 }
             }
-            assertEquals(expectedExitCode, exitCode);
+            assertEquals("Unexpected exit code", expectedExitCode, exitCode);
         } finally {
             System.setOut(previousOut);
             System.setErr(previousErr);
@@ -501,11 +500,11 @@ public class MainTest extends AbstractCheckTest {
 
     public void testUpdateBaseline() throws Exception {
         File baseline = File.createTempFile("baseline", "xml");
-        Files.write(
-                baseline.toPath(),
+        FilesKt.writeText(
+                baseline,
                 // language=XML
-                ("<issues></issues>").getBytes(),
-                StandardOpenOption.TRUNCATE_EXISTING);
+                "<issues></issues>",
+                Charsets.UTF_8);
 
         checkDriver(
                 // Expected output

@@ -134,7 +134,6 @@ public final class FileOpUtils {
         recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, progress);
     }
 
-    @VisibleForTesting
     public static void recursiveCopy(
             @NonNull Path src,
             @NonNull Path dest,

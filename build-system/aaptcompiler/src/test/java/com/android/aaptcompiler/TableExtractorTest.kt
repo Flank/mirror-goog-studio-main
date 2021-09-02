@@ -1297,4 +1297,61 @@ class TableExtractorTest {
       val item = style.entries[0].value as RawString
       assertThat(item.value.value()).isEqualTo("some value")
   }
+
+  @Test
+  fun testMacro() {
+      val mockLogger = BlameLoggerTest.MockLogger()
+
+      val macros = """
+          <macro name="m_string">@string/foo</macro>
+          <macro name="m_int">@integer/foo</macro>
+          <macro name="m_attr">?attr/foo</macro>
+          <macro name="m_macro">@macro/foo</macro>
+          <macro name="m_text_value">Hello world</macro>
+          <macro name="m_int_value">123</macro>
+          """.trimIndent()
+
+      val result = testParse(macros, mockLogger = mockLogger)
+      assertThat(result).isTrue()
+      assertThat(mockLogger.errors).isEmpty()
+      assertThat(mockLogger.warnings).isEmpty()
+
+      val stringRefMacro = getValue("macro/m_string") as Macro
+      assertThat(stringRefMacro).isNotNull()
+      assertThat(stringRefMacro.rawValue).isEqualTo("@string/foo")
+
+      val intRefMacro = getValue("macro/m_int") as Macro
+      assertThat(intRefMacro).isNotNull()
+      assertThat(intRefMacro.rawValue).isEqualTo("@integer/foo")
+
+      val maybeAttrRefMacro = getValue("macro/m_attr") as Macro
+      assertThat(maybeAttrRefMacro).isNotNull()
+      assertThat(maybeAttrRefMacro.rawValue).isEqualTo("?attr/foo")
+
+      val macroRefMacro = getValue("macro/m_macro") as Macro
+      assertThat(macroRefMacro).isNotNull()
+      assertThat(macroRefMacro.rawValue).isEqualTo("@macro/foo")
+
+      val rawStringValueMacro = getValue("macro/m_text_value") as Macro
+      assertThat(rawStringValueMacro).isNotNull()
+      assertThat(rawStringValueMacro.untranslatables).isEmpty()
+      assertThat(rawStringValueMacro.rawValue).isEqualTo("Hello world")
+
+      // Any text that isn't a reference is held as a string in a macro
+      val rawIntValueMacro = getValue("macro/m_int_value") as Macro
+      assertThat(rawIntValueMacro).isNotNull()
+      assertThat(rawIntValueMacro.untranslatables).isEmpty()
+      assertThat(rawIntValueMacro.rawValue).isEqualTo("123")
+  }
+
+  @Test
+  fun testMacroMissingName() {
+      val mockLogger = BlameLoggerTest.MockLogger()
+
+      val result = testParse("<macro/>", mockLogger = mockLogger)
+      assertThat(result).isFalse()
+      assertThat(mockLogger.errors).hasSize(1)
+      assertThat(mockLogger.errors.single().first).contains("<macro> is missing the 'name' attribute.")
+  }
+
 }

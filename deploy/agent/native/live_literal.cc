@@ -69,13 +69,6 @@ extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
   size_t new_size;
   unsigned char* result = writer.CreateImage(&allocator, &new_size);
 
-  const std::string overlay_dir = Sites::AppOverlays(applicationId);
-  if (!IO::mkpath(overlay_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
-    if (errno != EEXIST) {
-      Log::E("Could not create %s", overlay_dir.c_str());
-    }
-  }
-
   std::string ll_dir = Sites::AppLiveLiteral(applicationId);
   if (!IO::mkpath(ll_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
     if (errno != EEXIST) {

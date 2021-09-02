@@ -20,7 +20,6 @@ import com.android.SdkConstants.VALUE_TRUE
 import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.tools.lint.detector.api.LintFix.ReplaceString.Companion.INSERT_BEGINNING
 import com.android.tools.lint.detector.api.LintFix.ReplaceString.Companion.INSERT_END
-import com.android.tools.lint.detector.api.Location.Companion.create
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -46,7 +45,12 @@ import kotlin.math.min
  */
 open class LintFix protected constructor(
     @field:Nls private var displayName: String? = null,
-    @field:Nls private var familyName: String? = null
+    @field:Nls private var familyName: String? = null,
+    /**
+     * A location range associated with this fix, if different from the
+     * associated incident's range.
+     */
+    open var range: Location? = null
 ) {
     /**
      * The display name, a short user-visible description of the fix
@@ -1541,10 +1545,10 @@ open class LintFix protected constructor(
          * operate. Useful when the fix is applying in a wider range
          * than the highlighted problem range.
          */
-        var range: Location?,
+        range: Location?,
         robot: Boolean,
         independent: Boolean
-    ) : LintFix(displayName, familyName) {
+    ) : LintFix(displayName, familyName, range) {
         init {
             this.robot = robot
             this.independent = independent
@@ -1565,6 +1569,13 @@ open class LintFix protected constructor(
         /** A list of fixes */
         val fixes: List<LintFix>
     ) : LintFix(displayName, familyName) {
+
+        override var range: Location? = null
+            set(value) {
+                field = value
+                error("Groups can't define an error range; should be set on each member")
+            }
+
         @Nls
         override fun getDisplayName(): String? {
             // For composites, we can display the name of one of the actions
@@ -1609,7 +1620,7 @@ open class LintFix protected constructor(
          * operate. Useful when the fix is applying in a wider range
          * than the highlighted problem range.
          */
-        var range: Location?,
+        range: Location?,
         /**
          * The caret location to show, OR [Integer.MIN_VALUE] if not
          * set. If [mark] is set, the end of the selection too.
@@ -1619,7 +1630,7 @@ open class LintFix protected constructor(
         val mark: Int,
         robot: Boolean,
         independent: Boolean
-    ) : LintFix(displayName, familyName) {
+    ) : LintFix(displayName, familyName, range) {
         init {
             this.robot = robot
             this.independent = independent
@@ -1677,10 +1688,10 @@ open class LintFix protected constructor(
          * pattern. Useful if you want to make a replacement that is
          * larger than the error range highlighted as the problem range.
          */
-        var range: Location?,
+        range: Location?,
         robot: Boolean,
         independent: Boolean
-    ) : LintFix(displayName, familyName) {
+    ) : LintFix(displayName, familyName, range) {
         init {
             this.robot = robot
             this.independent = independent
@@ -1795,7 +1806,7 @@ open class LintFix protected constructor(
         val reformat: Boolean,
         robot: Boolean,
         independent: Boolean
-    ) : LintFix(displayName, familyName) {
+    ) : LintFix(displayName, familyName, Location.create(file)) {
         init {
             this.robot = robot
             this.independent = independent
@@ -1903,14 +1914,14 @@ open class LintFix protected constructor(
             val start = range.start
             val end = range.end
             return if (start != null && end != null) {
-                create(
+                Location.create(
                     range.file,
                     DefaultPosition(-1, -1, start.offset),
                     DefaultPosition(-1, -1, end.offset)
                 )
             } else {
                 val pos = DefaultPosition(-1, -1, 0)
-                create(range.file, pos, pos)
+                Location.create(range.file, pos, pos)
             }
         }
     }

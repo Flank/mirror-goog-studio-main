@@ -24,6 +24,9 @@ import java.io.File
  */
 internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuilder {
 
+    override var group: String? = null
+    override var version: String? = null
+
     private var android: AndroidProjectBuilderImpl? = null
     private val files = mutableMapOf<String, SourceFile>()
     private val buildFileActions = mutableListOf<() -> String>()
@@ -90,6 +93,13 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
         val sb = StringBuilder()
         buildScriptContent?.let { sb.append(it) }
         sb.append('\n')
+
+        group?.let {
+            sb.append("group = \"$it\"\n")
+        }
+        version?.let {
+            sb.append("version = \"$it\"\n")
+        }
 
         for (plugin in plugins) {
             sb.append("apply plugin: '${plugin.oldId}'\n")

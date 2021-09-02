@@ -31,9 +31,10 @@ maven_library(
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "@maven//:com.google.guava.guava",
+        "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 

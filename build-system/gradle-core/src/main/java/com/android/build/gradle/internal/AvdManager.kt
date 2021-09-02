@@ -18,7 +18,6 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants
 import com.android.prefs.AndroidLocationsProvider
-import com.android.sdklib.ISystemImage
 import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
@@ -62,7 +61,7 @@ class AvdManager(
     private val avdManager: com.android.sdklib.internal.avd.AvdManager by lazy {
         com.android.sdklib.internal.avd.AvdManager.getInstance(
             sdkHandler,
-            avdFolder,
+            sdkHandler.toCompatiblePath(avdFolder),
             logger
         ) ?: throw RuntimeException("Failed to initialize AvdManager.")
     }
@@ -89,8 +88,7 @@ class AvdManager(
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
 
-        val fileOp = sdkHandler.fileOp
-        val imageLocation = fileOp.toPath(imageProvider.get().asFile)
+        val imageLocation = sdkHandler.toCompatiblePath(imageProvider.get().asFile)
         val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
         systemImage?: error("System image does not exist at $imageLocation")
 
@@ -102,10 +100,13 @@ class AvdManager(
         hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
         EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
 
-        val deviceFolder = AvdInfo.getDefaultAvdFolder(avdManager, deviceName, fileOp, false)
+        val deviceFolder =
+                AvdInfo.getDefaultAvdFolder(avdManager,
+                        deviceName,
+                        false)
 
         val newInfo = avdManager.createAvd(
-            fileOp.toPath(deviceFolder),
+            deviceFolder,
             deviceName,
             systemImage,
             null,
@@ -198,7 +199,7 @@ class AvdManager(
         val hardwareDefs = File(libDirectory, SdkConstants.FN_HARDWARE_INI)
         val hwMap =
             HardwareProperties.parseHardwareDefinitions(
-                PathFileWrapper(sdkHandler.fileOp.toPath(hardwareDefs)), logger)?:
+                PathFileWrapper(sdkHandler.toCompatiblePath(hardwareDefs)), logger)?:
                     error("Failed to find hardware definitions for emulator.")
 
         val hwConfigMap = defaultEmulatorPropertiesMap.toMutableMap()

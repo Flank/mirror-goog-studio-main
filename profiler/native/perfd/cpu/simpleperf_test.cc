@@ -17,6 +17,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <cstring>
 #include <memory>
 
@@ -84,15 +85,11 @@ namespace profiler {
 // --show-features`, which affects the result of |GetRecordCommand|.
 class FakeSimpleperfGetFeatures final : public Simpleperf {
  public:
-  explicit FakeSimpleperfGetFeatures()
-      : FakeSimpleperfGetFeatures(false, true) {}
-  explicit FakeSimpleperfGetFeatures(bool is_emulator, bool is_user_build)
-      : Simpleperf(kFakeSimpleperfDir, DeviceInfo::R, is_emulator,
-                   is_user_build) {}
-  explicit FakeSimpleperfGetFeatures(int feature_level, bool is_emulator,
-                                     bool is_user_build)
-      : Simpleperf(kFakeSimpleperfDir, feature_level, is_emulator,
-                   is_user_build) {}
+  explicit FakeSimpleperfGetFeatures() : FakeSimpleperfGetFeatures(true) {}
+  explicit FakeSimpleperfGetFeatures(bool is_user_build)
+      : Simpleperf(kFakeSimpleperfDir, DeviceInfo::R, is_user_build) {}
+  explicit FakeSimpleperfGetFeatures(int feature_level, bool is_user_build)
+      : Simpleperf(kFakeSimpleperfDir, feature_level, is_user_build) {}
 
   // A public wrapper for the homonym protected method, for testing.
   string GetRecordCommand(int pid, const string& pkg_name,
@@ -116,7 +113,7 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
 };
 
 TEST(SimpleperfTest, RecordCommandParamsForRPlus) {
-  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::R, false, true};
+  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::R, true};
 
   string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
                                                       kFakeTracePath, 100);
@@ -132,6 +129,8 @@ TEST(SimpleperfTest, RecordCommandParamsForRPlus) {
   // Sampling frequency. Note sampling interval is 100us, so frequency is 10000
   // samples per second.
   EXPECT_THAT(record_command, HasArgument("-f 10000"));
+  // always use cpu-clock event flag
+  EXPECT_THAT(record_command, HasArgument("-e cpu-clock"));
   // --exit-with-parent flag
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
   // --log-to-android-buffer flag
@@ -139,15 +138,14 @@ TEST(SimpleperfTest, RecordCommandParamsForRPlus) {
 }
 
 TEST(SimpleperfTest, RecordCommandParamsForPreR) {
-  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::Q, false, true};
+  FakeSimpleperfGetFeatures simpleperf{DeviceInfo::Q, true};
   string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
                                                       kFakeTracePath, 100);
   EXPECT_THAT(record_command, Not(HasArgument("--log-to-android-buffer")));
 }
 
 TEST(SimpleperfTest, NonUserBuildUseSuRoot) {
-  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
-                                       false /* is_user_build */};
+  FakeSimpleperfGetFeatures simpleperf{false /* is_user_build */};
 
   string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
                                                       kFakeTracePath, 100);
@@ -160,8 +158,7 @@ TEST(SimpleperfTest, NonUserBuildUseSuRoot) {
 }
 
 TEST(SimpleperfTest, NonUserBuildWithStartupUsesRunAs) {
-  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
-                                       false /* is_user_build */};
+  FakeSimpleperfGetFeatures simpleperf{false /* is_user_build */};
 
   string record_command = simpleperf.GetRecordCommand(
       kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
@@ -175,8 +172,7 @@ TEST(SimpleperfTest, NonUserBuildWithStartupUsesRunAs) {
 }
 
 TEST(SimpleperfTest, UserBuildAlwaysUsesRunAs) {
-  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
-                                       true /* is_user_build */};
+  FakeSimpleperfGetFeatures simpleperf{true /* is_user_build */};
 
   string record_command = simpleperf.GetRecordCommand(
       kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
@@ -232,20 +228,6 @@ TEST(SimpleperfTest, SimpleperfBinaryName) {
       pid, app, "x86_64", kFakeTracePath, sampling_interval);
   EXPECT_THAT(record_command,
               StartsWith("/fake/path/simpleperf_x86_64 record"));
-}
-
-TEST(SimpleperfTest, EmulatorUsesCpuClockEvents) {
-  FakeSimpleperfGetFeatures simpleperf_emulator{true /* is_emulator */,
-                                                true /* is_user_build */};
-  string record_command = simpleperf_emulator.GetRecordCommand(
-      1, "any.package", "arm", kFakeTracePath, 1);
-  EXPECT_THAT(record_command, HasArgument("-e cpu-clock"));
-
-  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
-                                       true /* is_user_build */};
-  record_command =
-      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
-  EXPECT_THAT(record_command, Not(HasArgument("-e cpu-clock")));
 }
 
 TEST(SimpleperfTest, TraceOffCpuFlag) {

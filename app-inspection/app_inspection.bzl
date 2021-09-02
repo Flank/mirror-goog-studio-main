@@ -110,9 +110,9 @@ def app_inspection_jar(
 
     jarjar_srcs_dedup = [
         ":" + name + "-sources_undexed",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlin.kotlin-stdlib.1.4.21",
-        "//prebuilts/tools/common/m2:org.jetbrains.kotlinx.kotlinx-coroutines-core.1.4.1",
         "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
     ]
     for src in jarjar_srcs:
         if src not in jarjar_srcs_dedup:

@@ -145,7 +145,9 @@ class UtpTestRunnerTest {
         val result = runUtp(result = true)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
-        assertThat(capturedRunnerConfigs[0].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[0].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isTrue()
@@ -156,7 +158,9 @@ class UtpTestRunnerTest {
         val result = runUtp(result = false)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
-        assertThat(capturedRunnerConfigs[0].runnerConfig(mockUtpTestResultListenerServerMetadata))
+        assertThat(capturedRunnerConfigs[0].runnerConfig(
+            mockUtpTestResultListenerServerMetadata,
+            temporaryFolderRule.newFolder("tmp")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
 
         assertThat(result).isFalse()

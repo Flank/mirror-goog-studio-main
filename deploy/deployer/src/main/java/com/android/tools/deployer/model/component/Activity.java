@@ -19,10 +19,9 @@ package com.android.tools.deployer.model.component;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-import com.android.tools.deployer.ComponentActivationException;
+import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.utils.ILogger;
-
 import java.util.Locale;
 
 public class Activity extends AppComponent {
@@ -32,7 +31,7 @@ public class Activity extends AppComponent {
             @NonNull String extraFlags,
             @NonNull Mode activationMode,
             @NonNull IShellOutputReceiver receiver)
-            throws ComponentActivationException {
+            throws DeployerException {
         validate(extraFlags, activationMode);
         logger.info("Activating Activity '%s' '%s'",
                     manifestActivityInfo.getQualifiedName(),
@@ -65,13 +64,13 @@ public class Activity extends AppComponent {
     }
 
     private void validate(@NonNull String extraFlags, @NonNull Mode activationMode)
-            throws ComponentActivationException {
+            throws DeployerException {
         validateFlags(extraFlags, activationMode);
 
         // TODO: write validation of component
     }
 
-    private void validateFlags(String rawFlags, Mode mode) throws ComponentActivationException {
+    private void validateFlags(String rawFlags, Mode mode) throws DeployerException {
         String[] flags = rawFlags.split("\\s+");
         boolean hasArgument = false;
         for (String current : flags) {
@@ -82,11 +81,12 @@ public class Activity extends AppComponent {
                 Flags validFlag = Flags.valueOf(current.toUpperCase(Locale.US));
                 hasArgument = validFlag.hasArgument;
             } catch (Exception e) {
-                throw new ComponentActivationException(String.format("Unknown flag '%s'", current));
+                throw DeployerException.componentActivationException(
+                        String.format("Unknown flag '%s'", current));
             }
         }
         if (hasArgument) {
-            throw new ComponentActivationException("Invalid flags");
+            throw DeployerException.componentActivationException("Invalid flags");
         }
     }
 

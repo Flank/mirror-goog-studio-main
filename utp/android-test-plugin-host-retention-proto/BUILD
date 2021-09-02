@@ -5,6 +5,9 @@ maven_proto_library(
     name = "android-test-plugin-host-retention-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     coordinates = "com.android.tools.utp:android-test-plugin-host-retention-proto:" + BASE_VERSION,
+    java_exports = [
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+    ],
     resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention-proto",
     visibility = ["//visibility:public"],
 )

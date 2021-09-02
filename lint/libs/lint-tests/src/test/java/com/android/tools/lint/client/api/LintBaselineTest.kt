@@ -17,6 +17,8 @@
 package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
+import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
+import com.android.tools.lint.MainTest
 import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
@@ -25,7 +27,9 @@ import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
 import com.android.tools.lint.detector.api.DefaultPosition
@@ -36,6 +40,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.XmlUtils
 import com.google.common.truth.Truth.assertThat
+import junit.framework.TestCase.assertEquals
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -714,5 +719,181 @@ class LintBaselineTest {
         assertTrue(mark("Call requires API level 30: `Something`", "MyFile.java"))
         assertTrue(mark("Call requires API level 29: `Something`", "OtherFile.java"))
         baseline.close()
+    }
+
+    @Test
+    fun testUpdateBaselineWithContinue() {
+        // Testing two scenarios.
+        //   (1) No baseline exists (or is not specified). Ensures that the output baseline
+        //       file is written and contains all issues.
+        //   (2) Baseline exists. Ensures that the output baseline
+        //       contains both the matched errors and any non matched
+        //       errors (and removes unreported issues).
+
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFile = xml(
+            "res/layout/accessibility.xml",
+            """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+                    <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                    <ImageButton android:importantForAccessibility="yes" android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                </LinearLayout>
+                """
+        ).indented()
+
+        val baselineFolder = File(root, "baselines")
+        baselineFolder.mkdirs()
+        val nonexistentBaseline = File(baselineFolder, "nonexistent-baseline.xml")
+        val existingBaseline = File(baselineFolder, "baseline.xml")
+        val outputBaseline = File(baselineFolder, "baseline-out.xml")
+        existingBaseline.writeText(
+            // language=XML
+            """
+            <issues format="5" by="lint unittest">
+                <issue
+                    id="HardcodedText"
+                    message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource">
+                    <location
+                        file="../project1/my/source/file.txt"
+                        line="1"/>
+                </issue>
+
+                <issue
+                    id="ContentDescription"
+                    message="Missing `contentDescription` attribute on image">
+                    <location
+                        file="res/layout/accessibility.xml"
+                        line="5"/>
+                </issue>
+
+            </issues>
+            """.trimIndent()
+        )
+
+        val outputWithBaseline = """
+            ../baselines/baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, ../baselines/baseline.xml
+             [LintBaseline]
+            ../baselines/baseline.xml: Information: 1 errors/warnings were listed in the baseline file (../baselines/baseline.xml) but not found in the project; perhaps they have been fixed? Unmatched issue types: HardcodedText [LintBaseline]
+            res/layout/accessibility.xml:3: Error: Missing contentDescription attribute on image [ContentDescription]
+                <ImageButton android:importantForAccessibility="yes" android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                 ~~~~~~~~~~~
+            1 errors, 0 warnings (1 error filtered by baseline baseline.xml)
+            """
+        val outputWithoutBaseline = """
+            res/layout/accessibility.xml:2: Error: Missing contentDescription attribute on image [ContentDescription]
+                <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                 ~~~~~~~~~
+            res/layout/accessibility.xml:3: Error: Missing contentDescription attribute on image [ContentDescription]
+                <ImageButton android:importantForAccessibility="yes" android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                 ~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+
+        val project = lint().files(testFile).createProjects(root).single()
+
+        val scenarios: List<Pair<File?, String>> = listOf(
+            null to outputWithoutBaseline,
+            nonexistentBaseline to outputWithoutBaseline,
+            existingBaseline to outputWithBaseline
+        )
+
+        for ((baselineFile, output) in scenarios) {
+            outputBaseline.delete()
+
+            val baselineArgs = if (baselineFile != null)
+                arrayOf("--baseline", baselineFile.path)
+            else
+                emptyArray()
+
+            MainTest.checkDriver(
+                // Expected output
+                output,
+                // Expected error
+                "",
+                // Expected exit code
+                ERRNO_ERRORS,
+                arrayOf(
+                    "--exit-code",
+                    "--check",
+                    "ContentDescription",
+                    "--error",
+                    "ContentDescription",
+                    *baselineArgs,
+                    "--write-reference-baseline",
+                    outputBaseline.path,
+                    "--disable",
+                    "LintError",
+                    project.path
+                ),
+                { it.replace(root.path, "ROOT") },
+                null
+            )
+
+            // Skip the first three lines that contain just the version which can change.
+            val newBaseline = outputBaseline.readText().trim().let {
+                // Filter out header attributes which would make the test file change over
+                // time, like "<issues format="5" by="lint 7.1.0-dev">"
+                val start = it.indexOf("<issues ") + 7
+                val end = it.indexOf('>', start)
+                it.substring(0, start) + it.substring(end)
+            }
+
+            // Expected baseline: lint uses a more detailed report when not rewriting an
+            // existing baseline (because with baseline matching it doesn't have details
+            // about the filtered items)
+            @Language("XML")
+            val expected = if (baselineFile != null) """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <issues>
+
+                    <issue
+                        id="ContentDescription"
+                        message="Missing `contentDescription` attribute on image">
+                        <location
+                            file="res/layout/accessibility.xml"
+                            line="2"/>
+                    </issue>
+
+                    <issue
+                        id="ContentDescription"
+                        message="Missing `contentDescription` attribute on image">
+                        <location
+                            file="res/layout/accessibility.xml"
+                            line="3"/>
+                    </issue>
+
+                </issues>
+            """.trimIndent()
+            else """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <issues>
+
+                <issue
+                    id="ContentDescription"
+                    message="Missing `contentDescription` attribute on image"
+                    errorLine1="    &lt;ImageView android:id=&quot;@+id/android_logo&quot; android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:src=&quot;@drawable/android_button&quot; android:focusable=&quot;false&quot; android:clickable=&quot;false&quot; android:layout_weight=&quot;1.0&quot; />"
+                    errorLine2="     ~~~~~~~~~">
+                    <location
+                        file="res/layout/accessibility.xml"
+                        line="2"
+                        column="6"/>
+                </issue>
+
+                <issue
+                    id="ContentDescription"
+                    message="Missing `contentDescription` attribute on image"
+                    errorLine1="    &lt;ImageButton android:importantForAccessibility=&quot;yes&quot; android:id=&quot;@+id/android_logo2&quot; android:layout_width=&quot;wrap_content&quot; android:layout_height=&quot;wrap_content&quot; android:src=&quot;@drawable/android_button&quot; android:focusable=&quot;false&quot; android:clickable=&quot;false&quot; android:layout_weight=&quot;1.0&quot; />"
+                    errorLine2="     ~~~~~~~~~~~">
+                    <location
+                        file="res/layout/accessibility.xml"
+                        line="3"
+                        column="6"/>
+                </issue>
+
+            </issues>
+            """.trimIndent()
+            assertEquals(expected, newBaseline)
+        }
     }
 }

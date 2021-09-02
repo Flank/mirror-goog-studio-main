@@ -55,7 +55,6 @@ maven_library(
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
     coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
-    enable_scopes = True,
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],

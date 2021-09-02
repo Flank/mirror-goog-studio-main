@@ -91,6 +91,13 @@ public enum ResourceType {
      * namespace
      */
     SAMPLE_DATA("sample", "Sample data", Kind.SYNTHETIC),
+
+    /**
+     * Not a real resource, but a way of defining a resource reference that will be replaced with
+     * its actual value during linking. Does not exist at runtime, nor does it appear in the R
+     * class. Only present in raw and flat resources.
+     */
+    MACRO("macro", "Macro resource replacement", Kind.SYNTHETIC),
     ;
 
     private enum Kind {
@@ -145,6 +152,7 @@ public enum ResourceType {
         tagNames.put(AndroidConstants.TAG_DECLARE_STYLEABLE, STYLEABLE);
         tagNames.put(AndroidConstants.TAG_PUBLIC, PUBLIC);
         tagNames.put(OVERLAYABLE.getName(), OVERLAYABLE);
+        tagNames.put(MACRO.getName(), MACRO);
 
         ImmutableMap.Builder<String, ResourceType> classNames = ImmutableMap.builder();
         classNames.put(STYLEABLE.mName, STYLEABLE);

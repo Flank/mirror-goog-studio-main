@@ -54,6 +54,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UObjectLiteralExpression
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
@@ -559,6 +560,28 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         val field = node.resolve()
         if (field is PsiField || field is PsiMethod) {
+            var prev: UElement = node
+            var parent = prev.uastParent
+            while (true) {
+                if (parent is UParenthesizedExpression ||
+                    parent is UQualifiedReferenceExpression && parent.selector === prev
+                ) {
+                    prev = parent
+                    parent = parent.uastParent ?: break
+                } else if (parent is UBinaryExpression && parent.leftOperand === prev) {
+                    val operatorMethod = parent.resolveOperator()
+                    if (operatorMethod != null && parent.operator is UastBinaryOperator.AssignOperator) {
+                        // The call is just the left hand side expression of an overloaded operator
+                        // so we won't actually call it (the overloaded operator will instead
+                        // be called, and that's handled separately via visitBinaryExpression)
+                        return
+                    }
+                    break
+                } else {
+                    break
+                }
+            }
+
             val evaluator = context.evaluator
             val annotations = filterRelevantAnnotations(
                 evaluator,

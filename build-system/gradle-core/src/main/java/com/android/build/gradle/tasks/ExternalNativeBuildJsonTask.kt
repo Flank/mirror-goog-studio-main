@@ -17,10 +17,10 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
@@ -46,7 +46,7 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
     abstract val sdkComponents: Property<SdkComponentsBuildService>
 
     @get:Internal
-    internal lateinit var configurationModel: CxxConfigurationModel
+    internal lateinit var abi: CxxAbiModel
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
@@ -57,14 +57,14 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
         IssueReporterLoggingEnvironment(
             DefaultIssueReporter(LoggerWrapper(logger)),
             analyticsService.get(),
-            configurationModel
+            abi.variant
         ).use {
             val generator: CxxMetadataGenerator =
                 createCxxMetadataGenerator(
-                    configurationModel,
+                    abi,
                     analyticsService = analyticsService.get()
                 )
-            generator.generate(ops, false, null)
+            generator.generate(ops, false)
         }
     }
 }
@@ -74,14 +74,14 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
  */
 fun createCxxConfigureTask(
         globalScope: GlobalScope,
-        configurationModel : CxxConfigurationModel,
+        abi : CxxAbiModel,
         name : String
 ) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalScope) {
     override val name = name
     override val type = ExternalNativeBuildJsonTask::class.java
     override fun configure(task: ExternalNativeBuildJsonTask) {
         super.configure(task)
-        task.configurationModel = configurationModel
-        task.variantName = configurationModel.variant.variantName
+        task.abi = abi
+        task.variantName = abi.variant.variantName
     }
 }

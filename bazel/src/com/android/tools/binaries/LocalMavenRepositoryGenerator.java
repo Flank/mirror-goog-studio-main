@@ -137,6 +137,7 @@ public class LocalMavenRepositoryGenerator {
             List<String> coords,
             boolean resolve,
             boolean fetch,
+            Map<String, String> remoteRepositories,
             boolean verbose) {
         this.coords = coords;
         this.outputBuildFile = outputBuildFile;
@@ -153,7 +154,14 @@ public class LocalMavenRepositoryGenerator {
                         .build();
         List<RemoteRepository> repositories = new ArrayList<>();
         if (fetch) {
-            repositories.addAll(AetherUtils.REPOSITORIES);
+            repositories.addAll(
+                    remoteRepositories.entrySet().stream().map(entry -> {
+                            String name = entry.getKey();
+                            String url = entry.getValue();
+                            return new RemoteRepository.Builder(name, "default", url).build();
+                        }
+                    ).collect(Collectors.toList())
+            );
         }
         repositories.add(remoteRepository);
         repo = new CustomMavenRepository(this.repoPath.toString(), repositories);
@@ -406,11 +414,12 @@ public class LocalMavenRepositoryGenerator {
         boolean verbose = false;
         boolean resolve = true;
         boolean fetch = "1".equals(System.getenv("MAVEN_FETCH"));
+        Map<String, String> remoteRepositories = new TreeMap<>();
         String outputFile = "output.BUILD";
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-o")) {
-                if (args.length < i + 1) {
+                if (args.length <= i + 1) {
                     System.err.println("-o must be followed by a filename");
                     System.exit(1);
                 }
@@ -423,11 +432,25 @@ public class LocalMavenRepositoryGenerator {
                 continue;
             }
             if (arg.equals("--repo-path")) {
-                if (args.length < i + 1) {
+                if (args.length <= i + 1) {
                     System.err.println("--repo-path must be followed by a path");
                     System.exit(1);
                 }
                 repoPath = Paths.get(args[i + 1]);
+                i++;
+                continue;
+            }
+            if (arg.equals("--remote-repo")) {
+                if (args.length <= i + 1) {
+                    System.err.println("--remote-repo must be followed by a \"name=URL\" pair");
+                    System.exit(1);
+                }
+                String[] remoteRepo = args[i + 1].split("=", 2);
+                if (remoteRepo.length != 2) {
+                    System.err.println("Invalid argument after --remote-repo: " + args[i + 1]);
+                    System.exit(1);
+                }
+                remoteRepositories.put(remoteRepo[0], remoteRepo[1]);
                 i++;
                 continue;
             }
@@ -453,7 +476,7 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
-        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, verbose)
+        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, remoteRepositories, verbose)
                 .run();
     }
 
@@ -687,45 +710,45 @@ public class LocalMavenRepositoryGenerator {
 
                 // Add support to resolve only if pointing locally
                 for (RemoteRepository repository : request.getRepositories()) {
-                    try {
-                        URI uri = new URL(repository.getUrl()).toURI();
-                        try {
-                            File repoPath = new File(uri);
-                            Artifact artifact = request.getArtifact();
-                            String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
-                            File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
-                            File[] versions = artifactPath.listFiles();
-                            if (versions != null) {
-                                for (File version : versions) {
-                                    if (!version.isDirectory())
-                                        continue;
-                                    try {
-                                        Version parsedVersion = versionScheme.parseVersion(version.getName());
-                                        if (versionConstraint.containsVersion(parsedVersion)) {
-                                            result.addVersion(parsedVersion);
-                                        }
-                                    } catch (InvalidVersionSpecificationException e) {
-                                        // Ignore invalid versions.
-                                    }
-                                }
-                                if (!result.getVersions().isEmpty()) {
-                                    result.setVersionConstraint(versionConstraint);
-                                    return result;
-                                }
-                            }
-                        } catch (IllegalArgumentException e) {
-                            // Ignore non local repositories
-                        }
-                    } catch (URISyntaxException | MalformedURLException e) {
-                        result.addException(e);
-                        throw new VersionRangeResolutionException(result);
+                    if (!repository.getUrl().startsWith("file://")) {
+                        // Ignore non-local repositories.
+                        continue;
                     }
 
+                    // Windows has trouble with "file://C:\\users\\..." style File paths.
+                    File repoPath = new File(repository.getUrl().substring("file://".length()));
+                    Artifact artifact = request.getArtifact();
+                    String path = session.getLocalRepositoryManager().getPathForRemoteArtifact(artifact, repository, "");
+                    File artifactPath = new File(repoPath, path).getParentFile().getParentFile();
+                    File[] versions = artifactPath.listFiles();
+                    if (versions != null) {
+                        for (File version : versions) {
+                            if (!version.isDirectory()) {
+                                continue;
+                            }
+                            try {
+                                Version parsedVersion = versionScheme.parseVersion(version.getName());
+                                if (versionConstraint.containsVersion(parsedVersion)) {
+                                    result.addVersion(parsedVersion);
+                                }
+                            } catch (InvalidVersionSpecificationException e) {
+                                // Ignore invalid versions.
+                                continue;
+                            }
+                        }
+                        if (!result.getVersions().isEmpty()) {
+                          result.setVersionConstraint(versionConstraint);
+                          return result;
+                        }
+                    }
+
+                    // This is a local repository, and we could not resolve the version range.
                     result.addException(new Exception("Failed to resolve version"));
                     throw new VersionRangeResolutionException(result);
                 }
             }
 
+            // If we are fetching, then we can use the default version range resolver.
             return super.resolveVersionRange(session, request);
         }
     }

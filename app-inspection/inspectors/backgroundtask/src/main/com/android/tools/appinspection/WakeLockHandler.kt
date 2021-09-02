@@ -16,13 +16,12 @@
 
 package com.android.tools.appinspection
 
-import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
-import androidx.inspection.InspectorEnvironment
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.WakeLockAcquired
-import backgroundtask.inspection.BackgroundTaskInspectorProtocol.WakeLockReleased
 import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
 import com.android.tools.appinspection.common.getStackTrace
 import java.lang.reflect.Field
@@ -42,15 +41,52 @@ private const val ACQUIRE_CAUSES_WAKEUP = 0x10000000
 private const val ON_AFTER_RELEASE = 0x20000000
 
 /** Wake lock release flags */
-private const val RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY = 0x00000001
+@VisibleForTesting
+const val RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY = 0x00000001
 
 /**
  * A handler class that adds necessary hooks to track events for wake locks.
  */
-class WakeLockHandler(
-    private val connection: Connection,
-    environment: InspectorEnvironment
-) {
+interface WakeLockHandler {
+
+    /**
+     * Entry hook for [PowerManager.newWakeLock(int, String)]. Captures the flags
+     * and tag parameters.
+     */
+    fun onNewWakeLockEntry(levelAndFlags: Int, tag: String)
+
+    /**
+     * Exit hook for [PowerManager#newWakeLock(int, String)]. Associates wake lock
+     * instance with the previously captured flags and myTag parameters.
+     */
+    fun onNewWakeLockExit(wakeLock: WakeLock): WakeLock
+
+    /**
+     * Wrapper method for [WakeLock.acquire].
+     *
+     * Since [WakeLock.acquire] does not call [WakeLock.acquire] (vice
+     * versa), this will not cause double-instrumentation.
+     *
+     * @param wakeLock the wrapped [WakeLock] instance.
+     * @param timeout the timeout parameter passed to the original method.
+     */
+    fun onWakeLockAcquired(wakeLock: WakeLock, timeout: Long)
+
+    /**
+     * Entry hook for [WakeLock.release(int)]. Capture the flags passed to the method
+     * and the "this" instance so the exit hook can retrieve them back.
+     */
+    fun onWakeLockReleasedEntry(wakeLock: WakeLock, flag: Int)
+
+    /**
+     * Add exit hook for [WakeLock.release(int)]. [WakeLock.isHeld()] may be updated in the
+     * method, so we should retrieve the value in an exit hook. Then we send the held state
+     * along with the flags from the entry hook to Studio Profiler.
+     */
+    fun onWakeLockReleasedExit()
+}
+
+class WakeLockHandlerImpl(private val connection: Connection) : WakeLockHandler {
 
     /** Data structure for wake lock creation parameters. */
     private data class CreationParams(val levelAndFlags: Int, val tag: String)
@@ -78,94 +114,16 @@ class WakeLockHandler(
     /** Used by acquire hooks to retrieve wake lock creation parameters.  */
     private val wakeLockCreationParamsMap = mutableMapOf<WakeLock, CreationParams>()
 
-    init {
-        /**
-         * Add entry hook for [PowerManager.newWakeLock(int, String)]. Captures the flags
-         * and tag parameters.
-         */
-        environment.artTooling().registerEntryHook(
-            PowerManager::class.java,
-            "newWakeLock" +
-                    "(ILjava/lang/String;)Landroid/os/PowerManager\$WakeLock;"
-        ) { _, args ->
-            val levelAndFlags = args[0] as Int
-            val tag = args[1] as String
-            newWakeLockData.set(CreationParams(levelAndFlags, tag))
-        }
-
-        /**
-         * Add exit hook for [PowerManager#newWakeLock(int, String)]. Associates wake lock
-         * instance with the previously captured flags and myTag parameters.
-         */
-        environment.artTooling().registerExitHook<WakeLock>(
-            PowerManager::class.java,
-            "newWakeLock" +
-                    "(ILjava/lang/String;)Landroid/os/PowerManager\$WakeLock;"
-        ) { wakeLock ->
-            wakeLockCreationParamsMap[wakeLock] = newWakeLockData.get()
-            wakeLock
-        }
-
-        environment.artTooling().registerEntryHook(
-            WakeLock::class.java,
-            "acquire()V"
-        ) { wakeLock, _ ->
-            wrapAcquire(wakeLock as WakeLock, 0)
-        }
-
-        environment.artTooling().registerEntryHook(
-            WakeLock::class.java,
-            "acquire(J)V"
-        ) { wakeLock, args ->
-            wrapAcquire(wakeLock as WakeLock, args[0] as Long)
-        }
-
-        /**
-         * Add entry hook for [WakeLock.release(int)]. Capture the flags passed to the method
-         * and the "this" instance so the exit hook can retrieve them back.
-         */
-        environment.artTooling().registerEntryHook(
-            WakeLock::class.java,
-            "release(I)V"
-        ) { wakeLock, args ->
-            releaseWakeLockData.set(ReleaseParams(wakeLock as WakeLock, args[0] as Int))
-        }
-
-        /**
-         * Add exit hook for [WakeLock.release(int)]. [WakeLock.isHeld()] may be updated in the
-         * method, so we should retrieve the value in an exit hook. Then we send the held state
-         * along with the flags from the entry hook to Studio Profiler.
-         */
-        environment.artTooling().registerExitHook<Void>(
-            WakeLock::class.java,
-            "release(I)V"
-        ) { res ->
-            val releaseParams = releaseWakeLockData.get()
-            val eventId =
-                eventIdMap.getOrPut(releaseParams.wakeLock) { BackgroundTaskUtil.nextId() }
-            connection.sendBackgroundTaskEvent(eventId) {
-                stacktrace = getStackTrace(2)
-                wakeLockReleasedBuilder.apply {
-                    if (releaseParams.flag and RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY != 0) {
-                        addFlags(WakeLockReleased.ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY)
-                    }
-                    isHeld = releaseParams.wakeLock.isHeld
-                }
-            }
-            res
-        }
+    override fun onNewWakeLockEntry(levelAndFlags: Int, tag: String) {
+        newWakeLockData.set(CreationParams(levelAndFlags, tag))
     }
 
-    /**
-     * Wraps [WakeLock.acquire].
-     *
-     * Since [WakeLock.acquire] does not call [WakeLock.acquire] (vice
-     * versa), this will not cause double-instrumentation.
-     *
-     * @param wakeLock the wrapped [WakeLock] instance.
-     * @param timeout the timeout parameter passed to the original method.
-     */
-    private fun wrapAcquire(wakeLock: WakeLock, timeout: Long) {
+    override fun onNewWakeLockExit(wakeLock: WakeLock): WakeLock {
+        wakeLockCreationParamsMap[wakeLock] = newWakeLockData.get()
+        return wakeLock
+    }
+
+    override fun onWakeLockAcquired(wakeLock: WakeLock, timeout: Long) {
         val eventId = eventIdMap.getOrPut(wakeLock) { BackgroundTaskUtil.nextId() }
         var creationParams = CreationParams(1, DEFAULT_TAG)
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
@@ -206,6 +164,28 @@ class WakeLockHandler(
                 }
                 tag = creationParams.tag
                 this.timeout = timeout
+            }
+        }
+    }
+
+    override fun onWakeLockReleasedEntry(wakeLock: WakeLock, flag: Int) {
+        releaseWakeLockData.set(ReleaseParams(wakeLock, flag))
+    }
+
+    override fun onWakeLockReleasedExit() {
+        val releaseParams = releaseWakeLockData.get()
+        val eventId =
+            eventIdMap.getOrPut(releaseParams.wakeLock) { BackgroundTaskUtil.nextId() }
+        connection.sendBackgroundTaskEvent(eventId) {
+            stacktrace = getStackTrace(2)
+            wakeLockReleasedBuilder.apply {
+                if (releaseParams.flag and RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY != 0) {
+                    addFlags(
+                        BackgroundTaskInspectorProtocol.WakeLockReleased.ReleaseFlag
+                            .RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY
+                    )
+                }
+                isHeld = releaseParams.wakeLock.isHeld
             }
         }
     }
