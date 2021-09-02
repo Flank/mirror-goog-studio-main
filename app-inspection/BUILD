@@ -1,5 +1,7 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 
+exports_files(["jarjar_rules.txt"])
+
 cc_library(
     name = "agent_command",
     srcs = [

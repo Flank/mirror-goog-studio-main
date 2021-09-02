@@ -11,14 +11,16 @@ app_inspection_jar(
         "src/main/com/android/tools/agent/appinspection/**/*.java",
     ]),
     out = "layoutinspector-view-inspection.jar",
+    bundle_srcs = [
+        "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common.jar",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
     d8_flags = [
         "--min-api 29",  # Live layout inspection supported on Q+
     ],
     inspection_resource_strip_prefix = "tools/base/dynamic-layout-inspector/agent/appinspection/resources",
     inspection_resources = glob(["resources/META-INF/**"]),
-    jarjar_srcs = [
-        "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common.jar",
-    ],
     proto = "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
