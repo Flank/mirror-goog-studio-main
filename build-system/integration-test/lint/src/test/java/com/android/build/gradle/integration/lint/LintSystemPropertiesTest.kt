@@ -58,8 +58,7 @@ class LintSystemPropertiesTest {
                 "lint.nullness.ignore-deprecated",
                 "lint.unused-resources.exclude-tests",
                 "lint.unused-resources.include-tests",
-                "com.android.tools.lint.workdir",
-                "user.home"
+                "com.android.tools.lint.workdir"
             )
 
         for (systemProperty in systemProperties) {
@@ -84,7 +83,8 @@ class LintSystemPropertiesTest {
             listOf(
                 "lint.autofix",
                 "lint.baselines.continue",
-                "lint.html.prefs"
+                "lint.html.prefs",
+                "user.home"
             )
 
         for (systemProperty in reportTaskSystemProperties) {
