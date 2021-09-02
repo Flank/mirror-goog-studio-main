@@ -53,12 +53,10 @@ class LintSystemPropertiesTest {
                 "LINT_API_DATABASE",
                 "java.vendor",
                 "java.version",
-                "com.android.tools.lint.bindir",
                 "lint.configuration.override",
                 "lint.nullness.ignore-deprecated",
                 "lint.unused-resources.exclude-tests",
-                "lint.unused-resources.include-tests",
-                "com.android.tools.lint.workdir"
+                "lint.unused-resources.include-tests"
             )
 
         for (systemProperty in systemProperties) {

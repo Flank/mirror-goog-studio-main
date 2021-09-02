@@ -1781,6 +1781,10 @@ public class Main {
      */
     @Nullable
     private static File getLintWorkDir() {
+        // Return null if LintClient.isGradle because AGP passes absolute paths
+        if (LintClient.isGradle()) {
+            return null;
+        }
         // First check the Java properties (e.g. set using "java -jar ... -Dname=value")
         String path = System.getProperty(PROP_WORK_DIR);
         if (path == null || path.isEmpty()) {

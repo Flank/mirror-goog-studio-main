@@ -22,6 +22,7 @@ import com.android.tools.lint.checks.AnnotationDetector.GMS_SHOW_FIRST_PARTY_ANN
 import com.android.tools.lint.checks.AnnotationDetector.GUAVA_VISIBLE_FOR_TESTING
 import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_LHS
 import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_RHS
@@ -162,6 +163,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         containingClass: PsiClass,
         member: PsiMember?
     ): Boolean {
+        if (LintClient.isGradle) return false
         val binDir = System.getProperty("com.android.tools.lint.bindir") ?: return false
         if (!binDir.contains("third_party/java/android/")) return false
 
