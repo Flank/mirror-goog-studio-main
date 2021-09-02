@@ -494,12 +494,14 @@ abstract class SystemPropertyInputs {
             lintAutofix.disallowChanges()
             lintBaselinesContinue.disallowChanges()
             lintHtmlPrefs.disallowChanges()
+            userHome.disallowChanges()
         } else {
             lintAutofix.setDisallowChanges(providerFactory.systemProperty("lint.autofix"))
             lintBaselinesContinue.setDisallowChanges(
                 providerFactory.systemProperty("lint.baselines.continue")
             )
             lintHtmlPrefs.setDisallowChanges(providerFactory.systemProperty("lint.html.prefs"))
+            userHome.setDisallowChanges(providerFactory.systemProperty("user.home"))
         }
         androidLintLogJarProblems.setDisallowChanges(
             providerFactory.systemProperty("android.lint.log-jar-problems")
@@ -527,7 +529,6 @@ abstract class SystemPropertyInputs {
         lintWorkDir.setDisallowChanges(
             providerFactory.systemProperty("com.android.tools.lint.workdir")
         )
-        userHome.setDisallowChanges(providerFactory.systemProperty("user.home"))
     }
 }
 

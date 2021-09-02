@@ -330,8 +330,7 @@ public class Main {
                 }
             }
 
-            // Create some default variables
-            pathVariables.add("HOME", new File(System.getProperty("user.home")), true);
+            pathVariables.sort();
         }
     }
 
