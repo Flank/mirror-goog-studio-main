@@ -21,13 +21,13 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.OsType
 import com.android.testutils.TestUtils
 import com.android.utils.FileUtils
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.lang.Exception
 
 /**
  * Tests on building a project with Java 9+ source code, annotation processing and unit tests
@@ -158,6 +158,51 @@ class Java11CompileTest {
             )
             executor().run("assembleDebug")
         }
+    }
+
+    @Test
+    fun testCompatibilityWithJavaToolChain() {
+        val platform = when(OsType.getHostOs()) {
+            OsType.LINUX -> "linux"
+            OsType.WINDOWS -> "win64"
+            OsType.DARWIN -> "mac/Contents/Home"
+            else -> throw IllegalStateException("Unsupported operating system")
+        }
+
+        val customJdkLocation =
+            TestUtils.resolveWorkspacePath("prebuilts/studio/jdk/${platform}").toString()
+                .replace("\\", "/")
+
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            "org.gradle.java.installations.paths=${customJdkLocation}"
+        )
+        // jdk 8 is going to be used to create the jdk image(configured through java toolChain)
+        // we expect it to fail because jdk 8 doesn't have the jlink tool to create jdk image
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+
+                tasks.withType(JavaCompile).configureEach {
+                    javaCompiler = javaToolchains.compilerFor {
+                        languageVersion = JavaLanguageVersion.of(8)
+                    }
+                }
+            """.trimIndent()
+        )
+        val result = executor().expectFailure().run("assembleDebug")
+        val gLink = if (OsType.getHostOs() == OsType.WINDOWS) "jlink.exe" else "jlink"
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "$gLink does not exist"
+            )
+        }
+        TestFileUtils.searchAndReplace(
+            project.buildFile,
+            "JavaLanguageVersion.of(8)",
+            "JavaLanguageVersion.of(11)"
+        )
+        executor().run("assembleDebug")
     }
 
     private fun executor() = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)

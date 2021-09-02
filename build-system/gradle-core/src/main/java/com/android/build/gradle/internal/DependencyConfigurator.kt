@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import com.android.build.gradle.internal.dependency.ANDROID_JDK_IMAGE
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -45,7 +44,6 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JacocoTransform
-import com.android.build.gradle.internal.dependency.JdkImageTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
@@ -55,8 +53,6 @@ import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransf
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform.Companion.registerRecalculateStackFramesTransformForComponent
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
-import com.android.build.gradle.internal.dependency.getJavaHome
-import com.android.build.gradle.internal.dependency.getJdkId
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
@@ -67,10 +63,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
@@ -79,7 +73,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
-import com.android.sdklib.AndroidVersion
 import com.google.common.collect.Maps
 import org.gradle.api.ActionConfiguration
 import org.gradle.api.Project
@@ -254,17 +247,6 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.JAR.type,
             AndroidArtifacts.TYPE_PLATFORM_ATTR
         )
-
-        // transform to create the JDK image from core-for-system-modules.jar
-        registerTransform(
-            JdkImageTransform::class.java,
-            // Query for JAR instead of PROCESSED_JAR as core-for-system-modules.jar doesn't need processing
-            AndroidArtifacts.ArtifactType.JAR.type,
-            ANDROID_JDK_IMAGE
-        ) { params ->
-            params.jdkId.setDisallowChanges(getJdkId(project))
-            params.javaHome.setDisallowChanges(getJavaHome(project))
-        }
 
         val sharedLibSupport = projectOptions[BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES]
 

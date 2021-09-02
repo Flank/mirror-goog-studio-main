@@ -76,7 +76,11 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         checkNotNull(task.project.configurations.findByName(CONFIG_NAME_ANDROID_JDK_IMAGE)) {
             "The $CONFIG_NAME_ANDROID_JDK_IMAGE configuration must exist for Java 9+ sources."
         }
-        val jdkImage = getJdkImageFromTransform(creationConfig.services.projectInfo.getProject())
+
+        val jdkImage = getJdkImageFromTransform(
+            creationConfig.services.projectInfo.getProject(),
+            task.javaCompiler.orNull
+        )
 
         this.options.compilerArgumentProviders.add(JdkImageInput(jdkImage))
         // Make Javac generate legacy bytecode for string concatenation, see b/65004097
