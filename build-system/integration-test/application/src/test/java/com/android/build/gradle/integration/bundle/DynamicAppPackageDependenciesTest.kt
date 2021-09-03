@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
@@ -49,5 +50,11 @@ class DynamicAppPackageDependenciesTest {
             "debug/deps.txt"
         )
         assertThat(feature2Dependencies).contains("feature2::debug")
+
+        val buildResult =
+                project.executor()
+                        .withArgument("--build-cache")
+                        .run(":app:generateReleaseFeatureTransitiveDeps")
+        assertThat(buildResult.getTask(":app:generateReleaseFeatureTransitiveDeps")).didWork()
     }
 }
