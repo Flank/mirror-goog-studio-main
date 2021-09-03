@@ -429,4 +429,85 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
             assertNotEquals(unchangedFileTimestampBefore, unchangedFileTimestampAfter)
         }
     }
+
+    /** Regression test for b/198667126. */
+    @Test
+    fun testMultipleMetaInfDirsNonIncremental() {
+        val input = setOf(
+                tmp.newFolder().also { dir ->
+                    dir.resolve("META-INF/emptyDir/").mkdirs()
+                    dir.resolve("META-INF/dir/").mkdirs()
+                    dir.resolve("META-INF/dir/1.txt").createNewFile()
+                },
+                tmp.newFolder().also { dir ->
+                    dir.resolve("META-INF/dir/").mkdirs()
+                    dir.resolve("META-INF/dir/2.txt").createNewFile()
+                }
+        )
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val namespace = FakeGradleProperty("com.example")
+                    override val toIgnore =
+                            FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(input)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(false)
+                    override val inputChanges =
+                            FakeGradleProperty(SerializableFileChanges(emptyList()))
+                    override val packageRClass = FakeGradleProperty(true)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
+                }
+            }
+        }.execute()
+        assertContains(outputFile, "META-INF/dir/1.txt")
+        assertContains(outputFile, "META-INF/dir/2.txt")
+        assertDoesNotContain(outputFile, "META-INF/emptyDir/")
+    }
+
+    /** Regression test for b/198667126. */
+    @Test
+    fun testMultipleMetaInfDirsIncremental() {
+        val changes = mutableListOf<SerializableChange>()
+        val input = setOf(
+                tmp.newFolder().also { dir ->
+                    dir.resolve("META-INF/emptyDir/").mkdirs()
+                    dir.resolve("META-INF/dir/").mkdirs()
+                    dir.resolve("META-INF/dir/1.txt").also { f ->
+                        f.createNewFile()
+                        changes.add(SerializableChange(f, FileStatus.NEW, "META-INF/dir/1.txt"))
+                        changes.add(SerializableChange(f.parentFile, FileStatus.NEW, "META-INF/dir"))
+                        changes.add(SerializableChange(f.parentFile, FileStatus.NEW, "META-INF/emptyDir"))
+                    }
+                }
+        )
+        object : BundleLibraryClassesWorkAction() {
+            override fun getParameters(): Params {
+                return object : Params() {
+                    override val namespace = FakeGradleProperty("com.example")
+                    override val toIgnore =
+                            FakeObjectFactory.factory.listProperty(String::class.java)
+                    override val input = FakeConfigurableFileCollection(input)
+                    override val output = FakeGradleProperty(outputFile)
+                    override val incremental = FakeGradleProperty(true)
+                    override val inputChanges =
+                            FakeGradleProperty(SerializableFileChanges(changes))
+                    override val packageRClass = FakeGradleProperty(true)
+                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
+                    override val projectName = FakeGradleProperty("project")
+                    override val taskOwner = FakeGradleProperty("taskOwner")
+                    override val workerKey = FakeGradleProperty("workerKey")
+                    override val analyticsService: Property<AnalyticsService>
+                        get() = FakeGradleProperty(FakeNoOpAnalyticsService())
+                }
+            }
+        }.execute()
+        assertContains(outputFile, "META-INF/dir/1.txt")
+        assertDoesNotContain(outputFile, "META-INF/emptyDir/")
+    }
 }
