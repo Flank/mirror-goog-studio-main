@@ -13,7 +13,7 @@ compileKotlin {
 }
 
 dependencies {
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation project(':base:sdk-common')
     implementation project(':base:builder-model')
     implementation libs.kotlin_stdlib

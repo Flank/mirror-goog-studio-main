@@ -7,7 +7,7 @@ archivesBaseName = 'testutils'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation libs.kotlin_stdlib
     implementation libs.kotlin_test
     implementation libs.junit

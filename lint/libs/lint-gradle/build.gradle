@@ -19,7 +19,7 @@ dependencies {
     // so update both in sync
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation project(':base:builder')
     implementation project(':base:builder-model')
     implementation project(':base:intellij-core')

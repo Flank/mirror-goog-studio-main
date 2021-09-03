@@ -3,7 +3,7 @@ apply plugin: 'com.android.tools.java-library'
 dependencies {
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_metadata
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
 
     testImplementation project(':base:testutils')
     testImplementation libs.junit

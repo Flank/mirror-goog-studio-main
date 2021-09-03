@@ -16,7 +16,7 @@ compileKotlin {
 dependencies {
     api project(':base:sdk-common')
     api project(':base:sdklib')
-    api project(':base:common')
+    api libs.com.android.tools.common
     api project(':base:lint-model')
     implementation project(':base:builder-model')
     implementation libs.guava

@@ -9,7 +9,7 @@ archivesBaseName = 'ddmlib'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation libs.kxml
     implementation libs.protobuf
 

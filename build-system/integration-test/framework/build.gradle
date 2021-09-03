@@ -45,7 +45,7 @@ dependencies {
     implementation libs.truth_java8_extension
 
     testImplementation libs.mockito_core
-    testImplementation project(':base:common')
+    testImplementation libs.com.android.tools.common
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.

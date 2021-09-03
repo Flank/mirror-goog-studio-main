@@ -19,7 +19,7 @@ dependencies {
     implementation project(':base:uast')
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation project(':base:kotlin-compiler')
     implementation project(':base:intellij-core')
     implementation project(':base:manifest-merger')

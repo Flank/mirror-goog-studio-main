@@ -7,7 +7,7 @@ archivesBaseName = 'layoutlib-api'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation 'net.sf.kxml:kxml2:2.3.0'
     implementation libs.com.android.tools.annotations
     implementation 'org.jetbrains:annotations:13.0'

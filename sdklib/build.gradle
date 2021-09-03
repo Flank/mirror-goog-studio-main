@@ -12,7 +12,7 @@ dependencies {
     implementation project(':base:layoutlib-api')
     implementation project(':base:dvlib')
     api project(':base:repository')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
 
     implementation libs.gson
     implementation libs.jaxb_runtime

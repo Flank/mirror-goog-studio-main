@@ -9,7 +9,7 @@ dependencies {
 
     implementation project(':base:sdklib')
     implementation project(':base:sdk-common')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     api project(':base:manifest-merger')
     implementation project(':base:ddmlib')
     api project(':base:zipflinger')

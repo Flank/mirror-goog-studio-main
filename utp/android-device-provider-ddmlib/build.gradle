@@ -24,7 +24,7 @@ archivesBaseName = 'android-device-provider-ddmlib'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation project(':base:ddmlib')
     implementation libs.protobuf
     implementation project(':base:utp:android-device-provider-ddmlib-proto')

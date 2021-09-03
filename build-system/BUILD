@@ -274,7 +274,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/gradle-core:agp_gradle_build_files",
     "//tools/base/build-system/profile:agp_gradle_build_files",
     "//tools/base/chunkio:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/base/common:agp_gradle_build_files",
     "//tools/base/ddmlib:agp_gradle_build_files",
     "//tools/base/device_validator:agp_gradle_build_files",
     "//tools/base/draw9patch:agp_gradle_build_files",  # Only published, not a dependency of AGP

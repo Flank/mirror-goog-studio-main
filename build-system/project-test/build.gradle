@@ -4,7 +4,7 @@ apply plugin: 'application'
 
 dependencies {
     implementation project(':base:project-test-lib')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
 
     // Need an SLF4J implementation at runtime
     runtimeOnly 'org.slf4j:slf4j-simple:1.7.2'

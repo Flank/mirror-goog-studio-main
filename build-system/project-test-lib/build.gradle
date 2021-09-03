@@ -3,7 +3,7 @@ apply plugin: 'idea'
 
 dependencies {
     implementation project(':base:builder-model')
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
 
     testImplementation 'junit:junit:4.12'
 

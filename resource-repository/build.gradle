@@ -3,7 +3,7 @@ apply plugin: 'com.android.tools.kotlin'
 
 dependencies {
     implementation libs.com.android.tools.annotations
-    implementation project(':base:common')
+    implementation libs.com.android.tools.common
     implementation project(':base:intellij-core')
     implementation project(':base:layoutlib-api')
     implementation project(':base:sdk-common')

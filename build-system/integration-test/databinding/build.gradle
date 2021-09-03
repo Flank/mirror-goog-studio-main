@@ -15,7 +15,7 @@ dependencies {
     testImplementation project(':base:gradle-api')
     testImplementation project(':base:builder-model')
     testImplementation project(':base:sdk-common')
-    testImplementation project(':base:common')
+    testImplementation libs.com.android.tools.common
     testImplementation project(':base:sdklib')
     testImplementation project(':base:testing-infrastructure:device-pool:device-provider')
     testImplementation project(':base:testutils')
