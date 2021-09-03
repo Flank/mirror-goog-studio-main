@@ -34,6 +34,7 @@ fun androidManifestXml(
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity android:name="$activityPackage.$activityClass"
+            android:exported="true"
             android:label="@string/title_$simpleName"
             android:theme="@style/${themesData.main.name}">
             $activityBody
