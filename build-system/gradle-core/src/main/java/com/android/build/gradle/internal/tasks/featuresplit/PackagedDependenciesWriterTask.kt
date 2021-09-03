@@ -32,7 +32,6 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -88,7 +87,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             contentFilters.addAll(lines)
         }
 
-        val contentWithProject = content + "${projectPath.get()}::$variantName"
+        val contentWithProject = content + projectPath.get()
 
         // compute the overall content
         val filteredContent =
@@ -132,7 +131,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task: PackagedDependenciesWriterTask
         ) {
             super.configure(task)
-            task.projectPath.setDisallowChanges(task.project.path)
+            task.projectPath.setDisallowChanges("${task.project.path}::${task.variantName}")
 
             task.runtimeAarOrJarDeps =
                 creationConfig.variantDependencies
@@ -148,12 +147,6 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES)
         }
-    }
-}
-
-private fun ResolvedComponentResult.toIdString() : String {
-    return id.toIdString {
-        getAndroidVariant()
     }
 }
 
@@ -177,26 +170,3 @@ private inline fun ComponentIdentifier.toIdString(variantProvider: () -> String?
         else -> toString()
     }
 }
-
-private fun ResolvedComponentResult.getAndroidVariant(): String? = variants
-    .asSequence()
-    .map { result ->
-        // what we have access here are the attributes of the variant that was selected
-        // rather than the one setup on the resolved variant (if one were to access this via
-        // ArtifactCollection).
-        // In order to handle cross project boundaries (in the case of composite projects where
-        // both side have different classloader for instance), the attributes are desugared into
-        // Strings.
-        // So in this case all the attributes are Attribute<String> with the value being the
-        // original generic type.
-        val key = result.attributes.keySet().firstOrNull {
-            it.name == VariantAttr::class.java.name
-        }
-
-        if (key != null) {
-            result.attributes.getAttribute(key) as String?
-        } else null
-    }
-    .filter { it != null }
-    .firstOrNull()
-
