@@ -42,7 +42,7 @@ dependencies {
     testImplementation libs.mockito_core
     testImplementation libs.truth
     testImplementation libs.equalsverifier
-    testImplementation testFixtures(project(":base:repository"))
+    testImplementation externalTestFixtures.repository
 }
 
 protobuf {

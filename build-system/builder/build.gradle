@@ -43,7 +43,7 @@ dependencies {
     testImplementation libs.equalsverifier
     testImplementation libs.jimfs
     testImplementation project(':base:testutils')
-    testImplementation testFixtures(project(":base:repository"))
+    testImplementation externalTestFixtures.repository
 }
 
 test {

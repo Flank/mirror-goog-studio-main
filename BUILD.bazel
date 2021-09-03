@@ -91,11 +91,18 @@ maven_repository(
     ],
 )
 
+# Test only dependencies that are not published to gmaven,
+# and are now just directly consumed as jars
+AGP_TEST_ONLY_DEPENDENCIES = [
+    "//tools/base/common:tools.fixtures",
+    "//tools/base/repository:tools.testlib",
+]
+
 # The Android Gradle Plugin gradle build invokes this to
 # prepare the repository of artifacts to compile against
 java_binary(
     name = "agp_artifacts_dir",
-    data = [":agp_artifacts"],
+    data = [":agp_artifacts"] + AGP_TEST_ONLY_DEPENDENCIES,
     jvm_flags = [
         "-Dartifacts_manifest_file=tools/base/agp_artifacts.manifest",
     ],

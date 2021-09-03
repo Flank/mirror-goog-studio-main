@@ -39,6 +39,6 @@ dependencies {
     testImplementation libs.truth
     testImplementation libs.kxml
     testImplementation files(toolsJarForJava8)
-    testImplementation testFixtures(project(":base:repository"))
-    testImplementation testFixtures(project(":base:common"))
+    testImplementation externalTestFixtures.repository
+    testImplementation externalTestFixtures.common
 }

@@ -27,7 +27,7 @@ dependencies {
     implementation project(':base:testing-infrastructure:device-pool:device-provider')
     implementation project(':base:testutils')
     implementation libs.com.android.tools.annotations
-    implementation testFixtures(project(":base:repository"))
+    implementation externalTestFixtures.repository
 
     implementation libs.kotlin_stdlib
 

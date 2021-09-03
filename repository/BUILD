@@ -71,14 +71,26 @@ maven_library(
 
 java_library(
     name = "tools.testlib",
-    srcs = glob([
-        "src/test/java/**",
-        "src/testFixtures/java/**",
-    ]),
-    resources = glob(["src/test/resources/**"]),
+    srcs = glob(["src/testFixtures/java/**/*.java"]),
     visibility = ["//visibility:public"],  # contains com.android.repository.testframework
     deps = [
         ":tools.repository",
+        "//tools/base/annotations",
+        "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.jimfs.jimfs",
+    ],
+)
+
+coverage_java_test(
+    name = "tools.tests",
+    srcs = glob(["src/test/java/**/*.java"]),
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":tools.repository",
+        ":tools.testlib",
         "//tools/base/annotations",
         "//tools/base/testutils:tools.testutils",
         "@maven//:com.google.guava.guava",
@@ -89,13 +101,6 @@ java_library(
         "@maven//:org.apache.commons.commons-compress",
         "@maven//:org.mockito.mockito-core",
     ],
-)
-
-coverage_java_test(
-    name = "tools.tests",
-    jvm_flags = ["-Dtest.suite.jar=tools.testlib.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = [":tools.testlib"],
 )
 
 xsd_to_java(
