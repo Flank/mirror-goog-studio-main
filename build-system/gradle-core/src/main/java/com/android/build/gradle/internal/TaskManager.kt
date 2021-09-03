@@ -225,6 +225,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
+import com.android.utils.appendCapitalized
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions
@@ -1798,6 +1799,160 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
+    /**
+     * Creates the individual managed device tasks for the given variant
+     *
+     * @param creationConfig the test config
+     * @param testData the extra test data
+     * @param variant the testing variant, used for test coverage
+     * @param variantName name of the variant under test. This can be different from the testing
+     * variant.
+     * @param testTaskSuffix the suffix to be applied to the individual task names. This should be
+     * used if the test config's name does not include a test suffix.
+     */
+    protected fun createTestDevicesForVariant(
+        creationConfig: VariantCreationConfig,
+        testData: AbstractTestDataImpl,
+        variant: VariantImpl?,
+        variantName: String,
+        testTaskSuffix: String = ""
+    ) {
+        val managedDevices = getManagedDevices()
+        if (!shouldEnableUtp(
+                globalConfig.services.projectOptions,
+                globalConfig.testOptions,
+                variant?.variantType
+            ) ||
+                managedDevices.isEmpty()) {
+            return
+        }
+
+        val allDevicesVariantTask = taskFactory.register(
+            creationConfig.computeTaskName("allDevices", testTaskSuffix)
+        ) { allDevicesVariant: Task ->
+            allDevicesVariant.description =
+                "Runs the tests for $variantName on all managed devices in the dsl."
+            allDevicesVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+        }
+        taskFactory.configure(
+            ALL_DEVICES_CHECK
+        ) { allDevices: Task ->
+            allDevices.dependsOn(allDevicesVariantTask)
+        }
+
+        val resultsRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
+            creationConfig.paths.outputDir(BuilderConstants.FD_ANDROID_RESULTS)
+                .get().asFile
+        } else {
+            File(requireNotNull(extension.testOptions.resultsDir))
+        }
+        val reportRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
+            creationConfig.paths.reportsDir(BuilderConstants.FD_ANDROID_TESTS)
+                .get().asFile
+        } else {
+            File(requireNotNull(extension.testOptions.reportDir))
+        }
+        val flavor: String? = testData.flavorName.orNull
+        val flavorDir = if (flavor.isNullOrEmpty()) "" else "${BuilderConstants.FD_FLAVORS}/$flavor"
+        val resultsDir = File(resultsRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
+        val reportDir = File(reportRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
+
+        val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
+        for (managedDevice in managedDevices) {
+            val managedDeviceTestTask = taskFactory.register(
+                ManagedDeviceInstrumentationTestTask.CreationAction(
+                    creationConfig,
+                    managedDevice,
+                    testData,
+                    File(resultsDir, managedDevice.name),
+                    File(reportDir, managedDevice.name),
+                    testTaskSuffix
+                )
+            )
+            managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
+            allDevicesVariantTask.dependsOn(managedDeviceTestTask)
+            taskFactory.configure(
+                managedDeviceAllVariantsTaskName(managedDevice)
+            ) { managedDeviceTests: Task ->
+                managedDeviceTests.dependsOn(managedDeviceTestTask)
+            }
+            deviceToProvider[managedDevice.name] = managedDeviceTestTask
+        }
+
+        // Register a task to aggregate test suite result protos.
+        val testResultAggregationTask = taskFactory.register(
+            ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
+                creationConfig,
+                managedDevices.map { File(File(resultsDir, it.name), TEST_RESULT_PB_FILE_NAME) },
+                File(resultsDir, TEST_RESULT_PB_FILE_NAME)
+            )
+        )
+        for (managedDevice in managedDevices) {
+            taskFactory.configure(
+                managedDeviceAllVariantsTaskName(managedDevice)
+            ) { managedDeviceCheck ->
+                managedDeviceCheck.dependsOn(testResultAggregationTask)
+            }
+        }
+        deviceToProvider.values.forEach { managedDeviceTestTask ->
+            testResultAggregationTask.configure {
+                it.mustRunAfter(managedDeviceTestTask)
+            }
+            // Run test result aggregation task even after test failures.
+            managedDeviceTestTask.configure {
+                it.finalizedBy(testResultAggregationTask)
+            }
+        }
+
+        // Register a test coverage report generation task to every managedDeviceCheck
+        // task.
+        if ((variant?.variantDslInfo?.isAndroidTestCoverageEnabled == true) &&
+                creationConfig is TestComponentImpl) {
+            val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
+                project, JacocoTask.getJacocoVersion(creationConfig)
+            )
+            val reportTask = taskFactory.register(
+                JacocoReportTask.CreationActionManagedDeviceTest(
+                    creationConfig, jacocoAntConfiguration
+                )
+            )
+            variant?.taskContainer?.coverageReportTask?.dependsOn(reportTask)
+            for (managedDevice in managedDevices) {
+                taskFactory.configure(
+                    managedDeviceAllVariantsTaskName(managedDevice)
+                ) { managedDeviceTests: Task ->
+                    managedDeviceTests.dependsOn(reportTask)
+                }
+            }
+            // Run the report task after all tests are finished on all devices.
+            deviceToProvider.values.forEach { managedDeviceTestTask ->
+                reportTask.configure {
+                    it.mustRunAfter(managedDeviceTestTask)
+                }
+            }
+        }
+
+        // Lastly the Device Group Tasks.
+        for (group in getDeviceGroups()) {
+            val variantDeviceGroupTask = taskFactory.register(
+                managedDeviceGroupSingleVariantTaskName(creationConfig, group)
+                    .appendCapitalized(testTaskSuffix)
+            ) { deviceGroupVariant: Task ->
+                deviceGroupVariant.description =
+                    "Runs the tests for $variantName on all devices defined in ${group.name}."
+                deviceGroupVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
+            for (device in group.targetDevices) {
+                variantDeviceGroupTask.dependsOn(deviceToProvider.getValue(device.name))
+            }
+            taskFactory.configure(
+                managedDeviceGroupAllVariantsTaskName(group)
+            ) { deviceGroupTask: Task ->
+                deviceGroupTask.dependsOn(variantDeviceGroupTask)
+            }
+        }
+    }
+
     private fun createConnectedTestForVariant(androidTestProperties: AndroidTestImpl) {
         val testedVariant = androidTestProperties.testedVariant
         val isLibrary = testedVariant.variantType.isAar
@@ -1881,134 +2036,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (shouldEnableUtp(
-                globalConfig.services.projectOptions,
-                globalConfig.testOptions,
-                testedVariant.variantType
-            ) &&
-                globalConfig.testOptions.devices.isNotEmpty()) {
-            // Now for each managed device defined in the dsl
-            val managedDevices = getManagedDevices()
-            val variantName = androidTestProperties.testedConfig.name
-            val allDevicesVariantTask = taskFactory.register(
-                androidTestProperties.computeTaskName("allDevices")
-            ) { allDevicesVariant: Task ->
-                allDevicesVariant.description =
-                    "Runs the tests for $variantName on all managed devices in the dsl."
-                allDevicesVariant.group = JavaBasePlugin.VERIFICATION_GROUP
-            }
-            taskFactory.configure(
-                ALL_DEVICES_CHECK
-            ) { allDevices: Task ->
-                allDevices.dependsOn(allDevicesVariantTask)
-            }
-
-            val resultsRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
-                androidTestProperties.paths.outputDir(BuilderConstants.FD_ANDROID_RESULTS)
-                    .get().asFile
-            } else {
-                File(requireNotNull(extension.testOptions.resultsDir))
-            }
-            val reportRootDir = if (extension.testOptions.resultsDir.isNullOrEmpty()) {
-                androidTestProperties.paths.reportsDir(BuilderConstants.FD_ANDROID_TESTS)
-                    .get().asFile
-            } else {
-                File(requireNotNull(extension.testOptions.reportDir))
-            }
-            val flavor: String? = testData.flavorName.orNull
-            val flavorDir = if (flavor.isNullOrEmpty()) "" else "${BuilderConstants.FD_FLAVORS}/$flavor"
-            val resultsDir = File(resultsRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
-            val reportDir = File(reportRootDir, "${BuilderConstants.MANAGED_DEVICE}/${flavorDir}")
-
-            val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
-            for (managedDevice in managedDevices) {
-                val managedDeviceTestTask = taskFactory.register(
-                    ManagedDeviceInstrumentationTestTask.CreationAction(
-                        androidTestProperties,
-                        managedDevice,
-                        testData,
-                        File(resultsDir, managedDevice.name),
-                        File(reportDir, managedDevice.name),
-                    )
-                )
-                managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
-                allDevicesVariantTask.dependsOn(managedDeviceTestTask)
-                taskFactory.configure(
-                    managedDeviceAllVariantsTaskName(managedDevice)
-                ) { managedDeviceTests: Task ->
-                    managedDeviceTests.dependsOn(managedDeviceTestTask)
-                }
-                deviceToProvider[managedDevice.name] = managedDeviceTestTask
-            }
-
-            // Register a task to aggregate test suite result protos.
-            val testResultAggregationTask = taskFactory.register(
-                ManagedDeviceInstrumentationTestResultAggregationTask.CreationAction(
-                    androidTestProperties,
-                    managedDevices.map { File(File(resultsDir, it.name), TEST_RESULT_PB_FILE_NAME) },
-                    File(resultsDir, TEST_RESULT_PB_FILE_NAME)
-                )
-            )
-            for (managedDevice in managedDevices) {
-                taskFactory.configure(
-                    managedDeviceAllVariantsTaskName(managedDevice)
-                ) { managedDeviceCheck ->
-                    managedDeviceCheck.dependsOn(testResultAggregationTask)
-                }
-            }
-            deviceToProvider.values.forEach { managedDeviceTestTask ->
-                testResultAggregationTask.configure {
-                    it.mustRunAfter(managedDeviceTestTask)
-                }
-                // Run test result aggregation task even after test failures.
-                managedDeviceTestTask.configure {
-                    it.finalizedBy(testResultAggregationTask)
-                }
-            }
-
-            // Register a test coverage report generation task to every managedDeviceCheck
-            // task.
-            if (testedVariant.variantDslInfo.isAndroidTestCoverageEnabled) {
-                val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
-                    project, JacocoTask.getJacocoVersion(androidTestProperties))
-                val reportTask = taskFactory.register(
-                    JacocoReportTask.CreationActionManagedDeviceTest(
-                        androidTestProperties, jacocoAntConfiguration))
-                testedVariant.taskContainer.coverageReportTask.dependsOn(reportTask)
-                for (managedDevice in managedDevices) {
-                    taskFactory.configure(
-                        managedDeviceAllVariantsTaskName(managedDevice)
-                    ) { managedDeviceTests: Task ->
-                        managedDeviceTests.dependsOn(reportTask)
-                    }
-                }
-                // Run the report task after all tests are finished on all devices.
-                deviceToProvider.values.forEach { managedDeviceTestTask ->
-                    reportTask.configure {
-                        it.mustRunAfter(managedDeviceTestTask)
-                    }
-                }
-            }
-
-            // Lastly the Device Group Tasks.
-            for (group in getDeviceGroups()) {
-                val variantDeviceGroupTask = taskFactory.register(
-                    managedDeviceGroupSingleVariantTaskName(androidTestProperties, group)
-                ) { deviceGroupVariant: Task ->
-                    deviceGroupVariant.description =
-                        "Runs the tests for $variantName on all devices defined in ${group.name}."
-                    deviceGroupVariant.group = JavaBasePlugin.VERIFICATION_GROUP
-                }
-                for (device in group.targetDevices) {
-                    variantDeviceGroupTask.dependsOn(deviceToProvider.getValue(device.name))
-                }
-                taskFactory.configure(
-                    managedDeviceGroupAllVariantsTaskName(group)
-                ) { deviceGroupTask: Task ->
-                    deviceGroupTask.dependsOn(variantDeviceGroupTask)
-                }
-            }
-        }
+        createTestDevicesForVariant(
+            androidTestProperties,
+            testData,
+            testedVariant,
+            androidTestProperties.testedConfig.name)
     }
 
     /**

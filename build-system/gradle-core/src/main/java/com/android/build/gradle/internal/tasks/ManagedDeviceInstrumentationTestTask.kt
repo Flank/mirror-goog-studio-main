@@ -337,10 +337,11 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         private val testData: AbstractTestDataImpl,
         private val testResultOutputDir: File,
         private val testReportOutputDir: File,
+        private val nameSuffix: String = "",
     ) : VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
-        override val name = computeTaskName(device.name)
+        override val name = computeTaskName(device.name, nameSuffix)
 
         override val type = ManagedDeviceInstrumentationTestTask::class.java
 
