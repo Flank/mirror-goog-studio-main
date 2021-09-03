@@ -29,6 +29,10 @@ public class AssumeUtil {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
     }
 
+    public static void assumeNotMac() {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN);
+    }
+
     public static void assumeNotWindowsBot() {
         Assume.assumeFalse(
                 SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
