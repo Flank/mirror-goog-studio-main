@@ -23,9 +23,11 @@ def _gradle_build_impl(ctx):
     for repo in ctx.attr.repos:
         args += ["--repo", repo[MavenRepoInfo].build_manifest.path]
         manifest_inputs += repo[MavenRepoInfo].artifacts + [repo[MavenRepoInfo].build_manifest]
+    for repo_zip in ctx.files.repo_zips:
+        args += ["--repo", repo_zip.path]
 
     ctx.actions.run(
-        inputs = ctx.files.data + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
+        inputs = ctx.files.data + ctx.files.repo_zips + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
         outputs = outputs,
         mnemonic = "gradlew",
         arguments = args,
@@ -44,6 +46,7 @@ _gradle_build_rule = rule(
             allow_single_file = True,
         ),
         "repos": attr.label_list(providers = [MavenRepoInfo]),
+        "repo_zips": attr.label_list(allow_files = [".zip"]),
         "output_log": attr.output(),
         "distribution": attr.label(allow_files = True),
         "max_workers": attr.int(default = 0, doc = "Max number of workers, 0 or negative means unset (Gradle will use the default: number of CPU cores)."),
@@ -74,6 +77,7 @@ def gradle_build(
         output_file_source = None,
         output_files = {},
         repos = [],
+        repo_zips = [],
         tasks = [],
         max_workers = 0,
         gradle_properties = {},
@@ -105,6 +109,7 @@ def gradle_build(
         output_log = name + ".log",
         gradle_properties = gradle_properties,
         repos = repos,
+        repo_zips = repo_zips,
         tags = tags,
         tasks = tasks,
         max_workers = max_workers,
