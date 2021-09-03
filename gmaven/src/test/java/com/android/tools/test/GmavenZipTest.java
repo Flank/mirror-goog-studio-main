@@ -1715,7 +1715,6 @@ public class GmavenZipTest {
                 "META-INF/android-test-plugin-host-retention.kotlin_module",
                 "META-INF/services/",
                 "META-INF/services/com.google.testing.platform.api.plugin.HostPlugin",
-                "com.android.tools.utp.plugins.host.icebox/",
                 "com/",
                 "com/android/",
                 "com/android/tools/",
