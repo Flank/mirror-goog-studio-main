@@ -25,6 +25,11 @@ app_inspection_jar(
     ],
     inspection_resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
     inspection_resources = glob(["resources/META-INF/**"]),
+    jarjar_srcs = [
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
     proto = ":network_inspector_java_proto",
     deps = [
         ":network_inspector_java_proto",

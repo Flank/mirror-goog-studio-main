@@ -18,6 +18,8 @@ app_inspection_jar(
     inspection_resources = glob(["resources/META-INF/**"]),
     jarjar_srcs = [
         "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common.jar",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
     ],
     proto = "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
