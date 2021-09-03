@@ -13,9 +13,13 @@ gradle_build(
     ] + glob(["library/**"]),
     output_file = "outputs/aar/library-release.aar",
     output_file_source = "outputs/aar/library-release.aar",
+    repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin.zip",
+    ],
     repos = [
         ":test_deps",
-        "//tools/base/build-system:gradle_plugin_repo",
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
     ],
     tags = ["no_windows"],  # There is a bug in aapt2 that breaks with bazel paths (>260 chars)
     tasks = ["build"],

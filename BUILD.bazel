@@ -67,7 +67,10 @@ maven_repository(
         "@maven//:org.tensorflow.tensorflow-lite-metadata",
         "@maven//:xerces.xercesImpl",
     ],
-    visibility = ["//tools/base/build-system:__pkg__"],
+    visibility = [
+        "//tools/base/bazel/test/gradle:__pkg__",
+        "//tools/base/build-system:__pkg__",
+    ],
 )
 
 maven_repository(
@@ -78,6 +81,7 @@ maven_repository(
     ],
     include_transitive_deps = False,
     visibility = [
+        "//tools/base/bazel/test/gradle:__pkg__",
         "//tools/base/build-system:__pkg__",
         "//tools/base/gmaven:__pkg__",
     ],
