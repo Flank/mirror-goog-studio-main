@@ -23,6 +23,7 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManagerGlobal
+import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.google.common.util.concurrent.SettableFuture
@@ -39,6 +40,9 @@ import java.util.concurrent.TimeUnit
 class SkiaQWorkaroundTest {
     @get:Rule
     val mainLooperRule = MainLooperRule()
+
+    @get:Rule
+    val frameworkStateRule = FrameworkStateRule()
 
     @Test
     fun changeShouldSerializeDuringCaptureDoesntCrash() {
@@ -81,7 +85,7 @@ class SkiaQWorkaroundTest {
                     callback = { ByteArrayOutputStream() },
                     shouldSerialize = { shouldSerialize })
             root.forcePictureCapture(Picture(byteArrayOf()))
-            handle?.close()
+            handle.close()
             Looper.myLooper().quitSafely()
 
             exception?.let { completed.setException(it) }

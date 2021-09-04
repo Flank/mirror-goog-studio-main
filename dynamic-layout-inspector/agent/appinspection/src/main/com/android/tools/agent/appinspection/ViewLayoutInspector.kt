@@ -16,10 +16,16 @@
 
 package com.android.tools.agent.appinspection
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.view.View
 import android.view.WindowManager
 import android.view.inspector.WindowInspector
 import androidx.annotation.GuardedBy
+import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
@@ -37,18 +43,23 @@ import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
+import com.android.tools.agent.shared.FoldObserver
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldOrientation
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.SpecialAngles.*
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
@@ -87,6 +98,28 @@ class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_
 
 class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
     Inspector(connection) {
+
+    @VisibleForTesting
+    var foldObserver: FoldObserver? = null
+
+    // During setup fold events can be triggered by both the angle sensor and the androidx.window
+    // library. We want to send exactly one event during setup, so track whether that's happened.
+    private var sentInitialFoldEvent = false
+
+    init {
+        try {
+            // Since FoldObserverImpl has to be built without jarjar so as to interact with the
+            // app's androidx.coroutines objects, it can't be a declared dependency of this,
+            // and so has to be invoked through reflection.
+            val foldObserverClass =
+                Class.forName("com.android.tools.agent.nojarjar.FoldObserverImpl")
+            this.foldObserver = foldObserverClass?.getConstructor(Any::class.java)
+                ?.newInstance(::sendFoldStateEvent) as FoldObserver?
+        } catch (e: Exception) {
+            // couldn't instantiate, probably because library isn't found.
+        }
+    }
+
 
     private var checkpoint: ProgressCheckpoint = ProgressCheckpoint.NOT_STARTED
         set(value) {
@@ -199,11 +232,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         @Synchronized
         fun checkRoots() {
             val currRoots = getRootViewsOnMainThread()
+            currRoots.values.firstOrNull()?.context?.let { initializeSensors(it) }
 
             val currRootIds = currRoots.keys
             if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
                 val removed = lastRootIds.filter { !currRootIds.contains(it) }
                 val added = currRootIds.filter { !lastRootIds.contains(it) }
+                added.mapNotNull { currRoots[it] }
+                    .forEach { foldObserver?.startObservingFoldState(it) }
+                removed.mapNotNull { currRoots[it] }
+                    .forEach { foldObserver?.stopObservingFoldState(it) }
                 lastRootIds = currRootIds
                 checkpoint = ProgressCheckpoint.ROOTS_EVENT_SENT
                 connection.sendEvent {
@@ -269,6 +307,47 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
     }
 
+    private fun initializeSensors(context: Context) {
+        if (!sensorsInitialized.compareAndSet(false, true)) {
+            return
+        }
+
+        val sensorManager = context.getSystemService(SensorManager::class.java)
+        sensorManager.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE)?.let { hingeAngleSensor ->
+            sensorManager.registerListener(object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent) {
+                    currentHingeAngle = event.values[0].toInt()
+                    sendFoldStateEvent()
+                }
+
+                override fun onAccuracyChanged(p0: Sensor?, p1: Int) = Unit
+            }, hingeAngleSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+    }
+
+    private fun sendFoldStateEvent() {
+        if ((!state.fetchContinuously && sentInitialFoldEvent) || foldObserver?.foldState == null) {
+            return
+        }
+        sentInitialFoldEvent = true
+        sendFoldStateEventNow()
+    }
+
+    private fun sendFoldStateEventNow() {
+        val observer = foldObserver ?: return
+        val foldState = observer.foldState
+        if (currentHingeAngle == null && foldState == null) {
+            return
+        }
+        connection.sendEvent {
+            foldEventBuilder.apply {
+                angle = currentHingeAngle ?: NO_FOLD_ANGLE_VALUE
+                foldState?.let { this.foldState = it }
+                this.orientation = observer.orientation ?: FoldOrientation.NONE
+            }
+        }
+    }
+
     private class SnapshotRequest {
         enum class State { NEW, PROCESSING }
         val result = CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>()
@@ -306,6 +385,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var snapshotRequests: MutableMap<Long, SnapshotRequest> = ConcurrentHashMap()
     }
 
+    private val scope =
+        CoroutineScope(SupervisorJob() + environment.executors().primary().asCoroutineDispatcher())
+
     private val stateLock = Any()
     @GuardedBy("stateLock")
     private val state = InspectorState()
@@ -313,6 +395,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private val rootsDetector = RootsDetector()
 
     private var previousConfig = Configuration.getDefaultInstance()
+
+    private var sensorsInitialized = AtomicBoolean(false)
+    private var currentHingeAngle: Int? = null
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -340,6 +425,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     override fun onDispose() {
         forceStopAllCaptures()
+        foldObserver?.shutdown()
+        scope.cancel("ViewLayoutInspector has been disposed")
         SynchronousPixelCopy.stopHandler()
     }
 
@@ -488,12 +575,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 }
 
-                if (snapshotResponse != null || context.isLastCapture) { // Prepare and send PropertiesEvent
+                if (snapshotResponse != null || context.isLastCapture) {
+                    // Prepare and send PropertiesEvent
                     // We get here either if the client requested a one-time snapshot of the layout
                     // or if the client just stopped an in-progress fetch. Collect and send all
                     // properties, so that the user can continue to explore all values in the UI and
                     // they will match exactly the layout at this moment in time.
-
                     val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
                     val stringTable = StringTable()
                     val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
@@ -510,6 +597,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                             propertiesEvent = properties
                         }
                     }
+
+                    // Send the updated fold state, in case we haven't been sending it continuously.
+                    sendFoldStateEventNow()
                 }
                 snapshotResponse?.let { snapshotRequest?.result?.complete(it.build()) }
             }
@@ -598,6 +688,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun handleStopFetchCommand(callback: CommandCallback) {
+        state.fetchContinuously = false
         callback.reply {
             stopFetchResponse = StopFetchResponse.getDefaultInstance()
         }
@@ -639,14 +730,14 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun handleCaptureSnapshotCommand(
-        // TODO: support bitmap
+        @Suppress("UNUSED_PARAMETER") // TODO: support bitmap
         captureSnapshotCommand: LayoutInspectorViewProtocol.CaptureSnapshotCommand,
         callback: CommandCallback
     ) {
         rootsDetector.checkRoots()
         state.snapshotRequests.clear()
 
-        CoroutineScope(environment.executors().primary().asCoroutineDispatcher()).launch {
+        scope.launch {
             val roots = ThreadUtils.runOnMainThreadAsync { getRootViews() }.await()
             val windowSnapshots = roots.map { view ->
                 SnapshotRequest().also {

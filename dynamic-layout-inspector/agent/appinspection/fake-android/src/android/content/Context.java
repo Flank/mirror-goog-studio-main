@@ -16,16 +16,19 @@
 package android.content;
 
 import android.content.res.Resources;
+import android.hardware.SensorManager;
 import androidx.annotation.VisibleForTesting;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("MethodMayBeStatic")
-public final class Context {
+public class Context {
     // Only for tests - doesn't exist in the framework
     private final AtomicInteger mViewIdGenerator = new AtomicInteger(0);
 
     private final String mPackageName;
     private final Resources mResources;
+
+    @VisibleForTesting public SensorManager sensorManager = new SensorManager();
 
     @VisibleForTesting
     public Context(String packageName, Resources resources) {
@@ -43,6 +46,14 @@ public final class Context {
 
     public int getThemeResId() {
         return 0;
+    }
+
+    public <T> T getSystemService(Class<T> serviceClass) {
+        if (serviceClass.equals(SensorManager.class)) {
+            //noinspection unchecked
+            return (T) sensorManager;
+        }
+        return null;
     }
 
     // Only for tests - doesn't exist in the framework

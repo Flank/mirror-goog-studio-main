@@ -19,6 +19,9 @@ package com.android.tools.agent.appinspection
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Picture
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
 import android.os.Looper
 import android.view.Surface
 import android.view.View
@@ -29,6 +32,8 @@ import android.view.WindowManagerGlobal
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatButton
+import checkNextEventMatching
+import checkNonProgressEvent
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
@@ -40,10 +45,12 @@ import com.android.tools.agent.appinspection.testutils.property.companions.ViewG
 import com.android.tools.agent.appinspection.testutils.property.companions.ViewInspectionCompanion
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.decompress
+import com.android.tools.agent.shared.FoldObserver
 import com.android.tools.layoutinspector.BITMAP_HEADER_SIZE
 import com.android.tools.layoutinspector.BitmapType
 import com.android.tools.layoutinspector.toBytes
 import com.google.common.truth.Truth.assertThat
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
@@ -53,7 +60,6 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchComm
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
@@ -66,6 +72,9 @@ class ViewLayoutInspectorTest {
 
     @get:Rule
     val frameworkRule = FrameworkStateRule()
+
+    @get:Rule
+    val frameworkStateRule = FrameworkStateRule()
 
     @Test
     fun canStartAndStopInspector() = createViewInspector { viewInspector ->
@@ -103,6 +112,107 @@ class ViewLayoutInspectorTest {
     }
 
     @Test
+    fun foldEventsSent() = createViewInspector { viewInspector ->
+        viewInspector.foldObserver = object: FoldObserver {
+            override val foldState: LayoutInspectorViewProtocol.FoldEvent.FoldState =
+                LayoutInspectorViewProtocol.FoldEvent.FoldState.HALF_OPEN
+            override val orientation: LayoutInspectorViewProtocol.FoldEvent.FoldOrientation =
+                LayoutInspectorViewProtocol.FoldEvent.FoldOrientation.HORIZONTAL
+
+            override fun startObservingFoldState(rootView: View) {}
+            override fun stopObservingFoldState(rootView: View) {}
+            override fun shutdown() {}
+        }
+        val eventQueue = ArrayBlockingQueue<ByteArray>(15)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val tree1 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        WindowManagerGlobal.getInstance().rootViews.add(tree1)
+
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        val angleSensor = object : Sensor() {
+            override fun addListener(listener: SensorEventListener?) {
+                super.addListener(listener)
+                fire(SensorEvent().apply { values = floatArrayOf(150f) })
+            }
+        }
+        context.sensorManager.addSensor(Sensor.TYPE_HINGE_ANGLE, angleSensor)
+        val root = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val fakePicture = Picture(byteArrayOf(1, 2, 3))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        ThreadUtils.runOnMainThread { }.get()
+
+        root.forcePictureCapture(fakePicture)
+
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.angle).isEqualTo(150)
+        }
+
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(100f) })
+
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.angle).isEqualTo(100)
+        }
+
+        val stopFetchCommand = Command.newBuilder().apply {
+            stopFetchCommand = StopFetchCommand.getDefaultInstance()
+        }.build()
+        viewInspector.onReceiveCommand(
+            stopFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        // Fire several sensor events, but there shouldn't be FoldEvents generated.
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(80f) })
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(70f) })
+        angleSensor.fire(SensorEvent().apply { values = floatArrayOf(60f) })
+
+        // Now refresh the view: we should only get the latest fold event.
+        val refreshCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = false
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            refreshCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        ThreadUtils.runOnMainThread { }.get()
+        tree1.forcePictureCapture(fakePicture)
+
+        checkNextEventMatching(
+            eventQueue, { it.specializedCase == Event.SpecializedCase.FOLD_EVENT}) { event ->
+            assertThat(event.foldEvent.angle).isEqualTo(60)
+        }
+    }
+
+    @Test
     fun restartingInspectorResendsRootEvents() = createViewInspector { viewInspector ->
         val responseQueue = ArrayBlockingQueue<ByteArray>(10)
         inspectorRule.commandCallback.replyListeners.add { bytes ->
@@ -121,8 +231,9 @@ class ViewLayoutInspectorTest {
         val fakePicture = Picture(byteArrayOf(1, 2, 3))
         WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
 
-        // First, we startup the inspector, to ensure that we've gotten to a point where a roots
-        // event is sent back to us (so we know that the inspector is keeping track of the state).
+        // First, we start up the inspector, to ensure that we've gotten to a point where a
+        // WindowRootsEvent is sent back to us (so we know that the inspector is keeping track of
+        // the state).
         run {
             val updateScreenshotTypeCommand = Command.newBuilder().apply {
                 updateScreenshotTypeCommandBuilder.apply {
@@ -1319,25 +1430,6 @@ class ViewLayoutInspectorTest {
                 }
             }
         }
-    }
-
-    private fun checkNonProgressEvent(
-        eventQueue: BlockingQueue<ByteArray>, block: (Event) -> Unit
-    ) {
-        val startTime = System.currentTimeMillis()
-        var found = false
-        while (startTime + TimeUnit.SECONDS.toMillis(10) > System.currentTimeMillis()) {
-            val bytes = eventQueue.take()
-            val event = Event.parseFrom(bytes)
-            if (event.specializedCase == Event.SpecializedCase.PROGRESS_EVENT) {
-                // skip progress events for this test
-                continue
-            }
-            block(event)
-            found = true
-            break
-        }
-        assertThat(found).isTrue()
     }
 
         // TODO: Add test for filtering system views and properties
