@@ -562,7 +562,7 @@ abstract class Detector {
     ) {
     }
 
-    @Deprecated("This method is missing the referenced parameter; use/override the other overload instead")
+    @Deprecated("Migrate to visitAnnotationUsage(JavaContext, UElement, AnnotationInfo, AnnotationUsageInfo)")
     open fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,
@@ -577,6 +577,7 @@ abstract class Detector {
     ) {
     }
 
+    @Deprecated("Migrate to visitAnnotationUsage(JavaContext, UElement, AnnotationInfo, AnnotationUsageInfo)")
     open fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,
@@ -595,6 +596,66 @@ abstract class Detector {
         visitAnnotationUsage(
             context, usage, type, annotation, qualifiedName, method,
             annotations, allMemberAnnotations, allClassAnnotations, allPackageAnnotations
+        )
+    }
+
+    open fun visitAnnotationUsage(
+        context: JavaContext,
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
+    ) {
+        // Temporary backwards compatibility. If you have overridden visitAnnotationUsage, do NOT
+        // invoke this code since it will redundantly compute parameters and invoke the older
+        // no-op visitAnnotationUsage method for backwards compatibility.
+
+        val annotations = mutableListOf<UAnnotation>()
+        val memberAnnotations = mutableListOf<UAnnotation>()
+        val classAnnotations = mutableListOf<UAnnotation>()
+        val packageAnnotations = mutableListOf<UAnnotation>()
+
+        for (info in usageInfo.annotations) {
+            val list: MutableList<UAnnotation> = when (info.origin) {
+                AnnotationOrigin.METHOD,
+                AnnotationOrigin.FIELD -> { annotations.add(info.annotation); memberAnnotations }
+                AnnotationOrigin.CLASS,
+                AnnotationOrigin.OUTER_CLASS -> classAnnotations
+                AnnotationOrigin.FILE,
+                AnnotationOrigin.PACKAGE -> packageAnnotations
+                else -> annotations
+            }
+            list.add(info.annotation)
+        }
+
+        val annotation = annotationInfo.annotation
+        if (!annotations.contains(annotation)) {
+            annotations.add(annotation)
+        }
+
+        @Suppress("DEPRECATION")
+        val usageType =
+            when (usageInfo.type) {
+                AnnotationUsageType.METHOD_CALL -> when (annotationInfo.origin) {
+                    AnnotationOrigin.CLASS -> AnnotationUsageType.METHOD_CALL_CLASS
+                    AnnotationOrigin.PACKAGE -> AnnotationUsageType.METHOD_CALL_PACKAGE
+                    else -> usageInfo.type
+                }
+                else -> usageInfo.type
+            }
+
+        @Suppress("DEPRECATION")
+        visitAnnotationUsage(
+            context,
+            element,
+            usageType,
+            annotation,
+            annotationInfo.qualifiedName,
+            usageInfo.referenced as? PsiMethod,
+            usageInfo.referenced,
+            annotations,
+            memberAnnotations,
+            classAnnotations,
+            packageAnnotations
         )
     }
 

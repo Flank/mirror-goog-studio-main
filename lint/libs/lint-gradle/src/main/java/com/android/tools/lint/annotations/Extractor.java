@@ -323,7 +323,6 @@ public class Extractor {
             return;
         }
 
-        Project project = units.get(0).getProject();
         AnnotationVisitor visitor = new AnnotationVisitor(false, true);
 
         for (PsiFile unit : units) {

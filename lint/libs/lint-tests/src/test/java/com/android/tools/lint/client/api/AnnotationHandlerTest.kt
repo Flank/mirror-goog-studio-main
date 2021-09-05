@@ -22,19 +22,20 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.bytecode
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask
-import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationOrigin
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LocationType
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UMethod
 import org.junit.Test
 
 class AnnotationHandlerTest {
@@ -158,30 +159,30 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/pkg/JavaUsage.java:7: Error: METHOD_CALL usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/pkg/JavaUsage.java:7: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     new JavaApi().method1();
-                    ~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/JavaUsage.java:8: Error: METHOD_CALL usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                                  ~~~~~~~~~
+            src/test/pkg/JavaUsage.java:8: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     new JavaApi().method2();
-                    ~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/JavaUsage.java:9: Error: METHOD_CALL usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                                  ~~~~~~~~~
+            src/test/pkg/JavaUsage.java:9: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     new KotlinApi().method1();
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/JavaUsage.java:10: Error: METHOD_CALL usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                                    ~~~~~~~~~
+            src/test/pkg/JavaUsage.java:10: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     new KotlinApi().method2();
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/KotlinUsage.kt:7: Error: METHOD_CALL usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                                    ~~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:7: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     JavaApi().method1()
-                    ~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/KotlinUsage.kt:8: Error: METHOD_CALL usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                              ~~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:8: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     JavaApi().method2()
-                    ~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/KotlinUsage.kt:9: Error: METHOD_CALL usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                              ~~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:9: Error: METHOD_CALL usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                     KotlinApi().method1()
-                    ~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/KotlinUsage.kt:10: Error: METHOD_CALL usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                                ~~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:10: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                     KotlinApi().method2()
-                    ~~~~~~~~~~~~~~~~~~~~~
+                                ~~~~~~~~~
             8 errors, 0 warnings
             """
         )
@@ -232,43 +233,110 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                     use(api.field);      // ERROR 1A and 1B
                             ~~~~~
-            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                     use(api.field);      // ERROR 1A and 1B
                             ~~~~~
-            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                     use(api.next.field); // ERROR 2A, 2B on next, 3A, 3B on field
                             ~~~~
-            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                     use(api.next.field); // ERROR 2A, 2B on next, 3A, 3B on field
                                  ~~~~~
-            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                     use(api.next.field); // ERROR 2A, 2B on next, 3A, 3B on field
                             ~~~~
-            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:7: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                     use(api.next.field); // ERROR 2A, 2B on next, 3A, 3B on field
                                  ~~~~~
-            src/test/usage/test.kt:5: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:5: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                 use(api.field)       // ERROR 4A and 4B
                         ~~~~~
-            src/test/usage/test.kt:5: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:5: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                 use(api.field)       // ERROR 4A and 4B
                         ~~~~~
-            src/test/usage/test.kt:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:6: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                 use(api.next.field)  // ERROR 5A, 5B on next, 6A, 6B on field
                         ~~~~
-            src/test/usage/test.kt:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:6: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on CLASS [_AnnotationIssue]
                 use(api.next.field)  // ERROR 5A, 5B on next, 6A, 6B on field
                              ~~~~~
-            src/test/usage/test.kt:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:6: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                 use(api.next.field)  // ERROR 5A, 5B on next, 6A, 6B on field
                         ~~~~
-            src/test/usage/test.kt:6: Error: FIELD_REFERENCE_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:6: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
                 use(api.next.field)  // ERROR 5A, 5B on next, 6A, 6B on field
                              ~~~~~
             12 errors, 0 warnings
+            """
+        )
+    }
+
+    @Test
+    fun testFileLevelAnnotations() {
+        lint().files(
+            kotlin(
+                """
+                package pkg.kotlin
+                @Target(AnnotationTarget.FILE)
+                annotation class MyKotlinAnnotation
+                """
+            ).indented(),
+            java(
+                """
+                    package test.pkg;
+
+                    public class JavaUsage {
+                        public void test() {
+                            new KotlinApi().method();
+                        }
+                    }
+                    """
+            ).indented(),
+            kotlin(
+                """
+                    package test.pkg
+
+                    class KotlinUsage {
+                        fun test() {
+                            KotlinApi().method()
+                            method2()
+                        }
+                    }
+                    """
+            ).indented(),
+            kotlin(
+                """
+                    @file:MyKotlinAnnotation
+                    package test.pkg
+                    import pkg.kotlin.MyKotlinAnnotation
+                    class KotlinApi {
+                        fun method() {
+                        }
+                    }
+                    fun method2() { }
+                    """
+            ).indented(),
+        ).run().expect(
+            """
+            src/test/pkg/JavaUsage.java:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
+                    new KotlinApi().method();
+                    ~~~~~~~~~~~~~~~
+            src/test/pkg/JavaUsage.java:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
+                    new KotlinApi().method();
+                                    ~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
+                    KotlinApi().method()
+                    ~~~~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:5: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on FILE [_AnnotationIssue]
+                    KotlinApi().method()
+                                ~~~~~~~~
+            src/test/pkg/KotlinUsage.kt:6: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on CLASS [_AnnotationIssue]
+                    method2()
+                    ~~~~~~~~~
+            5 errors, 0 warnings
             """
         )
     }
@@ -334,52 +402,52 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/usage/JavaUsage.java:10: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:10: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.CONSTANT); // ERROR 1A and 1B
                                  ~~~~~~~~
-            src/test/usage/JavaUsage.java:10: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:10: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.CONSTANT); // ERROR 1A and 1B
                                  ~~~~~~~~
-            src/test/usage/JavaUsage.java:11: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:11: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(CONSTANT);          // ERROR 2A and 2B
                         ~~~~~~~~
-            src/test/usage/JavaUsage.java:11: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:11: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(CONSTANT);          // ERROR 2A and 2B
                         ~~~~~~~~
-            src/test/usage/JavaUsage.java:12: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:12: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(innerApi.method()); // ERROR 3A and 3B
-                        ~~~~~~~~~~~~~~~~~
-            src/test/usage/JavaUsage.java:12: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                                 ~~~~~~~~
+            src/test/usage/JavaUsage.java:12: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(innerApi.method()); // ERROR 3A and 3B
-                        ~~~~~~~~~~~~~~~~~
-            src/test/usage/JavaUsage.java:13: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                                 ~~~~~~~~
+            src/test/usage/JavaUsage.java:13: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method());          // ERROR 4A and 4B
                         ~~~~~~~~
-            src/test/usage/JavaUsage.java:13: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:13: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method());          // ERROR 4A and 4B
                         ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:10: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:10: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.CONSTANT)     // ERROR 5A and 5B
                                  ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:10: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:10: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.CONSTANT)     // ERROR 5A and 5B
                                  ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:11: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:11: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(CONSTANT)              // ERROR 6A and 6B
                         ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:11: Error: FIELD_REFERENCE_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:11: Error: FIELD_REFERENCE usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(CONSTANT)              // ERROR 6A and 6B
                         ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.method())     // ERROR 7A and 7B
-                        ~~~~~~~~~~~~~~~~~
-            src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+                                 ~~~~~~~~
+            src/test/usage/KotlinUsage.kt:12: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.method())     // ERROR 7A and 7B
-                        ~~~~~~~~~~~~~~~~~
-            src/test/usage/KotlinUsage.kt:13: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+                                 ~~~~~~~~
+            src/test/usage/KotlinUsage.kt:13: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method())              // ERROR 8A and 8B
                         ~~~~~~~~
-            src/test/usage/KotlinUsage.kt:13: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/KotlinUsage.kt:13: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(method())              // ERROR 8A and 8B
                         ~~~~~~~~
             16 errors, 0 warnings
@@ -429,10 +497,10 @@ class AnnotationHandlerTest {
             javaAnnotation
         ).run().expect(
             """
-            src/test/usage/JavaUsage.java:7: Error: CLASS_REFERENCE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:7: Error: CLASS_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     use(InnerApi.class); // ERROR1
                         ~~~~~~~~~~~~~~
-            src/test/usage/test.kt:6: Error: CLASS_REFERENCE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:6: Error: CLASS_REFERENCE usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                 use(InnerApi::class.java)  // ERROR2
                     ~~~~~~~~~~~~~~~
             2 errors, 0 warnings
@@ -480,16 +548,16 @@ class AnnotationHandlerTest {
             javaAnnotation
         ).run().expect(
             """
-            src/test/usage/JavaUsage.java:5: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:5: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     new InnerApi(); // ERROR1
                     ~~~~~~~~~~~~~~
-            src/test/usage/JavaUsage.java:6: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/JavaUsage.java:6: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                     new InnerApi() { }; // ERROR2
                     ~~~~~~~~~~~~~~~~~~
-            src/test/usage/test.kt:4: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:4: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                 InnerApi() // ERROR3
                 ~~~~~~~~~~
-            src/test/usage/test.kt:5: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/test.kt:5: Error: METHOD_CALL usage associated with @MyJavaAnnotation on OUTER_CLASS [_AnnotationIssue]
                 object : InnerApi() { } // ERROR4
                 ~~~~~~~~~~~~~~~~~~~~~~~
             4 errors, 0 warnings
@@ -540,9 +608,9 @@ class AnnotationHandlerTest {
                 """
             ).indented(),
             javaAnnotation
-        ).testModes(TestMode.DEFAULT).run().expect(
+        ).run().expect(
             """
-            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE_PACKAGE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/usage/Usage.java:6: Error: FIELD_REFERENCE usage associated with @MyJavaAnnotation on PACKAGE [_AnnotationIssue]
                     use(api.field);
                             ~~~~~
             libs/packageinfoclass.jar!/test/api/package-info.class: Error: Incident reported on package annotation [_AnnotationIssue]
@@ -610,22 +678,22 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                 public void experimentalMethod() {} // ERROR 1A and 1B
                             ~~~~~~~~~~~~~~~~~~
-            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/api/ConcreteStableInterface.java:4: Error: METHOD_OVERRIDE usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                 public void experimentalMethod() {} // ERROR 1A and 1B
                             ~~~~~~~~~~~~~~~~~~
-            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage of annotated element (@MyJavaAnnotation)  [_AnnotationIssue]
+            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage associated with @MyJavaAnnotation on METHOD [_AnnotationIssue]
                 override fun experimentalMethod() {} // ERROR 2A and 2B
                              ~~~~~~~~~~~~~~~~~~
-            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/api/ConcreteStableInterface2.kt:3: Error: METHOD_OVERRIDE usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
                 override fun experimentalMethod() {} // ERROR 2A and 2B
                              ~~~~~~~~~~~~~~~~~~
-            src/test/pkg/I.kt:16: Error: METHOD_CALL_OUTER_CLASS usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/I.kt:16: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
             open class C : A.B() {
                            ~~~~~
-            src/test/pkg/I.kt:17: Error: METHOD_OVERRIDE_OUTER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/I.kt:17: Error: METHOD_OVERRIDE usage associated with @MyKotlinAnnotation on OUTER_CLASS [_AnnotationIssue]
                 override fun m() {}
                              ~
             6 errors, 0 warnings
@@ -663,19 +731,19 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/usage/FooBar.kt:13: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/FooBar.kt:13: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                     this infixFun 0 // visit 0
                                   ~
-            src/test/usage/FooBar.kt:14: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/FooBar.kt:14: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                     this + 0 // visit 0
                            ~
-            src/test/usage/FooBar.kt:15: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/FooBar.kt:15: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                     bar extensionInfixFun 0 // visit 0
                                           ~
-            src/test/usage/FooBar.kt:16: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/FooBar.kt:16: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                     bar extensionInfixFun2 0 // visit bar
                     ~~~
-            src/test/usage/FooBar.kt:17: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/usage/FooBar.kt:17: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                     this += 0 // visit 0
                             ~
             5 errors, 0 warnings
@@ -720,25 +788,25 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/pkg/Resource.kt:18: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:18: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(color in resource) // visit color
                         ~~~~~
-            src/test/pkg/Resource.kt:19: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:19: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(color !in resource) // visit color
                         ~~~~~
-            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(resource * color) // visit color
                                    ~~~~~
-            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(resource..color) // visit color
                                   ~~~~~
-            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(color in resource2) // visit color
                         ~~~~~
-            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(resource2..color) // visit color
                                    ~~~~~
-            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 println(resource2 * color) // visit *resource*
                         ~~~~~~~~~
             7 errors, 0 warnings
@@ -785,28 +853,28 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:20: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 val x = resource[5] // visit 5
                                  ~
-            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:21: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 resource[5] = x // visit 5
                          ~
-            src/test/pkg/Resource.kt:22: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:22: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 val y = resource2[5] // visit 5
                                   ~
-            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:23: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 resource2[5] = y // visit y
                                ~
-            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:24: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 val z = resource3[5] // visit 5
                                   ~
-            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:25: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 resource3[5] = z // visit 5
                           ~
-            src/test/pkg/Resource.kt:26: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:26: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 val w = resource4[0, 5] // visit 5
                                      ~
-            src/test/pkg/Resource.kt:27: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/Resource.kt:27: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 resource4[0, 5] = w // visit 5
                              ~
             8 errors, 0 warnings
@@ -879,10 +947,10 @@ class AnnotationHandlerTest {
             kotlinAnnotation
         ).run().expect(
             """
-            src/test/pkg/test.kt:6: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/test.kt:6: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 val x = resource[5] // visit 5
                                  ~
-            src/test/pkg/test.kt:7: Error: METHOD_CALL_PARAMETER usage of annotated element (@MyKotlinAnnotation)  [_AnnotationIssue]
+            src/test/pkg/test.kt:7: Error: METHOD_CALL_PARAMETER usage associated with @MyKotlinAnnotation on PARAMETER [_AnnotationIssue]
                 resource[5] = x // visit 5
                          ~
             2 errors, 0 warnings
@@ -897,28 +965,28 @@ class AnnotationHandlerTest {
             return listOf("pkg.java.MyJavaAnnotation", "pkg.kotlin.MyKotlinAnnotation")
         }
 
+        override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+            return true
+        }
+
         override fun visitAnnotationUsage(
             context: JavaContext,
-            usage: UElement,
-            type: AnnotationUsageType,
-            annotation: UAnnotation,
-            qualifiedName: String,
-            method: PsiMethod?,
-            referenced: PsiElement?,
-            annotations: List<UAnnotation>,
-            allMemberAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
-            allPackageAnnotations: List<UAnnotation>
+            element: UElement,
+            annotationInfo: AnnotationInfo,
+            usageInfo: AnnotationUsageInfo
         ) {
-            if (allPackageAnnotations.contains(annotation)) {
+            if (annotationInfo.origin == AnnotationOrigin.PACKAGE) {
+                val annotation = annotationInfo.annotation
                 // Regression test for https://issuetracker.google.com/191286558: Make sure we can report
                 // incidents on annotations from package info files without throwing an exception
                 context.report(TEST_ISSUE, context.getLocation(annotation), "Incident reported on package annotation")
             }
-            val name = qualifiedName.substring((qualifiedName.lastIndexOf('.') + 1))
-            val message = "`${type.name}` usage of annotated element (`@$name`) "
-            val location = context.getLocation(usage)
-            context.report(TEST_ISSUE, usage, location, message)
+
+            val name = annotationInfo.qualifiedName.substringAfterLast('.')
+            val message = "`${usageInfo.type.name}` usage associated with `@$name` on ${annotationInfo.origin}"
+            val locationType = if (element is UMethod) LocationType.NAME else LocationType.ALL
+            val location = context.getLocation(element, locationType)
+            context.report(TEST_ISSUE, element, location, message)
         }
 
         companion object {

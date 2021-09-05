@@ -56,6 +56,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.USuperExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
@@ -115,7 +116,7 @@ class LintDetectorDetector : Detector(), UastScanner {
     }
 
     override fun getApplicableMethodNames(): List<String> =
-        listOf("expect", "expectFixDiffs", "files", "projects", "lint")
+        listOf("expect", "expectFixDiffs", "files", "projects", "lint", "visitAnnotationUsage")
 
     private val visitedTestClasses = mutableSetOf<String>()
 
@@ -152,6 +153,12 @@ class LintDetectorDetector : Detector(), UastScanner {
                 val qualifiedName = testClass?.qualifiedName
                 if (testClass != null && qualifiedName != null && visitedTestClasses.add(qualifiedName)) {
                     checkDocumentationExamples(context, testClass)
+                }
+            }
+
+            "visitAnnotationUsage" -> {
+                if (method.parameterList.parametersCount == 4 && node.receiver is USuperExpression) {
+                    context.report(USE_UAST, node, context.getLocation(node), "Do not invoke `super.visitAnnotationUsage`")
                 }
             }
         }
