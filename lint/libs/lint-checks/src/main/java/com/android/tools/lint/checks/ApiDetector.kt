@@ -75,6 +75,9 @@ import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionChec
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.client.api.UElementHandler
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -160,7 +163,6 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedName
 import org.jetbrains.uast.isUastChildOf
-import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.util.isConstructorCall
@@ -618,6 +620,89 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
     // ---- implements SourceCodeScanner ----
 
+    override fun applicableAnnotations(): List<String>? {
+        return listOf(REQUIRES_API_ANNOTATION.oldName(), REQUIRES_API_ANNOTATION.newName())
+    }
+
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type)
+    }
+
+    override fun inheritAnnotation(annotation: String): Boolean {
+        return false
+    }
+
+    override fun visitAnnotationUsage(
+        context: JavaContext,
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
+    ) {
+        val annotation = annotationInfo.annotation
+        val member = usageInfo.referenced as? PsiMember
+        val api = getApiLevel(context, annotation)
+        if (api == -1) return
+        val minSdk = getMinSdk(context)
+        if (api <= minSdk) return
+        val target = getTargetApi(element)
+        if (target == -1 || api > target) {
+            if (isWithinVersionCheckConditional(context, element, api)) {
+                return
+            }
+            if (isPrecededByVersionCheckExit(context, element, api)) {
+                return
+            }
+
+            val location: Location
+            val fqcn: String?
+            if (element is UCallExpression &&
+                element.kind != UastCallKind.METHOD_CALL &&
+                element.classReference != null
+            ) {
+                val classReference = element.classReference!!
+                location = context.getRangeLocation(element, 0, classReference, 0)
+                fqcn = classReference.resolvedName ?: member?.name ?: ""
+            } else {
+                location = context.getNameLocation(element)
+                fqcn = member?.name ?: ""
+            }
+
+            ApiVisitor(context).report(UNSUPPORTED, element, location, "Call", fqcn, api, minSdk, apiLevelFix(api))
+        }
+    }
+
+    private fun getApiLevel(context: JavaContext, annotation: UAnnotation): Int {
+        var api = getLongAttribute(context, annotation, ATTR_VALUE, -1).toInt()
+        if (api <= 1) {
+            // @RequiresApi has two aliasing attributes: api and value
+            api = getLongAttribute(context, annotation, "api", -1).toInt()
+        } else if (api == SdkVersionInfo.CUR_DEVELOPMENT) {
+            val version = context.project.buildTarget?.version
+            if (version != null && version.isPreview) {
+                return version.featureLevel
+            }
+            // Special value defined in the Android framework to indicate current development
+            // version. This is different from the tools where we use current stable + 1 since
+            // that's the anticipated version.
+            api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+                SdkVersionInfo.HIGHEST_KNOWN_API
+            } else {
+                SdkVersionInfo.HIGHEST_KNOWN_API + 1
+            }
+
+            // Try to match it up by codename
+            val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
+                ?: annotation.findDeclaredAttributeValue("api")
+            if (value is PsiReferenceExpression) {
+                val name = value.referenceName
+                if (name?.length == 1) {
+                    api = max(api, SdkVersionInfo.getApiByBuildCode(name, true))
+                }
+            }
+        }
+        return api
+    }
+
     override fun createUastHandler(context: JavaContext): UElementHandler? {
         if (apiDatabase == null || context.isTestSource && !context.driver.checkTestSources) {
             return null
@@ -740,7 +825,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
     private inner class ApiVisitor(private val context: JavaContext) : UElementHandler() {
 
-        private fun report(
+        fun report(
             issue: Issue,
             node: UElement,
             location: Location,
@@ -1290,24 +1375,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         override fun visitCallExpression(node: UCallExpression) {
             val method = node.resolve()
-            if (method == null) {
-                // If it's a constructor call to a default constructor, resolve() returns
-                // null. But we still want to check @RequiresApi for these; we won't
-                // run into this for the APIs recorded in the database since those
-                // are always referenced from .class files where we have the actual
-                // constructor.
-                val reference = node.classReference
-                if (reference != null) {
-                    val resolved = reference.resolve()
-                    if (resolved is PsiClass) {
-                        checkRequiresApi(node, resolved, resolved)
-                    }
-                }
-
-                return
+            if (method != null) {
+                visitCall(method, node, node)
             }
-
-            visitCall(method, node, node)
         }
 
         private fun visitCall(
@@ -1317,12 +1387,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         ) {
             val apiDatabase = apiDatabase ?: return
             val containingClass = method.containingClass ?: return
-
-            // Enforce @RequiresApi
-            if (!checkRequiresApi(reference, method, method)) {
-                checkRequiresApi(reference, method, containingClass)
-            }
-
             val parameterList = method.parameterList
             if (parameterList.parametersCount > 0) {
                 val parameters = parameterList.parameters
@@ -1771,135 +1835,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
         }
 
-        private fun getRequiresApiFromAnnotations(modifierListOwner: PsiModifierListOwner): Int {
-            for (annotation in context.evaluator.getAllAnnotations(modifierListOwner, false)) {
-                val qualifiedName = annotation.qualifiedName
-                if (REQUIRES_API_ANNOTATION.isEquals(qualifiedName)) {
-                    val wrapped = JavaUAnnotation.wrap(annotation)
-                    var api = getLongAttribute(context, wrapped, ATTR_VALUE, -1).toInt()
-                    if (api <= 1) {
-                        // @RequiresApi has two aliasing attributes: api and value
-                        api = getLongAttribute(context, wrapped, "api", -1).toInt()
-                    } else if (api == SdkVersionInfo.CUR_DEVELOPMENT) {
-                        val version = context.project.buildTarget?.version
-                        if (version != null && version.isPreview) {
-                            return version.featureLevel
-                        }
-                        // Special value defined in the Android framework to indicate current development
-                        // version. This is different from the tools where we use current stable + 1 since
-                        // that's the anticipated version.
-                        api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
-                            SdkVersionInfo.HIGHEST_KNOWN_API
-                        } else {
-                            SdkVersionInfo.HIGHEST_KNOWN_API + 1
-                        }
-
-                        // Try to match it up by codename
-                        val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
-                            ?: annotation.findDeclaredAttributeValue("api")
-                        if (value is PsiReferenceExpression) {
-                            val name = value.referenceName
-                            if (name?.length == 1) {
-                                api = max(api, SdkVersionInfo.getApiByBuildCode(name, true))
-                            }
-                        }
-                    }
-                    return api
-                } else if (qualifiedName == null) {
-                    // Work around UAST type resolution problems
-                    // Work around bugs in UAST type resolution for file annotations:
-                    // parse the source string instead.
-                    if (annotation is PsiCompiledElement) {
-                        continue
-                    }
-                    val text = annotation.text
-                    if (text.contains("RequiresApi(")) {
-                        val start = text.indexOf('(')
-                        val end = text.indexOf(')', start + 1)
-                        if (end != -1) {
-                            var name = text.substring(start + 1, end)
-                            // Strip off attribute name and qualifiers, e.g.
-                            //   @RequiresApi(api = Build.VERSION.O) -> O
-                            var index = name.indexOf('=')
-                            if (index != -1) {
-                                name = name.substring(index + 1).trim()
-                            }
-                            index = name.indexOf('.')
-                            if (index != -1) {
-                                name = name.substring(index + 1)
-                            }
-                            if (name.isNotEmpty()) {
-                                if (name[0].isDigit()) {
-                                    val api = Integer.parseInt(name)
-                                    if (api > 0) {
-                                        return api
-                                    }
-                                } else {
-                                    return codeNameToApi(name)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return -1
-        }
-
-        // Look for @RequiresApi in modifier lists
-        private fun checkRequiresApi(
-            expression: UElement,
-            member: PsiMember,
-            modifierListOwner: PsiModifierListOwner?
-        ): Boolean {
-            modifierListOwner ?: return false
-
-            val api = getRequiresApiFromAnnotations(modifierListOwner)
-            if (api != -1) {
-                val minSdk = getMinSdk(context)
-                if (api > minSdk) {
-                    val target = getTargetApi(expression)
-                    if (target == -1 || api > target) {
-                        if (isWithinVersionCheckConditional(context, expression, api)) {
-                            return true
-                        }
-                        if (isPrecededByVersionCheckExit(context, expression, api)) {
-                            return true
-                        }
-
-                        val location: Location
-                        val fqcn: String?
-                        if (expression is UCallExpression &&
-                            expression.kind != UastCallKind.METHOD_CALL &&
-                            expression.classReference != null
-                        ) {
-                            val classReference = expression.classReference!!
-                            location = context.getRangeLocation(expression, 0, classReference, 0)
-                            fqcn = classReference.resolvedName ?: member.name ?: ""
-                        } else {
-                            location = context.getNameLocation(expression)
-                            fqcn = member.name ?: ""
-                        }
-
-                        report(
-                            UNSUPPORTED,
-                            expression,
-                            location,
-                            "Call",
-                            fqcn,
-                            api,
-                            minSdk,
-                            apiLevelFix(api)
-                        )
-                    }
-                }
-
-                return true
-            }
-
-            return false
-        }
-
         override fun visitLocalVariable(node: ULocalVariable) {
             val initializer = node.uastInitializer ?: return
 
@@ -2148,11 +2083,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             if (SDK_INT == name && "android.os.Build.VERSION" == owner) {
                 checkObsoleteSdkVersion(context, node)
-            }
-
-            // Enforce @RequiresApi
-            if (!checkRequiresApi(node, field, field)) {
-                checkRequiresApi(node, field, containingClass)
             }
 
             var api = apiDatabase.getFieldVersion(owner, name)
