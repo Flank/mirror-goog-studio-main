@@ -553,6 +553,50 @@ interface SourceCodeScanner : FileScanner {
     fun inheritAnnotation(annotation: String): Boolean
 
     /**
+     * Called whenever the given [element] references a [referenced]
+     * element that has been annotated with one of the annotations
+     * returned from [applicableAnnotations], pointed to by
+     * [annotationInfo].
+     *
+     * The element itself may not be annotated; it can also be a member
+     * in a class which has been annotated, or within an outer class
+     * which has been annotated, or in a file that has been annotated
+     * with an annotation, or in a package, and so on.
+     *
+     * The [usageInfo] data provides additional context; most
+     * importantly, it will include all relevant annotations in the
+     * hierarchy, in scope order, and an index pointing to which
+     * specific annotation the callback is pointing to. This can
+     * be used to handle scoping when there are multiple related
+     * annotations. For example, let's say you have two annotations,
+     * `@Mutable` and `@Immutable`. When you're visiting an `@Immutable`
+     * annotation, that annotation could be coming from an outer class
+     * where a closer class or immediate method annotation is marked
+     * @Mutable. In this case, you'll want to visit the [usageInfo]
+     * and make sure that none of the annotations leading up to the
+     * [AnnotationUsageInfo.index] are the `@Mutable` annotation which
+     * would override the `@Immutable` annotation on the class. You
+     * don't need to do this for repeated occurrences of the same
+     * annotation; lint will already skip any later or outer scope
+     * usages of the same annotation since it's almost always the case
+     * that the closer annotation is a redefinition which overrides the
+     * outer one, and leaving this up to detectors to worry about would
+     * probably lead to subtle bugs. Note that these annotations *are*
+     * included in the [AnnotationUsageInfo.annotations] list, so you
+     * can look for them in the callback to the innermost one if you
+     * *do* want to consider outer occurrences of the same annotation.
+     *
+     * For more information, see the annotations chapter of the lint api
+     * guide.
+     */
+    fun visitAnnotationUsage(
+        context: JavaContext,
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
+    )
+
+    /**
      * Called whenever the given element references an element that
      * has been annotated with one of the annotations returned from
      * [.applicableAnnotations].
@@ -588,13 +632,10 @@ interface SourceCodeScanner : FileScanner {
      *     surrounding class
      * @param allPackageAnnotations all annotations in the target
      *     surrounding package
-     * @deprecated This method is missing the resolved parameter; use
-     *     the other method instead
+     * @deprecated Migrate to the new visitAnnotationUsage callback
+     *     which uses the [AnnotationInfo] mechanism
      */
-    @Deprecated(
-        "There is a new version of this method which also takes a resolved " +
-            "parameter; use that one instead"
-    )
+    @Deprecated("Migrate to visitAnnotationUsage(JavaContext, UElement, AnnotationInfo, AnnotationUsageInfo)")
     fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,
@@ -608,7 +649,6 @@ interface SourceCodeScanner : FileScanner {
         allPackageAnnotations: List<UAnnotation>
     )
 
-    @Suppress("DEPRECATION") // Delegating to deprecated API
     /**
      * Called whenever the given element references an element that
      * has been annotated with one of the annotations returned from
@@ -647,7 +687,10 @@ interface SourceCodeScanner : FileScanner {
      *     surrounding class
      * @param allPackageAnnotations all annotations in the target
      *     surrounding package
+     * @deprecated Migrate to the new visitAnnotationUsage callback
+     *     which uses the [AnnotationInfo] mechanism
      */
+    @Deprecated("Migrate to visitAnnotationUsage(JavaContext, UElement, AnnotationInfo, AnnotationUsageInfo)")
     fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,

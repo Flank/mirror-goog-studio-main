@@ -93,7 +93,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
-        if (annotations === allMemberAnnotations) {
+        if (type == AnnotationUsageType.METHOD_CALL) {
             // Permission annotation specified on method:
             val requirement = PermissionRequirement.create(annotation)
             checkPermission(context, usage, method, null, requirement)

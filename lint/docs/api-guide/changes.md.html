@@ -51,29 +51,41 @@ Guide.
   also used by the above machinery.
 
 * The annotation support (where a detector callback is invoked when
-  elements are combined with annotated elements) now supports visiting
+  elements are combined with annotated elements) has been significantly
+  reworked (and the detector API changed). It now supports visiting
   the following additional scenarios:
 
   * Fields in annotated classes and packages
   * Fields and methods in annotated outerclasses
   * Class and object literals
   * Overridden methods
+  * File level annotations (from Kotlin)
 
-  There are new annotation usage type enum constants for these which
-  let your lint checks treat these differently. For example, the lint
-  check which makes sure that calls to methods annotated with
-  `@CheckResult` started flagging overrides of these methods. The fix
-  was to add the following override to the `CheckResultDetector`:
+  It also offers better control for handling scopes -- providing all
+  relevant annotations in the hierarchy at the same time such that a
+  lint check for example can easily determine whether an outer
+  annotation like `@Immutable` is canceled by a closer @Mutable`
+  annotation.
+
+  There are some new annotation usage type enum constants which let
+  your lint checks treat these differently. For example, the lint check
+  which makes sure that calls to methods annotated with `@CheckResult`
+  started flagging overrides of these methods. The fix was to add the
+  following override to the `CheckResultDetector`:
 
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~kotlin
   override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-    return type != AnnotationUsageType.METHOD_OVERRIDE && super.isApplicableAnnotationUsage(type)
+    return type != AnnotationUsageType.METHOD_OVERRIDE &&
+        super.isApplicableAnnotationUsage(type)
   }
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   (Using this new API constant will make your lint check only work with
   the new version of lint. An alternative fix is to check that the
   `usage` parameter is not a `UMethod`.)
+
+  For more, see the [new documentation](annotations.md.html) for
+  how to handle annotations from detectors.
 
 * The lint testing library now contains a new test file type, `rClass`,
   which lets you easily construct Android `R` classes with resource

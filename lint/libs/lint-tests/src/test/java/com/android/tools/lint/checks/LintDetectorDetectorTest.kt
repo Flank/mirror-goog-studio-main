@@ -223,6 +223,16 @@ class LintDetectorDetectorTest {
                                 .addMoreInfo("https://b.corp.google.com/issues/139153781") // ERROR - don't point to buganizer with internal link
                                 .addMoreInfo("https://goo.gle/policy-storage-help") // OK - regression test for goo.gle
                         }
+
+                        override fun visitAnnotationUsage(
+                            context: JavaContext,
+                            element: org.jetbrains.uast.UElement.UElement,
+                            annotationInfo: com.android.tools.lint.detector.api.AnnotationInfo,
+                            usageInfo: com.android.tools.lint.detector.api.AnnotationUsageInfo
+                        ) {
+                            // Invalid recursion!
+                            super.visitAnnotationUsage(context, element, annotationInfo, usageInfo)
+                        }
                     }
                     """
                 ).indented(),
@@ -441,10 +451,13 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:37: Error: Don't call PsiField#getInitializer(); you must use UAST instead. If you don't have a UField call UastFacade.getInitializerBody(field) [LintImplUseUast]
                         field.initializer // ERROR - must use UAST
                         ~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:86: Error: Do not invoke super.visitAnnotationUsage [LintImplUseUast]
+                        super.visitAnnotationUsage(context, element, annotationInfo, usageInfo)
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                26 errors, 12 warnings
+                27 errors, 12 warnings
                 """
             )
             .expectFixDiffs(

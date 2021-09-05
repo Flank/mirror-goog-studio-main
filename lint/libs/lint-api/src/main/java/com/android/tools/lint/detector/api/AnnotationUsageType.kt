@@ -17,24 +17,20 @@
 package com.android.tools.lint.detector.api
 
 enum class AnnotationUsageType {
-    /** A call to a method where the method it self was annotated. */
+    /** A call to a method where the method itself was annotated. */
     METHOD_CALL,
 
     /**
      * A reference to a member in a class where the class was annotated.
      */
+    @Deprecated("Use AnnotationInfo.source instead")
     METHOD_CALL_CLASS,
-
-    /**
-     * A reference to a member in a class where an outer class was
-     * annotated.
-     */
-    METHOD_CALL_OUTER_CLASS,
 
     /**
      * A reference to a member in a package where the package was
      * annotated.
      */
+    @Deprecated("Use AnnotationInfo.source instead")
     METHOD_CALL_PACKAGE,
 
     /**
@@ -66,12 +62,6 @@ enum class AnnotationUsageType {
 
     /** A method which overrides an annotated method */
     METHOD_OVERRIDE,
-
-    /**
-     * A method which overrides an annotated method where the
-     * surrounding class, outer class or package was annotated
-     */
-    METHOD_OVERRIDE_OUTER,
 
     /** A variable whose declaration was annotated. */
     VARIABLE_REFERENCE,
@@ -105,23 +95,5 @@ enum class AnnotationUsageType {
     EXTENDS,
 
     /** An annotated field is referenced. */
-    FIELD_REFERENCE,
-
-    /**
-     * An annotated field is referenced where the class containing the
-     * field is annotated.
-     */
-    FIELD_REFERENCE_CLASS,
-
-    /**
-     * An annotated field is referenced where an outer class of the
-     * class containing the field is annotated.
-     */
-    FIELD_REFERENCE_OUTER_CLASS,
-
-    /**
-     * An annotated field is referenced where the package containing the
-     * field is annotated.
-     */
-    FIELD_REFERENCE_PACKAGE;
+    FIELD_REFERENCE;
 }
