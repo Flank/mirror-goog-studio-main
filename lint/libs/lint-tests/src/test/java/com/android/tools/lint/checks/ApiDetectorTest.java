@@ -3052,10 +3052,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/usage/JavaUsage.java:6: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        Object o1 = new InnerApi();\n"
                                 + "                    ~~~~~~~~~~~~\n"
+                                + "src/test/usage/JavaUsage.java:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        Object o2 = new InnerApi() { };\n"
+                                + "                        ~~~~~~~~\n"
+                                + "src/test/usage/JavaUsage.java:7: Error: Call requires API level 29 (current min is 1):  [NewApi]\n"
+                                + "        Object o2 = new InnerApi() { };\n"
+                                + "                    ~~~~~~~~~~~~~~~~~~\n"
                                 + "src/test/usage/KotlinUsage.kt:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        val o1: Any = InnerApi()\n"
                                 + "                      ~~~~~~~~~~\n"
-                                + "2 errors, 0 warnings");
+                                + "src/test/usage/KotlinUsage.kt:8: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        val o2: Any = object : InnerApi() {}\n"
+                                + "                      ~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/usage/KotlinUsage.kt:8: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        val o2: Any = object : InnerApi() {}\n"
+                                + "                               ~~~~~~~~\n"
+                                + "6 errors, 0 warnings");
     }
 
     public void testUpdatedDescriptions() {
@@ -4718,7 +4730,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 18 (current min is 1): foo1 [NewApi]\n"
                                 + "        new ParentClass().foo1(); // ERROR\n"
                                 + "                          ~~~~\n"
-                                + "2 errors, 0 warnings\n");
+                                + "src/android/support/v7/app/RequiresApiTest.java:21: Error: Call requires API level 16 (current min is 1): ParentClass [NewApi]\n"
+                                + "    public class ChildClass extends ParentClass {\n"
+                                + "                                    ~~~~~~~~~~~\n"
+                                + "3 errors, 0 warnings");
     }
 
     public void testRequiresApiOnFields() {
@@ -4743,7 +4758,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    private static final int Field24 = 42;\n"
                                         + "\n"
                                         + "    private void ReferenceMethod24() {\n"
-                                        + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n"
+                                        + "        Log.d(\"zzzz\", \"ReferenceMethod24: \" + Method24());\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    private void ReferenceField24() {\n"
@@ -4756,12 +4771,54 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(
                         ""
                                 + "src/test/pkg/RequiresApiFieldTest.java:16: Error: Call requires API level 24 (current min is 15): Method24 [NewApi]\n"
-                                + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n"
-                                + "                                             ~~~~~~~~\n"
+                                + "        Log.d(\"zzzz\", \"ReferenceMethod24: \" + Method24());\n"
+                                + "                                              ~~~~~~~~\n"
                                 + "src/test/pkg/RequiresApiFieldTest.java:20: Error: Call requires API level 24 (current min is 15): Field24 [NewApi]\n"
                                 + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n"
                                 + "                                             ~~~~~~~\n"
                                 + "2 errors, 0 warnings\n");
+    }
+
+    public void testPackageRequiresApi() {
+        lint().files(
+                        manifest().minSdk(1),
+                        kotlin(
+                                ""
+                                        + "import com.mylib.mypackage.MyClass\n"
+                                        + "fun test() {\n"
+                                        + "    MyClass.myMethod()\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package com.mylib.mypackage;\n"
+                                        + "public class MyClass {\n"
+                                        + "    public static void myMethod() { }\n"
+                                        + "}"),
+                        // Include the compiled version of the package-info file;
+                        // without this we can't resolve package annotations.
+                        bytecode(
+                                "libs/packageinfoclass.jar",
+                                // "bin/classes/com/mylib/mypackage/package-info.class",
+                                java(
+                                        ""
+                                                + "@RequiresApi(19)\n"
+                                                + "package com.mylib.mypackage;\n"
+                                                + "import androidx.annotation.RequiresApi;"),
+                                0xf57b8b02,
+                                "com/mylib/mypackage/package-info.class:"
+                                        + "H4sIAAAAAAAAAE2Nz2rCQBjEZ7Vp/HOxFLz00j6A7rEHT7kUAoVC+gRf1q/y"
+                                        + "6WZXk2ywr+bBB/ChSrdWxIGZgZnD7/RzOAJ4xTjFMMVIYfTpQ234TSwrPGzJ"
+                                        + "bGjFM3Fffr6mjhSeiuBaqTh3nTRSWs6c8y214l2j8PJObll7We41XXdd8C5I"
+                                        + "zU22lYVC0pEN3I/cR4Vn4ytdfVspY15w+harMPkDa0tupT/KNZt2Cij08K8e"
+                                        + "+ue8QxJ7HJ/76DTH4BcsZCcD3QAAAA=="),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:3: Error: Call requires API level 19 (current min is 1): myMethod [NewApi]\n"
+                                + "    MyClass.myMethod()\n"
+                                + "            ~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void testDrawableThemeReferences() {
@@ -6854,7 +6911,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         ""
                                 + "src/test/pkg/MyClass2.kt:12: Error: Call requires API level 21 (current min is 15): something [NewApi]\n"
                                 + "            a something b\n"
-                                + "            ~~~~~~~~~~~~~\n"
+                                + "              ~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");
     }
 
@@ -7314,7 +7371,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         ""
                                 + "src/test/pkg/Point.kt:7: Error: Call requires API level S (current min is 21): set [NewApi]\n"
                                 + "    array[1] = \"one\" // ERROR\n"
-                                + "    ~~~~~~~~\n"
+                                + "         ~\n"
                                 + "src/test/pkg/Point.kt:8: Error: Call requires API level S (current min is 21): set [NewApi]\n"
                                 + "    array.set(1, \"one\") // ERROR\n"
                                 + "          ~~~\n"
@@ -7323,34 +7380,34 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "                  ~~~\n"
                                 + "src/test/pkg/Point.kt:10: Error: Call requires API level S (current min is 21): get [NewApi]\n"
                                 + "    val y = array[1] // ERROR\n"
-                                + "            ~~~~~~~~\n"
+                                + "                 ~\n"
                                 + "src/test/pkg/Point.kt:11: Error: Call requires API level 30 (current min is 21): set [NewApi]\n"
                                 + "    array[1L] = \"three\" // ERROR\n"
-                                + "    ~~~~~~~~~\n"
+                                + "         ~\n"
                                 + "src/test/pkg/Point.kt:16: Error: Call requires API level S (current min is 21): set [NewApi]\n"
                                 + "    array2[1] = 1 // ERROR\n"
-                                + "    ~~~~~~~~~\n"
+                                + "          ~\n"
                                 + "src/test/pkg/Point.kt:17: Error: Call requires API level 29 (current min is 21): get [NewApi]\n"
                                 + "    val w = array2[1] // ERROR (inherited get)\n"
-                                + "            ~~~~~~~~~\n"
+                                + "                  ~\n"
                                 + "src/test/pkg/Point.kt:23: Error: Call requires API level S (current min is 21): plus [NewApi]\n"
                                 + "    println(p1 + p2) // ERROR\n"
-                                + "            ~~~~~~~\n"
+                                + "               ~\n"
                                 + "src/test/pkg/Point.kt:24: Error: Call requires API level S (current min is 21): minus [NewApi]\n"
                                 + "    println(p2 - p1) // ERROR\n"
-                                + "            ~~~~~~~\n"
+                                + "               ~\n"
                                 + "src/test/pkg/Point.kt:25: Error: Call requires API level S (current min is 21): plusAssign [NewApi]\n"
                                 + "    p1 += p2 // ERROR\n"
-                                + "    ~~~~~~~~\n"
+                                + "       ~~\n"
                                 + "src/test/pkg/Point.kt:26: Error: Call requires API level 30 (current min is 21): minus [NewApi]\n"
                                 + "    println(p1 - 1.toShort()) // ERROR\n"
-                                + "            ~~~~~~~~~~~~~~~~\n"
+                                + "               ~\n"
                                 + "src/test/pkg/Point.kt:27: Error: Call requires API level 29 (current min is 21): minus [NewApi]\n"
                                 + "    println(p1 - 1) // ERROR\n"
-                                + "            ~~~~~~\n"
+                                + "               ~\n"
                                 + "src/test/pkg/Point.kt:28: Error: Call requires API level 28 (current min is 21): minus [NewApi]\n"
                                 + "    println(p1 - 1L) // ERROR\n"
-                                + "            ~~~~~~~\n"
+                                + "               ~\n"
                                 + "13 errors, 0 warnings");
     }
 
