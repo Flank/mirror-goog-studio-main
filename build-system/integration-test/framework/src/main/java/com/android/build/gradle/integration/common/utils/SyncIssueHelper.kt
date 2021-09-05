@@ -97,8 +97,6 @@ private fun <T> testIssuesForPossibleValue(
 
     if (!incorrectIssues.isEmpty) {
         val total = issues.size
-        incorrectIssues.values()
-
         fail("Not true that all <$issues> have '$propName' in <$expectedValues>'. It contains correct items (${correctIssues.size}/$total) <$correctIssues>, and incorrect items (${incorrectIssues.size()}/$total) <${incorrectIssues.values()}>")
     }
 }

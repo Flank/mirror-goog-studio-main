@@ -220,15 +220,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     }
                 """
             ).indented(),
-            java(
-                """
-                    package com.google.errorprone.annotations;
-                    import java.lang.annotation.Retention;
-                    import static java.lang.annotation.RetentionPolicy.CLASS;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    @Retention(CLASS)
-                    public @interface CanIgnoreReturnValue {}"""
-            ).indented(),
+            errorProneCanIgnoreReturnValueSource,
             javaxCheckReturnValueSource,
             SUPPORT_ANNOTATIONS_JAR
         )
@@ -245,23 +237,56 @@ class CheckResultDetectorTest : AbstractCheckTest() {
     }
 
     fun testSubtract2() {
-        // Regression test for https://issuetracker.google.com/69344103
-        // Make sure we don't inherit @CheckReturn value from packages
+        // Regression test for 196984792: Incomplete handling of @CheckReturnValue annotations on scopes
+        // Make sure we properly handle scopes on @CheckReturnValue and @CanIgnoreReturnValue; the closest
+        // one should win (and should be inherited all the way down from package annotations)
         lint().files(
             java(
                 """
-                    package test.pkg;
+                package test.pkg;
+                import static test.pkg.IgnoreTest.MyClass.MyClass1.ignoredFromOuterClassAnnotation;
+                import static test.pkg.IgnoreTest.MyClass.MyClass2.checkedFromOuterClassAnnotation;
+                import static test.pkg.IgnoreTest.MyClass.checkedFromMethodAnnotation;
+                import static test.pkg.IgnoreTest.MyClass.ignoredFromClassAnnotation;
+                import com.google.errorprone.annotations.CanIgnoreReturnValue;
+                import javax.annotation.CheckReturnValue;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class IgnoreTest {
-                        public String method() {
-                            return "";
+                @SuppressWarnings({"ClassNameDiffersFromFileName"})
+                public class IgnoreTest {
+                    public void test() {
+                        checkedFromPackageAnnotation(); // WARN 1
+                        checkedFromMethodAnnotation(); // WARN 2
+                        checkedFromOuterClassAnnotation(); // WARN 3
+                        ignoredFromMethodAnnotation(); // OK 1
+                        ignoredFromClassAnnotation(); // OK 2
+                        ignoredFromOuterClassAnnotation(); // OK 3
+                    }
+
+                    // Inherit @CheckReturnValue from package
+                    public static String checkedFromPackageAnnotation() {
+                        return "";
+                    }
+
+                    @CanIgnoreReturnValue
+                    public String ignoredFromMethodAnnotation() { return ""; }
+
+                    @CanIgnoreReturnValue
+                    static class MyClass {
+                        public static String ignoredFromClassAnnotation() { return ""; }
+
+                        static class MyClass1 {
+                            public static String ignoredFromOuterClassAnnotation() { return ""; }
                         }
 
-                        public void test() {
-                            method(); // OK: not inheriting from packages
+                        @CheckReturnValue
+                        public static String checkedFromMethodAnnotation() { return ""; }
+
+                        @CheckReturnValue
+                        static class MyClass2 {
+                            public static String checkedFromOuterClassAnnotation() { return ""; }
                         }
                     }
+                }
                 """
             ).indented(),
 
@@ -282,12 +307,27 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     "UQmGaeSNU1famUqVKta0NsY64ZQ1JcNs37RuXPxMvrmQzCJyvjAnoT2tGMaO" +
                     "SsfzLOH/BwzDZsy1MAk/xClJNwEYAnwRoPXhNjq1duukC7wBEsYF4sIAAAA="
             ),
+            errorProneCanIgnoreReturnValueSource,
             javaxCheckReturnValueSource,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
+            .allowDuplicates()
             .run()
-            .expectClean()
+            .expect(
+                """
+                src/test/pkg/IgnoreTest.java:12: Warning: The result of checkedFromPackageAnnotation is not used [CheckResult]
+                        checkedFromPackageAnnotation(); // WARN 1
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/IgnoreTest.java:13: Warning: The result of checkedFromMethodAnnotation is not used [CheckResult]
+                        checkedFromMethodAnnotation(); // WARN 2
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/IgnoreTest.java:14: Warning: The result of checkedFromOuterClassAnnotation is not used [CheckResult]
+                        checkedFromOuterClassAnnotation(); // WARN 3
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 3 warnings
+                """
+            )
     }
 
     fun testCheckResultInTests() {
@@ -1373,7 +1413,18 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         public @interface CheckReturnValue {
         }
         """
-    )
+    ).indented()
+
+    private val errorProneCanIgnoreReturnValueSource = java(
+        """
+        package com.google.errorprone.annotations;
+        import java.lang.annotation.Retention;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        @SuppressWarnings("ClassNameDiffersFromFileName")
+        @Retention(CLASS)
+        public @interface CanIgnoreReturnValue {}
+        """
+    ).indented()
 
     fun testTernary() {
         // Regression test for b/191788196

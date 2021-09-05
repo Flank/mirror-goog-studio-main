@@ -20,6 +20,8 @@ import com.android.tools.lint.checks.AnnotationDetector.CHECK_RESULT_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.ERRORPRONE_CAN_IGNORE_RETURN_VALUE
 import com.android.tools.lint.checks.AnnotationDetector.FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE
 import com.android.tools.lint.checks.AnnotationDetector.JAVAX_ANNOTATION_CHECK_RETURN_VALUE
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
@@ -28,18 +30,15 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.findSelector
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.nextStatement
 import com.android.tools.lint.detector.api.previousStatement
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
@@ -77,45 +76,15 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
-    ) {
-        method ?: return
-
-        // Don't inherit CheckResult from packages for now; see
-        //  https://issuetracker.google.com/69344103
-        // for a common (dagger) package declaration that doesn't have
-        // a @CanIgnoreReturnValue exclusion on inject.
-        if (allPackageAnnotations.contains(annotation)) {
-            return
-        }
-
-        if (qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE) {
-            return
-        }
-
-        checkResult(
-            context, usage, method, annotation,
-            allMemberAnnotations, allClassAnnotations
-        )
-    }
-
-    private fun checkResult(
-        context: JavaContext,
         element: UElement,
-        method: PsiMethod,
-        annotation: UAnnotation,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
+        if (annotationInfo.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE) {
+            return
+        }
+
+        val method = usageInfo.referenced as? PsiMethod ?: return
         if (method.returnType == PsiType.VOID || method.isConstructor) {
             return
         }
@@ -123,20 +92,15 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (isExpressionValueUnused(element)) {
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
-            if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE) ||
-                containsAnnotation(
-                        allClassAnnotations,
-                        ERRORPRONE_CAN_IGNORE_RETURN_VALUE
-                    )
-            ) {
+            if (usageInfo.anyCloser { it.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE }) {
                 return
             }
-
             if (context.isTestSource && expectsSideEffect(context, element)) {
                 return
             }
 
             val methodName = JavaContext.getMethodName(element)
+            val annotation = annotationInfo.annotation
             val suggested = getAnnotationStringValue(
                 annotation,
                 AnnotationDetector.ATTR_SUGGEST
