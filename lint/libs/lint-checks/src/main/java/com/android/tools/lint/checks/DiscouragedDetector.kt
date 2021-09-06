@@ -16,7 +16,8 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
@@ -25,9 +26,6 @@ import com.android.tools.lint.detector.api.Scope.Companion.JAVA_FILE_SCOPE
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 
 class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
@@ -38,32 +36,24 @@ class DiscouragedDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        referenced ?: return
-
-        val location = context.getNameLocation(usage)
+        usageInfo.referenced ?: return
+        val location = context.getNameLocation(element)
 
         // androidx.annotation.Discouraged defines the message as an empty string; it is non-null.
         val message = getAnnotationStringValue(
-            annotation, "message"
+            annotationInfo.annotation, "message"
         )
 
         // If an explanation is not provided, a generic message will be shown instead.
         if (!message.isNullOrBlank()) {
-            report(context, ISSUE, usage, location, message)
+            report(context, ISSUE, element, location, message)
         } else {
             val defaultMessage = "Use of this API is discouraged"
-            report(context, ISSUE, usage, location, defaultMessage)
+            report(context, ISSUE, element, location, defaultMessage)
         }
     }
 

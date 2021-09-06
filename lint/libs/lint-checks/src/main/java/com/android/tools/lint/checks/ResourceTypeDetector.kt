@@ -25,6 +25,8 @@ import com.android.resources.ResourceType.STYLEABLE
 import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -68,11 +70,9 @@ import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.findSelector
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiArrayType
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
@@ -158,40 +158,32 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
+        val qualifiedName = annotationInfo.qualifiedName
         when (qualifiedName) {
             COLOR_INT_ANNOTATION.oldName(), COLOR_INT_ANNOTATION.newName() -> checkColor(
                 context,
-                usage
+                element
             )
             HALF_FLOAT_ANNOTATION.oldName(), HALF_FLOAT_ANNOTATION.newName() -> checkHalfFloat(
                 context,
-                usage
+                element
             )
             DIMENSION_ANNOTATION.oldName(), DIMENSION_ANNOTATION.newName(), PX_ANNOTATION.oldName(), PX_ANNOTATION.newName() -> checkPx(
                 context,
-                usage
+                element
             )
             else -> {
                 if (isResourceAnnotation(qualifiedName)) {
                     // Make sure it's the first one to avoid duplicate warnings since we check all
-                    if (annotations.size > 1 &&
-                        getFirstResourceAnnotation(annotations) !== annotation
-                    ) {
+                    if (usageInfo.anyCloser { isResourceAnnotation(it.qualifiedName) }) {
                         return
                     }
 
-                    val expression = skipParenthesizedExprUp(usage.getParentOfType(UExpression::class.java, true))
+                    val expression = skipParenthesizedExprUp(element.getParentOfType(UExpression::class.java, true))
                     // Crap - how do we avoid double-checking here, we can't limit ourselves
                     // to just left or right because what if the other one doesn't have
                     // data?
@@ -219,31 +211,21 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         }
                     }
 
-                    val types = ResourceEvaluator.getTypesFromAnnotations(annotations)
+                    val types = ResourceEvaluator.getTypesFromAnnotationList(usageInfo.annotations)
                     if (types != null) {
                         if (types.contains(STYLEABLE) &&
-                            type == AnnotationUsageType.ASSIGNMENT_LHS
+                            usageInfo.type == AnnotationUsageType.ASSIGNMENT_LHS
                         ) {
                             // Allow assigning constants to R.styleable; this is done
                             // for example in the support library
                             return
                         }
 
-                        checkResourceType(context, usage, types, method)
+                        checkResourceType(context, element, types, usageInfo.referenced as? PsiMethod)
                     }
                 }
             }
         }
-    }
-
-    private fun getFirstResourceAnnotation(annotations: List<UAnnotation>): UAnnotation? {
-        for (annotation in annotations) {
-            val qualifiedName = annotation.qualifiedName
-            if (qualifiedName != null && isResourceAnnotation(qualifiedName)) {
-                return annotation
-            }
-        }
-        return null
     }
 
     private fun isResourceAnnotation(signature: String): Boolean {
@@ -417,13 +399,10 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         ) {
             return
         } else if (actual != null && (
-            !Sets.intersection(
-                    actual,
-                    expectedTypes
-                ).isEmpty() || expectedTypes.contains(DRAWABLE) && (
-                actual.contains(COLOR) || actual.contains(
-                        MIPMAP
-                    )
+            !Sets.intersection(actual, expectedTypes).isEmpty() ||
+                expectedTypes.contains(DRAWABLE) && (
+                actual.contains(COLOR) ||
+                    actual.contains(MIPMAP)
                 )
             )
         ) {
@@ -432,10 +411,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         if (expectedTypes.contains(STYLEABLE) && expectedTypes.size == 1 &&
             calledMethod != null &&
-            context.evaluator.isMemberInClass(
-                    calledMethod,
-                    "android.content.res.TypedArray"
-                )
+            context.evaluator.isMemberInClass(calledMethod, "android.content.res.TypedArray")
         ) {
             val call = argument.getParentOfType<UExpression>(UCallExpression::class.java, false)
             if (call is UCallExpression &&

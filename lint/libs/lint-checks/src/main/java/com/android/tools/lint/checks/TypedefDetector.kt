@@ -22,6 +22,10 @@ import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ExternalReferenceExpression
@@ -96,32 +100,20 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        when (qualifiedName) {
+        val annotation = annotationInfo.annotation
+        when (annotationInfo.qualifiedName) {
             INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
             LONG_DEF_ANNOTATION.oldName(), LONG_DEF_ANNOTATION.newName() -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
                 val flag = flagAttribute != null && flagAttribute
-                checkTypeDefConstant(
-                    context, annotation, usage, null, flag,
-                    annotations
-                )
+                checkTypeDefConstant(context, annotation, element, null, flag, usageInfo)
             }
             STRING_DEF_ANNOTATION.oldName(), STRING_DEF_ANNOTATION.newName() -> {
-                checkTypeDefConstant(
-                    context, annotation, usage, null, false,
-                    annotations
-                )
+                checkTypeDefConstant(context, annotation, element, null, false, usageInfo)
             }
             INT_RANGE_ANNOTATION.oldName(), INT_RANGE_ANNOTATION.newName() -> {
             } // deliberate no-op
@@ -134,7 +126,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         argument: UElement?,
         errorNode: UElement?,
         flag: Boolean,
-        allAnnotations: List<UAnnotation>
+        usageInfo: AnnotationUsageInfo
     ) {
         if (argument == null) {
             return
@@ -145,10 +137,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 // Accepted for @StringDef
                 return
             } else if (value is String) {
-                checkTypeDefConstant(
-                    context, annotation, argument, errorNode, false, value,
-                    allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument, errorNode, false, value, usageInfo)
             } else if (value is Number) {
                 val v = value.toLong()
                 if (flag && v == 0L) {
@@ -156,22 +145,16 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return
                 }
 
-                checkTypeDefConstant(
-                    context, annotation, argument, errorNode, flag, value,
-                    allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument, errorNode, flag, value, usageInfo)
             }
         } else if (isMinusOne(argument)) {
             // -1 is accepted unconditionally for flags
             if (!flag) {
-                reportTypeDef(context, annotation, argument, errorNode, allAnnotations)
+                reportTypeDef(context, annotation, argument, errorNode, usageInfo)
             }
         } else if (argument is UPrefixExpression) {
             if (flag) {
-                checkTypeDefConstant(
-                    context, annotation, argument.operand,
-                    errorNode, true, allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument.operand, errorNode, true, usageInfo)
             } else {
                 val operator = argument.operator
                 if (operator === UastPrefixOperator.BITWISE_NOT) {
@@ -180,33 +163,19 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         "Flag not allowed here"
                     )
                 } else if (operator === UastPrefixOperator.UNARY_MINUS) {
-                    reportTypeDef(context, annotation, argument, errorNode, allAnnotations)
+                    reportTypeDef(context, annotation, argument, errorNode, usageInfo)
                 }
             }
         } else if (argument is UParenthesizedExpression) {
             val expression = argument.expression
-            checkTypeDefConstant(context, annotation, expression, errorNode, flag, allAnnotations)
+            checkTypeDefConstant(context, annotation, expression, errorNode, flag, usageInfo)
         } else if (argument is UIfExpression) {
             // If it's ?: then check both the if and else clauses
             if (argument.thenExpression != null) {
-                checkTypeDefConstant(
-                    context,
-                    annotation,
-                    argument.thenExpression,
-                    errorNode,
-                    flag,
-                    allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument.thenExpression, errorNode, flag, usageInfo)
             }
             if (argument.elseExpression != null) {
-                checkTypeDefConstant(
-                    context,
-                    annotation,
-                    argument.elseExpression,
-                    errorNode,
-                    flag,
-                    allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument.elseExpression, errorNode, flag, usageInfo)
             }
         } else if (argument is UPolyadicExpression) {
             if (flag) {
@@ -223,10 +192,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 for (operand in argument.operands) {
-                    checkTypeDefConstant(
-                        context, annotation, operand, errorNode, true,
-                        allAnnotations
-                    )
+                    checkTypeDefConstant(context, annotation, operand, errorNode, true, usageInfo)
                 }
             } else {
                 val operator = argument.operator
@@ -246,11 +212,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (resolved.type is PsiArrayType) {
                     // Allow checking the initializer here even if the field itself
                     // isn't final or static; check that the individual values are okay
-                    checkTypeDefConstant(
-                        context, annotation, argument,
-                        errorNode ?: argument,
-                        flag, resolved, allAnnotations
-                    )
+                    checkTypeDefConstant(context, annotation, argument, errorNode ?: argument, flag, resolved, usageInfo)
                     return
                 }
 
@@ -259,28 +221,16 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         PsiModifier.FINAL
                     )
                 ) {
-                    checkTypeDefConstant(
-                        context, annotation, argument,
-                        errorNode ?: argument,
-                        flag, resolved, allAnnotations
-                    )
+                    checkTypeDefConstant(context, annotation, argument, errorNode ?: argument, flag, resolved, usageInfo)
                 } else {
                     val lastAssignment = UastLintUtils.findLastAssignment(resolved, argument)
 
                     if (lastAssignment != null) {
-                        checkTypeDefConstant(
-                            context, annotation,
-                            lastAssignment,
-                            errorNode ?: argument, flag,
-                            allAnnotations
-                        )
+                        checkTypeDefConstant(context, annotation, lastAssignment, errorNode ?: argument, flag, usageInfo)
                     }
                 }
             } else if (resolved is PsiMethod) {
-                checkTypeDefConstant(
-                    context, annotation, argument,
-                    errorNode ?: argument, flag, resolved, allAnnotations
-                )
+                checkTypeDefConstant(context, annotation, argument, errorNode ?: argument, flag, resolved, usageInfo)
             }
         } else if (argument is UCallExpression) {
             if (argument.isNewArrayWithInitializer() || argument.isArrayInitializer()) {
@@ -290,19 +240,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
                 if (PsiType.INT == type || PsiType.LONG == type) {
                     for (expression in argument.valueArguments) {
-                        checkTypeDefConstant(
-                            context, annotation, expression, errorNode, flag,
-                            allAnnotations
-                        )
+                        checkTypeDefConstant(context, annotation, expression, errorNode, flag, usageInfo)
                     }
                 }
             } else {
                 val resolved = argument.resolve()
                 if (resolved is PsiMethod) {
-                    checkTypeDefConstant(
-                        context, annotation, argument,
-                        errorNode ?: argument, flag, resolved, allAnnotations
-                    )
+                    checkTypeDefConstant(context, annotation, argument, errorNode ?: argument, flag, resolved, usageInfo)
                 }
             }
         }
@@ -315,13 +259,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         errorNode: UElement?,
         flag: Boolean,
         value: Any,
-        allAnnotations: List<UAnnotation>
+        usageInfo: AnnotationUsageInfo
     ) {
-        val rangeAnnotation = RangeDetector.findIntRange(allAnnotations)
+        val rangeAnnotation = usageInfo.findSameScope { RangeDetector.isIntRange(it.qualifiedName) }
         if (rangeAnnotation != null && value !is PsiField) {
             // Allow @IntRange on this number, but only if it's a literal, not if it's some
             // other (unrelated) constant
-            if (RangeDetector.getIntRangeError(context, rangeAnnotation, argument) == null) {
+            if (RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, argument) == null) {
                 return
             }
         }
@@ -443,7 +387,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             if (const is PsiField) {
                                 checkTypeDefConstant(
                                     context, annotation, retValue, errorNode,
-                                    flag, const, allAnnotations
+                                    flag, const, usageInfo
                                 )
                             }
                             return
@@ -508,7 +452,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     initializer.sourcePsi?.containingFile?.text
                     checkTypeDefConstant(
                         context, annotation, initializer, errorNode,
-                        flag, allAnnotations
+                        flag, usageInfo
                     )
                     return
                 }
@@ -520,7 +464,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            reportTypeDef(context, argument, errorNode, flag, initializers, allAnnotations, annotation, unmatched)
+            reportTypeDef(context, argument, errorNode, flag, initializers, usageInfo, annotation, unmatched)
         }
     }
 
@@ -551,7 +495,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotation: UAnnotation,
         argument: UElement,
         errorNode: UElement?,
-        allAnnotations: List<UAnnotation>
+        usageInfo: AnnotationUsageInfo
     ) {
         val allowed = getAnnotationValue(annotation)?.skipParenthesizedExprDown()
         if (allowed != null && allowed.isArrayInitializer()) {
@@ -563,7 +507,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 errorNode,
                 false,
                 initializers,
-                allAnnotations,
+                usageInfo,
                 annotation,
                 null
             )
@@ -576,7 +520,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         errorNode: UElement?,
         flag: Boolean,
         allowedValues: List<UExpression>,
-        allAnnotations: List<UAnnotation>,
+        usageInfo: AnnotationUsageInfo,
         annotation: UAnnotation,
         unmatched: List<Any>?
     ) {
@@ -614,10 +558,10 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
-        val rangeAnnotation = RangeDetector.findIntRange(allAnnotations)
+        val rangeAnnotation = usageInfo.findSameScope { RangeDetector.isIntRange(it.qualifiedName) }
         if (rangeAnnotation != null) {
             // Allow @IntRange on this number
-            val rangeError = RangeDetector.getIntRangeError(context, rangeAnnotation, node)
+            val rangeError = RangeDetector.getIntRangeError(context, rangeAnnotation.annotation, node)
             if (rangeError != null && rangeError.isNotEmpty()) {
                 message += " or " + Character.toLowerCase(rangeError[0]) + rangeError.substring(1)
             }
@@ -744,12 +688,26 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
+        /**
+         * Returns true if the given [qualifiedName] is one of the
+         * typedef annotations.
+         */
+        fun isTypeDef(qualifiedName: String?): Boolean {
+            qualifiedName ?: return false
+            if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                LONG_DEF_ANNOTATION.isEquals(qualifiedName)
+            ) {
+                return true
+            }
+            if (isPlatformAnnotation(qualifiedName)) {
+                return isTypeDef(toAndroidxAnnotation(qualifiedName))
+            }
+            return false
+        }
+
         fun findIntDef(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
-                val qualifiedName = annotation.qualifiedName
-                if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
-                    LONG_DEF_ANNOTATION.isEquals(qualifiedName)
-                ) {
+                if (isTypeDef(annotation.qualifiedName)) {
                     return annotation
                 }
             }

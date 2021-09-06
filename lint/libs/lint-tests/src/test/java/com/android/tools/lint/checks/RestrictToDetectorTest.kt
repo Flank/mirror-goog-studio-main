@@ -176,9 +176,9 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     Library.privateMethod(); // ERROR
                             ~~~~~~~~~~~~~
-            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     PrivateClass.method(); // ERROR
-                    ~~~~~~~~~~~~
+                                 ~~~~~~
             src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     InternalClass.method(); // ERROR
                                   ~~~~~~

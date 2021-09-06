@@ -21,7 +21,8 @@ import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION
-import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Implementation
@@ -30,8 +31,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
@@ -70,27 +69,21 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        when (qualifiedName) {
+        val annotation = annotationInfo.annotation
+        when (annotationInfo.qualifiedName) {
             INT_RANGE_ANNOTATION.oldName(), INT_RANGE_ANNOTATION.newName() -> {
-                checkIntRange(context, annotation, usage, annotations)
+                checkIntRange(context, annotation, element, usageInfo)
             }
 
             FLOAT_RANGE_ANNOTATION.oldName(), FLOAT_RANGE_ANNOTATION.newName() -> {
-                checkFloatRange(context, annotation, usage)
+                checkFloatRange(context, annotation, element)
             }
             SIZE_ANNOTATION.oldName(), SIZE_ANNOTATION.newName() -> {
-                checkSize(context, annotation, usage)
+                checkSize(context, annotation, element)
             }
 
             INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
@@ -103,24 +96,24 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         context: JavaContext,
         annotation: UAnnotation,
         argument: UElement,
-        allAnnotations: List<UAnnotation>
+        usageInfo: AnnotationUsageInfo
     ) {
         if (argument is UIfExpression) {
             argument.thenExpression?.let { thenExpression ->
-                checkIntRange(context, annotation, thenExpression, allAnnotations)
+                checkIntRange(context, annotation, thenExpression, usageInfo)
             }
             argument.elseExpression?.let { elseExpression ->
-                checkIntRange(context, annotation, elseExpression, allAnnotations)
+                checkIntRange(context, annotation, elseExpression, usageInfo)
             }
             return
         } else if (argument is UParenthesizedExpression) {
-            checkIntRange(context, annotation, argument.expression, allAnnotations)
+            checkIntRange(context, annotation, argument.expression, usageInfo)
             return
         }
 
         val message = getIntRangeError(context, annotation, argument)
         if (message != null) {
-            if (TypedefDetector.findIntDef(allAnnotations) != null) {
+            if (usageInfo.anySameScope { TypedefDetector.isTypeDef(it.qualifiedName) }) {
                 // Don't flag int range errors if there is an int def annotation there too;
                 // there could be a valid @IntDef constant. (The @IntDef check will
                 // perform range validation by calling getIntRange.)
@@ -321,15 +314,14 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private const val AOSP_INT_RANGE_ANNOTATION = "android.annotation.IntRange"
 
-        fun findIntRange(annotations: List<UAnnotation>): UAnnotation? {
-            for (annotation in annotations) {
-                val qualifiedName = annotation.qualifiedName
-                if (INT_RANGE_ANNOTATION.isEquals(qualifiedName) || AOSP_INT_RANGE_ANNOTATION == qualifiedName) {
-                    return annotation
-                }
+        /**
+         * Returns true if the given [qualifiedName] is a range annotation
+         */
+        fun isIntRange(qualifiedName: String?): Boolean {
+            if (INT_RANGE_ANNOTATION.isEquals(qualifiedName) || AOSP_INT_RANGE_ANNOTATION == qualifiedName) {
+                return true
             }
-
-            return null
+            return false
         }
 
         fun getIntRangeError(
