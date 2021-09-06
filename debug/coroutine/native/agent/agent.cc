@@ -101,9 +101,6 @@ int installDebugProbes(JNIEnv* jni) {
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesImpl");
   if (klass == nullptr) {
-    // clear exception thrown by failed FindClass
-    jni->ExceptionClear();
-
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl not found");
     return -1;
   }
@@ -247,9 +244,6 @@ bool setAgentInstallationType(JNIEnv* jni) {
   jclass klass_agentInstallationType =
       jni->FindClass("kotlinx/coroutines/debug/internal/AgentInstallationType");
   if (klass_agentInstallationType == nullptr) {
-    // clear exception thrown by failed FindClass
-    jni->ExceptionClear();
-
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentInstallationType not found.");
     return false;
   }
@@ -257,8 +251,7 @@ bool setAgentInstallationType(JNIEnv* jni) {
   jfieldID instance_filedId = jni->GetStaticFieldID(
       klass_agentInstallationType, "INSTANCE",
       "Lkotlinx/coroutines/debug/internal/AgentInstallationType;");
-  // TODO catch exceptions here and elsewhere - everytime we try to find/use
-  // classes from the coroutine lib
+
   if (instance_filedId == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "AgentInstallationType#INSTANCE not found.");
@@ -305,9 +298,6 @@ bool setAgentPremainInstalledStatically(JNIEnv* jni) {
   jclass klass_agentPremain =
       jni->FindClass("kotlinx/coroutines/debug/AgentPremain");
   if (klass_agentPremain == nullptr) {
-    // clear exception thrown by failed FindClass
-    jni->ExceptionClear();
-
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain not found.");
     return false;
   }
@@ -363,14 +353,22 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // set AgentInstallationType#isInstalledStatically to true
   bool setAgentInstallationTypeSuccessful = setAgentInstallationType(jni);
+
   if (!setAgentInstallationTypeSuccessful) {
+    if (jni->ExceptionCheck()) {
+      jni->ExceptionClear();
+    }
     // AgentInstallationType#isInstalledStatically was introduced on newer
     // versions of coroutines
     // see for more info: https://github.com/Kotlin/kotlinx.coroutines/pull/2912
     // we should try to set that first, if it fails we can fall back to the
     // older way, through AgentPremain.
     bool setSuccessful = setAgentPremainInstalledStatically(jni);
+
     if (!setSuccessful) {
+      if (jni->ExceptionCheck()) {
+        jni->ExceptionClear();
+      }
       SetEventNotification(jvmti, JVMTI_DISABLE,
                            JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
       return;
@@ -379,7 +377,11 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // call DebugProbesImpl#install
   int installed = installDebugProbes(jni);
+
   if (installed < 0) {
+    if (jni->ExceptionCheck()) {
+      jni->ExceptionClear();
+    }
     SetEventNotification(jvmti, JVMTI_DISABLE,
                          JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
     return;
@@ -390,7 +392,9 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesKt");
   if (klass == nullptr) {
     // clear exception thrown by failed FindClass
-    jni->ExceptionClear();
+    if (jni->ExceptionCheck()) {
+      jni->ExceptionClear();
+    }
 
     // backward compatible - replace
     // kotlin/coroutines/jvm/internal/DebugProbesKt with the one from the .bin
@@ -413,6 +417,10 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
     if (!instrumentedClass.success) {
       Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumentation of %s failed",
              name);
+
+      if (jni->ExceptionCheck()) {
+        jni->ExceptionClear();
+      }
       return;
     }
 
