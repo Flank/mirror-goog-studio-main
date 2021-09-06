@@ -83,6 +83,9 @@ public class ResourceEvaluator {
      */
     public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.SAMPLE_DATA;
 
+    /** Marker type used to signify *all* resource types (for the annotation `AnyRes`) */
+    private static final ResourceType ANY_RES_MARKER_TYPE = ResourceType.MACRO;
+
     public static final AndroidxName COLOR_INT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ColorInt");
     public static final AndroidxName PX_ANNOTATION =
@@ -612,27 +615,14 @@ public class ResourceEvaluator {
             @NonNull PsiAnnotation[] annotations) {
         EnumSet<ResourceType> resources = null;
         for (PsiAnnotation annotation : annotations) {
-            String signature = annotation.getQualifiedName();
-            if (signature == null) {
-                continue;
-            } else if (isPlatformAnnotation(signature)) {
-                signature = toAndroidxAnnotation(signature);
-            }
-            if (COLOR_INT_ANNOTATION.isEquals(signature)) {
-                return EnumSet.of(COLOR_INT_MARKER_TYPE);
-            } else if (PX_ANNOTATION.isEquals(signature)
-                    || DIMENSION_ANNOTATION.isEquals(signature)) {
-                return EnumSet.of(DIMENSION_MARKER_TYPE);
-            } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
-                return getAnyRes();
-            } else {
-                ResourceType type = getTypeFromAnnotationSignature(signature);
-                if (type != null) {
-                    if (resources == null) {
-                        resources = EnumSet.of(type);
-                    } else {
-                        resources.add(type);
-                    }
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
+            if (type != null) {
+                if (type == ANY_RES_MARKER_TYPE) {
+                    return getAnyRes();
+                } else if (resources == null) {
+                    resources = EnumSet.of(type);
+                } else {
+                    resources.add(type);
                 }
             }
         }
@@ -645,32 +635,57 @@ public class ResourceEvaluator {
             @NonNull List<UAnnotation> annotations) {
         EnumSet<ResourceType> resources = null;
         for (UAnnotation annotation : annotations) {
-            String signature = annotation.getQualifiedName();
-            if (signature == null) {
-                continue;
-            } else if (isPlatformAnnotation(signature)) {
-                signature = toAndroidxAnnotation(signature);
-            }
-            if (COLOR_INT_ANNOTATION.isEquals(signature)) {
-                return EnumSet.of(COLOR_INT_MARKER_TYPE);
-            } else if (PX_ANNOTATION.isEquals(signature)
-                    || DIMENSION_ANNOTATION.isEquals(signature)) {
-                return EnumSet.of(DIMENSION_MARKER_TYPE);
-            } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
-                return getAnyRes();
-            } else {
-                ResourceType type = getTypeFromAnnotationSignature(signature);
-                if (type != null) {
-                    if (resources == null) {
-                        resources = EnumSet.of(type);
-                    } else {
-                        resources.add(type);
-                    }
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
+            if (type != null) {
+                if (type == ANY_RES_MARKER_TYPE) {
+                    return getAnyRes();
+                } else if (resources == null) {
+                    resources = EnumSet.of(type);
+                } else {
+                    resources.add(type);
                 }
             }
         }
 
         return resources;
+    }
+
+    @Nullable
+    public static EnumSet<ResourceType> getTypesFromAnnotationList(
+            @NonNull List<AnnotationInfo> annotations) {
+        EnumSet<ResourceType> resources = null;
+        for (AnnotationInfo annotation : annotations) {
+            ResourceType type = getTypeFromAnnotation(annotation.getQualifiedName());
+            if (type != null) {
+                if (type == ANY_RES_MARKER_TYPE) {
+                    return getAnyRes();
+                } else if (resources == null) {
+                    resources = EnumSet.of(type);
+                } else {
+                    resources.add(type);
+                }
+            }
+        }
+
+        return resources;
+    }
+
+    @Nullable
+    private static ResourceType getTypeFromAnnotation(@Nullable String signature) {
+        if (signature == null) {
+            return null;
+        } else if (isPlatformAnnotation(signature)) {
+            signature = toAndroidxAnnotation(signature);
+        }
+        if (COLOR_INT_ANNOTATION.isEquals(signature)) {
+            return COLOR_INT_MARKER_TYPE;
+        } else if (PX_ANNOTATION.isEquals(signature) || DIMENSION_ANNOTATION.isEquals(signature)) {
+            return DIMENSION_MARKER_TYPE;
+        } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
+            return ANY_RES_MARKER_TYPE;
+        } else {
+            return getTypeFromAnnotationSignature(signature);
+        }
     }
 
     @Nullable

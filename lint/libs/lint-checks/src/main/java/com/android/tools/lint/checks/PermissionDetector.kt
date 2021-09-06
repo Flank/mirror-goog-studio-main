@@ -38,6 +38,8 @@ import com.android.tools.lint.checks.PermissionFinder.Operation.WRITE
 import com.android.tools.lint.checks.PermissionRequirement.ATTR_PROTECTION_LEVEL
 import com.android.tools.lint.checks.PermissionRequirement.VALUE_DANGEROUS
 import com.android.tools.lint.client.api.LintDriver.Companion.KEY_CONDITION
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -55,10 +57,8 @@ import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.utils.XmlUtils
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
@@ -82,28 +82,23 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
+        val type = usageInfo.type
+        val method = usageInfo.referenced as? PsiMethod
         if (type == AnnotationUsageType.METHOD_CALL) {
             // Permission annotation specified on method:
-            val requirement = PermissionRequirement.create(annotation)
-            checkPermission(context, usage, method, null, requirement)
+            val requirement = PermissionRequirement.create(annotationInfo.annotation)
+            checkPermission(context, element, method, null, requirement)
         } else {
             // PERMISSION_ANNOTATION, PERMISSION_ANNOTATION_READ, PERMISSION_ANNOTATION_WRITE
             // When specified on a parameter, that indicates that we're dealing with
             // a permission requirement on this *method* which depends on the value
             // supplied by this parameter
-            if (usage is UExpression && method != null) {
-                checkParameterPermission(context, qualifiedName, method, usage)
+            if (element is UExpression && method != null) {
+                checkParameterPermission(context, annotationInfo.qualifiedName, method, element)
             }
         }
     }

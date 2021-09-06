@@ -18,6 +18,8 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_NAME
 import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -30,14 +32,12 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParameterList
 import com.intellij.psi.util.PsiTreeUtil
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
@@ -72,36 +72,31 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        method ?: return
+        val method = usageInfo.referenced as? PsiMethod ?: return
 
+        val type = usageInfo.type
         if (type != AnnotationUsageType.METHOD_CALL && type != AnnotationUsageType.METHOD_CALL_CLASS &&
             type != AnnotationUsageType.METHOD_CALL_PACKAGE
         ) {
             return
         }
 
+        val annotation = annotationInfo.annotation
         val nameAttribute = annotation.findAttributeValue(ATTR_NAME)
         val name = nameAttribute?.getValueIfStringLiteral() ?: return
         val enforcementAttribute = annotation.findAttributeValue(ATTR_ENFORCEMENT)
         val reference = enforcementAttribute?.getValueIfStringLiteral() ?: return
 
         val checker = EnforcementChecker(name, reference)
-        if (!checker.isWithinNameCheckConditional(context.evaluator, usage) &&
-            !checker.isPrecededByFeatureCheck(usage)
+        if (!checker.isWithinNameCheckConditional(context.evaluator, element) &&
+            !checker.isPrecededByFeatureCheck(element)
         ) {
             context.report(
-                REQUIRES_FEATURE, usage, context.getLocation(usage),
+                REQUIRES_FEATURE, element, context.getLocation(element),
                 "`${method.name}` should only be called if the feature `$name` is " +
                     "present; to check call `$reference`"
             )

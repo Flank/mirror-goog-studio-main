@@ -20,9 +20,11 @@ import com.android.annotations.concurrency.AnyThread
 import com.android.annotations.concurrency.Slow
 import com.android.annotations.concurrency.UiThread
 import com.android.annotations.concurrency.WorkerThread
+import com.android.tools.lint.checks.isThreadingAnnotation
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
-import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
@@ -35,7 +37,6 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
@@ -70,7 +71,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = THREADING_ANNOTATIONS.toList()
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
-        type == METHOD_CALL || type == METHOD_CALL_CLASS || type == METHOD_CALL_PARAMETER
+        type == METHOD_CALL || type == METHOD_CALL_PARAMETER
 
     /**
      * Keeps track of which UAST nodes have already been visited by
@@ -83,61 +84,39 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
         visitedAnnotationUsages.clear()
     }
 
-    /**
-     * Handles a given UAST node relevant to our annotations.
-     *
-     * [com.android.tools.lint.client.api.AnnotationHandler] will call
-     * us repeatedly (once for every element in [annotations]) if there
-     * are multiple annotations on the target method or method parameter
-     * (see [checkThreading]), but we check every UAST node only once,
-     * against all annotations on the target and the caller at once.
-     *
-     * The reason for this is that depending on [type], [annotations] is
-     * populated from either the target ([METHOD_CALL]) or the caller
-     * ([METHOD_CALL_PARAMETER]), which makes it hard to handle the two
-     * cases consistently.
-     *
-     * Marking the node also means we will ignore class-level
-     * annotations if method-level annotations were present, since
-     * [com.android.tools.lint.client.api.AnnotationHandler] handles
-     * [METHOD_CALL] before [METHOD_CALL_CLASS].
-     */
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        if (method == null) return
-        val usagePsi = usage.sourcePsi ?: return
+        if (usageInfo.anyCloser { it.isThreadingAnnotation() }) {
+            return
+        }
+
+        val method = usageInfo.referenced as? PsiMethod ?: return
+        val usagePsi = element.sourcePsi ?: return
         if (!visitedAnnotationUsages.add(usagePsi)) return
 
         // Meaning of the arguments we are given depends on `type`, get what we need accordingly:
-        when (type) {
-            METHOD_CALL, METHOD_CALL_CLASS -> {
+        when (usageInfo.type) {
+            METHOD_CALL -> {
                 checkThreading(
                     context,
-                    usage,
+                    element,
                     method,
-                    getThreadContext(context, usage) ?: return,
+                    getThreadContext(context, element) ?: return,
                     getThreadsFromMethod(context, method) ?: return
                 )
             }
             METHOD_CALL_PARAMETER -> {
-                val reference = usage as? UCallableReferenceExpression ?: return
+                val reference = element as? UCallableReferenceExpression ?: return
                 val referencedMethod = reference.resolve() as? PsiMethod ?: return
                 checkThreading(
                     context,
-                    usage,
+                    element,
                     referencedMethod,
-                    annotations.mapNotNull { it.qualifiedName },
+                    usageInfo.annotations.map { it.qualifiedName },
                     getThreadsFromMethod(context, referencedMethod) ?: return
                 )
             }

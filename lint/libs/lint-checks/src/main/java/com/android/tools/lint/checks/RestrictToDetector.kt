@@ -23,6 +23,9 @@ import com.android.tools.lint.checks.AnnotationDetector.GUAVA_VISIBLE_FOR_TESTIN
 import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationOrigin
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_LHS
 import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_RHS
@@ -35,12 +38,10 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
-import com.android.tools.lint.detector.api.UastLintUtils.Companion.containsAnnotation
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiCompiledElement
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMember
@@ -85,42 +86,36 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        if (type == AnnotationUsageType.EXTENDS && usage is UTypeReferenceExpression) {
+        val type = usageInfo.type
+        if (type == AnnotationUsageType.EXTENDS && element is UTypeReferenceExpression) {
             // If it's a constructor reference we don't need to also check the type
             // reference. Ideally we'd do a "parent is KtConstructorCalleeExpression"
             // here, but that points to impl classes in its hierarchy which leads to
             // class loading trouble.
-            val sourcePsi = usage.sourcePsi
+            val sourcePsi = element.sourcePsi
             if (isKotlin(sourcePsi) && sourcePsi?.parent?.toString() == "CONSTRUCTOR_CALLEE") {
                 return
             }
         }
 
-        val member = method ?: referenced as? PsiMember
-        when (qualifiedName) {
+        val member = usageInfo.referenced as? PsiMember
+        val annotation = annotationInfo.annotation
+        when (annotationInfo.qualifiedName) {
             RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName() -> {
                 checkRestrictTo(
-                    context, usage, member, annotation, allMemberAnnotations,
-                    allClassAnnotations, true
+                    context, element, member, annotation, usageInfo, true
                 )
             }
             GMS_HIDE_ANNOTATION -> {
+                val method = member as? PsiMethod
                 val isConstructor = method == null || method.isConstructor
                 val isStatic = if (method == null) false else context.evaluator.isStatic(method)
                 checkRestrictTo(
-                    context, usage, method, annotation, allMemberAnnotations,
-                    allClassAnnotations, isConstructor || isStatic
+                    context, element, method, annotation, usageInfo, isConstructor || isStatic
                 )
             }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
@@ -128,11 +123,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (member != null && type != AnnotationUsageType.METHOD_OVERRIDE) {
                     checkVisibleForTesting(
                         context,
-                        usage,
+                        element,
                         member,
                         annotation,
-                        allMemberAnnotations,
-                        allClassAnnotations
+                        usageInfo
                     )
                 }
             }
@@ -237,16 +231,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         node: UElement,
         method: PsiMember,
         annotation: UAnnotation,
-        allMethodAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>
+        usageInfo: AnnotationUsageInfo
     ) {
 
         val visibility = getVisibilityForTesting(annotation)
         if (visibility == VISIBILITY_NONE) { // not the default
-            checkRestrictTo(
-                context, node, method, annotation, allMethodAnnotations,
-                allClassAnnotations, RESTRICT_TO_TESTS
-            )
+            checkRestrictTo(context, node, method, annotation, usageInfo, RESTRICT_TO_TESTS)
         } else {
             // Check that the target method is available
             // (1) private is available in the same compilation unit
@@ -334,16 +324,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         node: UElement,
         method: PsiMember?,
         annotation: UAnnotation,
-        allMethodAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
+        usageInfo: AnnotationUsageInfo,
         applyClassAnnotationsToMembers: Boolean = true
     ) {
         val scope = getRestrictionScope(annotation)
         if (scope != 0) {
-            checkRestrictTo(
-                context, node, method, annotation, allMethodAnnotations,
-                allClassAnnotations, scope, applyClassAnnotationsToMembers
-            )
+            checkRestrictTo(context, node, method, annotation, usageInfo, scope, applyClassAnnotationsToMembers)
         }
     }
 
@@ -352,8 +338,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         node: UElement,
         member: PsiMember?,
         annotation: UAnnotation,
-        allMethodAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
+        usageInfo: AnnotationUsageInfo,
         scope: Int,
         applyClassAnnotationsToMembers: Boolean = true
     ) {
@@ -368,31 +353,23 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         containingClass ?: return
 
-        var isClassAnnotation = false
-        if (containsAnnotation(allMethodAnnotations, annotation)) {
-            // Make sure that the annotation is *not* inherited.
-            // For example, NavigationView (a public, exposed class) extends ScrimInsetsFrameLayout, which
-            // is a restricted class. We don't want to make all uses of NavigationView to suddenly be
-            // treated as Restricted just because it inherits code from a restricted API.
-            if (member != null && context.evaluator.isInherited(annotation, member)) {
-                return
-            }
-        } else if (applyClassAnnotationsToMembers) {
-            // Found restriction or class or package: make sure we only check on the most
-            // specific scope, otherwise we report the same error multiple times
-            // or report errors on restrictions that have been redefined
-            if (containsRestrictionAnnotation(allMethodAnnotations)) {
-                return
-            }
-            isClassAnnotation = containsAnnotation(allClassAnnotations, annotation)
-            if (isClassAnnotation) {
-                if (context.evaluator.isInherited(annotation, containingClass)) {
+        val annotations = usageInfo.annotations
+        if (!applyClassAnnotationsToMembers) {
+            val origin = annotations[usageInfo.index].origin
+            if (member is PsiClass) {
+                if (origin != AnnotationOrigin.CLASS) {
                     return
                 }
-            } else if (containsRestrictionAnnotation(allClassAnnotations)) {
+            } else if (origin != AnnotationOrigin.METHOD && origin != AnnotationOrigin.FIELD) {
                 return
             }
-        } else { // not in member annotations and applyClassAnnotationToMembers is false.
+        }
+
+        if (usageInfo.anyCloser {
+            it.qualifiedName == RESTRICT_TO_ANNOTATION.oldName() ||
+                it.qualifiedName == RESTRICT_TO_ANNOTATION.newName()
+        }
+        ) {
             return
         }
 
@@ -412,10 +389,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (thisGroup != methodGroup && methodGroup != null) {
                 val thisGroupDisplayText = thisGroup ?: "<unknown>"
                 val where = "from within the same library group (referenced groupId=`$methodGroup` from groupId=`$thisGroupDisplayText`)"
-                reportRestriction(
-                    where, containingClass, member, context,
-                    node, isClassAnnotation
-                )
+                reportRestriction(where, containingClass, member, context, node, usageInfo)
             }
         } else if (scope and RESTRICT_TO_LIBRARY_GROUP_PREFIX != 0 && member != null) {
             val evaluator = context.evaluator
@@ -438,10 +412,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
                 val where =
                     "from within the same library group prefix (referenced groupId=`$methodGroup` with prefix $expectedPrefix${if (thisGroup != null) " from groupId=`$thisGroup`" else ""})"
-                reportRestriction(
-                    where, containingClass, member, context,
-                    node, isClassAnnotation
-                )
+                reportRestriction(where, containingClass, member, context, node, usageInfo)
             }
         } else if (scope and RESTRICT_TO_LIBRARY != 0 && member != null) {
             val evaluator = context.evaluator
@@ -454,10 +425,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val methodArtifact = methodCoordinates.artifactId
                 if (thisArtifact != methodArtifact) {
                     val where = "from within the same library ($methodGroup:$methodArtifact)"
-                    reportRestriction(
-                        where, containingClass, member, context,
-                        node, isClassAnnotation
-                    )
+                    reportRestriction(where, containingClass, member, context, node, usageInfo)
                 }
             } else if (member !is PsiCompiledElement) {
                 // If the resolved method is source, make sure they're part
@@ -471,30 +439,21 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         project.name
                     }
                     val where = "from within the same library ($name)"
-                    reportRestriction(
-                        where, containingClass, member, context,
-                        node, isClassAnnotation
-                    )
+                    reportRestriction(where, containingClass, member, context, node, usageInfo)
                 }
             }
         }
 
         if (scope and RESTRICT_TO_TESTS != 0) {
             if (!isTestContext(context, node)) {
-                reportRestriction(
-                    "from tests", containingClass, member, context,
-                    node, isClassAnnotation
-                )
+                reportRestriction("from tests", containingClass, member, context, node, usageInfo)
             }
         }
 
         if (scope and RESTRICT_TO_ALL != 0) {
             val fqn = annotation.qualifiedName
             if (fqn != GMS_HIDE_ANNOTATION || flagHide(context, containingClass, member, node)) {
-                reportRestriction(
-                    null, containingClass, member, context,
-                    node, isClassAnnotation
-                )
+                reportRestriction(null, containingClass, member, context, node, usageInfo)
             }
         }
 
@@ -524,10 +483,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
 
                 if (!isSubClass) {
-                    reportRestriction(
-                        "from subclasses", containingClass, member,
-                        context, node, isClassAnnotation
-                    )
+                    reportRestriction("from subclasses", containingClass, member, context, node, usageInfo)
                 }
             }
         }
@@ -539,16 +495,18 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         member: PsiMember?,
         context: JavaContext,
         node: UElement,
-        isClassAnnotation: Boolean
+        usageInfo: AnnotationUsageInfo
     ) {
         var api: String
         api = if (member == null || member is PsiMethod && member.isConstructor) {
-            member?.name ?: containingClass.name + " constructor"
-        } else if (containingClass == member) {
-            member.name ?: "class"
-        } else {
-            containingClass.name + "." + member.name
-        }
+            member?.name ?: (containingClass.name + " constructor")
+        } else
+        //noinspection LintImplPsiEquals
+            if (containingClass == member) {
+                member.name ?: "class"
+            } else {
+                containingClass.name + "." + member.name
+            }
 
         var locationNode = node
         if (node is UCallExpression) {
@@ -559,9 +517,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             // If the annotation was reported on the class, and the left hand side
             // expression is that class, use it as the name node?
-            if (isClassAnnotation) {
+            val annotation = usageInfo.annotations[usageInfo.index]
+            val annotated = annotation.annotated
+            //noinspection LintImplPsiEquals
+            if (where == null && annotated is PsiClass && annotated != usageInfo.referenced) {
                 val qualifier = node.receiver
-                val className = containingClass.name
+                val className = annotated.name
                 if (qualifier != null && className != null && qualifier.asSourceString() == className) {
                     locationNode = qualifier
                     api = className
@@ -586,20 +547,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        val location: Location
-        location = if (locationNode is UCallExpression) {
+        val location = if (locationNode is UCallExpression) {
             context.getCallLocation(locationNode, false, false)
         } else {
             context.getLocation(locationNode)
         }
         report(context, RESTRICTED, node, location, message, null)
-    }
-
-    private fun containsRestrictionAnnotation(list: List<UAnnotation>): Boolean {
-        return containsAnnotation(
-            list,
-            RESTRICT_TO_ANNOTATION.oldName()
-        ) || containsAnnotation(list, RESTRICT_TO_ANNOTATION.newName())
     }
 
     companion object {
