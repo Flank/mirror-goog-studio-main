@@ -280,9 +280,11 @@ abstract class ProjectInputs {
         mavenArtifactId.setDisallowChanges(project.name)
         buildDirectoryPath.setDisallowChanges(project.layout.buildDirectory.map { it.asFile.absolutePath })
         if (!isForAnalysis) {
-            projectDirectoryPathInput.setDisallowChanges(projectDirectoryPath)
-            buildDirectoryPathInput.setDisallowChanges(buildDirectoryPath)
+            projectDirectoryPathInput.set(projectDirectoryPath)
+            buildDirectoryPathInput.set(buildDirectoryPath)
         }
+        projectDirectoryPathInput.disallowChanges()
+        buildDirectoryPathInput.disallowChanges()
     }
 
     internal fun convertToLintModelModule(): LintModelModule {
@@ -766,9 +768,14 @@ abstract class VariantInputs {
         mergedManifest.setDisallowChanges(
             creationConfig.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         )
-        manifestMergeReport.setDisallowChanges(
-            creationConfig.artifacts.get(InternalArtifactType.MANIFEST_MERGE_REPORT)
-        )
+        // The manifest merge report contains absolute paths, so it's not compatible with the lint
+        // analysis task being cacheable.
+        if (!isForAnalysis) {
+            manifestMergeReport.set(
+                creationConfig.artifacts.get(InternalArtifactType.MANIFEST_MERGE_REPORT)
+            )
+        }
+        manifestMergeReport.disallowChanges()
         namespace.setDisallowChanges(creationConfig.namespace)
 
         minSdkVersion.initialize(creationConfig.minSdkVersion)
