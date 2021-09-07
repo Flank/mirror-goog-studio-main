@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -39,7 +38,6 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -49,18 +47,18 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.util.Collections
 
 /** Task to invoke lint with the --analyze-only flag, producing partial results. */
-@DisableCachingByDefault
+@CacheableTask
 abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     @get:Nested

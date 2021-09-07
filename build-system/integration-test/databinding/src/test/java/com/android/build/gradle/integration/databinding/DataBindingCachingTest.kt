@@ -61,7 +61,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":compileDebugAidl" to SKIPPED,
         ":compileDebugJavaWithJavac" to FROM_CACHE,
         ":compileDebugRenderscript" to SKIPPED,
-        ":createDebugCompatibleScreenManifests" to DID_WORK,
+        ":createDebugCompatibleScreenManifests" to FROM_CACHE,
         ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
@@ -74,18 +74,16 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
-        ":processDebugMainManifest" to DID_WORK,
-        ":processDebugManifest" to DID_WORK,
+        ":processDebugMainManifest" to FROM_CACHE,
+        ":processDebugManifest" to FROM_CACHE,
         ":processDebugManifestForPackage" to FROM_CACHE,
         ":processDebugResources" to DID_WORK
     ).plus(
         if (withKotlin) {
             mapOf(
-                // Kotlin tasks are not FROM_CACHE because they includes the project name in the
-                // cache key, and the two project names in this test are currently different.
-                ":compileDebugKotlin" to DID_WORK,
+                ":compileDebugKotlin" to FROM_CACHE,
                 ":kaptDebugKotlin" to FROM_CACHE,
-                ":kaptGenerateStubsDebugKotlin" to DID_WORK
+                ":kaptGenerateStubsDebugKotlin" to FROM_CACHE
             )
         } else {
             emptyMap()

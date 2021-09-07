@@ -64,6 +64,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "jacoco", "", listOf("Debug")),
             TaskInfo(FROM_CACHE, "javaPreCompile", "",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
+            TaskInfo(FROM_CACHE, "lintVitalAnalyze", "", listOf("Release")),
             TaskInfo(FROM_CACHE, "merge", "Assets", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "JniLibFolders", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "Shaders", listOf("Debug", "Release")),
@@ -92,8 +93,6 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
-            /* Bug 178810169 */
-            TaskInfo(DID_WORK, "lintVitalAnalyze", "", listOf("Release")),
             /* Intentionally not cacheable. */
             TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
             /* b/181142260 */

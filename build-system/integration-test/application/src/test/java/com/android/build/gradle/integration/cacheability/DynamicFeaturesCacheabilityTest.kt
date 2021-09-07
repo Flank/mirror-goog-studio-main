@@ -81,6 +81,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:generateDebugFeatureTransitiveDeps",
                     ":app:generateDebugResValues",
                     ":app:javaPreCompileDebug",
+                    ":app:lintAnalyzeDebug",
                     ":app:mergeDebugAssets",
                     ":app:mergeDebugJniLibFolders",
                     ":app:mergeDebugShaders",
@@ -107,6 +108,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:generateDebugFeatureTransitiveDeps",
                     ":feature1:generateDebugResValues",
                     ":feature1:javaPreCompileDebug",
+                    ":feature1:lintAnalyzeDebug",
                     ":feature1:mergeDebugAssets",
                     ":feature1:mergeDebugJniLibFolders",
                     ":feature1:mergeDebugShaders",
@@ -132,6 +134,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:generateDebugFeatureTransitiveDeps",
                     ":feature2:generateDebugResValues",
                     ":feature2:javaPreCompileDebug",
+                    ":feature2:lintAnalyzeDebug",
                     ":feature2:mergeDebugAssets",
                     ":feature2:mergeDebugJniLibFolders",
                     ":feature2:mergeDebugShaders",
@@ -168,19 +171,28 @@ class DynamicFeaturesCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:createDebugApkListingFileRedirect",
+                    ":app:copyDebugAndroidLintReports", // intentionally not cacheable
+                    ":app:extractProguardFiles", // intentionally not cacheable
+                    ":app:generateDebugLintModel", // intentionally not cacheable
+                    ":app:lintDebug", // intentionally not cacheable
+                    ":app:lintReportDebug", // intentionally not cacheable
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:writeDebugModuleMetadata",
 
                     ":feature1:createDebugApkListingFileRedirect",
+                    ":feature1:extractProguardFiles", // intentionally not cacheable
                     ":feature1:featureDebugWriter",
+                    ":feature1:generateDebugLintModel", // intentionally not cacheable
                     ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
 
                     ":feature2:createDebugApkListingFileRedirect",
+                    ":feature2:extractProguardFiles", // intentionally not cacheable
                     ":feature2:featureDebugWriter",
+                    ":feature2:generateDebugLintModel", // intentionally not cacheable
                     ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:packageDebug",
@@ -262,7 +274,8 @@ class DynamicFeaturesCacheabilityTest {
         CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
             .runTasks(
                 "clean",
-                "assembleDebug"
+                "assembleDebug",
+                "lintDebug"
             )
             .assertTaskStatesByGroups(EXPECTED_TASK_STATES, exhaustive = true)
     }
