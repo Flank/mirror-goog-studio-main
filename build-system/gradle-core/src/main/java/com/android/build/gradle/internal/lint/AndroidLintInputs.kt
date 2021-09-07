@@ -520,10 +520,6 @@ abstract class EnvironmentVariableInputs {
 
     @get:Input
     @get:Optional
-    abstract val androidHome: Property<String>
-
-    @get:Input
-    @get:Optional
     abstract val androidLintIncludeLdpi: Property<String>
 
     @get:Input
@@ -537,10 +533,6 @@ abstract class EnvironmentVariableInputs {
     @get:Input
     @get:Optional
     abstract val androidLintNullnessIgnoreDeprecated: Property<String>
-
-    @get:Input
-    @get:Optional
-    abstract val androidSdkRoot: Property<String>
 
     @get:Input
     @get:Optional
@@ -566,7 +558,6 @@ abstract class EnvironmentVariableInputs {
             lintHtmlPrefs.setDisallowChanges(providerFactory.environmentVariable("LINT_HTML_PREFS"))
             lintXmlRoot.setDisallowChanges(providerFactory.environmentVariable("LINT_XML_ROOT"))
         }
-        androidHome.setDisallowChanges(providerFactory.environmentVariable("ANDROID_HOME"))
         androidLintIncludeLdpi.setDisallowChanges(
             providerFactory.environmentVariable("ANDROID_LINT_INCLUDE_LDPI")
         )
@@ -579,7 +570,6 @@ abstract class EnvironmentVariableInputs {
         androidLintNullnessIgnoreDeprecated.setDisallowChanges(
             providerFactory.environmentVariable("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED")
         )
-        androidSdkRoot.setDisallowChanges(providerFactory.environmentVariable("ANDROID_SDK_ROOT"))
         lintApiDatabase.setDisallowChanges(providerFactory.environmentVariable("LINT_API_DATABASE"))
         lintOverrideConfiguration.setDisallowChanges(
             providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
