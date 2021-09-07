@@ -2,6 +2,7 @@ load("//tools/base/bazel:repositories.bzl", "setup_external_repositories")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//tools/base/bazel:maven.bzl", "local_maven_repository")
+load("//tools/adt/idea/kotlin-integration:version.bzl", "KOTLIN_IDE_VERSION")
 
 setup_external_repositories()
 
@@ -435,32 +436,32 @@ local_maven_repository(
         "org.jetbrains.dokka:dokka-base:1.4.32",
         "org.jetbrains.dokka:javadoc-plugin:1.4.32",
         "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:1.5.0",
+        "org.jetbrains.kotlin:kotlin-android-extensions-runtime:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.3.41",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.3.72",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.4.32",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.0",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.20",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.21",
-        "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.30",
+        "org.jetbrains.kotlin:kotlin-gradle-plugin:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21",
-        "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.30",
+        "org.jetbrains.kotlin:kotlin-reflect:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-reflect:1.4.31",
         "org.jetbrains.kotlin:kotlin-reflect:1.5.20",
         "org.jetbrains.kotlin:kotlin-reflect:1.5.21",
-        "org.jetbrains.kotlin:kotlin-reflect:1.5.30",
+        "org.jetbrains.kotlin:kotlin-script-runtime:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-script-runtime:1.5.20",
         "org.jetbrains.kotlin:kotlin-script-runtime:1.5.21",
-        "org.jetbrains.kotlin:kotlin-script-runtime:1.5.30",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.31",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.20",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.30",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.6",
