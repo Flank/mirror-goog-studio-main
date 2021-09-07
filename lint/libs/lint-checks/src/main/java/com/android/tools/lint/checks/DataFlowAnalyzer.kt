@@ -621,6 +621,7 @@ abstract class DataFlowAnalyzer(
                 is PsiLocalVariable -> references.add(lhs)
                 is PsiParameter -> references.add(lhs)
                 is PsiField -> field(rhs)
+                is PsiMethod -> field(rhs)
             }
         } else if (rhs is UReferenceExpression) {
             val resolved = rhs.resolve()
@@ -631,6 +632,7 @@ abstract class DataFlowAnalyzer(
                     is PsiParameter -> references.add(lhs)
                     is PsiLocalVariable -> references.add(lhs)
                     is PsiField -> field(rhs)
+                    is PsiMethod -> field(rhs)
                 }
             }
         }

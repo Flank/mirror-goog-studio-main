@@ -307,6 +307,31 @@ class ToastDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testProperty() {
+        // Regression test for b/199163915
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.widget.Toast
+
+                class Test {
+                    var toast: Toast? = null
+                    fun test(context: Context) {
+                         toast = Toast.makeText(context, "Hello", Toast.LENGTH_LONG)
+                        show()
+                    }
+                    fun show() {
+                        toast?.show()
+                    }
+                }
+                """
+            ).indented(),
+        ).run().expectClean()
+    }
+
     companion object {
         val snackbarStubs = arrayOf(
             java(
