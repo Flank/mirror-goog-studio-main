@@ -48,12 +48,10 @@ class LintEnvironmentVariablesTest {
 
         val environmentVariables =
             listOf(
-                "ANDROID_HOME",
                 "ANDROID_LINT_INCLUDE_LDPI",
                 "ANDROID_LINT_MAX_DEPTH",
                 "ANDROID_LINT_MAX_VIEW_COUNT",
                 "ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED",
-                "ANDROID_SDK_ROOT",
                 "LINT_API_DATABASE",
                 "LINT_OVERRIDE_CONFIGURATION"
             )
