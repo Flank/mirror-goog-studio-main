@@ -92,6 +92,7 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -441,9 +442,10 @@ abstract class SystemPropertyInputs {
     @get:Optional
     abstract val javaVersion: Property<String>
 
-    @get:Input
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    abstract val lintApiDatabase: Property<String>
+    abstract val lintApiDatabase: RegularFileProperty
 
     @get:Input
     @get:Optional
@@ -453,9 +455,10 @@ abstract class SystemPropertyInputs {
     @get:Optional
     abstract val lintBaselinesContinue: Property<String>
 
-    @get:Input
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    abstract val lintConfigurationOverride: Property<String>
+    abstract val lintConfigurationOverride: RegularFileProperty
 
     @get:Input
     @get:Optional
@@ -497,10 +500,22 @@ abstract class SystemPropertyInputs {
         javaHome.setDisallowChanges(providerFactory.systemProperty("java.home"))
         javaVendor.setDisallowChanges(providerFactory.systemProperty("java.vendor"))
         javaVersion.setDisallowChanges(providerFactory.systemProperty("java.version"))
-        lintApiDatabase.setDisallowChanges(providerFactory.systemProperty("LINT_API_DATABASE"))
-        lintConfigurationOverride.setDisallowChanges(
-            providerFactory.systemProperty("lint.configuration.override")
+        lintApiDatabase.fileProvider(
+            providerFactory.systemProperty("LINT_API_DATABASE").map {
+                // Suppress the warning because the Gradle docs say "May return null"
+                @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                File(it).takeIf { file -> file.isFile }
+            }
         )
+        lintApiDatabase.disallowChanges()
+        lintConfigurationOverride.fileProvider(
+            providerFactory.systemProperty("lint.configuration.override").map {
+                // Suppress the warning because the Gradle docs say "May return null"
+                @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                File(it).takeIf { file -> file.isFile }
+            }
+        )
+        lintConfigurationOverride.disallowChanges()
         lintNullnessIgnoreDeprecated.setDisallowChanges(
             providerFactory.systemProperty("lint.nullness.ignore-deprecated")
         )
@@ -534,9 +549,10 @@ abstract class EnvironmentVariableInputs {
     @get:Optional
     abstract val androidLintNullnessIgnoreDeprecated: Property<String>
 
-    @get:Input
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    abstract val lintApiDatabase: Property<String>
+    abstract val lintApiDatabase: RegularFileProperty
 
     @get:Input
     @get:Optional
@@ -546,9 +562,10 @@ abstract class EnvironmentVariableInputs {
     @get:Optional
     abstract val lintXmlRoot: Property<String>
 
-    @get:Input
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:Optional
-    abstract val lintOverrideConfiguration: Property<String>
+    abstract val lintOverrideConfiguration: RegularFileProperty
 
     fun initialize(providerFactory: ProviderFactory, isForAnalysis: Boolean) {
         if (isForAnalysis) {
@@ -570,10 +587,22 @@ abstract class EnvironmentVariableInputs {
         androidLintNullnessIgnoreDeprecated.setDisallowChanges(
             providerFactory.environmentVariable("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED")
         )
-        lintApiDatabase.setDisallowChanges(providerFactory.environmentVariable("LINT_API_DATABASE"))
-        lintOverrideConfiguration.setDisallowChanges(
-            providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION")
+        lintApiDatabase.fileProvider(
+            providerFactory.environmentVariable("LINT_API_DATABASE").map {
+                // Suppress the warning because the Gradle docs say "May return null"
+                @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                File(it).takeIf { file -> file.isFile }
+            }
         )
+        lintApiDatabase.disallowChanges()
+        lintOverrideConfiguration.fileProvider(
+            providerFactory.environmentVariable("LINT_OVERRIDE_CONFIGURATION").map {
+                // Suppress the warning because the Gradle docs say "May return null"
+                @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                File(it).takeIf { file -> file.isFile }
+            }
+        )
+        lintOverrideConfiguration.disallowChanges()
     }
 }
 

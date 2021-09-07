@@ -49,10 +49,8 @@ class LintSystemPropertiesTest {
         val systemProperties =
             listOf(
                 "android.lint.log-jar-problems",
-                "LINT_API_DATABASE",
                 "java.vendor",
                 "java.version",
-                "lint.configuration.override",
                 "lint.nullness.ignore-deprecated",
                 "lint.unused-resources.exclude-tests",
                 "lint.unused-resources.include-tests"
