@@ -30,8 +30,10 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import junit.framework.TestCase
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.junit.Assert.assertNotEquals
 import java.io.File
@@ -151,6 +153,8 @@ class DataFlowAnalyzerTest : TestCase() {
         file.accept(object : AbstractUastVisitor() {
             override fun visitCallExpression(node: UCallExpression): Boolean {
                 if (node.methodName == targetName) {
+                    target = node
+                } else if (node.isConstructorCall() && node.classReference?.resolvedName == targetName) {
                     target = node
                 }
                 return super.visitCallExpression(node)
@@ -690,6 +694,40 @@ class DataFlowAnalyzerTest : TestCase() {
                 """
             ).indented(),
         ).issues(ToastDetector.ISSUE).run().expectClean()
+    }
+
+    fun testArgumentCalls() {
+        // Make sure we visit the registerReceiver call exactly once
+        val parsed = LintUtilsTest.parse(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.BroadcastReceiver
+                import android.content.Context
+                import android.content.IntentFilter
+
+                class Test {
+                    fun testNew(context: Context, receiver: BroadcastReceiver) {
+                        context.registerReceiver(receiver, IntentFilter("ppp").apply { addAction("ooo") })
+                    }
+                }
+                """,
+            ).indented()
+        )
+
+        val target = findMethodCall(parsed, "IntentFilter")
+
+        val calls = mutableListOf<UCallExpression>()
+        val method = target.getParentOfType(UMethod::class.java)
+        method?.accept(object : DataFlowAnalyzer(listOf(target)) {
+            override fun argument(call: UCallExpression, reference: UElement) {
+                assertTrue(calls.add(call))
+            }
+        })
+        assertEquals(1, calls.size)
+        assertSame(calls[0], target.getParentOfType(UCallExpression::class.java, strict = true))
+        Disposer.dispose(parsed.second)
     }
 
     private fun lint() = TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())

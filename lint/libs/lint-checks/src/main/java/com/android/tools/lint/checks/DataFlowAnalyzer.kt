@@ -270,18 +270,6 @@ abstract class DataFlowAnalyzer(
         if (matched) {
             if (!initial.contains(node)) {
                 receiver(node)
-
-                if (isReturningContext(node)) {
-                    val parent = skipParenthesizedExprUp(node.uastParent)
-                    val parentCall = skipParenthesizedExprUp(parent?.uastParent)
-                    if (parentCall is UCallExpression) {
-                        // The node is being passed as an argument to a method, e.g.
-                        //  call(arg1, arg2, something.also { })
-                        if (!ignoreArgument(parentCall, node)) {
-                            argument(parentCall, node)
-                        }
-                    }
-                }
             }
             if (returnsSelf(node)) {
                 instances.add(node)
@@ -746,7 +734,7 @@ abstract class DataFlowAnalyzer(
      * Computes identifying string for the given element; used for
      * debugging only
      */
-    private fun UElement.id(): String {
+    fun UElement.id(): String {
         val s = Integer.toHexString(System.identityHashCode(this)) + ":" +
             this.sourcePsi?.text?.replace(Regex("\\s+"), " ")
         val max = 100
