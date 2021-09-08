@@ -79,6 +79,9 @@ maven_repository(
         "//tools/base/annotations:annotations",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/analytics-library/protos/src/main/proto:proto",
+        "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/analytics-library/tracker:tools.analytics-tracker",
     ],
     include_transitive_deps = False,
     visibility = [
