@@ -119,7 +119,7 @@ class JavaPreCompileTaskTest {
                     override val annotationProcessorListFile: RegularFileProperty =
                         FakeObjectFactory.factory.fileProperty()
                             .fileValue(annotationProcessorListFile)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>

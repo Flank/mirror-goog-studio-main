@@ -75,7 +75,7 @@ class InstallVariantViaBundleTaskTest {
                 get() = project.objects.property(String::class.java)
             override val minSdkVersion: Property<Int>
                 get() = project.objects.property(Int::class.java).value(21)
-            override val projectName: Property<String>
+            override val projectPath: Property<String>
                 get() = project.objects.property(String::class.java).value("projectName")
             override val taskOwner: Property<String>
                 get() = project.objects.property(String::class.java).value("taskOwner")

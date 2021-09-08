@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -496,7 +497,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
             inputJarHashesFile = inputJarHashes,
             numberOfBuckets = 2,
             workerExecutor = workerExecutor,
-            projectName = "",
+            projectPath = FakeProviderFactory.factory.provider { "" },
             taskPath = "",
             analyticsService = FakeObjectFactory.factory.property(AnalyticsService::class.java)
                 .value(FakeNoOpAnalyticsService())

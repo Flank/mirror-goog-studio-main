@@ -81,7 +81,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         writeIdentifiedSourceSetsFile(
             resourceSourceSets = sourceSetInputs.listConfigurationSourceSets(uncreatedSourceSets),
             namespace = namespace.get(),
-            projectName = projectName,
+            projectPath = projectPath.get(),
             output = filepathMappingFile.get().asFile
         )
     }

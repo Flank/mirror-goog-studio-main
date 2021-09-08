@@ -108,7 +108,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                 val androidVersion = AndroidVersion(parameters.minSdkVersion.get(), parameters.minApiCodeName.orNull)
                 for (device in devices) {
                     if (!InstallUtils.checkDeviceApiLevel(
-                            device, androidVersion, iLogger, parameters.projectName.get(), parameters.variantName.get())
+                            device, androidVersion, iLogger, parameters.projectPath.get(), parameters.variantName.get())
                     ) {
                         continue
                     }
@@ -116,7 +116,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                     logger.lifecycle(
                         "Generating APKs for device '{}' for {}:{}",
                         device.name,
-                        parameters.projectName.get(),
+                        parameters.projectPath.get(),
                         parameters.variantName.get()
                     )
 
@@ -126,7 +126,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                         logger.lifecycle(
                             "Skipping device '{}' for '{}:{}': No APK generated",
                             device.name,
-                            parameters.projectName.get(),
+                            parameters.projectPath.get(),
                             parameters.variantName.get())
 
                     } else {
@@ -137,7 +137,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                             "Installing APKs '{}' on '{}' for {}:{}",
                             FileUtils.getNamesAsCommaSeparatedList(apkFiles),
                             device.name,
-                            parameters.projectName.get(),
+                            parameters.projectPath.get(),
                             parameters.variantName.get()
                         )
 

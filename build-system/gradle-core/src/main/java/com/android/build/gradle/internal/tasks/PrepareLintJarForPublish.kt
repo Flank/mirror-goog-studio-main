@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -55,7 +57,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     abstract val outputLintJar: RegularFileProperty
 
     @get:Internal
-    val projectName = project.name
+    abstract val projectPath: Property<String>
 
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
@@ -70,7 +72,7 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
     @TaskAction
     fun prepare() {
         workerExecutor.noIsolation().submit(PublishLintJarWorkerRunnable::class.java) {
-            it.initializeWith(projectName, path, analyticsService)
+            it.initializeWith(projectPath, path, analyticsService)
             it.files.from(lintChecks)
             it.outputLintJar.set(outputLintJar)
         }
@@ -91,8 +93,9 @@ abstract class PrepareLintJarForPublish : DefaultTask() {
         }
 
         override fun configure(task: PrepareLintJarForPublish) {
-            task.lintChecks.from(scope.publishedCustomLintChecks)
+            task.lintChecks.fromDisallowChanges(scope.publishedCustomLintChecks)
             task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
+            task.projectPath.setDisallowChanges(task.project.path)
         }
     }
 }

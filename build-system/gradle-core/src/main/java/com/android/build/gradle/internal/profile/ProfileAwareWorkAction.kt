@@ -28,37 +28,37 @@ import org.gradle.workers.WorkParameters
 abstract class ProfileAwareWorkAction<T : ProfileAwareWorkAction.Parameters> : WorkAction<T> {
 
     abstract class Parameters : WorkParameters {
-        abstract val projectName: Property<String>
+        abstract val projectPath: Property<String>
         abstract val taskOwner: Property<String>
         abstract val workerKey: Property<String>
         abstract val analyticsService: Property<AnalyticsService>
         fun initializeFromAndroidVariantTask(task: AndroidVariantTask) {
-            initializeWith(task.projectName, task.path, task.analyticsService)
+            initializeWith(task.projectPath, task.path, task.analyticsService)
         }
         fun initializeWith(
-            projectName: String,
+            projectPath: Provider<String>,
             taskOwner:  String,
             analyticsService: Provider<AnalyticsService>
         ) {
             val workerKeyString = "$taskOwner{${this.javaClass.name}${this.hashCode()}"
-            initAllProperties(projectName, taskOwner, workerKeyString, analyticsService)
+            initAllProperties(projectPath, taskOwner, workerKeyString, analyticsService)
         }
         fun initializeFromProfileAwareWorkAction(workAction: Parameters) {
             val workerKeyString = "${workAction.workerKey.get()}${this.hashCode()}"
             initAllProperties(
-                workAction.projectName.get(),
+                workAction.projectPath,
                 workAction.taskOwner.get(),
                 workerKeyString,
                 workAction.analyticsService
             )
         }
         private fun initAllProperties(
-            projectName: String,
+            projectPath: Provider<String>,
             taskOwner: String,
             workerKey: String,
             analyticsService: Provider<AnalyticsService>
         ) {
-            this.projectName.setDisallowChanges(projectName)
+            this.projectPath.setDisallowChanges(projectPath)
             this.taskOwner.setDisallowChanges(taskOwner)
             this.workerKey.setDisallowChanges(workerKey)
             this.analyticsService.setDisallowChanges(analyticsService)

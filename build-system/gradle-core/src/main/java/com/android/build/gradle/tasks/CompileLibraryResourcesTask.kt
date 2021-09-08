@@ -141,7 +141,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         override fun run() {
 
             WorkerExecutorResourceCompilationService(
-                projectName = parameters.projectName.get(),
+                projectPath = parameters.projectPath,
                 taskOwner = parameters.taskOwner.get(),
                 workerExecutor = workerExecutor,
                 analyticsService = parameters.analyticsService,

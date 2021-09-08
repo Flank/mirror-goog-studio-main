@@ -44,19 +44,19 @@ object Workers {
     /**
      * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor].
      *
-     * @param projectName name of the project owning the task
+     * @param projectPath path of the project owning the task
      * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
      * @param worker [WorkerExecutor] to use if Gradle's worker executor are enabled.
      * @param analyticsService the build service to record worker execution spans
      * @return an instance of [WorkerExecutorFacade] using the passed worker
      */
     fun withGradleWorkers(
-        projectName: String,
+        projectPath: String,
         owner: String,
         worker: WorkerExecutor,
         analyticsService: Provider<AnalyticsService>
     ): WorkerExecutorFacade {
-        return WorkerExecutorAdapter(projectName, owner, worker, analyticsService)
+        return WorkerExecutorAdapter(projectPath, owner, worker, analyticsService)
     }
 
     /**
@@ -78,7 +78,7 @@ object Workers {
      *
      */
     private class WorkerExecutorAdapter(
-        private val projectName: String,
+        private val projectPath: String,
         private val owner: String,
         private val workerExecutor: WorkerExecutor,
         private val analyticsService: Provider<AnalyticsService>
@@ -95,7 +95,7 @@ object Workers {
             workerExecutor.noIsolation().submit(
                 RunnableWrapperWorkAction::class.java
             ) { params: RunnableWrapperParams ->
-                params.projectName.set(projectName)
+                params.projectPath.set(projectPath)
                 params.taskOwner.set(owner)
                 params.workerKey.set(workerKey)
                 params.runnableAction.set(action)

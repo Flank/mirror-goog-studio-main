@@ -108,7 +108,6 @@ class AsyncResourceProcessorTest {
 
     private fun createAsyncResourceProcessor(counter: AtomicInteger): AsyncResourceProcessor<AtomicInteger> {
         return AsyncResourceProcessor(
-            projectName = "testProject",
             owner = "testTask",
             executor = executor,
             service = counter,

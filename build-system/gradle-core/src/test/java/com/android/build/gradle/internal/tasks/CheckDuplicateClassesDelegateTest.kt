@@ -47,7 +47,7 @@ class CheckDuplicateClassesDelegateTest {
     fun testNoArtifacts() {
         val classesArtifacts = mapOf<String, File>()
 
-        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+        CheckDuplicateClassesDelegate().run(classesArtifacts)
     }
 
     @Test
@@ -59,7 +59,7 @@ class CheckDuplicateClassesDelegateTest {
         val classesArtifacts = mapOf<String, File>("identifier" to jar.toFile())
 
         // Nothing should happen, no fails
-        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+        CheckDuplicateClassesDelegate().run(classesArtifacts)
     }
 
     @Test
@@ -76,7 +76,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         // Nothing should happen, no fails
-        CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+        CheckDuplicateClassesDelegate().run(classesArtifacts)
     }
 
     @Test
@@ -93,7 +93,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+            CheckDuplicateClassesDelegate().run(classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -115,7 +115,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier2" to jar2.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+            CheckDuplicateClassesDelegate().run(classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -143,7 +143,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier3" to jar3.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+            CheckDuplicateClassesDelegate().run(classesArtifacts)
         }
 
         Truth.assertThat(exception.message)
@@ -169,7 +169,7 @@ class CheckDuplicateClassesDelegateTest {
             "identifier3" to jar3.toFile())
 
         val exception = assertFailsWith(RuntimeException::class) {
-            CheckDuplicateClassesDelegate().run("test", classesArtifacts)
+            CheckDuplicateClassesDelegate().run(classesArtifacts)
         }
 
         Truth.assertThat(exception.message)

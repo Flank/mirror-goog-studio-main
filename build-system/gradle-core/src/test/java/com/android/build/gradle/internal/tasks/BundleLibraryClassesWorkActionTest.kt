@@ -124,7 +124,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                         FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -165,7 +165,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                         FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -206,7 +206,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                         FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(true)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -250,7 +250,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                         FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -296,7 +296,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                         FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -337,7 +337,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     override val inputChanges = FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -398,7 +398,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                     )
                     override val packageRClass = FakeGradleProperty(false)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -457,7 +457,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                             FakeGradleProperty(SerializableFileChanges(emptyList()))
                     override val packageRClass = FakeGradleProperty(true)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -499,7 +499,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
                             FakeGradleProperty(SerializableFileChanges(changes))
                     override val packageRClass = FakeGradleProperty(true)
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>

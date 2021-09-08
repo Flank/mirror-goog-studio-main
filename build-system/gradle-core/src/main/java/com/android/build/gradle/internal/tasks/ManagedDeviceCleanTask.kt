@@ -55,7 +55,7 @@ abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceCleanRunnable::class.java) {
-            it.initializeWith(projectName, path, analyticsService)
+            it.initializeWith(projectPath, path, analyticsService)
             it.avdService.set(avdService)
             it.ignoredDevices.set(if (preserveDefined.get()) dslDevices.get() else listOf<String>())
         }

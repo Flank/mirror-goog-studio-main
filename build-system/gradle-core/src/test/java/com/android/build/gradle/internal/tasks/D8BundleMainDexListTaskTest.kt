@@ -163,7 +163,7 @@ class D8BundleMainDexListTaskTest {
                     get() = FakeObjectFactory.factory.fileProperty().fileValue(output)
                 override val errorFormat: Property<SyncOptions.ErrorFormatMode>
                     get() = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-                override val projectName: Property<String>
+                override val projectPath: Property<String>
                     get() = FakeGradleProperty("projectName")
                 override val taskOwner: Property<String>
                     get() = FakeGradleProperty("taskOwner")

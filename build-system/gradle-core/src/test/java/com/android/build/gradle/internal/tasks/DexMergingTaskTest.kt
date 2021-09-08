@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInputChanges
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
+import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
@@ -40,6 +42,7 @@ import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
@@ -53,6 +56,8 @@ class DexMergingTaskTest {
     @Rule
     @JvmField
     val tmp = TemporaryFolder()
+
+    private val factory=  ProjectFactory.project.objects
 
     @Test
     fun testMonoDex() {
@@ -385,7 +390,7 @@ class DexMergingTaskTest {
                             inputChanges.getFileChanges(
                                     FakeFileCollection(dexDirsOrJars.get())).toSerializable()
                     )
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = factory.property(String::class.java).value("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService =

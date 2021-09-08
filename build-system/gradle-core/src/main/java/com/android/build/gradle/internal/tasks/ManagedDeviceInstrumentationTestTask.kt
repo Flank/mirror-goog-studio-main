@@ -236,7 +236,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                         managedDevice,
                         resultsOutDir,
                         codeCoverageOutDir,
-                        projectName,
+                        projectPath.get(),
                         testData.get().flavorName.get(),
                         testData.get().getAsStaticData(),
                         installOptions.getOrElse(listOf()),

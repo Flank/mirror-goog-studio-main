@@ -45,7 +45,7 @@ class BundleAllClassesTest {
                     override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val outputJar =
                         FakeObjectFactory.factory.fileProperty().fileValue(outputJar)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(

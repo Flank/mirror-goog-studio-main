@@ -103,7 +103,7 @@ class DexArchiveBuilderTaskDelegate(
     private val numberOfBuckets: Int,
     private val workerExecutor: WorkerExecutor,
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
-    private val projectName: String,
+    private val projectPath: Provider<String>,
     private val taskPath: String,
     private val analyticsService: Provider<AnalyticsService>
 ) {
@@ -402,7 +402,7 @@ class DexArchiveBuilderTaskDelegate(
 
             val classBucket = ClassBucket(inputs, bucketId)
             workerExecutor.noIsolation().submit(DexWorkAction::class.java) { params ->
-                params.initializeWith(projectName, taskPath, analyticsService)
+                params.initializeWith(projectPath, taskPath, analyticsService)
                 params.dexSpec.set(
                         IncrementalDexSpec(
                         inputClassFiles = classBucket,

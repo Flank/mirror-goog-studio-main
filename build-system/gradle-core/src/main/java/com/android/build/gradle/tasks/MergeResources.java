@@ -239,7 +239,7 @@ public abstract class MergeResources extends NewIncrementalTask {
         }
 
         return new WorkerExecutorResourceCompilationService(
-                mergeResourcesTask.getProjectName(),
+                mergeResourcesTask.getProjectPath(),
                 mergeResourcesTask.getPath(),
                 mergeResourcesTask.getWorkerExecutor(),
                 mergeResourcesTask.getAnalyticsService(),
@@ -249,7 +249,7 @@ public abstract class MergeResources extends NewIncrementalTask {
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
-        return Workers.INSTANCE.withGradleWorkers(getProjectName(), getPath(), getWorkerExecutor(), getAnalyticsService());
+        return Workers.INSTANCE.withGradleWorkers(getProjectPath().get(), getPath(), getWorkerExecutor(), getAnalyticsService());
     }
 
     @NonNull
@@ -574,7 +574,7 @@ public abstract class MergeResources extends NewIncrementalTask {
         sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_MERGED_DOT_DIR));
         sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_STRIPPED_DOT_DIR));
         return RelativeResourceUtils.getIdentifiedSourceSetMap(
-                sourceSets, getNamespace().get(), getProjectName());
+                sourceSets, getNamespace().get(), getProjectPath().get());
     }
 
     @Nullable

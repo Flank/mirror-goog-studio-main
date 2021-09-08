@@ -111,7 +111,7 @@ class ManagedDeviceTestRunnerTest {
             mockManagedDevice,
             temporaryFolderRule.newFolder("results"),
             mockCoverageOutputDir,
-            "projectName",
+            "projectPath",
             "variantName",
             mockTestData,
             listOf(),

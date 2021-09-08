@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -57,7 +59,7 @@ import java.util.function.BiConsumer
 abstract class JavaDocGenerationTask : NonIncrementalTask() {
 
     @get:Input
-    abstract val moduleName: Property<String>
+    abstract override val projectPath: Property<String>
 
     @get:Input
     abstract val moduleVersion: Property<String>
@@ -87,7 +89,7 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
                 classpath,
                 outputDirectory,
                 path,
-                moduleName.get(),
+                projectPath.get(),
                 moduleVersion.get())
 
         getRuntimeClassLoader(dokkaRuntimeClasspath).use {
@@ -192,27 +194,26 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
         override fun configure(task: JavaDocGenerationTask) {
             super.configure(task)
 
-            task.moduleName.set(task.projectName)
-            task.moduleVersion.set(task.project.version.toString())
+            task.moduleVersion.setDisallowChanges(task.project.version.toString())
 
             val dokkaPluginConfig = task.project.configurations.detachedConfiguration(
                 task.project.dependencies.create(DOKKA_BASE_PLUGIN),
                 task.project.dependencies.create(DOKKA_JAVADOC_PLUGIN)
             )
-            task.dokkaPlugins.from(dokkaPluginConfig)
+            task.dokkaPlugins.fromDisallowChanges(dokkaPluginConfig)
 
             val runtimeConfig = task.project.configurations.detachedConfiguration(
                 task.project.dependencies.create(DOKKA_CORE),
                 task.project.dependencies.create(DOKKA_JAVADOC_PLUGIN)
             )
-            task.dokkaRuntimeClasspath.from(runtimeConfig)
+            task.dokkaRuntimeClasspath.fromDisallowChanges(runtimeConfig)
 
-            task.sources.from(
+            task.sources.fromDisallowChanges(
                 Callable { creationConfig.variantSources.getSourceFiles { it.javaDirectories } },
                 Callable { creationConfig.variantSources.getSourceFiles { it.kotlinDirectories } }
             )
 
-            task.classpath.from(
+            task.classpath.fromDisallowChanges(
                 creationConfig.sdkComponents.bootClasspath,
                 creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
             )

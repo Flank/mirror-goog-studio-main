@@ -161,7 +161,7 @@ class DataBindingMergeBaseClassLogTest {
                         override val status: Property<FileStatus>
                             get() = project.objects.property(FileStatus::class.java)
                                 .also { it.set(status) }
-                        override val projectName: Property<String>
+                        override val projectPath: Property<String>
                             get() = project.objects.property(String::class.java)
                                 .also { it.set("projectName") }
                         override val taskOwner: Property<String>

@@ -54,7 +54,7 @@ class FeatureDexMergeTaskTest {
                     get() = FakeConfigurableFileCollection(inputDir)
                 override val outputDir: DirectoryProperty
                     get() = FakeObjectFactory.factory.directoryProperty().fileValue(outputDir)
-                override val projectName: Property<String>
+                override val projectPath: Property<String>
                     get() = FakeGradleProperty("projectName")
                 override val taskOwner: Property<String>
                     get() = FakeGradleProperty("taskOwner")

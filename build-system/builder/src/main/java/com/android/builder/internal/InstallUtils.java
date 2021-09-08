@@ -30,7 +30,7 @@ public class InstallUtils {
      * @param device the device
      * @param appMinSdkVersion the minSdkVersion of the app
      * @param logger a logger object
-     * @param projectName the project name for logging
+     * @param projectPath the project name for logging
      * @param variantName the variant name for logging
      * @return true if the device can run the app
      */
@@ -38,13 +38,13 @@ public class InstallUtils {
             @NonNull DeviceConnector device,
             @NonNull AndroidVersion appMinSdkVersion,
             @NonNull ILogger logger,
-            @NonNull String projectName,
+            @NonNull String projectPath,
             @NonNull String variantName) {
         int deviceApiLevel = device.getApiLevel();
         if (deviceApiLevel == 0) {
             logger.lifecycle(
                     "Skipping device '%1$s' for '%2$s:%3$s': Unknown API Level",
-                    device.getName(), projectName, variantName);
+                    device.getName(), projectPath, variantName);
             return false;
         }
 
@@ -70,7 +70,7 @@ public class InstallUtils {
             logger.lifecycle(
                     "Skipping device '%s' for '%s:%s': minSdkVersion [%s] > deviceApiLevel [%d]",
                     device.getName(),
-                    projectName,
+                    projectPath,
                     variantName,
                     appMinSdkVersion.getApiString(),
                     deviceApiLevel);

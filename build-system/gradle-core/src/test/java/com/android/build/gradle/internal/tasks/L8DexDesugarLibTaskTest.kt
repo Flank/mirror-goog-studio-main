@@ -65,7 +65,7 @@ class L8DexDesugarLibTaskTest {
                     override val keepRulesConfigurations =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val debuggable = FakeGradleProperty(true)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(

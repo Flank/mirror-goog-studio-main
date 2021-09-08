@@ -86,7 +86,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
-            it.initializeWith(projectName,  path, analyticsService)
+            it.initializeWith(projectPath,  path, analyticsService)
             it.sdkService.set(sdkService)
             it.compileSdkVersion.set(compileSdkVersion)
             it.buildToolsRevision.set(buildToolsRevision)

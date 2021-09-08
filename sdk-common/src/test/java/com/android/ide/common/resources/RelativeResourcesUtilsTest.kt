@@ -43,7 +43,7 @@ class RelativeResourcesUtilsTest {
                 File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "main", "res")),
                 File(FileUtils.join("usr", "a", "b", "myproject", "app", "src", "debug", "res"))
         )
-        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, ":app")
         val expected = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
         // Ordinal value is 1 due to invariantPath sorting in getIdentifiedSourceSetMap
         assertThat(expected)
@@ -77,7 +77,7 @@ class RelativeResourcesUtilsTest {
                                     "usr", "a", "b", "myproject", "app", "src", "main", "res"))
         )
 
-        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, ":app")
         getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
     }
 
@@ -94,7 +94,7 @@ class RelativeResourcesUtilsTest {
                         "incremental", "mergeDebugResources", "merged.dir"))
         )
 
-        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, ":app")
         val relativePath = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
         assertThat(relativePath).isEqualTo(
                 "com.foobar.myproject.app-mergeDebugResources-0:/layout/activity_map_tv.xml"
@@ -114,7 +114,7 @@ class RelativeResourcesUtilsTest {
         )
 
         val packageName = "com.foobar.myproject.app"
-        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, "app")
+        val identifiedSourceSetMap = getIdentifiedSourceSetMap(sourceSets, packageName, ":app")
         val result = getRelativeSourceSetPath(testAbsoluteFile, identifiedSourceSetMap)
         assertThat(result).isEqualTo("com.foobar.myproject.app-pngs-0:/drawable/a.png")
     }

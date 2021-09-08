@@ -248,7 +248,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             inputJarHashesFile = inputJarHashesFile.get().asFile,
             numberOfBuckets = numberOfBuckets.get(),
             workerExecutor = workerExecutor,
-            projectName = projectName,
+            projectPath = projectPath,
             taskPath = path,
             analyticsService = analyticsService
         ).doProcess()

@@ -98,11 +98,11 @@ fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
 fun writeIdentifiedSourceSetsFile(
         resourceSourceSets: List<File>,
         namespace: String,
-        projectName: String,
+        projectPath: String,
         output: File
 ) {
     output.bufferedWriter().use { bw ->
-        getIdentifiedSourceSetMap(resourceSourceSets, namespace, projectName).forEach {
+        getIdentifiedSourceSetMap(resourceSourceSets, namespace, projectPath).forEach {
             bw.write("${it.key} ${it.value}\n")
         }
     }
@@ -125,7 +125,8 @@ fun mergeIdentifiedSourceSetFiles(sourceSetFiles: List<File>) : Map<String, Stri
 fun getIdentifiedSourceSetMap(
         resourceSourceSets: List<File>,
         namespace: String,
-        projectName: String) : Map<String, String> {
+        projectPath: String) : Map<String, String> {
+    val projectName = projectPath.split(":").last()
     var i = 0
     return resourceSourceSets
             .asSequence()

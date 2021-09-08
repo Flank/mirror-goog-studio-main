@@ -117,7 +117,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
         val logger = LoggerWrapper(logger)
         try {
-            Workers.withGradleWorkers(projectName, path, workerExecutor, analyticsService).use { workerExecutor ->
+            Workers.withGradleWorkers(projectPath.get(), path, workerExecutor, analyticsService).use { workerExecutor ->
                 for (assetSet in assetSets) {
                     // set needs to be loaded.
                     assetSet.loadFromFiles(logger)
@@ -151,7 +151,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         // create a merger and load the known state.
         val merger = AssetMerger()
         try {
-            Workers.withGradleWorkers(projectName, path, workerExecutor, analyticsService).use { workerExecutor ->
+            Workers.withGradleWorkers(projectPath.get(), path, workerExecutor, analyticsService).use { workerExecutor ->
                 if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true, aaptEnv)) {
                     doFullTaskAction()
                     return

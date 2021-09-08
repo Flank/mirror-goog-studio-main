@@ -130,7 +130,7 @@ class ParseLibraryResourcesTaskTest(
             override val partialRDir = objects.directoryProperty().fileValue(partialRDirectory)
             override val enablePartialRIncrementalBuilds =
                 FakeGradleProperty(this@ParseLibraryResourcesTaskTest.usePartialR)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
@@ -169,7 +169,7 @@ class ParseLibraryResourcesTaskTest(
             override val partialRDir = objects.directoryProperty().fileValue(partialRDirectory)
             override val enablePartialRIncrementalBuilds =
                 FakeGradleProperty(this@ParseLibraryResourcesTaskTest.usePartialR)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -224,7 +224,7 @@ class ParseLibraryResourcesTaskTest(
             override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
             override val enablePartialRIncrementalBuilds =
                 FakeGradleProperty(this@ParseLibraryResourcesTaskTest.usePartialR)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -299,7 +299,7 @@ class ParseLibraryResourcesTaskTest(
             override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
             override val enablePartialRIncrementalBuilds =
                 FakeGradleProperty(this@ParseLibraryResourcesTaskTest.usePartialR)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -367,7 +367,7 @@ class ParseLibraryResourcesTaskTest(
                 objects.listProperty(SerializableChange::class.java).value(changedResources)
             override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
             override val enablePartialRIncrementalBuilds = FakeGradleProperty(true)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -470,7 +470,7 @@ class ParseLibraryResourcesTaskTest(
                     objects.listProperty(SerializableChange::class.java).value(emptyList())
             override val partialRDir = objects.directoryProperty().fileValue(partialRFolder)
             override val enablePartialRIncrementalBuilds = FakeGradleProperty(true)
-            override val projectName = FakeGradleProperty("projectName")
+            override val projectPath = FakeGradleProperty("projectName")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())

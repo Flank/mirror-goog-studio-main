@@ -35,9 +35,9 @@ class ManagedDeviceTestRunner(
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
         List<UtpRunnerConfig>, String, String, File, ILogger
-    ) -> List<Boolean> = { runnerConfigs, projectName, variantName, resultsDir, logger ->
+    ) -> List<Boolean> = { runnerConfigs, projectPath, variantName, resultsDir, logger ->
         runUtpTestSuiteAndWait(
-            runnerConfigs, workerExecutor, projectName, variantName, resultsDir, logger,
+            runnerConfigs, workerExecutor, projectPath, variantName, resultsDir, logger,
             null, utpDependencies)
     }
 ) {
@@ -45,7 +45,7 @@ class ManagedDeviceTestRunner(
         managedDevice: UtpManagedDevice,
         outputDirectory: File,
         coverageOutputDirectory: File,
-        projectName: String,
+        projectPath: String,
         variantName: String,
         testData: StaticTestData,
         additionalInstallOptions: List<String>,
@@ -103,7 +103,7 @@ class ManagedDeviceTestRunner(
 
         val results = runUtpTestSuiteAndWaitFunc(
             runnerConfigs,
-            projectName,
+            projectPath,
             variantName,
             outputDirectory,
             logger

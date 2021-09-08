@@ -17,15 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.google.common.collect.Maps
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -47,7 +42,6 @@ class CheckDuplicateClassesDelegate {
     }
 
     fun run(
-        projectName: String,
         enumeratedClasses: Map<String, File>) {
 
         val classesMap = extractClasses(enumeratedClasses)
@@ -89,14 +83,12 @@ private fun duplicateClassMessage(className: String, artifactNames: List<String>
 }
 
 abstract class CheckDuplicatesParams: WorkParameters {
-    abstract val projectName: Property<String>
     abstract val enumeratedClasses: MapProperty<String, File>
 }
 
 abstract class CheckDuplicatesRunnable @Inject constructor(): WorkAction<CheckDuplicatesParams> {
     override fun execute() {
         CheckDuplicateClassesDelegate().run(
-            parameters.projectName.get(),
             parameters.enumeratedClasses.get()
         )
     }

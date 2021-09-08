@@ -54,7 +54,7 @@ class CopyDexOutputTest {
                     override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
                     override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
                     override val outputKeepRules = FakeObjectFactory.factory.directoryProperty()
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
@@ -84,7 +84,7 @@ class CopyDexOutputTest {
                     override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
                     override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(outputDex)
                     override val outputKeepRules = FakeObjectFactory.factory.directoryProperty().fileValue(outputKeepRules)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())

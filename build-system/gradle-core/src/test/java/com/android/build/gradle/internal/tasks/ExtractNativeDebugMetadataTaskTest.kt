@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInjectableService
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
+import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
@@ -46,6 +47,8 @@ class ExtractNativeDebugMetadataTaskTest {
 
     @get: Rule
     val temporaryFolder = TemporaryFolder()
+
+    private val factory=  ProjectFactory.project.objects
 
     private lateinit var inputDir: File
     private lateinit var strippedNativelibs: File
@@ -110,7 +113,7 @@ class ExtractNativeDebugMetadataTaskTest {
                             .value(this@ExtractNativeDebugMetadataTaskTest.objcopyExecutableMap)
                     override val debugSymbolLevel = FakeGradleProperty(DebugSymbolLevel.FULL)
                     override val maxWorkerCount = FakeGradleProperty(2)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = factory.property(String::class.java).value("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -162,7 +165,7 @@ class ExtractNativeDebugMetadataTaskTest {
                             .value(this@ExtractNativeDebugMetadataTaskTest.objcopyExecutableMap)
                     override val debugSymbolLevel = FakeGradleProperty(DebugSymbolLevel.FULL)
                     override val maxWorkerCount = FakeGradleProperty(1)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = factory.property(String::class.java).value("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>
@@ -214,7 +217,7 @@ class ExtractNativeDebugMetadataTaskTest {
                     override val debugSymbolLevel =
                         FakeGradleProperty(DebugSymbolLevel.SYMBOL_TABLE)
                     override val maxWorkerCount = FakeGradleProperty(2)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = factory.property(String::class.java).value("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService>

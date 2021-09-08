@@ -146,7 +146,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         override fun run() {
             val aapt2Input = parameters.aapt2.get()
             WorkerExecutorResourceCompilationService(
-                projectName = parameters.projectName.get(),
+                projectPath = parameters.projectPath,
                 taskOwner = parameters.taskOwner.get(),
                 analyticsService = parameters.analyticsService,
                 workerExecutor = workerExecutor,

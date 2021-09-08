@@ -98,7 +98,7 @@ class GenerateLibraryProguardRulesTaskTest {
             override val changedResources = FakeObjectFactory.factory.listProperty(
                 SerializableChange::class.java).value(changedResources)
             override val incremental = FakeGradleProperty(true)
-            override val projectName = FakeGradleProperty("project")
+            override val projectPath = FakeGradleProperty("project")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
@@ -169,7 +169,7 @@ class GenerateLibraryProguardRulesTaskTest {
             override val changedResources =
                 FakeObjectFactory.factory.listProperty(SerializableChange::class.java)
             override val incremental = FakeGradleProperty(false)
-            override val projectName = FakeGradleProperty("project")
+            override val projectPath = FakeGradleProperty("project")
             override val taskOwner = FakeGradleProperty("taskOwner")
             override val workerKey = FakeGradleProperty("workerKey")
             override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())

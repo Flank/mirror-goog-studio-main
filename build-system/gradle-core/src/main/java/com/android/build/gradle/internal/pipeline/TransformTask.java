@@ -263,7 +263,7 @@ public abstract class TransformTask extends StreamBasedTask {
 
                                     @Override
                                     public String getProjectName() {
-                                        return TransformTask.this.getProjectName();
+                                        return TransformTask.this.getProjectPath().get();
                                     }
 
                                     @NonNull

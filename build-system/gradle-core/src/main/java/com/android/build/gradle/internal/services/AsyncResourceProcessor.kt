@@ -31,7 +31,6 @@ import javax.annotation.concurrent.ThreadSafe
 /** Wrapper around aapt2 and an executor service for use in gradle worker actions. */
 @ThreadSafe
 class AsyncResourceProcessor<ServiceT> constructor(
-    private val projectName: String,
     private val owner: String,
     private val executor: ExecutorService,
     private val service: ServiceT,

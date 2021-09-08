@@ -31,7 +31,7 @@ import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
-    private val projectName: String,
+    private val projectPath: Provider<String>,
     private val taskOwner: String,
     private val workerExecutor: WorkerExecutor,
     private val analyticsService: Provider<AnalyticsService>,
@@ -82,7 +82,7 @@ class WorkerExecutorResourceCompilationService(
         jvmBuckets.values.forEach { bucket ->
             workerExecutor.noIsolation()
                 .submit(ResourceCompilerRunnable::class.java) {
-                    it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
+                    it.initializeWith(projectPath = projectPath, taskOwner = taskOwner, analyticsService = analyticsService)
                     it.request.set(bucket)
                 }
         }
@@ -102,7 +102,7 @@ class WorkerExecutorResourceCompilationService(
             workerExecutor.noIsolation().submit(
                 Aapt2CompileRunnable::class.java
             ) {
-                it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
+                it.initializeWith(projectPath = projectPath, taskOwner = taskOwner, analyticsService = analyticsService)
                 it.aapt2Input.set(aapt2Input)
                 it.requests.set(bucketRequests)
                 it.enableBlame.set(true)

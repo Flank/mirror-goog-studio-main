@@ -342,7 +342,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
                                 try {
                                     return testRunner.runTests(
-                                            getProjectName(),
+                                            getProjectPath().get(),
                                             getTestData().get().getFlavorName().get(),
                                             getTestData().get().getAsStaticData(),
                                             getBuddyApks().getFiles(),

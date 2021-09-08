@@ -70,7 +70,7 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
                         FakeGradleProperty(FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O)
                     override val outputFile =
                         FakeObjectFactory.factory.fileProperty().fileValue(outputLocation)
-                    override val projectName = FakeGradleProperty("project")
+                    override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(

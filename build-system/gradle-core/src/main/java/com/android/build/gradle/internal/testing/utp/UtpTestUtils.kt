@@ -65,7 +65,7 @@ data class UtpRunnerConfig(
 fun runUtpTestSuiteAndWait(
     runnerConfigs: List<UtpRunnerConfig>,
     workerExecutor: WorkerExecutor,
-    projectName: String,
+    projectPath: String,
     variantName: String,
     resultsDir: File,
     logger: ILogger,
@@ -99,7 +99,7 @@ fun runUtpTestSuiteAndWait(
                     } else {
                         "${config.deviceName}_${config.shardConfig.index}"
                     },
-                    projectName,
+                    projectPath,
                     variantName,
                     logger).apply {
                     setReportDir(resultsDir)

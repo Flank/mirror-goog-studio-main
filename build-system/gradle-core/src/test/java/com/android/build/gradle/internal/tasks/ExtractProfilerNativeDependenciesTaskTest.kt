@@ -209,7 +209,7 @@ class ExtractProfilerNativeDependenciesTaskTest {
             override fun getParameters() = object : Parameters() {
                 override val outputDir = FakeObjectFactory.factory.directoryProperty().fileValue(outputDir)
                 override val inputJars = FakeObjectFactory.factory.fileCollection().from(inputJars)
-                override val projectName = FakeGradleProperty("projectName")
+                override val projectPath = FakeGradleProperty("projectName")
                 override val taskOwner = FakeGradleProperty("taskOwner")
                 override val workerKey = FakeGradleProperty("workerKey")
                 override val analyticsService: Property<AnalyticsService>

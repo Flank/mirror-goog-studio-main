@@ -100,7 +100,7 @@ class MergeJavaResWorkActionTest {
                         )
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(
@@ -189,7 +189,7 @@ class MergeJavaResWorkActionTest {
                         FakeObjectFactory.factory.listProperty(String::class.java).also {
                             it.add(".no_compress")
                         }
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -256,7 +256,7 @@ class MergeJavaResWorkActionTest {
                         )
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -313,7 +313,7 @@ class MergeJavaResWorkActionTest {
                         ).also { it.put(jarFile, FileStatus.CHANGED) }
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())
@@ -376,7 +376,7 @@ class MergeJavaResWorkActionTest {
                         )
                     override val noCompress =
                         FakeObjectFactory.factory.listProperty(String::class.java)
-                    override val projectName = FakeGradleProperty("projectName")
+                    override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
                     override val analyticsService: Property<AnalyticsService> = FakeGradleProperty(FakeNoOpAnalyticsService())

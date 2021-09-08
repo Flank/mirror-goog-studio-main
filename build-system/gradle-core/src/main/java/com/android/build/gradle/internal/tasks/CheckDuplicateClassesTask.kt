@@ -51,7 +51,6 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(CheckDuplicatesRunnable::class.java) { params ->
-            params.projectName.set(projectName)
             params.enumeratedClasses.set(enumeratedClassesArtifacts.artifacts.map { it.id.displayName to it.file }.toMap())
         }
     }

@@ -207,7 +207,6 @@ fun Aapt2Input.use(
     val daemonBuildService = buildService.get()
 
     AsyncResourceProcessor(
-        projectName = context.projectName.get(),
         owner = context.taskOwner.get(),
         executor = threadPool,
         service = daemonBuildService.getLeasingAapt2(this),
