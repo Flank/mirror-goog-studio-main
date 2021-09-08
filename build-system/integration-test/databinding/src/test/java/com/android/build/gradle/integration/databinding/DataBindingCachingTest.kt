@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TaskStateList
@@ -58,6 +57,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     private val expectedTaskStates: Map<String, TaskStateList.ExecutionState> = mapOf(
         // Sort by alphabetical order for easier searching
         ":checkDebugAarMetadata" to FROM_CACHE,
+        ":clean" to UP_TO_DATE,
         ":compileDebugAidl" to SKIPPED,
         ":compileDebugJavaWithJavac" to FROM_CACHE,
         ":compileDebugRenderscript" to SKIPPED,
@@ -81,7 +81,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     ).plus(
         if (withKotlin) {
             mapOf(
-                ":clean" to DID_WORK,
                 // Kotlin tasks are not FROM_CACHE because they includes the project name in the
                 // cache key, and the two project names in this test are currently different.
                 ":compileDebugKotlin" to DID_WORK,
@@ -89,9 +88,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
                 ":kaptGenerateStubsDebugKotlin" to DID_WORK
             )
         } else {
-            mapOf(
-                ":clean" to UP_TO_DATE
-            )
+            emptyMap()
         }
     ).plus(
             if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
