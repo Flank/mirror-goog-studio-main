@@ -161,7 +161,7 @@ def _resources(ctx, resources, resources_jar):
         outputs = [resources_jar],
         executable = ctx.executable._zipper,
         arguments = zipper_args,
-        progress_message = "Creating resources zip...",
+        progress_message = "Creating resources %s (%d files)" % (resources_jar.short_path, len(resources)),
         mnemonic = "zipper",
     )
 
