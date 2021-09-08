@@ -303,7 +303,7 @@ class LintFixVerifierTest {
             context.report(
                 ISSUE, context.getCallLocation(node, false, false),
                 "This call references a method added in API level 21; however, the containing class " +
-                    "androidx.AutofixUnsafeVoidMethodReferenceJava is reachable from earlier API levels and " +
+                    "`androidx.AutofixUnsafeVoidMethodReferenceJava` is reachable from earlier API levels and " +
                     "will fail run-time class verification.",
                 fix
             )
@@ -480,6 +480,7 @@ class LintFixVerifierDetector : Detector(), Detector.UastScanner {
     }
 }
 
+@Suppress("MissingVendor")
 class LintFixVerifierRegistry : IssueRegistry() {
     override val issues: List<Issue>
         get() = listOf(LintFixVerifierDetector.ISSUE)

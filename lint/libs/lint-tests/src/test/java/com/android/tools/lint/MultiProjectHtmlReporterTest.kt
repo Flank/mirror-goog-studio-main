@@ -31,6 +31,7 @@ import java.io.File
 import java.util.ArrayList
 
 class MultiProjectHtmlReporterTest : AbstractCheckTest() {
+    @Suppress("MissingVendor")
     fun testBasic() {
         val dir = File(targetDir, "report")
         try {

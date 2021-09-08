@@ -238,7 +238,7 @@ class LintDetectorDetector : Detector(), UastScanner {
 
     private fun checkIssueRegistry(context: JavaContext, declaration: UClass) {
         val methods = declaration.javaPsi.allMethods
-        val count = methods.count() { it.name == "getVendor" && it.parameters.isEmpty() }
+        val count = methods.count { it.name == "getVendor" && it.parameters.isEmpty() }
         if (count <= 1) { // one occurrence is on IssueRegistry itself; don't count that one
             val name = declaration.qualifiedName
             if (name != null && name.startsWith("com.android.tools.lint.client.api.")) {
@@ -648,6 +648,12 @@ class LintDetectorDetector : Detector(), UastScanner {
                 id == "PrivateMemberAccessBetweenOuterAndInnerClass" ||
                 id == "PermissionImpliesUnsupportedChromeOsHardware"
             ) {
+                return
+            }
+
+            if (id.startsWith("_") && context.isTestSource) {
+                // Unit test detectors conventionally use _ as an id prefix
+                // to easily tell them apart from regular checks
                 return
             }
 
@@ -1168,6 +1174,12 @@ class LintDetectorDetector : Detector(), UastScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
+        private val TEST_IMPLEMENTATION = Implementation(
+            LintDetectorDetector::class.java,
+            EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+            Scope.JAVA_FILE_SCOPE
+        )
+
         /** Expected lint id format. */
         @JvmField
         val ID =
@@ -1416,7 +1428,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION,
+                implementation = TEST_IMPLEMENTATION,
                 platforms = JDK_SET
             )
 
@@ -1448,7 +1460,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION,
+                implementation = TEST_IMPLEMENTATION,
                 platforms = JDK_SET
             )
 
@@ -1473,8 +1485,8 @@ class LintDetectorDetector : Detector(), UastScanner {
                     """,
                 category = CUSTOM_LINT_CHECKS,
                 priority = 6,
-                severity = Severity.WARNING,
-                implementation = IMPLEMENTATION,
+                severity = WARNING,
+                implementation = TEST_IMPLEMENTATION,
                 platforms = JDK_SET,
                 enabledByDefault = false
             )

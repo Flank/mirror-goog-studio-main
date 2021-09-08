@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import junit.framework.TestCase;
 
+@SuppressWarnings("MissingVendor")
 public class CompositeIssueRegistryTest extends TestCase {
     @Override
     protected void setUp() throws Exception {

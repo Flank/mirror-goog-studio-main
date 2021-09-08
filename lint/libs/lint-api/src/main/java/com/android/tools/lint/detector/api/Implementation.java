@@ -175,7 +175,7 @@ public class Implementation {
                 && !scope.contains(Scope.TEST_SOURCES)
                 && this.scope.contains(Scope.TEST_SOURCES)) {
             // TEST_SOURCES is a special marker scope
-            return true;
+            return this.scope.contains(scope.iterator().next());
         }
 
         return false;

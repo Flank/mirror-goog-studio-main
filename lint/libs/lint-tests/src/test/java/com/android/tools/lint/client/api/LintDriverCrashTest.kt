@@ -74,18 +74,16 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 {
                     assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
                     assertThat(it).contains("The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.")
-                    assertThat(
-                        it.contains(
-                            """
-                    The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.
-                    You can try disabling it with something like this:
-                        android {
-                            lintOptions {
-                                disable "_TestCrash"
-                            }
-                        }
-                            """.trimIndent()
-                        )
+                    assertThat(it).contains(
+                        """
+                        The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.
+                        You can try disabling it with something like this:
+                            android {
+                                lintOptions {
+                                    disable "_TestCrash"
+                                }
+                            }
+                        """.trimIndent()
                     )
 
                     // It's not easy to set environment variables from Java once the process is running,
@@ -418,6 +416,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             }
 
         companion object {
+            @Suppress("LintImplTextFormat")
             val CRASHING_ISSUE = Issue
                 .create(
                     "_TestCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
@@ -580,6 +579,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
         companion object {
             val COLOR_REGEX = Regex("#[a-fA-F\\d]{3,8}")
+            @Suppress("LintImplTextFormat")
             val ISSUE_COLOR_CASING = Issue.create(
                 "_ColorCasing",
                 "Raw colors should be defined with uppercase letters.",
@@ -602,6 +602,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
         }
 
         companion object {
+            @Suppress("LintImplTextFormat")
             val DISPOSED_ISSUE = Issue.create(
                 "_TestDisposed", "test", "test", Category.LINT,
                 10, Severity.FATAL,
@@ -636,6 +637,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             }
 
         companion object {
+            @Suppress("LintImplTextFormat")
             val LINKAGE_ERROR = Issue
                 .create(
                     "_LinkageCrash", "test", "test", Category.LINT, 10, Severity.FATAL,

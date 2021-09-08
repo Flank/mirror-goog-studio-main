@@ -510,6 +510,7 @@ class SimplePlatformLookupTest {
         }
     }
 
+    @Suppress("DefaultLocale")
     private fun createSampleAddOn(
         sdk: File,
         vendor: String,

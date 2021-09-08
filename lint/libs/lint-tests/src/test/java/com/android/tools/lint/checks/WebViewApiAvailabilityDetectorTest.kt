@@ -146,6 +146,7 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
+    @Suppress("WrongTerminology")
     fun testGuardedAndroidXAvailableMethods() {
         val expected =
             """
@@ -215,6 +216,7 @@ class WebViewApiAvailabilityDetectorTest : AbstractCheckTest() {
             .expect(expected)
     }
 
+    @Suppress("WrongTerminology")
     fun testGuardedAndroidXAvailableMethodsKotlin() {
         val expected =
             """

@@ -624,7 +624,7 @@ dependencies {
 
     // @Test
     // TODO(b/158654131): Re-implement when possible.
-    @Ignore
+    @Ignore("b/158654131")
     fun testNestedDependencies() {
         // Nested dependencies are not supported in the IDE right now.
         /*
