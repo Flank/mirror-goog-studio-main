@@ -66,6 +66,7 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
@@ -95,16 +96,18 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         if (p is UQualifiedReferenceExpression) {
             call = p
-            p = p.uastParent ?: return
+            p = skipParenthesizedExprUp(p.uastParent) ?: return
         }
 
         if (p is UBinaryExpression) {
             var check: UExpression? = null
             val binary = p
-            if (call === binary.leftOperand) {
-                check = binary.rightOperand
-            } else if (call === binary.rightOperand) {
-                check = binary.leftOperand
+            val leftOperand = binary.leftOperand.skipParenthesizedExprDown()
+            val rightOperand = binary.rightOperand.skipParenthesizedExprDown()
+            if (call === leftOperand) {
+                check = rightOperand
+            } else if (call === rightOperand) {
+                check = leftOperand
             }
             if (check != null) {
                 checkAnnotations(
@@ -135,15 +138,18 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 if (selector is UCallExpression) {
                     val arguments = selector.valueArguments
                     if (arguments.size == 1) {
-                        checkAnnotations(
-                            context = context,
-                            argument = arguments[0],
-                            type = AnnotationUsageType.EQUALITY,
-                            method = method,
-                            referenced = referenced,
-                            annotations = allMethodAnnotations,
-                            annotated = annotated
-                        )
+                        val argument = arguments[0].skipParenthesizedExprDown()
+                        if (argument != null) {
+                            checkAnnotations(
+                                context = context,
+                                argument = arguments[0],
+                                type = AnnotationUsageType.EQUALITY,
+                                method = method,
+                                referenced = referenced,
+                                annotations = allMethodAnnotations,
+                                annotated = annotated
+                            )
+                        }
                     }
                 }
             }
