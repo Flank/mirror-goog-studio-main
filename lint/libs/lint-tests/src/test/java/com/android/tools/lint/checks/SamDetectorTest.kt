@@ -54,7 +54,12 @@ class SamDetectorTest : AbstractCheckTest() {
                     var lambda2: () -> Unit
                     lambda2 = { println("hello") }
                     handler.stash(lambda2, list) // WARN
+
+                    handler.act({ println("hello") }) // OK
+                    handler.act(::callback) // OK
                 }
+
+                fun callback() {}
 
                 fun viewpost(view: android.view.View) {
                     view.postDelayed({ println ("Hello") }, 50)
@@ -129,6 +134,17 @@ class SamDetectorTest : AbstractCheckTest() {
                     public void compareEquals2(MyInterface actor) {
                         if (last.equals(actor)) {
                             System.out.println("last");
+                        }
+                    }
+
+                    public void act(MyInterface actor) {
+                        if (actor != null) {
+                            actor.act();
+                        }
+                        //noinspection StatementWithEmptyBody
+                        if (actor == null) {
+                        } else {
+                            actor.act();
                         }
                     }
                 }
