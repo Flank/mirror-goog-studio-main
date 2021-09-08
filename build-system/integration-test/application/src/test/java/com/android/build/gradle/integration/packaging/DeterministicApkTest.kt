@@ -79,8 +79,7 @@ class DeterministicApkTest(
         getExecutor().run(getAssembleTask())
         val apk1 = project.getApk(
                 getApkType(),
-                if (fromIde) GradleTestProject.ApkLocation.Intermediates
-                else GradleTestProject.ApkLocation.Output
+                GradleTestProject.ApkLocation.Output
         )
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
@@ -89,8 +88,7 @@ class DeterministicApkTest(
         getExecutor().run("clean", getAssembleTask())
         val apk2 = project.getApk(
                 getApkType(),
-                if (fromIde) GradleTestProject.ApkLocation.Intermediates
-                else GradleTestProject.ApkLocation.Output
+                GradleTestProject.ApkLocation.Output
         )
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()
@@ -103,8 +101,7 @@ class DeterministicApkTest(
         getExecutor().run(getAssembleTask())
         val apk1 = project.getApk(
                 getApkType(),
-                if (fromIde) GradleTestProject.ApkLocation.Intermediates
-                else GradleTestProject.ApkLocation.Output
+                GradleTestProject.ApkLocation.Output
         )
         assertThat(apk1).exists()
         val byteArray1 = apk1.file.toFile().readBytes()
@@ -120,8 +117,7 @@ class DeterministicApkTest(
         getExecutor().run(getAssembleTask())
         val apk2 = project.getApk(
                 getApkType(),
-                if (fromIde) GradleTestProject.ApkLocation.Intermediates
-                else GradleTestProject.ApkLocation.Output
+                GradleTestProject.ApkLocation.Output
         )
         assertThat(apk2).exists()
         val byteArray2 = apk2.file.toFile().readBytes()

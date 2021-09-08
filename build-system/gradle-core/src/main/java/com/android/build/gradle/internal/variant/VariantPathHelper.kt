@@ -81,11 +81,13 @@ class VariantPathHelper(
     val apkLocation: File
             by lazy {
                 val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
+                // it does not really matter if the build was invoked from the IDE or not, it only
+                // matters if it is an 'optimized' build and in that case, we consider it a
+                // custom build.
                 val customBuild =
                         dslServices.projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY) != null ||
                         dslServices.projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI) != null ||
-                        dslServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null ||
-                                dslServices.projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)
+                        dslServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 val baseDirectory =when {
                     override != null -> dslServices.file(override)
                     customBuild ->  deploymentApkLocation.get().asFile
