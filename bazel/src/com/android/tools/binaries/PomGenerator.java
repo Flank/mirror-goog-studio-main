@@ -261,11 +261,6 @@ public class PomGenerator {
         MavenCoordinates coordinates;
         Model dependent = pomToModel(pom.getAbsolutePath());
         coordinates = new MavenCoordinates(dependent);
-        if (dependent.getPackaging().equals("pom")) {
-            // If the target has "pom" packaging, then the dependency
-            // must also be declared as a pom type dependency.
-            dependency.setType("pom");
-        }
 
         dependency.setGroupId(coordinates.groupId);
         dependency.setArtifactId(coordinates.artifactId);
