@@ -22,16 +22,16 @@ import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
 
-public class WatchFace extends AppComponent {
+public class Tile extends AppComponent {
 
     static final String LAUNCH_COMMAND =
-            "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --ecn component";
+            "am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation 'add-tile' --ecn component";
 
     static final String DEBUG_COMMAND = "am set-debug-app -w";
 
     @NonNull private final ILogger logger;
 
-    public WatchFace(
+    public Tile(
             @NonNull ManifestServiceInfo info,
             @NonNull String appId,
             @NonNull IDevice device, @NonNull ILogger logger
@@ -44,19 +44,19 @@ public class WatchFace extends AppComponent {
     public void activate(
             @NonNull String extraFlags,
             @NonNull Mode activationMode,
-            @NonNull IShellOutputReceiver receiver)
-            throws DeployerException {
+            @NonNull IShellOutputReceiver receiver
+    ) throws DeployerException {
         validate(extraFlags);
-        logger.info("Activating WatchFace '%s' %s",
+        logger.info("Activating Tile '%s' %s",
                     info.getQualifiedName(),
                     activationMode.equals(Mode.DEBUG) ? "for debug" : "");
 
         if (activationMode.equals(Mode.DEBUG)) {
-            String debug_command = DEBUG_COMMAND + " '" + appId + "'";
-            logger.info("$ adb shell " + debug_command);
-            runShellCommand(debug_command, receiver);
+            String debugCommand = String.format("%s '%s'", DEBUG_COMMAND, appId);
+            logger.info("$ adb shell " + debugCommand);
+            runShellCommand(debugCommand, receiver);
         }
-        String command = getStartWatchFaceCommand();
+        String command = getStartTileCommand();
         logger.info("$ adb shell " + command);
         runShellCommand(command, receiver);
     }
@@ -64,13 +64,13 @@ public class WatchFace extends AppComponent {
     private void validate(String extraFlags) throws DeployerException {
         if (!extraFlags.isEmpty()) {
             throw DeployerException.componentActivationException(
-                    String.format("Extra flags are not supported by Watch Face. Detected flags `%s`",
+                    String.format("Extra flags are not supported by Tile. Detected flags `%s`",
                                   extraFlags));
         }
     }
 
     @NonNull
-    private String getStartWatchFaceCommand() {
-        return LAUNCH_COMMAND + " " + getFQEscapedName();
+    private String getStartTileCommand() {
+        return String.format("%s %s", LAUNCH_COMMAND, getFQEscapedName());
     }
 }

@@ -22,33 +22,11 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.utils.ILogger;
+
 import java.util.Locale;
 
 public class Activity extends AppComponent {
 
-    @Override
-    public void activate(
-            @NonNull String extraFlags,
-            @NonNull Mode activationMode,
-            @NonNull IShellOutputReceiver receiver)
-            throws DeployerException {
-        validate(extraFlags, activationMode);
-        logger.info("Activating Activity '%s' '%s'",
-                    manifestActivityInfo.getQualifiedName(),
-                    activationMode.equals(Mode.DEBUG) ? "for debug" : "");
-        if (activationMode.equals(Mode.DEBUG) && extraFlags.contains(Flags.ENABLE_DEBUGGING.string)) {
-            extraFlags = "-D " + extraFlags;
-        }
-        String command = getStartActivityCommand(extraFlags);
-        logger.info("$ adb shell " + command);
-        runShellCommand(command, receiver);
-    }
-
-    @NonNull
-    private final ManifestActivityInfo manifestActivityInfo;
-
-    @NonNull
-    private final String packageName;
 
     @NonNull
     private final ILogger logger;
@@ -57,10 +35,27 @@ public class Activity extends AppComponent {
             @NonNull String appId,
             @NonNull IDevice device,
             @NonNull ILogger logger) {
-        super(device);
-        manifestActivityInfo = info;
-        this.packageName = appId;
+        super(device, appId, info);
         this.logger = logger;
+    }
+
+    @Override
+    public void activate(
+            @NonNull String extraFlags,
+            @NonNull Mode activationMode,
+            @NonNull IShellOutputReceiver receiver)
+            throws DeployerException {
+        validate(extraFlags, activationMode);
+        logger.info("Activating Activity '%s' %s",
+                    info.getQualifiedName(),
+                    activationMode.equals(Mode.DEBUG) ? "for debug" : "");
+        if (activationMode.equals(Mode.DEBUG)
+            && extraFlags.contains(Flags.ENABLE_DEBUGGING.string)) {
+            extraFlags = "-D " + extraFlags;
+        }
+        String command = getStartActivityCommand(extraFlags);
+        logger.info("$ adb shell " + command);
+        runShellCommand(command, receiver);
     }
 
     private void validate(@NonNull String extraFlags, @NonNull Mode activationMode)
@@ -80,7 +75,8 @@ public class Activity extends AppComponent {
             } try {
                 Flags validFlag = Flags.valueOf(current.toUpperCase(Locale.US));
                 hasArgument = validFlag.hasArgument;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw DeployerException.componentActivationException(
                         String.format("Unknown flag '%s'", current));
             }
@@ -88,6 +84,15 @@ public class Activity extends AppComponent {
         if (hasArgument) {
             throw DeployerException.componentActivationException("Invalid flags");
         }
+    }
+
+    @NonNull
+    private String getStartActivityCommand(@NonNull String extraFlags) {
+        return "am start" +
+               " -n " + getFQEscapedName() +
+               " -a android.intent.action.MAIN" +
+               " -c android.intent.category.LAUNCHER" +
+               extraFlags;
     }
 
     private enum Flags {
@@ -108,17 +113,5 @@ public class Activity extends AppComponent {
             this.string = flag;
             this.hasArgument = hasArgument;
         }
-    }
-
-    @NonNull
-    private String getStartActivityCommand(@NonNull String extraFlags) {
-        // Escape activity declared as inner class name (resulting in foo.bar.Activity$SubActivity).
-        String activityPath = packageName + "/" + manifestActivityInfo.getQualifiedName()
-                .replace("$", "\\$");
-        return "am start" +
-               " -n " + activityPath +
-               " -a android.intent.action.MAIN" +
-               " -c android.intent.category.LAUNCHER" +
-               extraFlags;
     }
 }

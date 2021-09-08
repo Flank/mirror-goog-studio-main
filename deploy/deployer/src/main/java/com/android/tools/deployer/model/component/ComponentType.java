@@ -17,5 +17,6 @@ package com.android.tools.deployer.model.component;
 
 public enum ComponentType {
     ACTIVITY,
-    WATCH_FACE
+    WATCH_FACE,
+    TILE
 }

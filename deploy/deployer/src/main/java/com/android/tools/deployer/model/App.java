@@ -23,6 +23,7 @@ import com.android.tools.deployer.DeployerException;
 import com.android.tools.deployer.model.component.Activity;
 import com.android.tools.deployer.model.component.AppComponent;
 import com.android.tools.deployer.model.component.ComponentType;
+import com.android.tools.deployer.model.component.Tile;
 import com.android.tools.deployer.model.component.WatchFace;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
@@ -107,6 +108,12 @@ public class App {
                 Optional<ManifestServiceInfo> optionalService = getService(qualifiedName);
                 if (optionalService.isPresent()) {
                     component = new WatchFace(optionalService.get(), appId, device, logger);
+                }
+                break;
+            case TILE:
+                optionalService = getService(qualifiedName);
+                if (optionalService.isPresent()) {
+                    component = new Tile(optionalService.get(), appId, device, logger);
                 }
                 break;
             default:
