@@ -17,7 +17,7 @@
 package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.deploy.asm.Type;
 
 public class LongValue extends AbstractValue<Long> {
     public LongValue(@NonNull Long value) {

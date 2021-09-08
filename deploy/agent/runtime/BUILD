@@ -1,6 +1,7 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_test")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 coverage_java_library(
     name = "interpreter_common",
@@ -8,15 +9,27 @@ coverage_java_library(
         "src/main/java/com/android/tools/deploy/interpreter/**/*.java",
     ]),
     deps = [
-        "lib/asm-all-9.0.jar",
+        ":asm4",
         "//tools/base/annotations",
     ],
 )
 
-java_import(
-    name = "jetbrains_asm4",
-    jars = [
+# Generates asm4.jar. Must be run manually and output copied to lib/asm4.jar.
+# $ tools/base/bazel/bazel build tools/base/deploy/agent/runtime:jarjar_asm4
+# $ cp bazel-bin/tools/base/deploy/agent/runtime/jarjar_asm4.jar tools/base/deploy/agent/runtime/lib/deploy_asm4.jar
+java_jarjar(
+    name = "jarjar_asm4",
+    srcs = [
         "lib/asm-all-9.0.jar",
+    ],
+    rules = "jarjar_asm4_rules.txt",
+    visibility = ["//visibility:private"],
+)
+
+java_import(
+    name = "asm4",
+    jars = [
+        "lib/deploy_asm4.jar",
     ],
 )
 
@@ -34,8 +47,8 @@ kotlin_library(
     ]),
     visibility = ["//visibility:private"],
     deps = [
+        ":asm4",
         ":interpreter_common",
-        ":jetbrains_asm4",
     ],
 )
 
@@ -53,7 +66,7 @@ coverage_java_library(
 
         # For prototyping LE, we will check in our own version of the
         # eval4j dependencies.
-        ":jetbrains_asm4",
+        ":asm4",
         ":eval4j",
         ":interpreter_common",
     ],
@@ -95,7 +108,7 @@ dex_library(
         ":runtime_java",
         ":eval4j",
         ":interpreter_common",
-        # ":jetbrains_asm4",
+        ":asm4",
         # ":kotlin-stdlib",
     ],
     visibility = ["//visibility:public"],

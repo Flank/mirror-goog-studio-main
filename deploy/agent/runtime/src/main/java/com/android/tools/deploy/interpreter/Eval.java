@@ -17,8 +17,8 @@
 package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
+import com.android.deploy.asm.Type;
 import java.util.List;
-import org.jetbrains.org.objectweb.asm.Type;
 
 public interface Eval {
 

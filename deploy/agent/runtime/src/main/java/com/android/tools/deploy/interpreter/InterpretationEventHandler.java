@@ -17,8 +17,8 @@ package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import org.jetbrains.org.objectweb.asm.tree.AbstractInsnNode;
-import org.jetbrains.org.objectweb.asm.tree.analysis.Frame;
+import com.android.deploy.asm.tree.AbstractInsnNode;
+import com.android.deploy.asm.tree.analysis.Frame;
 
 public interface InterpretationEventHandler {
 

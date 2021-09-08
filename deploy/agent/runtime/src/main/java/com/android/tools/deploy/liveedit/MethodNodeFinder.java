@@ -15,12 +15,12 @@
  */
 package com.android.tools.deploy.liveedit;
 
-import org.jetbrains.org.objectweb.asm.ClassReader;
-import org.jetbrains.org.objectweb.asm.ClassVisitor;
-import org.jetbrains.org.objectweb.asm.MethodVisitor;
-import org.jetbrains.org.objectweb.asm.Opcodes;
-import org.jetbrains.org.objectweb.asm.commons.TryCatchBlockSorter;
-import org.jetbrains.org.objectweb.asm.tree.MethodNode;
+import com.android.deploy.asm.ClassReader;
+import com.android.deploy.asm.ClassVisitor;
+import com.android.deploy.asm.MethodVisitor;
+import com.android.deploy.asm.Opcodes;
+import com.android.deploy.asm.commons.TryCatchBlockSorter;
+import com.android.deploy.asm.tree.MethodNode;
 
 /** This class searches the .class bytecode for a methodNode. */
 class MethodNodeFinder extends ClassVisitor {

@@ -18,7 +18,7 @@ package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.deploy.asm.Type;
 
 public class ObjectValue extends AbstractValue<Object> {
     public ObjectValue(@Nullable Object value, @NonNull Type asmType) {

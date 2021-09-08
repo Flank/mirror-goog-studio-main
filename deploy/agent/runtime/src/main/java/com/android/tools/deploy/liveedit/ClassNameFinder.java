@@ -15,9 +15,9 @@
  */
 package com.android.tools.deploy.liveedit;
 
-import org.jetbrains.org.objectweb.asm.ClassReader;
-import org.jetbrains.org.objectweb.asm.ClassVisitor;
-import org.jetbrains.org.objectweb.asm.Opcodes;
+import com.android.deploy.asm.ClassReader;
+import com.android.deploy.asm.ClassVisitor;
+import com.android.deploy.asm.Opcodes;
 
 public class ClassNameFinder extends ClassVisitor {
 

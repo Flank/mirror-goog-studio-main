@@ -11,7 +11,7 @@ import com.android.tools.deploy.interpreter.IntValue
 import com.android.tools.deploy.interpreter.LongValue
 import com.android.tools.deploy.interpreter.ObjectValue
 import com.android.tools.deploy.interpreter.Value
-import org.jetbrains.org.objectweb.asm.Type
+import com.android.deploy.asm.Type
 
 fun makeNotInitializedValue(t: Type): Value? {
     return when (t.sort) {

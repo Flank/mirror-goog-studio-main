@@ -17,9 +17,9 @@
 package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.deploy.asm.Type;
 
-public abstract class Value implements org.jetbrains.org.objectweb.asm.tree.analysis.Value {
+public abstract class Value implements com.android.deploy.asm.tree.analysis.Value {
 
     protected Type asmType;
     protected boolean valid;

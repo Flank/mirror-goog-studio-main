@@ -15,49 +15,48 @@
  */
 package com.android.tools.deploy.interpreter;
 
-// TODO jarjar asm4 to remove all these org.jebrains imports
-import static org.jetbrains.org.objectweb.asm.Opcodes.ARETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.ATHROW;
-import static org.jetbrains.org.objectweb.asm.Opcodes.DRETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.FRETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.GOTO;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFEQ;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFGE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFGT;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFLE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFLT;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFNE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFNONNULL;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IFNULL;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ACMPEQ;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ACMPNE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPEQ;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPGE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPGT;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPLE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPLT;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IF_ICMPNE;
-import static org.jetbrains.org.objectweb.asm.Opcodes.IRETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.LOOKUPSWITCH;
-import static org.jetbrains.org.objectweb.asm.Opcodes.LRETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.RET;
-import static org.jetbrains.org.objectweb.asm.Opcodes.RETURN;
-import static org.jetbrains.org.objectweb.asm.Opcodes.TABLESWITCH;
+import static com.android.deploy.asm.Opcodes.ARETURN;
+import static com.android.deploy.asm.Opcodes.ATHROW;
+import static com.android.deploy.asm.Opcodes.DRETURN;
+import static com.android.deploy.asm.Opcodes.FRETURN;
+import static com.android.deploy.asm.Opcodes.GOTO;
+import static com.android.deploy.asm.Opcodes.IFEQ;
+import static com.android.deploy.asm.Opcodes.IFGE;
+import static com.android.deploy.asm.Opcodes.IFGT;
+import static com.android.deploy.asm.Opcodes.IFLE;
+import static com.android.deploy.asm.Opcodes.IFLT;
+import static com.android.deploy.asm.Opcodes.IFNE;
+import static com.android.deploy.asm.Opcodes.IFNONNULL;
+import static com.android.deploy.asm.Opcodes.IFNULL;
+import static com.android.deploy.asm.Opcodes.IF_ACMPEQ;
+import static com.android.deploy.asm.Opcodes.IF_ACMPNE;
+import static com.android.deploy.asm.Opcodes.IF_ICMPEQ;
+import static com.android.deploy.asm.Opcodes.IF_ICMPGE;
+import static com.android.deploy.asm.Opcodes.IF_ICMPGT;
+import static com.android.deploy.asm.Opcodes.IF_ICMPLE;
+import static com.android.deploy.asm.Opcodes.IF_ICMPLT;
+import static com.android.deploy.asm.Opcodes.IF_ICMPNE;
+import static com.android.deploy.asm.Opcodes.IRETURN;
+import static com.android.deploy.asm.Opcodes.LOOKUPSWITCH;
+import static com.android.deploy.asm.Opcodes.LRETURN;
+import static com.android.deploy.asm.Opcodes.RET;
+import static com.android.deploy.asm.Opcodes.RETURN;
+import static com.android.deploy.asm.Opcodes.TABLESWITCH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.deploy.asm.Type;
+import com.android.deploy.asm.tree.AbstractInsnNode;
+import com.android.deploy.asm.tree.InsnList;
+import com.android.deploy.asm.tree.JumpInsnNode;
+import com.android.deploy.asm.tree.MethodNode;
+import com.android.deploy.asm.tree.TryCatchBlockNode;
+import com.android.deploy.asm.tree.VarInsnNode;
+import com.android.deploy.asm.tree.analysis.AnalyzerException;
+import com.android.deploy.asm.tree.analysis.Frame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import org.jetbrains.org.objectweb.asm.Type;
-import org.jetbrains.org.objectweb.asm.tree.AbstractInsnNode;
-import org.jetbrains.org.objectweb.asm.tree.InsnList;
-import org.jetbrains.org.objectweb.asm.tree.JumpInsnNode;
-import org.jetbrains.org.objectweb.asm.tree.MethodNode;
-import org.jetbrains.org.objectweb.asm.tree.TryCatchBlockNode;
-import org.jetbrains.org.objectweb.asm.tree.VarInsnNode;
-import org.jetbrains.org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.jetbrains.org.objectweb.asm.tree.analysis.Frame;
 
 public class ByteCodeInterpreter {
 
@@ -138,7 +137,7 @@ public class ByteCodeInterpreter {
                         continue loop;
                     case RET:
                         VarInsnNode varNode = (VarInsnNode) currentInsn;
-                        org.jetbrains.org.objectweb.asm.tree.analysis.Value address =
+                        com.android.deploy.asm.tree.analysis.Value address =
                                 frame.getLocal(varNode.var);
                         goTo(((LabelValue) address).value);
                         continue loop;

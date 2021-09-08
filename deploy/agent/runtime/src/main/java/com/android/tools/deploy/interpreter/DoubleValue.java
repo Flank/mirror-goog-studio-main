@@ -17,7 +17,7 @@
 package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.deploy.asm.Type;
 
 public class DoubleValue extends AbstractValue<Double> {
     public DoubleValue(@NonNull Double value) {

@@ -16,11 +16,11 @@
 
 package com.android.tools.deploy.interpreter;
 
-import static org.jetbrains.org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.jetbrains.org.objectweb.asm.Opcodes.PUTSTATIC;
+import static com.android.deploy.asm.Opcodes.GETSTATIC;
+import static com.android.deploy.asm.Opcodes.PUTSTATIC;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.tree.FieldInsnNode;
+import com.android.deploy.asm.tree.FieldInsnNode;
 
 public class FieldDescription {
     private final String ownerInternalName;

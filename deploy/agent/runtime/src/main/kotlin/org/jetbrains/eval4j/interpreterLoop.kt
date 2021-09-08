@@ -14,11 +14,11 @@ import com.android.tools.deploy.interpreter.Value
 import com.android.tools.deploy.interpreter.Value.VOID_VALUE
 import com.android.tools.deploy.interpreter.ValueReturned
 import org.jetbrains.eval4j.ExceptionThrown.ExceptionKind
-import org.jetbrains.org.objectweb.asm.Opcodes.*
-import org.jetbrains.org.objectweb.asm.Type
-import org.jetbrains.org.objectweb.asm.tree.*
-import org.jetbrains.org.objectweb.asm.tree.analysis.Frame
-import org.jetbrains.org.objectweb.asm.util.Printer
+import com.android.deploy.asm.Opcodes.*
+import com.android.deploy.asm.Type
+import com.android.deploy.asm.tree.*
+import com.android.deploy.asm.tree.analysis.Frame
+import com.android.deploy.asm.util.Printer
 import java.util.*
 
 class ExceptionThrown(val exception: ObjectValue, val kind: ExceptionKind) : InterpreterResult {
@@ -225,7 +225,7 @@ private fun <T : Value> Frame<T>.getStackTop(i: Int = 0) = this.getStack(this.st
     IllegalArgumentException("Couldn't get value with index = $i from top of stack")
 )
 
-// Copied from org.jetbrains.org.objectweb.asm.tree.analysis.Analyzer.analyze()
+// Copied from com.android.deploy.asm.tree.analysis.Analyzer.analyze()
 fun computeHandlers(m: MethodNode): Array<out List<TryCatchBlockNode>?> {
     val instructions = m.instructions
     val handlers = Array<MutableList<TryCatchBlockNode>?>(instructions.size()) { null }

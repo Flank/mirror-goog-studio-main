@@ -16,6 +16,7 @@
 package com.android.tools.deploy.liveedit;
 
 import com.android.annotations.NonNull;
+import com.android.deploy.asm.Type;
 import com.android.tools.deploy.interpreter.DoubleValue;
 import com.android.tools.deploy.interpreter.Eval;
 import com.android.tools.deploy.interpreter.FieldDescription;
@@ -30,7 +31,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
-import org.jetbrains.org.objectweb.asm.Type;
 
 class AndroidEval implements Eval {
 

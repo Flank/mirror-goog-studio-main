@@ -12,12 +12,12 @@ import com.android.tools.deploy.interpreter.MethodDescription
 import com.android.tools.deploy.interpreter.ObjectValue
 import com.android.tools.deploy.interpreter.Value
 import com.android.tools.deploy.interpreter.Value.NOT_A_VALUE
-import org.jetbrains.org.objectweb.asm.Handle
-import org.jetbrains.org.objectweb.asm.Opcodes.*
-import org.jetbrains.org.objectweb.asm.Type
-import org.jetbrains.org.objectweb.asm.tree.*
-import org.jetbrains.org.objectweb.asm.tree.analysis.AnalyzerException
-import org.jetbrains.org.objectweb.asm.tree.analysis.Interpreter
+import com.android.deploy.asm.Handle
+import com.android.deploy.asm.Opcodes.*
+import com.android.deploy.asm.Type
+import com.android.deploy.asm.tree.*
+import com.android.deploy.asm.tree.analysis.AnalyzerException
+import com.android.deploy.asm.tree.analysis.Interpreter
 
 class UnsupportedByteCodeException(message: String) : RuntimeException(message)
 

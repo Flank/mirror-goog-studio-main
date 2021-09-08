@@ -15,6 +15,10 @@
  */
 package com.android.tools.deploy.liveedit;
 
+import com.android.deploy.asm.Opcodes;
+import com.android.deploy.asm.Type;
+import com.android.deploy.asm.tree.MethodNode;
+import com.android.deploy.asm.tree.analysis.Frame;
 import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
 import com.android.tools.deploy.interpreter.InterpretationEventHandler;
 import com.android.tools.deploy.interpreter.InterpreterResult;
@@ -22,10 +26,6 @@ import com.android.tools.deploy.interpreter.ObjectValue;
 import com.android.tools.deploy.interpreter.Value;
 import com.android.tools.deploy.interpreter.ValueReturned;
 import org.jetbrains.eval4j.InterpreterLoopKt;
-import org.jetbrains.org.objectweb.asm.Opcodes;
-import org.jetbrains.org.objectweb.asm.Type;
-import org.jetbrains.org.objectweb.asm.tree.MethodNode;
-import org.jetbrains.org.objectweb.asm.tree.analysis.Frame;
 
 /** Evaluate a method body with Eval4j for the Android environment. */
 public class MethodBodyEvaluator {

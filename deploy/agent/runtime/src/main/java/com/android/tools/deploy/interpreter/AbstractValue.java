@@ -18,8 +18,8 @@ package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.deploy.asm.Type;
 import java.util.Objects;
-import org.jetbrains.org.objectweb.asm.Type;
 
 public class AbstractValue<T> extends Value {
 

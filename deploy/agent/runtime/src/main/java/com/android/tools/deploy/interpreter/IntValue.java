@@ -16,7 +16,7 @@
 
 package com.android.tools.deploy.interpreter;
 
-import org.jetbrains.org.objectweb.asm.Type;
+import com.android.deploy.asm.Type;
 
 public class IntValue extends AbstractValue<Integer> {
     public IntValue(int value, Type asmType) {

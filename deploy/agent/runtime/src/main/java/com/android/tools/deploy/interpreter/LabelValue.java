@@ -17,8 +17,8 @@
 package com.android.tools.deploy.interpreter;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.Type;
-import org.jetbrains.org.objectweb.asm.tree.LabelNode;
+import com.android.deploy.asm.Type;
+import com.android.deploy.asm.tree.LabelNode;
 
 public class LabelValue extends AbstractValue<LabelNode> {
     public LabelValue(@NonNull LabelNode value) {

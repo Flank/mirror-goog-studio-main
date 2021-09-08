@@ -16,10 +16,10 @@
 
 package com.android.tools.deploy.interpreter;
 
-import static org.jetbrains.org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static com.android.deploy.asm.Opcodes.INVOKESTATIC;
 
 import com.android.annotations.NonNull;
-import org.jetbrains.org.objectweb.asm.tree.MethodInsnNode;
+import com.android.deploy.asm.tree.MethodInsnNode;
 
 public class MethodDescription {
     private final String ownerInternalName;

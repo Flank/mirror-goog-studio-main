@@ -1,0 +1,1 @@
+rule org.jetbrains.org.objectweb.asm.** com.android.deploy.asm.@1
