@@ -590,6 +590,23 @@ coverage_report(
     ],
 )
 
+# Coverage report for Android Test Retention
+coverage_report(
+    name = "retention",
+    srcpath_include = [
+        "tools/adt/idea/android-test-retention",
+        "tools/base/utp/android-test-plugin-host-retention/src",
+        "tools/adt/idea/android/src/com/android/tools/idea/testartifacts/instrumented/retention",
+        "tools/adt/idea/android/src/com/android/tools/idea/testartifacts/instrumented/testsuite/view/RetentionView.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-test-retention:intellij.android.testRetention.tests_tests",
+        "//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
+        "//tools/base/utp/android-test-plugin-host-retention:tests.test",
+    ],
+)
+
 # Coverage report for Embedded Emulator.
 coverage_report(
     name = "emulator",
@@ -691,6 +708,7 @@ combine_report_definitions(
         "projectsystem",
         "r8-editing",
         "resources-ui",
+        "retention",
         "spliteditor",
         "suggested-import",
         "systracev2",
@@ -720,6 +738,7 @@ coverage_report(
         "//tools/adt/idea/android-npw:intellij.android.newProjectWizard.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
+        "//tools/adt/idea/android-test-retention:intellij.android.testRetention.tests_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:app-inspection.api_tests",
@@ -814,6 +833,7 @@ coverage_report(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
+        "//tools/base/build-system/integration-test/connected:FailureRetentionConnectedTest",
         "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
