@@ -3,6 +3,7 @@ load("//tools/base/common:version.bzl", "BASE_VERSION")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
+load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
 # managed by go/iml_to_build
@@ -70,6 +71,17 @@ java_library(
     ],
 )
 
+fileset(
+    name = "tools.ddmlib.resources",
+    srcs = [
+        "src/main/proto/app_processes.proto",
+        "src/main/proto/instrumentation-data.proto",
+    ],
+    mappings = {
+        "src/main/proto/": "",
+    },
+)
+
 # For now instead of combining ddmlib-base and its add-ons, we recompile all together
 # until we sort out the AGP - ddmlib dependency. This matches what is done in build.gradle.
 # Note that this target is released via go/ab studio_linux, for its usage in the platform.
@@ -86,8 +98,12 @@ maven_library(
         ":app-processes-proto",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
+    module_name = "ddmlib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
+    resources = [
+        ":tools.ddmlib.resources",
+    ],
     visibility = ["//visibility:public"],
     exports = [
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
@@ -166,14 +182,6 @@ iml_module(
 
 filegroup(
     name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/proto/**/*.proto",
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
+    srcs = ["build.gradle"],
     visibility = ["//tools/base/build-system:__pkg__"],
 )
