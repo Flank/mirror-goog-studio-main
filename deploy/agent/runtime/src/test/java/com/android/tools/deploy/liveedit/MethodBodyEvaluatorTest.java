@@ -516,4 +516,16 @@ public class MethodBodyEvaluatorTest {
             Assert.assertTrue("Tableswitch for value " + i, TestTarget.tableSwitch1to4(i) == r);
         }
     }
+
+    @org.junit.Test
+    public void testLookupSwitch() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        for (int i = 0; i < 16; i++) {
+            Object result =
+                    new MethodBodyEvaluator(classInput, "lookupSwitch1_5_10_15")
+                            .evalStatic(new Object[] {i});
+            Integer r = (Integer) result;
+            Assert.assertTrue("LookupSwitch for value " + i, TestTarget.lookupSwitch1_5_10_15(i) == r);
+        }
+    }
 }

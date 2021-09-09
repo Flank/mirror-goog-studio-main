@@ -141,8 +141,6 @@ public class ByteCodeInterpreter {
                         goTo(((LabelValue) address).value);
                         continue loop;
 
-                    case LOOKUPSWITCH:
-                        throw new UnsupportedByteCodeException("LOOKUPSWITCH is not supported yet");
                     case IRETURN:
                     case LRETURN:
                     case FRETURN:

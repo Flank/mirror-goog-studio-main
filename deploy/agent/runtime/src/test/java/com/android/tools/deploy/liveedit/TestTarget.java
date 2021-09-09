@@ -258,4 +258,14 @@ class TestTarget {
                 return -1;
         }
     }
+
+    public static int lookupSwitch1_5_10_15(int value) {
+        switch (value) {
+            case  1 : return 1;
+            case  5 : return 5;
+            case 10 : return 10;
+            case 15 : return 15;
+            default: return -1;
+        }
+    }
 }

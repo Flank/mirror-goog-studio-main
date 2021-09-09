@@ -169,6 +169,7 @@ import com.android.deploy.asm.tree.IntInsnNode;
 import com.android.deploy.asm.tree.JumpInsnNode;
 import com.android.deploy.asm.tree.LabelNode;
 import com.android.deploy.asm.tree.LdcInsnNode;
+import com.android.deploy.asm.tree.LookupSwitchInsnNode;
 import com.android.deploy.asm.tree.MethodInsnNode;
 import com.android.deploy.asm.tree.MultiANewArrayInsnNode;
 import com.android.deploy.asm.tree.TableSwitchInsnNode;
@@ -350,7 +351,17 @@ class OpcodeInterpreter extends Interpreter<Value> {
                 }
                 return null;
             case LOOKUPSWITCH:
-                throw new UnsupportedByteCodeException("LookupSwitch is not supported");
+                LookupSwitchInsnNode ls = (LookupSwitchInsnNode) insn;
+                int v = value.getInt();
+                for (int i = 0 ; i < ls.keys.size() ; i++) {
+                    if (v == ls.keys.get(i)) {
+                        looper.goTo(ls.labels.get(i));
+                        return null;
+                    }
+                }
+                looper.goTo(ls.dflt);
+                return null;
+
             case PUTSTATIC:
                 eval.setStaticField(new FieldDescription((FieldInsnNode) insn), value);
                 return null;
