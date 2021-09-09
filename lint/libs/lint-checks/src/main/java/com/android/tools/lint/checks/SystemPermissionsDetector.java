@@ -368,7 +368,6 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
                 "android.permission.MANAGE_DEVICE_ADMINS",
                 "android.permission.MANAGE_DOCUMENTS",
                 "android.permission.MANAGE_DYNAMIC_SYSTEM",
-                "android.permission.MANAGE_EXTERNAL_STORAGE",
                 "android.permission.MANAGE_FACTORY_RESET_PROTECTION",
                 "android.permission.MANAGE_FINGERPRINT",
                 "android.permission.MANAGE_GAME_MODE",
