@@ -104,7 +104,8 @@ public class DeviceManagerTest {
                         "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
-                        "13.5\" Freeform");
+                        "13.5\" Freeform",
+                        "Resizable");
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
 
@@ -169,6 +170,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Resizable",
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
@@ -268,7 +270,8 @@ public class DeviceManagerTest {
                         "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
-                        "13.5\" Freeform");
+                        "13.5\" Freeform",
+                        "Resizable");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -329,6 +332,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Resizable",
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
@@ -422,7 +426,8 @@ public class DeviceManagerTest {
                         "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
-                        "13.5\" Freeform");
+                        "13.5\" Freeform",
+                        "Resizable");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -483,6 +488,7 @@ public class DeviceManagerTest {
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
+                        "Resizable",
                         "Android TV (4K)",
                         "Android TV (1080p)",
                         "Android TV (720p)",
