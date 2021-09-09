@@ -83,7 +83,7 @@ public class LintKotlinTest {
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
         File lintResults = project.file("app/build/reports/lint-results.txt");
-        assertThat(lintResults).contains("8 errors, 4 warnings");
+        assertThat(lintResults).contains("9 errors, 4 warnings");
     }
 
     private GradleTaskExecutor getExecutor() {
