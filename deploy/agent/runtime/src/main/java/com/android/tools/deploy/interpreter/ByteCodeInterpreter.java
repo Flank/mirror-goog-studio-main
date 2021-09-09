@@ -41,7 +41,6 @@ import static com.android.deploy.asm.Opcodes.LOOKUPSWITCH;
 import static com.android.deploy.asm.Opcodes.LRETURN;
 import static com.android.deploy.asm.Opcodes.RET;
 import static com.android.deploy.asm.Opcodes.RETURN;
-import static com.android.deploy.asm.Opcodes.TABLESWITCH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -84,12 +83,12 @@ public class ByteCodeInterpreter {
 
         currentInsn = firstInsn;
 
-        interpreter = new OpcodeInterpreter(eval);
+        interpreter = new OpcodeInterpreter(eval, this);
         frame = new Frame<>(initialState);
         handlers = computeHandlers(m);
     }
 
-    private void goTo(@Nullable AbstractInsnNode nextInsn) {
+    void goTo(@Nullable AbstractInsnNode nextInsn) {
         if (nextInsn == null) {
             throw new IllegalArgumentException("Instruction flow ended with no RETURN");
         }
@@ -144,9 +143,6 @@ public class ByteCodeInterpreter {
 
                     case LOOKUPSWITCH:
                         throw new UnsupportedByteCodeException("LOOKUPSWITCH is not supported yet");
-                    case TABLESWITCH:
-                        throw new UnsupportedByteCodeException("TABLESWITCH is not supported yet");
-
                     case IRETURN:
                     case LRETURN:
                     case FRETURN:

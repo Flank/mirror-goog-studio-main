@@ -243,4 +243,19 @@ class TestTarget {
         boolean z = staticNot(y);
         return z;
     }
+
+    public static int tableSwitch1to4(int value) {
+        switch (value) {
+            case 1:
+                return 1;
+            case 2:
+                return 2;
+            case 3:
+                return 3;
+            case 4:
+                return 4;
+            default:
+                return -1;
+        }
+    }
 }

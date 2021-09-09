@@ -167,9 +167,11 @@ import com.android.deploy.asm.tree.FieldInsnNode;
 import com.android.deploy.asm.tree.IincInsnNode;
 import com.android.deploy.asm.tree.IntInsnNode;
 import com.android.deploy.asm.tree.JumpInsnNode;
+import com.android.deploy.asm.tree.LabelNode;
 import com.android.deploy.asm.tree.LdcInsnNode;
 import com.android.deploy.asm.tree.MethodInsnNode;
 import com.android.deploy.asm.tree.MultiANewArrayInsnNode;
+import com.android.deploy.asm.tree.TableSwitchInsnNode;
 import com.android.deploy.asm.tree.TypeInsnNode;
 import com.android.deploy.asm.tree.analysis.AnalyzerException;
 import com.android.deploy.asm.tree.analysis.Interpreter;
@@ -180,10 +182,12 @@ import java.util.stream.Collectors;
 class OpcodeInterpreter extends Interpreter<Value> {
 
     private final Eval eval;
+    private final ByteCodeInterpreter looper;
 
-    public OpcodeInterpreter(Eval eval) {
+    public OpcodeInterpreter(Eval eval, @NonNull ByteCodeInterpreter looper) {
         super(API_VERSION);
         this.eval = eval;
+        this.looper = looper;
     }
 
     @Override
@@ -336,8 +340,17 @@ class OpcodeInterpreter extends Interpreter<Value> {
                 return null;
 
             case TABLESWITCH:
+                TableSwitchInsnNode ts = (TableSwitchInsnNode) insn;
+                int index = value.getInt();
+                if (index < ts.min || index > ts.max) {
+                    looper.goTo(ts.dflt);
+                } else {
+                    LabelNode target = ts.labels.get(index - ts.min);
+                    looper.goTo(target);
+                }
+                return null;
             case LOOKUPSWITCH:
-                throw new UnsupportedByteCodeException("Switch is not supported");
+                throw new UnsupportedByteCodeException("LookupSwitch is not supported");
             case PUTSTATIC:
                 eval.setStaticField(new FieldDescription((FieldInsnNode) insn), value);
                 return null;

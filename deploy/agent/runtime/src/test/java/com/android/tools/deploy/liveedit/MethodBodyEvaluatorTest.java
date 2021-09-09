@@ -500,4 +500,16 @@ public class MethodBodyEvaluatorTest {
                 "Static invoke with type parameters",
                 TestTarget.staticInvokeBooleanParamWithBool(true) == r);
     }
+
+    @org.junit.Test
+    public void testTableSwitch() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        for (int i = 0; i < 5; i++) {
+            Object result =
+                    new MethodBodyEvaluator(classInput, "tableSwitch1to4")
+                            .evalStatic(new Object[] {i});
+            Integer r = (Integer) result;
+            Assert.assertTrue("Tableswitch for value " + i, TestTarget.tableSwitch1to4(i) == r);
+        }
+    }
 }
