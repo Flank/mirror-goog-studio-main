@@ -236,41 +236,48 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   return instrumentedClass;
 }
 
+// TODO(b/182023182) make sure `setInstalledStatically$kotlinx_coroutines_core`
+// will be the final name, when they release kotlinx-coroutines-core
+// 1.6 in October
 /**
  * Try to set
- * kotlinx.coroutines.debug.AgentInstallationType#isInstalledStatically to true.
+ * kotlinx.coroutines.debug.AgentInstallationType#setInstalledStatically$kotlinx_coroutines_core
+ * to true.
  */
 bool setAgentInstallationType(JNIEnv* jni) {
-  jclass klass_agentInstallationType =
-      jni->FindClass("kotlinx/coroutines/debug/internal/AgentInstallationType");
+  const char* class_name = "AgentInstallationType";
+  const char* class_full_name =
+      ("kotlinx/coroutines/debug/internal/" + std::string(class_name)).c_str();
+  const char* method_name = "setInstalledStatically$kotlinx_coroutines_core";
+
+  jclass klass_agentInstallationType = jni->FindClass(class_full_name);
   if (klass_agentInstallationType == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentInstallationType not found.");
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found.", class_name);
     return false;
   }
 
-  jfieldID instance_filedId = jni->GetStaticFieldID(
-      klass_agentInstallationType, "INSTANCE",
-      "Lkotlinx/coroutines/debug/internal/AgentInstallationType;");
+  jfieldID instance_filedId =
+      jni->GetStaticFieldID(klass_agentInstallationType, "INSTANCE",
+                            ("L" + std::string(class_full_name) + ";").c_str());
 
   if (instance_filedId == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "AgentInstallationType#INSTANCE not found.");
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#INSTANCE not found.", class_name);
     return false;
   }
 
   jobject obj_agentInstallationType =
       jni->GetStaticObjectField(klass_agentInstallationType, instance_filedId);
   if (obj_agentInstallationType == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Failed to retrieve AgentInstallationType#INSTANCE.");
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Failed to retrieve %s#INSTANCE.",
+           class_name);
     return false;
   }
 
-  jmethodID mid_setIsInstalledStatically = jni->GetMethodID(
-      klass_agentInstallationType, "setInstalledStatically", "(Z)V");
+  jmethodID mid_setIsInstalledStatically =
+      jni->GetMethodID(klass_agentInstallationType, method_name, "(Z)V");
   if (mid_setIsInstalledStatically == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "AgentInstallationType#setInstalledStatically(Z)V not found.");
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V not found.", class_name,
+           method_name);
     return false;
   }
 
@@ -278,15 +285,14 @@ bool setAgentInstallationType(JNIEnv* jni) {
                       true);
 
   if (jni->ExceptionOccurred()) {
-    Log::D(
-        Log::Tag::COROUTINE_DEBUGGER,
-        "AgentInstallationType#setInstalledStatically(Z)V threw an exception.");
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V threw an exception.",
+           class_name, method_name);
     printStackTrace(jni);
     return false;
   }
 
-  Log::D(Log::Tag::COROUTINE_DEBUGGER,
-         "AgentInstallationType#isInstalledStatically set to true.");
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s set to true.", class_name,
+         method_name);
   return true;
 }
 
