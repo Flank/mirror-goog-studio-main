@@ -2,6 +2,8 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_EXPORTED
+import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
 import com.android.SdkConstants.TAG_INTENT_FILTER
@@ -9,6 +11,8 @@ import com.android.SdkConstants.TAG_NAV_GRAPH
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
+import com.android.SdkConstants.VALUE_FALSE
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.sdklib.AndroidVersion.VersionCodes.S
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -23,6 +27,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.utils.subtag
+import org.w3c.dom.Attr
 import org.w3c.dom.Element
 
 class ExportedReceiverDetector : Detector(), XmlScanner {
@@ -34,16 +39,38 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
         val navGraph = element.subtag(TAG_NAV_GRAPH)
         val exported = element.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED)
         if ((intentFilter != null || navGraph != null) && exported == null) {
-            val fix = LintFix.create().set().todo(ANDROID_URI, ATTR_EXPORTED).build()
+            val message = """
+                As of Android 12, `android:exported` must be set; use `true` to make the activity \
+                available to other apps, and `false` otherwise.""".trimIndent()
+
+            // Check if the intent filter is for a launcher activity
+            val incident = if (intentFilter?.subtag(TAG_ACTION)?.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                    ?.equals(mainActivityAction) == true) {
+                Incident(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
+                    "$message For launcher activities, this should be set to `true`.",
+                    createSetToTrueFix()
+                )
+            } else {
+                Incident(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
+                    message,
+                    LintFix.create().alternatives(createSetToTrueFix(), createSetToFalseFix())
+                )
+            }
+            context.report(incident, map())
+        } else if (isNonExportedLaunchable(exported, intentFilter)) {
             val incident = Incident(
                 ISSUE,
-                element,
-                context.getNameLocation(element),
-                "When using ${
-                if (intentFilter != null) "intent filters" else "navigation graphs"
-                }, please specify `android:exported` as well",
-                fix
-            )
+                exported,
+                context.getLocation(exported),
+                "A launchable activity must be exported as of Android 12, which also makes it available to other apps.",
+                createSetToTrueFix()
+            ).overrideSeverity(Severity.ERROR)
             context.report(incident, map())
         }
     }
@@ -55,7 +82,17 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
         return true
     }
 
+    private fun isNonExportedLaunchable(exported: Attr?, intentFilterTag: Element?) =
+        exported?.value == VALUE_FALSE && intentFilterTag?.subtag(TAG_ACTION)
+            ?.getAttributeNS(ANDROID_URI, ATTR_NAME)?.equals(mainActivityAction) == true
+
+    private fun createSetToTrueFix() = fix().set().android().attribute(ATTR_EXPORTED).value(VALUE_TRUE).build()
+
+    private fun createSetToFalseFix() = fix().set().android().attribute(ATTR_EXPORTED).value(VALUE_FALSE).build()
+
     companion object {
+        private const val mainActivityAction = "android.intent.action.MAIN"
+
         @JvmField
         val ISSUE = Issue.create(
             id = "IntentFilterExportedReceiver",
@@ -63,7 +100,9 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
             explanation = """
                 Apps targeting Android 12 and higher are required to specify an explicit value \
                 for `android:exported` when the corresponding component has an intent filter defined. \
-                Otherwise, installation will fail.
+                Otherwise, installation will fail. Set it to `true` to make this activity accessible \
+                to other apps, and `false` to limit it to be used only by this app or the OS. For \
+                launch activities, this should be set to true; otherwise, the app will fail to launch.
 
                 Previously, `android:exported` for components without any intent filters present \
                 used to default to `false`, and when intent filters were present, the default was \
