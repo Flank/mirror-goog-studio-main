@@ -193,7 +193,9 @@ class PermissionDataGenerator {
 
     fun getSignaturePermissions(skipHidden: Boolean = false): List<Permission> {
         return permissions?.filter {
-            it.signatureIn > 0 && (!skipHidden || it.field != null)
+            it.signatureIn > 0 && (!skipHidden || it.field != null) &&
+                // Specially handled by ScopedStorageDetector
+                it.name != "android.permission.MANAGE_EXTERNAL_STORAGE"
         }?.toList() ?: emptyList()
     }
 
