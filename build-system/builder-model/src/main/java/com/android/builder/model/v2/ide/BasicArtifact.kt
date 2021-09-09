@@ -15,26 +15,24 @@
  */
 package com.android.builder.model.v2.ide
 
-import com.android.builder.model.v2.AndroidModel
-import java.io.File
-
 /**
- * The information for a generated Java artifact.
- *
- * This artifact is for Java components inside an Android project, which is only unit tests
- * for now.
- *
- * @since 4.2
+ * The base information for all generated artifacts
  */
-interface JavaArtifact : AbstractArtifact, AndroidModel {
-    /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
-    val mockablePlatformJar: File?
+interface BasicArtifact {
 
     /**
-     * Returns the folder containing resource files that classes from this artifact expect to find
-     * on the classpath.
-     *
-     * This is used to run the unit tests
+     * A SourceProvider specific to the variant. This can be null if there is no flavors as
+     * the "variant" is equal to the build type.
      */
-    val runtimeResourceFolder: File?
+    val variantSourceProvider: SourceProvider?
+
+    /**
+     * A SourceProvider specific to the flavor combination.
+     *
+     * For instance if there are 2 dimensions, then this would be Flavor1Flavor2, and would be
+     * common to all variant using these two flavors and any of the build type.
+     *
+     * This can be null if there is less than 2 flavors.
+     */
+    val multiFlavorSourceProvider: SourceProvider?
 }

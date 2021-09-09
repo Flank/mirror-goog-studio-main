@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.testprojects.RootTestProjectBuilderImpl
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
-import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilderImpl
 import org.junit.Rule
 
 /**
@@ -74,12 +73,22 @@ abstract class ReferenceModelComparator(
         syncOptions(deltaProject.modelV2()).fetchModels(variantName)
     }
 
+    fun compareBasicAndroidProjectWith(
+        projectPath: String? = null,
+        goldenFileSuffix: String = ""
+    ) {
+        Comparator(this, result, referenceResult).compareBasicAndroidProject(
+            projectAction =  { getProject(projectPath) },
+            goldenFile = goldenFileSuffix
+        )
+    }
+
     fun compareAndroidProjectWith(
         projectPath: String? = null,
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareAndroidProject(
-            modelAction =  { getProject(projectPath) },
+            projectAction =  { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
@@ -95,7 +104,7 @@ abstract class ReferenceModelComparator(
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareAndroidDsl(
-            modelAction = { getProject(projectPath) },
+            projectAction = { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }
@@ -111,7 +120,7 @@ abstract class ReferenceModelComparator(
         goldenFileSuffix: String = ""
     ) {
         Comparator(this, result, referenceResult).compareVariantDependencies(
-            modelAction = { getProject(projectPath) },
+            projectAction = { getProject(projectPath) },
             goldenFile = goldenFileSuffix
         )
     }

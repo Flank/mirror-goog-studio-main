@@ -17,6 +17,7 @@ package com.android.build.gradle.integration.common.fixture
 
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BasicAndroidProject
 import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
@@ -56,6 +57,7 @@ class ModelContainerV2(
     data class ModelInfo(
         val projectDir: File,
         val versions: Versions?,
+        val basicAndroidProject: BasicAndroidProject?,
         val androidProject: AndroidProject?,
         val androidDsl: AndroidDsl?,
         val variantDependencies: VariantDependencies?,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,61 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.builder.model.v2.ide
 
 import com.android.builder.model.v2.AndroidModel
 
 /**
- * A build Variant.
+ * Basic information about a build Variant.
+ *
+ * This is basically the source set information.
  */
-interface Variant: AndroidModel {
+interface BasicVariant: AndroidModel {
     /**
      * The name of the variant.
      */
     val name: String
 
     /**
-     * The display name for the variant.
-     */
-    val displayName: String
-
-    /**
      * The main artifact for this variant.
      */
-    val mainArtifact: AndroidArtifact
+    val mainArtifact: BasicArtifact
 
     /**
      * The AndroidTest artifact for this variant, if applicable.
      */
-    val androidTestArtifact: AndroidArtifact?
+    val androidTestArtifact: BasicArtifact?
 
     /**
      * The Unit Test artifact for this variant, if applicable.
      */
-    val unitTestArtifact: JavaArtifact?
+    val unitTestArtifact: BasicArtifact?
 
     /**
      * The TestFixtures artifact for this variant, if applicable.
      */
-    val testFixturesArtifact: AndroidArtifact?
+    val testFixturesArtifact: BasicArtifact?
 
     /**
-     * For standalone test plugins: information about the tested project.
+     * The build type name.
      *
-     * For other plugin types, this is null
+     * If null, no build type is associated with the variant (this generally means that no build
+     * types exist, which can only happen for libraries)
      */
-    val testedTargetVariant: TestedTargetVariant?
+    val buildType: String?
 
     /**
-     * Whether the variant is instant app compatible.
-     *
-     * Only application modules and dynamic feature modules will set this property.
+     * The flavors for this variants. This can be empty if no flavors are configured.
      */
-    val isInstantAppCompatible: Boolean
-
-    /**
-     * The list of desugared methods, including =backported methods handled by D8 and methods
-     * provided by core library desugaring.
-     */
-    val desugaredMethods: List<String>
+    val productFlavors: List<String>
 }
+

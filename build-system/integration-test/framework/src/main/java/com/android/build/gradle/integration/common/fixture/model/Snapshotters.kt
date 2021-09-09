@@ -30,7 +30,9 @@ import com.android.builder.model.v2.ide.AndroidArtifact
 import com.android.builder.model.v2.ide.AndroidLibraryData
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.ArtifactDependencies
-import com.android.builder.model.v2.ide.BaseArtifact
+import com.android.builder.model.v2.ide.AbstractArtifact
+import com.android.builder.model.v2.ide.BasicArtifact
+import com.android.builder.model.v2.ide.BasicVariant
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.ComponentInfo
 import com.android.builder.model.v2.ide.GraphItem
@@ -50,6 +52,7 @@ import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BasicAndroidProject
 import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.Versions.Version
 import com.android.builder.model.v2.models.VariantDependencies
@@ -61,12 +64,17 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 // snapshot fixtures specific to each model class
 
 internal fun ModelSnapshotter<Versions>.snapshotVersions() {
-    dataObject("AndroidDsl", Versions::androidDsl) {
+    dataObject("BasicAndroidProject", Versions::basicAndroidProject) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
 
     dataObject("AndroidProject", Versions::androidProject) {
+        item("major", Version::major)
+        item("minor", Version::minor)
+    }
+
+    dataObject("AndroidDsl", Versions::androidDsl) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
@@ -93,23 +101,18 @@ private fun normalizeAgpVersion(version: String): Any {
     return version
 }
 
-internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
-    item("projectType", AndroidProject::projectType)
-    item("path", AndroidProject::path)
-    item("buildName", AndroidProject::buildName)
-    item("buildFolder", AndroidProject::buildFolder)
-    item("namespace", AndroidProject::namespace)
-    item("androidTestNamespace", AndroidProject::androidTestNamespace)
-    item("testFixturesNamespace", AndroidProject::testFixturesNamespace)
-    item("resourcePrefix", AndroidProject::resourcePrefix)
-    list("dynamicFeatures", AndroidProject::dynamicFeatures)
-    valueList("bootClasspath", AndroidProject::bootClasspath)
-    dataObject("defaultConfig", AndroidProject::mainSourceSet) {
+internal fun ModelSnapshotter<BasicAndroidProject>.snapshotBasicAndroidProject() {
+    item("projectType", BasicAndroidProject::projectType)
+    item("path", BasicAndroidProject::path)
+    item("buildName", BasicAndroidProject::buildName)
+    item("buildFolder", BasicAndroidProject::buildFolder)
+    valueList("bootClasspath", BasicAndroidProject::bootClasspath)
+    dataObject("defaultConfig", BasicAndroidProject::mainSourceSet) {
         snapshotSourceSetContainer()
     }
     objectList(
         name = "buildTypes",
-        propertyAction = AndroidProject::buildTypeSourceSets,
+        propertyAction = BasicAndroidProject::buildTypeSourceSets,
         nameAction = { sourceProvider.name },
         sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
@@ -117,12 +120,28 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     }
     objectList(
         name = "productFlavors",
-        propertyAction = AndroidProject::productFlavorSourceSets,
+        propertyAction = BasicAndroidProject::productFlavorSourceSets,
         nameAction = { sourceProvider.name },
         sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
         snapshotSourceSetContainer()
     }
+    objectList(
+        name = "variants",
+        propertyAction = BasicAndroidProject::variants,
+        nameAction = { name },
+        sortAction = { collection -> collection?.sortedBy { it.name } }
+    ) {
+        snapshotBasicVariant()
+    }
+}
+
+internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
+    item("namespace", AndroidProject::namespace)
+    item("androidTestNamespace", AndroidProject::androidTestNamespace)
+    item("testFixturesNamespace", AndroidProject::testFixturesNamespace)
+    item("resourcePrefix", AndroidProject::resourcePrefix)
+    list("dynamicFeatures", AndroidProject::dynamicFeatures)
     objectList(
         name = "variants",
         propertyAction = AndroidProject::variants,
@@ -152,7 +171,6 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     }
     valueList("lintChecksJars", AndroidProject::lintChecksJars) { it?.sorted() }
 }
-
 internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
     item("groupId", AndroidDsl::groupId)
     item("compileTarget", AndroidDsl::compileTarget)
@@ -380,11 +398,28 @@ private fun ModelSnapshotter<SourceProvider>.snapshotSourceProvider() {
     valueList("mlModelsDirectories", SourceProvider::mlModelsDirectories) { it?.sorted() }
 }
 
+private fun ModelSnapshotter<BasicVariant>.snapshotBasicVariant() {
+    item("name", BasicVariant::name)
+    item("displayName", BasicVariant::name)
+    item("buildType", BasicVariant::buildType)
+    list("productFlavors", BasicVariant::productFlavors)
+    dataObject("mainArtifact", BasicVariant::mainArtifact) {
+        snapshotBasicArtifact()
+    }
+    dataObject("androidTestArtifact", BasicVariant::androidTestArtifact) {
+        snapshotBasicArtifact()
+    }
+    dataObject("unitTestArtifact", BasicVariant::unitTestArtifact) {
+        snapshotBasicArtifact()
+    }
+    dataObject("testFixturesArtifact", BasicVariant::testFixturesArtifact) {
+        snapshotBasicArtifact()
+    }
+}
+
 private fun ModelSnapshotter<Variant>.snapshotVariant() {
     item("name", Variant::name)
     item("displayName", Variant::name)
-    item("buildType", Variant::buildType)
-    list("productFlavors", Variant::productFlavors)
     item("isInstantAppCompatible", Variant::isInstantAppCompatible)
     list("desugaredMethods", Variant::desugaredMethods)
     dataObject("mainArtifact", Variant::mainArtifact) {
@@ -402,6 +437,15 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
     dataObject("testedTargetVariant", Variant::testedTargetVariant) {
         item("targetProjectPath", TestedTargetVariant::targetProjectPath)
         item("targetVariant", TestedTargetVariant::targetVariant)
+    }
+}
+
+private fun ModelSnapshotter<BasicArtifact>.snapshotBasicArtifact() {
+    dataObject("variantSourceProvider", BasicArtifact::variantSourceProvider) {
+        snapshotSourceProvider()
+    }
+    dataObject("multiFlavorSourceProvider", BasicArtifact::multiFlavorSourceProvider) {
+        snapshotSourceProvider()
     }
 }
 
@@ -443,19 +487,13 @@ private fun ModelSnapshotter<JavaArtifact>.snapshotJavaArtifact() {
     item("runtimeResourceFolder", JavaArtifact::runtimeResourceFolder)
 }
 
-private fun ModelSnapshotter<out BaseArtifact>.snapshotBaseArtifact() {
-    item("compileTaskName", BaseArtifact::compileTaskName)
-    item("assembleTaskName", BaseArtifact::assembleTaskName)
-    valueList("classesFolders", BaseArtifact::classesFolders) { it?.sorted() }
-    valueList("additionalClassesFolders", BaseArtifact::additionalClassesFolders) { it?.sorted() }
-    list("ideSetupTaskNames", BaseArtifact::ideSetupTaskNames)
-    valueList("generatedSourceFolders", BaseArtifact::generatedSourceFolders) { it?.sorted() }
-    dataObject("variantSourceProvider", BaseArtifact::variantSourceProvider) {
-        snapshotSourceProvider()
-    }
-    dataObject("multiFlavorSourceProvider", BaseArtifact::multiFlavorSourceProvider) {
-        snapshotSourceProvider()
-    }
+private fun ModelSnapshotter<out AbstractArtifact>.snapshotBaseArtifact() {
+    item("compileTaskName", AbstractArtifact::compileTaskName)
+    item("assembleTaskName", AbstractArtifact::assembleTaskName)
+    valueList("classesFolders", AbstractArtifact::classesFolders) { it?.sorted() }
+    valueList("additionalClassesFolders", AbstractArtifact::additionalClassesFolders) { it?.sorted() }
+    list("ideSetupTaskNames", AbstractArtifact::ideSetupTaskNames)
+    valueList("generatedSourceFolders", AbstractArtifact::generatedSourceFolders) { it?.sorted() }
 }
 
 private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {

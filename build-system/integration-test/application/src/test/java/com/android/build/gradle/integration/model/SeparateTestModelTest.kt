@@ -51,9 +51,17 @@ class SeparateTestModelTest: ModelComparator() {
     }
 
     @Test
+    fun `test BasicAndroidProject`() {
+        with(result).compareBasicAndroidProject(
+            projectAction = { getProject(":test") },
+            goldenFile = "BasicAndroidProject"
+        )
+    }
+
+    @Test
     fun `test AndroidProject`() {
         with(result).compareAndroidProject(
-            modelAction = { getProject(":test") },
+            projectAction = { getProject(":test") },
             goldenFile = "AndroidProject"
         )
     }
@@ -61,7 +69,7 @@ class SeparateTestModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":test") },
+            projectAction = { getProject(":test") },
             goldenFile = "VariantDependencies"
         )
     }

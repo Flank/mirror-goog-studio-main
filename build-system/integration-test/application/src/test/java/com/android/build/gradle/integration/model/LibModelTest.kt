@@ -44,6 +44,7 @@ class HelloWorldLibModelTest: ModelComparator() {
             .fetchModels(variantName = "debug")
 
         with(result).compareVersions(goldenFile = "Versions")
+        with(result).compareBasicAndroidProject(goldenFile = "BasicAndroidProject")
         with(result).compareAndroidProject(goldenFile = "AndroidProject")
         with(result).compareAndroidDsl(goldenFile = "AndroidDsl")
         with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
@@ -72,6 +73,12 @@ class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
@@ -105,6 +112,11 @@ class EnabledTestFixturesInLibModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")

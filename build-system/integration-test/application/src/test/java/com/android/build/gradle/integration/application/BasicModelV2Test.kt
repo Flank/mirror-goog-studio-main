@@ -37,6 +37,7 @@ class BasicModelV2Test: ModelComparator() {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels(variantName = "debug")
 
+        with(result).compareBasicAndroidProject(goldenFile = "basicAndroidProject")
         with(result).compareAndroidProject(goldenFile = "testProject")
         with(result).compareAndroidDsl(goldenFile = "AndroidDsl")
         with(result).compareVariantDependencies(goldenFile = "testDep")

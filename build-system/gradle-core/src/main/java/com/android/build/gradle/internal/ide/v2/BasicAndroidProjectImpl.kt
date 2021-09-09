@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,28 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
-import com.android.builder.model.v2.ide.JavaCompileOptions
-import com.android.builder.model.v2.ide.Variant
-import com.android.builder.model.v2.ide.ViewBindingOptions
+import com.android.builder.model.v2.ide.BasicVariant
+import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BasicAndroidProject
 import java.io.File
 import java.io.Serializable
 
 /**
  * Implementation of [AndroidProject] for serialization via the Tooling API.
  */
-data class AndroidProjectImpl(
-    override val namespace: String,
-    override val androidTestNamespace: String?,
-    override val testFixturesNamespace: String?,
-    override val variants: Collection<Variant>,
-    override val javaCompileOptions: JavaCompileOptions,
-    override val resourcePrefix: String?,
-    override val dynamicFeatures: Collection<String>?,
-    override val viewBindingOptions: ViewBindingOptions?,
-    override val flags: AndroidGradlePluginProjectFlags,
-    override val lintChecksJars: List<File>,
-) : AndroidProject, Serializable {
+data class BasicAndroidProjectImpl(
+    override val path: String,
+    override val buildName: String,
+    override val projectType: ProjectType,
+    override val mainSourceSet: SourceSetContainer,
+    override val buildTypeSourceSets: Collection<SourceSetContainer>,
+    override val productFlavorSourceSets: Collection<SourceSetContainer>,
+    override val variants: Collection<BasicVariant>,
+    override val bootClasspath: Collection<File>,
+    override val buildFolder: File,
+) : BasicAndroidProject, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

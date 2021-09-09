@@ -16,26 +16,23 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.ide.AndroidArtifact
-import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.TestedTargetVariant
+import com.android.builder.model.v2.ide.BasicArtifact
+import com.android.builder.model.v2.ide.BasicVariant
 import com.android.builder.model.v2.ide.Variant
 import java.io.Serializable
 
 /**
  * Implementation of [Variant] for serialization via the Tooling API.
  */
-data class VariantImpl(
+data class BasicVariantImpl(
     override val name: String,
-    override val displayName: String,
-    override val mainArtifact: AndroidArtifact,
-    override val androidTestArtifact: AndroidArtifact?,
-    override val unitTestArtifact: JavaArtifact?,
-    override val testFixturesArtifact: AndroidArtifact?,
-    override val testedTargetVariant: TestedTargetVariant?,
-    override val isInstantAppCompatible: Boolean,
-    override val desugaredMethods: List<String>
-) : Variant, Serializable {
+    override val mainArtifact: BasicArtifact,
+    override val androidTestArtifact: BasicArtifact?,
+    override val unitTestArtifact: BasicArtifact?,
+    override val testFixturesArtifact: BasicArtifact?,
+    override val buildType: String?,
+    override val productFlavors: List<String>,
+) : BasicVariant, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

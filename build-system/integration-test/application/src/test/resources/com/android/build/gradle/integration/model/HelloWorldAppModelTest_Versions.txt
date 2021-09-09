@@ -1,8 +1,11 @@
 > Versions:
-   - AndroidDsl:
+   - BasicAndroidProject:
       - major = 0
       - minor = 1
    - AndroidProject:
+      - major = 0
+      - minor = 1
+   - AndroidDsl:
       - major = 0
       - minor = 1
    - VariantDependencies:

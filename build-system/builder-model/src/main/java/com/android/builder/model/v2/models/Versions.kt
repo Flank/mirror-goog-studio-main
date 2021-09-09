@@ -29,6 +29,7 @@ interface Versions: AndroidModel {
         val minor: Int
     }
 
+    val basicAndroidProject: Version
     val androidProject: Version
     val androidDsl: Version
     val variantDependencies: Version

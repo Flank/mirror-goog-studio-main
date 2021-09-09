@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.SourceProvider
 import java.io.File
 import java.io.Serializable
 
@@ -32,8 +31,6 @@ data class JavaArtifactImpl(
     override val classesFolders: Set<File>,
     override val additionalClassesFolders: Set<File>,
     override val runtimeResourceFolder: File?,
-    override val variantSourceProvider: SourceProvider?,
-    override val multiFlavorSourceProvider: SourceProvider?,
     override val ideSetupTaskNames: Set<String>,
     override val generatedSourceFolders: Collection<File>,
     override val modelSyncFiles: Collection<ModelSyncFile>,

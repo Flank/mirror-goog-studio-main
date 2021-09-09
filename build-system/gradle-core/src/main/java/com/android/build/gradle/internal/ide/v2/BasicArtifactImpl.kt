@@ -17,25 +17,17 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.AndroidArtifact
-import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.TestedTargetVariant
-import com.android.builder.model.v2.ide.Variant
+import com.android.builder.model.v2.ide.BasicArtifact
+import com.android.builder.model.v2.ide.SourceProvider
 import java.io.Serializable
 
 /**
- * Implementation of [Variant] for serialization via the Tooling API.
+ * Implementation of [AndroidArtifact] for serialization via the Tooling API.
  */
-data class VariantImpl(
-    override val name: String,
-    override val displayName: String,
-    override val mainArtifact: AndroidArtifact,
-    override val androidTestArtifact: AndroidArtifact?,
-    override val unitTestArtifact: JavaArtifact?,
-    override val testFixturesArtifact: AndroidArtifact?,
-    override val testedTargetVariant: TestedTargetVariant?,
-    override val isInstantAppCompatible: Boolean,
-    override val desugaredMethods: List<String>
-) : Variant, Serializable {
+data class BasicArtifactImpl(
+    override val variantSourceProvider: SourceProvider?,
+    override val multiFlavorSourceProvider: SourceProvider?,
+) : BasicArtifact, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L
