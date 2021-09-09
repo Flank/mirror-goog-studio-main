@@ -97,12 +97,12 @@ void printStackTrace(JNIEnv* jni) {
 
 // check if DebugProbesImpl exists, then call
 // DebugProbesImpl#install
-int installDebugProbes(JNIEnv* jni) {
+bool installDebugProbes(JNIEnv* jni) {
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesImpl");
   if (klass == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl not found");
-    return -1;
+    return false;
   }
 
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl found");
@@ -112,7 +112,7 @@ int installDebugProbes(JNIEnv* jni) {
   if (constructor == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "DebugProbesImpl constructor not found");
-    return -1;
+    return false;
   }
 
   // create DebugProbesImpl by calling constructor
@@ -121,14 +121,14 @@ int installDebugProbes(JNIEnv* jni) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "DebugProbesImpl constructor threw an exception.");
     printStackTrace(jni);
-    return -1;
+    return false;
   }
 
   // get install method id
   jmethodID install = jni->GetMethodID(klass, "install", "()V");
   if (install == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install not found");
-    return -1;
+    return false;
   }
 
   // invoke install method
@@ -138,11 +138,11 @@ int installDebugProbes(JNIEnv* jni) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "DebugProbesImpl#install threw an exception.");
     printStackTrace(jni);
-    return -1;
+    return false;
   }
 
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install called.");
-  return 0;
+  return true;
 }
 
 /**
@@ -376,9 +376,9 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
   }
 
   // call DebugProbesImpl#install
-  int installed = installDebugProbes(jni);
+  bool installed = installDebugProbes(jni);
 
-  if (installed < 0) {
+  if (!installed) {
     if (jni->ExceptionCheck()) {
       jni->ExceptionClear();
     }
