@@ -135,6 +135,16 @@ public class Deployer {
         }
     }
 
+    private static class InstallInfo {
+        public final boolean skippedInstall;
+        public final List<Apk> apks;
+
+        public InstallInfo(boolean skippedInstall, List<Apk> apks) {
+            this.skippedInstall = skippedInstall;
+            this.apks = apks;
+        }
+    }
+
     /**
      * Persists the content of the provide APKs on the device. If the operation succeeds, the dex
      * files from the APKs are stored in the dex database.
@@ -161,70 +171,75 @@ public class Deployer {
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
             Canceller canceller = options.getCancelChecker();
+            String sessionUID = UUID.randomUUID().toString();
 
+            InstallInfo info;
             if (supportsNewPipeline()) {
-                installMode =
-                        installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
-                return maybeOptimisticInstall(packageName, apks, options, installMode);
+                info = optimisticInstall(sessionUID, packageName, apks, options, installMode);
+            } else {
+                info = packageManagerInstall(sessionUID, packageName, apks, options, installMode);
             }
 
-            String deploySessionUID = UUID.randomUUID().toString();
-            logger.info("Deploy Install Session %s", deploySessionUID);
-
-            ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
-
-            // Inputs
-            Task<String> pkgName = runner.create(packageName);
-            Task<List<String>> paths = runner.create(apks);
-
-            // Parse the apks
-            Task<List<Apk>> apkList =
-                    runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
-
-            boolean skippedInstall =
-                    !apkInstaller.install(
-                            packageName, apks, options, installMode, metrics.getDeployMetrics());
-
+            Task<List<Apk>> parsedApksTask = runner.create(info.apks);
             Task<Boolean> installCoroutineDebugger = null;
             if (useCoroutineDebugger()) {
                 installCoroutineDebugger =
                         runner.create(
                                 Tasks.INSTALL_COROUTINE_DEBUGGER,
-                                this::installCoroutineDebugger,
-                                pkgName,
-                                apkList);
+                                list -> installCoroutineDebugger(packageName, list),
+                                parsedApksTask);
             }
 
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
-            runner.create(Tasks.CACHE, splitter::cache, apkList);
-            ApkChecker checker = new ApkChecker(deploySessionUID, logger);
-            runner.create(Tasks.APK_CHECK, checker::log, apkList);
+            runner.create(Tasks.CACHE, splitter::cache, parsedApksTask);
+            ApkChecker checker = new ApkChecker(sessionUID, logger);
+            runner.create(Tasks.APK_CHECK, checker::log, parsedApksTask);
             runner.runAsync(canceller);
 
-            App app = new App(packageName, apkList.get(), adb.getDevice(), logger);
-            final boolean coroutineDebuggerInstalled;
-            if (installCoroutineDebugger != null) {
-                coroutineDebuggerInstalled = installCoroutineDebugger.get();
-            } else {
-                coroutineDebuggerInstalled = false;
-            }
-            return new Result(skippedInstall, false, coroutineDebuggerInstalled, app);
+            App app = new App(packageName, info.apks, adb.getDevice(), logger);
+            boolean coroutineDebuggerInstalled =
+                    installCoroutineDebugger != null ? installCoroutineDebugger.get() : false;
+            return new Result(info.skippedInstall, false, coroutineDebuggerInstalled, app);
         }
     }
 
-    private Result maybeOptimisticInstall(
+    private InstallInfo packageManagerInstall(
+            String deploySessionUID,
+            String packageName,
+            List<String> paths,
+            InstallOptions installOptions,
+            InstallMode installMode)
+            throws DeployerException {
+        logger.info("Deploy Install Session %s", deploySessionUID);
+        ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
+        boolean skippedInstall =
+                !apkInstaller.install(
+                        packageName,
+                        paths,
+                        installOptions,
+                        installMode,
+                        metrics.getDeployMetrics());
+        // TODO(b/138467905): Prevent double-parsing inside ApkInstaller and here
+        return new InstallInfo(skippedInstall, new ApkParser().parsePaths(paths));
+    }
+
+    private InstallInfo optimisticInstall(
+            String deploySessionUID,
             String pkgName,
             List<String> paths,
             InstallOptions installOptions,
             InstallMode installMode)
             throws DeployerException {
+        logger.info("Optimistic Deploy Install Session %s", deploySessionUID);
         Canceller canceller = installOptions.getCancelChecker();
+
+        // Do not skip installs; we need to ensure overlays are properly cleared.
+        installMode = installMode == InstallMode.DELTA ? InstallMode.DELTA_NO_SKIP : installMode;
+
         Task<String> packageName = runner.create(pkgName);
         Task<String> deviceSerial = runner.create(adb.getSerial());
         Task<List<Apk>> apks =
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, runner.create(paths));
-
-        Task<Boolean> installCoroutineDebugger = null;
 
         boolean installSuccess = false;
         if (!options.optimisticInstallSupport.isEmpty()) {
@@ -235,22 +250,9 @@ public class Deployer {
                     runner.create(
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
 
-            if (useCoroutineDebugger()) {
-                installCoroutineDebugger =
-                        runner.create(
-                                Tasks.INSTALL_COROUTINE_DEBUGGER,
-                                (String pkg, List<Apk> apksList, OverlayId overlay) ->
-                                        installCoroutineDebugger(pkg, apksList),
-                                packageName,
-                                apks,
-                                overlayId);
-            }
-
             TaskResult result = runner.run(canceller);
             installSuccess = result.isSuccess();
             if (installSuccess) {
-                String deploySessionUID = UUID.randomUUID().toString();
-                logger.info("Optimistic Deploy Install Session %s", deploySessionUID);
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
@@ -258,19 +260,13 @@ public class Deployer {
                         packageName,
                         apks,
                         overlayId);
-
-                ApkChecker checker = new ApkChecker(deploySessionUID, logger);
-                runner.create(Tasks.APK_CHECK, checker::log, apks);
             }
             result.getMetrics().forEach(metrics::add);
         }
 
-        // This needs to happen no matter which path we're on, so create the task now.
-        CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
-        runner.create(Tasks.CACHE, splitter::cache, apks);
-
         boolean skippedInstall = false;
         if (!installSuccess) {
+            logger.info("Optimistic Install Session %s: falling back to PM", deploySessionUID);
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
             skippedInstall =
                     !apkInstaller.install(
@@ -279,32 +275,12 @@ public class Deployer {
                             installOptions,
                             installMode,
                             metrics.getDeployMetrics());
-
-            if (useCoroutineDebugger()) {
-                installCoroutineDebugger =
-                        runner.create(
-                                Tasks.INSTALL_COROUTINE_DEBUGGER,
-                                this::installCoroutineDebugger,
-                                packageName,
-                                apks);
-            }
-
             runner.create(
                     Tasks.DEPLOY_CACHE_STORE, deployCache::invalidate, deviceSerial, packageName);
         }
 
         runner.runAsync(canceller);
-
-        App app = new App(pkgName, apks.get(), adb.getDevice(), logger);
-
-        final boolean coroutineDebuggerInstalled;
-        if (installCoroutineDebugger != null) {
-            coroutineDebuggerInstalled = installCoroutineDebugger.get();
-        } else {
-            coroutineDebuggerInstalled = false;
-        }
-
-        return new Result(skippedInstall, false, coroutineDebuggerInstalled, app);
+        return new InstallInfo(skippedInstall, apks.get());
     }
 
     public Result codeSwap(
