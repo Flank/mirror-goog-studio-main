@@ -17,6 +17,7 @@ package com.android.ide.common.repository;
 
 import static com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginVersion;
 import static com.android.ide.common.repository.GradleVersion.tryParseAndroidGradlePluginVersion;
+import static com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -624,6 +625,31 @@ public class GradleVersionTest {
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev-01")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev.0")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev-0")).isNull();
+    }
+
+    @Test
+    public void testAndroidGradlePluginVersion_tryParseStable() {
+        /*
+         * Valid versions
+         */
+        assertThat(convertAGPVersionToString(tryParseStableAndroidGradlePluginVersion("0.0.0")))
+                .isEqualTo("0.0.0");
+        assertThat(convertAGPVersionToString(tryParseStableAndroidGradlePluginVersion("3.0.0")))
+                .isEqualTo("3.0.0");
+        assertThat(convertAGPVersionToString(tryParseStableAndroidGradlePluginVersion("10.10.10")))
+                .isEqualTo("10.10.10");
+
+        /*
+         * Invalid versions
+         */
+        assertThat(tryParseStableAndroidGradlePluginVersion("")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("foo")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3.0")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3.0.0-alpha01")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3.0.0-beta01")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3.0.0-rc01")).isNull();
+        assertThat(tryParseStableAndroidGradlePluginVersion("3.0.0-dev")).isNull();
     }
 
     @Test

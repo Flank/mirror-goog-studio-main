@@ -17,6 +17,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
@@ -249,6 +250,23 @@ class CheckAarMetadataTaskTest {
     }
 
     @Test
+    fun testIncompatibleAgpVersion() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+            aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+            minAgpVersion = "99999.0.0"
+        )
+        // Test that build fails with desired error message.
+        try {
+            project.executor().run(":app:assembleDebug")
+            Assert.fail("Expected build failure")
+        } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message)
+                .contains("requires an Android Gradle Plugin version of 99999.0.0 or higher.")
+        }
+    }
+
+    @Test
     fun testInvalidAarMetadataVersion() {
         addAarWithPossiblyInvalidAarMetadataToAppProject(
             aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
@@ -286,7 +304,8 @@ class CheckAarMetadataTaskTest {
         addAarWithPossiblyInvalidAarMetadataToAppProject(
             aarFormatVersion = "invalid",
             aarMetadataVersion = "invalid",
-            minCompileSdk = "invalid"
+            minCompileSdk = "invalid",
+            minAgpVersion = "invalid"
         )
         // Test that build fails with desired error message.
         try {
@@ -299,13 +318,16 @@ class CheckAarMetadataTaskTest {
                 .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
             assertThat(Throwables.getRootCause(e).message)
                 .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
+            assertThat(Throwables.getRootCause(e).message)
+                .contains("has an invalid $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value")
         }
     }
 
     private fun addAarWithPossiblyInvalidAarMetadataToAppProject(
         aarFormatVersion: String?,
         aarMetadataVersion: String?,
-        minCompileSdk: String? = null
+        minCompileSdk: String? = null,
+        minAgpVersion: String? = null
     ) {
         project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
@@ -323,6 +345,7 @@ class CheckAarMetadataTaskTest {
             aarFormatVersion?.let { sb.appendln("$AAR_FORMAT_VERSION_PROPERTY=$it") }
             aarMetadataVersion?.let { sb.appendln("$AAR_METADATA_VERSION_PROPERTY=$it") }
             minCompileSdk?.let { sb.appendln("$MIN_COMPILE_SDK_PROPERTY=$it") }
+            minAgpVersion?.let { sb.appendln("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$it") }
             aar.add(
                 BytesSource(
                     sb.toString().toByteArray(),

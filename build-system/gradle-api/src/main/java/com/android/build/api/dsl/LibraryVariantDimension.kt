@@ -16,6 +16,7 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Action
 import java.io.File
 import org.gradle.api.Incubating
 
@@ -91,4 +92,8 @@ interface LibraryVariantDimension : VariantDimension {
     /** Options for configuring AAR metadata. */
     @Incubating
     fun aarMetadata(action: AarMetadata.() -> Unit)
+
+    /** Options for configuring AAR metadata. */
+    @Incubating
+    fun aarMetadata(action: Action<AarMetadata>)
 }

@@ -733,7 +733,9 @@ com.android.build.gradle.internal.dsl.AaptOptions.setUseNewCruncher: void (boole
 com.android.build.gradle.internal.dsl.AaptOptions.useNewCruncher: void (boolean)
 com.android.build.gradle.internal.dsl.AarMetadata implements com.android.build.api.dsl.AarMetadata
 com.android.build.gradle.internal.dsl.AarMetadata.<init>: com.android.build.gradle.internal.dsl.AarMetadata ()
+com.android.build.gradle.internal.dsl.AarMetadata.getMinAgpVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
+com.android.build.gradle.internal.dsl.AarMetadata.setMinAgpVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.AbiSplit
 com.android.build.gradle.internal.dsl.AbiSplitOptions.<init>: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
@@ -921,6 +923,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.cor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BaseFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseFlavor.aarMetadata: void (org.gradle.api.Action<com.android.build.api.dsl.AarMetadata>)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFile: void (java.lang.Object)
@@ -1022,6 +1025,7 @@ com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle
 com.android.build.gradle.internal.dsl.BuildType._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BuildType._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.gradle.internal.dsl.BuildType.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BuildType.aarMetadata: void (org.gradle.api.Action<com.android.build.api.dsl.AarMetadata>)
 com.android.build.gradle.internal.dsl.BuildType.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType.consumerProguardFile: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.consumerProguardFile: java.lang.Object (java.lang.Object)

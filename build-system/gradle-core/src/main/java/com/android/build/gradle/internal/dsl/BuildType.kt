@@ -165,6 +165,10 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         action.invoke(aarMetadata)
     }
 
+    override fun aarMetadata(action: Action<com.android.build.api.dsl.AarMetadata>) {
+        action.execute(aarMetadata)
+    }
+
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
      * scripts.

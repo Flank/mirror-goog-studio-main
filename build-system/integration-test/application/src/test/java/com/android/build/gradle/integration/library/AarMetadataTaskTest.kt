@@ -17,6 +17,7 @@ package com.android.build.gradle.integration.library
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.apksig.internal.util.ByteBufferUtils.toByteArray
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -40,9 +41,9 @@ class AarMetadataTaskTest {
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=1
+                |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=1.0.0
                 |"""
                 .trimMargin()
-                .replace("\n", System.lineSeparator())
                 .toByteArray()
         project.executor().run(":lib:assembleDebug")
         project.getSubproject("lib").withAar("debug") {
@@ -57,18 +58,27 @@ class AarMetadataTaskTest {
     }
 
     @Test
-    fun testMinCompileSdkVersion() {
+    fun testDsl() {
          val expectedAarMetadataBytes =
              """
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=27
+                |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.0.0
                 |"""
                  .trimMargin()
-                 .replace("\n", System.lineSeparator())
                  .toByteArray()
         project.getSubproject("lib").buildFile.appendText(
-            "android.defaultConfig.aarMetadata.minCompileSdk 27"
+            """
+                android {
+                    defaultConfig {
+                        aarMetadata {
+                            minCompileSdk 27
+                            minAgpVersion '3.0.0'
+                        }
+                    }
+                }
+                """.trimIndent()
         )
         project.executor().run(":lib:assembleDebug")
         project.getSubproject("lib").withAar("debug") {
@@ -83,26 +93,34 @@ class AarMetadataTaskTest {
     }
 
     @Test
-    fun testMinCompileSdkVersion_productFlavor() {
+    fun testDsl_productFlavor() {
         val expectedAarMetadataBytes =
             """
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=28
+                |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.1.0
                 |"""
                 .trimMargin()
-                .replace("\n", System.lineSeparator())
                 .toByteArray()
         // We add minCompileSdkVersion to defaultConfig and a product flavor to ensure that the
         // product flavor value trumps the defaultConfig value.
         project.getSubproject("lib").buildFile.appendText(
             """
                 android {
-                    defaultConfig.aarMetadata.minCompileSdk 27
+                    defaultConfig {
+                        aarMetadata {
+                            minCompileSdk 27
+                            minAgpVersion '3.0.0'
+                        }
+                    }
                     flavorDimensions 'foo'
                     productFlavors {
                         premium {
-                            aarMetadata.minCompileSdk 28
+                            aarMetadata {
+                                minCompileSdk 28
+                                minAgpVersion '3.1.0'
+                            }
                         }
                     }
                 }
@@ -121,34 +139,90 @@ class AarMetadataTaskTest {
     }
 
     @Test
-    fun testMinCompileSdkVersion_buildType() {
+    fun testDsl_buildType() {
         val expectedAarMetadataBytes =
             """
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
                 |$MIN_COMPILE_SDK_PROPERTY=29
+                |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.2.0
                 |"""
                 .trimMargin()
-                .replace("\n", System.lineSeparator())
                 .toByteArray()
         // We add minCompileSdkVersion to defaultConfig, a product flavor, and the debug build
         // type to ensure that the build type value trumps the other values.
         project.getSubproject("lib").buildFile.appendText(
             """
                 android {
-                    defaultConfig.aarMetadata.minCompileSdk 27
+                    defaultConfig {
+                        aarMetadata {
+                            minCompileSdk 27
+                            minAgpVersion '3.0.0'
+                        }
+                    }
                     flavorDimensions 'foo'
                     productFlavors {
                         premium {
-                            aarMetadata.minCompileSdk 28
+                            aarMetadata {
+                                minCompileSdk 28
+                                minAgpVersion '3.1.0'
+                            }
                         }
                     }
-                    buildTypes.debug.aarMetadata.minCompileSdk 29
+                    buildTypes {
+                        debug {
+                            aarMetadata {
+                                minCompileSdk 29
+                                minAgpVersion '3.2.0'
+                            }
+                        }
+                    }
                 }
                 """.trimIndent()
         )
         project.executor().run(":lib:assemblePremiumDebug")
         project.getSubproject("lib").withAar(listOf("premium", "debug")) {
+            val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
+            assertThat(aarMetadataEntryPath).isNotNull()
+            ZipArchive(file).use { aar ->
+                val aarMetadataBytes =
+                    toByteArray(aar.getContent(aarMetadataEntryPath.toString()))
+                assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)
+            }
+        }
+    }
+
+    @Test
+    fun testVariantApi() {
+        val expectedAarMetadataBytes =
+            """
+                |$AAR_FORMAT_VERSION_PROPERTY=1.0
+                |$AAR_METADATA_VERSION_PROPERTY=1.0
+                |$MIN_COMPILE_SDK_PROPERTY=27
+                |$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=3.0.0
+                |"""
+                .trimMargin()
+                .toByteArray()
+        project.getSubproject("lib").buildFile.appendText(
+            """
+                android {
+                    defaultConfig {
+                        aarMetadata {
+                            minCompileSdk 26
+                            minAgpVersion '2.0.0'
+                        }
+                    }
+                }
+                androidComponents {
+                    onVariants(selector().all(), {
+                        aarMetadata.minCompileSdk.set(27)
+                        aarMetadata.minAgpVersion.set("3.0.0")
+                    })
+                }
+                """.trimIndent()
+        )
+        project.executor().run(":lib:assembleDebug")
+        project.getSubproject("lib").withAar("debug") {
             val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
             ZipArchive(file).use { aar ->

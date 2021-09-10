@@ -20,4 +20,6 @@ package com.android.build.gradle.internal.dsl
 open class AarMetadata : com.android.build.api.dsl.AarMetadata {
 
     override var minCompileSdk: Int? = null
+
+    override var minAgpVersion: String? = null
 }
