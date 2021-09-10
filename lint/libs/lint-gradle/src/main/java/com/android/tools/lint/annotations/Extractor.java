@@ -37,7 +37,7 @@ import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
 import static com.android.SdkConstants.TYPE_DEF_VALUE_ATTRIBUTE;
 import static com.android.SdkConstants.VALUE_TRUE;
-import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetectorKt.INT_RANGE_ANNOTATION;
 import static com.android.tools.lint.detector.api.Lint.assertionsEnabled;
 
 import com.android.annotations.NonNull;

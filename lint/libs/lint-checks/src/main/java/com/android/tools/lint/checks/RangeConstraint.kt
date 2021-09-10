@@ -13,89 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.checks;
+package com.android.tools.lint.checks
 
-import static com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION;
-import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
-import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
-import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.fromPlatformAnnotation
+import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.uast.UAnnotated
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.java.JavaUAnnotation
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.AndroidPlatformAnnotations;
-import com.android.tools.lint.client.api.JavaEvaluator;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiModifierListOwner;
-import org.jetbrains.uast.UAnnotated;
-import org.jetbrains.uast.UAnnotation;
-import org.jetbrains.uast.java.JavaUAnnotation;
-
-public abstract class RangeConstraint {
-
-    @Nullable
-    public static RangeConstraint create(@NonNull UAnnotation annotation) {
-        String qualifiedName = annotation.getQualifiedName();
-        if (qualifiedName == null) {
-            return null;
-        }
-
-        if (INT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
-            return IntRangeConstraint.create(annotation);
-        } else if (FLOAT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
-            return FloatRangeConstraint.create(annotation);
-        } else if (SIZE_ANNOTATION.isEquals(qualifiedName)) {
-            return SizeConstraint.create(annotation);
-        } else if (isPlatformAnnotation(qualifiedName)) {
-            return create(
-                    AndroidPlatformAnnotations.Companion.fromPlatformAnnotation(
-                            annotation, qualifiedName));
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static RangeConstraint create(
-            @NonNull PsiModifierListOwner owner, @NonNull JavaEvaluator evaluator) {
-        for (PsiAnnotation annotation : evaluator.getAllAnnotations(owner, false)) {
-            RangeConstraint constraint = create(JavaUAnnotation.wrap(annotation));
-            // Pick first; they're mutually exclusive
-            if (constraint != null) {
-                return constraint;
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static RangeConstraint create(
-            @NonNull UAnnotated owner, @NonNull JavaEvaluator evaluator) {
-        for (UAnnotation annotation : evaluator.getAllAnnotations(owner, false)) {
-            RangeConstraint constraint = create(annotation);
-            // Pick first; they're mutually exclusive
-            if (constraint != null) {
-                return constraint;
-            }
-        }
-
-        return null;
-    }
-
+abstract class RangeConstraint {
     /**
-     * Checks whether the given range is compatible with this one. We err on the side of caution.
-     * E.g. if we have
-     *
-     * <pre>
-     *    method(x)
-     * </pre>
-     *
-     * and the parameter declaration says that x is between 0 and 10, and then we have a parameter
-     * which is known to be in the range 5 to 15, here we consider this a compatible range; we don't
-     * flag this as an error. If however, the ranges don't overlap, *then* we complain.
+     * Checks whether the given range is compatible with this one. We
+     * err on the side of caution. E.g. if we have `method(x)` and the
+     * parameter declaration says that x is between 0 and 10, and then
+     * we have a parameter which is known to be in the range 5 to 15,
+     * here we consider this a compatible range; we don't flag this
+     * as an error. If however, the ranges don't overlap, *then* we
+     * complain.
      */
-    @Nullable
-    public Boolean contains(@NonNull RangeConstraint other) {
-        return null;
+    open fun contains(other: RangeConstraint): Boolean? {
+        return null
+    }
+
+    companion object {
+        fun create(annotation: UAnnotation): RangeConstraint? {
+            val qualifiedName = annotation.qualifiedName ?: return null
+            if (INT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
+                return IntRangeConstraint.create(annotation)
+            } else if (FLOAT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
+                return FloatRangeConstraint.create(annotation)
+            } else if (SIZE_ANNOTATION.isEquals(qualifiedName)) {
+                return SizeConstraint.create(annotation)
+            } else if (isPlatformAnnotation(qualifiedName)) {
+                return create(annotation.fromPlatformAnnotation(qualifiedName))
+            }
+            return null
+        }
+
+        fun create(owner: PsiModifierListOwner, evaluator: JavaEvaluator): RangeConstraint? {
+            for (annotation in evaluator.getAllAnnotations(owner, false)) {
+                val constraint = create(JavaUAnnotation.wrap(annotation))
+                // Pick first; they're mutually exclusive
+                if (constraint != null) {
+                    return constraint
+                }
+            }
+            return null
+        }
+
+        fun create(owner: UAnnotated, evaluator: JavaEvaluator): RangeConstraint? {
+            for (annotation in evaluator.getAllAnnotations(owner, false)) {
+                val constraint = create(annotation)
+                // Pick first; they're mutually exclusive
+                if (constraint != null) {
+                    return constraint
+                }
+            }
+            return null
+        }
     }
 }

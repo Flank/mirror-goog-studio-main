@@ -15,8 +15,6 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector

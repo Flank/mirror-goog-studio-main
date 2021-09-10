@@ -21,7 +21,6 @@ import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
-import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
 import com.android.tools.lint.detector.api.AnnotationInfo

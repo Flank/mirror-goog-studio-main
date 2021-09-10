@@ -16,9 +16,9 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_INTENT;
-import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
-import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_READ;
-import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_WRITE;
+import static com.android.tools.lint.checks.AnnotationDetectorKt.PERMISSION_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetectorKt.PERMISSION_ANNOTATION_READ;
+import static com.android.tools.lint.checks.AnnotationDetectorKt.PERMISSION_ANNOTATION_WRITE;
 import static com.android.tools.lint.checks.PermissionDetector.AOSP_PERMISSION_ANNOTATION;
 import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toPlatformAnnotation;
 

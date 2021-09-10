@@ -28,10 +28,6 @@ import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.sdklib.AndroidVersion
-import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_READ
-import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_WRITE
-import com.android.tools.lint.checks.AnnotationDetector.SECURITY_EXCEPTION
 import com.android.tools.lint.checks.PermissionFinder.Operation.ACTION
 import com.android.tools.lint.checks.PermissionFinder.Operation.READ
 import com.android.tools.lint.checks.PermissionFinder.Operation.WRITE

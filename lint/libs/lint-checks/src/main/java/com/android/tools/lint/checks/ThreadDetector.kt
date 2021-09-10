@@ -18,12 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
-import com.android.tools.lint.checks.AnnotationDetector.ANY_THREAD_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.BINDER_THREAD_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.MAIN_THREAD_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.THREAD_SUFFIX
-import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
+import com.android.tools.lint.checks.ThreadDetector.Companion.THREAD_ANNOTATION_SUFFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.PLATFORM_ANNOTATIONS_PREFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
@@ -401,7 +396,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ): MutableList<String>? {
         var resultList = result
         val name = annotation.qualifiedName
-        if (name != null && name.endsWith(THREAD_SUFFIX) &&
+        if (name != null && name.endsWith(THREAD_ANNOTATION_SUFFIX) &&
             (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name) || isPlatformAnnotation(name))
         ) {
             if (resultList == null) {
@@ -427,6 +422,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     companion object {
+        const val THREAD_ANNOTATION_SUFFIX = "Thread"
+
         private val IMPLEMENTATION = Implementation(
             ThreadDetector::class.java,
             Scope.JAVA_FILE_SCOPE
@@ -458,6 +455,6 @@ private fun PsiAnnotation.isThreadingAnnotation(): Boolean = qualifiedName?.isTh
 
 private fun String.isThreadingAnnotation(): Boolean {
     val signature = this
-    return signature.endsWith(THREAD_SUFFIX) &&
+    return signature.endsWith(THREAD_ANNOTATION_SUFFIX) &&
         (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature) || isPlatformAnnotation(signature))
 }

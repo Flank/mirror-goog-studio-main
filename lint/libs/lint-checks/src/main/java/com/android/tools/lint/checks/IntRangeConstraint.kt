@@ -13,136 +13,112 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.checks;
+package com.android.tools.lint.checks
 
-import static com.android.tools.lint.checks.AnnotationDetector.ATTR_FROM;
-import static com.android.tools.lint.checks.AnnotationDetector.ATTR_TO;
-import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
-import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationLongValue;
+import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_FROM
+import com.android.tools.lint.checks.AnnotationDetector.Companion.ATTR_TO
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationLongValue
+import com.google.common.annotations.VisibleForTesting
+import org.jetbrains.uast.UAnnotation
+import kotlin.Long.Companion.MAX_VALUE
+import kotlin.Long.Companion.MIN_VALUE
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.google.common.annotations.VisibleForTesting;
-import org.jetbrains.uast.UAnnotation;
-
-class IntRangeConstraint extends RangeConstraint {
-
-    final long from;
-    final long to;
-
-    @NonNull
-    public static IntRangeConstraint create(@NonNull UAnnotation annotation) {
-        assert INT_RANGE_ANNOTATION.isEquals(annotation.getQualifiedName());
-        long from = getAnnotationLongValue(annotation, ATTR_FROM, Long.MIN_VALUE);
-        long to = getAnnotationLongValue(annotation, ATTR_TO, Long.MAX_VALUE);
-        return new IntRangeConstraint(from, to);
+class IntRangeConstraint private constructor(
+    val from: Long,
+    val to: Long
+) : RangeConstraint() {
+    fun isValid(value: Long): Boolean {
+        return value in from..to
     }
 
-    @VisibleForTesting
-    static IntRangeConstraint atLeast(long value) {
-        return new IntRangeConstraint(value, Long.MAX_VALUE);
+    fun describe(): String {
+        return describe(null)
     }
 
-    @VisibleForTesting
-    static IntRangeConstraint atMost(long value) {
-        return new IntRangeConstraint(Long.MIN_VALUE, value);
-    }
-
-    @VisibleForTesting
-    static IntRangeConstraint range(long from, long to) {
-        return new IntRangeConstraint(from, to);
-    }
-
-    private IntRangeConstraint(long from, long to) {
-        this.from = from;
-        this.to = to;
-    }
-
-    public boolean isValid(long value) {
-        return value >= from && value <= to;
-    }
-
-    @NonNull
-    public String describe() {
-        return describe(null);
-    }
-
-    @NonNull
-    public String describe(long argument) {
-        return describe(Long.valueOf(argument));
-    }
-
-    @NonNull
-    private String describe(@Nullable Long actualValue) {
-        StringBuilder sb = new StringBuilder(20);
+    fun describe(actualValue: Long?): String {
+        val sb = StringBuilder(20)
 
         // If we have an actual value, don't describe the full range, only describe
         // the parts that are outside the range
         if (actualValue != null && !isValid(actualValue)) {
-            long value = actualValue;
+            val value: Long = actualValue
             if (value < from) {
-                sb.append("Value must be \u2265 ");
-                sb.append(Long.toString(from));
+                sb.append("Value must be \u2265 ")
+                sb.append(from.toString())
             } else {
-                assert value > to;
-                sb.append("Value must be \u2264 ");
-                sb.append(Long.toString(to));
+                assert(value > to)
+                sb.append("Value must be \u2264 ")
+                sb.append(to.toString())
             }
-            sb.append(" (was ").append(value).append(')');
-            return sb.toString();
+            sb.append(" (was ").append(value).append(')')
+            return sb.toString()
         }
-
-        if (to == Long.MAX_VALUE) {
-            sb.append("Value must be \u2265 ");
-            sb.append(Long.toString(from));
-        } else if (from == Long.MIN_VALUE) {
-            sb.append("Value must be \u2264 ");
-            sb.append(Long.toString(to));
+        if (to == MAX_VALUE) {
+            sb.append("Value must be \u2265 ")
+            sb.append(from.toString())
+        } else if (from == MIN_VALUE) {
+            sb.append("Value must be \u2264 ")
+            sb.append(to.toString())
         } else {
-            sb.append("Value must be \u2265 ");
-            sb.append(Long.toString(from));
-            sb.append(" and \u2264 ");
-            sb.append(Long.toString(to));
+            sb.append("Value must be \u2265 ")
+            sb.append(from.toString())
+            sb.append(" and \u2264 ")
+            sb.append(to.toString())
         }
-
         if (actualValue != null) {
-            sb.append(" (is ").append(actualValue).append(')');
+            sb.append(" (is ").append(actualValue).append(')')
         }
-        return sb.toString();
+        return sb.toString()
     }
 
-    @Override
-    public String toString() {
-        return describe(null);
+    override fun toString(): String {
+        return describe(null)
     }
 
-    @Nullable
-    @Override
-    public Boolean contains(@NonNull RangeConstraint other) {
-        if (other instanceof IntRangeConstraint) {
-            IntRangeConstraint otherRange = (IntRangeConstraint) other;
-            return otherRange.from >= from && otherRange.to <= to;
-        } else if (other instanceof FloatRangeConstraint) {
-            FloatRangeConstraint otherRange = (FloatRangeConstraint) other;
-            if (!otherRange.fromInclusive && otherRange.from == (double) from
-                    || !otherRange.toInclusive && otherRange.to == (double) to) {
-                return false;
+    override fun contains(other: RangeConstraint): Boolean? {
+        if (other is IntRangeConstraint) {
+            return other.from >= from && other.to <= to
+        } else if (other is FloatRangeConstraint) {
+            if (!other.fromInclusive && other.from == from.toDouble() ||
+                !other.toInclusive && other.to == to.toDouble()
+            ) {
+                return false
             }
 
             // Both represent infinity
-            if (otherRange.to > to && !(Double.isInfinite(otherRange.to) && to == Long.MAX_VALUE)) {
-                return false;
+            if (other.to > to && !(java.lang.Double.isInfinite(other.to) && to == MAX_VALUE)) {
+                return false
             }
+            return !(other.from < from && !(java.lang.Double.isInfinite(other.from) && from == MIN_VALUE))
+        }
+        return null
+    }
 
-            //noinspection RedundantIfStatement
-            if (otherRange.from < from
-                    && !(Double.isInfinite(otherRange.from) && from == Long.MIN_VALUE)) {
-                return false;
-            }
-
-            return true;
+    companion object {
+        @JvmStatic
+        fun create(annotation: UAnnotation): IntRangeConstraint {
+            assert(INT_RANGE_ANNOTATION.isEquals(annotation.qualifiedName))
+            val from = getAnnotationLongValue(annotation, ATTR_FROM, MIN_VALUE)
+            val to = getAnnotationLongValue(annotation, ATTR_TO, MAX_VALUE)
+            return IntRangeConstraint(from, to)
         }
 
-        return null;
+        @JvmStatic
+        @VisibleForTesting
+        fun atLeast(value: Long): IntRangeConstraint {
+            return IntRangeConstraint(value, MAX_VALUE)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun atMost(value: Long): IntRangeConstraint {
+            return IntRangeConstraint(MIN_VALUE, value)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun range(from: Long, to: Long): IntRangeConstraint {
+            return IntRangeConstraint(from, to)
+        }
     }
 }

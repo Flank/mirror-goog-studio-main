@@ -13,216 +13,185 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.checks;
+package com.android.tools.lint.checks
 
-import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MAX;
-import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MIN;
-import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MULTIPLE;
-import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
-import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationLongValue;
-import static com.intellij.psi.CommonClassNames.JAVA_LANG_STRING;
+import com.android.SdkConstants
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationLongValue
+import com.google.common.annotations.VisibleForTesting
+import com.intellij.psi.CommonClassNames
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UExpression
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.google.common.annotations.VisibleForTesting;
-import org.jetbrains.uast.UAnnotation;
-import org.jetbrains.uast.UExpression;
-
-class SizeConstraint extends RangeConstraint {
-
-    final long exact;
-    final long min;
-    final long max;
-    final long multiple;
-
-    @NonNull
-    public static SizeConstraint create(@NonNull UAnnotation annotation) {
-        assert SIZE_ANNOTATION.isEquals(annotation.getQualifiedName());
-        long exact = getAnnotationLongValue(annotation, ATTR_VALUE, -1);
-        long min = getAnnotationLongValue(annotation, ATTR_MIN, Long.MIN_VALUE);
-        long max = getAnnotationLongValue(annotation, ATTR_MAX, Long.MAX_VALUE);
-        long multiple = getAnnotationLongValue(annotation, ATTR_MULTIPLE, 1);
-        return new SizeConstraint(exact, min, max, multiple);
+internal class SizeConstraint private constructor(
+    val exact: Long,
+    val min: Long,
+    val max: Long,
+    val multiple: Long
+) : RangeConstraint() {
+    override fun toString(): String {
+        return describe(null, null, null)
     }
 
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint exactly(long value) {
-        return new SizeConstraint(value, Long.MIN_VALUE, Long.MAX_VALUE, 1);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint atLeast(long value) {
-        return new SizeConstraint(-1, value, Long.MAX_VALUE, 1);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint atMost(long value) {
-        return new SizeConstraint(-1, Long.MIN_VALUE, value, 1);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint range(long from, long to) {
-        return new SizeConstraint(-1, from, to, 1);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint multiple(int multiple) {
-        return new SizeConstraint(-1, Long.MIN_VALUE, Long.MAX_VALUE, multiple);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint rangeWithMultiple(long from, long to, int multiple) {
-        return new SizeConstraint(-1, from, to, multiple);
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static SizeConstraint minWithMultiple(long from, int multiple) {
-        return new SizeConstraint(-1, from, Long.MAX_VALUE, multiple);
-    }
-
-    private SizeConstraint(long exact, long min, long max, long multiple) {
-        this.exact = exact;
-        this.min = min;
-        this.max = max;
-        this.multiple = multiple;
-    }
-
-    @Override
-    public String toString() {
-        return describe(null, null, null);
-    }
-
-    public boolean isValid(long actual) {
-        if (exact != -1) {
+    fun isValid(actual: Long): Boolean {
+        if (exact != -1L) {
             if (exact != actual) {
-                return false;
+                return false
             }
-        } else if (actual < min || actual > max || actual % multiple != 0) {
-            return false;
+        } else if (actual < min || actual > max || actual % multiple != 0L) {
+            return false
         }
-
-        return true;
+        return true
     }
 
-    @NonNull
-    public String describe() {
-        return describe(null, null, null);
+    fun describe(argument: Long): String {
+        return describe(null, null, argument)
     }
 
-    @NonNull
-    public String describe(long argument) {
-        return describe(null, null, argument);
-    }
-
-    @NonNull
-    public String describe(
-            @Nullable UExpression argument, @Nullable String unit, @Nullable Long actualValue) {
-        if (unit == null) {
-            if (argument != null
-                    && argument.getExpressionType() != null
-                    && argument.getExpressionType().getCanonicalText().equals(JAVA_LANG_STRING)) {
-                unit = "Length";
-            } else {
-                unit = "Size";
-            }
+    @JvmOverloads
+    fun describe(
+        argument: UExpression? = null,
+        unit: String? = null,
+        actualValue: Long? = null
+    ): String {
+        val actualUnit = unit ?: if (argument?.getExpressionType() != null &&
+            argument.getExpressionType()?.canonicalText == CommonClassNames.JAVA_LANG_STRING
+        ) {
+            "Length"
+        } else {
+            "Size"
         }
 
         if (actualValue != null && !isValid(actualValue)) {
-            long actual = actualValue;
-            if (exact != -1) {
+            val actual: Long = actualValue
+            if (exact != -1L) {
                 if (exact != actual) {
-                    return String.format("Expected %1$s %2$d (was %3$d)", unit, exact, actual);
+                    return "Expected $actualUnit $exact (was $actual)"
                 }
             } else if (actual < min || actual > max) {
-                StringBuilder sb = new StringBuilder(20);
+                val sb = StringBuilder(20)
                 if (actual < min) {
-                    sb.append("Expected ").append(unit).append(" \u2265 ");
-                    sb.append(Long.toString(min));
+                    sb.append("Expected ").append(actualUnit).append(" \u2265 ")
+                    sb.append(min.toString())
                 } else {
-                    assert actual > max;
-                    sb.append("Expected ").append(unit).append(" \u2264 ");
-                    sb.append(Long.toString(max));
+                    assert(actual > max)
+                    sb.append("Expected ").append(actualUnit).append(" \u2264 ")
+                    sb.append(max.toString())
                 }
-                sb.append(" (was ").append(actual).append(')');
-                return sb.toString();
-            } else if (actual % multiple != 0) {
-                return String.format(
-                        "Expected %1$s to be a multiple of %2$d (was %3$d "
-                                + "and should be either %4$d or %5$d)",
-                        unit,
-                        multiple,
-                        actual,
-                        (actual / multiple) * multiple,
-                        (actual / multiple + 1) * multiple);
+                sb.append(" (was ").append(actual).append(')')
+                return sb.toString()
+            } else if (actual % multiple != 0L) {
+                return "Expected $actualUnit to be a multiple of $multiple (was $actual " +
+                    "and should be either ${actual / multiple * multiple} or ${(actual / multiple + 1) * multiple})"
             }
         }
-
-        StringBuilder sb = new StringBuilder(20);
-        sb.append(unit);
-        sb.append(" must be");
-        if (exact != -1) {
-            sb.append(" exactly ");
-            sb.append(Long.toString(exact));
-            return sb.toString();
+        val sb = StringBuilder(20)
+        sb.append(actualUnit)
+        sb.append(" must be")
+        if (exact != -1L) {
+            sb.append(" exactly ")
+            sb.append(exact.toString())
+            return sb.toString()
         }
-        boolean continued = true;
+        var continued = true
         if (min != Long.MIN_VALUE && max != Long.MAX_VALUE) {
-            sb.append(" at least ");
-            sb.append(Long.toString(min));
-            sb.append(" and at most ");
-            sb.append(Long.toString(max));
+            sb.append(" at least ")
+            sb.append(min.toString())
+            sb.append(" and at most ")
+            sb.append(max.toString())
         } else if (min != Long.MIN_VALUE) {
-            sb.append(" at least ");
-            sb.append(Long.toString(min));
+            sb.append(" at least ")
+            sb.append(min.toString())
         } else if (max != Long.MAX_VALUE) {
-            sb.append(" at most ");
-            sb.append(Long.toString(max));
+            sb.append(" at most ")
+            sb.append(max.toString())
         } else {
-            continued = false;
+            continued = false
         }
-        if (multiple != 1) {
+        if (multiple != 1L) {
             if (continued) {
-                sb.append(" and");
+                sb.append(" and")
             }
-            sb.append(" a multiple of ");
-            sb.append(Long.toString(multiple));
+            sb.append(" a multiple of ")
+            sb.append(multiple.toString())
         }
         if (actualValue != null) {
-            sb.append(" (was ").append(actualValue).append(')');
+            sb.append(" (was ").append(actualValue).append(')')
         }
-        return sb.toString();
+        return sb.toString()
     }
 
-    @Nullable
-    @Override
-    public Boolean contains(@NonNull RangeConstraint other) {
-        if (other instanceof SizeConstraint) {
-            SizeConstraint otherRange = (SizeConstraint) other;
-            if (exact != -1 && otherRange.exact != -1) {
-                return exact == otherRange.exact;
+    override fun contains(other: RangeConstraint): Boolean? {
+        if (other is SizeConstraint) {
+            if (exact != -1L && other.exact != -1L) {
+                return exact == other.exact
             }
-            if (multiple != 1) {
-                if (otherRange.exact != -1) {
-                    if (otherRange.exact % multiple != 0) {
-                        return false;
+            if (multiple != 1L) {
+                if (other.exact != -1L) {
+                    if (other.exact % multiple != 0L) {
+                        return false
                     }
-                } else if (otherRange.multiple % multiple != 0) {
-                    return false;
+                } else if (other.multiple % multiple != 0L) {
+                    return false
                 }
             }
-            if (otherRange.exact != -1) {
-                return otherRange.exact >= min && otherRange.exact <= max;
-            }
-            return otherRange.min >= min && otherRange.max <= max;
+            return if (other.exact != -1L) {
+                other.exact in min..max
+            } else
+                other.min >= min && other.max <= max
         }
-        return null;
+        return null
+    }
+
+    companion object {
+        @JvmStatic
+        fun create(annotation: UAnnotation): SizeConstraint {
+            assert(SIZE_ANNOTATION.isEquals(annotation.qualifiedName))
+            val exact = getAnnotationLongValue(annotation, SdkConstants.ATTR_VALUE, -1)
+            val min = getAnnotationLongValue(annotation, AnnotationDetector.ATTR_MIN, Long.MIN_VALUE)
+            val max = getAnnotationLongValue(annotation, AnnotationDetector.ATTR_MAX, Long.MAX_VALUE)
+            val multiple = getAnnotationLongValue(annotation, AnnotationDetector.ATTR_MULTIPLE, 1)
+            return SizeConstraint(exact, min, max, multiple)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun exactly(value: Long): SizeConstraint {
+            return SizeConstraint(value, Long.MIN_VALUE, Long.MAX_VALUE, 1)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun atLeast(value: Long): SizeConstraint {
+            return SizeConstraint(-1, value, Long.MAX_VALUE, 1)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun atMost(value: Long): SizeConstraint {
+            return SizeConstraint(-1, Long.MIN_VALUE, value, 1)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun range(from: Long, to: Long): SizeConstraint {
+            return SizeConstraint(-1, from, to, 1)
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun multiple(multiple: Int): SizeConstraint {
+            return SizeConstraint(-1, Long.MIN_VALUE, Long.MAX_VALUE, multiple.toLong())
+        }
+
+        @JvmStatic
+        @VisibleForTesting
+        fun rangeWithMultiple(from: Long, to: Long, multiple: Int): SizeConstraint {
+            return SizeConstraint(-1, from, to, multiple.toLong())
+        }
+
+        @VisibleForTesting
+        fun minWithMultiple(from: Long, multiple: Int): SizeConstraint {
+            return SizeConstraint(-1, from, Long.MAX_VALUE, multiple.toLong())
+        }
     }
 }

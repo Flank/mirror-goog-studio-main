@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetectorKt.PERMISSION_ANNOTATION;
 import static com.android.tools.lint.checks.PermissionRequirement.REVOCABLE_PERMISSION_NAMES;
 import static com.android.tools.lint.checks.PermissionRequirement.isRevocableSystemPermission;
 import static org.mockito.Mockito.mock;

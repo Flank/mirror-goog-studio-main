@@ -16,10 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.AnnotationDetector.CHECK_RESULT_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.ERRORPRONE_CAN_IGNORE_RETURN_VALUE
-import com.android.tools.lint.checks.AnnotationDetector.FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE
-import com.android.tools.lint.checks.AnnotationDetector.JAVAX_ANNOTATION_CHECK_RETURN_VALUE
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType

@@ -30,9 +30,9 @@ public class IntRangeConstraintTest {
         assertThat(atLeast(5).describe()).isEqualTo("Value must be ≥ 5");
         assertThat(atMost(5).describe()).isEqualTo("Value must be ≤ 5");
 
-        assertThat(range(1, 5).describe(3)).isEqualTo("Value must be ≥ 1 and ≤ 5 (is 3)");
-        assertThat(range(1, 5).describe(0)).isEqualTo("Value must be ≥ 1 (was 0)");
-        assertThat(range(1, 5).describe(6)).isEqualTo("Value must be ≤ 5 (was 6)");
+        assertThat(range(1, 5).describe(3L)).isEqualTo("Value must be ≥ 1 and ≤ 5 (is 3)");
+        assertThat(range(1, 5).describe(0L)).isEqualTo("Value must be ≥ 1 (was 0)");
+        assertThat(range(1, 5).describe(6L)).isEqualTo("Value must be ≤ 5 (was 6)");
     }
 
     @Test

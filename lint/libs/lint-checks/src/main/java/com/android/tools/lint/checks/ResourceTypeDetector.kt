@@ -22,7 +22,6 @@ import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.DRAWABLE
 import com.android.resources.ResourceType.MIPMAP
 import com.android.resources.ResourceType.STYLEABLE
-import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
 import com.android.tools.lint.detector.api.AnnotationInfo

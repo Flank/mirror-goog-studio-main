@@ -18,9 +18,6 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.SdkConstants.LONG_DEF_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
-import com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.Category
@@ -315,7 +312,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         private const val AOSP_INT_RANGE_ANNOTATION = "android.annotation.IntRange"
 
         /**
-         * Returns true if the given [qualifiedName] is a range annotation
+         * Returns true if the given [qualifiedName] is a range
+         * annotation
          */
         fun isIntRange(qualifiedName: String?): Boolean {
             if (INT_RANGE_ANNOTATION.isEquals(qualifiedName) || AOSP_INT_RANGE_ANNOTATION == qualifiedName) {
