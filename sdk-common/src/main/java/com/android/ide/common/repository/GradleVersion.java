@@ -553,6 +553,31 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
         }
     }
 
+    /**
+     * Parses the given string into a {@link GradleVersion} instance if it represents a valid stable
+     * Android Gradle plugin version, or returns {@code null} otherwise.
+     *
+     * <p>This method is similar to {@link #tryParseAndroidGradlePluginVersion(String)} but has
+     * stricter constraints on what will be accepted as a valid version. Specifically, this method
+     * does not accept any alpha, beta, rc, or dev versions as valid plugin versions, but the other
+     * method does.
+     *
+     * @param value the string to parse
+     * @return the created {@link GradleVersion} instance, or {@code null} if the given string does
+     *     not represent a valid stable Android Gradle plugin version.
+     * @see #tryParseAndroidGradlePluginVersion(String)
+     */
+    @Nullable
+    public static GradleVersion tryParseStableAndroidGradlePluginVersion(@NonNull String value) {
+        if (value.matches("\\d+\\.\\d+\\.\\d+")) {
+            // Any string that matches the above pattern is a valid Android Gradle plugin version
+            // and should be parsable by tryParse()
+            return Verify.verifyNotNull(tryParse(value));
+        } else {
+            return null;
+        }
+    }
+
     @NonNull
     public static GradleVersion parseAndroidGradlePluginVersion(@NonNull String value) {
         GradleVersion version = tryParseAndroidGradlePluginVersion(value);

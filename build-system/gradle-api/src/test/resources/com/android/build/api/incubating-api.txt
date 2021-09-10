@@ -8,6 +8,8 @@ com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.and
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ASSETS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
+com.android.build.api.dsl.AarMetadata.getMinAgpVersion: java.lang.String ()
+com.android.build.api.dsl.AarMetadata.setMinAgpVersion: void (java.lang.String)
 com.android.build.api.dsl.AbiSplit.isUniversalApk: boolean ()
 com.android.build.api.dsl.AbiSplit.setUniversalApk: void (boolean)
 com.android.build.api.dsl.AdbOptions implements com.android.build.api.dsl.Installation
@@ -419,6 +421,7 @@ com.android.build.api.dsl.LibraryExtension.publishing: void (kotlin.jvm.function
 com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.LibraryProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryVariantDimension.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
+com.android.build.api.dsl.LibraryVariantDimension.aarMetadata: void (org.gradle.api.Action<com.android.build.api.dsl.AarMetadata>)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.api.dsl.LibraryVariantDimension.getAarMetadata: com.android.build.api.dsl.AarMetadata ()
@@ -758,6 +761,7 @@ com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.
 com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.extension.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.AarMetadata.getMinAgpVersion: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.variant.AndroidComponentsExtension.registerExtension: void (com.android.build.api.variant.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.variant.AnnotationProcessor

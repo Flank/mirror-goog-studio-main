@@ -17,13 +17,16 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
+import com.android.Version
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.repository.GradleVersion
 import com.android.repository.Revision
 import com.android.sdklib.SdkVersionInfo
 import com.google.common.annotations.VisibleForTesting
@@ -76,6 +79,9 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val compileSdkVersion: Property<String>
 
+    @get:Input
+    abstract val agpVersion: Property<String>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(
             CheckAarMetadataWorkAction::class.java
@@ -96,6 +102,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
+            it.agpVersion.set(agpVersion)
             it.projectPath.set(projectPath)
         }
     }
@@ -133,6 +140,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.compileSdkVersion
                     ?: throw RuntimeException("compileSdkVersion is not specified.")
             )
+            task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         }
     }
 }
@@ -257,16 +265,47 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                         Dependency: $displayName.
                         AAR metadata file: ${aarMetadataFile.absolutePath}.
                         """.trimIndent()
-
                 )
             } else {
                 val compileSdkVersion = parameters.compileSdkVersion.get()
                 val compileSdkVersionInt = getApiIntFromString(compileSdkVersion)
                 if (minCompileSdkInt > compileSdkVersionInt) {
+                    // TODO(b/199900566) - change compileSdkVersion to compileSdk for AGP 8.0.
                     errorMessages.add(
                         """
-                            Dependency '$displayName' requires a compilation target of $minCompileSdk.
-                            Compilation target for module '${parameters.projectPath.get()}' is '$compileSdkVersion'
+                            Dependency '$displayName' requires 'compileSdkVersion' to be set to $minCompileSdk or higher.
+                            Compilation target for module '${parameters.projectPath.get()}' is '$compileSdkVersion'.
+                            """.trimIndent()
+                    )
+                }
+            }
+        }
+
+        // check agpVersion
+        val minAgpVersion = aarMetadataReader.minAgpVersion
+        if (minAgpVersion != null) {
+            val parsedMinAgpVersion =
+                GradleVersion.tryParseStableAndroidGradlePluginVersion(minAgpVersion)
+            if (parsedMinAgpVersion == null) {
+                errorMessages.add(
+                    """
+                        A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
+                        has an invalid $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY value
+                        ($minAgpVersion). $MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY must be a a
+                        stable AGP version, formatted with major, minor, and micro values (for
+                        example "4.0.0").
+                        Dependency: $displayName.
+                        AAR metadata file: ${aarMetadataFile.absolutePath}.
+                        """.trimIndent()
+                )
+            } else {
+                val parsedAgpVersion =
+                    GradleVersion.parseAndroidGradlePluginVersion(parameters.agpVersion.get())
+                if (parsedMinAgpVersion > parsedAgpVersion) {
+                    errorMessages.add(
+                        """
+                            Dependency '$displayName' requires an Android Gradle Plugin version of $minAgpVersion or higher.
+                            The Android Gradle Plugin version used for this build is ${parameters.agpVersion.get()}.
                             """.trimIndent()
                     )
                 }
@@ -301,6 +340,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
+    abstract val agpVersion: Property<String>
     abstract val projectPath: Property<String>
 }
 
@@ -309,6 +349,7 @@ private data class AarMetadataReader(val file: File) {
     val aarFormatVersion: String?
     val aarMetadataVersion: String?
     val minCompileSdk: String?
+    val minAgpVersion: String?
 
     init {
         val properties = Properties()
@@ -316,6 +357,7 @@ private data class AarMetadataReader(val file: File) {
         aarFormatVersion = properties.getProperty(AAR_FORMAT_VERSION_PROPERTY)
         aarMetadataVersion = properties.getProperty(AAR_METADATA_VERSION_PROPERTY)
         minCompileSdk = properties.getProperty(MIN_COMPILE_SDK_PROPERTY)
+        minAgpVersion = properties.getProperty(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
     }
 }
 

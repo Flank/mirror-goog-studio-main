@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
+import com.android.Version
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
@@ -70,7 +71,8 @@ class CheckAarMetadataTaskTest {
                                 file = it,
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-                                minCompileSdk = 28
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -80,6 +82,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-28")
+        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         task.projectPath.set(":app")
         task.taskAction()
     }
@@ -95,7 +98,8 @@ class CheckAarMetadataTaskTest {
                                 file = it,
                                 aarFormatVersion = "2.0",
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-                                minCompileSdk = 28
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -105,6 +109,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set("1.0")
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-28")
+        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         task.projectPath.set(":app")
         try {
             task.taskAction()
@@ -125,7 +130,8 @@ class CheckAarMetadataTaskTest {
                                 file = it,
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = "2.0",
-                                minCompileSdk = 28
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -135,6 +141,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set("1.0")
         task.compileSdkVersion.set("android-28")
+        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         task.projectPath.set(":app")
         try {
             task.taskAction()
@@ -155,7 +162,8 @@ class CheckAarMetadataTaskTest {
                                 file = it,
                                 aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
                                 aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-                                minCompileSdk = 28
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -165,13 +173,51 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-27")
+        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         task.projectPath.set(":app")
         try {
             task.taskAction()
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertThat(e.message).contains(
-                "Dependency 'displayName' requires a compilation target of 28."
+                "Dependency 'displayName' requires 'compileSdkVersion' to be set to 28 or higher."
+            )
+        }
+    }
+
+    @Test
+    fun testFailsOnMinAgpVersion() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-28")
+        task.agpVersion.set("3.0.0-beta01")
+        task.projectPath.set(":app")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains(
+                """
+                    Dependency 'displayName' requires an Android Gradle Plugin version of 3.0.0 or higher.
+                    The Android Gradle Plugin version used for this build is 3.0.0-beta01.
+                    """.trimIndent()
             )
         }
     }
@@ -187,7 +233,8 @@ class CheckAarMetadataTaskTest {
                                 file = it,
                                 aarFormatVersion = "2.0",
                                 aarMetadataVersion = "2.0",
-                                minCompileSdk = 28
+                                minCompileSdk = 28,
+                                minAgpVersion = "3.0.0"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -197,6 +244,7 @@ class CheckAarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.compileSdkVersion.set("android-27")
+        task.agpVersion.set("3.0.0-beta01")
         task.projectPath.set(":app")
         try {
             task.taskAction()
@@ -205,7 +253,13 @@ class CheckAarMetadataTaskTest {
             assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
             assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
             assertThat(e.message).contains(
-                "Dependency 'displayName' requires a compilation target of 28."
+                "Dependency 'displayName' requires 'compileSdkVersion' to be set to 28 or higher."
+            )
+            assertThat(e.message).contains(
+                """
+                    Dependency 'displayName' requires an Android Gradle Plugin version of 3.0.0 or higher.
+                    The Android Gradle Plugin version used for this build is 3.0.0-beta01.
+                    """.trimIndent()
             )
         }
     }

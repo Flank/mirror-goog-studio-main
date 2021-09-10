@@ -32,4 +32,11 @@ open class AnalyticsEnabledAarMetadata @Inject constructor(
                 VariantPropertiesMethodType.VARIANT_AAR_METADATA_MIN_COMPILE_SDK_VALUE
             return delegate.minCompileSdk
         }
+
+    override val minAgpVersion: Property<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_MIN_AGP_VERSION_VALUE
+            return delegate.minAgpVersion
+        }
 }
