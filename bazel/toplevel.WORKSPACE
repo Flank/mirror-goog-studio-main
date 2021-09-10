@@ -1,6 +1,6 @@
 load("//tools/base/bazel:repositories.bzl", "setup_external_repositories")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("//tools/adt/idea/kotlin-integration:version.bzl", "KOTLIN_IDE_VERSION")
 
 setup_external_repositories()
@@ -101,6 +101,58 @@ http_archive(
     sha256 = "5d866d9925ad7b142c89bbffc9ce9941961e08747d6f64e28b5158cc44ad95cd",
     strip_prefix = "x86_64",
     build_file = "//tools/base/bazel/avd:system_images.BUILD",
+)
+
+# Sdk components when needed by gradle managed devices
+# TODO(b/219103375) use a single 29 system image
+# Not for use in Presubmit
+http_file(
+    name = "system_image_android-29_default_x86_zip",
+    urls = ["https://dl.google.com/android/repository/sys-img/android/x86-29_r08-linux.zip"],
+    sha256 = "3fa56afb1d1eb0d27f0a33f72bfa15146c0328e849181e80d21cc1bff3907621",
+    downloaded_file_path = "x86-29_r08-linux.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "emulator_zip",
+    urls = ["https://dl.google.com/android/repository/emulator-linux_x64-7920983.zip"],
+    sha256 = "5690099ab213a6265bc025d1d2218055e6b9d69414972c13cf2ef1c98a9c4565",
+    downloaded_file_path = "emulator-linux_x64-7920983.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "sdk_patcher_zip",
+    urls = ["https://dl.google.com/android/repository/3534162-studio.sdk-patcher.zip"],
+    sha256 = "18f9b8f27ea656e06b05d8f14d881df8e19803c9221c0be3e801632bcef18bed",
+    downloaded_file_path = "3534162-studio.sdk-patcher.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "build_tools_zip",
+    urls = ["https://dl.google.com/android/repository/build-tools_r30.0.3-linux.zip"],
+    sha256 = "24593500aa95d2f99fb4f10658aae7e65cb519be6cd33fa164f15f27f3c4a2d6",
+    downloaded_file_path = "build-tools_r30.0.3-linux.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "platform_32_zip",
+    urls = ["https://dl.google.com/android/repository/platform-32_r01.zip"],
+    sha256 = "01d8da1c900e70fcf5da39767d5444e39928935b1a5927055ce749fc348ca7ae",
+    downloaded_file_path = "platform-32_r01.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "platform_tools_zip",
+    urls = ["https://dl.google.com/android/repository/platform-tools_r31.0.3-linux.zip"],
+    sha256 = "e6cb61b92b5669ed6fd9645fad836d8f888321cd3098b75588a54679c204b7dc",
+    downloaded_file_path = "platform-tools_r31.0.3-linux.zip",
+)
+# Not for use in Presubmit
+http_file(
+    name = "sdk_tools_zip",
+    urls = ["https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip"],
+    sha256 = "92ffee5a1d98d856634e8b71132e8a95d96c83a63fde1099be3d86df3106def9",
+    downloaded_file_path = "sdk-tools-linux-4333796.zip",
 )
 
 # An empty local repository which must be overridden according to the instructions at
