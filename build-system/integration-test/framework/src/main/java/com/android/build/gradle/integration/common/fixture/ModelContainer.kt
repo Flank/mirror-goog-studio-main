@@ -17,12 +17,10 @@ package com.android.build.gradle.integration.common.fixture
 
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
-import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModule
-import org.gradle.tooling.model.BuildIdentifier
 import java.io.File
 import java.io.Serializable
 
@@ -34,7 +32,6 @@ import java.io.Serializable
 class ModelContainerV2(
     val infoMaps: Map<String, Map<String, ModelInfo>>,
     val buildMap: Map<String, BuildInfo>,
-    val globalLibraryMap: GlobalLibraryMap? = null
 ) : Serializable {
 
     companion object {
@@ -75,33 +72,25 @@ class ModelContainerV2(
         }
     }
 
-    /**
-     * Returns the only [Versions] when there is no composite builds and a single sub-project.
-     */
-    val singleVersions: Versions
-        get() = singleInfo.versions
-            ?: throw RuntimeException("No Versions model for project '${singleInfoPath}'")
+    fun getProject(
+        projectPath: String? = null,
+        buildName: String = ROOT_BUILD_ID
+    ): ModelInfo {
+        val info: Map<String, ModelInfo> =
+            infoMaps[buildName]
+                ?: throw RuntimeException("Could not find projects for build '$buildName'")
 
-    /**
-     * Returns the only [AndroidProject] when there is no composite builds and a single sub-project.
-     */
-    val singleAndroidProject: AndroidProject
-        get() = singleInfo.androidProject
-                ?: throw RuntimeException("No AndroidProject model for project '${singleInfoPath}'")
+        return if (projectPath == null) {
+            if (info.size != 1) {
+                throw RuntimeException("Build '$buildName' contains ${info.size} projects but no path was provided")
+            }
 
-    /**
-     * Returns the only [AndroidDsl] when there is no composite builds and a single sub-project.
-     */
-    val singleAndroidDsl: AndroidDsl
-        get() = singleInfo.androidDsl
-                ?: throw RuntimeException("No AndroidDsl model for project '${singleInfoPath}'")
-
-    /**
-     * Returns the only [VariantDependencies] when there is no composite builds and a single sub-project.
-     */
-    val singleVariantDependencies: VariantDependencies
-        get() = singleInfo.variantDependencies
-                ?: throw RuntimeException("No AndroidProject model for project '${singleInfoPath}'")
+            info.values.single()
+        } else {
+            info[projectPath]
+                ?: throw RuntimeException("Failed to find model info for $projectPath in build '$buildName'")
+        }
+    }
 
     /**
      * Returns the only [NativeModule] when there is no composite builds and a single sub-project
@@ -114,42 +103,15 @@ class ModelContainerV2(
         get() = infoMaps.values.flatMap { it.values }.mapNotNull { it.nativeModule }.single()
 
     /**
-     * Returns the only [ProjectSyncIssues] model when there is no composite builds and a single
-     * Android sub-project.
-     */
-    val singleProjectIssues: ProjectSyncIssues?
-        get() = singleInfo.issues
-            ?: throw RuntimeException("No ProjectSyncIssues model for project '${singleInfoPath}'")
-
-    /**
      * Returns the single [ModelInfo] when there is no composite builds and a single
      * Android sub-project.
      */
-    val singleInfo: ModelInfo
+    val singleProjectInfo: ModelInfo
         get() {
             if (infoMaps.size != 1) {
                 throw RuntimeException("Found ${infoMaps.size} builds when querying for single: ${infoMaps.keys}")
             }
             return rootInfoMap.values.single()
-        }
-
-    /** Returns the only model map. This is only valid if there is no included builds.  */
-    private val singleInfoPath: String
-        get() {
-            if (infoMaps.size != 1) {
-                throw RuntimeException("Found ${infoMaps.size} builds when querying for single: ${infoMaps.keys}")
-            }
-            return rootInfoMap.keys.single()
-        }
-
-
-    /** Returns the only model map. This is only valid if there is no included builds.  */
-    private val singleInfoMap: Map<String, ModelInfo>
-        get() {
-            if (infoMaps.size != 1) {
-                throw RuntimeException("Found ${infoMaps.size} builds when querying for single: ${infoMaps.keys}")
-            }
-            return rootInfoMap
         }
 
     /**

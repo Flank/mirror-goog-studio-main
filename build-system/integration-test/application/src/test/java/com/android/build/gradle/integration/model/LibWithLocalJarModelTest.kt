@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.model
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
-import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
-import com.android.build.gradle.integration.common.fixture.model.getVariantDependencies
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
@@ -64,7 +62,7 @@ class LibWithLocalJarModelTest : ModelComparator() {
     @Test
     fun `test app dependency model`() {
         with(result).compareVariantDependencies(
-            modelAction = { getVariantDependencies(":app") },
+            modelAction = { getProject(":app") },
             goldenFile = "app"
         )
     }
@@ -72,7 +70,7 @@ class LibWithLocalJarModelTest : ModelComparator() {
     @Test
     fun `test lib dependency model`() {
         with(result).compareVariantDependencies(
-            modelAction = { getVariantDependencies(":lib") },
+            modelAction = { getProject(":lib") },
             goldenFile = "lib"
         )
     }

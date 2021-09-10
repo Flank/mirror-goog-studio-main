@@ -18,12 +18,6 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
-import com.android.builder.model.v2.models.AndroidDsl
-import com.android.builder.model.v2.models.AndroidProject
-import com.android.builder.model.v2.models.GlobalLibraryMap
-import com.android.builder.model.v2.models.Versions
-import com.android.builder.model.v2.models.VariantDependencies
-import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
@@ -58,12 +52,12 @@ class Comparator(
 ) {
 
     fun compareVersions(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> Versions,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "Versions",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).versions ?: throw RuntimeException("No androidProject model") },
             project = result,
             referenceProject = referenceResult
         ) {
@@ -77,12 +71,12 @@ class Comparator(
     }
 
     fun compareAndroidProject(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidProject,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "AndroidProject",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).androidProject ?: throw RuntimeException("No androidProject model") },
             project = result,
             referenceProject = referenceResult
         ) {
@@ -96,11 +90,11 @@ class Comparator(
     }
 
     fun ensureAndroidProjectIsEmpty(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidProject,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
         checkEmptyDelta(
             modelName = "AndroidProject",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).androidProject ?: throw RuntimeException("No androidProject model") },
             project = result,
             referenceProject = referenceResult!!,
             action = { snapshotAndroidProject() },
@@ -114,12 +108,12 @@ class Comparator(
     }
 
     fun compareAndroidDsl(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidDsl,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "AndroidDsl",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).androidDsl ?: throw RuntimeException("No androidDsl model") },
             project = result,
             referenceProject = referenceResult
         ) {
@@ -133,11 +127,11 @@ class Comparator(
     }
 
     fun ensureAndroidDslIsEmpty(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidDsl,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
         checkEmptyDelta(
             modelName = "AndroidDsl",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).androidDsl ?: throw RuntimeException("No androidDsl model") },
             project = result,
             referenceProject = referenceResult!!,
             action = { snapshotAndroidDsl() },
@@ -151,46 +145,30 @@ class Comparator(
     }
 
     fun compareVariantDependencies(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> VariantDependencies,
-        goldenFile: String,
-        dumpGlobalLibrary: Boolean = true
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "VariantDependencies",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).variantDependencies ?: throw RuntimeException("No variantDependencies model") },
             project = result,
             referenceProject = referenceResult
         ) {
             snapshotVariantDependencies()
         }
 
-        val finalString = if (dumpGlobalLibrary) {
-            result.container.globalLibraryMap?.let { libraryMap ->
-                content + snapshotModel(
-                    modelName = "GlobalLibraryMap",
-                    modelAction = {  container.globalLibraryMap!! },
-                    project = result,
-                    referenceProject = referenceResult
-                ) {
-                    snapshotGlobalLibraryMap()
-                }
-            } ?: content
-        } else {
-            content
-        }
-
         generateStdoutHeader()
-        println(finalString)
+        println(content)
 
-        runComparison("VariantDependencies", finalString, goldenFile)
+        runComparison("VariantDependencies", content, goldenFile)
     }
 
     fun ensureVariantDependenciesIsEmpty(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> VariantDependencies,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
         checkEmptyDelta(
             modelName = "VariantDependencies",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).variantDependencies ?: throw RuntimeException("No variantDependencies model") },
             project = result,
             referenceProject = referenceResult!!,
             action = { snapshotVariantDependencies() },
@@ -203,35 +181,13 @@ class Comparator(
         )
     }
 
-    /**
-     * Entry point to dump a [GlobalLibraryMap]
-     */
-    fun compareGlobalLibraryMap(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> GlobalLibraryMap,
-        goldenFile: String
-    ) {
-        val content = snapshotModel(
-            modelName = "GlobalLibraryMap",
-            modelAction = modelAction,
-            project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotGlobalLibraryMap()
-        }.also {
-            generateStdoutHeader()
-            println(it)
-        }
-
-        runComparison("GlobalLibraryMap", content, goldenFile)
-    }
-
     fun compareNativeModule(
-        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> NativeModule,
+        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "NativeModule",
-            modelAction = modelAction,
+            modelAction = { modelAction(this).nativeModule ?: throw RuntimeException("No nativeModule model") },
             project = result,
             referenceProject = referenceResult
         ) {

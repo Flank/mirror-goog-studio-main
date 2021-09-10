@@ -105,10 +105,7 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
             }
         }
 
-        with(result).compareNativeModule(
-          modelAction = { container.singleNativeModule },
-          goldenFile = "nativeModule"
-        )
+        with(result).compareNativeModule(goldenFile = "nativeModule")
     }
 
     @Test

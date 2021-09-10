@@ -50,6 +50,9 @@ import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInp
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
+import com.android.build.gradle.internal.ide.dependencies.LibraryService
+import com.android.build.gradle.internal.ide.dependencies.LibraryServiceImpl
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
@@ -89,7 +92,6 @@ import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.BuildMap
-import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
@@ -119,6 +121,7 @@ class ModelBuilder<
                 BuildTypeT,
                 DefaultConfigT,
                 ProductFlavorT>>(
+    private val project: Project,
     private val globalScope: GlobalScope,
     private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
@@ -136,7 +139,6 @@ class ModelBuilder<
                 || className == BuildMap::class.java.name
                 || className == AndroidProject::class.java.name
                 || className == AndroidDsl::class.java.name
-                || className == GlobalLibraryMap::class.java.name
                 || className == VariantDependencies::class.java.name
                 || className == ProjectSyncIssues::class.java.name
     }
@@ -149,7 +151,6 @@ class ModelBuilder<
         BuildMap::class.java.name -> buildBuildMap(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
         AndroidDsl::class.java.name -> buildAndroidDslModel(project)
-        GlobalLibraryMap::class.java.name -> buildGlobalLibraryMapModel(project)
         ProjectSyncIssues::class.java.name -> buildProjectSyncIssueModel(project)
         VariantDependencies::class.java.name -> throw RuntimeException(
             "Please use parameterized Tooling API to obtain VariantDependencies model."
@@ -169,7 +170,7 @@ class ModelBuilder<
         Versions::class.java.name,
         BuildMap::class.java.name,
         AndroidProject::class.java.name,
-        GlobalLibraryMap::class.java.name,
+        AndroidDsl::class.java.name,
         ProjectSyncIssues::class.java.name -> throw RuntimeException(
             "Please use non-parameterized Tooling API to obtain $className model."
         )
@@ -425,16 +426,6 @@ class ModelBuilder<
             )
     }
 
-    private fun buildGlobalLibraryMapModel(project: Project): GlobalLibraryMap {
-        val globalLibraryBuildService =
-            getBuildService(
-                project.gradle.sharedServices,
-                GlobalLibraryBuildService::class.java
-            ).get()
-
-        return globalLibraryBuildService.createModel()
-    }
-
     private fun buildProjectSyncIssueModel(project: Project): ProjectSyncIssues {
         syncIssueReporter.lockHandler()
 
@@ -470,42 +461,32 @@ class ModelBuilder<
         val variant = variantModel.variants.singleOrNull { it.name == variantName }
             ?: return null
 
+        val buildMapping = project.gradle.computeBuildMapping()
+
         val globalLibraryBuildService =
             getBuildService(
                 project.gradle.sharedServices,
-                GlobalLibraryBuildService::class.java
+                GlobalSyncService::class.java
             ).get()
 
-        val buildMapping = project.gradle.computeBuildMapping()
+        val libraryService = LibraryServiceImpl(
+            globalLibraryBuildService.stringCache,
+            globalLibraryBuildService.localJarCache
+        )
 
         return VariantDependenciesImpl(
             name = variantName,
-            mainArtifact = createDependencies(
-                variant,
-                buildMapping,
-                globalLibraryBuildService,
-            ),
+            mainArtifact = createDependencies(variant, buildMapping, libraryService,),
             androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
-                createDependencies(
-                    it,
-                    buildMapping,
-                    globalLibraryBuildService,
-                )
+                createDependencies(it, buildMapping, libraryService,)
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
-                createDependencies(
-                    it,
-                    buildMapping,
-                    globalLibraryBuildService,
-                )
+                createDependencies(it, buildMapping, libraryService,)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
-                createDependencies(
-                    it,
-                    buildMapping,
-                    globalLibraryBuildService,
-                )
-            }
+                createDependencies(it, buildMapping, libraryService,)
+            },
+            libraryService.getAllLibraries().associateBy { it.key }
         )
     }
 
@@ -683,7 +664,7 @@ class ModelBuilder<
     private fun createDependencies(
         component: ComponentImpl,
         buildMapping: BuildMapping,
-        globalLibraryBuildService: GlobalLibraryBuildService,
+        libraryService: LibraryService,
     ): ArtifactDependencies {
 
         val inputs = ArtifactCollectionsInputsImpl(
@@ -694,7 +675,7 @@ class ModelBuilder<
             buildMapping = buildMapping
         )
 
-        return FullDependencyGraphBuilder(inputs, component.variantDependencies, globalLibraryBuildService).build(
+        return FullDependencyGraphBuilder(inputs, component.variantDependencies, libraryService).build(
             syncIssueReporter)
     }
 

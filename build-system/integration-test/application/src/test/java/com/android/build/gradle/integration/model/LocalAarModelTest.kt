@@ -60,9 +60,6 @@ class LocalAarModelTest: ModelComparator() {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels(variantName = "debug")
 
-        with(result).compareVariantDependencies(
-            modelAction = { container.singleVariantDependencies },
-            goldenFile = "VariantDependencies"
-        )
+        with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
     }
 }

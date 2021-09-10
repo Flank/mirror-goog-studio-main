@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
-import com.android.build.gradle.integration.common.fixture.model.getAndroidProject
 import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -53,10 +52,15 @@ class LibraryModelSyncFilesTest {
         }
     }
 
-    private fun getLibraryVariant() =
-        project.modelV2()
+    private fun getLibraryVariant(): com.android.builder.model.v2.ide.Variant {
+        val androidProject = project.modelV2()
             .fetchModels("debug")
-            .getAndroidProject(":lib")
+            .container
+            .getProject(":lib")
+            .androidProject
+            ?: throw RuntimeException("No AndroidProject model for :lib")
+        return androidProject
             .variants
             .first { variant -> variant.name == "debug" }
+    }
 }

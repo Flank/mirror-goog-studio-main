@@ -73,7 +73,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
-import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
+import com.android.build.gradle.internal.ide.v2.GlobalSyncService;
 import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
 import com.android.build.gradle.internal.lint.LintFixBuildService;
 import com.android.build.gradle.internal.lint.LintFromMaven;
@@ -375,9 +375,8 @@ public abstract class BasePlugin<
                 project, mavenCoordinatesCacheBuildService
         ).execute();
 
-        new GlobalLibraryBuildService.RegistrationAction(
-                project, mavenCoordinatesCacheBuildService
-        ).execute();
+        new GlobalSyncService.RegistrationAction(project, mavenCoordinatesCacheBuildService)
+                .execute();
 
         extraModelInfo = new ExtraModelInfo();
 
@@ -561,6 +560,7 @@ public abstract class BasePlugin<
 
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
+                        project,
                         globalScope,
                         projectServices.getProjectOptions(),
                         variantModel,

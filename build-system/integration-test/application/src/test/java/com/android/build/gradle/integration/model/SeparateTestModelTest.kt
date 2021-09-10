@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.model
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
-import com.android.build.gradle.integration.common.fixture.model.getAndroidProject
-import com.android.build.gradle.integration.common.fixture.model.getVariantDependencies
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
@@ -55,7 +53,7 @@ class SeparateTestModelTest: ModelComparator() {
     @Test
     fun `test AndroidProject`() {
         with(result).compareAndroidProject(
-            modelAction = { getAndroidProject(":test") },
+            modelAction = { getProject(":test") },
             goldenFile = "AndroidProject"
         )
     }
@@ -63,7 +61,7 @@ class SeparateTestModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getVariantDependencies(":test") },
+            modelAction = { getProject(":test") },
             goldenFile = "VariantDependencies"
         )
     }

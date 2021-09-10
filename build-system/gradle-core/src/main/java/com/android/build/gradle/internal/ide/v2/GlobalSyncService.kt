@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.gradle.internal.ide.dependencies.LibraryService
-import com.android.build.gradle.internal.ide.dependencies.LibraryServiceImpl
+import com.android.build.gradle.internal.ide.dependencies.LocalJarCache
 import com.android.build.gradle.internal.ide.dependencies.LocalJarCacheImpl
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
-import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
+import com.android.build.gradle.internal.ide.dependencies.StringCache
 import com.android.build.gradle.internal.ide.dependencies.StringCacheImpl
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
-import com.android.builder.model.v2.ide.Library
-import com.android.builder.model.v2.models.GlobalLibraryMap
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -32,11 +29,15 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 
 /**
- * Build Service used to aggregate all instances of [Library], across all sub-projects, during sync.
+ * Build Service used to cache objects used across sync of several sub-projects.
+ *
+ * Right now this caches:
+ * - string instances
+ * - content of local jar folders so that we only need to do IO once per folder.
  */
-abstract class GlobalLibraryBuildService : BuildService<GlobalLibraryBuildService.Parameters>,
-        AutoCloseable,
-        LibraryService {
+@Suppress("UnstableApiUsage")
+abstract class GlobalSyncService : BuildService<GlobalSyncService.Parameters>,
+    AutoCloseable {
 
     interface Parameters: BuildServiceParameters {
         val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
@@ -45,29 +46,27 @@ abstract class GlobalLibraryBuildService : BuildService<GlobalLibraryBuildServic
     class RegistrationAction(
         project: Project,
         private val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
-    ) : ServiceRegistrationAction<GlobalLibraryBuildService, Parameters>(
+    ) : ServiceRegistrationAction<GlobalSyncService, Parameters>(
         project,
-        GlobalLibraryBuildService::class.java
+        GlobalSyncService::class.java
     ) {
         override fun configure(parameters: Parameters) {
             parameters.mavenCoordinatesCache.set(mavenCoordinatesCache)
         }
     }
 
-    internal fun createModel(): GlobalLibraryMap {
-        return GlobalLibraryMapImpl(libraryService.getAllLibraries().associateBy { it.key })
-    }
+    val stringCache: StringCache
+        get() = _stringCache
 
-    override fun getLibrary(artifact: ResolvedArtifact): Library = libraryService.getLibrary(artifact)
+    val localJarCache: LocalJarCache
+        get() = _localJarCache
 
-    private val stringCache = StringCacheImpl()
-    private val localJarCache = LocalJarCacheImpl()
-    private val libraryService = LibraryServiceImpl(stringCache, localJarCache)
+    private val _stringCache = StringCacheImpl()
+    private val _localJarCache = LocalJarCacheImpl()
 
     override fun close() {
-        libraryService.clear()
-        stringCache.clear()
-        localJarCache.clear()
+        _stringCache.clear()
+        _localJarCache.clear()
     }
 }
 

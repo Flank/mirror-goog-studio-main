@@ -49,12 +49,13 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SyncIssue
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.BuildMap
-import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.Versions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
@@ -87,8 +88,9 @@ class ModelBuilderTest {
                 .isTrue()
         }
 
+        testModel(Versions::class.java.name)
         testModel(AndroidProject::class.java.name)
-        testModel(GlobalLibraryMap::class.java.name)
+        testModel(AndroidDsl::class.java.name)
         testModel(VariantDependencies::class.java.name)
         testModel(ProjectSyncIssues::class.java.name)
     }
@@ -130,9 +132,17 @@ class ModelBuilderTest {
     }
 
     @Test
-    fun `test wrong query with GlobalLibraryMap`() {
+    fun `test wrong query with Versions`() {
         thrown.expect(RuntimeException::class.java)
-        val name = GlobalLibraryMap::class.java.name
+        val name = Versions::class.java.name
+        thrown.expectMessage("Please use non-parameterized Tooling API to obtain $name model.")
+        createApplicationModelBuilder().buildAll(name, FakeModelBuilderParameter(), project)
+    }
+
+    @Test
+    fun `test wrong query with AndroidDsl`() {
+        thrown.expect(RuntimeException::class.java)
+        val name = AndroidDsl::class.java.name
         thrown.expectMessage("Please use non-parameterized Tooling API to obtain $name model.")
         createApplicationModelBuilder().buildAll(name, FakeModelBuilderParameter(), project)
     }
@@ -225,6 +235,7 @@ class ModelBuilderTest {
         ).execute()
 
         return ModelBuilder(
+            project,
             GlobalScope(
                 project,
                 "",
