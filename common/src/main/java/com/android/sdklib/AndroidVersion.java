@@ -133,10 +133,14 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** First version to support TV 4K display */
     public static final int MIN_4K_TV_API = 31;
 
+    /** Last version of Android with supported 32-bit system images. */
+    public static final int MAX_32_BIT_API = 30;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */
     public static final class AndroidVersionException extends Exception {
+
         private static final long serialVersionUID = 1L;
 
         public AndroidVersionException(String message, Throwable cause) {
