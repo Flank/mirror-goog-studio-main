@@ -136,10 +136,14 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** Frist version to support Resizable device */
     public static final int MIN_RESIZABLE_DEVICE_API = 31;
 
+    /** Last version of Android with supported 32-bit system images. */
+    public static final int MAX_32_BIT_API = 30;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */
     public static final class AndroidVersionException extends Exception {
+
         private static final long serialVersionUID = 1L;
 
         public AndroidVersionException(String message, Throwable cause) {
