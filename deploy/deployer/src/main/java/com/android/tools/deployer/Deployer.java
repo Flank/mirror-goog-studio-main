@@ -187,8 +187,6 @@ public class Deployer {
 
             Task<Boolean> installCoroutineDebugger = null;
             if (useCoroutineDebugger()) {
-                // TODO(b/185399333): instead of using apks, add  task to get arch by opening apk
-                // has to happen after install
                 installCoroutineDebugger =
                         runner.create(
                                 Tasks.INSTALL_COROUTINE_DEBUGGER,
@@ -238,9 +236,6 @@ public class Deployer {
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
 
             if (useCoroutineDebugger()) {
-                // TODO(b/185399333): instead of using apks, add task to get arch by opening
-                // apk
-                // has to happen after install
                 installCoroutineDebugger =
                         runner.create(
                                 Tasks.INSTALL_COROUTINE_DEBUGGER,
@@ -286,8 +281,6 @@ public class Deployer {
                             metrics.getDeployMetrics());
 
             if (useCoroutineDebugger()) {
-                // TODO(b/185399333): instead of using apks, add  task to get arch by opening apk
-                // has to happen after install
                 installCoroutineDebugger =
                         runner.create(
                                 Tasks.INSTALL_COROUTINE_DEBUGGER,
