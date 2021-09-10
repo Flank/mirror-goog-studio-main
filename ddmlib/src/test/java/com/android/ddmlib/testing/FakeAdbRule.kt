@@ -44,6 +44,8 @@ class FakeAdbRule : ExternalResource() {
   private var closeFakeAdbServerDuringCleanUp = true
   private lateinit var fakeAdbServer: FakeAdbServer
   private val startingDevices: MutableMap<String, CountDownLatch> = mutableMapOf()
+  private var consoleFactory: (String, String) -> EmulatorConsole =
+        { name, path -> FakeEmulatorConsole(name, path) }
   private val hostCommandHandlers: MutableMap<String, () -> HostCommandHandler> = mutableMapOf()
   private val deviceCommandHandlers: MutableList<DeviceCommandHandler> = mutableListOf(
     object : DeviceCommandHandler("track-jdwp") {
@@ -68,7 +70,14 @@ class FakeAdbRule : ExternalResource() {
     deviceCommandHandlers.add(handler)
   }
 
-  /**
+    /**
+     * Add a [EmulatorConsole] factory.
+     */
+    fun withEmulatorConsoleFactory(factory: (String, String) -> EmulatorConsole) = apply {
+        consoleFactory = factory
+    }
+
+    /**
    * Initialize the ADB bridge as part of the setup.
    *
    * Some tests may delay this step and call initialize the AdbBridge separately.
@@ -95,7 +104,7 @@ class FakeAdbRule : ExternalResource() {
     val startLatch = CountDownLatch(1)
     startingDevices[deviceId] = startLatch
     if (avdName != null && avdPath != null) {
-      EmulatorConsole.registerConsoleForTest(deviceId, FakeEmulatorConsole(avdName, avdPath))
+      EmulatorConsole.registerConsoleForTest(deviceId, consoleFactory(avdName, avdPath))
     }
     val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType).get()
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
