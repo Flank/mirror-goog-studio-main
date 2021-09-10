@@ -72,6 +72,9 @@ import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.impl.source.PsiImmediateClassType
 import org.jetbrains.kotlin.asJava.elements.KtLightField
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -288,6 +291,8 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                     checkTargetType(annotation, type, TYPE_INT, TYPE_LONG)
                 }
                 RESTRICT_TO_ANNOTATION.isEquals(type) -> {
+                    checkConstructorParameter(annotation, type)
+
                     val attributeValue = annotation.findDeclaredAttributeValue(ATTR_VALUE)
                         ?: annotation.findDeclaredAttributeValue(null)
                         ?: run {
@@ -308,6 +313,35 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                             "`RestrictTo.Scope.SUBCLASSES` should only be specified on methods and fields"
                         )
                     }
+                }
+                VISIBLE_FOR_TESTING_ANNOTATION.isEquals(type) -> {
+                    checkConstructorParameter(annotation, type)
+                }
+            }
+        }
+
+        private fun checkConstructorParameter(annotation: UAnnotation, type: String) {
+            val source = annotation.sourcePsi
+            if (source is KtAnnotationEntry) {
+                val parameter = source.parent?.parent as? KtParameter ?: return
+                if (!parameter.hasValOrVar()) {
+                    return
+                }
+                val target = source.useSiteTarget?.getAnnotationUseSiteTarget()
+                if (target == null || target == AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER) {
+                    val name = type.substringAfterLast('.')
+                    val fix = if (target == null) {
+                        fix().name("Change to `@get:`").replace().text("@").with("@get:").build()
+                    } else {
+                        null
+                    }
+
+                    context.report(
+                        ANNOTATION_USAGE, annotation, context.getLocation(annotation),
+                        "Did you mean `@get:$name` ? Without `get:` this annotates the constructor " +
+                            "parameter itself instead of the associated getter.",
+                        fix
+                    )
                 }
             }
         }

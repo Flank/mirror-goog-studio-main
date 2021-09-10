@@ -476,6 +476,7 @@ class LintDetectorDetector : Detector(), UastScanner {
 
                     if (string.endsWith(".") &&
                         string.lastIndexOf('.', string.length - 2) == -1 &&
+                        string.lastIndexOf('?', string.length - 2) == -1 &&
                         !string.endsWith(" etc.")
                     ) {
                         // Make sure string is really there; may not be the case if we

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 7.0.0-dev">
+<issues format="5" by="lint 7.1.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -22,7 +22,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ArraySizeDetector.java"
-            line="307"/>
+            line="306"/>
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/FirebaseAnalyticsDetector.java"
-            line="335"/>
+            line="349"/>
     </issue>
 
     <issue
@@ -38,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/FirebaseAnalyticsDetector.java"
-            line="375"/>
+            line="389"/>
     </issue>
 
     <issue
@@ -111,22 +111,6 @@
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RelativeOverlapDetector.java"
             line="117"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/SizeConstraint.java"
-            line="142"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/SizeConstraint.java"
-            line="157"/>
     </issue>
 
     <issue
