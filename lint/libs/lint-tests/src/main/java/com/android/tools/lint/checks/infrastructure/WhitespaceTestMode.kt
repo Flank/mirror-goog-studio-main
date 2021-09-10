@@ -24,6 +24,7 @@ import com.intellij.psi.PsiImportList
 import com.intellij.psi.PsiPackageStatement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.psi.KtAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtPackageDirective
@@ -81,6 +82,7 @@ class WhitespaceTestMode : SourceTransformationTestMode(
                         is KtStringTemplateExpression,
                         // We cannot separate the "@" from the annotation name:
                         is KtAnnotationEntry,
+                        is KtAnnotation,
                         is PsiAnnotation,
                         // Weirdly if there are spaces between tokens in the import list, PSI/UAST does not
                         // work properly:

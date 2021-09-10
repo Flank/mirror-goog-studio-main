@@ -87,6 +87,25 @@ class WhitespaceTestModeTest {
     }
 
     @Test
+    fun testAnnotationBracketSyntax() {
+        @Language("kotlin")
+        val kotlin = """
+            @file:Suppress("ALL")
+            annotation class VisibleForTesting
+            class TestClass(@get:[VisibleForTesting] @set:VisibleForTesting var p5: String)
+        """.trimIndent().trim()
+
+        @Language("kotlin")
+        val expected = "" +
+            " @file:Suppress(\"ALL\") \n" +
+            " annotation   class   VisibleForTesting \n" +
+            " class   TestClass ( @get:[VisibleForTesting]   @set:VisibleForTesting   var   p5 :   String ) "
+
+        val modified = addSpacesKotlin(kotlin)
+        assertEquals(expected, modified)
+    }
+
+    @Test
     fun testStrings() {
         @Language("kotlin")
         val kotlin = """
