@@ -16,31 +16,19 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
 /**
  * Integration test testing cases when lint should analyze test sources.
  */
-@RunWith(FilterableParameterized::class)
-class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintCheckTestSourcesTest {
 
     private val app = MinimalSubProject.app("com.example.app")
     private val lib = MinimalSubProject.lib("com.example.lib")
@@ -188,7 +176,7 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun testCheckTestSources() {
         // check that there are no errors before adding "checkTestSources true"
-        getExecutor().run(":app:lintRelease")
+        project.executor().run(":app:lintRelease")
         val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
         assertThat(reportFile).exists()
         assertThat(reportFile).doesNotContain("Error: STOPSHIP")
@@ -202,29 +190,21 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
         project.getSubproject(":javaLib")
             .buildFile
             .appendText("\nlintOptions.checkTestSources true\n")
-        getExecutor().run(":app:lintRelease")
+        project.executor().run(":app:lintRelease")
         assertThat(reportFile).exists()
         assertThat(reportFile).containsAllOf(
             "AppUnitTest.java:4: Error: STOPSHIP comment found",
             "AppAndroidTest.java:4: Error: STOPSHIP comment found",
             "JavaLibUnitTest.java:4: Error: STOPSHIP comment found",
+            "LibUnitTest.java:4: Error: STOPSHIP comment found",
+            "LibAndroidTest.java:4: Error: STOPSHIP comment found",
         )
-        if (usePartialAnalysis) {
-            // TODO(b/183138097) Analyze test sources in android library dependencies when not using
-            //  partial analysis? Currently, we omit test sources from published lint models
-            //  intentionally for some reason (see
-            //  LintModelWriterTask.BaseCreationAction::configure)
-            assertThat(reportFile).containsAllOf(
-                "LibUnitTest.java:4: Error: STOPSHIP comment found",
-                "LibAndroidTest.java:4: Error: STOPSHIP comment found",
-            )
-        }
     }
 
     @Test
     fun testIgnoreTestSources() {
         // check that there are no unused resource warnings before adding "ignoreTestSources true"
-        getExecutor().run(":app:lintRelease")
+        project.executor().run(":app:lintRelease")
         val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
         assertThat(reportFile).exists()
         assertThat(reportFile).doesNotContain(
@@ -234,11 +214,8 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
         project.getSubproject(":app")
             .buildFile
             .appendText("\nandroid.lintOptions.ignoreTestSources true\n")
-        getExecutor().run(":app:lintRelease")
+        project.executor().run(":app:lintRelease")
         assertThat(reportFile).exists()
         assertThat(reportFile).contains("Warning: The resource R.string.foo appears to be unused")
     }
-
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

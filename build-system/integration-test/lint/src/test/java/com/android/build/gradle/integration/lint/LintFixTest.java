@@ -20,32 +20,19 @@ import static com.android.build.gradle.integration.common.truth.ScannerSubject.a
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Integration test for the lintFix target on the synthetic accessor warnings found in the Kotlin
  * project.
  */
-@RunWith(FilterableParameterized.class)
 public class LintFixTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -94,7 +81,7 @@ public class LintFixTest {
 
         FileUtils.copyDirectory(sourceDir, sourceDirCopy);
 
-        GradleBuildResult result = getExecutor().expectFailure().run(":app:lintFix");
+        GradleBuildResult result = project.executor().expectFailure().run(":app:lintFix");
         assertThat(result.getStderr())
                 .contains(
                         "Aborting build since sources were modified to apply quickfixes after compilation");
@@ -116,10 +103,6 @@ public class LintFixTest {
         GradleBuildResult result2 = project.executor().expectFailure().run("clean", ":app:lintFix");
         assertThat(result2.getStderr())
                 .contains("Lint found errors in the project; aborting build");
-    }
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }
 

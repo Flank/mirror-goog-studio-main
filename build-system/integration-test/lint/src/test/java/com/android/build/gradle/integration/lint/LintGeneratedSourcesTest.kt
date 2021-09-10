@@ -16,30 +16,18 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test running lint on generated sources
  */
-@RunWith(FilterableParameterized::class)
-class LintGeneratedSourcesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintGeneratedSourcesTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -78,25 +66,18 @@ class LintGeneratedSourcesTest(private val usePartialAnalysis: Boolean) {
     /** Test that changes to generated sources cause the lint tasks to re-run as expected. */
     @Test
     fun testNotUpToDate() {
-        project.getExecutor().run("clean", "lintRelease")
+        project.executor().run("clean", "lintRelease")
         assertThat(project.buildResult.getTask(":lintReportRelease")).didWork()
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.getTask(":lintAnalyzeRelease")).didWork()
-        }
+        assertThat(project.buildResult.getTask(":lintAnalyzeRelease")).didWork()
         val lintReport = project.file("lint-results.txt")
         assertThat(lintReport).exists()
         assertThat(lintReport).contains("StopShip")
 
         TestFileUtils.searchAndReplace(project.buildFile, "STOPSHIP", "comment")
-        project.getExecutor().run("lintRelease")
+        project.executor().run("lintRelease")
         assertThat(project.buildResult.getTask(":lintReportRelease")).didWork()
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.getTask(":lintAnalyzeRelease")).didWork()
-        }
+        assertThat(project.buildResult.getTask(":lintAnalyzeRelease")).didWork()
         assertThat(lintReport).exists()
         assertThat(lintReport).doesNotContain("StopShip")
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

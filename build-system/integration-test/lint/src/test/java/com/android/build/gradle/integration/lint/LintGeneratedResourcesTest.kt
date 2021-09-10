@@ -16,30 +16,18 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test running lint on generated resources
  */
-@RunWith(FilterableParameterized::class)
-class LintGeneratedResourcesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintGeneratedResourcesTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -91,11 +79,9 @@ class LintGeneratedResourcesTest(private val usePartialAnalysis: Boolean) {
     /** Test that changes to generated resources cause the lint tasks to re-run as expected. */
     @Test
     fun testNotUpToDate() {
-        project.getExecutor().run("clean", "lintDebug")
+        project.executor().run("clean", "lintDebug")
         assertThat(project.buildResult.getTask(":lintReportDebug")).didWork()
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.getTask(":lintAnalyzeDebug")).didWork()
-        }
+        assertThat(project.buildResult.getTask(":lintAnalyzeDebug")).didWork()
         val lintReport = project.file("lint-results.txt")
         assertThat(lintReport).exists()
         assertThat(lintReport).doesNotContain(
@@ -106,17 +92,12 @@ class LintGeneratedResourcesTest(private val usePartialAnalysis: Boolean) {
         val byteOrderMark = "\ufeff"
         TestFileUtils.searchAndReplace(project.buildFile, "xml comment", byteOrderMark)
 
-        project.getExecutor().run("lintDebug")
+        project.executor().run("lintDebug")
         assertThat(project.buildResult.getTask(":lintReportDebug")).didWork()
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.getTask(":lintAnalyzeDebug")).didWork()
-        }
+        assertThat(project.buildResult.getTask(":lintAnalyzeDebug")).didWork()
         assertThat(lintReport).exists()
         assertThat(lintReport).contains(
             "generated.xml:3: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]"
         )
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

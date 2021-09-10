@@ -16,30 +16,18 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test for [AndroidLintCopyReportTask]
  */
-@RunWith(FilterableParameterized::class)
-class AndroidLintCopyReportTaskTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class AndroidLintCopyReportTaskTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -60,7 +48,7 @@ class AndroidLintCopyReportTaskTest(private val usePartialAnalysis: Boolean) {
     // Regression test for b/189877657
     @Test
     fun testRunningTaskDirectly() {
-        project.getExecutor().run("clean", "copyDebugAndroidLintReports")
+        project.executor().run("clean", "copyDebugAndroidLintReports")
         ScannerSubject.assertThat(project.buildResult.stdout).contains("BUILD SUCCESSFUL")
         ScannerSubject.assertThat(project.buildResult.stdout)
             .contains("Unable to copy the lint text report")
@@ -68,10 +56,7 @@ class AndroidLintCopyReportTaskTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testReportCopiedAfterLint() {
-        project.getExecutor().run("clean", "lintDebug")
+        project.executor().run("clean", "lintDebug")
         assertThat(project.file("lint-results.txt")).exists()
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

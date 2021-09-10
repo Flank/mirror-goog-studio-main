@@ -18,31 +18,18 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for a custom jar in a library model, used by a consuming app.
  *
  * <p>The custom lint rule comes from a 3rd java module.
  */
-@RunWith(FilterableParameterized.class)
 public class LintCustomRuleTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -51,8 +38,8 @@ public class LintCustomRuleTest {
     @Test
     public void checkCustomLint() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
-        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
+        project.executor().expectFailure().run(":app:clean", ":app:lintDebug");
+        project.executor().expectFailure().run(":app:clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
@@ -62,7 +49,7 @@ public class LintCustomRuleTest {
     public void checkCustomLintFromCompileOnlyDependency() throws Exception {
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").getBuildFile(), "implementation", "compileOnly");
-        getExecutor().expectFailure().run(":app:clean", ":app:lintDebug");
+        project.executor().expectFailure().run(":app:clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
@@ -84,8 +71,4 @@ public class LintCustomRuleTest {
                     + "   Identifier: LintCustomRuleTest\n"
                     + "\n"
                     + "1 errors, 0 warnings";
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
-    }
 }

@@ -16,29 +16,17 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(FilterableParameterized::class)
-class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintCompileOnlyTest {
 
     private val app =
         MinimalSubProject.app("com.example.app")
@@ -141,8 +129,8 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun testLintWithCompileOnlyDependencies() {
         // Run twice to catch issues with configuration caching
-        getExecutor().run("clean", ":app:lint")
-        getExecutor().run("clean", ":app:lint")
+        project.executor().run("clean", ":app:lint")
+        project.executor().run("clean", ":app:lint")
         Truth.assertThat(project.buildResult.failedTasks).isEmpty()
     }
 
@@ -160,8 +148,8 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
                     """.trimIndent()
         )
         // Run twice to catch issues with configuration caching
-        getExecutor().run("clean", ":app:lintRelease")
-        getExecutor().run("clean", ":app:lintRelease")
+        project.executor().run("clean", ":app:lintRelease")
+        project.executor().run("clean", ":app:lintRelease")
         Truth.assertThat(project.buildResult.failedTasks).isEmpty()
         val reportFile = File(project.getSubproject(":app").projectDir, "lint-results.txt")
         PathSubject.assertThat(reportFile).exists()
@@ -175,7 +163,4 @@ class LintCompileOnlyTest(private val usePartialAnalysis: Boolean) {
             "Baz.java:4: Error: STOPSHIP comment found"
         )
     }
-
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

@@ -72,7 +72,6 @@ import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelNamespacingMode
-import com.android.tools.lint.model.LintModelSerialization
 import com.android.tools.lint.model.LintModelSeverity
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
@@ -698,10 +697,6 @@ abstract class VariantInputs {
     @get:Internal
     abstract val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val dynamicFeatureLintModels: ConfigurableFileCollection
-
     /**
      * Initializes the variant inputs
      *
@@ -715,16 +710,13 @@ abstract class VariantInputs {
      * @param addBaseModuleLintModel whether the base app module should be modeled as a module
      *     dependency if checkDependencies is false. This Boolean only affects dynamic feature
      *     modules, and it has no effect if checkDependencies is true.
-     * @param includeDynamicFeatureSourceProviders whether to merge any dynamic feature source
-     *     providers with this module's source providers. This Boolean only affects app modules.
      */
     fun initialize(
         variantWithTests: VariantWithTests,
         checkDependencies: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
         isForAnalysis: Boolean,
-        addBaseModuleLintModel: Boolean = false,
-        includeDynamicFeatureSourceProviders: Boolean = false
+        addBaseModuleLintModel: Boolean = false
     ) {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
@@ -834,17 +826,6 @@ abstract class VariantInputs {
         buildFeatures.initialize(creationConfig)
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
-
-        if (includeDynamicFeatureSourceProviders) {
-            dynamicFeatureLintModels.from(
-                creationConfig.variantDependencies.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                    AndroidArtifacts.ArtifactScope.PROJECT,
-                    AndroidArtifacts.ArtifactType.LINT_MODEL
-                )
-            )
-        }
-        dynamicFeatureLintModels.disallowChanges()
     }
 
     internal fun initializeForStandalone(
@@ -917,11 +898,6 @@ abstract class VariantInputs {
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get())
 
-        val dynamicFeatureSourceProviders: List<LintModelSourceProvider> =
-            dynamicFeatureLintModels.files.map {
-                LintModelSerialization.readModule(it, readDependencies = false)
-            }.flatMap { it.variants.flatMap { variant -> variant.sourceProviders } }
-
         return DefaultLintModelVariant(
             module,
             name.get(),
@@ -946,7 +922,7 @@ abstract class VariantInputs {
             resourceConfigurations = resourceConfigurations.get(),
             proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
             consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
-            sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
+            sourceProviders = sourceProviders.get().map { it.toLintModel() },
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
             shrinkable = mainArtifact.shrinkable.get(),

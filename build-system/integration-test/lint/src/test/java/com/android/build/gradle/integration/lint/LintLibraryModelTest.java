@@ -21,17 +21,12 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Assemble tests for lintLibraryModel.
@@ -43,15 +38,7 @@ import org.junit.runners.Parameterized;
  *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintLibraryModelTest
  * </pre>
  */
-@RunWith(FilterableParameterized.class)
 public class LintLibraryModelTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -66,8 +53,8 @@ public class LintLibraryModelTest {
     @Test
     public void checkLintLibraryModel() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:clean", ":app:lintDebug");
-        GradleBuildResult result = getExecutor().run(":app:clean", ":app:lintDebug");
+        project.executor().run(":app:clean", ":app:lintDebug");
+        GradleBuildResult result = project.executor().run(":app:clean", ":app:lintDebug");
         String expected =
                 ""
                         + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "javalib", "JavaLib.java") + ":4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
@@ -89,7 +76,7 @@ public class LintLibraryModelTest {
                 project.getSubproject("javalib").getBuildFile(),
                 "apply plugin: 'com.android.lint'",
                 "/* Lint plugin not applied */");
-        GradleBuildResult result = getExecutor().run("clean", ":app:lintDebug");
+        GradleBuildResult result = project.executor().run("clean", ":app:lintDebug");
         String expected =
                 ""
                         + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":9: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]\n"
@@ -100,9 +87,5 @@ public class LintLibraryModelTest {
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
         assertThat(result.getStdout()).contains(APPLY_THE_PLUGIN_TO_JAVA_LIBRARY_PROJECT);
-    }
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

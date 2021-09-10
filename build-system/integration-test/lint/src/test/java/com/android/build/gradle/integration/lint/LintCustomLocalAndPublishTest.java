@@ -20,12 +20,8 @@ import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
@@ -34,22 +30,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for publishing a custom jar in a library model, used by a consuming app, as well as having a
  * local lint jar.
  */
-@RunWith(FilterableParameterized.class)
 public class LintCustomLocalAndPublishTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule public final GradleTestProject project =
             GradleTestProject.builder()
@@ -59,11 +45,11 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkCustomLint() throws Exception {
-        getExecutor().withFailOnWarning(false).run("clean");
-        getExecutor().withFailOnWarning(false).run(":library-remote:publish");
+        project.executor().withFailOnWarning(false).run("clean");
+        project.executor().withFailOnWarning(false).run(":library-remote:publish");
         // Run twice to catch issues with configuration caching
-        getExecutor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
-        getExecutor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
 
         String libexpected =
                         ""
@@ -104,8 +90,8 @@ public class LintCustomLocalAndPublishTest {
                         "library-lint-results.txt");
         assertThat(liblintfile).exists();
         assertThat(liblintfile).contentWithUnixLineSeparatorsIsExactly(libexpected);
-        getExecutor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
-        getExecutor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
 
         String appExpected =
                 ""
@@ -152,10 +138,10 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkAarHasLintJar() throws Exception {
-        getExecutor().withFailOnWarning(false).run("clean");
-        getExecutor().withFailOnWarning(false).run(":library:assembleDebug");
-        getExecutor().withFailOnWarning(false).run(":library-publish-only:assembleDebug");
-        getExecutor().withFailOnWarning(false).run(":library-local-only:assembleDebug");
+        project.executor().withFailOnWarning(false).run("clean");
+        project.executor().withFailOnWarning(false).run(":library:assembleDebug");
+        project.executor().withFailOnWarning(false).run(":library-publish-only:assembleDebug");
+        project.executor().withFailOnWarning(false).run(":library-local-only:assembleDebug");
 
         project.getSubproject("library")
                 .testAar(
@@ -183,7 +169,7 @@ public class LintCustomLocalAndPublishTest {
     @Test
     public void checkModel() throws Exception {
         ModelContainer<AndroidProject> androidProjects =
-                getModel().withFailOnWarning(false).ignoreSyncIssues().fetchAndroidProjects();
+                project.model().withFailOnWarning(false).ignoreSyncIssues().fetchAndroidProjects();
 
         assertThat(androidProjects.getOnlyModelMap().get(":library").getLintRuleJars()).hasSize(1);
 
@@ -194,13 +180,5 @@ public class LintCustomLocalAndPublishTest {
         assertThat(syncIssues).hasSize(1);
         assertThat(syncIssues.iterator().next().getMessage())
                 .isEqualTo("Unable to resolve dependency com.example.google:library-remote:1.0");
-    }
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
-    }
-
-    private ModelBuilder getModel() {
-        return project.model().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

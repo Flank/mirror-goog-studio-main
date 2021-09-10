@@ -16,30 +16,18 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test for VectorDrawableCompatDetector.
  */
-@RunWith(FilterableParameterized::class)
-class LintVectorDrawableCompatTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintVectorDrawableCompatTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -93,7 +81,7 @@ class LintVectorDrawableCompatTest(private val usePartialAnalysis: Boolean) {
     // Regression test for b/187341964
     @Test
     fun testVectorDrawableCompat() {
-        project.getExecutor().run("lintDebug")
+        project.executor().run("lintDebug")
         assertThat(project.file("lint-results.txt")).exists()
         assertThat(project.file("lint-results.txt")).contains(
             "Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true"
@@ -103,13 +91,10 @@ class LintVectorDrawableCompatTest(private val usePartialAnalysis: Boolean) {
             "vectorDrawables.useSupportLibrary false",
             "vectorDrawables.useSupportLibrary true"
         )
-        project.getExecutor().run("lintDebug")
+        project.executor().run("lintDebug")
         assertThat(project.file("lint-results.txt")).exists()
         assertThat(project.file("lint-results.txt")).doesNotContain(
             "Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true"
         )
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

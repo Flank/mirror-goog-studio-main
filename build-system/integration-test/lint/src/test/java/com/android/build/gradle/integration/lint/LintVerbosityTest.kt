@@ -16,29 +16,17 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test testing lint verbosity.
  */
-@RunWith(FilterableParameterized::class)
-class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintVerbosityTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -64,11 +52,11 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun testQuiet() {
         // first check that we see "Wrote HTML ..." in stdout if running with --info and quiet=false
-        project.getExecutor().withArgument("--info").run("lintDebug")
+        project.executor().withArgument("--info").run("lintDebug")
         ScannerSubject.assertThat(project.buildResult.stdout).contains("Wrote HTML report to ")
         // then set quiet to true and check that stdout doesn't contain "Scanning".
         TestFileUtils.searchAndReplace(project.buildFile, "quiet false", "quiet true")
-        project.getExecutor().withArgument("--info").run("lintDebug")
+        project.executor().withArgument("--info").run("lintDebug")
         ScannerSubject.assertThat(project.buildResult.stdout).doesNotContain("Wrote HTML report to ")
     }
 
@@ -76,11 +64,8 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun testErrorMessage() {
         TestFileUtils.searchAndReplace(project.buildFile, "abortOnError false", "abortOnError true")
-        project.getExecutor().expectFailure().run("lintDebug")
+        project.executor().expectFailure().run("lintDebug")
         ScannerSubject.assertThat(project.buildResult.stderr)
             .contains("Lint found errors in the project; aborting build.")
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

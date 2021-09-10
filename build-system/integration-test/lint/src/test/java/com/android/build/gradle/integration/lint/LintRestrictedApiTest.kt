@@ -32,20 +32,12 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(FilterableParameterized::class)
-class LintRestrictedApiTest(
-    private val usePartialAnalysis: Boolean,
-    private val checkDependencies: Boolean
-) {
+class LintRestrictedApiTest(private val checkDependencies: Boolean) {
 
     companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis_{0}_checkDependencies_{1}")
+        @Parameterized.Parameters(name = "checkDependencies_{0}")
         @JvmStatic
-        fun params() = listOf(
-            arrayOf(true, true),
-            arrayOf(true, false),
-            arrayOf(false, true),
-            arrayOf(false, false)
-        )
+        fun params() = listOf(true, false)
     }
 
     private val lib1 =
@@ -181,7 +173,5 @@ class LintRestrictedApiTest(
     }
 
     private fun getExecutor(): GradleTaskExecutor =
-        project.executor()
-            .with(BooleanOption.USE_ANDROID_X, true)
-            .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+        project.executor().with(BooleanOption.USE_ANDROID_X, true)
 }

@@ -17,31 +17,19 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(FilterableParameterized::class)
-class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintDynamicFeatureTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -76,7 +64,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testUnusedResourcesInFeatureModules() {
-        project.getExecutor().run("clean", "lint")
+        project.executor().run("clean", "lint")
 
         val file = project.file("app/lint-results.txt")
         assertThat(file).containsAllOf(
@@ -132,8 +120,8 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
 
         // Run twice to catch issues with configuration caching
-        projectWithLibs.getExecutor().run("clean", "lint")
-        projectWithLibs.getExecutor().run("clean", "lint")
+        projectWithLibs.executor().run("clean", "lint")
+        projectWithLibs.executor().run("clean", "lint")
         assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
 
         assertThat(projectWithLibs.buildResult.tasks).contains(":app:lint")
@@ -165,8 +153,8 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun runLintFromApp() {
         // Run twice to catch issues with configuration caching
-        project.getExecutor().run(":app:clean", ":app:lint")
-        project.getExecutor().run(":app:clean", ":app:lint")
+        project.executor().run(":app:clean", ":app:lint")
+        project.executor().run(":app:clean", ":app:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
         assertThat(project.file("app/lint-results.txt")).containsAllOf(
@@ -195,7 +183,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             File(projectWithLibs.getSubproject(":feature").mainResDir, "layout/feature_layout.xml"),
             layout_text
         )
-        projectWithLibs.getExecutor().run(":app:clean", ":app:lint")
+        projectWithLibs.executor().run(":app:clean", ":app:lint")
         assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
 
         assertThat(projectWithLibs.file("app/lint-results.txt")).contains(
@@ -205,61 +193,45 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testLintUpToDate() {
-        project.getExecutor().run(":app:lintDebug")
-        project.getExecutor().run(":app:lintDebug")
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
-                listOf(
-                    ":app:lintReportDebug",
-                    ":app:lintAnalyzeDebug",
-                    ":feature1:lintAnalyzeDebug",
-                    ":feature2:lintAnalyzeDebug",
-                )
+        project.executor().run(":app:lintDebug")
+        project.executor().run(":app:lintDebug")
+        assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
+            listOf(
+                ":app:lintReportDebug",
+                ":app:lintAnalyzeDebug",
+                ":feature1:lintAnalyzeDebug",
+                ":feature2:lintAnalyzeDebug",
             )
-        } else {
-            // The lint report task should not be up-to-date if not using partial analysis with
-            // dynamic features because the inputs are not modeled correctly in that case.
-            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
-                listOf(":app:lintReportDebug")
-            )
-        }
+        )
     }
 
     @Test
     fun testLintWithIncrementalChanges() {
-        project.getExecutor().run(":app:lintDebug")
+        project.executor().run(":app:lintDebug")
         TestFileUtils.searchAndReplace(
             project.file("feature2/src/main/res/layout/feature2_layout.xml"),
             "\"Button\"",
             "\"AAAAAAAAAAA\""
         )
-        project.getExecutor().run(":app:lintDebug")
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
-                listOf(
-                    ":app:lintAnalyzeDebug",
-                    ":feature1:lintAnalyzeDebug",
-                )
+        project.executor().run(":app:lintDebug")
+        assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
+            listOf(
+                ":app:lintAnalyzeDebug",
+                ":feature1:lintAnalyzeDebug",
             )
-            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
-                listOf(
-                    ":app:lintReportDebug",
-                    ":feature2:lintAnalyzeDebug",
-                )
+        )
+        assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
+            listOf(
+                ":app:lintReportDebug",
+                ":feature2:lintAnalyzeDebug",
             )
-        } else {
-            // The lint task report should not be up-to-date if not using partial analysis with
-            // dynamic features because the inputs are not modeled correctly in that case.
-            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
-                listOf(":app:lintReportDebug")
-            )
-        }
+        )
     }
 
     @Test
     fun testLintVital() {
         // check that lintVital succeeds before change to feature manifest
-        project.getExecutor().run(":app:lintVitalRelease")
+        project.executor().run(":app:lintVitalRelease")
         ScannerSubject.assertThat(project.buildResult.stdout).contains("BUILD SUCCESSFUL")
 
         val featureManifest =
@@ -271,40 +243,32 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
 
         val failureMessage =
-            project.getExecutor().expectFailure().run(":app:lintVitalRelease").failureMessage
+            project.executor().expectFailure().run(":app:lintVitalRelease").failureMessage
         assertThat(failureMessage).contains("fatal errors")
     }
 
     @Test
     fun testLintVitalUpToDate() {
-        project.getExecutor().run("lintVitalRelease")
+        project.executor().run("lintVitalRelease")
 
         assertThat(project.buildResult.tasks).contains(":app:lintVitalRelease")
         assertThat(project.buildResult.tasks).contains(":app:lintVitalReportRelease")
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.tasks).contains(":app:lintVitalAnalyzeRelease")
-            assertThat(project.buildResult.tasks).contains(":feature1:lintVitalAnalyzeRelease")
-            assertThat(project.buildResult.tasks).contains(":feature2:lintVitalAnalyzeRelease")
-        }
+        assertThat(project.buildResult.tasks).contains(":app:lintVitalAnalyzeRelease")
+        assertThat(project.buildResult.tasks).contains(":feature1:lintVitalAnalyzeRelease")
+        assertThat(project.buildResult.tasks).contains(":feature2:lintVitalAnalyzeRelease")
         assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalRelease")
         assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalRelease")
 
-        project.getExecutor().run("lintVitalRelease")
+        project.executor().run("lintVitalRelease")
 
-        if (usePartialAnalysis) {
-            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalReportRelease")
-            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
-            assertThat(project.buildResult.upToDateTasks).contains(
-                ":feature1:lintVitalAnalyzeRelease"
-            )
-            assertThat(project.buildResult.upToDateTasks).contains(
-                ":feature2:lintVitalAnalyzeRelease"
-            )
-        } else {
-            assertThat(project.buildResult.upToDateTasks).doesNotContain(
-                ":app:lintVitalReportRelease"
-            )
-        }
+        assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalReportRelease")
+        assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
+        assertThat(project.buildResult.upToDateTasks).contains(
+            ":feature1:lintVitalAnalyzeRelease"
+        )
+        assertThat(project.buildResult.upToDateTasks).contains(
+            ":feature2:lintVitalAnalyzeRelease"
+        )
     }
 
     @Test
@@ -355,7 +319,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             """.trimIndent()
         )
 
-        val result = project.getExecutor().expectFailure().run(":app:lintFix")
+        val result = project.executor().expectFailure().run(":app:lintFix")
         ScannerSubject.assertThat(result.stderr)
             .contains(
                 "Aborting build since sources were modified to apply quickfixes after compilation"
@@ -374,13 +338,13 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         assertThat(appSourceFile).contains("void bar()")
         assertThat(featureSourceFile).doesNotContain("private void bar()")
         assertThat(featureSourceFile).contains("void bar()")
-        val result2 = project.getExecutor().run("clean", "lintFix")
+        val result2 = project.executor().run("clean", "lintFix")
         ScannerSubject.assertThat(result2.stdout).contains("BUILD SUCCESSFUL")
     }
 
     @Test
     fun testLintFixAnchorTaskWithDynamicFeatures() {
-        project.getExecutor().run("lintFix")
+        project.executor().run("lintFix")
 
         assertThat(project.buildResult.tasks).contains(":app:lintFix")
         assertThat(project.buildResult.tasks).contains(":app:lintFixDebug")
@@ -398,19 +362,14 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             project.getSubproject(":app").buildFile,
             "\n\nbuildDir 'foo'\n\n"
         )
-        project.getExecutor().run("app:clean", ":app:lintDebug")
+        project.executor().run("app:clean", ":app:lintDebug")
         val defaultAppBuildDir = File(project.getSubproject(":app").projectDir, "build")
         assertThat(!defaultAppBuildDir.exists() || defaultAppBuildDir.walk().none { it.isFile })
             .isTrue()
         val appBuildDir = File(project.getSubproject(":app").projectDir, "foo")
         assertThat(appBuildDir).exists()
-        if (usePartialAnalysis) {
-            appBuildDir.listFiles()?.forEach { assertThat(it).isDirectory() }
-        }
+        appBuildDir.listFiles()?.forEach { assertThat(it).isDirectory() }
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
 
 private val layout_text =

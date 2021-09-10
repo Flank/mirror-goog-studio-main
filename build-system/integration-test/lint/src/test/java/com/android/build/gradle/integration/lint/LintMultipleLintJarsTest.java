@@ -18,29 +18,16 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test ensuring that when we have multiple service-loaded lint jars, they're all included.
  * Regression test for https://issuetracker.google.com/143455360.
  */
-@RunWith(FilterableParameterized.class)
 public class LintMultipleLintJarsTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -49,16 +36,12 @@ public class LintMultipleLintJarsTest {
     @Test
     public void checkBothErrorsFound() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:clean", ":app:lintDebug");
-        getExecutor().run(":app:clean", ":app:lintDebug");
+        project.executor().run(":app:clean", ":app:lintDebug");
+        project.executor().run(":app:clean", ":app:lintDebug");
 
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.xml");
         assertThat(file).exists();
         assertThat(file).contains("id=\"ShortUniqueIdA\"");
         assertThat(file).contains("id=\"ShortUniqueIdB\"");
-    }
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

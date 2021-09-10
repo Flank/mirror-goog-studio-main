@@ -17,24 +17,14 @@ package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /** Integration test that runs lint with analytics enabled. Regression test for b/178904638  */
-@RunWith(FilterableParameterized::class)
-class LintWithAnalyticsEnabledTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintWithAnalyticsEnabledTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -67,7 +57,5 @@ class LintWithAnalyticsEnabledTest(private val usePartialAnalysis: Boolean) {
     }
 
     private fun getExecutor(): GradleTaskExecutor =
-        project.executor()
-            .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
-            .with(BooleanOption.ENABLE_PROFILE_JSON, true)
+        project.executor().with(BooleanOption.ENABLE_PROFILE_JSON, true)
 }

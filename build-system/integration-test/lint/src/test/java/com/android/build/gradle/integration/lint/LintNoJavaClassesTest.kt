@@ -16,15 +16,10 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
 /**
@@ -34,14 +29,7 @@ import java.io.File
  * makes sure that we handle the classpath correctly such that type resolution to
  * Kotlin libraries works correctly.
  */
-@RunWith(FilterableParameterized::class)
-class LintNoJavaClassesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintNoJavaClassesTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -54,14 +42,11 @@ class LintNoJavaClassesTest(private val usePartialAnalysis: Boolean) {
     @Throws(Exception::class)
     fun checkNoMissingClass() {
         // Run twice to catch issues with configuration caching
-        getExecutor().run("clean", ":app:lintDebug")
-        getExecutor().run(":app:clean", ":app:lintDebug")
+        project.executor().run("clean", ":app:lintDebug")
+        project.executor().run(":app:clean", ":app:lintDebug")
         val app = project.getSubproject("app")
         val file = File(app.projectDir, "lint-results.txt")
         assertThat(file).exists()
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.")
     }
-
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

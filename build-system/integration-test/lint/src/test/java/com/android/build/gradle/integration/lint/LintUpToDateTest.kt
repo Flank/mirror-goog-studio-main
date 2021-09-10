@@ -18,26 +18,15 @@ package com.android.build.gradle.integration.lint
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /** Integration test that lint can be up-to-date  */
-@RunWith(FilterableParameterized::class)
-class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintUpToDateTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -53,7 +42,6 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
     fun disableAbortOnError() {
         project.getSubproject(":app").buildFile
             .appendText("\nandroid.lintOptions.abortOnError=false\n")
-        project.executor().run(":app:clean")
     }
 
     @Test
@@ -61,22 +49,17 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
         val firstRun = getExecutor().run(":app:lintDebug")
 
         assertThat(firstRun.getTask(":app:lintReportDebug")).didWork()
-        if (usePartialAnalysis) {
-            assertThat(firstRun.getTask(":app:lintAnalyzeDebug")).didWork()
-        }
+        assertThat(firstRun.getTask(":app:lintAnalyzeDebug")).didWork()
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("9 errors, 4 warnings")
 
         val secondRun = getExecutor().run(":app:lintDebug")
         assertThat(secondRun.getTask(":app:lintReportDebug")).wasUpToDate()
-        if (usePartialAnalysis) {
-            assertThat(secondRun.getTask(":app:lintAnalyzeDebug")).wasUpToDate()
-        }
+        assertThat(secondRun.getTask(":app:lintAnalyzeDebug")).wasUpToDate()
     }
 
     private fun getExecutor(): GradleTaskExecutor =
         project.executor()
             // see https://github.com/gradle/gradle/issues/15626
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

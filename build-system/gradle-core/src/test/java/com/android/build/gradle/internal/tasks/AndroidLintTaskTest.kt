@@ -59,7 +59,6 @@ class AndroidLintTaskTest {
     fun testGenerateCommandLineArguments() {
         task.autoFix.set(false)
         task.fatalOnly.set(false)
-        task.reportOnly.set(true)
         task.systemPropertyInputs.javaHome.set("javaHome")
         task.androidSdkHome.set("androidSdkHome")
         task.intermediateTextReport.set(temporaryFolder.newFile())

@@ -24,6 +24,7 @@ import com.android.build.gradle.options.Version.VERSION_4_1
 import com.android.build.gradle.options.Version.VERSION_4_2
 import com.android.build.gradle.options.Version.VERSION_7_0
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget.VERSION_8_0
+import com.android.build.gradle.options.Version.VERSION_7_2
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
@@ -191,8 +192,6 @@ enum class BooleanOption(
 
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
-    /** Whether to use lint's partial analysis functionality. */
-    USE_LINT_PARTIAL_ANALYSIS("android.enableParallelLint", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
@@ -417,6 +416,9 @@ enum class BooleanOption(
     ENABLE_SYMBOL_TABLE_CACHING("android.enableSymbolTableCaching", true, FeatureStage.Enforced(VERSION_7_0)),
 
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    /** Whether to use lint's partial analysis functionality. */
+    USE_LINT_PARTIAL_ANALYSIS("android.enableParallelLint", true, FeatureStage.Enforced(VERSION_7_2)),
 
     /* ----------------
      * REMOVED FEATURES

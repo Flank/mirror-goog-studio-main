@@ -16,30 +16,18 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test testing that lint reports issues with proguard files.
  *
  * Regression test for b/67156629
  */
-@RunWith(FilterableParameterized::class)
-class LintProguardFilesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintProguardFilesTest {
 
     @get:Rule
     val appProject: GradleTestProject =
@@ -94,7 +82,7 @@ class LintProguardFilesTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testIssueFromProguardFile() {
-        appProject.getExecutor().run("lintRelease")
+        appProject.executor().run("lintRelease")
         assertThat(appProject.file("lint-results.txt")).contains(
             "proguard-rules.pro:1: Error: Found byte-order-mark in the middle of a file"
         )
@@ -102,12 +90,9 @@ class LintProguardFilesTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testIssueFromConsumerProguardFile() {
-        libProject.getExecutor().run("lint")
+        libProject.executor().run("lint")
         assertThat(libProject.file("lint-results.txt")).contains(
             "consumer-rules.pro:1: Error: Found byte-order-mark in the middle of a file"
         )
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

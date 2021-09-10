@@ -22,11 +22,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Files;
@@ -37,8 +34,6 @@ import kotlin.text.Charsets;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Integration test for running lint from gradle on a model with java (including indirect java)
@@ -51,15 +46,7 @@ import org.junit.runners.Parameterized;
  *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintDependencyModelTest
  * </pre>
  */
-@RunWith(FilterableParameterized.class)
 public class LintDependencyModelTest {
-
-    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-    public static Object[] getParameters() {
-        return new Object[] {true, false};
-    }
-
-    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -72,8 +59,8 @@ public class LintDependencyModelTest {
     @Test
     public void checkFindNestedResult() throws Exception {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:clean", ":app:lintDebug");
-        getExecutor().run(":app:clean", ":app:lintDebug");
+        project.executor().run(":app:clean", ":app:lintDebug");
+        project.executor().run(":app:clean", ":app:lintDebug");
 
         String textReport = readTextReportToString();
 
@@ -96,61 +83,39 @@ public class LintDependencyModelTest {
         assertThat(textReport).contains("androidlib/src/main/java/com/example/mylibrary/MyClass.java:4: Information: Do not hardcode");
         assertThat(textReport).contains("javalib/src/main/java/com/example/MyClass.java:4: Warning: Do not hardcode");
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:4: Warning: Do not hardcode");
-        if (usePartialAnalysis) {
-            // TODO(b/182859396): These should be informational, as explained in comments above
-            assertThat(textReport)
-                    .contains(
-                            "indirectlib/src/main/java/com/example/MyClass2.java:4: Warning: Do not hardcode");
-            assertThat(textReport)
-                    .contains(
-                            "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Warning: Do not hardcode");
-        } else {
-            assertThat(textReport)
-                    .contains(
-                            "indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
-            assertThat(textReport)
-                    .contains(
-                            "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
-        }
         // This issue is turned off in javalib but still returns to (default) enabled when processing
         // its sibling
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
         assertThat(textReport).doesNotContain("javalib/src/main/java/com/example/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
+        // TODO(b/182859396): These 2 should be informational, as explained in comments above
+        assertThat(textReport)
+                .contains(
+                        "indirectlib/src/main/java/com/example/MyClass2.java:4: Warning: Do not hardcode");
+        assertThat(textReport)
+                .contains(
+                        "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Warning: Do not hardcode");
     }
 
     @Test
     public void checkLintUpToDate() throws Exception {
-        if (usePartialAnalysis) {
-            ImmutableList<String> tasks =
-                    ImmutableList.of(
-                            ":app:lintReportDebug",
-                            ":app:lintAnalyzeDebug",
-                            ":androidlib:lintAnalyzeDebug",
-                            ":javalib:lintAnalyze",
-                            ":javalib2:lintAnalyze",
-                            ":indirectlib:lintAnalyze",
-                            ":indirectlib2:lintAnalyze");
+        ImmutableList<String> tasks =
+                ImmutableList.of(
+                        ":app:lintReportDebug",
+                        ":app:lintAnalyzeDebug",
+                        ":androidlib:lintAnalyzeDebug",
+                        ":javalib:lintAnalyze",
+                        ":javalib2:lintAnalyze",
+                        ":indirectlib:lintAnalyze",
+                        ":indirectlib2:lintAnalyze");
 
-            GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
-            tasks.forEach(taskName -> assertThat(firstResult.findTask(taskName)).didWork());
-            String textReport = readTextReportToString();
-            // TODO(b/182859396): There should be 5 warnings; see TODO in checkFindNestedResult().
-            assertThat(textReport).contains("0 errors, 6 warnings");
+        GradleBuildResult firstResult = project.executor().run(":app:lintDebug");
+        tasks.forEach(taskName -> assertThat(firstResult.findTask(taskName)).didWork());
+        String textReport = readTextReportToString();
+        // TODO(b/182859396): There should be 5 warnings; see TODO in checkFindNestedResult().
+        assertThat(textReport).contains("0 errors, 6 warnings");
 
-            GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
-            tasks.forEach(taskName -> assertThat(secondResult.findTask(taskName)).wasUpToDate());
-
-        } else {
-            GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
-            assertThat(firstResult.findTask(":app:lintReportDebug")).didWork();
-            String textReport = readTextReportToString();
-            assertThat(textReport).contains("0 errors, 4 warnings");
-
-            // The lint task should not be up-to-date if not using partial analysis with
-            // checkDependencies because the inputs are not modeled correctly in that case.
-            GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
-            assertThat(secondResult.findTask(":app:lintReportDebug")).didWork();
-        }
+        GradleBuildResult secondResult = project.executor().run(":app:lintDebug");
+        tasks.forEach(taskName -> assertThat(secondResult.findTask(taskName)).wasUpToDate());
     }
 
     // Regression test for b/187964502
@@ -161,7 +126,7 @@ public class LintDependencyModelTest {
                 "checkDependencies true",
                 "checkDependencies false");
 
-        getExecutor().run(":app:lintDebug");
+        project.executor().run(":app:lintDebug");
 
         File lintModelDir =
                 project.getSubproject("app")
@@ -189,9 +154,5 @@ public class LintDependencyModelTest {
                         // Allow searching for substrings in Windows file reports as well
                         .replace("\\", "/");
         return textReport;
-    }
-
-    private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

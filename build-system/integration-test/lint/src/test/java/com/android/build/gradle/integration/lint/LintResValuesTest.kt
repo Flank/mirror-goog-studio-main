@@ -16,28 +16,16 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Integration test testing that lint analyzes Android resources specified via resValue.
  */
-@RunWith(FilterableParameterized::class)
-class LintResValuesTest(private val usePartialAnalysis: Boolean) {
-
-    companion object {
-        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
-        @JvmStatic
-        fun params() = listOf(true, false)
-    }
+class LintResValuesTest {
 
     @get:Rule
     val project: GradleTestProject =
@@ -62,12 +50,9 @@ class LintResValuesTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testResValues() {
-        project.getExecutor().run("lintDebug")
+        project.executor().run("lintDebug")
         assertThat(project.file("lint-results.txt")).contains(
             "Warning: The resource R.string.foo appears to be unused [UnusedResources]"
         )
     }
-
-    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
-        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
