@@ -86,5 +86,16 @@ abstract class EmulatorConsole {
     fun getConsole(d: IDevice): EmulatorConsole? {
       return sTestConsoles[d.serialNumber] ?: EmulatorConsoleImpl.createConsole(d)
     }
+
+    /**
+     * Return port of emulator given its serial number.
+     *
+     * @param serialNumber the emulator's serial number
+     * @return the integer port or `null` if it could not be determined
+     */
+    @JvmStatic
+    fun getEmulatorPort(serialNumber: String?): Int? {
+      return EmulatorConsoleImpl.getEmulatorPortFromSerialNumber(serialNumber)
+    }
   }
 }

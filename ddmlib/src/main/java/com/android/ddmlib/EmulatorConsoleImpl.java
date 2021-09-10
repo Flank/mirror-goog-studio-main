@@ -105,7 +105,7 @@ public final class EmulatorConsoleImpl extends EmulatorConsole {
     static EmulatorConsoleImpl createConsole(IDevice d) {
         // we need to make sure that the device is an emulator
         // get the port number. This is the console port.
-        Integer port = getEmulatorPort(d.getSerialNumber());
+        Integer port = getEmulatorPortFromSerialNumber(d.getSerialNumber());
         if (port == null) {
             Log.w(LOG_TAG, "Failed to find emulator port from serial: " + d.getSerialNumber());
             return null;
@@ -127,7 +127,7 @@ public final class EmulatorConsoleImpl extends EmulatorConsole {
      * @param serialNumber the emulator's serial number
      * @return the integer port or <code>null</code> if it could not be determined
      */
-    public static Integer getEmulatorPort(String serialNumber) {
+    static Integer getEmulatorPortFromSerialNumber(String serialNumber) {
         Matcher m = sEmulatorRegexp.matcher(serialNumber);
         if (m.matches()) {
             // get the port number. This is the console port.

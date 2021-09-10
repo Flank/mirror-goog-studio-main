@@ -22,25 +22,24 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 public final class EmulatorConsoleImplTest {
-    /** Test success case for {@link EmulatorConsoleImpl#getEmulatorPort(String)}. */
+    /** Test success case for {@link EmulatorConsole#getEmulatorPort(String)}. */
     @Test
     public void getEmulatorPort() {
-        assertEquals(Integer.valueOf(5554), EmulatorConsoleImpl.getEmulatorPort("emulator-5554"));
+        assertEquals(Integer.valueOf(5554), EmulatorConsole.getEmulatorPort("emulator-5554"));
     }
 
     /**
-     * Test {@link EmulatorConsoleImpl#getEmulatorPort(String)} when input serial has invalid
-     * format.
+     * Test {@link EmulatorConsole#getEmulatorPort(String)} when input serial has invalid format.
      */
     @Test
     public void getEmulatorPort_invalid() {
-        assertNull(EmulatorConsoleImpl.getEmulatorPort("invalidserial"));
+        assertNull(EmulatorConsole.getEmulatorPort("invalidserial"));
     }
 
-    /** Test {@link EmulatorConsoleImpl#getEmulatorPort(String)} when port is not a number. */
+    /** Test {@link EmulatorConsole#getEmulatorPort(String)} when port is not a number. */
     @Test
     public void getEmulatorPort_nan() {
-        assertNull(EmulatorConsoleImpl.getEmulatorPort("emulator-NaN"));
+        assertNull(EmulatorConsole.getEmulatorPort("emulator-NaN"));
     }
 
     @Test
