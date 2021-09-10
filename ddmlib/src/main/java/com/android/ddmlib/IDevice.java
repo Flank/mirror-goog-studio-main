@@ -21,6 +21,7 @@ import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,8 +174,11 @@ public interface IDevice extends IShellEnabledDevice {
      * <p>If the emulator is not running any AVD (for instance it's running from an Android source
      * tree build), this method will return "<code>&lt;build&gt;</code>".
      *
+     * <p><em>Note: Prefer using {@link #getAvdData()} if you want control over the timeout.</em>
+     *
      * @return the name of the AVD or <code>null</code> if there isn't any.
      */
+    @Deprecated
     @Nullable
     String getAvdName();
 
@@ -182,11 +186,28 @@ public interface IDevice extends IShellEnabledDevice {
      * Returns the absolute path to the virtual device in the file system. The path is operating
      * system dependent; it will have / name separators on Linux and \ separators on Windows.
      *
+     * <p><em>Note: Prefer using {@link #getAvdData()} if you want control over the timeout.</em>
+     *
      * @return the AVD path or null if this is a physical device, the emulator console subcommand
      *     failed, or the emulator's version is older than 30.0.18
      */
+    @Deprecated
     @Nullable
     String getAvdPath();
+
+    /**
+     * Returns information about the AVD the emulator is running.
+     *
+     * <p>{@link AvdData#getName} is the name of the AVD or <code>null</code> if there isn't any.
+     *
+     * <p>{@link AvdData#getPath} is the AVD path or null if this is a physical device, the emulator
+     * console subcommand failed, or the emulator's version is older than 30.0.18
+     *
+     * @return the {@link AvdData} for the device.
+     */
+    default ListenableFuture<AvdData> getAvdData() {
+        throw new UnsupportedOperationException();
+    }
 
     /** Returns the state of the device. */
     DeviceState getState();
