@@ -64,7 +64,7 @@ public final class LiveEditStubs {
         // First parameter is the class + method name + signature
         String methodKey = parameters[0].toString();
         int idx = methodKey.indexOf("->");
-        String methodClass = methodKey.substring(0, idx);
+        String methodClassName = methodKey.substring(0, idx);
         String methodName = methodKey.substring(idx + 2, methodKey.indexOf("("));
 
         // Second parameter is the this pointer, or null if static
@@ -77,8 +77,9 @@ public final class LiveEditStubs {
         }
 
         byte[] dex = methodCache.get(methodKey);
-        MethodBodyEvaluator evaluator = new MethodBodyEvaluator(dex, methodName);
-        return evaluator.eval(thisObject, methodClass, arguments);
+        MethodBodyEvaluator evaluator =
+                new MethodBodyEvaluator(dex, methodName, clazz.getClassLoader());
+        return evaluator.eval(thisObject, methodClassName, arguments);
     }
 
     public static byte stubB(Class<?> clazz, Object[] parameters) {

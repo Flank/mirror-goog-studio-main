@@ -389,7 +389,11 @@ public class MethodBodyEvaluatorTest {
         supportClasses[0] = buildClass(lambdaBinaryName);
         supportClasses[1] = interpretedClass;
         MethodBodyEvaluator evaluator =
-                new MethodBodyEvaluator(interpretedClass, "create", supportClasses);
+                new MethodBodyEvaluator(
+                        interpretedClass,
+                        "create",
+                        supportClasses,
+                        this.getClass().getClassLoader());
 
         // Make sure the lambda class is not loaded
         Supplier<Integer> sLiveEdit = (Supplier<Integer>) evaluator.evalStatic(new Object[] {});

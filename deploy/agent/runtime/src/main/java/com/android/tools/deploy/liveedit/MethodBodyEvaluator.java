@@ -34,17 +34,32 @@ public class MethodBodyEvaluator {
     private final ClassLoader classLoader;
     private static final boolean USE_JFLINGER = true;
 
+    // TODO: We should always use the app's classloader. This method is here for
+    // our unit tests. We should consider removing this after we refactor the tests.
     public MethodBodyEvaluator(byte[] classData, String targetMethod) {
-        this(classData, targetMethod, new byte[0][]);
+        this(classData, targetMethod, new byte[0][], MethodBodyEvaluator.class.getClassLoader());
     }
 
-    public MethodBodyEvaluator(byte[] classData, String targetMethod, byte[][] supportClasses) {
+    public MethodBodyEvaluator(
+            byte[] classData, String targetMethod, ClassLoader parentClassLoader) {
+        this(classData, targetMethod, new byte[0][], parentClassLoader);
+    }
+
+    public MethodBodyEvaluator(
+            byte[] classData,
+            String targetMethod,
+            byte[][] supportClasses,
+            ClassLoader parentClassLoader) {
         this.target = MethodNodeFinder.findIn(classData, targetMethod);
         if (target == null) {
             String msg = String.format("Cannot find target '%s'", targetMethod);
             throw new IllegalStateException(msg);
         }
-        this.classLoader = new LiveEditClassLoader(supportClasses);
+        if (supportClasses.length == 0) {
+            this.classLoader = parentClassLoader;
+        } else {
+            this.classLoader = new LiveEditClassLoader(supportClasses, parentClassLoader);
+        }
     }
 
     public Object evalStatic(Object[] arguments) {

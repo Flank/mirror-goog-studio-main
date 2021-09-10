@@ -16,8 +16,8 @@
 package com.android.tools.deploy.liveedit;
 
 public class LiveEditClassLoader extends ClassLoader {
-    public LiveEditClassLoader(byte[][] classes) {
-        super();
+    public LiveEditClassLoader(byte[][] classes, ClassLoader parent) {
+        super(parent);
         for (byte[] klass : classes) {
             ClassNameFinder nameFinder = new ClassNameFinder(klass);
             String internalName = nameFinder.getInternalName();
