@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants.ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY
 import com.android.SdkConstants.ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.APP_METADATA_VERSION_PROPERTY
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
-import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_ENTRY_PATH
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -71,7 +71,24 @@ class AppMetadataTaskTest {
         checkAppMetadataFile(outputFile, AppMetadataTask.APP_METADATA_VERSION, "foo")
     }
 
-    private fun checkAppMetadataFile(file: File, appMetadataVersion: String, agpVersion: String) {
+    @Test
+    fun testWithAgdeVersion() {
+        task.outputFile.set(outputFile)
+        task.appMetadataVersion.set(AppMetadataTask.APP_METADATA_VERSION)
+        task.agpVersion.set("0123 abcd")
+        task.agdeVersion.set("abcd 0123")
+
+        task.taskAction()
+
+        checkAppMetadataFile(outputFile, AppMetadataTask.APP_METADATA_VERSION, "0123 abcd", "abcd 0123")
+    }
+
+    private fun checkAppMetadataFile(
+        file: File,
+        appMetadataVersion: String,
+        agpVersion: String,
+        agdeVersion: String? = null
+    ) {
         assertThat(file).exists()
         val properties = Properties()
         file.inputStream().use { properties.load(it) }
@@ -79,5 +96,7 @@ class AppMetadataTaskTest {
             .isEqualTo(appMetadataVersion)
         assertThat(properties.getProperty(ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY))
             .isEqualTo(agpVersion)
+        assertThat(properties.getProperty(ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY))
+            .isEqualTo(agdeVersion)
     }
 }
