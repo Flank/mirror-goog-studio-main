@@ -6,36 +6,41 @@
 @rem remotely.
 setlocal enabledelayedexpansion
 set PATH=c:\tools\msys64\usr\bin;%PATH%
+
+@rem The current directory the executing script is in.
+set SCRIPTDIR=%~dp0
+call :normalize_path "%SCRIPTDIR%..\..\.." BASEDIR
+
 @rem Expected arguments:
 set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
-set SCRIPTDIR=%~dp0
-CALL :NORMALIZE_PATH "%SCRIPTDIR%..\..\..\.."
-set BASEDIR=%RETVAL%
-
-@rem Generate a UUID for the Bazel invocation ID
-for /F "tokens=*" %%F in ('uuidgen') DO (
-  set INVOCATIONID=%%F
+@rem Generate a UUID for use as the Bazel invocation ID
+for /f "tokens=*" %%f in ('uuidgen') do (
+  set INVOCATIONID=%%f
+)
+if exist %DISTDIR%\ (
+  echo "<meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" />" > %DISTDIR%\upsalite_build_results.html
 )
 
-CALL %BASEDIR%\tools\base\bazel\bazel.cmd ^
- --max_idle_secs=10 ^
- build ^
- --config=dynamic ^
- --build_tag_filters=-no_windows ^
- --invocation_id=%INVOCATIONID% ^
- --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+call %BASEDIR%\tools\base\bazel\bazel.cmd ^
+  --max_idle_secs=10 ^
+  build ^
+  --config=dynamic ^
+  --build_tag_filters=-no_windows ^
+  --invocation_id=%INVOCATIONID% ^
+  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+  --define=meta_android_build_number=%BUILD_NUMBER% ^
+  --tool_tag=studio-win-canary ^
+  -- ^
  //tools/...
 
-set EXITCODE=%errorlevel%
+set /a EXITCODE=%ERRORLEVEL%
 
-echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'"/>" > %DISTDIR%\upsalite_build_results.html
+exit /b %EXITCODE%
 
-EXIT \B %EXITCODE%
-
-@rem HELPER FUNCTIONS
-:NORMALIZE_PATH
-  SET RETVAL=%~dpfn1
-  EXIT /B
+@rem Normalizes a path from Arg 1 and store the result into Arg 2.
+:normalize_path
+  set %2=%~dpfn1
+  exit /b
