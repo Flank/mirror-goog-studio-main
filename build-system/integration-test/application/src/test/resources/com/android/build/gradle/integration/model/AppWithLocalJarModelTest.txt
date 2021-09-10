@@ -20,6 +20,8 @@
       - runtimeDependencies:
          - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
             - dependencies = "*visited*"
+< VariantDependencies
+> GlobalLibraryMap:
    > libraries:
       > __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
          - type                = JAVA_LIBRARY
@@ -47,4 +49,4 @@
          - symbolFile          = (null)
       < __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}
    < libraries
-< VariantDependencies
+< GlobalLibraryMap

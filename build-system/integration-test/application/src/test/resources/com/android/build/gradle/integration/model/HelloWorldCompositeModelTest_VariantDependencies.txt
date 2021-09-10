@@ -37,68 +37,9 @@
             - dependencies = "*visited*"
    < unitTestArtifact
    - testFixturesArtifact = (null)
+< VariantDependencies
+> GlobalLibraryMap:
    > libraries:
-      > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
-         > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":app"
-            - attributes:
-               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
-               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
-               * "org.gradle.libraryelements -> jar"
-               * "org.gradle.usage -> java-api"
-            - capabilities:
-               * "project:app:unspecified"
-         < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
-      < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
-      > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
-         - type                = PROJECT
-         - artifact            = (null)
-         > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":app"
-            - attributes:
-               * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
-               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
-               * "org.gradle.usage -> java-runtime"
-            - capabilities:
-               * "project:app:unspecified"
-         < projectInfo
-         - libraryInfo         = (null)
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
-      < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
       > other-build|:lib|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|com.composite-build:lib:1.2:
          - type                = PROJECT
          - artifact            = (null)
@@ -160,4 +101,4 @@
          - symbolFile          = (null)
       < other-build|:lib|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|com.composite-build:lib:1.2
    < libraries
-< VariantDependencies
+< GlobalLibraryMap

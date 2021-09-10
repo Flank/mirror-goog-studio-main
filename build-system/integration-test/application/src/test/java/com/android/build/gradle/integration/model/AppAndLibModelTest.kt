@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.model
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.model.getVariantDependencies
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
@@ -29,6 +30,7 @@ import com.android.testutils.generateAarWithContent
 import com.google.common.collect.ImmutableList
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class HelloWorldAppAndLibModelTest: ModelComparator() {
 
@@ -60,7 +62,7 @@ class HelloWorldAppAndLibModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -100,7 +102,7 @@ class AppAndLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -135,7 +137,7 @@ class AppAndJavaLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -184,7 +186,7 @@ class AppAndExternalJavaLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -245,7 +247,7 @@ class AppAndExternalAarLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            modelAction = { getVariantDependencies(":app") },
             goldenFile = "VariantDependencies"
         )
     }

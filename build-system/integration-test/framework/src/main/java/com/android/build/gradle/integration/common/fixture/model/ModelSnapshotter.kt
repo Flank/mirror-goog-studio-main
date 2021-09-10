@@ -42,7 +42,7 @@ import java.io.File
  */
 internal fun <ModelT> snapshotModel(
     modelName: String,
-    modelAction: ModelContainerV2.() -> ModelT,
+    modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> ModelT,
     project: ModelBuilderV2.FetchResult<ModelContainerV2>,
     referenceProject: ModelBuilderV2.FetchResult<ModelContainerV2>? = null,
     action: ModelSnapshotter<ModelT>.() -> Unit
@@ -78,21 +78,21 @@ internal fun <ModelT> snapshotModel(
 
 private fun <ModelT> getSnapshotContainer(
     modelName: String,
-    modelAction: ModelContainerV2.() -> ModelT,
+    modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> ModelT,
     project: ModelBuilderV2.FetchResult<ModelContainerV2>,
     action: ModelSnapshotter<ModelT>.() -> Unit
 ): SnapshotContainer {
 
     val registrar =
             SnapshotItemRegistrarImpl(modelName, SnapshotContainer.ContentType.OBJECT_PROPERTIES)
-    action(ModelSnapshotter(registrar, modelAction(project.container), project.normalizer))
+    action(ModelSnapshotter(registrar, modelAction(project), project.normalizer))
 
     return registrar
 }
 
 internal fun <ModelT> checkEmptyDelta(
     modelName: String,
-    modelAction: ModelContainerV2.() -> ModelT,
+    modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> ModelT,
     project: ModelBuilderV2.FetchResult<ModelContainerV2>,
     referenceProject: ModelBuilderV2.FetchResult<ModelContainerV2>,
     action: ModelSnapshotter<ModelT>.() -> Unit,

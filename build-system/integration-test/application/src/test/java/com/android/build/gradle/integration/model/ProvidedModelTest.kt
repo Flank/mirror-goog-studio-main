@@ -134,17 +134,16 @@ class ProvidedModelTest {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels(variantName = "debug")
 
-        val variantDependencies = result.container.rootInfoMap[":app"]?.variantDependencies
+        val dependencies = result.container.rootInfoMap[":app"]?.variantDependencies?.androidTestArtifact
             ?: throw RuntimeException("Cannot find model for :app")
-        val dependencies = variantDependencies.androidTestArtifact
-            ?: throw RuntimeException("No AndroidTest artifact for :app")
 
         // gather the compile and runtime Graphitem (ie flatten the graph)
         val compileItems: Set<GraphItem> = dependencies.compileDependencies.flatten()
         val runtimeItems: Set<GraphItem> = dependencies.runtimeDependencies.flatten()
 
         // convert to keys, using the library map
-        val map = variantDependencies.libraries
+        val map = result.container.globalLibraryMap?.libraries
+            ?: throw RuntimeException("No library map!")
 
         // Test the Android Libraries
         checkLibraries(compileItems, runtimeItems, LibraryType.ANDROID_LIBRARY, map, providedAndroidLibraries)

@@ -23,6 +23,8 @@ import com.android.builder.model.v2.ide.SyncIssue
  *
  * This model should be fetched last (after other models), in order to have all the SyncIssue's
  * collected and delivered.
+ *
+ * @since 4.2
  */
 interface ProjectSyncIssues: AndroidModel {
     /** Returns issues found during sync.  */

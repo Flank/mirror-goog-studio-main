@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.model.getAndroidProject
 import com.android.ide.model.sync.Variant
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -97,11 +98,8 @@ class ModelSyncFilesTest {
 
     private fun getAppVariant() =
         project.modelV2()
-            .fetchModels()
-            .container
-            .getProject()
-            .androidProject
-            ?.variants
-            ?.first { variant -> variant.name == "debug" }
-            ?: throw RuntimeException("could not find AndroidProject model")
+            .fetchModels("debug")
+            .getAndroidProject(null)
+            .variants
+            .first { variant -> variant.name == "debug" }
 }

@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
-import com.android.build.gradle.internal.ide.v2.GlobalSyncService
+import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
 import com.android.build.gradle.internal.lint.AndroidLintAnalysisTask
 import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
 import com.android.build.gradle.internal.lint.AndroidLintTask
@@ -382,7 +382,7 @@ abstract class LintPlugin : Plugin<Project> {
             project,
             mavenCoordinatesCacheBuildService
         ).execute()
-        GlobalSyncService.RegistrationAction(project, mavenCoordinatesCacheBuildService)
+        GlobalLibraryBuildService.RegistrationAction(project, mavenCoordinatesCacheBuildService)
             .execute()
 
         SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(

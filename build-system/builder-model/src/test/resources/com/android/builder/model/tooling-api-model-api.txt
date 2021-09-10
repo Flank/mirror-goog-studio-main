@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-bd52d122548a4589eb440a8e52f24447f473d91c2f0c2f9b58521ef2e5506768
+601e4c9cee5db16c85e1273a097ec9feb9322768e24c0300e96ea8a7988c27a2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -773,6 +773,8 @@ com.android.builder.model.v2.models.AndroidProject.getVariants: java.util.Collec
 com.android.builder.model.v2.models.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ide.ViewBindingOptions ()
 com.android.builder.model.v2.models.BuildMap implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.BuildMap.getBuildIdMap: java.util.Map<java.lang.String, java.io.File> ()
+com.android.builder.model.v2.models.GlobalLibraryMap implements com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.ModelBuilderParameter
 com.android.builder.model.v2.models.ModelBuilderParameter.getVariantName: java.lang.String ()
 com.android.builder.model.v2.models.ModelBuilderParameter.setVariantName: void (java.lang.String)
@@ -780,7 +782,6 @@ com.android.builder.model.v2.models.ProjectSyncIssues implements com.android.bui
 com.android.builder.model.v2.models.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.ide.SyncIssue> ()
 com.android.builder.model.v2.models.VariantDependencies implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.VariantDependencies.getAndroidTestArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
-com.android.builder.model.v2.models.VariantDependencies.getLibraries: java.util.Map<java.lang.String, com.android.builder.model.v2.ide.Library> ()
 com.android.builder.model.v2.models.VariantDependencies.getMainArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()
 com.android.builder.model.v2.models.VariantDependencies.getName: java.lang.String ()
 com.android.builder.model.v2.models.VariantDependencies.getTestFixturesArtifact: com.android.builder.model.v2.ide.ArtifactDependencies ()

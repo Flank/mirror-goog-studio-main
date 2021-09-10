@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.builder.model.v2.models
+
+package com.android.build.gradle.internal.ide.v2
+
+import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.models.GlobalLibraryMap
+import java.io.Serializable
 
 /**
- * The parameter for ModelBuilder to specify what to sync.
- *
- * This interface is implemented and instantiated on the fly by Gradle when using
- * [org.gradle.tooling.BuildController.findModel]
- *
- * @since 4.2
+ * Implementation of [GlobalLibraryMap] for serialization via the Tooling API.
  */
-interface ModelBuilderParameter {
-
-    /**
-     * The name of the variant for which to return [VariantDependencies]
-     */
-    var variantName: String
+data class GlobalLibraryMapImpl(
+    override val libraries: Map<String, Library>
+) : GlobalLibraryMap, Serializable {
+    companion object {
+        @JvmStatic
+        private val serialVersionUID: Long = 1L
+    }
 }

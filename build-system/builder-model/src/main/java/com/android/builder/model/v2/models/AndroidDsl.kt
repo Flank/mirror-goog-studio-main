@@ -29,6 +29,8 @@ interface AndroidDsl: AndroidModel {
 
     /**
      * Returns the optional group-id of the artifact represented by this project.
+     *
+     * @since 3.6
      */
     val groupId: String?
 

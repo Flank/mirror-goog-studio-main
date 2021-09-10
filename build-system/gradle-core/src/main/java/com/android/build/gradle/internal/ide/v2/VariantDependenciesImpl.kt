@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.ArtifactDependencies
-import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.models.VariantDependencies
 import java.io.Serializable
 
@@ -29,8 +28,7 @@ data class VariantDependenciesImpl(
     override val mainArtifact: ArtifactDependencies,
     override val androidTestArtifact: ArtifactDependencies?,
     override val unitTestArtifact: ArtifactDependencies?,
-    override val testFixturesArtifact: ArtifactDependencies?,
-    override val libraries: Map<String, Library>
+    override val testFixturesArtifact: ArtifactDependencies?
 ) : VariantDependencies, Serializable {
     companion object {
         @JvmStatic

@@ -18,6 +18,9 @@ package com.android.build.gradle.integration.model
 
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
+import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
+import com.android.build.gradle.integration.common.fixture.model.getAndroidProject
+import com.android.build.gradle.integration.common.fixture.model.getVariantDependencies
 import com.android.build.gradle.integration.common.fixture.model.toValueString
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
@@ -56,8 +59,7 @@ class PrebuiltLintChecksModelTest {
 
     @Test
     fun `test lintChecksJars in Lib model`() {
-        val androidProject = result.container.getProject(":lib").androidProject
-            ?: throw RuntimeException("No AndroidProject model for :lib")
+        val androidProject = result.getAndroidProject(":lib")
 
         Truth
             .assertThat(androidProject.lintChecksJars.map { it.toValueString(result.normalizer) })
@@ -100,8 +102,7 @@ class SubProjectLintChecksModelTest {
 
     @Test
     fun `test lintChecksJars in Lib model`() {
-        val androidProject = result.container.getProject(":lib").androidProject
-            ?: throw RuntimeException("No AndroidProject model for :lib")
+        val androidProject = result.getAndroidProject(":lib")
 
         Truth
             .assertThat(androidProject.lintChecksJars.map { it.toValueString(result.normalizer) })
@@ -147,10 +148,7 @@ class AppAndLibWithLintPublishModelTest {
 
     @Test
     fun `test lint model in app dependency`() {
-        val variantDeps = result.container.getProject(":app").variantDependencies
-            ?: throw RuntimeException("No VariantDependencies model for :app")
-
-        val lib = variantDeps.libraries.values.singleOrNull {
+        val lib = result.container.globalLibraryMap?.libraries?.values?.singleOrNull {
             it.projectInfo?.let { info ->
                 info.projectPath == ":lib" && info.attributes["org.gradle.usage"] == "java-api"
             } ?: false
@@ -165,8 +163,7 @@ class AppAndLibWithLintPublishModelTest {
 
     @Test
     fun `check publish jar does not show up in lintChecks`() {
-        val androidProject = result.container.getProject(":lib").androidProject
-            ?: throw RuntimeException("No AndroidProject model for :lib")
+        val androidProject = result.getAndroidProject(":lib")
 
         Truth.assertThat(androidProject.lintChecksJars.isEmpty())
     }
@@ -206,10 +203,7 @@ class AppWithExternalLibraryWithLintJarModelTest {
 
     @Test
     fun `test lint model in app dependency`() {
-        val variantDeps = result.container.getProject().variantDependencies
-            ?: throw RuntimeException("No VariantDependencies model for :app")
-
-        val lib = variantDeps.libraries.values.singleOrNull {
+        val lib = result.container.globalLibraryMap?.libraries?.values?.singleOrNull {
             it.libraryInfo?.let { info ->
                 info.name == "example-aar"  && info.attributes["org.gradle.usage"] == "java-api"
             } ?: false

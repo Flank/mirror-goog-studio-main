@@ -27,6 +27,8 @@
          - com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:myaar:1{ADDED}:
             - dependencies = "*visited*"
    < unitTestArtifact
+< VariantDependencies
+> GlobalLibraryMap:
    > libraries:
       > com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.example:myaar:1{ADDED}:
          - type                = ANDROID_LIBRARY
@@ -91,4 +93,4 @@
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
       < com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:myaar:1{ADDED}
    < libraries
-< VariantDependencies
+< GlobalLibraryMap

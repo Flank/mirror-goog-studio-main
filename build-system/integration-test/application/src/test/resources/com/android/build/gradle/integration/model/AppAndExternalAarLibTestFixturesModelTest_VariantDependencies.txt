@@ -50,6 +50,8 @@
             - dependencies = "*visited*"
    < unitTestArtifact
    - testFixturesArtifact = (null)
+< VariantDependencies
+> GlobalLibraryMap:
    > libraries:
       > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
          - type                = PROJECT
@@ -241,4 +243,4 @@
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/aar-1/R.txt{!}
       < com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1
    < libraries
-< VariantDependencies
+< GlobalLibraryMap

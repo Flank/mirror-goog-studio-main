@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.builder.model.v2.models
 
 import com.android.builder.model.v2.AndroidModel
-import com.android.builder.model.v2.ide.ArtifactDependencies
+import com.android.builder.model.v2.ide.Library
 
 /**
- * The dependencies for a given variants.
+ * Global map of all the [Library] instances used in a single or multi-module gradle project.
  *
- * This will contain the dependencies for the variant's main artifact as well as its tests (if
- * applicable)
+ * This is a separate model to query (the same way [AndroidProject] is queried). It must
+ * be queried after all the models have been queried for their [AndroidProject].
  *
- * @since 4.2
  */
-interface VariantDependencies: AndroidModel {
+interface GlobalLibraryMap: AndroidModel {
     /**
-     * Returns the name of the variant. It is made up of the build type and flavors (if applicable)
+     * The list of external libraries used by all the variants in the module.
      *
-     * @return the name of the variant.
+     * The key for the map entries is the keys found via [com.android.builder.model.v2.ide.GraphItem.key]
+     * and [Library.key]
      */
-    val name: String
-
-    val mainArtifact: ArtifactDependencies
-
-    val androidTestArtifact: ArtifactDependencies?
-    val unitTestArtifact: ArtifactDependencies?
-    val testFixturesArtifact: ArtifactDependencies?
+    val libraries: Map<String, Library>
 }

@@ -49,6 +49,7 @@ interface LibraryService {
  */
 interface StringCache {
     fun cacheString(string: String): String
+    fun clear()
 }
 
 /**
@@ -60,6 +61,7 @@ interface StringCache {
  */
 interface LocalJarCache {
     fun getLocalJarsForAar(aar: File): List<File>?
+    fun clear()
 }
 
 class StringCacheImpl: StringCache {
@@ -70,7 +72,7 @@ class StringCacheImpl: StringCache {
         }
     }
 
-    fun clear() {
+    override fun clear() {
         cache.clear()
     }
 }
@@ -79,7 +81,7 @@ class LocalJarCacheImpl: LocalJarCache {
 
     override fun getLocalJarsForAar(aar: File): List<File>? = cache[aar]
 
-    fun clear() {
+    override fun clear() {
         cache.clear()
     }
 
@@ -111,24 +113,34 @@ class LibraryServiceImpl(
      * Returns a [Library] instance matching the provided a [ResolvedArtifact].
      */
     override fun getLibrary(artifact: ResolvedArtifact): Library =
-            libraryCache.computeIfAbsent(artifact) {
-                createLibrary(it)
+            synchronized(libraryCache) {
+                libraryCache.computeIfAbsent(artifact) {
+                    createLibrary(it)
+                }
             }
 
     fun getAllLibraries(): Collection<Library> = libraryCache.values
 
+    fun clear() {
+        libraryCache.clear()
+        projectInfoCache.clear()
+        libraryInfoCache.clear()
+    }
+
     // do not query directly. Use [getProjectInfo]
     private val projectInfoCache = mutableMapOf<ResolvedVariantResult, ProjectInfoImpl>()
     private fun getProjectInfo(variant: ResolvedVariantResult): ProjectInfoImpl =
-            projectInfoCache.computeIfAbsent(variant) {
-                val component = it.owner as ProjectComponentIdentifier
+            synchronized(projectInfoCache) {
+                projectInfoCache.computeIfAbsent(variant) {
+                    val component = it.owner as ProjectComponentIdentifier
 
-                ProjectInfoImpl(
-                    getAttributeMap(it),
-                    getCapabilityList(it),
-                    stringCache.cacheString(component.build.name),
-                    stringCache.cacheString(component.projectPath)
-                )
+                    ProjectInfoImpl(
+                        getAttributeMap(it),
+                        getCapabilityList(it),
+                        stringCache.cacheString(component.build.name),
+                        stringCache.cacheString(component.projectPath)
+                    )
+                }
             }
 
     // do not query directly. Use [getLibraryCache]
@@ -144,26 +156,30 @@ class LibraryServiceImpl(
             // itself and skip the attributes. (there is already no capabilities for local jars)
             when (val component = artifact.variant.owner) {
                 is ModuleComponentIdentifier -> {
-                    // simply query for the variant.
-                    libraryInfoCache.computeIfAbsent(artifact.variant) {
-                        LibraryInfoImpl(
-                            getAttributeMap(it),
-                            getCapabilityList(it),
-                            stringCache.cacheString(component.group),
-                            stringCache.cacheString(component.module),
-                            stringCache.cacheString(component.version)
-                        )
+                    synchronized(libraryInfoCache) {
+                        // simply query for the variant.
+                        libraryInfoCache.computeIfAbsent(artifact.variant) {
+                            LibraryInfoImpl(
+                                getAttributeMap(it),
+                                getCapabilityList(it),
+                                stringCache.cacheString(component.group),
+                                stringCache.cacheString(component.module),
+                                stringCache.cacheString(component.version)
+                            )
+                        }
                     }
                 }
                 is OpaqueComponentArtifactIdentifier -> {
-                    libraryInfoForLocalJarsCache.computeIfAbsent(artifact.artifactFile) {
-                        LibraryInfoImpl(
-                            attributes = mapOf(),
-                            capabilities = listOf(),
-                            group = stringCache.cacheString(LOCAL_AAR_GROUPID),
-                            name = stringCache.cacheString(it.absolutePath),
-                            version = stringCache.cacheString("unspecified")
-                        )
+                    synchronized(libraryInfoForLocalJarsCache) {
+                        libraryInfoForLocalJarsCache.computeIfAbsent(artifact.artifactFile) {
+                            LibraryInfoImpl(
+                                attributes = mapOf(),
+                                capabilities = listOf(),
+                                group = stringCache.cacheString(LOCAL_AAR_GROUPID),
+                                name = stringCache.cacheString(it.absolutePath),
+                                version = stringCache.cacheString("unspecified")
+                            )
+                        }
                     }
                 }
                 is ProjectComponentIdentifier -> {
