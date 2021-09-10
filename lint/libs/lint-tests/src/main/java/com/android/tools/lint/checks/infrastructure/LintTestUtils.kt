@@ -178,6 +178,7 @@ private fun createTestProjectForFiles(
     kotlinLanguageLevel: LanguageVersionSettings? = null,
     sdkHome: File? = null
 ): Project {
+    val includeKotlinStdlib = dir.walkBottomUp().any { it.path.endsWith(DOT_KT) }
     val client = object : LintCliClient(CLIENT_UNIT_TESTS) {
         override fun readFile(file: File): CharSequence {
             return sourcesMap[file] ?: super.readFile(file)
@@ -217,7 +218,8 @@ private fun createTestProjectForFiles(
             project: Project,
             includeProvided: Boolean
         ): List<File> {
-            return super.getJavaLibraries(project, includeProvided) + libs + findKotlinStdlibPath().map(::File)
+            val kotlinStdlib = if (includeKotlinStdlib) findKotlinStdlibPath().map(::File) else emptyList()
+            return super.getJavaLibraries(project, includeProvided) + libs + kotlinStdlib
         }
 
         override fun getJavaSourceFolders(project: Project): List<File> {
