@@ -515,6 +515,21 @@ public interface IDevice extends IShellEnabledDevice {
     void removeForward(int localPort)
             throws TimeoutException, AdbCommandRejectedException, IOException;
 
+    /** @deprecated Use {@link #removeForward(int)} */
+    @Deprecated
+    default void removeForward(int localPort, int remotePort)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        removeForward(localPort);
+    }
+
+    /** @deprecated Use {@link #removeForward(int)} */
+    @Deprecated
+    default void removeForward(
+            int localPort, String remoteSocketName, DeviceUnixSocketNamespace namespace)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        removeForward(localPort);
+    }
+
     /**
      * Creates a port reversing between a remote and a local port.
      *
