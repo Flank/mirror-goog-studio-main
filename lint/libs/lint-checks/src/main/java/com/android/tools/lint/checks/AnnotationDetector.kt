@@ -37,7 +37,6 @@ import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.ExternalReferenceExpression
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
 import com.android.tools.lint.detector.api.JavaContext
@@ -922,13 +921,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 this.allowedValues = allowedValues
                 fields = Lists.newArrayListWithCapacity(allowedValues.size)
                 for (allowedValue in allowedValues) {
-                    if (allowedValue is ExternalReferenceExpression) {
-                        val externalRef = allowedValue as ExternalReferenceExpression
-                        val resolved = resolve(externalRef, switchExpression)
-                        if (resolved is PsiField) {
-                            fields.add(resolved)
-                        }
-                    } else if (allowedValue is UReferenceExpression) {
+                    if (allowedValue is UReferenceExpression) {
                         val resolved = allowedValue.resolve()
                         if (resolved != null) {
                             fields.add(resolved)
@@ -965,12 +958,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
         val list = mutableListOf<String>()
         for (allowedValue in allowedValues) {
             var o = allowedValue
-            if (o is ExternalReferenceExpression) {
-                val resolved = resolve(o, node)
-                if (resolved != null) {
-                    o = resolved
-                }
-            } else if (o is PsiReferenceExpression) {
+            if (o is PsiReferenceExpression) {
                 val ref = o
                 val resolved = ref.resolve()
                 o = if (resolved != null) {

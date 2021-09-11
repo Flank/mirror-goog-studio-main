@@ -47,7 +47,6 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getContainingUMethod
-import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
 
 class UastLintUtils {
@@ -129,14 +128,6 @@ class UastLintUtils {
                 element.containingClass?.let { getQualifiedName(it) }
                     ?.let { "$it.${element.name}" }
             else -> null
-        }
-
-        @JvmStatic
-        fun resolve(expression: ExternalReferenceExpression, context: UElement): PsiElement? {
-            val declaration =
-                context.getParentOfType<UDeclaration>(UDeclaration::class.java) ?: return null
-
-            return expression.resolve(declaration.psi)
         }
 
         @JvmStatic

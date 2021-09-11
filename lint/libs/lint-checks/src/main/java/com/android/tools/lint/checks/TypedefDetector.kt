@@ -27,7 +27,6 @@ import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.ExternalReferenceExpression
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
@@ -426,13 +425,6 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 } else if (psiValue == null) {
                     // We're checking here such that we can assume psiValue is not null below
                     continue
-                } else if (expression is ExternalReferenceExpression) {
-                    val resolved = UastLintUtils.resolve(
-                        expression as ExternalReferenceExpression, argument
-                    )
-                    if (resolved != null && resolved.isEquivalentTo(psiValue)) {
-                        return
-                    }
                 } else if (expression is UReferenceExpression) {
                     val resolved = expression.resolve()
                     if (resolved != null && resolved.isEquivalentTo(psiValue)) {
@@ -482,7 +474,6 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun getResolvedValue(expression: UExpression, context: UElement): Any? {
         return when (expression) {
             is ULiteralExpression -> expression.value
-            is ExternalReferenceExpression -> UastLintUtils.resolve(expression as ExternalReferenceExpression, context)
             is UReferenceExpression -> expression.resolve()
             is UParenthesizedExpression -> getResolvedValue(expression.expression, context)
             else -> null
@@ -596,9 +587,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         var foundCurrent = false
         for (value in values) {
             var resolved: PsiElement? = null
-            if (value is ExternalReferenceExpression) {
-                resolved = UastLintUtils.resolve(value as ExternalReferenceExpression, context)
-            } else if (value is UReferenceExpression) {
+            if (value is UReferenceExpression) {
                 resolved = value.resolve()
             }
             if (resolved !is PsiField) continue
@@ -640,7 +629,6 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             when (allowedValue) {
                 is UReferenceExpression -> resolved = allowedValue.resolve()
                 is PsiField -> resolved = allowedValue
-                is ExternalReferenceExpression -> resolved = UastLintUtils.resolve(allowedValue, context)
             }
             if (resolved is PsiField) {
                 val containingClassName = resolved.containingClass?.name ?: continue
