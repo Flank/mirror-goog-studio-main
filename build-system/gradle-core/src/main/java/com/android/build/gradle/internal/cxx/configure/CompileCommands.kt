@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.utils.TokenizedCommandLineMap
@@ -40,7 +41,12 @@ import java.nio.file.Files
  * name. See [extractCMakeTargetFromObjectFile] for details on how that is
  * done.
  */
-fun convertCMakeToCompileCommandsBin(json : File, bin : File) {
+fun convertCMakeToCompileCommandsBin(
+    json : File,
+    bin : File,
+    platform: Int = SdkConstants.currentPlatform(),
+    stringToFile: (String) -> File = { s:String -> File(s) } ) {
+
     // If bin exists but is not the current version, then delete it so that
     // it can be recreated with current version information.
     if (bin.exists()) {
@@ -70,10 +76,15 @@ fun convertCMakeToCompileCommandsBin(json : File, bin : File) {
     JsonReader(json.reader(StandardCharsets.UTF_8)).use { reader ->
         CompileCommandsEncoder(bin).use { encoder ->
             val tokenMap =
-                TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) {
+                TokenizedCommandLineMap<Triple<String, List<String>, String?>>(
+                    raw = false,
+                    platform = platform) {
                         tokens,
                         sourceFile ->
-                    tokens.removeTokenGroup(sourceFile, 0)
+                    tokens.removeTokenGroup(
+                        sourceFile,
+                        0,
+                        filePathSlashAgnostic = true)
 
                     for (flag in STRIP_FLAGS_WITH_ARG) {
                         tokens.removeTokenGroup(flag, 1)
@@ -118,12 +129,12 @@ fun convertCMakeToCompileCommandsBin(json : File, bin : File) {
                 }
 
                 encoder.writeCompileCommand(
-                    sourceFile = File(sourceFile),
-                    compiler = File(compiler),
+                    sourceFile = stringToFile(sourceFile),
+                    compiler = stringToFile(compiler),
                     flags = flags,
-                    workingDirectory = File(directory),
-                    outputFile = File(output),
-                    target = extractCMakeTargetFromObjectFile(output)
+                    workingDirectory = stringToFile(directory),
+                    outputFile = stringToFile(output),
+                    target = extractCMakeTargetFromObjectFile(stringToFile(output))
                 )
             }
             reader.endArray()
@@ -145,8 +156,8 @@ fun convertCMakeToCompileCommandsBin(json : File, bin : File) {
  * Where "hello-jni" from "hello-jni.dir" is the associated build
  * target.
  */
-private fun extractCMakeTargetFromObjectFile(objectFile : String) : String {
-    var current = File(objectFile).parentFile
+private fun extractCMakeTargetFromObjectFile(objectFile : File) : String {
+    var current = objectFile.parentFile
     while(current != null) {
         if (current.extension == "dir") {
             val targetCandidate = current.nameWithoutExtension
