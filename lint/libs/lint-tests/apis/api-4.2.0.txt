@@ -177,6 +177,11 @@ package com.android.tools.lint.checks.infrastructure {
     method public com.android.tools.lint.checks.infrastructure.LintFixVerifier! window(int);
   }
 
+  public final class LintTestUtils {
+    method public static <T extends java.lang.Comparable<? super T>> void checkTransitiveComparator(java.util.List<? extends T> list);
+    method public static <T> void checkTransitiveComparator(java.util.List<? extends T> list, java.util.Comparator<T> comparator);
+  }
+
   public final class ProjectDescription {
     ctor public ProjectDescription();
     ctor public ProjectDescription(com.android.tools.lint.checks.infrastructure.TestFile... files);
@@ -191,11 +196,11 @@ package com.android.tools.lint.checks.infrastructure {
     method public com.android.tools.lint.checks.infrastructure.ProjectDescription.Type getType();
     method public com.android.tools.lint.checks.infrastructure.ProjectDescription name(String name);
     method public com.android.tools.lint.checks.infrastructure.ProjectDescription report(boolean report);
-    method public void setDependencyGraph(String? p);
-    method public void setFiles(com.android.tools.lint.checks.infrastructure.TestFile![] p);
-    method public void setName(String p);
-    method public void setReport(boolean p);
-    method public void setType(com.android.tools.lint.checks.infrastructure.ProjectDescription.Type p);
+    method public void setDependencyGraph(String? dependencyGraph);
+    method public void setFiles(com.android.tools.lint.checks.infrastructure.TestFile![] files);
+    method public void setName(String name);
+    method public void setReport(boolean report);
+    method public void setType(com.android.tools.lint.checks.infrastructure.ProjectDescription.Type type);
     method public com.android.tools.lint.checks.infrastructure.ProjectDescription type(com.android.tools.lint.checks.infrastructure.ProjectDescription.Type type);
     method public com.android.tools.lint.checks.infrastructure.ProjectDescription withDependencyGraph(String dependencyGraph);
     property public final String? dependencyGraph;

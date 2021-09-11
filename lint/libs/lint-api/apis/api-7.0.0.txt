@@ -44,25 +44,30 @@ package com.android.tools.lint.client.api {
     ctor public CompositeIssueRegistry(java.util.List<? extends com.android.tools.lint.client.api.IssueRegistry> registries);
     method public java.util.List<com.android.tools.lint.detector.api.Issue> getIssues();
     property public int api;
+    property public java.util.List<java.lang.String> deletedIssues;
     property public boolean isUpToDate;
     property public java.util.List<com.android.tools.lint.detector.api.Issue> issues;
   }
 
   @com.google.common.annotations.Beta public abstract class Configuration {
     ctor public Configuration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations);
+    method public abstract void addConfiguredIssues(java.util.Map<java.lang.String,com.android.tools.lint.detector.api.Severity> targetMap, com.android.tools.lint.client.api.IssueRegistry registry, boolean specificOnly);
     method public void finishBulkEditing();
     method public abstract java.io.File? getBaselineFile();
     method public final com.android.tools.lint.client.api.LintClient getClient();
     method public final com.android.tools.lint.client.api.ConfigurationHierarchy getConfigurations();
-    method protected com.android.tools.lint.detector.api.Severity getDefaultSeverity(com.android.tools.lint.detector.api.Issue issue);
-    method public com.android.tools.lint.detector.api.Severity? getDefinedSeverity(com.android.tools.lint.detector.api.Issue issue, optional com.android.tools.lint.client.api.Configuration source);
+    method public final java.util.Map<java.lang.String,com.android.tools.lint.detector.api.Severity> getConfiguredIssues(com.android.tools.lint.client.api.IssueRegistry registry, boolean specificOnly);
+    method protected com.android.tools.lint.detector.api.Severity getDefaultSeverity(com.android.tools.lint.detector.api.Issue issue, optional com.android.tools.lint.detector.api.Severity visibleDefault);
+    method public com.android.tools.lint.detector.api.Severity? getDefinedSeverity(com.android.tools.lint.detector.api.Issue issue, optional com.android.tools.lint.client.api.Configuration source, optional com.android.tools.lint.detector.api.Severity visibleDefault);
     method public final java.io.File? getDir();
     method public boolean getFileLevel();
+    method public final com.android.tools.lint.detector.api.Location? getIssueConfigLocation(String issue, optional boolean specificOnly, optional boolean severityOnly);
     method public java.util.List<java.io.File> getLintJars();
-    method public String? getOption(com.android.tools.lint.detector.api.Issue issue, String name, optional String? p);
-    method public final boolean getOptionAsBoolean(com.android.tools.lint.detector.api.Issue issue, String name, boolean p);
-    method public java.io.File? getOptionAsFile(com.android.tools.lint.detector.api.Issue issue, String name, optional java.io.File? p);
-    method public final int getOptionAsInt(com.android.tools.lint.detector.api.Issue issue, String name, int p);
+    method public com.android.tools.lint.detector.api.Location? getLocalIssueConfigLocation(String issue, optional boolean specificOnly, optional boolean severityOnly, optional com.android.tools.lint.client.api.Configuration source);
+    method public String? getOption(com.android.tools.lint.detector.api.Issue issue, String name, optional String? default);
+    method public final boolean getOptionAsBoolean(com.android.tools.lint.detector.api.Issue issue, String name, boolean default);
+    method public java.io.File? getOptionAsFile(com.android.tools.lint.detector.api.Issue issue, String name, optional java.io.File? default);
+    method public final int getOptionAsInt(com.android.tools.lint.detector.api.Issue issue, String name, int default);
     method protected final com.android.tools.lint.client.api.Configuration? getOverrides();
     method public final com.android.tools.lint.client.api.Configuration? getParent();
     method public final com.android.tools.lint.detector.api.Severity getSeverity(com.android.tools.lint.detector.api.Issue issue);
@@ -70,16 +75,18 @@ package com.android.tools.lint.client.api {
     method public abstract void ignore(com.android.tools.lint.detector.api.Issue issue, java.io.File file);
     method public abstract void ignore(String issueId, java.io.File file);
     method public boolean isEnabled(com.android.tools.lint.detector.api.Issue issue);
-    method public boolean isIgnored(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location? location, String message);
+    method @Deprecated public final boolean isIgnored(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location? location, String message);
+    method public boolean isIgnored(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
     method public final boolean isOverriding();
-    method public abstract void setBaselineFile(java.io.File? p);
-    method public final void setDir(java.io.File? p);
-    method public void setFileLevel(boolean p);
-    method public final void setOverriding(boolean p);
+    method protected final void reportNonExistingIssueId(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.client.api.LintDriver? driver, com.android.tools.lint.client.api.IssueRegistry issueRegistry, com.android.tools.lint.detector.api.Project? project, String id);
+    method public abstract void setBaselineFile(java.io.File? baselineFile);
+    method public final void setDir(java.io.File? dir);
+    method public void setFileLevel(boolean fileLevel);
+    method public final void setOverriding(boolean isOverriding);
     method public final void setParent(com.android.tools.lint.client.api.Configuration parent);
     method public abstract void setSeverity(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Severity? severity);
     method public void startBulkEditing();
-    method public void validateIssueIds(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.IssueRegistry registry);
+    method public void validateIssueIds(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project? project, com.android.tools.lint.client.api.IssueRegistry registry);
     property public abstract java.io.File? baselineFile;
     property public final com.android.tools.lint.client.api.LintClient client;
     property public final com.android.tools.lint.client.api.ConfigurationHierarchy configurations;
@@ -88,31 +95,34 @@ package com.android.tools.lint.client.api {
     property public final boolean isOverriding;
     property protected final com.android.tools.lint.client.api.Configuration? overrides;
     property public final com.android.tools.lint.client.api.Configuration? parent;
+    field public static final com.android.tools.lint.client.api.Configuration.Companion Companion;
+  }
+
+  public static final class Configuration.Companion {
+    method public String getUnknownIssueIdErrorMessage(String id, com.android.tools.lint.client.api.IssueRegistry issueRegistry);
   }
 
   public class ConfigurationHierarchy {
-    ctor public ConfigurationHierarchy(com.android.tools.lint.client.api.LintClient client, java.io.File? rootDir);
+    ctor public ConfigurationHierarchy(com.android.tools.lint.client.api.LintClient client, optional java.io.File? rootDir);
     method public final void addGlobalConfigurationFromFile(optional java.io.File? fallback, optional com.android.tools.lint.client.api.Configuration? override);
     method public final void addGlobalConfigurations(optional com.android.tools.lint.client.api.Configuration? fallback, optional com.android.tools.lint.client.api.Configuration? override);
-    method public final void checkForCycle(com.android.tools.lint.client.api.Configuration child);
     method public final com.android.tools.lint.client.api.Configuration createChainedConfigurations(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.Configuration? middle, kotlin.jvm.functions.Function0<? extends com.android.tools.lint.client.api.Configuration> createFirst, optional kotlin.jvm.functions.Function0<? extends com.android.tools.lint.client.api.Configuration> createLast);
-    method public final com.android.tools.lint.client.api.Configuration createLintOptionsConfiguration(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.model.LintModelLintOptions lintOptions, boolean fatalOnly, com.android.tools.lint.client.api.Configuration? p, optional kotlin.jvm.functions.Function0<? extends com.android.tools.lint.client.api.LintOptionsConfiguration> configFactory);
+    method public final com.android.tools.lint.client.api.Configuration createLintOptionsConfiguration(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.model.LintModelLintOptions lintOptions, boolean fatalOnly, com.android.tools.lint.client.api.Configuration? default, optional kotlin.jvm.functions.Function0<? extends com.android.tools.lint.client.api.LintOptionsConfiguration> configFactory);
     method public final com.android.tools.lint.client.api.LintClient getClient();
     method public final com.android.tools.lint.client.api.Configuration getConfigurationForFile(java.io.File xmlFile);
-    method public final com.android.tools.lint.client.api.Configuration? getConfigurationForFolder(java.io.File? dir, optional com.android.tools.lint.client.api.Configuration? p);
+    method public final com.android.tools.lint.client.api.Configuration? getConfigurationForFolder(java.io.File? dir, optional com.android.tools.lint.client.api.Configuration? default);
     method public final com.android.tools.lint.client.api.Configuration getConfigurationForProject(com.android.tools.lint.detector.api.Project project, optional kotlin.jvm.functions.Function2<? super java.io.File,? super com.android.tools.lint.client.api.Configuration,? extends com.android.tools.lint.client.api.Configuration> create);
-    method public final com.android.tools.lint.detector.api.Severity? getDefinedSeverityWithoutOverride(com.android.tools.lint.client.api.Configuration source, com.android.tools.lint.detector.api.Issue issue);
+    method public final com.android.tools.lint.detector.api.Severity? getDefinedSeverityWithoutOverride(com.android.tools.lint.client.api.Configuration source, com.android.tools.lint.detector.api.Issue issue, optional com.android.tools.lint.detector.api.Severity visibleDefault);
     method public final com.android.tools.lint.client.api.Configuration? getFallback();
-    method public final com.android.tools.lint.client.api.LintXmlConfiguration? getLintXmlConfigurationFallback();
     method public final com.android.tools.lint.client.api.Configuration? getOverrides();
     method public final com.android.tools.lint.client.api.Configuration? getParentConfiguration(com.android.tools.lint.client.api.Configuration configuration);
     method public java.io.File? getParentFolder(java.io.File folder);
     method public final java.io.File? getRootDir();
     method public final com.android.tools.lint.client.api.Configuration getScopeLeaf(com.android.tools.lint.client.api.Configuration child);
-    method public final void setFallback(com.android.tools.lint.client.api.Configuration? p);
-    method public final void setOverrides(com.android.tools.lint.client.api.Configuration? p);
+    method public final void setFallback(com.android.tools.lint.client.api.Configuration? fallback);
+    method public final void setOverrides(com.android.tools.lint.client.api.Configuration? overrides);
     method public final void setParent(com.android.tools.lint.client.api.Configuration child, com.android.tools.lint.client.api.Configuration? parent);
-    method public final void setRootDir(java.io.File? p);
+    method public final void setRootDir(java.io.File? rootDir);
     property public final com.android.tools.lint.client.api.LintClient client;
     property public final com.android.tools.lint.client.api.Configuration? fallback;
     property public final com.android.tools.lint.client.api.Configuration? overrides;
@@ -123,12 +133,13 @@ package com.android.tools.lint.client.api {
   public static final class ConfigurationHierarchy.Companion {
     method public java.io.File getDefaultRootDir();
     method public java.io.File getLintXmlFile(java.io.File);
-    method public void setDefaultRootDir(java.io.File p);
+    method public void setDefaultRootDir(java.io.File defaultRootDir);
     property public final java.io.File defaultRootDir;
   }
 
   public class FlagConfiguration extends com.android.tools.lint.client.api.Configuration {
     ctor public FlagConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations);
+    method public void addConfiguredIssues(java.util.Map<java.lang.String,com.android.tools.lint.detector.api.Severity> targetMap, com.android.tools.lint.client.api.IssueRegistry registry, boolean specificOnly);
     method public boolean allowSuppress();
     method public java.util.Set<com.android.tools.lint.detector.api.Category>? disabledCategories();
     method public java.util.Set<java.lang.String> disabledIds();
@@ -137,6 +148,7 @@ package com.android.tools.lint.client.api {
     method public java.util.Set<com.android.tools.lint.detector.api.Category>? exactCategories();
     method public java.util.Set<java.lang.String>? exactCheckedIds();
     method public boolean fatalOnly();
+    method public final com.android.tools.lint.detector.api.Location? getAssociatedLocation();
     method public java.io.File? getBaselineFile();
     method public void ignore(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location? location, String message);
     method public void ignore(com.android.tools.lint.detector.api.Issue issue, java.io.File file);
@@ -144,9 +156,13 @@ package com.android.tools.lint.client.api {
     method public boolean isCheckAllWarnings();
     method public boolean isIgnoreWarnings();
     method public boolean isWarningsAsErrors();
-    method public void setBaselineFile(java.io.File? p);
+    method public final void setAssociatedLocation(com.android.tools.lint.detector.api.Location? associatedLocation);
+    method public void setBaselineFile(java.io.File? baselineFile);
     method public void setSeverity(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Severity? severity);
     method public com.android.tools.lint.detector.api.Severity? severityOverride(com.android.tools.lint.detector.api.Issue issue);
+    method public java.util.Set<java.lang.String> severityOverrides();
+    method protected final void validateIssueIds(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project? project, com.android.tools.lint.client.api.IssueRegistry registry, java.util.Collection<java.lang.String> ids);
+    property public final com.android.tools.lint.detector.api.Location? associatedLocation;
     property public java.io.File? baselineFile;
   }
 
@@ -164,20 +180,27 @@ package com.android.tools.lint.client.api {
     method protected boolean cacheable();
     method public int getApi();
     method public final java.util.List<com.android.tools.lint.detector.api.Category> getCategories();
+    method public java.util.List<java.lang.String> getDeletedIssues();
     method public final java.util.List<java.lang.String> getIdSpellingSuggestions(String id);
     method public final com.android.tools.lint.detector.api.Issue? getIssue(String id);
     method protected int getIssueCapacity(java.util.EnumSet<com.android.tools.lint.detector.api.Scope> scope);
     method public abstract java.util.List<com.android.tools.lint.detector.api.Issue> getIssues();
     method protected java.util.List<com.android.tools.lint.detector.api.Issue> getIssuesForScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope> scope);
+    method public int getMaxApi();
     method public int getMinApi();
+    method public com.android.tools.lint.client.api.Vendor? getVendor();
     method public final boolean isCategoryName(String name);
     method public final boolean isIssueId(String id);
     method public boolean isUpToDate();
     property public int api;
+    property public java.util.List<java.lang.String> deletedIssues;
     property public boolean isUpToDate;
     property public abstract java.util.List<com.android.tools.lint.detector.api.Issue> issues;
+    property public int maxApi;
     property public int minApi;
+    property public com.android.tools.lint.client.api.Vendor? vendor;
     field public static final com.android.tools.lint.detector.api.Issue BASELINE;
+    field public static final com.android.tools.lint.detector.api.Issue CANNOT_ENABLE_HIDDEN;
     field public static final com.android.tools.lint.client.api.IssueRegistry.Companion Companion;
     field public static final com.android.tools.lint.detector.api.Issue LINT_ERROR;
     field public static final com.android.tools.lint.detector.api.Issue LINT_WARNING;
@@ -187,7 +210,11 @@ package com.android.tools.lint.client.api {
   }
 
   public static final class IssueRegistry.Companion {
+    method public com.android.tools.lint.client.api.Vendor getAOSP_VENDOR();
+    method public String? getNewId(String id);
+    method public boolean isDeletedIssueId(String id);
     method public void reset();
+    property public final com.android.tools.lint.client.api.Vendor AOSP_VENDOR;
   }
 
   public final class JarFileIssueRegistry extends com.android.tools.lint.client.api.IssueRegistry {
@@ -197,6 +224,7 @@ package com.android.tools.lint.client.api {
     property public boolean isUpToDate;
     property public java.util.List<com.android.tools.lint.detector.api.Issue> issues;
     property public final java.io.File jarFile;
+    property public com.android.tools.lint.client.api.Vendor vendor;
     field public static final com.android.tools.lint.client.api.JarFileIssueRegistry.Factory Factory;
   }
 
@@ -245,7 +273,13 @@ package com.android.tools.lint.client.api {
     method public abstract boolean implementsInterface(com.intellij.psi.PsiClass cls, String interfaceName, optional boolean strict);
     method public boolean inheritsFrom(com.intellij.psi.PsiClass? cls, String className, optional boolean strict);
     method public boolean isAbstract(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isActual(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isCompanion(com.intellij.psi.PsiClass? owner);
+    method public boolean isConst(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isCrossInline(com.intellij.psi.PsiParameter? owner);
     method public boolean isData(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isExpect(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isExternal(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isFinal(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isInfix(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isInherited(com.intellij.psi.PsiAnnotation annotation, com.intellij.psi.PsiModifierListOwner owner);
@@ -256,6 +290,8 @@ package com.android.tools.lint.client.api {
     method public boolean isLateInit(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isMemberInClass(com.intellij.psi.PsiMember? member, String className);
     method public boolean isMemberInSubClassOf(com.intellij.psi.PsiMember member, String className, optional boolean strict);
+    method public boolean isNoInline(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isOpen(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isOperator(com.intellij.psi.PsiModifierListOwner? owner);
     method public final boolean isOverride(org.jetbrains.uast.UMethod method, optional boolean includeInterfaces);
     method public final boolean isOverride(com.intellij.psi.PsiMethod method, optional boolean includeInterfaces);
@@ -265,6 +301,8 @@ package com.android.tools.lint.client.api {
     method public boolean isSealed(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isStatic(com.intellij.psi.PsiModifierListOwner? owner);
     method public boolean isSuspend(com.intellij.psi.PsiModifierListOwner? owner);
+    method public boolean isTailRec(com.intellij.psi.PsiMethod? owner);
+    method public boolean isVararg(com.intellij.psi.PsiParameter? owner);
     method public boolean methodMatches(com.intellij.psi.PsiMethod method, String? className, boolean allowInherit, java.lang.String... argumentTypes);
     method public boolean parameterHasType(com.intellij.psi.PsiMethod? method, int parameterIndex, String typeName);
     method public boolean parametersMatch(com.intellij.psi.PsiMethod method, java.lang.String... argumentTypes);
@@ -326,7 +364,7 @@ package com.android.tools.lint.client.api {
   public final class LintBaseline {
     ctor public LintBaseline(com.android.tools.lint.client.api.LintClient? client, java.io.File file);
     method public void close();
-    method public boolean findAndMark(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.Severity? severity, com.android.tools.lint.detector.api.Project? project);
+    method public boolean findAndMark(com.android.tools.lint.detector.api.Incident incident);
     method public String? getAttribute(String name);
     method public java.io.File getFile();
     method public int getFixedCount();
@@ -335,8 +373,9 @@ package com.android.tools.lint.client.api {
     method public boolean getRemoveFixed();
     method public int getTotalCount();
     method public boolean getWriteOnClose();
+    method public boolean sameMessage(com.android.tools.lint.detector.api.Issue issue, String new, String old);
     method public void setAttribute(String name, String value);
-    method public void setRemoveFixed(boolean p);
+    method public void setRemoveFixed(boolean removeFixed);
     method public void setWriteOnClose(boolean writeOnClose);
     property public final java.io.File file;
     property public final int fixedCount;
@@ -365,7 +404,7 @@ package com.android.tools.lint.client.api {
     method public boolean checkForSuppressComments();
     method public void closeConnection(java.net.URLConnection connection);
     method protected com.android.tools.lint.detector.api.Project createProject(java.io.File dir, java.io.File referenceDir);
-    method public com.android.tools.lint.detector.api.Location.Handle createResourceItemHandle(com.android.ide.common.resources.ResourceItem item);
+    method public com.android.tools.lint.detector.api.Location.ResourceItemHandle createResourceItemHandle(com.android.ide.common.resources.ResourceItem item, optional boolean nameOnly, optional boolean valueOnly);
     method public java.util.Map<java.lang.String,java.lang.String> createSuperClassMap(com.android.tools.lint.detector.api.Project project);
     method public ClassLoader createUrlClassLoader(java.net.URL![] urls, ClassLoader parent);
     method @kotlin.jvm.Throws(exceptionClasses=IOException::class) public org.xmlpull.v1.XmlPullParser? createXmlPullParser(com.android.ide.common.util.PathString resourcePath) throws java.io.IOException;
@@ -376,9 +415,9 @@ package com.android.tools.lint.client.api {
     method public java.io.File? findResource(String relativePath);
     method public Iterable<java.io.File> findRuleJars(com.android.tools.lint.detector.api.Project project);
     method public java.util.List<java.io.File> getAssetFolders(com.android.tools.lint.detector.api.Project project);
-    method public com.android.repository.Revision? getBuildToolsRevision(com.android.tools.lint.detector.api.Project project);
     method public java.io.File? getCacheDir(String? name, boolean create);
     method protected com.android.tools.lint.client.api.LintClient.ClassPathInfo getClassPath(com.android.tools.lint.detector.api.Project project);
+    method public String getClientDisplayName();
     method public String? getClientDisplayRevision();
     method public static final String getClientName();
     method public String? getClientRevision();
@@ -403,25 +442,30 @@ package com.android.tools.lint.client.api {
     method public java.io.File? getJdkHome(optional com.android.tools.lint.detector.api.Project? project);
     method public final java.util.Collection<com.android.tools.lint.detector.api.Project> getKnownProjects();
     method public org.jetbrains.kotlin.config.LanguageVersionSettings getKotlinLanguageLevel(com.android.tools.lint.detector.api.Project project);
+    method public com.android.sdklib.IAndroidTarget? getLatestSdkTarget(optional int minApi, optional boolean includePreviews);
     method public org.w3c.dom.Document? getMergedManifest(com.android.tools.lint.detector.api.Project project);
+    method public com.android.tools.lint.detector.api.PartialResult getPartialResults(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Issue issue);
+    method public com.android.tools.lint.model.PathVariables getPathVariables();
+    method public com.android.tools.lint.client.api.PlatformLookup? getPlatformLookup();
+    method public boolean getPrintInternalErrorStackTrace();
     method public com.android.tools.lint.detector.api.Project getProject(java.io.File dir, java.io.File referenceDir);
     method protected final java.util.Set<java.io.File> getProjectDirs();
     method public String getProjectName(com.android.tools.lint.detector.api.Project project);
     method public String? getRelativePath(java.io.File? baseFile, java.io.File? file);
     method protected final java.util.Map<java.lang.Object,com.android.tools.lint.client.api.BlameFile> getReportFileCache();
-    method public com.android.repository.api.ProgressIndicator getRepositoryLogger();
     method public java.util.List<java.io.File> getResourceFolders(com.android.tools.lint.detector.api.Project project);
-    method public com.android.ide.common.resources.ResourceRepository? getResourceRepository(com.android.tools.lint.detector.api.Project project, boolean includeModuleDependencies, boolean includeLibraries);
-    method public com.android.ide.common.repository.ResourceVisibilityLookup.Provider getResourceVisibilityProvider();
-    method public com.android.sdklib.repository.AndroidSdkHandler? getSdk();
+    method @Deprecated public final com.android.ide.common.resources.ResourceRepository getResourceRepository(com.android.tools.lint.detector.api.Project project, boolean includeModuleDependencies, boolean includeLibraries);
+    method public abstract com.android.ide.common.resources.ResourceRepository getResources(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.ResourceRepositoryScope scope);
+    method public java.io.File? getRootDir();
     method public java.io.File? getSdkHome();
     method public com.android.tools.lint.client.api.SdkInfo getSdkInfo(com.android.tools.lint.detector.api.Project project);
     method protected final java.util.Map<org.w3c.dom.Node,com.android.utils.Pair<java.io.File,? extends org.w3c.dom.Node>> getSourceNodeCache();
     method public String? getSuperClass(com.android.tools.lint.detector.api.Project project, String name);
-    method public com.android.sdklib.IAndroidTarget![] getTargets();
+    method public java.util.List<com.android.sdklib.IAndroidTarget> getTargets();
     method public java.util.List<java.io.File> getTestLibraries(com.android.tools.lint.detector.api.Project project);
     method public java.util.List<java.io.File> getTestSourceFolders(com.android.tools.lint.detector.api.Project project);
     method public abstract com.android.tools.lint.client.api.UastParser getUastParser(com.android.tools.lint.detector.api.Project? project);
+    method public org.w3c.dom.Document? getXmlDocument(java.io.File file, optional CharSequence? contents);
     method public abstract com.android.tools.lint.client.api.XmlParser getXmlParser();
     method protected void initializeProjects(java.util.Collection<? extends com.android.tools.lint.detector.api.Project> knownProjects);
     method public static final boolean isGradle();
@@ -434,22 +478,30 @@ package com.android.tools.lint.client.api {
     method public static final boolean isUnitTest();
     method public void log(Throwable? exception, String? format, java.lang.Object... args);
     method public abstract void log(com.android.tools.lint.detector.api.Severity severity, Throwable? exception, String? format, java.lang.Object... args);
+    method public void mergeState(com.android.tools.lint.detector.api.Project root, com.android.tools.lint.client.api.LintDriver driver);
     method @kotlin.jvm.Throws(exceptionClasses=IOException::class) public java.net.URLConnection? openConnection(java.net.URL url) throws java.io.IOException;
     method @kotlin.jvm.Throws(exceptionClasses=IOException::class) public java.net.URLConnection? openConnection(java.net.URL url, int timeout) throws java.io.IOException;
     method @kotlin.jvm.Throws(exceptionClasses=IOException::class) public byte[] readBytes(java.io.File file) throws java.io.IOException;
     method @kotlin.jvm.Throws(exceptionClasses=IOException::class) public byte[] readBytes(com.android.ide.common.util.PathString resourcePath) throws java.io.IOException;
     method public abstract CharSequence readFile(java.io.File file);
     method public void registerProject(java.io.File dir, com.android.tools.lint.detector.api.Project project);
-    method public abstract void report(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Severity severity, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.TextFormat format, com.android.tools.lint.detector.api.LintFix? fix);
+    method @Deprecated public final void report(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Severity severity, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.TextFormat format, com.android.tools.lint.detector.api.LintFix? fix);
+    method public abstract void report(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident, optional com.android.tools.lint.detector.api.TextFormat format);
+    method public void report(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident, com.android.tools.lint.detector.api.Constraint constraint);
+    method public void report(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident, com.android.tools.lint.detector.api.LintMap map);
     method public void resolveMergeManifestSources(org.w3c.dom.Document mergedManifest, Object reportFile);
     method public void runReadAction(Runnable runnable);
     method public <T> T! runReadAction(com.intellij.openapi.util.Computable<T> computable);
-    method public static final void setClientName(String p);
-    method public boolean supportsProjectResources();
+    method public static final void setClientName(String clientName);
+    method public void storeState(com.android.tools.lint.detector.api.Project project);
+    method public boolean supportsPartialAnalysis();
+    method @Deprecated public final boolean supportsProjectResources();
     property public com.android.tools.lint.client.api.ConfigurationHierarchy configurations;
     property protected final java.util.Map<java.io.File,com.android.tools.lint.detector.api.Project> dirToProject;
     property public final int highestKnownApiLevel;
     property public final java.util.Collection<com.android.tools.lint.detector.api.Project> knownProjects;
+    property public com.android.tools.lint.model.PathVariables pathVariables;
+    property public boolean printInternalErrorStackTrace;
     property protected final java.util.Set<java.io.File> projectDirs;
     property protected final java.util.Map<java.lang.Object,com.android.tools.lint.client.api.BlameFile> reportFileCache;
     property protected final java.util.Map<org.w3c.dom.Node,com.android.utils.Pair<java.io.File,? extends org.w3c.dom.Node>> sourceNodeCache;
@@ -460,6 +512,7 @@ package com.android.tools.lint.client.api {
     field public static final String CLIENT_UNIT_TESTS = "test";
     field public static final String CLIENT_UNKNOWN = "unknown";
     field public static final com.android.tools.lint.client.api.LintClient.Companion Companion;
+    field public static final String MERGED_MANIFEST = "lint-merged-manifest";
     field protected static final com.android.utils.Pair<java.io.File,org.w3c.dom.Node> NOT_FOUND;
     field public static String clientName;
   }
@@ -491,7 +544,7 @@ package com.android.tools.lint.client.api {
     method public void report(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.detector.api.Issue issue, String message, java.io.File file, com.android.tools.lint.detector.api.Project? project);
     method public void report(com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.detector.api.Issue issue, String message, com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Location? location, com.android.tools.lint.detector.api.LintFix? fix);
     method public void resetClientName();
-    method public void setClientName(String p);
+    method public void setClientName(String clientName);
     property public final String clientName;
     property public final boolean isGradle;
     property public final boolean isStudio;
@@ -502,7 +555,9 @@ package com.android.tools.lint.client.api {
     ctor public LintDriver(com.android.tools.lint.client.api.IssueRegistry registry, com.android.tools.lint.client.api.LintClient client, com.android.tools.lint.client.api.LintRequest request);
     method public void addLintListener(com.android.tools.lint.client.api.LintListener listener);
     method public void analyze();
+    method public void analyzeOnly();
     method @com.google.common.annotations.VisibleForTesting public static void clearCrashCount();
+    method public void computeDetectors(com.android.tools.lint.detector.api.Project project);
     method public org.objectweb.asm.tree.ClassNode? findClass(com.android.tools.lint.detector.api.ClassContext context, String type, int flags);
     method public com.android.tools.lint.detector.api.Project? findProjectFor(java.io.File file);
     method public boolean getAllowSuppress();
@@ -523,6 +578,7 @@ package com.android.tools.lint.client.api {
     method public long getInitializeTimeMs();
     method public int getJavaFileCount();
     method public int getKotlinFileCount();
+    method public com.android.tools.lint.client.api.LintDriver.DriverMode getMode();
     method public int getModuleCount();
     method public org.objectweb.asm.tree.ClassNode? getOuterClassNode(org.objectweb.asm.tree.ClassNode classNode);
     method public int getPhase();
@@ -539,10 +595,12 @@ package com.android.tools.lint.client.api {
     method public java.util.EnumSet<com.android.tools.lint.detector.api.Scope> getScope();
     method public String? getSuperClass(String name);
     method public int getTestSourceCount();
-    method public static boolean handleDetectorError(com.android.tools.lint.detector.api.Context? context, com.android.tools.lint.client.api.LintDriver driver, Throwable throwable);
+    method public static void handleDetectorError(com.android.tools.lint.detector.api.Context? context, com.android.tools.lint.client.api.LintDriver driver, Throwable throwable);
     method public boolean hasParserErrors();
     method public boolean isAbbreviating();
     method public static boolean isAnnotatedWithSuppress(com.android.tools.lint.detector.api.JavaContext? context, com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiModifierListOwner? modifierListOwner);
+    method public boolean isGlobalAnalysis();
+    method public boolean isIsolated();
     method public boolean isSubclassOf(org.objectweb.asm.tree.ClassNode classNode, String superClassName);
     method public boolean isSuppressed(com.android.tools.lint.detector.api.Issue? issue, org.objectweb.asm.tree.ClassNode classNode, org.objectweb.asm.tree.MethodNode method, org.objectweb.asm.tree.AbstractInsnNode? instruction);
     method public boolean isSuppressed(com.android.tools.lint.detector.api.Issue? issue, org.objectweb.asm.tree.FieldNode field);
@@ -554,36 +612,39 @@ package com.android.tools.lint.client.api {
     method public boolean isSuppressed(com.android.tools.lint.detector.api.XmlContext? context, com.android.tools.lint.detector.api.Issue issue, org.w3c.dom.Node? node);
     method public static boolean isSuppressed(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UAnnotated annotated);
     method public static boolean isSuppressed(com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiAnnotationMemberValue? value);
+    method public void mergeConditionalIncidents(com.android.tools.lint.detector.api.Context projectContext, java.util.List<com.android.tools.lint.detector.api.Incident> provisional);
+    method public void mergeOnly();
+    method public void processMergedProjects(com.android.tools.lint.detector.api.Context projectContext);
     method public void removeLintListener(com.android.tools.lint.client.api.LintListener listener);
     method public void requestRepeat(com.android.tools.lint.detector.api.Detector detector, java.util.EnumSet<com.android.tools.lint.detector.api.Scope>? scope);
     method public void runLaterOutsideReadAction(Runnable runnable);
-    method public void setAbbreviating(boolean p);
-    method public void setAllowSuppress(boolean p);
-    method public void setAnalysisStartTime(long p);
-    method public void setBaseline(com.android.tools.lint.client.api.LintBaseline? p);
-    method public void setCheckDependencies(boolean p);
-    method public void setCheckGeneratedSources(boolean p);
-    method public void setCheckProjectTimeMs(long p);
-    method public void setCheckTestSources(boolean p);
-    method public void setComputeDetectorsTimeMs(long p);
-    method public void setDisposeProjectsTimeMs(long p);
-    method public void setExtraPhasesTimeMs(long p);
-    method public void setFatalOnlyMode(boolean p);
-    method public void setFileCount(int p);
+    method public void setAbbreviating(boolean isAbbreviating);
+    method public void setAllowSuppress(boolean allowSuppress);
+    method public void setAnalysisStartTime(long analysisStartTime);
+    method public void setBaseline(com.android.tools.lint.client.api.LintBaseline? baseline);
+    method public void setCheckDependencies(boolean checkDependencies);
+    method public void setCheckGeneratedSources(boolean checkGeneratedSources);
+    method public void setCheckProjectTimeMs(long checkProjectTimeMs);
+    method public void setCheckTestSources(boolean checkTestSources);
+    method public void setComputeDetectorsTimeMs(long computeDetectorsTimeMs);
+    method public void setDisposeProjectsTimeMs(long disposeProjectsTimeMs);
+    method public void setExtraPhasesTimeMs(long extraPhasesTimeMs);
+    method public void setFatalOnlyMode(boolean fatalOnlyMode);
+    method public void setFileCount(int fileCount);
     method public void setHasParserErrors(boolean hasErrors);
-    method public void setIgnoreTestSources(boolean p);
-    method public void setInitializeTimeMs(long p);
-    method public void setJavaFileCount(int p);
-    method public void setKotlinFileCount(int p);
-    method public void setModuleCount(int p);
-    method public void setPlatforms(java.util.EnumSet<com.android.tools.lint.detector.api.Platform> p);
-    method public void setRegisterCustomDetectorsTimeMs(long p);
-    method public void setRegistry(com.android.tools.lint.client.api.IssueRegistry p);
-    method public void setReportBaselineIssuesTimeMs(long p);
-    method public void setReportGenerationTimeMs(long p);
-    method public void setResourceFileCount(int p);
-    method public void setScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope> p);
-    method public void setTestSourceCount(int p);
+    method public void setIgnoreTestSources(boolean ignoreTestSources);
+    method public void setInitializeTimeMs(long initializeTimeMs);
+    method public void setJavaFileCount(int javaFileCount);
+    method public void setKotlinFileCount(int kotlinFileCount);
+    method public void setModuleCount(int moduleCount);
+    method public void setPlatforms(java.util.EnumSet<com.android.tools.lint.detector.api.Platform> platforms);
+    method public void setRegisterCustomDetectorsTimeMs(long registerCustomDetectorsTimeMs);
+    method public void setRegistry(com.android.tools.lint.client.api.IssueRegistry registry);
+    method public void setReportBaselineIssuesTimeMs(long reportBaselineIssuesTimeMs);
+    method public void setReportGenerationTimeMs(long reportGenerationTimeMs);
+    method public void setResourceFileCount(int resourceFileCount);
+    method public void setScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope> scope);
+    method public void setTestSourceCount(int testSourceCount);
     property public final boolean allowSuppress;
     property public final long analysisStartTime;
     property public final com.android.tools.lint.client.api.LintBaseline? baseline;
@@ -602,6 +663,7 @@ package com.android.tools.lint.client.api {
     property public final boolean isAbbreviating;
     property public final int javaFileCount;
     property public final int kotlinFileCount;
+    property public final com.android.tools.lint.client.api.LintDriver.DriverMode mode;
     property public final int moduleCount;
     property public final int phase;
     property public final java.util.EnumSet<com.android.tools.lint.detector.api.Platform> platforms;
@@ -616,18 +678,41 @@ package com.android.tools.lint.client.api {
     property public final java.util.EnumSet<com.android.tools.lint.detector.api.Scope> scope;
     property public final int testSourceCount;
     field public static final com.android.tools.lint.client.api.LintDriver.Companion Companion;
+    field public static final String KEY_CONDITION = "_condition_";
+    field public static final String KEY_THROWABLE = "throwable";
     field public static final String STUDIO_ID_PREFIX = "AndroidLint";
   }
 
   public static final class LintDriver.Companion {
-    method public void appendStackTraceSummary(Throwable throwable, StringBuilder sb);
+    method public void appendStackTraceSummary(Throwable throwable, StringBuilder sb, optional int skipFrames, optional int maxFrames);
     method @com.google.common.annotations.VisibleForTesting public void clearCrashCount();
+    method public kotlin.Pair<java.lang.String,java.util.List<com.android.tools.lint.detector.api.Issue>>? getAssociatedDetector(Throwable throwable, com.android.tools.lint.client.api.LintDriver driver);
     method @com.google.common.annotations.VisibleForTesting public int getCrashCount();
-    method public boolean handleDetectorError(com.android.tools.lint.detector.api.Context? context, com.android.tools.lint.client.api.LintDriver driver, Throwable throwable);
+    method public java.util.List<com.android.tools.lint.client.api.LintDriver> getCurrentDrivers();
+    method public java.util.List<com.android.tools.lint.detector.api.Issue> getDetectorIssues(String className, com.android.tools.lint.client.api.LintDriver driver);
+    method public void handleDetectorError(com.android.tools.lint.detector.api.Context? context, com.android.tools.lint.client.api.LintDriver driver, Throwable throwable);
     method public boolean isAnnotatedWithSuppress(com.android.tools.lint.detector.api.JavaContext? context, com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiModifierListOwner? modifierListOwner);
     method public boolean isSuppressed(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UAnnotated annotated);
     method public boolean isSuppressed(com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiAnnotationMemberValue? value);
     property @com.google.common.annotations.VisibleForTesting public final int crashCount;
+    property public final java.util.List<com.android.tools.lint.client.api.LintDriver> currentDrivers;
+  }
+
+  public enum LintDriver.DriverMode {
+    enum_constant public static final com.android.tools.lint.client.api.LintDriver.DriverMode ANALYSIS_ONLY;
+    enum_constant public static final com.android.tools.lint.client.api.LintDriver.DriverMode GLOBAL;
+    enum_constant public static final com.android.tools.lint.client.api.LintDriver.DriverMode MERGE;
+  }
+
+  public final class LintJarVerifier extends org.objectweb.asm.ClassVisitor {
+    ctor public LintJarVerifier();
+    method public String describeFirstIncompatibleReference();
+    method public int getApiCount();
+    method public boolean isCompatible(java.io.File lintJar);
+    property public final int apiCount;
+  }
+
+  public final class LintJarVerifierKt {
   }
 
   @com.google.common.annotations.Beta public interface LintListener {
@@ -635,8 +720,8 @@ package com.android.tools.lint.client.api {
   }
 
   public enum LintListener.EventType {
-    enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType CANCELED;
     enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType COMPLETED;
+    enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType MERGING;
     enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType NEW_PHASE;
     enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType REGISTERED_PROJECT;
     enum_constant public static final com.android.tools.lint.client.api.LintListener.EventType SCANNING_FILE;
@@ -646,7 +731,7 @@ package com.android.tools.lint.client.api {
   }
 
   public class LintOptionsConfiguration extends com.android.tools.lint.client.api.FlagConfiguration {
-    ctor public LintOptionsConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, com.android.tools.lint.model.LintModelLintOptions lintOptions, boolean fatalOnly);
+    ctor public LintOptionsConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, com.android.tools.lint.model.LintModelLintOptions lintOptions, optional boolean fatalOnly);
   }
 
   @com.google.common.annotations.Beta public class LintRequest {
@@ -663,7 +748,7 @@ package com.android.tools.lint.client.api {
     method public final com.android.tools.lint.client.api.LintRequest setProjects(java.util.Collection<? extends com.android.tools.lint.detector.api.Project>? projects);
     method public final com.android.tools.lint.client.api.LintRequest setReleaseMode(Boolean? releaseMode);
     method public final com.android.tools.lint.client.api.LintRequest setScope(java.util.EnumSet<com.android.tools.lint.detector.api.Scope>? scope);
-    method public final void setSrcRoot(java.io.File? p);
+    method public final void setSrcRoot(java.io.File? srcRoot);
     property public final com.android.tools.lint.client.api.LintClient client;
     property public final java.util.List<java.io.File> files;
     property public final java.io.File? srcRoot;
@@ -674,8 +759,9 @@ package com.android.tools.lint.client.api {
   }
 
   @com.google.common.annotations.Beta public class LintXmlConfiguration extends com.android.tools.lint.client.api.Configuration {
-    ctor protected LintXmlConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, java.io.File configFile, java.io.File? dir, boolean fileLevel);
+    ctor protected LintXmlConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, java.io.File configFile, optional java.io.File? dir, optional boolean fileLevel);
     ctor protected LintXmlConfiguration(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, com.android.tools.lint.detector.api.Project project);
+    method public void addConfiguredIssues(java.util.Map<java.lang.String,com.android.tools.lint.detector.api.Severity> targetMap, com.android.tools.lint.client.api.IssueRegistry registry, boolean specificOnly);
     method public static final com.android.tools.lint.client.api.LintXmlConfiguration create(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, java.io.File lintFile);
     method public final Boolean? getAbortOnError();
     method public final Boolean? getApplySuggestions();
@@ -711,12 +797,10 @@ package com.android.tools.lint.client.api {
 
   public static final class LintXmlConfiguration.Companion {
     method public com.android.tools.lint.client.api.LintXmlConfiguration create(com.android.tools.lint.client.api.ConfigurationHierarchy configurations, java.io.File lintFile);
-    method public String getUnknownIssueIdErrorMessage(String id, com.android.tools.lint.client.api.IssueRegistry issueRegistry);
   }
 
   public static final class LintXmlConfiguration.IssueData {
-    ctor public LintXmlConfiguration.IssueData(com.android.tools.lint.detector.api.Severity? severity, java.util.List<java.lang.String>? paths, java.util.List<java.util.regex.Pattern>? patterns, java.util.Map<java.lang.String,java.lang.String>? options);
-    ctor public LintXmlConfiguration.IssueData();
+    ctor public LintXmlConfiguration.IssueData(optional com.android.tools.lint.detector.api.Severity? severity, optional java.util.List<java.lang.String>? paths, optional java.util.List<java.util.regex.Pattern>? patterns, optional java.util.Map<java.lang.String,java.lang.String>? options);
     method public com.android.tools.lint.detector.api.Severity? component1();
     method public java.util.List<java.lang.String>? component2();
     method public java.util.List<java.util.regex.Pattern>? component3();
@@ -727,18 +811,30 @@ package com.android.tools.lint.client.api {
     method public java.util.List<java.util.regex.Pattern>? getPatterns();
     method public com.android.tools.lint.detector.api.Severity? getSeverity();
     method public boolean isEmpty();
-    method public void setOptions(java.util.Map<java.lang.String,java.lang.String>? p);
-    method public void setPaths(java.util.List<java.lang.String>? p);
-    method public void setPatterns(java.util.List<java.util.regex.Pattern>? p);
-    method public void setSeverity(com.android.tools.lint.detector.api.Severity? p);
+    method public operator void plusAssign(com.android.tools.lint.client.api.LintXmlConfiguration.IssueData other);
+    method public void setOptions(java.util.Map<java.lang.String,java.lang.String>? options);
+    method public void setPaths(java.util.List<java.lang.String>? paths);
+    method public void setPatterns(java.util.List<java.util.regex.Pattern>? patterns);
+    method public void setSeverity(com.android.tools.lint.detector.api.Severity? severity);
     property public final java.util.Map<java.lang.String,java.lang.String>? options;
     property public final java.util.List<java.lang.String>? paths;
     property public final java.util.List<java.util.regex.Pattern>? patterns;
     property public final com.android.tools.lint.detector.api.Severity? severity;
   }
 
+  public interface PlatformLookup {
+    method public com.android.sdklib.IAndroidTarget? getLatestSdkTarget(optional int minApi, optional boolean includePreviews, optional boolean includeAddOns);
+    method public com.android.sdklib.IAndroidTarget? getTarget(String buildTargetHash);
+    method public default com.android.sdklib.IAndroidTarget? getTarget(int api);
+    method public java.util.List<com.android.sdklib.IAndroidTarget> getTargets(optional boolean includeAddOns);
+  }
+
+  public final class PlatformLookupKt {
+    field public static final boolean SUPPORTS_ADD_ONS = false;
+  }
+
   public final class ResourceReference {
-    ctor public ResourceReference(org.jetbrains.uast.UExpression node, String p, com.android.resources.ResourceType type, String name, boolean heuristic);
+    ctor public ResourceReference(org.jetbrains.uast.UExpression node, String package, com.android.resources.ResourceType type, String name, optional boolean heuristic);
     method public static com.android.tools.lint.client.api.ResourceReference? get(org.jetbrains.uast.UElement element);
     method public boolean getHeuristic();
     method public String getName();
@@ -755,6 +851,15 @@ package com.android.tools.lint.client.api {
 
   public static final class ResourceReference.Companion {
     method public com.android.tools.lint.client.api.ResourceReference? get(org.jetbrains.uast.UElement element);
+  }
+
+  public enum ResourceRepositoryScope {
+    method public final boolean includesDependencies();
+    method public final boolean includesLibraries();
+    enum_constant public static final com.android.tools.lint.client.api.ResourceRepositoryScope ALL_DEPENDENCIES;
+    enum_constant public static final com.android.tools.lint.client.api.ResourceRepositoryScope ANDROID;
+    enum_constant public static final com.android.tools.lint.client.api.ResourceRepositoryScope LOCAL_DEPENDENCIES;
+    enum_constant public static final com.android.tools.lint.client.api.ResourceRepositoryScope PROJECT_ONLY;
   }
 
   @com.google.common.annotations.Beta public abstract class SdkInfo {
@@ -851,18 +956,49 @@ package com.android.tools.lint.client.api {
     property public abstract com.android.tools.lint.client.api.JavaEvaluator evaluator;
   }
 
+  public final class Vendor {
+    ctor public Vendor(optional String? vendorName, optional String? identifier, optional String? feedbackUrl, optional String? contact);
+    ctor public Vendor(optional String? vendorName, optional String? identifier, optional String? feedbackUrl);
+    ctor public Vendor(optional String? vendorName, optional String? identifier);
+    ctor public Vendor(optional String? vendorName);
+    method public String? component1();
+    method public String? component2();
+    method public String? component3();
+    method public String? component4();
+    method public com.android.tools.lint.client.api.Vendor copy(String? vendorName, String? identifier, String? feedbackUrl, String? contact);
+    method public String describe(com.android.tools.lint.detector.api.TextFormat format);
+    method public void describeInto(StringBuilder stringBuilder, com.android.tools.lint.detector.api.TextFormat format, optional String indent);
+    method public String? getContact();
+    method public String? getFeedbackUrl();
+    method public String? getIdentifier();
+    method public String? getVendorName();
+    property public final String? contact;
+    property public final String? feedbackUrl;
+    property public final String? identifier;
+    property public final String? vendorName;
+  }
+
   @com.google.common.annotations.Beta public abstract class XmlParser {
     ctor public XmlParser();
     method public abstract com.android.tools.lint.detector.api.Location.Handle createLocationHandle(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node);
     method public abstract org.w3c.dom.Node? findNodeAt(com.android.tools.lint.detector.api.XmlContext context, int offset);
     method public final com.android.tools.lint.detector.api.Location getElementLocation(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Element element, optional org.w3c.dom.Node? node, optional String? namespace, optional String? attribute);
+    method public final java.io.File? getFile(com.android.ide.common.resources.ResourceItem);
     method public abstract com.android.tools.lint.detector.api.Location getLocation(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node);
     method public abstract com.android.tools.lint.detector.api.Location getLocation(java.io.File file, org.w3c.dom.Node node);
     method public abstract com.android.tools.lint.detector.api.Location getLocation(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node, int start, int end);
+    method public abstract com.android.tools.lint.detector.api.Location getLocation(com.android.tools.lint.client.api.LintClient client, java.io.File file, org.w3c.dom.Node node);
+    method public final com.android.tools.lint.detector.api.Location? getLocation(com.android.tools.lint.client.api.LintClient client, com.android.ide.common.resources.ResourceItem item);
     method public abstract com.android.tools.lint.detector.api.Location getNameLocation(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node);
+    method public abstract com.android.tools.lint.detector.api.Location getNameLocation(com.android.tools.lint.client.api.LintClient client, java.io.File file, org.w3c.dom.Node node);
+    method public final com.android.tools.lint.detector.api.Location? getNameLocation(com.android.tools.lint.client.api.LintClient client, com.android.ide.common.resources.ResourceItem item);
     method public abstract int getNodeEndOffset(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node);
+    method public abstract int getNodeEndOffset(com.android.tools.lint.client.api.LintClient client, java.io.File file, org.w3c.dom.Node node);
     method public abstract int getNodeStartOffset(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Node node);
+    method public abstract int getNodeStartOffset(com.android.tools.lint.client.api.LintClient client, java.io.File file, org.w3c.dom.Node node);
     method public abstract com.android.tools.lint.detector.api.Location getValueLocation(com.android.tools.lint.detector.api.XmlContext context, org.w3c.dom.Attr node);
+    method public abstract com.android.tools.lint.detector.api.Location getValueLocation(com.android.tools.lint.client.api.LintClient client, java.io.File file, org.w3c.dom.Attr node);
+    method public final com.android.tools.lint.detector.api.Location? getValueLocation(com.android.tools.lint.client.api.LintClient client, com.android.ide.common.resources.ResourceItem item);
     method @kotlin.jvm.Throws(exceptionClasses={IOException::class, SAXException::class, ParserConfigurationException::class}) public abstract org.w3c.dom.Document? parseXml(java.io.File file) throws java.io.IOException, javax.xml.parsers.ParserConfigurationException, org.xml.sax.SAXException;
     method public abstract org.w3c.dom.Document? parseXml(CharSequence xml, java.io.File file);
     method public abstract org.w3c.dom.Document? parseXml(com.android.tools.lint.detector.api.XmlContext context);
@@ -871,6 +1007,14 @@ package com.android.tools.lint.client.api {
 }
 
 package com.android.tools.lint.detector.api {
+
+  public final class AllOfConstraint extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public com.android.tools.lint.detector.api.Constraint getLeft();
+    method public com.android.tools.lint.detector.api.Constraint getRight();
+    property public final com.android.tools.lint.detector.api.Constraint left;
+    property public final com.android.tools.lint.detector.api.Constraint right;
+  }
 
   public enum AnnotationUsageType {
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType ANNOTATION_REFERENCE;
@@ -884,13 +1028,36 @@ package com.android.tools.lint.detector.api {
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType METHOD_CALL_CLASS;
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType METHOD_CALL_PACKAGE;
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType METHOD_CALL_PARAMETER;
+    enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType METHOD_REFERENCE;
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType METHOD_RETURN;
     enum_constant public static final com.android.tools.lint.detector.api.AnnotationUsageType VARIABLE_REFERENCE;
   }
 
+  public final class AnyOfConstraint extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public com.android.tools.lint.detector.api.Constraint getLeft();
+    method public com.android.tools.lint.detector.api.Constraint getRight();
+    property public final com.android.tools.lint.detector.api.Constraint left;
+    property public final com.android.tools.lint.detector.api.Constraint right;
+  }
+
   public final class ApiKt {
     method public static String describeApi(int api);
-    field public static final int CURRENT_API = 8; // 0x8
+    field public static final int CURRENT_API = 10; // 0xa
+  }
+
+  public final class ApplicableVariants {
+    ctor public ApplicableVariants(java.util.Set<java.lang.String> applicableVariants);
+    method public void addVariant(String variantName);
+    method public java.util.List<java.lang.String> getExcludedVariantNames();
+    method public java.util.List<java.lang.String> getIncludedVariantNames();
+    method public boolean getVariantSpecific();
+    method public java.util.Set<java.lang.String> getVariants();
+    method public boolean includesMoreThanExcludes();
+    property public final java.util.List<java.lang.String> excludedVariantNames;
+    property public final java.util.List<java.lang.String> includedVariantNames;
+    property public final boolean variantSpecific;
+    property public final java.util.Set<java.lang.String> variants;
   }
 
   public interface BinaryResourceScanner extends com.android.tools.lint.detector.api.FileScanner {
@@ -903,16 +1070,19 @@ package com.android.tools.lint.detector.api {
     method public int compareTo(com.android.tools.lint.detector.api.Category other);
     method public com.android.tools.lint.detector.api.Category? component1();
     method public String component2();
-    method @com.google.common.annotations.Beta public com.android.tools.lint.detector.api.Category copy(com.android.tools.lint.detector.api.Category? parent, String name, int priority);
+    method public int component3();
+    method public com.android.tools.lint.detector.api.Category copy(com.android.tools.lint.detector.api.Category? parent, String name, int priority);
     method public static com.android.tools.lint.detector.api.Category create(String name, int priority);
     method public static com.android.tools.lint.detector.api.Category create(com.android.tools.lint.detector.api.Category? parent, String name, int priority);
     method public static com.android.tools.lint.detector.api.Category? getCategory(String name);
     method public String getFullName();
     method public String getName();
     method public com.android.tools.lint.detector.api.Category? getParent();
+    method public int getPriority();
     property public final String fullName;
     property public final String name;
     property public final com.android.tools.lint.detector.api.Category? parent;
+    property public final int priority;
     field public static final com.android.tools.lint.detector.api.Category A11Y;
     field public static final com.android.tools.lint.detector.api.Category APP_SIZE;
     field public static final com.android.tools.lint.detector.api.Category CHROME_OS;
@@ -965,8 +1135,6 @@ package com.android.tools.lint.detector.api {
     method public boolean isFromClassLibrary();
     method public void report(com.android.tools.lint.detector.api.Issue issue, org.objectweb.asm.tree.MethodNode? method, org.objectweb.asm.tree.AbstractInsnNode? instruction, com.android.tools.lint.detector.api.Location location, String message);
     method public void report(com.android.tools.lint.detector.api.Issue issue, org.objectweb.asm.tree.FieldNode? field, com.android.tools.lint.detector.api.Location location, String message);
-    method @Deprecated public void report(com.android.tools.lint.detector.api.Issue issue, org.objectweb.asm.tree.MethodNode? method, org.objectweb.asm.tree.AbstractInsnNode? instruction, com.android.tools.lint.detector.api.Location location, String message, Object? data);
-    method @Deprecated public void report(com.android.tools.lint.detector.api.Issue issue, org.objectweb.asm.tree.FieldNode? field, com.android.tools.lint.detector.api.Location location, String message, Object? data);
     property public final byte[] bytecode;
     property public final org.objectweb.asm.tree.ClassNode classNode;
     property public final boolean isFromClassLibrary;
@@ -1024,27 +1192,48 @@ package com.android.tools.lint.detector.api {
     field public static final Object! LAST_ASSIGNMENT_VALUE_UNKNOWN;
   }
 
+  public abstract sealed class Constraint {
+    method public abstract boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public final infix com.android.tools.lint.detector.api.Constraint and(com.android.tools.lint.detector.api.Constraint other);
+    method public final infix com.android.tools.lint.detector.api.Constraint or(com.android.tools.lint.detector.api.Constraint other);
+  }
+
+  public final class Constraints {
+    method public static com.android.tools.lint.detector.api.Constraint isAndroidProject();
+    method public static com.android.tools.lint.detector.api.Constraint isLibraryProject();
+    method public static com.android.tools.lint.detector.api.Constraint minSdkAtLeast(int minSdkVersion);
+    method public static com.android.tools.lint.detector.api.Constraint minSdkLessThan(int minSdkVersion);
+    method public static com.android.tools.lint.detector.api.Constraint notAndroidProject();
+    method public static com.android.tools.lint.detector.api.Constraint notLibraryProject();
+    method public static com.android.tools.lint.detector.api.Constraint targetSdkAtLeast(int minSdkVersion);
+    method public static com.android.tools.lint.detector.api.Constraint targetSdkLessThan(int minSdkVersion);
+  }
+
   @com.google.common.annotations.Beta public class Context {
-    ctor public Context(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, CharSequence? contents);
+    ctor public Context(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, optional CharSequence? contents);
     method public final boolean containsCommentSuppress();
-    method protected final void doReport(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final com.android.tools.lint.client.api.Configuration findConfiguration(java.io.File file);
     method public final com.android.tools.lint.client.api.LintClient getClient();
     method public final com.android.tools.lint.client.api.Configuration getConfiguration();
     method public CharSequence? getContents();
     method public final com.android.tools.lint.client.api.LintDriver getDriver();
+    method public final com.android.tools.lint.detector.api.Location getLocation(Object? node, optional com.android.tools.lint.detector.api.LocationType type);
     method public final com.android.tools.lint.detector.api.Project getMainProject();
+    method public final com.android.tools.lint.detector.api.PartialResult getPartialResults(com.android.tools.lint.detector.api.Issue issue);
     method public final int getPhase();
     method public final com.android.tools.lint.detector.api.Project getProject();
     method public final java.util.EnumSet<com.android.tools.lint.detector.api.Scope> getScope();
     method public final com.android.tools.lint.client.api.SdkInfo getSdkInfo();
     method protected String? getSuppressCommentPrefix();
     method public final boolean isEnabled(com.android.tools.lint.detector.api.Issue issue);
+    method public final boolean isGlobalAnalysis();
     method public final boolean isSuppressedWithComment(int startOffset, com.android.tools.lint.detector.api.Issue issue);
     method public final void log(Throwable? exception, String? format, java.lang.Object... args);
     method public void report(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message, optional com.android.tools.lint.detector.api.LintFix? quickfixData);
-    method public final void report(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message);
-    method @Deprecated public final void report(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message, Object? quickfixData);
+    method public void report(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message);
+    method public final void report(com.android.tools.lint.detector.api.Incident incident);
+    method public final void report(com.android.tools.lint.detector.api.Incident incident, com.android.tools.lint.detector.api.Constraint constraint);
+    method public final void report(com.android.tools.lint.detector.api.Incident incident, com.android.tools.lint.detector.api.LintMap map);
     method public final void requestRepeat(com.android.tools.lint.detector.api.Detector detector, java.util.EnumSet<com.android.tools.lint.detector.api.Scope>? scope);
     property public final com.android.tools.lint.client.api.LintClient client;
     property public final com.android.tools.lint.client.api.Configuration configuration;
@@ -1060,6 +1249,7 @@ package com.android.tools.lint.detector.api {
   }
 
   public static final class Context.Companion {
+    method public boolean checkForbidden(String methodName, java.io.File file, com.android.tools.lint.client.api.LintDriver? driver);
     method @com.google.common.annotations.VisibleForTesting public boolean isSuppressedWithComment(String line, com.android.tools.lint.detector.api.Issue issue);
   }
 
@@ -1068,7 +1258,7 @@ package com.android.tools.lint.detector.api {
     method public int component1();
     method public int component2();
     method public int component3();
-    method @com.google.common.annotations.Beta public com.android.tools.lint.detector.api.DefaultPosition copy(int line, int column, int offset);
+    method public com.android.tools.lint.detector.api.DefaultPosition copy(int line, int column, int offset);
     method public int getColumn();
     method public int getLine();
     method public int getOffset();
@@ -1078,6 +1268,8 @@ package com.android.tools.lint.detector.api {
   }
 
   public enum Desugaring {
+    method public final int getConstant();
+    property public final int constant;
     enum_constant public static final com.android.tools.lint.detector.api.Desugaring INTERFACE_METHODS;
     enum_constant public static final com.android.tools.lint.detector.api.Desugaring JAVA_8_LIBRARY;
     enum_constant public static final com.android.tools.lint.detector.api.Desugaring LAMBDAS;
@@ -1093,6 +1285,18 @@ package com.android.tools.lint.detector.api {
   }
 
   public static final class Desugaring.Companion {
+    method public com.android.tools.lint.detector.api.Desugaring fromConstant(int constant);
+  }
+
+  public final class DesugaringKt {
+    field public static final int DESUGARING_INTERFACE_METHODS = 4; // 0x4
+    field public static final int DESUGARING_JAVA_8_LIBRARY = 8; // 0x8
+    field public static final int DESUGARING_LAMBDAS = 1; // 0x1
+    field public static final int DESUGARING_LONG_COMPARE = 7; // 0x7
+    field public static final int DESUGARING_METHOD_REFERENCES = 2; // 0x2
+    field public static final int DESUGARING_OBJECTS_REQUIRE_NON_NULL = 6; // 0x6
+    field public static final int DESUGARING_TRY_WITH_RESOURCES = 5; // 0x5
+    field public static final int DESUGARING_TYPE_ANNOTATIONS = 3; // 0x3
   }
 
   @com.google.common.annotations.Beta public abstract class Detector {
@@ -1117,14 +1321,17 @@ package com.android.tools.lint.detector.api {
     method public void checkCall(com.android.tools.lint.detector.api.ClassContext context, org.objectweb.asm.tree.ClassNode classNode, org.objectweb.asm.tree.MethodNode method, org.objectweb.asm.tree.MethodInsnNode call);
     method public void checkClass(com.android.tools.lint.detector.api.ClassContext context, org.objectweb.asm.tree.ClassNode classNode);
     method public void checkClass(com.android.tools.lint.detector.api.JavaContext context, com.intellij.psi.PsiClass declaration);
-    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String? parent, String? parentParent, Object valueCookie, Object statementCookie);
-    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String? parent, String? parentParent, Object propertyCookie, Object valueCookie, Object statementCookie);
+    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String parent, String? parentParent, Object valueCookie, Object statementCookie);
+    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String parent, String? parentParent, Object propertyCookie, Object valueCookie, Object statementCookie);
     method public void checkFolder(com.android.tools.lint.detector.api.ResourceContext context, String folderName);
     method public void checkInstruction(com.android.tools.lint.detector.api.ClassContext context, org.objectweb.asm.tree.ClassNode classNode, org.objectweb.asm.tree.MethodNode method, org.objectweb.asm.tree.AbstractInsnNode instruction);
+    method public void checkMergedProject(com.android.tools.lint.detector.api.Context context);
     method public void checkMethodCall(com.android.tools.lint.detector.api.GradleContext context, String statement, String? parent, java.util.Map<java.lang.String,java.lang.String> namedArguments, java.util.List<java.lang.String> unnamedArguments, Object cookie);
     method public void checkMethodCall(com.android.tools.lint.detector.api.GradleContext context, String statement, String? parent, String? parentParent, java.util.Map<java.lang.String,java.lang.String> namedArguments, java.util.List<java.lang.String> unnamedArguments, Object cookie);
+    method public void checkPartialResults(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.PartialResult partialResults);
     method public com.intellij.psi.JavaElementVisitor? createPsiVisitor(com.android.tools.lint.detector.api.JavaContext context);
     method public com.android.tools.lint.client.api.UElementHandler? createUastHandler(com.android.tools.lint.detector.api.JavaContext context);
+    method public boolean filterIncident(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident, com.android.tools.lint.detector.api.LintMap map);
     method protected com.android.tools.lint.detector.api.LintFix.Builder fix();
     method public int[]? getApplicableAsmNodeTypes();
     method public java.util.Collection<java.lang.String>? getApplicableAttributes();
@@ -1142,6 +1349,7 @@ package com.android.tools.lint.detector.api {
     method public boolean inheritAnnotation(String annotation);
     method public boolean isApplicableAnnotationUsage(com.android.tools.lint.detector.api.AnnotationUsageType type);
     method public boolean isCallGraphRequired();
+    method protected final com.android.tools.lint.detector.api.LintMap map();
     method public void run(com.android.tools.lint.detector.api.Context context);
     method public void visitAnnotationUsage(com.android.tools.lint.detector.api.JavaContext context, org.jetbrains.uast.UElement usage, com.android.tools.lint.detector.api.AnnotationUsageType type, org.jetbrains.uast.UAnnotation annotation, String qualifiedName, com.intellij.psi.PsiMethod? method, java.util.List<? extends org.jetbrains.uast.UAnnotation> annotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allMemberAnnotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allClassAnnotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allPackageAnnotations);
     method public void visitAnnotationUsage(com.android.tools.lint.detector.api.JavaContext context, org.jetbrains.uast.UElement usage, com.android.tools.lint.detector.api.AnnotationUsageType type, org.jetbrains.uast.UAnnotation annotation, String qualifiedName, com.intellij.psi.PsiMethod? method, com.intellij.psi.PsiElement? referenced, java.util.List<? extends org.jetbrains.uast.UAnnotation> annotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allMemberAnnotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allClassAnnotations, java.util.List<? extends org.jetbrains.uast.UAnnotation> allPackageAnnotations);
@@ -1214,8 +1422,8 @@ package com.android.tools.lint.detector.api {
   }
 
   public interface GradleScanner extends com.android.tools.lint.detector.api.FileScanner {
-    method @Deprecated public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String? parent, String? parentParent, Object valueCookie, Object statementCookie);
-    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String? parent, String? parentParent, Object propertyCookie, Object valueCookie, Object statementCookie);
+    method @Deprecated public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String parent, String? parentParent, Object valueCookie, Object statementCookie);
+    method public void checkDslPropertyAssignment(com.android.tools.lint.detector.api.GradleContext context, String property, String value, String parent, String? parentParent, Object propertyCookie, Object valueCookie, Object statementCookie);
     method @Deprecated public void checkMethodCall(com.android.tools.lint.detector.api.GradleContext context, String statement, String? parent, java.util.Map<java.lang.String,java.lang.String> namedArguments, java.util.List<java.lang.String> unnamedArguments, Object cookie);
     method public void checkMethodCall(com.android.tools.lint.detector.api.GradleContext context, String statement, String? parent, String? parentParent, java.util.Map<java.lang.String,java.lang.String> namedArguments, java.util.List<java.lang.String> unnamedArguments, Object cookie);
     method public boolean getCustomVisitor();
@@ -1232,10 +1440,85 @@ package com.android.tools.lint.detector.api {
     method public boolean isAdequate(java.util.EnumSet<com.android.tools.lint.detector.api.Scope!>);
   }
 
+  public final class Incident implements java.lang.Comparable<com.android.tools.lint.detector.api.Incident> {
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, String message, com.android.tools.lint.detector.api.Location location, optional Object? scope, optional com.android.tools.lint.detector.api.LintFix? fix);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, String message, com.android.tools.lint.detector.api.Location location);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, String message, com.android.tools.lint.detector.api.Location location, com.android.tools.lint.detector.api.LintFix? fix);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? fix);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, Object scope, com.android.tools.lint.detector.api.Location location, String message);
+    ctor public Incident(com.android.tools.lint.detector.api.Issue issue, Object scope, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? fix);
+    ctor public Incident();
+    method public com.android.tools.lint.detector.api.Incident at(Object scope);
+    method public int compareTo(com.android.tools.lint.detector.api.Incident other);
+    method public com.android.tools.lint.detector.api.Incident fix(com.android.tools.lint.detector.api.LintFix? fix);
+    method public com.android.tools.lint.detector.api.ApplicableVariants? getApplicableVariants();
+    method public com.android.tools.lint.detector.api.LintMap? getClientProperties();
+    method public String getDisplayPath();
+    method public int getEndOffset();
+    method public java.io.File getFile();
+    method public com.android.tools.lint.detector.api.LintFix? getFix();
+    method public com.android.tools.lint.detector.api.Issue getIssue();
+    method public int getLine();
+    method public com.android.tools.lint.detector.api.Location getLocation();
+    method public String getMessage();
+    method public com.android.tools.lint.detector.api.Project? getProject();
+    method public Object? getScope();
+    method public com.android.tools.lint.detector.api.Severity getSeverity();
+    method public int getStartOffset();
+    method public boolean getWasAutoFixed();
+    method public com.android.tools.lint.detector.api.Incident issue(com.android.tools.lint.detector.api.Issue issue);
+    method public com.android.tools.lint.detector.api.Incident location(com.android.tools.lint.detector.api.Location location);
+    method public com.android.tools.lint.detector.api.Incident message(String message);
+    method public com.android.tools.lint.detector.api.Incident overrideSeverity(com.android.tools.lint.detector.api.Severity severity);
+    method public com.android.tools.lint.detector.api.Incident project(com.android.tools.lint.detector.api.Project? project);
+    method public void report(com.android.tools.lint.detector.api.Context context);
+    method public void report();
+    method public com.android.tools.lint.detector.api.Incident scope(Object? scope);
+    method public void setApplicableVariants(com.android.tools.lint.detector.api.ApplicableVariants? applicableVariants);
+    method public void setClientProperties(com.android.tools.lint.detector.api.LintMap? clientProperties);
+    method public void setFix(com.android.tools.lint.detector.api.LintFix? fix);
+    method public void setIssue(com.android.tools.lint.detector.api.Issue issue);
+    method public void setLocation(com.android.tools.lint.detector.api.Location location);
+    method public void setMessage(String message);
+    method public void setProject(com.android.tools.lint.detector.api.Project? project);
+    method public void setScope(Object? scope);
+    method public void setSeverity(com.android.tools.lint.detector.api.Severity severity);
+    method public void setWasAutoFixed(boolean wasAutoFixed);
+    property public final com.android.tools.lint.detector.api.ApplicableVariants? applicableVariants;
+    property public final com.android.tools.lint.detector.api.LintMap? clientProperties;
+    property public final int endOffset;
+    property public final java.io.File file;
+    property public final com.android.tools.lint.detector.api.LintFix? fix;
+    property public final com.android.tools.lint.detector.api.Issue issue;
+    property public final int line;
+    property public final com.android.tools.lint.detector.api.Location location;
+    property public final String message;
+    property public final com.android.tools.lint.detector.api.Project? project;
+    property public final Object? scope;
+    property public final com.android.tools.lint.detector.api.Severity severity;
+    property public final int startOffset;
+    property public final boolean wasAutoFixed;
+  }
+
+  public final class IncidentKt {
+    method public static com.android.tools.lint.detector.api.Incident Incident(com.android.tools.lint.detector.api.Context context);
+    method public static com.android.tools.lint.detector.api.Incident Incident(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Issue issue);
+  }
+
+  public final class IsAndroidProject extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+  }
+
+  public final class IsLibraryProject extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+  }
+
   @com.google.common.annotations.Beta public final class Issue implements java.lang.Comparable<com.android.tools.lint.detector.api.Issue> {
     method public com.android.tools.lint.detector.api.Issue addMoreInfo(String moreInfoUrl);
     method public int compareTo(com.android.tools.lint.detector.api.Issue other);
     method public static com.android.tools.lint.detector.api.Issue create(String id, String briefDescription, String explanation, com.android.tools.lint.detector.api.Category category, int priority, com.android.tools.lint.detector.api.Severity severity, com.android.tools.lint.detector.api.Implementation implementation);
+    method public java.util.List<java.lang.String>? getAliases();
     method public String getBriefDescription(com.android.tools.lint.detector.api.TextFormat format);
     method public com.android.tools.lint.detector.api.Category getCategory();
     method public com.android.tools.lint.detector.api.Severity getDefaultSeverity();
@@ -1245,12 +1528,17 @@ package com.android.tools.lint.detector.api {
     method public java.util.List<java.lang.String> getMoreInfo();
     method public java.util.EnumSet<com.android.tools.lint.detector.api.Platform> getPlatforms();
     method public int getPriority();
+    method public com.android.tools.lint.client.api.IssueRegistry? getRegistry();
     method public java.util.Collection<java.lang.String>? getSuppressNames();
+    method public com.android.tools.lint.client.api.Vendor? getVendor();
     method public boolean isAndroidSpecific();
     method public boolean isEnabledByDefault();
+    method public com.android.tools.lint.detector.api.Issue setAliases(java.util.List<java.lang.String>? aliases);
     method public com.android.tools.lint.detector.api.Issue setAndroidSpecific(boolean value);
     method public com.android.tools.lint.detector.api.Issue setEnabledByDefault(boolean enabledByDefault);
-    method public void setImplementation(com.android.tools.lint.detector.api.Implementation p);
+    method public void setImplementation(com.android.tools.lint.detector.api.Implementation implementation);
+    method public void setRegistry(com.android.tools.lint.client.api.IssueRegistry? registry);
+    method public void setVendor(com.android.tools.lint.client.api.Vendor? vendor);
     property public final com.android.tools.lint.detector.api.Category category;
     property public final com.android.tools.lint.detector.api.Severity defaultSeverity;
     property public final String id;
@@ -1258,7 +1546,9 @@ package com.android.tools.lint.detector.api {
     property public final java.util.List<java.lang.String> moreInfo;
     property public final java.util.EnumSet<com.android.tools.lint.detector.api.Platform> platforms;
     property public final int priority;
+    property public final com.android.tools.lint.client.api.IssueRegistry? registry;
     property public final java.util.Collection<java.lang.String>? suppressNames;
+    property public final com.android.tools.lint.client.api.Vendor? vendor;
     field public static final com.android.tools.lint.detector.api.Issue.Companion Companion;
   }
 
@@ -1299,21 +1589,19 @@ package com.android.tools.lint.detector.api {
     method public final boolean isTestSource();
     method public final void report(com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiElement? scope, com.android.tools.lint.detector.api.Location location, String message, optional com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiElement? scope, com.android.tools.lint.detector.api.Location location, String message);
-    method @Deprecated public final void report(com.android.tools.lint.detector.api.Issue issue, com.intellij.psi.PsiElement? scope, com.android.tools.lint.detector.api.Location location, String message, Object? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UElement? scope, com.android.tools.lint.detector.api.Location location, String message, optional com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UElement? scope, com.android.tools.lint.detector.api.Location location, String message);
-    method @Deprecated public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UElement? scope, com.android.tools.lint.detector.api.Location location, String message, Object? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UClass? scopeClass, com.android.tools.lint.detector.api.Location location, String message);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UClass? scopeClass, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UMethod? scopeClass, com.android.tools.lint.detector.api.Location location, String message);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UMethod? scopeClass, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UField? scopeClass, com.android.tools.lint.detector.api.Location location, String message);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.jetbrains.uast.UField? scopeClass, com.android.tools.lint.detector.api.Location location, String message, com.android.tools.lint.detector.api.LintFix? quickfixData);
-    method public final void setGeneratedSource(boolean p);
+    method public final void setGeneratedSource(boolean isGeneratedSource);
     method public final void setJavaFile(com.intellij.psi.PsiFile? javaFile);
-    method public final void setTestSource(boolean p);
-    method public final void setUastFile(org.jetbrains.uast.UFile? p);
-    method public final void setUastParser(com.android.tools.lint.client.api.UastParser p);
+    method public final void setTestSource(boolean isTestSource);
+    method public final void setUastFile(org.jetbrains.uast.UFile? uastFile);
+    method public final void setUastParser(com.android.tools.lint.client.api.UastParser uastParser);
     property public final com.android.tools.lint.client.api.JavaEvaluator evaluator;
     property public final boolean isGeneratedSource;
     property public final boolean isTestSource;
@@ -1376,10 +1664,11 @@ package com.android.tools.lint.detector.api {
     method public static org.objectweb.asm.tree.AbstractInsnNode? getPrevInstruction(org.objectweb.asm.tree.AbstractInsnNode node);
     method public static int getPrevOpcode(org.objectweb.asm.tree.AbstractInsnNode node);
     method public static String? getPrimitiveType(String autoBoxedType);
-    method public static java.util.List<com.android.ide.common.rendering.api.ResourceValue>? getStyleAttributes(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.LintClient client, String styleUrl, String namespaceUri, String attribute);
+    method public static java.util.List<com.android.ide.common.rendering.api.ResourceValue>? getStyleAttributes(com.android.tools.lint.detector.api.Project project, com.android.tools.lint.client.api.LintClient client, String styleUrl, String namespaceUri, String attribute, optional boolean acceptMissing);
     method public static org.jetbrains.uast.UMethod? getUMethod(com.intellij.psi.PsiMethod);
     method public static com.android.tools.lint.detector.api.Location guessGradleLocation(com.android.tools.lint.detector.api.Project project);
     method public static com.android.tools.lint.detector.api.Location guessGradleLocation(com.android.tools.lint.client.api.LintClient client, java.io.File projectDir, String? string);
+    method public static com.android.tools.lint.detector.api.Location guessGradleLocationForFile(com.android.tools.lint.client.api.LintClient client, java.io.File gradle, String? string);
     method public static boolean idReferencesMatch(String? id1, String? id2);
     method public static boolean isAnonymousClass(org.objectweb.asm.tree.ClassNode classNode);
     method public static boolean isDataBindingExpression(String expression);
@@ -1409,6 +1698,7 @@ package com.android.tools.lint.detector.api {
     method public static boolean isString(com.intellij.psi.PsiType type);
     method public static boolean isTrueLiteral(com.intellij.psi.PsiElement? element);
     method public static boolean isXmlFile(java.io.File file);
+    method public static org.w3c.dom.Element? matchXmlElement(org.w3c.dom.Element element, org.w3c.dom.Document targetDocument);
     method public static com.intellij.psi.PsiElement? nextNonWhitespace(com.intellij.psi.PsiElement? element);
     method public static com.intellij.psi.PsiElement? prevNonWhitespace(com.intellij.psi.PsiElement? element);
     method public static byte[]? readUrlData(com.android.tools.lint.client.api.LintClient client, String query, int timeout);
@@ -1424,70 +1714,143 @@ package com.android.tools.lint.detector.api {
   }
 
   public class LintFix {
-    ctor protected LintFix(String?);
-    ctor protected LintFix(String?, String?);
-    method public com.android.tools.lint.detector.api.LintFix! autoFix(boolean, boolean);
-    method public com.android.tools.lint.detector.api.LintFix! autoFix();
-    method public static com.android.tools.lint.detector.api.LintFix.Builder create();
-    method public static <T> T? getData(com.android.tools.lint.detector.api.LintFix?, Class<T!>);
-    method @org.jetbrains.annotations.Nls public String? getDisplayName();
-    method public String? getFamilyName();
+    ctor protected LintFix(optional String? displayName, optional String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix autoFix(boolean robot, boolean independent);
+    method public final com.android.tools.lint.detector.api.LintFix autoFix();
+    method public static final com.android.tools.lint.detector.api.LintFix.Builder create();
+    method public static final boolean getBoolean(com.android.tools.lint.detector.api.LintFix? fix, String key, boolean defaultValue);
+    method public String? getDisplayName();
+    method public final String? getFamilyName();
+    method public static final int getInt(com.android.tools.lint.detector.api.LintFix? fix, String key, int defaultValue);
+    method public static final com.intellij.psi.PsiMethod? getMethod(com.android.tools.lint.detector.api.LintFix? fix, String key);
+    method public static final String? getString(com.android.tools.lint.detector.api.LintFix? fix, String key, String? defaultValue);
+    method public static final java.util.List<java.lang.String>? getStringList(com.android.tools.lint.detector.api.LintFix? fix, String key);
+    method public static final Throwable? getThrowable(com.android.tools.lint.detector.api.LintFix? fix, String key);
+    field public static final com.android.tools.lint.detector.api.LintFix.Companion Companion;
     field public static final String TODO = "TODO";
-    field @org.jetbrains.annotations.Nls protected final String? displayName;
-    field @org.jetbrains.annotations.Nls protected final String? familyName;
     field public boolean independent;
     field public boolean robot;
   }
 
-  public static class LintFix.Builder {
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! alternatives();
-    method public com.android.tools.lint.detector.api.LintFix! alternatives(com.android.tools.lint.detector.api.LintFix!...);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! composite();
-    method public com.android.tools.lint.detector.api.LintFix! composite(com.android.tools.lint.detector.api.LintFix!...);
-    method public com.android.tools.lint.detector.api.LintFix data(java.lang.Object!...);
-    method public com.android.tools.lint.detector.api.LintFix.Builder! family(String!);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! group();
-    method public com.android.tools.lint.detector.api.LintFix! group(com.android.tools.lint.detector.api.LintFix!...);
-    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder! map();
-    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder map(java.lang.Object!...);
-    method public com.android.tools.lint.detector.api.LintFix.Builder! name(String);
-    method public com.android.tools.lint.detector.api.LintFix.Builder! name(String, String);
-    method public com.android.tools.lint.detector.api.LintFix.Builder! name(String, boolean);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! replace();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! set();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! set(String?, String, String?);
-    method public com.android.tools.lint.detector.api.LintFix.Builder! sharedName(String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! unset();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! unset(String?, String);
-    field @org.jetbrains.annotations.Nls protected String! displayName;
-    field @org.jetbrains.annotations.Nls protected String? familyName;
-  }
-
-  public static class LintFix.DataMap extends com.android.tools.lint.detector.api.LintFix implements java.lang.Iterable {
-    method public <T> T? get(Class<T!>);
-    method public Object? get(String);
-    method public java.util.Iterator iterator();
-    method public java.util.Set<java.lang.Object!>! keys();
-  }
-
-  public static class LintFix.FixMapBuilder {
+  public static final class LintFix.AnnotateBuilder {
+    method public com.android.tools.lint.detector.api.LintFix.AnnotateBuilder autoFix();
+    method public com.android.tools.lint.detector.api.LintFix.AnnotateBuilder autoFix(boolean robot, boolean independent);
     method public com.android.tools.lint.detector.api.LintFix build();
-    method public <T> com.android.tools.lint.detector.api.LintFix.FixMapBuilder! put(T?);
-    method public <T> com.android.tools.lint.detector.api.LintFix.FixMapBuilder! put(Class<? extends T>, T?);
-    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder! put(String, Object?);
-    field @org.jetbrains.annotations.Nls protected final String! displayName;
-    field @org.jetbrains.annotations.Nls protected final String! familyName;
+    method public com.android.tools.lint.detector.api.LintFix.AnnotateBuilder range(com.android.tools.lint.detector.api.Location range);
   }
 
-  public static class LintFix.GroupBuilder {
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! add(com.android.tools.lint.detector.api.LintFix);
+  public static final class LintFix.AnnotateFix extends com.android.tools.lint.detector.api.LintFix {
+    method public String getAnnotation();
+    method public com.android.tools.lint.detector.api.Location? getRange();
+    method public boolean getReplace();
+    method public void setRange(com.android.tools.lint.detector.api.Location? range);
+    property public final String annotation;
+    property public final com.android.tools.lint.detector.api.Location? range;
+    property public final boolean replace;
+  }
+
+  public static final class LintFix.Builder {
+    ctor public LintFix.Builder();
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder alternatives();
+    method public com.android.tools.lint.detector.api.LintFix alternatives(com.android.tools.lint.detector.api.LintFix... fixes);
+    method public com.android.tools.lint.detector.api.LintFix.AnnotateBuilder annotate(String source, optional boolean replace);
+    method public com.android.tools.lint.detector.api.LintFix.AnnotateBuilder annotate(String source);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder composite();
+    method public com.android.tools.lint.detector.api.LintFix composite(com.android.tools.lint.detector.api.LintFix... fixes);
+    method public com.android.tools.lint.detector.api.LintFix data(java.lang.Object... args);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder deleteFile(java.io.File file);
+    method public com.android.tools.lint.detector.api.LintFix.Builder family(String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder group();
+    method public com.android.tools.lint.detector.api.LintFix group(com.android.tools.lint.detector.api.LintFix... fixes);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder map();
+    method public com.android.tools.lint.detector.api.LintFix.Builder name(String? displayName);
+    method public com.android.tools.lint.detector.api.LintFix.Builder name(String displayName, String familyName);
+    method public com.android.tools.lint.detector.api.LintFix.Builder name(String displayName, boolean useAsFamilyNameToo);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder newFile(java.io.File file, String contents);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder newFile(java.io.File file, byte[] contents);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder replace();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder set();
+    method public operator com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder set(String? namespace, String attribute, String? value);
+    method public com.android.tools.lint.detector.api.LintFix.Builder sharedName(String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder unset();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder unset(String? namespace, String attribute);
+    method public com.android.tools.lint.detector.api.LintFix.UrlBuilder url();
+    method public com.android.tools.lint.detector.api.LintFix.UrlBuilder url(String url);
+  }
+
+  public static final class LintFix.Companion {
+    method public com.android.tools.lint.detector.api.LintFix.Builder create();
+    method public boolean getBoolean(com.android.tools.lint.detector.api.LintFix? fix, String key, boolean defaultValue);
+    method public int getInt(com.android.tools.lint.detector.api.LintFix? fix, String key, int defaultValue);
+    method public com.intellij.psi.PsiMethod? getMethod(com.android.tools.lint.detector.api.LintFix? fix, String key);
+    method public String? getString(com.android.tools.lint.detector.api.LintFix? fix, String key, String? defaultValue);
+    method public java.util.List<java.lang.String>? getStringList(com.android.tools.lint.detector.api.LintFix? fix, String key);
+    method public Throwable? getThrowable(com.android.tools.lint.detector.api.LintFix? fix, String key);
+  }
+
+  public static final class LintFix.CreateFileBuilder {
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder autoFix(boolean robot, boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder autoFix();
     method public com.android.tools.lint.detector.api.LintFix build();
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! join(com.android.tools.lint.detector.api.LintFix!...);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! name(String!);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! name(String, String);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! sharedName(String);
-    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder! type(com.android.tools.lint.detector.api.LintFix.GroupType);
-    field @org.jetbrains.annotations.Nls protected String? familyName;
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder contents(String contents);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder contents(byte[] contents);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder delete(java.io.File file);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder file(java.io.File file);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder independent(boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder name(optional String? displayName, optional String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder reformat(boolean reformat);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder robot(boolean robot);
+    method public com.android.tools.lint.detector.api.LintFix.CreateFileBuilder select(@org.intellij.lang.annotations.RegExp String? selectPattern);
+  }
+
+  public static final class LintFix.CreateFileFix extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.CreateFileFix(String? displayName, String? familyName, String? selectPattern, boolean delete, java.io.File file, byte[]? binary, String? text, boolean reformat, boolean robot, boolean independent);
+    method public byte[]? getBinary();
+    method public boolean getDelete();
+    method public java.io.File getFile();
+    method public boolean getReformat();
+    method public String? getSelectPattern();
+    method public String? getText();
+    property public final byte[]? binary;
+    property public final boolean delete;
+    property public final java.io.File file;
+    property public final boolean reformat;
+    property public final String? selectPattern;
+    property public final String? text;
+  }
+
+  public static final class LintFix.DataMap extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.DataMap(String? displayName, String? familyName, java.util.Map<java.lang.String,?> map);
+    method public operator Object? get(String key);
+    method public boolean getBoolean(String key, boolean defaultValue);
+    method public java.io.File? getFile(String key, java.io.File? defaultValue);
+    method public int getInt(String key, int defaultValue);
+    method public com.intellij.psi.PsiMethod? getMethod(String key);
+    method public String? getString(String key, String? defaultValue);
+    method public java.util.List<java.lang.String>? getStringList(String key);
+    method public Throwable? getThrowable(String key);
+    method public boolean hasKey(String key);
+    method public java.util.Set<java.lang.String> keys();
+  }
+
+  public static final class LintFix.FixMapBuilder {
+    method public com.android.tools.lint.detector.api.LintFix build();
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, String? value);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, com.intellij.psi.PsiMethod? value);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, Throwable? throwable);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, int value);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, boolean value);
+    method public com.android.tools.lint.detector.api.LintFix.FixMapBuilder put(String key, java.util.List<java.lang.String> value);
+  }
+
+  public static final class LintFix.GroupBuilder {
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder add(com.android.tools.lint.detector.api.LintFix fix);
+    method public com.android.tools.lint.detector.api.LintFix build();
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder join(com.android.tools.lint.detector.api.LintFix... fixes);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder name(String? displayName);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder name(String displayName, String familyName);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder sharedName(String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.GroupBuilder type(com.android.tools.lint.detector.api.LintFix.GroupType type);
   }
 
   public enum LintFix.GroupType {
@@ -1495,82 +1858,152 @@ package com.android.tools.lint.detector.api {
     enum_constant public static final com.android.tools.lint.detector.api.LintFix.GroupType COMPOSITE;
   }
 
-  public static class LintFix.LintFixGroup extends com.android.tools.lint.detector.api.LintFix {
-    ctor public LintFix.LintFixGroup(String?, String?, com.android.tools.lint.detector.api.LintFix.GroupType, java.util.List<com.android.tools.lint.detector.api.LintFix!>);
-    field public final java.util.List<com.android.tools.lint.detector.api.LintFix!> fixes;
-    field public final com.android.tools.lint.detector.api.LintFix.GroupType type;
+  public static final class LintFix.LintFixGroup extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.LintFixGroup(String? displayName, String? familyName, com.android.tools.lint.detector.api.LintFix.GroupType type, java.util.List<? extends com.android.tools.lint.detector.api.LintFix> fixes);
+    method public java.util.List<com.android.tools.lint.detector.api.LintFix> getFixes();
+    method public com.android.tools.lint.detector.api.LintFix.GroupType getType();
+    property public final java.util.List<com.android.tools.lint.detector.api.LintFix> fixes;
+    property public final com.android.tools.lint.detector.api.LintFix.GroupType type;
   }
 
-  public static class LintFix.ReplaceString extends com.android.tools.lint.detector.api.LintFix {
-    method public String! expandBackReferences(java.util.regex.Matcher);
-    method public static String! expandBackReferences(String, java.util.regex.Matcher);
+  public static final class LintFix.ReplaceString extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.ReplaceString(String? displayName, String? familyName, String? oldString, @org.intellij.lang.annotations.RegExp String? oldPattern, String? selectPattern, String replacement, boolean shortenNames, boolean reformat, com.android.tools.lint.detector.api.Location? range, boolean robot, boolean independent);
+    method public String expandBackReferences(java.util.regex.Matcher matcher);
+    method public static String expandBackReferences(String replacement, java.util.regex.Matcher matcher);
+    method public String? getOldPattern();
+    method public String? getOldString();
+    method public com.android.tools.lint.detector.api.Location? getRange();
+    method public boolean getReformat();
+    method public String getReplacement();
+    method public String? getSelectPattern();
+    method public boolean getShortenNames();
+    method public void setRange(com.android.tools.lint.detector.api.Location? range);
+    property public final String? oldPattern;
+    property public final String? oldString;
+    property public final com.android.tools.lint.detector.api.Location? range;
+    property public final boolean reformat;
+    property public final String replacement;
+    property public final String? selectPattern;
+    property public final boolean shortenNames;
+    field public static final com.android.tools.lint.detector.api.LintFix.ReplaceString.Companion Companion;
     field public static final String INSERT_BEGINNING = "_lint_insert_begin_";
     field public static final String INSERT_END = "_lint_insert_end_";
-    field @org.intellij.lang.annotations.Language("RegExp") public final String? oldPattern;
-    field public final String? oldString;
-    field public final com.android.tools.lint.detector.api.Location? range;
-    field public final boolean reformat;
-    field public final String replacement;
-    field public final String? selectPattern;
-    field public final boolean shortenNames;
   }
 
-  public static class LintFix.ReplaceStringBuilder {
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! all();
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! autoFix(boolean, boolean);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! autoFix();
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! beginning();
+  public static final class LintFix.ReplaceString.Companion {
+    method public String expandBackReferences(String replacement, java.util.regex.Matcher matcher);
+  }
+
+  public static final class LintFix.ReplaceStringBuilder {
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder all();
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder autoFix(boolean robot, boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder autoFix();
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder beginning();
     method public com.android.tools.lint.detector.api.LintFix build();
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! end();
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! independent(boolean);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! name(String!);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! name(String, String);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! pattern(@org.intellij.lang.annotations.Language("RegExp") String!);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! range(com.android.tools.lint.detector.api.Location);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! reformat(boolean);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! robot(boolean);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! select(@org.intellij.lang.annotations.RegExp String?);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! sharedName(String);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! shortenNames();
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! text(String!);
-    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder! with(String!);
-    field @org.jetbrains.annotations.Nls protected String! displayName;
-    field @org.jetbrains.annotations.Nls protected String? familyName;
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder end();
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder independent(boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder name(String? displayName);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder name(String displayName, String familyName);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder pattern(@org.intellij.lang.annotations.RegExp String? oldPattern);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder range(com.android.tools.lint.detector.api.Location range);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder reformat(boolean reformat);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder robot(boolean robot);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder select(@org.intellij.lang.annotations.RegExp String? selectPattern);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder sharedName(String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder shortenNames();
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder shortenNames(boolean shorten);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder text(String? oldText);
+    method public com.android.tools.lint.detector.api.LintFix.ReplaceStringBuilder with(String? newText);
   }
 
-  public static class LintFix.SetAttribute extends com.android.tools.lint.detector.api.LintFix {
-    field public final String attribute;
-    field public final int dot;
-    field public final int mark;
-    field public final String? namespace;
-    field public final com.android.tools.lint.detector.api.Location? range;
-    field public final String? value;
+  public static final class LintFix.SetAttribute extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.SetAttribute(String? displayName, String? familyName, String? namespace, String attribute, String? value, com.android.tools.lint.detector.api.Location? range, int dot, int mark, boolean robot, boolean independent);
+    method public String getAttribute();
+    method public int getDot();
+    method public int getMark();
+    method public String? getNamespace();
+    method public com.android.tools.lint.detector.api.Location? getRange();
+    method public String? getValue();
+    method public void setRange(com.android.tools.lint.detector.api.Location? range);
+    property public final String attribute;
+    property public final int dot;
+    property public final int mark;
+    property public final String? namespace;
+    property public final com.android.tools.lint.detector.api.Location? range;
+    property public final String? value;
   }
 
-  public static class LintFix.SetAttributeBuilder {
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! android();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! attribute(String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! autoFix(boolean, boolean);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! autoFix();
+  public static final class LintFix.SetAttributeBuilder {
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder android();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder attribute(String attribute);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder autoFix(boolean robot, boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder autoFix();
     method public com.android.tools.lint.detector.api.LintFix build();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! caret(int);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! caretBegin();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! caretEnd();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! independent(boolean);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! name(String!);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! name(String, String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! namespace(String?);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! range(com.android.tools.lint.detector.api.Location);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! remove(String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! robot(boolean);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! select(int, int);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! selectAll();
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! sharedName(String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! todo(String?, String, String?, String?);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! todo(String?, String);
-    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder! value(String?);
-    field @org.jetbrains.annotations.Nls protected String! displayName;
-    field @org.jetbrains.annotations.Nls protected String? familyName;
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder caret(int valueStartDelta);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder caretBegin();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder caretEnd();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder independent(boolean independent);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder name(String? displayName);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder name(String displayName, String familyName);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder namespace(String? namespace);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder range(com.android.tools.lint.detector.api.Location? range);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder remove(String attribute);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder robot(boolean robot);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder select(int start, int end);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder selectAll();
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder sharedName(String? familyName);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder todo(String? namespace, String attribute, optional String? prefix, optional String? suffix);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder todo(String? namespace, String attribute, optional String? prefix);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder todo(String? namespace, String attribute);
+    method public com.android.tools.lint.detector.api.LintFix.SetAttributeBuilder value(String? value);
+  }
+
+  public static final class LintFix.ShowUrl extends com.android.tools.lint.detector.api.LintFix {
+    ctor public LintFix.ShowUrl(String? displayName, String? familyName, String url);
+    method public String getUrl();
+    property public final String url;
+  }
+
+  public static final class LintFix.UrlBuilder {
+    method public com.android.tools.lint.detector.api.LintFix build();
+    method public com.android.tools.lint.detector.api.LintFix.UrlBuilder url(@org.jetbrains.annotations.NonNls String url);
+  }
+
+  public final class LintMap implements java.lang.Iterable<java.lang.String> kotlin.jvm.internal.markers.KMappedMarker {
+    ctor public LintMap();
+    method public boolean containsKey(String key);
+    method public operator String? get(String key);
+    method @org.jetbrains.annotations.Contract("_, !null -> !null") public Integer? getApi(String key, optional Integer? default);
+    method @org.jetbrains.annotations.Contract("_, !null -> !null") public Boolean? getBoolean(String key, optional Boolean? default);
+    method public com.android.tools.lint.detector.api.Constraint? getConstraint(String key);
+    method public com.android.tools.lint.detector.api.Incident? getIncident(String key);
+    method @org.jetbrains.annotations.Contract("_, !null -> !null") public Integer? getInt(String key, optional Integer? default);
+    method @org.jetbrains.annotations.Contract("_, !null -> !null") public com.android.tools.lint.detector.api.Location? getLocation(String key);
+    method public com.android.tools.lint.detector.api.LintMap? getMap(String key);
+    method public com.android.tools.lint.detector.api.Severity? getSeverity(String key, optional com.android.tools.lint.detector.api.Severity? default);
+    method public int getSize();
+    method @org.jetbrains.annotations.Contract("_, !null -> !null") public String? getString(String key, optional String? default);
+    method public boolean isEmpty();
+    method public boolean isNotEmpty();
+    method public java.util.Iterator<java.lang.String> iterator();
+    method public kotlin.sequences.Sequence<java.lang.String> keys();
+    method public com.android.tools.lint.detector.api.LintMap put(String key, String value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, int value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, boolean value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, com.android.tools.lint.detector.api.Location value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, com.android.tools.lint.detector.api.LintMap value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, com.android.tools.lint.detector.api.Incident value);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, com.android.tools.lint.detector.api.Constraint constraint);
+    method public com.android.tools.lint.detector.api.LintMap put(String key, com.android.tools.lint.detector.api.Severity severity);
+    method public com.android.tools.lint.detector.api.LintMap putAll(com.android.tools.lint.detector.api.LintMap from);
+    method public com.android.tools.lint.detector.api.LintMap remove(String key);
+    method public operator com.android.tools.lint.detector.api.LintMap set(String key, String value);
+    property public final int size;
+    field public static final com.android.tools.lint.detector.api.LintMap.Companion Companion;
+  }
+
+  public static final class LintMap.Companion {
+    method public java.util.Map<java.lang.String,java.lang.Object> getInternalMap(com.android.tools.lint.detector.api.LintMap map);
   }
 
   public class LintModelModuleAndroidLibraryProject extends com.android.tools.lint.detector.api.LintModelModuleLibraryProject {
@@ -1594,8 +2027,13 @@ package com.android.tools.lint.detector.api {
   public class LintModelModuleProject extends com.android.tools.lint.detector.api.Project {
     ctor public LintModelModuleProject(com.android.tools.lint.client.api.LintClient client, java.io.File dir, java.io.File referenceDir, com.android.tools.lint.model.LintModelVariant variant, java.io.File? mergedManifest);
     method public final void addDirectLibrary(com.android.tools.lint.detector.api.Project project);
+    method public static final java.util.List<com.android.tools.lint.detector.api.LintModelModuleProject> resolveDependencies(java.util.Collection<? extends com.android.tools.lint.detector.api.LintModelModuleProject> projects, boolean reporting);
     method public final void setExternalLibrary(boolean external);
-    method public final void setMavenCoordinates(com.android.tools.lint.model.LintModelMavenName mc);
+    field public static final com.android.tools.lint.detector.api.LintModelModuleProject.Companion Companion;
+  }
+
+  public static final class LintModelModuleProject.Companion {
+    method public java.util.List<com.android.tools.lint.detector.api.LintModelModuleProject> resolveDependencies(java.util.Collection<? extends com.android.tools.lint.detector.api.LintModelModuleProject> projects, boolean reporting);
   }
 
   public final class LintModelModuleProjectKt {
@@ -1697,15 +2135,15 @@ package com.android.tools.lint.detector.api {
     method public final boolean isSelfExplanatory();
     method public final boolean isSingleLine();
     method public static final com.android.tools.lint.detector.api.Location reverse(com.android.tools.lint.detector.api.Location location);
-    method public final void setClientData(Object? p);
+    method public final void setClientData(Object? clientData);
     method public com.android.tools.lint.detector.api.Location setData(Object? clientData);
     method public final void setMessage(String? value);
     method public com.android.tools.lint.detector.api.Location setMessage(String message, boolean selfExplanatory);
-    method public void setSecondary(com.android.tools.lint.detector.api.Location? p);
+    method public void setSecondary(com.android.tools.lint.detector.api.Location? secondary);
     method public com.android.tools.lint.detector.api.Location setSelfExplanatory(boolean selfExplanatory);
-    method public final void setSource(Object? p);
+    method public final void setSource(Object? source);
     method public final com.android.tools.lint.detector.api.Location setSource(Object? source);
-    method public void setVisible(boolean p);
+    method public void setVisible(boolean visible);
     method public final com.android.tools.lint.detector.api.Location withSecondary(com.android.tools.lint.detector.api.Location secondary, String message, optional boolean selfExplanatory);
     method public final com.android.tools.lint.detector.api.Location withSecondary(com.android.tools.lint.detector.api.Location secondary, String message);
     method public final com.android.tools.lint.detector.api.Location withSource(Object source);
@@ -1735,23 +2173,25 @@ package com.android.tools.lint.detector.api {
     ctor public Location.DefaultLocationHandle(com.android.tools.lint.detector.api.Context context, int startOffset, int endOffset);
     method public Object? getClientData();
     method public com.android.tools.lint.detector.api.Location resolve();
-    method public void setClientData(Object? p);
+    method public void setClientData(Object? clientData);
     property public Object? clientData;
   }
 
   public static interface Location.Handle {
     method public Object? getClientData();
     method public com.android.tools.lint.detector.api.Location resolve();
-    method public void setClientData(Object? p);
+    method public void setClientData(Object? clientData);
     property public abstract Object? clientData;
   }
 
-  public static final class Location.ResourceItemHandle implements com.android.tools.lint.detector.api.Location.Handle {
-    ctor public Location.ResourceItemHandle(com.android.ide.common.resources.ResourceItem item);
+  public static class Location.ResourceItemHandle implements com.android.tools.lint.detector.api.Location.Handle {
+    ctor public Location.ResourceItemHandle(com.android.tools.lint.client.api.LintClient client, com.android.ide.common.resources.ResourceItem item, boolean nameOnly, boolean valueOnly);
     method public Object? getClientData();
+    method public final com.android.ide.common.resources.ResourceItem getItem();
     method public com.android.tools.lint.detector.api.Location resolve();
-    method public void setClientData(Object? clientData);
+    method public void setClientData(Object? _);
     property public Object? clientData;
+    property public final com.android.ide.common.resources.ResourceItem item;
   }
 
   public enum Location.SearchDirection {
@@ -1782,8 +2222,49 @@ package com.android.tools.lint.detector.api {
     method public com.android.tools.lint.detector.api.Location.SearchHints create(com.android.tools.lint.detector.api.Location.SearchDirection direction);
   }
 
+  public enum LocationType {
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType ALL;
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType CALL_WITH_ARGUMENTS;
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType CALL_WITH_RECEIVER;
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType DEFAULT;
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType NAME;
+    enum_constant public static final com.android.tools.lint.detector.api.LocationType VALUE;
+  }
+
+  public final class MinSdkAtLeast extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public int getMinSdkVersion();
+    property public final int minSdkVersion;
+  }
+
+  public final class MinSdkLessThan extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public int getMinSdkVersion();
+    property public final int minSdkVersion;
+  }
+
+  public final class NotAndroidProject extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+  }
+
+  public final class NotLibraryProject extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+  }
+
   public interface OtherFileScanner extends com.android.tools.lint.detector.api.FileScanner {
     method public java.util.EnumSet<com.android.tools.lint.detector.api.Scope> getApplicableFiles();
+  }
+
+  public final class PartialResult implements java.lang.Iterable<java.util.Map.Entry<com.android.tools.lint.detector.api.Project,com.android.tools.lint.detector.api.LintMap>> kotlin.jvm.internal.markers.KMappedMarker {
+    ctor public PartialResult(com.android.tools.lint.detector.api.Issue issue, java.util.Map<com.android.tools.lint.detector.api.Project,com.android.tools.lint.detector.api.LintMap> data);
+    method public com.android.tools.lint.detector.api.Issue getIssue();
+    method public boolean isEmpty();
+    method public java.util.Iterator<java.util.Map.Entry<com.android.tools.lint.detector.api.Project,com.android.tools.lint.detector.api.LintMap>> iterator();
+    method public com.android.tools.lint.detector.api.LintMap map();
+    method public com.android.tools.lint.detector.api.LintMap mapFor(com.android.tools.lint.detector.api.Project project);
+    method public java.util.Collection<com.android.tools.lint.detector.api.LintMap> maps();
+    method public java.util.Collection<com.android.tools.lint.detector.api.Project> projects();
+    property public final com.android.tools.lint.detector.api.Issue issue;
   }
 
   @com.google.common.annotations.Beta public enum Platform {
@@ -1796,6 +2277,10 @@ package com.android.tools.lint.detector.api {
   }
 
   public static final class Platform.Companion {
+  }
+
+  public final class PlatformKt {
+    method public static boolean isApplicableTo(java.util.EnumSet<com.android.tools.lint.detector.api.Platform>, com.android.tools.lint.detector.api.Issue issue);
   }
 
   @com.google.common.annotations.Beta public abstract class Position {
@@ -1818,14 +2303,14 @@ package com.android.tools.lint.detector.api {
     method public java.util.List<java.lang.String!>? getApplicableDensities();
     method public String? getApplicationId();
     method public java.util.List<java.io.File!> getAssetFolders();
-    method public com.android.tools.lint.model.LintModelAndroidLibrary! getBuildLibraryModel();
+    method public com.android.tools.lint.model.LintModelAndroidLibrary? getBuildLibraryModel();
     method public com.android.tools.lint.model.LintModelModule? getBuildModule();
     method public int getBuildSdk();
     method public com.android.sdklib.IAndroidTarget? getBuildTarget();
     method public String? getBuildTargetHash();
-    method public com.android.repository.Revision? getBuildToolsRevision();
     method public com.android.tools.lint.model.LintModelVariant? getBuildVariant();
     method public com.android.tools.lint.client.api.LintClient getClient();
+    method public <T> T? getClientProperty(Object);
     method public com.android.tools.lint.client.api.Configuration getConfiguration(com.android.tools.lint.client.api.LintDriver?);
     method public java.util.Set<com.android.tools.lint.detector.api.Desugaring!>! getDesugaring();
     method public java.io.File getDir();
@@ -1841,6 +2326,7 @@ package com.android.tools.lint.detector.api {
     method public java.util.List<java.io.File!> getJavaLibraries(boolean);
     method public java.util.List<java.io.File!> getJavaSourceFolders();
     method public org.jetbrains.kotlin.config.LanguageVersionSettings getKotlinLanguageLevel();
+    method public org.w3c.dom.Document? getManifestDom();
     method public java.util.List<java.io.File!> getManifestFiles();
     method public com.android.tools.lint.model.LintModelMavenName? getMavenCoordinate();
     method public org.w3c.dom.Document? getMergedManifest();
@@ -1878,6 +2364,7 @@ package com.android.tools.lint.detector.api {
     method public boolean isLibrary();
     method public boolean isMergingManifests();
     method public void mergeFolders(com.android.tools.lint.detector.api.Project);
+    method public void putClientProperty(Object, Object?);
     method public void readManifest(org.w3c.dom.Document);
     method public void setBuildTargetHash(String!);
     method public void setDirectLibraries(java.util.List<com.android.tools.lint.detector.api.Project!>);
@@ -1894,6 +2381,7 @@ package com.android.tools.lint.detector.api {
     field protected java.util.Set<com.android.tools.lint.detector.api.Desugaring!>! desugaring;
     field protected final java.io.File! dir;
     field protected java.util.List<com.android.tools.lint.detector.api.Project!>! directLibraries;
+    field protected org.w3c.dom.Document! dom;
     field protected boolean externalLibrary;
     field protected java.util.List<java.io.File!>! files;
     field protected java.util.List<java.io.File!>! generatedResourceFolders;
@@ -1917,7 +2405,7 @@ package com.android.tools.lint.detector.api {
     field protected String! pkg;
     field protected java.util.List<java.io.File!>! proguardFiles;
     field protected String! proguardPath;
-    field protected final java.io.File! referenceDir;
+    field protected java.io.File! referenceDir;
     field protected boolean reportIssues;
     field protected java.util.List<java.io.File!>! resourceFolders;
     field protected com.android.tools.lint.client.api.SdkInfo! sdkInfo;
@@ -1928,7 +2416,7 @@ package com.android.tools.lint.detector.api {
   }
 
   @com.google.common.annotations.Beta public class ResourceContext extends com.android.tools.lint.detector.api.Context {
-    ctor public ResourceContext(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, com.android.resources.ResourceFolderType? resourceFolderType, String? contents);
+    ctor public ResourceContext(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, com.android.resources.ResourceFolderType? resourceFolderType, CharSequence? contents);
     method public final com.android.ide.common.resources.configuration.FolderConfiguration? getFolderConfiguration();
     method public final int getFolderVersion();
     method protected java.io.File? getResourceFolder();
@@ -2044,11 +2532,12 @@ package com.android.tools.lint.detector.api {
 
   @com.google.common.annotations.Beta public enum Severity {
     method public static final com.android.tools.lint.detector.api.Severity? fromName(String name);
-    method public final String getDescription();
+    method public final String! getDescription();
     method public final boolean isError();
     method public static final com.android.tools.lint.detector.api.Severity max(com.android.tools.lint.detector.api.Severity severity1, com.android.tools.lint.detector.api.Severity severity2);
     method public static final com.android.tools.lint.detector.api.Severity min(com.android.tools.lint.detector.api.Severity severity1, com.android.tools.lint.detector.api.Severity severity2);
-    property public final String description;
+    method public final String toName();
+    property public final String! description;
     property public final boolean isError;
     enum_constant public static final com.android.tools.lint.detector.api.Severity ERROR;
     enum_constant public static final com.android.tools.lint.detector.api.Severity FATAL;
@@ -2062,6 +2551,11 @@ package com.android.tools.lint.detector.api {
     method public com.android.tools.lint.detector.api.Severity? fromName(String name);
     method public com.android.tools.lint.detector.api.Severity max(com.android.tools.lint.detector.api.Severity severity1, com.android.tools.lint.detector.api.Severity severity2);
     method public com.android.tools.lint.detector.api.Severity min(com.android.tools.lint.detector.api.Severity severity1, com.android.tools.lint.detector.api.Severity severity2);
+  }
+
+  public final class SeverityKt {
+    method public static com.android.tools.lint.model.LintModelSeverity getModelSeverity(com.android.tools.lint.detector.api.Severity);
+    method public static com.android.tools.lint.detector.api.Severity getSeverity(com.android.tools.lint.model.LintModelSeverity, com.android.tools.lint.detector.api.Issue? issue);
   }
 
   public interface SourceCodeScanner extends com.android.tools.lint.detector.api.FileScanner {
@@ -2094,6 +2588,18 @@ package com.android.tools.lint.detector.api {
     enum_constant public static final com.android.tools.lint.detector.api.Speed NORMAL;
     enum_constant public static final com.android.tools.lint.detector.api.Speed REALLY_SLOW;
     enum_constant public static final com.android.tools.lint.detector.api.Speed SLOW;
+  }
+
+  public final class TargetSdkAtLeast extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public int getTargetSdkVersion();
+    property public final int targetSdkVersion;
+  }
+
+  public final class TargetSdkLessThan extends com.android.tools.lint.detector.api.Constraint {
+    method public boolean accept(com.android.tools.lint.detector.api.Context context, com.android.tools.lint.detector.api.Incident incident);
+    method public int getTargetSdkVersion();
+    property public final int targetSdkVersion;
   }
 
   public enum TextFormat {
@@ -2191,7 +2697,7 @@ package com.android.tools.lint.detector.api {
   }
 
   @com.google.common.annotations.Beta public class XmlContext extends com.android.tools.lint.detector.api.ResourceContext {
-    ctor public XmlContext(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, com.android.resources.ResourceFolderType? folderType, com.android.tools.lint.client.api.XmlParser parser, String contents, org.w3c.dom.Document document);
+    ctor public XmlContext(com.android.tools.lint.client.api.LintDriver driver, com.android.tools.lint.detector.api.Project project, com.android.tools.lint.detector.api.Project? main, java.io.File file, com.android.resources.ResourceFolderType? folderType, CharSequence? contents, org.w3c.dom.Document document);
     method public final com.android.tools.lint.detector.api.Location.Handle createLocationHandle(org.w3c.dom.Node node);
     method public final com.android.tools.lint.detector.api.Location getElementLocation(org.w3c.dom.Element element, optional org.w3c.dom.Node? node, optional String? namespace, optional String? attribute);
     method public final com.android.tools.lint.detector.api.Location getElementLocation(org.w3c.dom.Element element);
@@ -2203,7 +2709,6 @@ package com.android.tools.lint.detector.api {
     method public final boolean isSuppressedWithComment(org.w3c.dom.Node node, com.android.tools.lint.detector.api.Issue issue);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.w3c.dom.Node? scope, com.android.tools.lint.detector.api.Location location, String message, optional com.android.tools.lint.detector.api.LintFix? quickfixData);
     method public final void report(com.android.tools.lint.detector.api.Issue issue, org.w3c.dom.Node? scope, com.android.tools.lint.detector.api.Location location, String message);
-    method @Deprecated public final void report(com.android.tools.lint.detector.api.Issue issue, org.w3c.dom.Node? scope, com.android.tools.lint.detector.api.Location location, String message, Object? quickfixData);
     property public final com.android.tools.lint.client.api.XmlParser parser;
     property protected java.io.File? resourceFolder;
     property protected String? suppressCommentPrefix;
@@ -2298,7 +2803,7 @@ package com.android.tools.lint.detector.api.interprocedural {
   }
 
   public final class CallGraphVisitor extends org.jetbrains.uast.visitor.AbstractUastVisitor {
-    ctor public CallGraphVisitor(com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator receiverEval, com.android.tools.lint.detector.api.interprocedural.ClassHierarchy classHierarchy, boolean conservative);
+    ctor public CallGraphVisitor(com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator receiverEval, com.android.tools.lint.detector.api.interprocedural.ClassHierarchy classHierarchy, optional boolean conservative);
     method public com.android.tools.lint.detector.api.interprocedural.CallGraph getCallGraph();
     property public final com.android.tools.lint.detector.api.interprocedural.CallGraph callGraph;
   }
@@ -2425,8 +2930,7 @@ package com.android.tools.lint.detector.api.interprocedural {
   }
 
   public abstract class DispatchReceiverEvaluator {
-    ctor public DispatchReceiverEvaluator(com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator? delegate);
-    ctor public DispatchReceiverEvaluator();
+    ctor public DispatchReceiverEvaluator(optional com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator? delegate);
     method public final operator java.util.Collection<com.android.tools.lint.detector.api.interprocedural.DispatchReceiver> get(org.jetbrains.uast.UElement element, optional com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator root);
     method public final java.util.Collection<com.android.tools.lint.detector.api.interprocedural.DispatchReceiver> getForImplicitThis();
     method protected abstract java.util.Collection<com.android.tools.lint.detector.api.interprocedural.DispatchReceiver> getOwn(org.jetbrains.uast.UElement element, com.android.tools.lint.detector.api.interprocedural.DispatchReceiverEvaluator root);
@@ -2454,12 +2958,12 @@ package com.android.tools.lint.detector.api.interprocedural {
   public final class MutableCallGraph implements com.android.tools.lint.detector.api.interprocedural.CallGraph {
     ctor public MutableCallGraph();
     method public com.android.tools.lint.detector.api.interprocedural.MutableCallGraph.MutableNode getNode(org.jetbrains.uast.UElement element);
-    method public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.MutableCallGraph.MutableNode>! getNodes();
-    property public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.MutableCallGraph.MutableNode>! nodes;
+    method public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.MutableCallGraph.MutableNode> getNodes();
+    property public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.MutableCallGraph.MutableNode> nodes;
   }
 
   public static final class MutableCallGraph.MutableNode implements com.android.tools.lint.detector.api.interprocedural.CallGraph.Node {
-    ctor public MutableCallGraph.MutableNode(com.android.tools.lint.detector.api.interprocedural.CallTarget target, java.util.Collection<com.android.tools.lint.detector.api.interprocedural.CallGraph.Edge> edges);
+    ctor public MutableCallGraph.MutableNode(com.android.tools.lint.detector.api.interprocedural.CallTarget target, optional java.util.Collection<com.android.tools.lint.detector.api.interprocedural.CallGraph.Edge> edges);
     method public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.CallGraph.Edge> getEdges();
     method public com.android.tools.lint.detector.api.interprocedural.CallTarget getTarget();
     property public java.util.Collection<com.android.tools.lint.detector.api.interprocedural.CallGraph.Edge> edges;
@@ -2564,7 +3068,7 @@ package com.android.tools.lint.helpers {
 
   public static final class DefaultUastParser.Companion {
     method public boolean getWarnedAboutLargeFiles();
-    method public void setWarnedAboutLargeFiles(boolean p);
+    method public void setWarnedAboutLargeFiles(boolean warnedAboutLargeFiles);
     property public final boolean warnedAboutLargeFiles;
   }
 
