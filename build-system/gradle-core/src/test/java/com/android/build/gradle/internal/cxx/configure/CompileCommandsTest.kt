@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.CompileCommandsCodecTest
 import com.android.build.gradle.internal.cxx.StructuredLog
 import com.android.build.gradle.internal.cxx.logging.text
@@ -114,6 +115,31 @@ class CompileCommandsTest {
         val bin = createCompileCommandsBinFile()
         convertCMakeToCompileCommandsBin(json, bin)
         assertThat(bin.lastModified()).isEqualTo(json.lastModified())
+        structuredLog.assertNoErrors()
+    }
+
+    private fun convertWindowsLikePathToFile(path : String) : File {
+        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS) {
+            return File(path.replace("\\", "/"))
+        }
+        return File(path)
+    }
+
+    @Test
+    fun `bug 196847363 Windows compile_command JSON uses mixed slashes`() {
+        val json = tempFolder.newFolder().resolve("compile_commands.json")
+        testFile("windows_compile_commands.json").copyTo(json)
+        val bin = tempFolder.newFolder().resolve("compile_commands.json.bin")
+        convertCMakeToCompileCommandsBin(json, bin, SdkConstants.PLATFORM_WINDOWS, ::convertWindowsLikePathToFile)
+
+        val distinctFlags = mutableSetOf<List<String>>()
+        var count = 0
+        streamCompileCommandsV2(bin) {
+            distinctFlags.add(flags)
+            ++count
+        }
+        assertThat(distinctFlags).hasSize(38)
+        assertThat(count).isEqualTo(612)
         structuredLog.assertNoErrors()
     }
 
