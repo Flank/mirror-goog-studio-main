@@ -675,7 +675,6 @@ open class XmlWriter constructor(
                                 // Strings are not allowed to contain ,
                                 value.joinToString {
                                     val s = it as String
-                                    //noinspection ExpensiveAssertion
                                     assert(!s.contains(","))
                                     s
                                 }

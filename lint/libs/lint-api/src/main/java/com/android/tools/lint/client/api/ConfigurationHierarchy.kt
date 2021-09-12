@@ -418,7 +418,6 @@ open class ConfigurationHierarchy(
             override.fileLevel = false
             val prev = overrides
             overrides = override
-            //noinspection ExpensiveAssertion
             assert(parentOf[override] == null)
             prev?.let { override.setParent(prev) }
         }
@@ -426,7 +425,6 @@ open class ConfigurationHierarchy(
         if (fallback != null) {
             fallback.fileLevel = false
             val prev = this.fallback
-            //noinspection ExpensiveAssertion
             assert(parentOf[fallback] == null)
             this.fallback = fallback
             prev?.let { fallback.setParent(prev) }

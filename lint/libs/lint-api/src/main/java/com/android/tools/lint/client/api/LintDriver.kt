@@ -413,7 +413,6 @@ class LintDriver(
      * create a separate driver for each job.
      */
     fun analyze() {
-        //noinspection ExpensiveAssertion
         assert(!scope.contains(Scope.ALL_RESOURCE_FILES) || scope.contains(Scope.RESOURCE_FILE))
         mode = DriverMode.GLOBAL
         doAnalyze(
@@ -437,7 +436,6 @@ class LintDriver(
             analysis = {
                 // Partial analysis only looks at a single project, not multiple projects
                 // with source dependencies
-                //noinspection ExpensiveAssertion
                 assert(projectRoots.size == 1)
                 val project = projectRoots.first()
                 try {

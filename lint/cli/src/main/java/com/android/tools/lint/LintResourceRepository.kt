@@ -712,7 +712,6 @@ open class LintResourceRepository constructor(
             config: FolderConfiguration,
             added: MutableList<LintResourceItem>?
         ) {
-            //noinspection ExpensiveAssertion
             assert(styleableNode.nodeName == SdkConstants.TAG_DECLARE_STYLEABLE)
             for (element in styleableNode) {
                 val name = element.getAttribute(ATTR_NAME)

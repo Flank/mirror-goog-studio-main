@@ -595,7 +595,6 @@ object LintResourcePersistence {
                     }
                 }
             } else {
-                //noinspection ExpensiveAssertion
                 assert(arguments.isNotEmpty())
                 val reader = DeserializationReader(arguments)
                 when {
@@ -634,8 +633,6 @@ object LintResourcePersistence {
                     }
                     type == ResourceType.STYLEABLE -> {
                         val style = StyleableResourceValueImpl(namespace, name, null, library)
-                        //noinspection ExpensiveAssertion
-
                         assert(reader.next() == '-')
                         while (!reader.eof()) {
                             val attrName = reader.readString(':')

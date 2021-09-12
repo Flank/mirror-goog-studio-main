@@ -24,6 +24,29 @@ class AssertDetectorTest : AbstractCheckTest() {
         return AssertDetector()
     }
 
+    fun testNotExpensive() {
+        lint().files(
+            kotlin(
+                """
+                import org.w3c.dom.Node
+                fun test(override: String, offset: Int, textNode: Node) {
+                    assert(parentOf[override] == null) // OK 1
+                    assert(parentOf.isNotEmpty()) // OK 2
+                    assert(parentOf.size == 1) // OK 3
+                    assert(!override.contains(",")) // OK 4
+                    assert(override[offset] != ']') // OK 5
+                    assert(textNode.nodeType == Node.TEXT_NODE || textNode.nodeType == Node.COMMENT_NODE) // OK 6
+                }
+
+                private val parentOf: MutableMap<String, String> = HashMap()
+                """
+            ).indented()
+        )
+            .issues(AssertDetector.EXPENSIVE)
+            .platforms(Platform.JDK_SET)
+            .run().expectClean()
+    }
+
     fun testExpensiveKotlinCalls() {
         // This lint check also applies outside of Android
         lint().files(

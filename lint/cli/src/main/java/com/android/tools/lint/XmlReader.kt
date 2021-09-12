@@ -623,7 +623,6 @@ class XmlReader(
     }
 
     private fun readLintMap(): LintMap {
-        //noinspection ExpensiveAssertion
         assert(parser.name == TAG_MAP || parser.name == TAG_DATA)
         val lintMap = LintMap()
         val map = LintMap.getInternalMap(lintMap)

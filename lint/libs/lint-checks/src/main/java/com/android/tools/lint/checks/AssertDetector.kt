@@ -28,7 +28,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UBlockExpression
@@ -217,18 +217,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
             // Just a simple local variable/field reference
             return false
         } else if (argument is UQualifiedReferenceExpression) {
-            if (argument.selector is UCallExpression) {
-                return isExpensive(argument.selector, depth + 1)
-            }
-            val value = argument.evaluate()
-            if (value != null) { // constant inlined by compiler
-                return false
-            }
-            val resolved = argument.resolve()
-            if (resolved is PsiVariable) {
-                // Just a reference to a property/field, parameter or variable
-                return false
-            }
+            return false
         } else if (argument is UCallExpression) {
             val method = argument.resolve()
             if (method != null && method !is PsiCompiledElement) {
@@ -244,7 +233,20 @@ class AssertDetector : Detector(), SourceCodeScanner {
                     // Expression body
                     return isExpensive(body, depth + 1)
                 }
+            } else {
+                // Look for some well known cheap and common methods
+                val name = argument.methodName
+                if (name == "isEmpty" || name == "isNotEmpty" || name == "contains") {
+                    return false
+                }
             }
+        } else if (argument is UArrayAccessExpression) {
+            for (value in argument.indices) {
+                if (isExpensive((value), depth + 1)) {
+                    return true
+                }
+            }
+            return false
         }
 
         // Method invocations etc

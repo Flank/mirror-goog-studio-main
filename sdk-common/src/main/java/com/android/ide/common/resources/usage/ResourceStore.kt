@@ -510,7 +510,6 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
                 // attr[myAttr1(D,7f010000),myAttr2(D,7f010001)],dimen[activity_vertical_margin(...
                 //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 while (offset < length) {
-                    //noinspection ExpensiveAssertion
                     assert(s[offset] != ']') // no empty lists should have been written
                     val nameEnd = s.indexOf('(', offset)
                     assert(nameEnd != -1)
