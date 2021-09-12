@@ -85,6 +85,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 AppLinksValidDetector.VALIDATION,
                 ArraySizeDetector.INCONSISTENT,
                 AssertDetector.EXPENSIVE,
+                AssertDetector.SIDE_EFFECT,
                 AutofillDetector.ISSUE,
                 BadHostnameVerifierDetector.ISSUE,
                 BatteryDetector.ISSUE,

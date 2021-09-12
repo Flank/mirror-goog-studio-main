@@ -99,7 +99,7 @@ public class LintCliClientTest extends AbstractCheckTest {
 
         File projectDir = new File(tempDir, "test_project");
         if (!projectDir.exists()) {
-            assert (projectDir.mkdirs());
+            assertTrue(projectDir.mkdirs());
         }
 
         LintCliFlags flags = new LintCliFlags();

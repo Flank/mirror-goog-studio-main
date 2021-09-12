@@ -40,6 +40,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.java.JavaUAssertExpression
 import org.jetbrains.uast.kotlin.KotlinUImportStatement
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.io.StringWriter
@@ -196,7 +197,9 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
 
         override fun visitCallExpression(node: UCallExpression): Boolean {
             val name = node.methodName ?: node.methodIdentifier?.name
-            if (name != null && applicableCalls.contains(name) && node.resolve() == null) {
+            if (name != null && applicableCalls.contains(name) && node.resolve() == null &&
+                node !is JavaUAssertExpression
+            ) {
                 val context: JavaContext = this@checkFile
                 reportResolveProblem(context, node, name, "call", "getApplicableMethodNames", "visitMethodCall")
             }

@@ -113,6 +113,115 @@ class AssertDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testSideEffects() {
+        // This lint check also applies outside of Android
+        lint().files(
+            kotlin(
+                """
+                var x: Int = 0
+                fun test(file: java.io.File, list: java.util.List<String>) {
+                    var i = 0
+                    assert(i++ < 5) // WARN 1
+                    assert(method1() > 5) // WARN 2
+                    assert(method2() > 5) // WARN 3
+                    assert(method3()) // WARN 4
+                    assert(method4()) // OK 1
+                    assert(file.delete()) // WARN 5
+                    assert(file.mkdirs()) // WARN 6
+                    assert(list.add("test")) // WARN 7
+                    assert(file.setExecutable(true)) // WARN 8
+                    assert(list.contains("test")) // OK 2
+                    assert(method5()) // WARN 9
+                    assert(method6()) // WARN 10
+                    assert(method7()) // WARN 11
+                }
+
+                fun method1(): Int = x++ // side effect
+                fun method2(): Int = method1() // indirect side effect
+                fun method3(): Boolean {
+                    x = 0 // side effect
+                    return true
+                }
+                fun method4(): Boolean {
+                    val x: Int
+                    x = 0 // not a side effect
+                    x++ // not a side effect
+                    return true
+                }
+                fun method5(v: Int): Boolean {
+                    if (v > 5) { } else { x++ }
+                    return true
+                }
+                fun method6(v: Int): Boolean {
+                    for (i in 0 until v) x++
+                    return true
+                }
+                fun method7(v: Int): Boolean {
+                    try { println(v) } finally { x++ }
+                    return true
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public class Utils {
+                    public void test() {
+                        int i = 0;
+                        assert i++ < 5;
+                    }
+                }
+                """
+            ).indented(),
+            kotlinAssertionRuntime
+        )
+            .issues(AssertDetector.SIDE_EFFECT)
+            .platforms(Platform.JDK_SET)
+            .testModes(TestMode.DEFAULT)
+            .run()
+            .expect(
+                """
+                src/test/pkg/Utils.java:5: Warning: Assertion condition has a side effect: i++ [AssertionSideEffect]
+                        assert i++ < 5;
+                               ~~~
+                src/test.kt:4: Warning: Assertion condition has a side effect: i++ [AssertionSideEffect]
+                    assert(i++ < 5) // WARN 1
+                           ~~~
+                src/test.kt:5: Warning: Assertion condition has a side effect: x++ [AssertionSideEffect]
+                    assert(method1() > 5) // WARN 2
+                           ~~~~~~~~~
+                src/test.kt:6: Warning: Assertion condition has a side effect: x++ [AssertionSideEffect]
+                    assert(method2() > 5) // WARN 3
+                           ~~~~~~~~~
+                src/test.kt:7: Warning: Assertion condition has a side effect: x = 0 [AssertionSideEffect]
+                    assert(method3()) // WARN 4
+                           ~~~~~~~~~
+                src/test.kt:9: Warning: Assertion condition has a side effect: delete() [AssertionSideEffect]
+                    assert(file.delete()) // WARN 5
+                           ~~~~~~~~~~~~~
+                src/test.kt:10: Warning: Assertion condition has a side effect: mkdirs() [AssertionSideEffect]
+                    assert(file.mkdirs()) // WARN 6
+                           ~~~~~~~~~~~~~
+                src/test.kt:11: Warning: Assertion condition has a side effect: add("test") [AssertionSideEffect]
+                    assert(list.add("test")) // WARN 7
+                           ~~~~~~~~~~~~~~~~
+                src/test.kt:12: Warning: Assertion condition has a side effect: setExecutable(true) [AssertionSideEffect]
+                    assert(file.setExecutable(true)) // WARN 8
+                           ~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test.kt:14: Warning: Assertion condition has a side effect: x++ [AssertionSideEffect]
+                    assert(method5()) // WARN 9
+                           ~~~~~~~~~
+                src/test.kt:15: Warning: Assertion condition has a side effect: x++ [AssertionSideEffect]
+                    assert(method6()) // WARN 10
+                           ~~~~~~~~~
+                src/test.kt:16: Warning: Assertion condition has a side effect: x++ [AssertionSideEffect]
+                    assert(method7()) // WARN 11
+                           ~~~~~~~~~
+                0 errors, 12 warnings
+                """
+            )
+    }
+
     private val kotlinTestFile = kotlin(
         """
                 package test.pkg
