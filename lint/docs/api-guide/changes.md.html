@@ -7,6 +7,11 @@ Guide.
 
 **7.1**
 
+* Lint now bundles IntelliJ version 2021.1 and Kotlin compiler version 1.5.30.
+  You may see minor API changes in these dependencies. For example,
+  the Kotlin UAST class `KotlinUMethod` changed packages from
+  `org.jetbrains.uast.kotlin.declarations` to `org.jetbrains.uast.kotlin`.
+
 * The default behaviour of ResourceXmlDetector will change.
   It will skip res/raw folder and you have to override appliesTo method
   if you want your Lint checks to run there.
