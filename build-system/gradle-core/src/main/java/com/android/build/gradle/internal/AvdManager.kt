@@ -40,7 +40,7 @@ private const val MAX_SYSTEM_IMAGE_RETRIES = 4;
 private const val BASE_RETRY_DELAY_SECONDS = 2L;
 private const val MAX_RETRY_DELAY_SECONDS = 10L;
 
-private val snapshotLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
+private val avdLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
 
 /**
  * Manages AVDs for the Avd build service inside the Android Gradle Plugin.
@@ -76,54 +76,59 @@ class AvdManager(
         deviceName: String,
         hardwareProfile: String
     ): File {
-        avdManager.reloadAvds(logger)
-        val info = avdManager.getAvd(deviceName, false)
-        info?.let {
-            logger.info("Device: $deviceName already exists. AVD creation skipped.")
-            // already generated the avd
-            return info.configFile
+        val lock = avdLocks.computeIfAbsent(deviceName) {
+            Any()
         }
+        synchronized(lock) {
+            avdManager.reloadAvds(logger)
+            val info = avdManager.getAvd(deviceName, false)
+            info?.let {
+                logger.info("Device: $deviceName already exists. AVD creation skipped.")
+                // already generated the avd
+                return info.configFile
+            }
 
-        if (!imageProvider.isPresent) {
-            throw RuntimeException("Failed to find system image for hash: $imageHash")
+            if (!imageProvider.isPresent) {
+                throw RuntimeException("Failed to find system image for hash: $imageHash")
+            }
+
+            val imageLocation = sdkHandler.toCompatiblePath(imageProvider.get().asFile)
+            val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
+            systemImage?: error("System image does not exist at $imageLocation")
+
+            val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
+                it.displayName == hardwareProfile
+            } ?: error("Failed to find hardware profile for name: $hardwareProfile")
+
+            val hardwareConfig = defaultHardwareConfig()
+            hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
+            EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
+
+            val deviceFolder =
+                    AvdInfo.getDefaultAvdFolder(avdManager,
+                            deviceName,
+                            false)
+
+            val newInfo = avdManager.createAvd(
+                deviceFolder,
+                deviceName,
+                systemImage,
+                null,
+                null,
+                null,
+                hardwareConfig,
+                device.bootProps,
+                device.hasPlayStore(),
+                false,
+                false,
+                logger
+            )
+            return newInfo?.configFile ?: error("AVD could not be created.")
         }
-
-        val imageLocation = sdkHandler.toCompatiblePath(imageProvider.get().asFile)
-        val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
-        systemImage?: error("System image does not exist at $imageLocation")
-
-        val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
-            it.displayName == hardwareProfile
-        } ?: error("Failed to find hardware profile for name: $hardwareProfile")
-
-        val hardwareConfig = defaultHardwareConfig()
-        hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
-        EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
-
-        val deviceFolder =
-                AvdInfo.getDefaultAvdFolder(avdManager,
-                        deviceName,
-                        false)
-
-        val newInfo = avdManager.createAvd(
-            deviceFolder,
-            deviceName,
-            systemImage,
-            null,
-            null,
-            null,
-            hardwareConfig,
-            device.bootProps,
-            device.hasPlayStore(),
-            false,
-            false,
-            logger
-        )
-        return newInfo?.configFile ?: error("AVD could not be created.")
     }
 
     fun loadSnapshotIfNeeded(deviceName: String) {
-        val lock = snapshotLocks.computeIfAbsent(deviceName) {
+        val lock = avdLocks.computeIfAbsent(deviceName) {
             Any()
         }
         synchronized(lock) {
@@ -141,8 +146,16 @@ class AvdManager(
                 return
             }
 
+            val adbExecutable = versionedSdkLoader.get().adbExecutableProvider.get().asFile
+
             logger.verbose("Creating snapshot for $deviceName")
-            snapshotHandler.generateSnapshot(deviceName, emulatorExecutable, avdFolder, logger)
+            snapshotHandler.generateSnapshot(
+                deviceName,
+                emulatorExecutable,
+                adbExecutable,
+                avdFolder,
+                logger
+            )
             logger.verbose("Verified snapshot created for: $deviceName.")
         }
     }
