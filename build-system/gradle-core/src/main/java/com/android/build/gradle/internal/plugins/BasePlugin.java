@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
@@ -123,7 +122,6 @@ import com.google.common.base.CharMatcher;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -721,7 +719,7 @@ public abstract class BasePlugin<
                     .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
                     .setSplits(AnalyticsUtil.toProto(extension.getSplits()));
 
-            String kotlinPluginVersion = getKotlinPluginVersion();
+            String kotlinPluginVersion = KgpUtils.getKotlinPluginVersion(project);
             if (kotlinPluginVersion != null) {
                 projectBuilder.setKotlinPluginVersion(kotlinPluginVersion);
             }
@@ -881,29 +879,6 @@ public abstract class BasePlugin<
                         + "=true' to gradle.properties file in the project directory.";
 
         throw new StopExecutionException(message);
-    }
-
-    /**
-     * returns the kotlin plugin version, or null if plugin is not applied to this project, or
-     * "unknown" if plugin is applied but version can't be determined.
-     */
-    @Nullable
-    private String getKotlinPluginVersion() {
-        Plugin plugin = project.getPlugins().findPlugin("kotlin-android");
-        if (plugin == null) {
-            return null;
-        }
-        try {
-            // No null checks below because we're catching all exceptions.
-            @SuppressWarnings("JavaReflectionMemberAccess")
-            Method method = plugin.getClass().getMethod("getKotlinPluginVersion");
-            method.setAccessible(true);
-            return method.invoke(plugin).toString();
-        } catch (Throwable e) {
-            // Defensively catch all exceptions because we don't want it to crash
-            // if kotlin plugin code changes unexpectedly.
-            return "unknown";
-        }
     }
 
     /**
