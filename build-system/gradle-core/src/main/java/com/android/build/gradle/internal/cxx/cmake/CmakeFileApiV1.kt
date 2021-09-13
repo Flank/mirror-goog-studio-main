@@ -38,7 +38,6 @@ import com.google.gson.stream.JsonToken
 import java.io.Closeable
 import java.io.File
 import java.io.FileReader
-import java.lang.RuntimeException
 
 /**
  * CMake file-api reply directory is laid out as follows:
@@ -138,10 +137,7 @@ fun readCmakeFileApiReply(
     // because the information for both comes from the same target json file and
     // we only want to scan it once since it can be large.
     val targetIdToOutputs = mutableMapOf<String, MutableSet<String>>()
-    var compileGroups : List<TargetCompileGroupData>? = null
-    var sourceGroups : List<String>? = null
-    var paths : Paths? = null
-    var type : Type? = null
+    val targetIdToType = mutableMapOf<String, String>()
     val targetIdToNativeLibraryValue = mutableMapOf<String, NativeLibraryValue>()
     val languageToExtensionMap = mutableMapOf<String, MutableSet<String>>()
     val codeModel = index.getIndexObject("codemodel", replyFolder, CmakeFileApiCodeModelDataV2::class.java)!!
@@ -158,6 +154,8 @@ fun readCmakeFileApiReply(
 
     targetDataFiles
         .forEach { (id, jsonFile) ->
+            lateinit var compileGroups : List<TargetCompileGroupData>
+            lateinit var sourceGroups : List<String>
             TargetDataStream(id, replyFolder.resolve(jsonFile)).use {
                 it.stream().forEach { item ->
                     when (item) {
@@ -174,17 +172,16 @@ fun readCmakeFileApiReply(
                         }
                         is CompileGroups -> compileGroups = item.compileGroups
                         is SourceGroups -> sourceGroups = item.sourceGroups
-                        is Link -> targetIdToLink[item.targetId] = item
-                        is Paths -> paths = item
-                        is Type -> type = item
+                        is Link -> targetIdToLink[id] = item
+                        is Type -> targetIdToType[id] = item.type
                         is Source -> {
                             // This relies on "compileGroups" arriving before "sources". Without this
                             // assumption we'd need to scan source files twice, first to find compileGroups
                             // then to scan sources and join with compileGroups.
-                            val sourceGroup = sourceGroups!![item.sourceGroupIndex]
+                            val sourceGroup = sourceGroups[item.sourceGroupIndex]
                             val compileGroup =
                                     if (item.compileGroupIndex != null) {
-                                        compileGroups?.get(item.compileGroupIndex)
+                                        compileGroups[item.compileGroupIndex]
                                     } else {
                                         // No compile group probably means the sourceGroup is "Header Files"
                                         null
@@ -213,17 +210,17 @@ fun readCmakeFileApiReply(
         }
 
     // Populate NativeLibraryValues#output
-    if (type?.type != "OBJECT_LIBRARY") {
-        targetIdToOutputs.forEach { (id, outputs) ->
-            if (outputs.size > 1) {
-                errorln(
-                    EXTRA_OUTPUT, "Target $id produces multiple outputs ${outputs.joinToString(", ")}"
-                )
-            }
-            targetIdToNativeLibraryValue
-                    .computeIfAbsent(id) { NativeLibraryValue() }
-                        .output = outputs.map(::File).firstOrNull()
+    targetIdToOutputs
+        .filter {(id, _) -> targetIdToType.get(id) != "OBJECT_LIBRARY" }
+        .forEach { (id, outputs) ->
+        if (outputs.size > 1) {
+            errorln(
+                EXTRA_OUTPUT, "Target $id produces multiple outputs ${outputs.joinToString(", ")}"
+            )
         }
+        targetIdToNativeLibraryValue
+                .computeIfAbsent(id) { NativeLibraryValue() }
+                    .output = outputs.map(::File).firstOrNull()
     }
 
     // Populate NativeLibraryValues#runtimeFiles
@@ -511,8 +508,7 @@ fun parseCmakeFileApiReply(
     try {
         val extra = mutableSetOf<String>()
         val config = readCmakeFileApiReply(replyFolder) { source ->
-            if (source.sourceGroup == "Source Files") {
-            } else {
+            if (source.sourceGroup != "Source Files") {
                 extra += source.rootSourceFolder.resolve(source.sourcePath).absolutePath
             }
         }
