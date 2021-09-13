@@ -111,11 +111,6 @@ build:resultstore --noremote_accept_cached
 build:_rcache --config=_remote_base
 build:_rcache --config=release
 build:_rcache --noremote_upload_local_results
-# Include some of the expanded flags of --remote_download_toplevel to
-# optimize cache hits. We want the local cache to be populated from the
-# remote cache, so we keep --remote_download_outputs=all (default value).
-build:_rcache --experimental_inmemory_dotd_files
-build:_rcache --experimental_inmemory_jdeps_files
 
 ## Enables the remote cache, and uploading results to ResultStore.
 ## This config should be commonly used to avoid building outputs that
@@ -137,9 +132,6 @@ build:remote --remote_timeout=3600
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 build:remote --show_timestamps
-# Stop downloading of build outputs to the local machine and
-# removes a possibility of network/disk bottlenecks when using RBE.
-build:remote --remote_download_toplevel
 
 ## Enables dynamic scheduling. This will run some actions locally
 ## as well as remotely, choosing whichever finishes first.
