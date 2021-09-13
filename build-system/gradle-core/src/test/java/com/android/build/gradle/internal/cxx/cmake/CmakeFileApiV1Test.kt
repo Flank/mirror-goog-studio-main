@@ -85,7 +85,7 @@ class CmakeFileApiV1Test {
                         .map { it.output!!.toString().replace("\\", "/") }
                         .single { it.endsWith(".a") }
 
-        Truth.assertThat(library).endsWith(".cxx/cmake/debug/x86/libfoo_static.a")
+        assertThat(library).endsWith(".cxx/cmake/debug/x86/libfoo_static.a")
     }
 
     @Test
@@ -103,7 +103,7 @@ class CmakeFileApiV1Test {
                 .sorted()
                 .joinToString("\n")
 
-        Truth.assertThat(runtimeFiles).isEqualTo("""
+        assertThat(runtimeFiles).isEqualTo("""
             /{PREFAB}/jetified-curl/prefab/modules/curl/libs/android.x86_64/libcurl.so
             /{PREFAB}/jetified-jsoncpp/prefab/modules/jsoncpp/libs/android.x86_64/libjsoncpp.so
             /{PREFAB}/jetified-openssl/prefab/modules/crypto/libs/android.x86_64/libcrypto.so
@@ -121,20 +121,20 @@ class CmakeFileApiV1Test {
                 }
 
         val includes = sources.flatMap { it.compileGroup?.includes ?: listOf() }.distinct().sorted()
-        Truth.assertThat(includes).isEmpty()
+        assertThat(includes).isEmpty()
 
         val defines = sources.flatMap { it.compileGroup?.defines ?: listOf("(none)") }.distinct().sorted()
-        Truth.assertThat(defines).contains("hello_jni_EXPORTS")
+        assertThat(defines).contains("hello_jni_EXPORTS")
 
         val sysroots = sources.map { it.compileGroup?.sysroot ?: "(none)" }.distinct().sorted()
-        Truth.assertThat(sysroots).hasSize(1)
+        assertThat(sysroots).hasSize(1)
 
         // The "(none)" language is "Header Files"
         val languageGroups = sources.map { it.compileGroup?.language ?: "(none)" }.distinct().sorted()
-        Truth.assertThat(languageGroups).containsExactly("C")
+        assertThat(languageGroups).containsExactly("C")
 
         val sourceGroups = sources.map { it.sourceGroup }.distinct().sorted()
-        Truth.assertThat(sourceGroups).containsExactly("Source Files")
+        assertThat(sourceGroups).containsExactly("Source Files")
 
         val symbolFoldersIndexContent = config
                 .libraries!!
@@ -145,7 +145,7 @@ class CmakeFileApiV1Test {
                 .joinToString("\n")
                 .replace("/Users/jomof/projects/dolphin/", "{PROJECT}/")
                 .replace("\\", "/")
-        Truth.assertThat(symbolFoldersIndexContent).isEqualTo("""
+        assertThat(symbolFoldersIndexContent).isEqualTo("""
             /{PROJECT}/build/intermediates/cmake/debug/obj/x86_64
         """.trimIndent())
 
@@ -153,18 +153,18 @@ class CmakeFileApiV1Test {
             .map { it.path.replace("\\", "/") }
             .joinToString("\n")
 
-        Truth.assertThat(buildFilesIndexContent).isEqualTo("""
+        assertThat(buildFilesIndexContent).isEqualTo("""
             /{PROJECT}/CMakeLists.txt
         """.trimIndent())
     }
 
     @Test
     fun checkInferToolExeFromExistingTool() {
-        Truth.assertThat(
+        assertThat(
                 inferToolExeFromExistingTool("/path/to/ld.exe", "clang++")
                         .path.replace("\\", "/"))
                 .isEqualTo("/path/to/clang++.exe")
-        Truth.assertThat(
+        assertThat(
                 inferToolExeFromExistingTool("/path/to/ld", "clang++")
                         .path.replace("\\", "/"))
                 .isEqualTo("/path/to/clang++")
@@ -180,27 +180,27 @@ class CmakeFileApiV1Test {
                 }
 
         val includes = sources.flatMap { it.compileGroup?.includes ?: listOf() }.distinct().sorted()
-        Truth.assertThat(includes).contains("/{PROJECT}/External/minizip")
+        assertThat(includes).contains("/{PROJECT}/External/minizip")
 
         val compileCommandFragments = sources.flatMap { it.compileGroup?.compileCommandFragments ?: listOf() }.distinct().sorted()
-        Truth.assertThat(compileCommandFragments).contains("-Wall")
+        assertThat(compileCommandFragments).contains("-Wall")
 
         val defines = sources.flatMap { it.compileGroup?.defines ?: listOf("(none)") }.distinct().sorted()
-        Truth.assertThat(defines).contains("ANDROID")
-        Truth.assertThat(defines).contains("CIFACE_USE_ANDROID")
+        assertThat(defines).contains("ANDROID")
+        assertThat(defines).contains("CIFACE_USE_ANDROID")
 
         // The "(none)" sysroot is "Header Files"
         val sysroots = sources.map { it.compileGroup?.sysroot ?: "(none)" }.distinct().sorted()
-        Truth.assertThat(sysroots).containsExactly(
+        assertThat(sysroots).containsExactly(
             "(none)",
             "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot")
 
         // The "(none)" language is "Header Files"
         val languageGroups = sources.map { it.compileGroup?.language ?: "(none)" }.distinct().sorted()
-        Truth.assertThat(languageGroups).containsExactly("(none)", "C", "CXX")
+        assertThat(languageGroups).containsExactly("(none)", "C", "CXX")
 
         val sourceGroups = sources.map { it.sourceGroup }.distinct().sorted()
-        Truth.assertThat(sourceGroups).containsExactly("", "CMake Rules", "Header Files", "Object Libraries", "Source Files")
+        assertThat(sourceGroups).containsExactly("", "CMake Rules", "Header Files", "Object Libraries", "Source Files")
 
         val symbolFoldersIndexContent = config
                 .libraries!!
@@ -210,7 +210,7 @@ class CmakeFileApiV1Test {
                 .sorted()
                 .joinToString("\n")
 
-        Truth.assertThat(symbolFoldersIndexContent).isEqualTo("""
+        assertThat(symbolFoldersIndexContent).isEqualTo("""
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Binaries
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Binaries/Tests
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/FreeSurround
@@ -219,7 +219,6 @@ class CmakeFileApiV1Test {
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/bzip2
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/cpp-optparse
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/cubeb
-            /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/cubeb/CMakeFiles/speex.dir/src/speex
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/curl/lib
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/enet
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/fmt
@@ -247,7 +246,6 @@ class CmakeFileApiV1Test {
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core/VideoBackends/Software
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core/VideoBackends/Vulkan
             /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core/VideoCommon
-            /{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/UnitTests/CMakeFiles/unittests_stubhost.dir
             /{PROJECT}/Source/Android/app/build/intermediates/cxx/RelWithDebInfo/262v3q4o/obj/arm64-v8a
         """.trimIndent())
 
@@ -257,7 +255,7 @@ class CmakeFileApiV1Test {
             .sorted()
             .joinToString("\n")
 
-        Truth.assertThat(buildFilesIndexContent).isEqualTo("""
+        assertThat(buildFilesIndexContent).isEqualTo("""
             /{PROJECT}/CMake/CCache.cmake
             /{PROJECT}/CMake/CheckAndAddFlag.cmake
             /{PROJECT}/CMake/CheckLib.cmake
@@ -346,7 +344,7 @@ class CmakeFileApiV1Test {
                 .sorted()
                 .joinToString("\n")
 
-        Truth.assertThat(content).isEqualTo("""
+        assertThat(content).isEqualTo("""
             /{PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libfoo.so
         """.trimIndent())
     }
@@ -419,6 +417,17 @@ class CmakeFileApiV1Test {
             result
                 .libraries!!
                 .getValue("object_dependency::@6890427a1f51a3e7e1df")
+                .output).isNull()
+    }
+
+    @Test
+    fun `bug 198756433 multiple object file in same target`() {
+        val replyFolder = prepareReplyFolder("multiple-object-library-2")
+        val result = readCmakeFileApiReply(replyFolder) { }
+        assertThat(
+            result
+                .libraries!!
+                .getValue("AB::@6890427a1f51a3e7e1df")
                 .output).isNull()
     }
 }
