@@ -983,6 +983,9 @@ public abstract class BasePlugin<
                             + " to run. You are currently using Java "
                             + current.toString()
                             + ".\n"
+                            + "Your current JDK is located in  "
+                            + System.getProperty("java.home")
+                            + "\n"
                             + "You can try some of the following options:\n"
                             + "  - changing the IDE settings.\n"
                             + "  - changing the JAVA_HOME environment variable.\n"
