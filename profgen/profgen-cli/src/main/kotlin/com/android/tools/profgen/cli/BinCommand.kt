@@ -35,6 +35,7 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
     val apkPath by option(ArgType.String, "apk", "a", "File path to apk").required()
     val outPath by option(ArgType.String, "output", "o", "File path to generated binary profile").required()
     val obfPath by option(ArgType.String, "map", "m", "File path to name obfuscation map")
+    val metaPath by option(ArgType.String, "output-meta", "om", "File path to generated metadata output")
     override fun execute() {
         val hrpFile = File(hrpPath)
         require(hrpFile.exists()) { "File not found: $hrpPath" }
@@ -45,6 +46,12 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
         val obfFile = obfPath?.let { File(it) }
         require(obfFile?.exists() != false) { "File not found: $obfPath" }
 
+        val metaFile = metaPath?.let { File(it) }
+        if (metaFile != null) {
+            require(metaFile.parentFile.exists()) {
+                "Directory does not exist: ${metaFile.parent}"
+            }
+        }
 
         val outFile = File(outPath)
         require(outFile.parentFile.exists()) { "Directory does not exist: ${outFile.parent}" }
@@ -54,6 +61,9 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
         val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
         val profile = ArtProfile(hrp, obf, apk)
         profile.save(outFile.outputStream(), ArtProfileSerializer.V0_1_0_P)
+        if (metaFile != null) {
+            profile.save(metaFile.outputStream(), ArtProfileSerializer.METADATA_FOR_N)
+        }
     }
 }
 

@@ -23,13 +23,13 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 
-class Apk internal constructor(val dexes: List<DexFile>)
+class Apk internal constructor(val dexes: List<DexFile>, val name: String = "")
 
-fun Apk(file: File): Apk {
-    return Apk(file.readBytes())
+fun Apk(file: File, name: String = ""): Apk {
+    return Apk(file.readBytes(), name)
 }
 
-fun Apk(bytes: ByteArray): Apk {
+fun Apk(bytes: ByteArray, name: String = ""): Apk {
     return ZipInputStream(bytes.inputStream()).use { zis ->
         val dexes = mutableListOf<DexFile>()
         var zipEntry: ZipEntry? = zis.nextEntry
@@ -43,7 +43,7 @@ fun Apk(bytes: ByteArray): Apk {
             dexes.add(dex)
             zipEntry = zis.nextEntry
         }
-        Apk(dexes)
+        Apk(dexes, name)
     }
 }
 
@@ -64,6 +64,19 @@ class DexFile internal constructor(
     // we don't really care about any of the details of classes, just what index it corresponds to in the
     // type pool, and we can use the type pool to determine its descriptor, so in this case we only need an IntArray.
     internal val classDefPool = IntArray(header.classDefs.size)
+
+    companion object : Comparator<DexFile> {
+
+        override fun compare(o1: DexFile?, o2: DexFile?): Int {
+            return when {
+                o1 == null && o2 == null -> 0
+                o1 == null -> -1
+                o2 == null -> 1
+                else -> o1.name.compareTo(o2.name)
+            }
+        }
+
+    }
 }
 
 fun DexFile(file: File): DexFile = DexFile(file.inputStream(), file.name)
@@ -149,18 +162,36 @@ internal class Span(
 }
 
 internal class DexFileData(
-    val classes: Set<Int>,
+    val typeIndexes: Set<Int>,
+    val classIndexes: Set<Int>,
     val methods: Map<Int, MethodData>,
 )
 
+internal operator fun DexFileData.plus(other: DexFileData?): DexFileData {
+    if (other == null) return this
+    return DexFileData(
+            typeIndexes + other.typeIndexes,
+            classIndexes + other.classIndexes,
+            methods + other.methods
+    )
+}
+
 internal class MutableDexFileData(
-    val classSetSize: Int,
+    val classIdSetSize: Int,
+    val typeIdSetSize: Int,
     val hotMethodRegionSize: Int,
     val numMethodIds: Int,
     val dexFile: DexFile,
-    val classes: MutableSet<Int>,
+    val classIdSet: MutableSet<Int>,
+    val typeIdSet: MutableSet<Int>,
     val methods: MutableMap<Int, MethodData>,
-)
+) {
+    fun asDexFileData() = DexFileData(
+            typeIdSet,
+            classIdSet,
+            methods
+    )
+}
 
 internal data class MethodData(var flags: Int) {
     inline val isHot: Boolean get() = isFlagSet(MethodFlags.HOT)

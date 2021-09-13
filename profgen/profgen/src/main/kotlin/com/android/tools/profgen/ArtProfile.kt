@@ -24,10 +24,11 @@ internal val MAGIC = byteArrayOf('p', 'r', 'o', '\u0000')
 
 class ArtProfile internal constructor(
     internal val profileData: Map<DexFile, DexFileData>,
+    private val apkName: String = ""
 ) {
     fun print(os: PrintStream, obf: ObfuscationMap) {
         for ((dexFile, data) in profileData) {
-            for (typeIndex in data.classes) {
+            for (typeIndex in data.typeIndexes) {
                 val type = dexFile.typePool[typeIndex]
                 obf.deobfuscate(type).forEach { os.println(it) }
             }
@@ -49,18 +50,56 @@ class ArtProfile internal constructor(
      */
     fun save(os: OutputStream, version: ArtProfileSerializer) {
         with(os) {
-            write(MAGIC)
-            write(version.bytes)
-            version.write(os, profileData)
+            write(version.magicBytes)
+            write(version.versionBytes)
+            version.write(os, profileData, apkName)
         }
+    }
+
+    private fun extractKey(key: String): String {
+        val result =  key.substringAfter('!').substringAfter(':')
+        assert(result.indexOf(':') == -1)
+        assert(result.indexOf('!') == -1)
+        return result
+    }
+
+    operator fun plus(other: ArtProfile): ArtProfile {
+        val values = mutableMapOf<String, DexFileData>()
+        val files = mutableMapOf<String, DexFile>()
+        for ((file, value) in profileData) {
+            val key = extractKey(file.name)
+            files[key] = file
+            values[key] = value
+        }
+        for ((file, value) in other.profileData) {
+            val key = extractKey(file.name)
+            files.putIfAbsent(key, file)
+            values[key] = value + values[key]
+        }
+        return ArtProfile(
+                values.map { (key, value) ->
+                    val file = files[key]
+                    if (file == null) null
+                    else
+                        file to value
+                }
+                        .filterNotNull()
+                        .toMap(),
+                apkName
+        )
     }
 }
 
 fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, apk: Apk): ArtProfile {
-    return ArtProfile(hrp, obf, apk.dexes)
+    return ArtProfile(hrp, obf, apk.dexes, apk.name)
 }
 
-fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, dexes: List<DexFile>): ArtProfile {
+fun ArtProfile(
+        hrp: HumanReadableProfile,
+        obf: ObfuscationMap,
+        dexes: List<DexFile>,
+        apkName: String = ""
+): ArtProfile {
     val profileData = HashMap<DexFile, DexFileData>()
     for (iDex in dexes.indices) {
         val dex = dexes[iDex]
@@ -68,7 +107,8 @@ fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, dexes: List<DexFi
         val types = dex.typePool
         val classDefs = dex.classDefPool
 
-        val profileClasses = mutableSetOf<Int>()
+        val profileTypeIndexes = mutableSetOf<Int>()
+        val profileClassIndexes = mutableSetOf<Int>()
         val profileMethods = mutableMapOf<Int, MethodData>()
 
         for (iMethod in methods.indices) {
@@ -80,18 +120,24 @@ fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, dexes: List<DexFi
             }
         }
 
-        for (typeIndex in classDefs) {
+        for (classIndex in classDefs.indices) {
+            val typeIndex = classDefs[classIndex]
             val type = types[typeIndex]
             if (obf.deobfuscate(type).any { hrp.match(it) != 0 }) {
-                profileClasses.add(typeIndex)
+                profileTypeIndexes.add(typeIndex)
+                profileClassIndexes.add(classIndex)
             }
         }
 
-        if (profileClasses.isNotEmpty() || profileMethods.isNotEmpty()) {
-            profileData[dex] = DexFileData(profileClasses, profileMethods)
+        if (profileTypeIndexes.isNotEmpty() || profileMethods.isNotEmpty()) {
+            profileData[dex] = DexFileData(
+                    profileTypeIndexes,
+                    profileClassIndexes,
+                    profileMethods
+            )
         }
     }
-    return ArtProfile(profileData)
+    return ArtProfile(profileData, apkName)
 }
 
 fun ArtProfile(src: InputStream): ArtProfile? {
@@ -109,8 +155,13 @@ fun ArtProfile.save(file: File, version: ArtProfileSerializer) {
 }
 
 internal fun InputStream.readProfileVersion(): ArtProfileSerializer? {
-    val fileMagic = read(MAGIC.size)
-    if (!MAGIC.contentEquals(fileMagic)) error("Invalid magic")
+    val fileMagic = read(ArtProfileSerializer.size)
     val version = read(ArtProfileSerializer.size)
-    return ArtProfileSerializer.values().firstOrNull { it.bytes.contentEquals(version) }
+    if (ArtProfileSerializer.values().none { it.magicBytes.contentEquals(fileMagic) }) {
+        error("Invalid magic")
+    }
+    return ArtProfileSerializer.values().firstOrNull {
+        it.magicBytes.contentEquals(fileMagic) &&
+        it.versionBytes.contentEquals(version)
+    }
 }
