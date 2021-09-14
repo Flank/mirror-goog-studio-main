@@ -85,7 +85,8 @@ class StudioIssueRegistry : IssueRegistry() {
         HtmlPaneDetector.ISSUE,
         ForbiddenStudioCallDetector.INTERN,
         TerminologyDetector.ISSUE,
-        PathAsIterableDetector.ISSUE
+        PathAsIterableDetector.ISSUE,
+        NoOpDetector.ISSUE
     )
 
     // TODO other checks:
