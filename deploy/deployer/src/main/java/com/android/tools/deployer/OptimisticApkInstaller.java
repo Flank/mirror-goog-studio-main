@@ -77,13 +77,14 @@ class OptimisticApkInstaller {
      * The set of "files to add" are extracted from the APK and pushed to the device. The set of
      * "files to delete" are removed from the overlay.
      */
-    public OverlayId install(String packageName, List<Apk> apks) throws DeployerException {
+    public OverlayId install(String packageName, List<Apk> apks, List<String> userFlags)
+            throws DeployerException {
         if (hasInstrumentedTests(apks)) {
             throw DeployerException.runTestsNotSupported();
         }
 
         try {
-            return tracedInstall(packageName, apks);
+            return tracedInstall(packageName, apks, userFlags);
         } catch (DeployerException ex) {
             metrics.finish(ex.getError());
             throw ex;
@@ -94,7 +95,8 @@ class OptimisticApkInstaller {
         }
     }
 
-    private OverlayId tracedInstall(String packageName, List<Apk> apks) throws DeployerException {
+    private OverlayId tracedInstall(String packageName, List<Apk> apks, List<String> userFlags)
+            throws DeployerException {
         final String deviceSerial = adb.getSerial();
         final String targetAbi = adb.getAbiForApks(apks);
         final Deploy.Arch targetArch = AdbClient.getArchForAbi(targetAbi);
@@ -112,6 +114,9 @@ class OptimisticApkInstaller {
         metrics.finish();
 
         metrics.start(DIFF_METRIC);
+        if (!userFlags.isEmpty()) {
+            throw DeployerException.pmFlagsNotSupported();
+        }
         final OverlayId overlayId = entry.getOverlayId();
         OverlayDiffer.Result diff =
                 new OverlayDiffer(options.optimisticInstallSupport).diff(apks, overlayId);
