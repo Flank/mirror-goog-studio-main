@@ -227,9 +227,14 @@ public class Deployer {
             OptimisticApkInstaller apkInstaller =
                     new OptimisticApkInstaller(
                             installer, adb, deployCache, metrics, options, logger);
+            Task<List<String>> userFlags = runner.create(installOptions.getUserFlags());
             Task<OverlayId> overlayId =
                     runner.create(
-                            Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
+                            Tasks.OPTIMISTIC_INSTALL,
+                            apkInstaller::install,
+                            packageName,
+                            apks,
+                            userFlags);
 
             if (useCoroutineDebugger()) {
                 // TODO(b/185399333): instead of using apks, add task to get arch by opening
