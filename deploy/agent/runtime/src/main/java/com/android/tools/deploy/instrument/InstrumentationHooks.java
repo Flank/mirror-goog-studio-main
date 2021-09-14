@@ -104,14 +104,24 @@ public final class InstrumentationHooks {
         return files;
     }
 
+    // Called on app startup; persists overlaid resources.
     public static Resources addResourceOverlays(Resources resources) throws Exception {
-        ResourceOverlays.addResourceOverlays(resources);
+        try {
+            ResourceOverlays.addResourceOverlays(resources);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
         return resources;
     }
 
+    // Called on swap; overlays swapped resources onto the application.
     public static void addResourceOverlays(
             Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) throws Exception {
-        ResourceOverlays.addResourceOverlays(resourcesManager);
+        try {
+            ResourceOverlays.addResourceOverlays(resourcesManager);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
     }
 
     // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers
