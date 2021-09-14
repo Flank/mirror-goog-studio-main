@@ -440,7 +440,6 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (initializer != null && initializer !is ULiteralExpression &&
                     initializer.sourcePsi !is PsiLiteralExpression
                 ) {
-                    initializer.sourcePsi?.containingFile?.text
                     checkTypeDefConstant(
                         context, annotation, initializer, errorNode,
                         flag, usageInfo
