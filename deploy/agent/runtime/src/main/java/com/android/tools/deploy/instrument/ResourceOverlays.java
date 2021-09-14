@@ -21,6 +21,7 @@ import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
+import android.os.StrictMode;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -64,15 +65,20 @@ public final class ResourceOverlays {
         Overlay overlay = new Overlay(getPackageName(activityThread));
 
         List<ResourcesProvider> providers = new ArrayList<>();
-        for (File apkDir : overlay.getApkDirs()) {
-            File resDir = new File(apkDir, "res");
-            File arscFile = new File(apkDir, "resources.arsc");
-            // Ensure there's actually resource content in the directory before creating a loader.
-            // This is mostly important for when IWI run does not support resources but IWI swap
-            // does.
-            if (resDir.exists() || arscFile.exists()) {
-                providers.add(ResourcesProvider.loadFromDirectory(apkDir.getAbsolutePath(), null));
+
+        final StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            for (File apkDir : overlay.getApkDirs()) {
+                File resDir = new File(apkDir, "res");
+                File arscFile = new File(apkDir, "resources.arsc");
+                // Ensure there's resource content in the directory before creating a loader.
+                if (resDir.exists() || arscFile.exists()) {
+                    providers.add(
+                            ResourcesProvider.loadFromDirectory(apkDir.getAbsolutePath(), null));
+                }
             }
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
         }
 
         // This will update every AssetManager that currently references our loader.
