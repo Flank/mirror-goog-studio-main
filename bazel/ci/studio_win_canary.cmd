@@ -9,7 +9,7 @@ set PATH=c:\tools\msys64\usr\bin;%PATH%
 
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0
-call :normalize_path "%SCRIPTDIR%..\..\.." BASEDIR
+call :normalize_path "%SCRIPTDIR%..\..\..\.." BASEDIR
 
 @rem Expected arguments:
 set OUTDIR=%1
