@@ -77,6 +77,9 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val compileSdkVersion: Property<String>
 
+    @get:Internal
+    abstract val projectPath: Property<String>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(
             CheckAarMetadataWorkAction::class.java
@@ -97,6 +100,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
+            it.projectPath.set(projectPath)
         }
     }
 
@@ -133,6 +137,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.compileSdkVersion
                     ?: throw RuntimeException("compileSdkVersion is not specified.")
             )
+            task.projectPath.setDisallowChanges(task.project.path)
         }
     }
 }
@@ -267,11 +272,8 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                 if (minCompileSdkInt > compileSdkVersionInt) {
                     errorMessages.add(
                         """
-                            The $MIN_COMPILE_SDK_PROPERTY ($minCompileSdk) specified in a
-                            dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
-                            is greater than this module's compileSdkVersion ($compileSdkVersion).
-                            Dependency: $displayName.
-                            AAR metadata file: ${aarMetadataFile.absolutePath}.
+                            Dependency '$displayName' requires 'compileSdkVersion' to be set to $minCompileSdk or higher.
+                            Compilation target for module '${checkAarMetadataWorkParameters.projectPath.get()}' is '$compileSdkVersion'
                             """.trimIndent()
                     )
                 }
@@ -306,6 +308,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
+    abstract val projectPath: Property<String>
 }
 
 private data class AarMetadataReader(val file: File) {
