@@ -62,6 +62,8 @@ import com.android.build.gradle.internal.cxx.logging.errorln
  */
 class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
 
+    private val lookupTables = mutableMapOf<List<String>, Map<String, String>>()
+
     /**
      * Group the list of environments in [Settings] by the name of the environment.
      * Note that multiple environments can have the same name.
@@ -79,34 +81,52 @@ class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
     )
 
     /**
-     * Recursively walk through environments and inherited environments finding all properties
-     * that match [namespace] and [name].
+     * Recursively walk through environments and inherited environments finding all properties.
      */
-    private fun resolveAll(
-        namespace: String,
-        name: String,
+    private fun toLookup(
         environmentNames: List<String>,
         excludeEnvironmentNames: MutableSet<String>,
-        matches : MutableSet<Match>) {
-        environmentNames
-            .filter { !excludeEnvironmentNames.contains(it) }
-            .forEach { environmentName ->
-                excludeEnvironmentNames.add(environmentName)
-                environmentMap[environmentName]
-                    ?.forEach { environment ->
-                        if (namespace == environment.namespace) {
-                            environment.properties[name]?.let { value ->
-                                matches += Match(environment.groupPriority ?: 0, value)
-                            }
-                        }
-                        resolveAll(
-                            namespace,
-                            name,
-                            environment.inheritEnvironments,
-                            excludeEnvironmentNames,
-                            matches)
+        matches : MutableMap<Pair<String, String>, Match> = mutableMapOf())  {
+        for(environmentName in environmentNames) {
+            if (!excludeEnvironmentNames.add(environmentName)) continue
+            for(environment in environmentMap[environmentName] ?: listOf()) {
+                val currentGroupPriority = environment.groupPriority ?: 0
+                for((name, value) in environment.properties) {
+                    val fullname = environment.namespace to name
+                    val prior = matches[fullname]
+                    if (prior == null ||
+                        currentGroupPriority > prior.groupPriority) {
+                        matches[fullname] = Match(currentGroupPriority, value)
                     }
+                }
+                toLookup(
+                    environment.inheritEnvironments,
+                    excludeEnvironmentNames,
+                    matches
+                )
+            }
         }
+    }
+
+    private fun toLookupTable(environmentNames: List<String>) : Map<String, String> {
+        val matches = mutableMapOf<Pair<String, String>, Match>()
+        toLookup(
+            environmentNames,
+            mutableSetOf(),
+            matches
+        )
+        val result = mutableMapOf<String, String>()
+        for((key, match) in matches) {
+            val (environment, name) = key
+            val qualified = "${environment}.$name"
+            result[qualified] = match.propertyValue
+            if (environment == "env") {
+                // "env" environment is special in that it doesn't require full
+                // qualification to match.
+                result[name] = match.propertyValue
+            }
+        }
+        return result
     }
 
     /**
@@ -118,24 +138,8 @@ class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
     fun resolve(
         qualifiedName : String,
         environmentNames: List<String>) : String? {
-        val (namespace, name) =
-            if (qualifiedName.contains(".")) {
-                val split = qualifiedName.split(".")
-                if (split.size != 2) {
-                    errorln("Expected qualified name '$qualifiedName' to have two parts " +
-                            "but it had ${split.size}")
-                }
-                split
-            }
-            else listOf("env", qualifiedName)
-        val matches = mutableSetOf<Match>()
-        resolveAll(
-            namespace,
-            name,
-            environmentNames,
-            mutableSetOf(),
-            matches)
-        return matches.maxByOrNull { it.groupPriority }
-                ?.propertyValue
+        return lookupTables.computeIfAbsent(environmentNames) {
+            toLookupTable(environmentNames = environmentNames)
+        }[qualifiedName]
     }
 }
