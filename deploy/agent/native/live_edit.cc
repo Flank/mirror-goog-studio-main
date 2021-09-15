@@ -72,6 +72,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     recompose.LoadStateAndCompose(reloader, state);
   }
 
+  resp.set_status(proto::LiveEditResponse::OK);
   return resp;
 }
 }  // namespace deploy
