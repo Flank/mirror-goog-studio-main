@@ -1735,7 +1735,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createTestDevicesTasks() {
-        if (!shouldEnableUtp(projectOptions, extension.testOptions)) {
+        if (!shouldEnableUtp(projectOptions, extension.testOptions, variantType = null)) {
             return
         }
 
@@ -1875,7 +1875,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (shouldEnableUtp(projectOptions, extension.testOptions)) {
+        if (shouldEnableUtp(projectOptions, extension.testOptions, testedVariant.variantType)) {
             // Now for each managed device defined in the dsl
             val managedDevices = mutableListOf<ManagedVirtualDevice>()
             extension
