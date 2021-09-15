@@ -62,8 +62,14 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
 
 class Instrumenter {
  public:
-  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni, const TransformCache& cache)
-      : jvmti_(jvmti), jni_(jni), cache_(cache), caching_enabled_(true) {}
+  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni, const TransformCache& cache,
+               bool caching_enable = true)
+      : jvmti_(jvmti),
+        jni_(jni),
+        cache_(cache),
+        caching_enabled_(caching_enable) {
+    cache_.Init();
+  }
 
   bool Instrument(const Transform& transform) const;
   bool Instrument(const std::vector<const Transform*>& transforms) const;

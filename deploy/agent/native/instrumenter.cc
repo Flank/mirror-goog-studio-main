@@ -378,7 +378,7 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return true;
   }
 
-  auto cache = TransformCache::Create(instrument_jar_path + ".cache");
+  auto cache = TransformCache(instrument_jar_path + ".cache");
   Instrumenter instrumenter(jvmti, jni, cache);
 
   bool success = false;

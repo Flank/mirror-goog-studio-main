@@ -45,18 +45,29 @@ class Transform {
 // allows for the retrieval of previously cached dex files keyed by class name.
 class TransformCache {
  public:
-  static TransformCache Create(const std::string& cache_path);
+  explicit TransformCache(const std::string& cache_path = "UNINITIALIZED")
+      : cache_path_(cache_path) {}
+  virtual void Init();
 
-  bool ReadClass(const std::string& class_name,
-                 std::vector<dex::u4>* class_bytes) const;
-  bool WriteClass(const std::string& class_name,
-                  const std::vector<dex::u4>& class_bytes) const;
+  virtual bool ReadClass(const std::string& class_name,
+                         std::vector<dex::u4>* class_bytes) const;
+  virtual bool WriteClass(const std::string& class_name,
+                          const std::vector<dex::u4>& class_bytes) const;
 
  private:
-  TransformCache(const std::string& cache_path) : cache_path_(cache_path) {}
-
   const std::string cache_path_;
   std::string GetCachePath(const std::string& class_name) const;
+};
+
+class DisabledTransformCache : public TransformCache {
+ public:
+  explicit DisabledTransformCache() : TransformCache() {}
+  void Init() override {}
+
+  bool ReadClass(const std::string& class_name,
+                 std::vector<dex::u4>* class_bytes) const override;
+  bool WriteClass(const std::string& class_name,
+                  const std::vector<dex::u4>& class_bytes) const override;
 };
 
 struct BytecodeConvertingVisitor : public lir::Visitor {

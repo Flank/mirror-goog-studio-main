@@ -23,6 +23,7 @@
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/recompose.h"
 #include "tools/base/deploy/agent/native/transform/stub_transform.h"
+#include "tools/base/deploy/agent/native/transform/transforms.h"
 #include "tools/base/deploy/common/log.h"
 
 // TODO: We need some global state that holds all these information
@@ -41,8 +42,8 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   // class_name is in the format of "com.example.Target"
   if (primed_classes.find(req.class_name()) == primed_classes.end()) {
-    TransformCache cache = TransformCache::Create("BROKEN");
-    Instrumenter instrumenter(jvmti, jni, cache);
+    TransformCache cache = DisabledTransformCache();
+    Instrumenter instrumenter(jvmti, jni, cache, false);
     std::string name = req.class_name();
 
     // Transform expect class name to be in the format of "com/example/Target"

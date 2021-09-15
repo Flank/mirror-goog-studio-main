@@ -21,17 +21,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
-TransformCache TransformCache::Create(const std::string& cache_path) {
-  if (IO::access(cache_path, F_OK) && IO::mkdir(cache_path, S_IRWXU)) {
+void TransformCache::Init() {
+  if (IO::access(cache_path_, F_OK) && IO::mkdir(cache_path_, S_IRWXU)) {
     Log::W("Could not create transform cache directory: %s %s", strerror(errno),
-           cache_path.c_str());
+           cache_path_.c_str());
   }
-  return TransformCache(cache_path);
 }
 
 bool TransformCache::ReadClass(const std::string& class_name,
@@ -52,4 +52,15 @@ std::string TransformCache::GetCachePath(const std::string& class_name) const {
   return cache_path_ + "/" + file_name;
 }
 
+bool DisabledTransformCache::ReadClass(
+    const std::string& class_name, std::vector<dex::u4>* class_bytes) const {
+  ErrEvent("Attempted ReadClass on DisabledTransformCache");
+  return false;
+}
+bool DisabledTransformCache::WriteClass(
+    const std::string& class_name,
+    const std::vector<dex::u4>& class_bytes) const {
+  ErrEvent("Attempted WriteClass on DisabledTransformCache");
+  return false;
+}
 }  // namespace deploy
