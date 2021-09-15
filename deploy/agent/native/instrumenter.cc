@@ -346,7 +346,7 @@ std::string SetUpInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   return instrument_jar_path;
 }
 
-HookTransform GetResourceManagerTransform(JNIEnv* jni) {
+static HookTransform GetResourceManagerTransform(JNIEnv* jni) {
   JniClass version(jni, "android/os/Build$VERSION");
   jint sdk = version.GetStaticIntField("SDK_INT", "I");
 
