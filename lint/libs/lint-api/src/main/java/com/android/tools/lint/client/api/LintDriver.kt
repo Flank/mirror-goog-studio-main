@@ -3793,28 +3793,13 @@ class LintDriver(
         }
 
         private fun matches(issue: Issue?, id: String): Boolean {
-            if (id.equals(SUPPRESS_ALL, ignoreCase = true)) {
-                return true
-            }
-
             if (issue != null) {
                 val issueId = issue.id
-                if (id.equals(issueId, ignoreCase = true)) {
+                if (matches(issueId, id)) {
                     return true
                 }
-                if (issueId.equals(IssueRegistry.getNewId(id), ignoreCase = true)) {
-                    return true
-                }
-                if (id.startsWith(STUDIO_ID_PREFIX) &&
-                    id.regionMatches(
-                            STUDIO_ID_PREFIX.length,
-                            issueId,
-                            0,
-                            issueId.length,
-                            ignoreCase = true
-                        ) &&
-                    id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
-                ) {
+
+                if (issue.getAliases()?.any { matches(it, id) } == true) {
                     return true
                 }
 
@@ -3822,6 +3807,32 @@ class LintDriver(
                 if (matchesCategory(issue.category, id)) {
                     return true
                 }
+            }
+            return false
+        }
+
+        private fun matches(issueId: String, id: String): Boolean {
+            if (id.equals(SUPPRESS_ALL, ignoreCase = true)) {
+                return true
+            }
+
+            if (id.equals(issueId, ignoreCase = true)) {
+                return true
+            }
+            if (issueId.equals(IssueRegistry.getNewId(id), ignoreCase = true)) {
+                return true
+            }
+            if (id.startsWith(STUDIO_ID_PREFIX) &&
+                id.regionMatches(
+                        STUDIO_ID_PREFIX.length,
+                        issueId,
+                        0,
+                        issueId.length,
+                        ignoreCase = true
+                    ) &&
+                id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
+            ) {
+                return true
             }
 
             return false

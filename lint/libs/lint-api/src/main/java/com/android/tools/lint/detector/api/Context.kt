@@ -593,6 +593,11 @@ open class Context(
 
         @VisibleForTesting
         fun isSuppressedWithComment(line: String, issue: Issue): Boolean {
+            issue.getAliases()?.let { aliases ->
+                if (aliases.any { alias -> lineContainsId(line, alias) }) {
+                    return true
+                }
+            }
             return lineContainsId(line, issue.id) ||
                 lineContainsId(line, SUPPRESS_ALL) ||
                 isSuppressedWithComment(line, issue.category)

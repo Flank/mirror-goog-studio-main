@@ -77,33 +77,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             androidSpecific = true,
             enabledByDefault = false,
             implementation = IMPLEMENTATION
-        )
-
-        // A similar inspection is available in IntelliJ, using several different id's.
-        // Create a couple of internal issues with the same id's such that we can check
-        // for suppress directives for those other aliases.
-
-        @Suppress("ObjectPropertyName") // underscore prefix required by testing infra
-        val _ALIAS_1 = Issue.create(
-            "SyntheticAccessorCall",
-            "?",
-            "?",
-            Category.LINT,
-            1,
-            Severity.WARNING,
-            IMPLEMENTATION
-        )
-
-        @Suppress("ObjectPropertyName") // underscore prefix required by testing infra
-        val _ALIAS_2 = Issue.create(
-            "PrivateMemberAccessBetweenOuterAndInnerClass",
-            "?",
-            "?",
-            Category.LINT,
-            1,
-            Severity.WARNING,
-            IMPLEMENTATION
-        )
+        ).setAliases(listOf("SyntheticAccessorCall", "PrivateMemberAccessBetweenOuterAndInnerClass"))
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
@@ -209,12 +183,6 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
         member: PsiMember,
         target: PsiClass
     ) {
-        val driver = context.driver
-        if (driver.isSuppressed(context, _ALIAS_1, node) ||
-            driver.isSuppressed(context, _ALIAS_2, node)
-        ) {
-            return
-        }
         val location =
             if (node is UCallExpression) {
                 context.getCallLocation(node, true, false)

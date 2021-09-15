@@ -81,6 +81,11 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
                             //noinspection SyntheticAccessorCall
                             method1(); // OK - suppressed with IntelliJ similar inspection id
                         }
+
+                        @SuppressWarnings("PrivateMemberAccessBetweenOuterAndInnerClass")
+                        private void testSuppressAlias() {
+                            method1();
+                        }
                     }
 
                     @SuppressWarnings("ResultOfObjectAllocationIgnored")
@@ -127,55 +132,55 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             src/test/pkg/AccessTest.java:42: Warning: Access to private method method1 of class AccessTest requires synthetic accessor [SyntheticAccessor]
                         method1(); // ERROR
                         ~~~~~~~
-            src/test/pkg/AccessTest.java:61: Warning: Access to private constructor of class AccessTest requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest.java:66: Warning: Access to private constructor of class AccessTest requires synthetic accessor [SyntheticAccessor]
                             new AccessTest(); // ERROR
                             ~~~~~~~~~~~~~~~~
-            src/test/pkg/AccessTest.java:64: Warning: Access to private field field1 of class AccessTest requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest.java:69: Warning: Access to private field field1 of class AccessTest requires synthetic accessor [SyntheticAccessor]
                             int f1 = field1; // ERROR
                                      ~~~~~~
-            src/test/pkg/AccessTest.java:68: Warning: Access to private field field5 of class AccessTest requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest.java:73: Warning: Access to private field field5 of class AccessTest requires synthetic accessor [SyntheticAccessor]
                             Inner[] f5 = field5; // ERROR
                                          ~~~~~~
-            src/test/pkg/AccessTest.java:70: Warning: Access to private method method1 of class AccessTest requires synthetic accessor [SyntheticAccessor]
+            src/test/pkg/AccessTest.java:75: Warning: Access to private method method1 of class AccessTest requires synthetic accessor [SyntheticAccessor]
                             method1(); // ERROR
                             ~~~~~~~
             0 errors, 8 warnings
             """
         ).expectFixDiffs(
             """
-                Fix for src/test/pkg/AccessTest.java line 33: Make package protected:
-                @@ -13 +13
-                -     private AccessTest() {
-                +     AccessTest() {
-                Fix for src/test/pkg/AccessTest.java line 36: Make package protected:
-                @@ -6 +6
-                -     private int field1;
-                +     int field1;
-                Fix for src/test/pkg/AccessTest.java line 40: Make package protected:
-                @@ -10 +10
-                -     private final Inner[] field5 = new Inner[100];
-                +     final Inner[] field5 = new Inner[100];
-                Fix for src/test/pkg/AccessTest.java line 42: Make package protected:
-                @@ -19 +19
-                -     private void method1() {
-                +     void method1() {
-                Fix for src/test/pkg/AccessTest.java line 61: Make package protected:
-                @@ -13 +13
-                -     private AccessTest() {
-                +     AccessTest() {
-                Fix for src/test/pkg/AccessTest.java line 64: Make package protected:
-                @@ -6 +6
-                -     private int field1;
-                +     int field1;
-                Fix for src/test/pkg/AccessTest.java line 68: Make package protected:
-                @@ -10 +10
-                -     private final Inner[] field5 = new Inner[100];
-                +     final Inner[] field5 = new Inner[100];
-                Fix for src/test/pkg/AccessTest.java line 70: Make package protected:
-                @@ -19 +19
-                -     private void method1() {
-                +     void method1() {
-                """
+            Fix for src/test/pkg/AccessTest.java line 33: Make package protected:
+            @@ -13 +13
+            -     private AccessTest() {
+            +     AccessTest() {
+            Fix for src/test/pkg/AccessTest.java line 36: Make package protected:
+            @@ -6 +6
+            -     private int field1;
+            +     int field1;
+            Fix for src/test/pkg/AccessTest.java line 40: Make package protected:
+            @@ -10 +10
+            -     private final Inner[] field5 = new Inner[100];
+            +     final Inner[] field5 = new Inner[100];
+            Fix for src/test/pkg/AccessTest.java line 42: Make package protected:
+            @@ -19 +19
+            -     private void method1() {
+            +     void method1() {
+            Fix for src/test/pkg/AccessTest.java line 66: Make package protected:
+            @@ -13 +13
+            -     private AccessTest() {
+            +     AccessTest() {
+            Fix for src/test/pkg/AccessTest.java line 69: Make package protected:
+            @@ -6 +6
+            -     private int field1;
+            +     int field1;
+            Fix for src/test/pkg/AccessTest.java line 73: Make package protected:
+            @@ -10 +10
+            -     private final Inner[] field5 = new Inner[100];
+            +     final Inner[] field5 = new Inner[100];
+            Fix for src/test/pkg/AccessTest.java line 75: Make package protected:
+            @@ -19 +19
+            -     private void method1() {
+            +     void method1() {
+            """
         )
     }
 
