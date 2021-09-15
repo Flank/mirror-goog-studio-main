@@ -1739,6 +1739,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
 
+        if (extension.testOptions.devices.isNotEmpty()) {
+            logger.warn(
+                "WARNING: The Gradle Managed Device DSL and associated tests are experimental")
+        }
         val managedDevices = mutableListOf<ManagedVirtualDevice>()
         extension
                 .testOptions
