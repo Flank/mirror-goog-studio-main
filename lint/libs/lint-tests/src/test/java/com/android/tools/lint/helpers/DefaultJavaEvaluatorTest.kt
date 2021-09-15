@@ -20,6 +20,7 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.parse
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
@@ -29,19 +30,29 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiModifierListOwner
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertFalse
+import junit.framework.Assert.assertTrue
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.visitor.AbstractUastVisitor
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /**
  * Most of the evaluator is tested indirectly via all the lint unit
  * tests; this covers some additional specific scenarios.
  */
 class DefaultJavaEvaluatorTest {
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     // Regression test for https://groups.google.com/d/msg/lint-dev/BaRimyf40tI/DpkOjMMEAQAJ
     @Test
     fun lookUpAnnotationsOnUastModifierLists() {
@@ -151,6 +162,68 @@ class DefaultJavaEvaluatorTest {
                 0 errors, 18 warnings
                 """
             )
+    }
+
+    @Test
+    fun testStatic() {
+        val (contexts, disposable) = parse(
+            temporaryFolder = temporaryFolder,
+            sdkHome = TestUtils.getSdk().toFile(),
+            testFiles = arrayOf(
+                java(
+                    """
+                    package foo;
+                    public class Foo {
+                        public static String staticMethodJava() { return ""; }
+                        public String instanceMethodJava() { return ""; }
+                    }
+                    """
+                ).indented(),
+                kotlin(
+                    """
+                    @file:JvmName("Tedt")
+                    package foo
+                    fun staticMethodTopLevel() {
+                    }
+                    """
+                ).indented(),
+                kotlin(
+                    """
+                    package foo
+                    class Bar {
+                        fun instanceMethodKotlin(): String { return "" }
+                        companion object {
+                            fun instanceMethodCompanionObject(): String { return "" }
+                            @JvmStatic
+                            fun staticMethodCompanionObject(): String { return "" }
+                        }
+                    }
+                    """
+                ).indented()
+            )
+        )
+
+        var methodCount = 0
+        for (context in contexts) {
+            val file = context.uastFile ?: continue
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitMethod(node: UMethod): Boolean {
+                    methodCount++
+                    if (node.isConstructor) {
+                        assertFalse(context.evaluator.isStatic(node))
+                    } else {
+                        val name = node.name
+                        assertTrue(name, name.startsWith("instance") || name.startsWith("static"))
+                        val expectStatic = name.startsWith("static")
+                        val isStatic = context.evaluator.isStatic(node)
+                        assertEquals("Incorrect isStatic value for method $name", expectStatic, isStatic)
+                    }
+                    return super.visitMethod(node)
+                }
+            })
+        }
+        assertEquals(9, methodCount)
+        Disposer.dispose(disposable)
     }
 
     class TestAnnotationLookupDetector : Detector(), SourceCodeScanner {

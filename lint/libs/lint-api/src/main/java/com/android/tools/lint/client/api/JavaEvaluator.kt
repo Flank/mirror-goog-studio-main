@@ -49,6 +49,7 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeVisitor
 import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.asJava.elements.KtLightModifierList
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -263,8 +264,14 @@ class JavaEvaluator {
 
     open fun isStatic(owner: PsiModifierListOwner?): Boolean {
         if (owner != null) {
-            val modifierList = owner.modifierList
-            return modifierList != null && modifierList.hasModifierProperty(PsiModifier.STATIC)
+            val modifierList = owner.modifierList ?: return false
+
+            if (modifierList.hasModifierProperty(PsiModifier.STATIC)) {
+                return true
+            }
+            if (owner is PsiMethod && modifierList is KtLightModifierList<*>) {
+                return modifierList.findAnnotation("kotlin.jvm.JvmStatic") != null
+            }
         }
         return false
     }
