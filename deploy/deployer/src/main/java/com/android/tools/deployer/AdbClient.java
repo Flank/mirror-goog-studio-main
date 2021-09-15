@@ -31,6 +31,7 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -225,7 +226,7 @@ public class AdbClient {
      * natively supports. An application with no native libraries automatically runs with the
      * most-preferred device ABI.
      */
-    public String getAbiForApks(List<Apk> apks) throws DeployerException {
+    public Deploy.Arch getArchFromApk(List<Apk> apks) throws DeployerException {
         HashSet<String> appSupported = new HashSet<>();
         for (Apk apk : apks) {
             appSupported.addAll(apk.libraryAbis);
@@ -236,23 +237,19 @@ public class AdbClient {
             throw DeployerException.unsupportedArch();
         }
 
-        // No native library means we use the first device-preferred ABI.
+        // No native libraries means we use the first device-preferred ABI.
         if (appSupported.isEmpty()) {
             String abi = deviceSupported.get(0);
-            return abi;
+            return ABI_MAP.get(abi);
         }
 
         for (String abi : deviceSupported) {
             if (appSupported.contains(abi)) {
-                return abi;
+                return ABI_MAP.get(abi);
             }
         }
 
         throw DeployerException.unsupportedArch();
-    }
-
-    public static Deploy.Arch getArchForAbi(String abi) throws DeployerException {
-        return ABI_MAP.get(abi);
     }
 
     private Deploy.Arch getArch(int pid) {

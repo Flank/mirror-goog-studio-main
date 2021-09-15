@@ -314,7 +314,7 @@ public class Deployer {
 
     private boolean installCoroutineDebugger(String packageName, List<Apk> apk)
             throws DeployerException {
-        Deploy.Arch arch = AdbClient.getArchForAbi(adb.getAbiForApks(apk));
+        Deploy.Arch arch = adb.getArchFromApk(apk);
         try {
             Deploy.InstallCoroutineAgentResponse response =
                     installer.installCoroutineAgent(packageName, arch);

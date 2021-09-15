@@ -21,12 +21,8 @@ import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 class OptimisticApkInstaller {
 
@@ -98,8 +94,7 @@ class OptimisticApkInstaller {
     private OverlayId tracedInstall(String packageName, List<Apk> apks, List<String> userFlags)
             throws DeployerException {
         final String deviceSerial = adb.getSerial();
-        final String targetAbi = adb.getAbiForApks(apks);
-        final Deploy.Arch targetArch = AdbClient.getArchForAbi(targetAbi);
+        final Deploy.Arch targetArch = adb.getArchFromApk(apks);
 
         metrics.start(DUMP_METRIC);
         DeploymentCacheDatabase.Entry entry = cache.get(deviceSerial, packageName);
@@ -123,9 +118,8 @@ class OptimisticApkInstaller {
         metrics.finish();
 
         metrics.start(EXTRACT_METRIC);
-        List<ApkEntry> filesToAdd = filterIncompatibleNativeLibraries(targetAbi, diff.filesToAdd);
         Map<ApkEntry, ByteString> overlayFiles =
-                new ApkEntryExtractor().extractFromEntries(filesToAdd);
+                new ApkEntryExtractor().extractFromEntries(diff.filesToAdd);
         metrics.finish();
 
         metrics.start(UPDATE_METRIC);
@@ -173,20 +167,5 @@ class OptimisticApkInstaller {
 
     private static boolean hasInstrumentedTests(List<Apk> apks) {
         return apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty());
-    }
-
-    private static List<ApkEntry> filterIncompatibleNativeLibraries(
-            String targetAbi, Collection<ApkEntry> entries) {
-        return entries.stream()
-                .filter(
-                        entry -> {
-                            Path overlayPath = Paths.get(entry.getName());
-                            if (overlayPath.startsWith("lib")) {
-                                String abi = overlayPath.getParent().getFileName().toString();
-                                return targetAbi.equals(abi);
-                            }
-                            return true;
-                        })
-                .collect(Collectors.toList());
     }
 }
