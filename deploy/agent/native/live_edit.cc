@@ -23,7 +23,6 @@
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/recompose.h"
 #include "tools/base/deploy/agent/native/transform/stub_transform.h"
-#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
 // TODO: We need some global state that holds all these information
