@@ -133,6 +133,8 @@ class $activityClass : AppCompatActivity() {
      * @see [Getting a result
      * from an Activity](https://developer.android.com/training/basics/intents/result)
      */
+    @Suppress("Deprecation")
+    // Suppressing deprecation until `registerForActivityResult` is available on the Google Pay API.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
