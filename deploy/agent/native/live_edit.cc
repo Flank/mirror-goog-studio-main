@@ -45,7 +45,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     Instrumenter instrumenter(jvmti, jni, cache);
     std::string name = req.class_name();
 
-    // Transform expect class name to be in the formate of "com/example/Target"
+    // Transform expect class name to be in the format of "com/example/Target"
     std::replace(name.begin(), name.end(), '.', '/');
     const StubTransform stub(name);
     instrumenter.Instrument(stub);
