@@ -350,7 +350,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             val executionEnum = extension.testOptions.getExecutionEnum()
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)
-            val useUtp = shouldEnableUtp(projectOptions,extension.testOptions)
+            val useUtp = shouldEnableUtp(projectOptions,extension.testOptions,
+                                         testedConfig?.variantType)
             task.testRunnerFactory.unifiedTestPlatform.setDisallowChanges(useUtp)
 
             if (useUtp) {
