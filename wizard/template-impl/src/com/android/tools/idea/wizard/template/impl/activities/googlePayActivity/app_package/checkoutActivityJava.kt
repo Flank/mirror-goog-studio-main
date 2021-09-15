@@ -39,7 +39,7 @@ fun checkoutActivityJava(
   else "googlePayButton = findViewById(R.id.googlePayButton);"
 
   return """
-package $packageName.activity;
+package $packageName;
 
 import android.content.Intent;
 import android.os.Bundle;
