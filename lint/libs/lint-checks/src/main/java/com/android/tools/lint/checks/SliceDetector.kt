@@ -55,6 +55,7 @@ import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UPostfixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getParentOfType
@@ -473,8 +474,12 @@ class SliceDetector : Detector(), SourceCodeScanner {
                                         break
                                     }
                                     curr = curr.receiver.skipParenthesizedExprDown() ?: break
+                                } else if (curr is UPostfixExpression && curr.operator.text == "!!") {
+                                    curr = curr.operand.skipParenthesizedExprDown() ?: break
                                 } else if (curr is UCallExpression) {
                                     argument(curr, curr)
+                                    break
+                                } else {
                                     break
                                 }
                             }
