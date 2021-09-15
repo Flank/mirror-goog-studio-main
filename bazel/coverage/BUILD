@@ -488,6 +488,53 @@ coverage_report(
 )
 
 coverage_report(
+    name = "profileable-ui",
+    srcpath_include = [
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/SupportLevel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/StudioProfilers.java",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/SessionsManager.java",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/memory/MainMemoryProfilerStage.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/StudioProfilersView.java",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/DismissibleMessage.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/sessions/SessionsView.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/sessions/SessionItemView.java",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/CpuProfilersView.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/memory/BaseMemoryTimelineComponent.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/memory/MainMemoryProfilerStageView.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
+coverage_report(
+    name = "simpleperf-collapse-ui",
+    srcpath_include = [
+        "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/ComboCheckBox.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu/CpuCaptureStageView.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/BaseCpuCapture.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/CaptureNode.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/CaptureNodeModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/CppFunctionModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/NoSymbolModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/SyscallModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/JavaMethodModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/nodemodel/NativeNodeModel.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/simpleperf/SimpleperfTraceParser.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu/simpleperf/NodeNameParser.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/DropDownButton.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/PathUtils.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
+        "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
+coverage_report(
     name = "templates",
     srcpath_include = [
         "tools/adt/idea/android/src/com/android-npw/tools/idea/npw/module/recipes",
@@ -706,11 +753,13 @@ combine_report_definitions(
         "navigationsafeargs",
         "network-inspector",
         "parallel-device-test-report",
+        "profileable-ui",
         "profilers",
         "projectsystem",
         "r8-editing",
         "resources-ui",
         "retention",
+        "simpleperf-collapse-ui",
         "spliteditor",
         "suggested-import",
         "systracev2",
