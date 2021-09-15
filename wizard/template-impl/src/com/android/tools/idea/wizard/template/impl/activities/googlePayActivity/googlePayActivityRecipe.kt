@@ -56,11 +56,10 @@ fun RecipeExecutor.googlePayActivityRecipe(
   }
 
   // Create manifest
-  val activityPackage = "$packageName.activity"
   val simpleName = activityToLayout(activityClass)
   mergeXml(
     androidManifestXml(
-        activityClass, isLauncher, moduleData.isLibrary, activityPackage, simpleName, moduleData.isNewModule, moduleData.themesData),
+        activityClass, isLauncher, moduleData.isLibrary, packageName, simpleName, moduleData.isNewModule, moduleData.themesData),
     manifestOut.resolve("AndroidManifest.xml"))
 
   // Copy static resources
@@ -69,7 +68,7 @@ fun RecipeExecutor.googlePayActivityRecipe(
 
   // Generated resources
   mergeXml(stringsXml(activityClass, simpleName), resLocation.resolve("values/strings.xml"))
-  save(activityCheckoutXml(activityClass, activityPackage), resLocation.resolve("layout/$layoutName.xml"))
+  save(activityCheckoutXml(activityClass, packageName), resLocation.resolve("layout/$layoutName.xml"))
 
   // Generate Constants class
   val ktOrJavaExt = projectData.language.extension
@@ -118,7 +117,6 @@ fun RecipeExecutor.googlePayActivityRecipe(
       isViewBindingSupported = isViewBindingSupported)
   }
 
-  val activityOut = srcOut.resolve("activity")
-  save(checkoutActivity, activityOut.resolve("$activityClass.$ktOrJavaExt"))
-  open(activityOut.resolve("$activityClass.$ktOrJavaExt"))
+  save(checkoutActivity, srcOut.resolve("$activityClass.$ktOrJavaExt"))
+  open(srcOut.resolve("$activityClass.$ktOrJavaExt"))
 }

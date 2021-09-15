@@ -41,7 +41,7 @@ fun checkoutActivityKt(
   else "googlePayButton = findViewById<View>(R.id.googlePayButton)"
 
   return """
-package ${escapeKotlinIdentifier("$packageName.activity")}
+package ${escapeKotlinIdentifier(packageName)}
 
 import android.content.Intent
 import android.os.Bundle
