@@ -41,8 +41,8 @@ class MethodNodeFinder extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(
             int access, String name, String desc, String signature, String[] exceptions) {
-        if (!name.equals(targetName)) {
-            return super.visitMethod(access, name, desc, signature, exceptions);
+        if (!targetName.equals(name + desc)) {
+            return null;
         }
         target = new TryCatchBlockSorter(null, access, name, desc, signature, exceptions);
         return target;

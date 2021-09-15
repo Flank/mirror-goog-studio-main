@@ -268,4 +268,14 @@ class TestTarget {
             default: return -1;
         }
     }
+
+    // This method and the next one MUST have the same name.
+    // They are used to test overloading selection.
+    public static int returnMax(int i) {
+        return Integer.MAX_VALUE;
+    }
+
+    public static long returnMax(long l) {
+        return Long.MAX_VALUE;
+    }
 }

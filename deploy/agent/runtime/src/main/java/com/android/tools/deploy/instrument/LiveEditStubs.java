@@ -65,7 +65,7 @@ public final class LiveEditStubs {
         String methodKey = parameters[0].toString();
         int idx = methodKey.indexOf("->");
         String methodClassName = methodKey.substring(0, idx);
-        String methodName = methodKey.substring(idx + 2, methodKey.indexOf("("));
+        String methodName = methodKey.substring(idx + 2);
 
         // Second parameter is the this pointer, or null if static
         Object thisObject = parameters[1];
