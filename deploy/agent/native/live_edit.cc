@@ -60,11 +60,10 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   JniClass stub(jni, "com/android/tools/deploy/instrument/LiveEditStubs");
 
-  const char* key =
-      ((req.class_name() + "->" + req.method_signature()).c_str());
-  Log::E("Live Edit key %s", key);
+  const std::string key = req.class_name() + "->" + req.method_signature();
+  Log::E("Live Edit key %s", key.c_str());
   stub.CallStaticVoidMethod("addToCache", "(Ljava/lang/String;[B)V",
-                            jni->NewStringUTF(key), arr);
+                            jni->NewStringUTF(key.c_str()), arr);
 
   Recompose recompose(jvmti, jni);
   jobject reloader = recompose.GetComposeHotReload();
