@@ -35,6 +35,7 @@ import com.android.tools.lint.detector.api.previousStatement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
+import org.jetbrains.uast.UAnnotationMethod
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
@@ -52,6 +53,7 @@ import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUTernaryIfExpression
+import org.jetbrains.uast.java.expressions.JavaUSynchronizedExpression
 import org.jetbrains.uast.skipParenthesizedExprUp
 import java.util.EnumSet
 
@@ -263,6 +265,9 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             @Suppress("RedundantIf")
             if (curr is UBlockExpression) {
+                if (curr is JavaUSynchronizedExpression) {
+                    return false
+                }
                 // In Java, it's apparent when an expression is unused:
                 // the parent is a block expression. However, in Kotlin it's
                 // much trickier: values can flow through blocks and up through
@@ -329,6 +334,9 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
                 return isExpressionValueUnused(curr)
             } else if (curr is UMethod || curr is UClassInitializer) {
+                if (curr is UAnnotationMethod) {
+                    return false
+                }
                 return true
             } else {
                 @Suppress("UnstableApiUsage")

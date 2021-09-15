@@ -1622,4 +1622,33 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean() // until KTIJ-18765 is fixed
     }
+
+    fun testSynchronized() {
+        lint().files(
+            java(
+                """
+                import androidx.annotation.CheckResult;
+                public class Api {
+                    @CheckResult
+                    public Object getLock() { return Api.class; }
+                    public void test() {
+                        synchronized (getLock()) {
+                            println("Test");
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                class Api2 : Api() {
+                    fun test2() {
+                        synchronized(getLock()) { println("test") }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
