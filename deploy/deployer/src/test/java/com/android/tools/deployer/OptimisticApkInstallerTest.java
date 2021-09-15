@@ -219,6 +219,40 @@ public class OptimisticApkInstallerTest {
     }
 
     @Test
+    public void filterIncorrectAbis() throws IOException, DeployerException {
+        OptimisticApkInstaller apkInstaller =
+                new OptimisticApkInstaller(installer, adb, cache, metrics, IWI_ON, logger);
+        // Populate the cache. To prevent us from having to mock dump, we create a cache entry with
+        // an empty overlay, which prevents the cache entry from being treated as a base install.
+        Apk installedApk =
+                buildApk(
+                        "base",
+                        "0",
+                        ImmutableMap.of(
+                                "lib/x86/foo", "0",
+                                "lib/x86/ack", "1",
+                                "lib/x86_64/bar", "2",
+                                "lib/x86_64/baz", "3",
+                                "lib/x86_64/not", "4"));
+        OverlayId baseId = OverlayId.builder(new OverlayId(ImmutableList.of(installedApk))).build();
+        cache.store(TEST_SERIAL, TEST_PACKAGE, ImmutableList.of(installedApk), baseId);
+
+        // Test that we throw when IWI is off.
+        Apk nextApk =
+                buildApk(
+                        "base",
+                        "1",
+                        ImmutableMap.of(
+                                "lib/x86/foo", "0",
+                                "lib/x86/ack", "99",
+                                "lib/x86_64/bar", "99",
+                                "lib/x86_64/baz", "3",
+                                "lib/x86_64/not", "99"));
+        OverlayId nextId = apkInstaller.install(TEST_PACKAGE, ImmutableList.of(nextApk));
+        assertOverlay(nextId, "base/lib/x86_64/bar", "base/lib/x86_64/not");
+    }
+
+    @Test
     public void skipTestApks() throws IOException, DeployerException {
         OptimisticApkInstaller apkInstaller =
                 new OptimisticApkInstaller(installer, adb, cache, metrics, IWI_OFF, logger);
