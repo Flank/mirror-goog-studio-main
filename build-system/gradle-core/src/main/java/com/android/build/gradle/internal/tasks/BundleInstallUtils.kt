@@ -20,33 +20,18 @@ package com.android.build.gradle.internal.tasks
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.bundle.Devices
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
-import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableSet
-import com.google.protobuf.util.JsonFormat
 import java.nio.file.Files
 import java.nio.file.Path
 
-internal fun getDeviceJson(device: DeviceConfigProvider): Path {
-
-    val api = device.apiCodeName ?: device.apiLevel
-    val density = device.density
-    val abis = device.abis
-    val languages: Set<String>? = device.languageSplits
-
-    return Files.createTempFile("apkSelect", "").apply {
-        var json = "{\n" +
-                "  \"supportedAbis\": [${abis.joinToString()}],\n" +
-                "  \"screenDensity\": $density,\n" +
-                "  \"sdkVersion\": $api"
-
-        if (languages != null && !languages.isEmpty()) {
-            json = "$json,\n  \"supportedLocales\": [ ${Joiner.on(',').join(languages)} ]\n"
-        }
-
-        json = "$json}"
-
-        Files.write(this, json.toByteArray(Charsets.UTF_8))
-    }
+internal fun getDeviceSpec(device: DeviceConfigProvider): Devices.DeviceSpec {
+    return Devices.DeviceSpec.newBuilder().also { spec ->
+        device.apiLevel.takeIf { it > 0 }?.let { spec.sdkVersion = it }
+        device.apiCodeName?.let { spec.codename = it }
+        device.abis.takeIf { it.isNotEmpty() }?.let { spec.addAllSupportedAbis(it) }
+        device.density.takeIf { it > 0 }?.let { spec.screenDensity = it }
+        device.languageSplits?.let { spec.addAllSupportedLocales(it) }
+    }.build()
 }
 
 internal fun getApkFiles(
@@ -55,19 +40,14 @@ internal fun getApkFiles(
     moduleName: String? = null
 ): List<Path> {
     // get the device info to create the APKs
-    val jsonFile = getDeviceJson(device)
     val tempFolder: Path = Files.createTempDirectory("apkSelect")
 
-    val builder: Devices.DeviceSpec.Builder = Devices.DeviceSpec.newBuilder()
-
-    Files.newBufferedReader(jsonFile, Charsets.UTF_8).use {
-        JsonFormat.parser().merge(it, builder)
-    }
+    val deviceSpec: Devices.DeviceSpec = getDeviceSpec(device)
 
     val command = ExtractApksCommand
         .builder()
         .setApksArchivePath(apkBundle)
-        .setDeviceSpec(builder.build())
+        .setDeviceSpec(deviceSpec)
         .setOutputDirectory(tempFolder)
 
     moduleName?.let { command.setModules(ImmutableSet.of(it)) }
