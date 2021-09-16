@@ -331,8 +331,11 @@ open class LintCliClient : LintClient {
             baseline.file = outputBaselineFile
             baseline.close()
             // Not setting exit code to ERRNO_CREATED_BASELINE; that's the contract for this flag
-        } else if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing) {
-            val dir = baselineFile.parentFile
+        } else if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing ||
+            outputBaselineFile != null && baseline == null
+        ) {
+            val file = outputBaselineFile ?: baselineFile!!
+            val dir = file.parentFile
             var ok = true
             if (dir != null && !dir.isDirectory) {
                 ok = dir.mkdirs()
@@ -343,14 +346,14 @@ open class LintCliClient : LintClient {
             } else {
                 val reporter = Reporter.createXmlReporter(
                     this,
-                    baselineFile,
+                    file,
                     XmlFileType.BASELINE
                 )
                 reporter.setBaselineAttributes(this, baselineVariantName, flags.isCheckDependencies)
                 reporter.write(stats, definiteIncidents)
                 // With --write-reference-baseline we continue even if the baseline was written
                 if (outputBaselineFile == null) {
-                    System.err.println(getBaselineCreationMessage(baselineFile))
+                    System.err.println(getBaselineCreationMessage(file))
                     return if (flags.isContinueAfterBaselineCreated) {
                         ERRNO_SUCCESS
                     } else {

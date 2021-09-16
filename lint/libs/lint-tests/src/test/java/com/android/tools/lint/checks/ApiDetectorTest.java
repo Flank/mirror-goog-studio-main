@@ -3052,19 +3052,19 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/usage/JavaUsage.java:6: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        Object o1 = new InnerApi();\n"
                                 + "                    ~~~~~~~~~~~~\n"
-                                + "src/test/usage/JavaUsage.java:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
-                                + "        Object o2 = new InnerApi() { };\n"
-                                + "                        ~~~~~~~~\n"
                                 + "src/test/usage/JavaUsage.java:7: Error: Call requires API level 29 (current min is 1):  [NewApi]\n"
                                 + "        Object o2 = new InnerApi() { };\n"
                                 + "                    ~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/usage/JavaUsage.java:7: Error: Extending InnerApi requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "        Object o2 = new InnerApi() { };\n"
+                                + "                        ~~~~~~~~\n"
                                 + "src/test/usage/KotlinUsage.kt:7: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        val o1: Any = InnerApi()\n"
                                 + "                      ~~~~~~~~~~\n"
                                 + "src/test/usage/KotlinUsage.kt:8: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        val o2: Any = object : InnerApi() {}\n"
                                 + "                      ~~~~~~~~~~~~~~~~~~~\n"
-                                + "src/test/usage/KotlinUsage.kt:8: Error: Call requires API level 29 (current min is 1): InnerApi [NewApi]\n"
+                                + "src/test/usage/KotlinUsage.kt:8: Error: Extending InnerApi requires API level 29 (current min is 1): InnerApi [NewApi]\n"
                                 + "        val o2: Any = object : InnerApi() {}\n"
                                 + "                               ~~~~~~~~\n"
                                 + "6 errors, 0 warnings");
@@ -4730,7 +4730,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/android/support/v7/app/RequiresApiTest.java:8: Error: Call requires API level 18 (current min is 1): foo1 [NewApi]\n"
                                 + "        new ParentClass().foo1(); // ERROR\n"
                                 + "                          ~~~~\n"
-                                + "src/android/support/v7/app/RequiresApiTest.java:21: Error: Call requires API level 16 (current min is 1): ParentClass [NewApi]\n"
+                                + "src/android/support/v7/app/RequiresApiTest.java:21: Error: Extending ParentClass requires API level 16 (current min is 1): ParentClass [NewApi]\n"
                                 + "    public class ChildClass extends ParentClass {\n"
                                 + "                                    ~~~~~~~~~~~\n"
                                 + "3 errors, 0 warnings");
@@ -4773,7 +4773,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/RequiresApiFieldTest.java:16: Error: Call requires API level 24 (current min is 15): Method24 [NewApi]\n"
                                 + "        Log.d(\"zzzz\", \"ReferenceMethod24: \" + Method24());\n"
                                 + "                                              ~~~~~~~~\n"
-                                + "src/test/pkg/RequiresApiFieldTest.java:20: Error: Call requires API level 24 (current min is 15): Field24 [NewApi]\n"
+                                + "src/test/pkg/RequiresApiFieldTest.java:20: Error: Field requires API level 24 (current min is 15): Field24 [NewApi]\n"
                                 + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n"
                                 + "                                             ~~~~~~~\n"
                                 + "2 errors, 0 warnings\n");
@@ -7409,6 +7409,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "    println(p1 - 1L) // ERROR\n"
                                 + "               ~\n"
                                 + "13 errors, 0 warnings");
+    }
+
+    public void testAnnotationOnExtend() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.content.Context;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(24)\n"
+                                        + "public class RecordingSessionCompat {\n"
+                                        + "    public RecordingSessionCompat(Context context) {\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.content.Context;\n"
+                                        + "\n"
+                                        + "public class TunerRecordingSession extends RecordingSessionCompat {\n"
+                                        + "    TunerRecordingSession(Context context) {\n"
+                                        + "        super(context);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TunerRecordingSession.java:5: Error: Extending RecordingSessionCompat requires API level 24 (current min is 1): RecordingSessionCompat [NewApi]\n"
+                                + "public class TunerRecordingSession extends RecordingSessionCompat {\n"
+                                + "                                           ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TunerRecordingSession.java:7: Error: Call requires API level 24 (current min is 1): RecordingSessionCompat [NewApi]\n"
+                                + "        super(context);\n"
+                                + "        ~~~~~\n"
+                                + "2 errors, 0 warnings");
     }
 
     public void testArrayAccess194526870() {
