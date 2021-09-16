@@ -666,8 +666,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 location = context.getNameLocation(element)
                 fqcn = member?.name ?: ""
             }
-
-            ApiVisitor(context).report(UNSUPPORTED, element, location, "Call", fqcn, api, minSdk, apiLevelFix(api))
+            val type = when (usageInfo.type) {
+                AnnotationUsageType.EXTENDS -> "Extending $fqcn"
+                AnnotationUsageType.ANNOTATION_REFERENCE,
+                AnnotationUsageType.CLASS_REFERENCE -> "Class"
+                AnnotationUsageType.METHOD_RETURN,
+                AnnotationUsageType.METHOD_OVERRIDE -> "Method"
+                AnnotationUsageType.VARIABLE_REFERENCE,
+                AnnotationUsageType.FIELD_REFERENCE -> "Field"
+                else -> "Call"
+            }
+            ApiVisitor(context).report(UNSUPPORTED, element, location, type, fqcn, api, minSdk, apiLevelFix(api))
         }
     }
 

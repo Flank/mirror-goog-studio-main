@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
+import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.MainTest
 import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ApiDetector
@@ -27,6 +28,7 @@ import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.RestrictToDetector
 import com.android.tools.lint.checks.ScopedStorageDetector
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
@@ -567,6 +569,148 @@ class LintBaselineTest {
     }
 
     @Test
+    fun testTemporaryMessages() {
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFile = kotlin(
+            """
+            package test.pkg
+            import android.location.LocationManager
+            fun test() {
+                val mode = LocationManager.MODE_CHANGED_ACTION
+            }
+            """
+        ).indented()
+
+        val baselineFolder = File(root, "baselines")
+        baselineFolder.mkdirs()
+        val existingBaseline = File(baselineFolder, "baseline.xml")
+        val outputBaseline = File(baselineFolder, "baseline-out.xml")
+        existingBaseline.writeText(
+            // language=XML
+            """
+            <issues format="5" by="lint unittest">
+                <issue
+                    id="HardcodedText"
+                    message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource">
+                    <location
+                        file="../project1/my/source/file.txt"
+                        line="1"/>
+                </issue>
+
+            </issues>
+            """.trimIndent()
+        )
+
+        val project = lint().files(testFile).createProjects(root).single()
+
+        MainTest.checkDriver(
+            // Expected output
+            "src/test/pkg/test.kt:4: Error: Field requires API level 19 (current min is 1): android.location.LocationManager#MODE_CHANGED_ACTION [InlinedApi]\n" +
+                "    val mode = LocationManager.MODE_CHANGED_ACTION\n" +
+                "               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_ERRORS,
+            arrayOf(
+                "--exit-code",
+                "--check",
+                "InlinedApi",
+                "--error",
+                "InlinedApi",
+                "--ignore",
+                "LintBaseline",
+                "--baseline",
+                existingBaseline.path,
+                "--write-reference-baseline",
+                outputBaseline.path,
+                "--disable",
+                "LintError",
+                "--sdk-home",
+                TestUtils.getSdk().toFile().path,
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        @Language("XML")
+        val expected = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <issues>
+
+                <issue
+                    id="InlinedApi"
+                    message="Field requires API level 19 (current min is 1): `android.location.LocationManager#MODE_CHANGED_ACTION`">
+                    <location
+                        file="src/test/pkg/test.kt"
+                        line="4"/>
+                </issue>
+
+            </issues>
+        """.trimIndent()
+        assertEquals(expected, readBaseline(outputBaseline))
+    }
+
+    @Test
+    fun testWriteOutputBaseline() {
+        // Makes sure that if we have set an output baseline, and we don't have
+        // an input baseline, we'll write the output baseline.
+        val root = temporaryFolder.newFolder().canonicalFile.absoluteFile
+
+        val testFile = kotlin(
+            """
+            package test.pkg
+            val path = "/sdcard/path"
+            """
+        ).indented()
+
+        val outputBaseline = File(root, "baseline-out.xml")
+        val project = lint().files(testFile).createProjects(root).single()
+        MainTest.checkDriver(
+            // Expected output
+            "src/test/pkg/test.kt:2: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                "0 errors, 1 warnings",
+            // Expected error
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            arrayOf(
+                "--check",
+                "SdCardPath",
+                "--nolines",
+                "--write-reference-baseline",
+                outputBaseline.path,
+                "--disable",
+                "LintError",
+                project.path
+            ),
+            { it.replace(root.path, "ROOT") },
+            null
+        )
+
+        @Language("XML")
+        val expected = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <issues>
+
+                <issue
+                    id="SdCardPath"
+                    message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead">
+                    <location
+                        file="src/test/pkg/test.kt"
+                        line="2"
+                        column="13"/>
+                </issue>
+
+            </issues>
+        """.trimIndent()
+        assertEquals(expected, readBaseline(outputBaseline))
+    }
+
+    @Test
     fun testPlatformTestCase() {
         val baselineFile = temporaryFolder.newFile("baseline.xml")
 
@@ -830,14 +974,7 @@ class LintBaselineTest {
                 null
             )
 
-            // Skip the first three lines that contain just the version which can change.
-            val newBaseline = outputBaseline.readText().trim().let {
-                // Filter out header attributes which would make the test file change over
-                // time, like "<issues format="5" by="lint 7.1.0-dev">"
-                val start = it.indexOf("<issues ") + 7
-                val end = it.indexOf('>', start)
-                it.substring(0, start) + it.substring(end)
-            }
+            val newBaseline = readBaseline(outputBaseline)
 
             // Expected baseline: lint uses a more detailed report when not rewriting an
             // existing baseline (because with baseline matching it doesn't have details
@@ -895,5 +1032,21 @@ class LintBaselineTest {
             """.trimIndent()
             assertEquals(expected, newBaseline)
         }
+    }
+
+    /**
+     * Read the given [baseline] file and strip out the version details
+     * in the root tag which can change over time to make the golden files
+     * stable.
+     */
+    private fun readBaseline(baseline: File): String {
+        val newBaseline = baseline.readText().trim().let {
+            // Filter out header attributes which would make the test file change over
+            // time, like "<issues format="5" by="lint 7.1.0-dev">"
+            val start = it.indexOf("<issues ") + 7
+            val end = it.indexOf('>', start)
+            it.substring(0, start) + it.substring(end)
+        }
+        return newBaseline
     }
 }

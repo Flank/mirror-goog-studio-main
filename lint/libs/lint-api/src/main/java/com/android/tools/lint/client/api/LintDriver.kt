@@ -2533,7 +2533,12 @@ class LintDriver(
             }
 
             val baseline = baseline
-            if (baseline != null && mode != DriverMode.ANALYSIS_ONLY) {
+            if (baseline != null && mode != DriverMode.ANALYSIS_ONLY &&
+                // Some lint checks will lazily compute error messages in Detector.filterIncident.
+                // These will go through a separate isHidden call. Don't attempt to proactively check
+                // baselines here since these are based on the final message.
+                incident.message.isNotEmpty()
+            ) {
                 val filtered = baseline.findAndMark(incident)
                 if (filtered) {
                     if (!allowSuppress && issue.suppressNames != null) {
