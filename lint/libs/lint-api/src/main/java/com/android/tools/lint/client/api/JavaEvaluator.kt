@@ -167,13 +167,12 @@ class JavaEvaluator {
         allowInherit: Boolean,
         vararg argumentTypes: String
     ): Boolean {
-        if (className != null && allowInherit) {
-            if (!isMemberInSubClassOf(method, className, false)) {
-                return false
-            }
+        val classMatches = when {
+            className == null -> true
+            allowInherit -> isMemberInSubClassOf(method, className, false)
+            else -> method.containingClass?.qualifiedName == className
         }
-
-        return parametersMatch(method, *argumentTypes)
+        return classMatches && parametersMatch(method, *argumentTypes)
     }
 
     /**
