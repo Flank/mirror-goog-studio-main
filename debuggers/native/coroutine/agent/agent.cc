@@ -1,5 +1,5 @@
-#include "tools/base/debug/coroutine/native/agent/DebugProbesKt.h"
-#include "tools/base/debug/coroutine/native/agent/jni_utils.h"
+#include "tools/base/debuggers/native/coroutine/agent/DebugProbesKt.h"
+#include "tools/base/debuggers/native/coroutine/agent/jni_utils.h"
 #include "tools/base/transport/native/jvmti/jvmti_helper.h"
 #include "tools/base/transport/native/utils/log.h"
 
