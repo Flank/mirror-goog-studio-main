@@ -560,8 +560,10 @@ public interface IDevice extends IShellEnabledDevice {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    void createReverse(int remotePort, int localPort)
-            throws TimeoutException, AdbCommandRejectedException, IOException;
+    default void createReverse(int remotePort, int localPort)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Removes a port reversing between a remote and a local port.
@@ -571,8 +573,10 @@ public interface IDevice extends IShellEnabledDevice {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    void removeReverse(int remotePort)
-            throws TimeoutException, AdbCommandRejectedException, IOException;
+    default void removeReverse(int remotePort)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns the name of the client by pid or <code>null</code> if pid is unknown
