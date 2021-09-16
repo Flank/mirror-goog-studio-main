@@ -21,17 +21,16 @@ import com.android.deploy.asm.MethodVisitor;
 import com.android.deploy.asm.Opcodes;
 import com.android.deploy.asm.commons.TryCatchBlockSorter;
 import com.android.deploy.asm.tree.MethodNode;
+import java.util.ArrayList;
+import java.util.List;
 
 /** This class searches the .class bytecode for a methodNode. */
 class MethodNodeFinder extends ClassVisitor {
     private MethodNode target = null;
     private final String targetName;
+    private final List<String> visited = new ArrayList<>();
 
-    public static MethodNode findIn(byte[] classData, String name) {
-        return new MethodNodeFinder(classData, name).getTarget();
-    }
-
-    private MethodNodeFinder(byte[] classData, String name) {
+    MethodNodeFinder(byte[] classData, String name) {
         super(Opcodes.ASM6);
         targetName = name;
         ClassReader reader = new ClassReader(classData);
@@ -41,7 +40,10 @@ class MethodNodeFinder extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(
             int access, String name, String desc, String signature, String[] exceptions) {
-        if (!targetName.equals(name + desc)) {
+        String prospect = name + desc;
+        visited.add(prospect);
+
+        if (!targetName.equals(prospect)) {
             return null;
         }
         target = new TryCatchBlockSorter(null, access, name, desc, signature, exceptions);
@@ -50,5 +52,9 @@ class MethodNodeFinder extends ClassVisitor {
 
     public MethodNode getTarget() {
         return target;
+    }
+
+    List<String> getVisited() {
+        return visited;
     }
 }

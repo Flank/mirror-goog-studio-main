@@ -50,9 +50,13 @@ public class MethodBodyEvaluator {
             String targetMethod,
             byte[][] supportClasses,
             ClassLoader parentClassLoader) {
-        this.target = MethodNodeFinder.findIn(classData, targetMethod);
+        MethodNodeFinder finder = new MethodNodeFinder(classData, targetMethod);
+        this.target = finder.getTarget();
         if (target == null) {
-            String msg = String.format("Cannot find target '%s'", targetMethod);
+            String msg = String.format("Cannot find target '%s' in:\n", targetMethod);
+            for (String method : finder.getVisited()) {
+                msg += "  -> " + method + "\n";
+            }
             throw new IllegalStateException(msg);
         }
         if (supportClasses.length == 0) {
