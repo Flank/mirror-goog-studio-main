@@ -131,7 +131,7 @@ object ImageDiffUtil {
         var error: String? = null
         when {
             percentDifference > maxPercentDifferent -> {
-                error = String.format("Images differ (by %.2g%%)", percentDifference)
+                error = String.format("Images differ (by %.3g%%)", percentDifference)
             }
             abs(goldenImage.width - bufferedImage.width) >= 2 -> {
                 error =
