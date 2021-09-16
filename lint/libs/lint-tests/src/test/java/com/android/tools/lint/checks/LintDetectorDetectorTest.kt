@@ -233,6 +233,11 @@ class LintDetectorDetectorTest {
                             // Invalid recursion!
                             super.visitAnnotationUsage(context, element, annotationInfo, usageInfo)
                         }
+
+                        fun misc() {
+                            System.out.print("Debugging")
+                            println("Debugging code")
+                        }
                     }
                     """
                 ).indented(),
@@ -382,6 +387,12 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:64: Warning: "foo.bar.baz(args)" looks like a call; surround with backtics in string to display as symbol, e.g. `foo.bar.baz(args)` [LintImplTextFormat]
                                     Here's a call: foo.bar.baz(args).
                                                    ~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:90: Warning: Lint checks should not be printing to console; use LintClient.log instead [LintImplTextFormat]
+                        System.out.print("Debugging")
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:91: Warning: Lint checks should not be printing to console; use LintClient.log instead [LintImplTextFormat]
+                        println("Debugging code")
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyJavaLintDetector.java:36: Error: Unexpected URL host my.personal.blogger.com; for the builtin Android Lint checks make sure to use an authoritative link (http://my.personal.blogger.com/aboutme.htm) [LintImplUnexpectedDomain]
                                     .addMoreInfo("http://my.personal.blogger.com/aboutme.htm")
                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -457,7 +468,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                27 errors, 12 warnings
+                27 errors, 14 warnings
                 """
             )
             .expectFixDiffs(

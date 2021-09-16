@@ -1919,7 +1919,6 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             }
         } catch (IOException e) {
             // Pass -- we can't handle all image types, warn about those we can
-            System.out.println("foo");
         }
     }
 

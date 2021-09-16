@@ -350,6 +350,17 @@ class LintDetectorDetector : Detector(), UastScanner {
                 "of" -> {
                     checkEnumSet(node)
                 }
+                "print", "println" -> {
+                    val containingClass = node.resolve()?.containingClass?.qualifiedName
+                    if (!context.isTestSource &&
+                        (containingClass == "java.io.PrintStream" || containingClass == "kotlin.io.ConsoleKt")
+                    ) {
+                        context.report(
+                            TEXT_FORMAT, node, context.getLocation(node),
+                            "Lint checks should not be printing to console; use `LintClient.log` instead"
+                        )
+                    }
+                }
             }
 
             return super.visitCallExpression(node)

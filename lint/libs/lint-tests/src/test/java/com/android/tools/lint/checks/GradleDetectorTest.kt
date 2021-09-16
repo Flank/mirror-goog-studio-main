@@ -356,7 +356,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                     listOf(false, true).forEach {
                         val versionString = if (it) "\$version" else version
                         val dependencyString = "$configuration(\"$library:$versionString\")"
-                        println(dependencyString)
                         val source = gradle(
                             "" +
                                 "ext.version = '$version'\n" +
