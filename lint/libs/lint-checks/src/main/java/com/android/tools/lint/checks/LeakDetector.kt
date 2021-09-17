@@ -154,7 +154,9 @@ class LeakDetector : Detector(), SourceCodeScanner {
 
         override fun visitField(node: UField) {
             val modifierList = node.modifierList
-            if (modifierList == null || !modifierList.hasModifierProperty(PsiModifier.STATIC)) {
+            if (modifierList == null || !modifierList.hasModifierProperty(PsiModifier.STATIC) ||
+                node.uastParent is UAnonymousClass
+            ) {
                 return
             }
 
