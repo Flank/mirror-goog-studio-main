@@ -54,7 +54,9 @@ object ImageDiffUtil {
      */
     @Throws(IOException::class)
     @JvmStatic
-    fun assertImageSimilar(goldenFile: Path, actual: BufferedImage, maxPercentDifferent: Double) {
+    @JvmOverloads
+    fun assertImageSimilar(goldenFile: Path, actual: BufferedImage, maxPercentDifferent: Double,
+            maxSizeDifference: Int = 1) {
         if (Files.notExists(goldenFile)) {
             val converted = convertToARGB(actual)
             Files.createDirectories(goldenFile.parent)
@@ -66,16 +68,19 @@ object ImageDiffUtil {
             throw AssertionError("File did not exist, created here: $goldenFile and in undeclared outputs")
         }
         val goldenImage = goldenFile.readImage()
-        assertImageSimilar(goldenFile.fileName.toString(), goldenImage, actual, maxPercentDifferent)
+        assertImageSimilar(goldenFile.fileName.toString(), goldenImage, actual, maxPercentDifferent,
+                           maxSizeDifference)
     }
 
     @Throws(IOException::class)
     @JvmStatic
+    @JvmOverloads
     fun assertImageSimilar(
         imageName: String,
         goldenImage: BufferedImage,
         image: Image,
-        maxPercentDifferent: Double
+        maxPercentDifferent: Double,
+        maxSizeDifference: Int = 1
     ) {
         // If we get exactly the same object, no need to check--and they might be mocks anyway.
         if (goldenImage === image) {
@@ -130,20 +135,20 @@ object ImageDiffUtil {
         val percentDifference = delta / maxDiff * 100
         var error: String? = null
         when {
-            percentDifference > maxPercentDifferent -> {
-                error = String.format("Images differ (by %.3g%%)", percentDifference)
-            }
-            abs(goldenImage.width - bufferedImage.width) >= 2 -> {
+            abs(goldenImage.width - bufferedImage.width) > maxSizeDifference -> {
                 error =
                     "Widths differ too much for $imageName: " +
                             "${goldenImage.width}x${goldenImage.height} vs " +
                             "${bufferedImage.width}x${bufferedImage.height}"
             }
-            abs(goldenImage.height - bufferedImage.height) >= 2 -> {
+            abs(goldenImage.height - bufferedImage.height) > maxSizeDifference -> {
                 error =
                     "Heights differ too much for $imageName: " +
                             "${goldenImage.width}x${goldenImage.height} vs " +
                             "${bufferedImage.width}x${bufferedImage.height}"
+            }
+            percentDifference > maxPercentDifferent -> {
+                error = String.format("Images differ (by %.3g%%)", percentDifference)
             }
         }
         if (error != null) {
