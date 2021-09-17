@@ -555,4 +555,25 @@ class LeakDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testCompanionObject() {
+        // 200174290: StaticFieldLeak false positive for anonymous object in a companion object
+        lint().files(
+            kotlin(
+                """
+                import android.content.Context
+                class Foo {
+                    companion object {
+                        fun foo(context: Context) {
+                            val x = object : Runnable {
+                                val ctx = context
+                                override fun run() = TODO()
+                            }
+                        }
+                    }
+                }
+                """
+            )
+        ).run().expectClean()
+    }
 }
