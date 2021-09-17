@@ -84,20 +84,20 @@ gradle_integration_test(
 # - Run this command:
 # grep -F '> Could not find' test.log \
 #   | sed -e "s# *> Could not find \(.*\)\.#\1#"
-#   | sed -e 's#\(.*\):\(.*\):\(.*\)#"@maven_tests//:\1.\2_\3",#'
+#   | sed -e 's#\(.*\):\(.*\):\(.*\)#"@maven//:\1.\2_\3",#'
 #   | sort | uniq
 maven_repository(
     name = "prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:android.arch.lifecycle.livedata_1.1.1",
-        "@maven_tests//:com.android.support.constraint.constraint-layout_1.0.2",
-        "@maven_tests//:com.google.guava.guava_19.0",
-        "@maven_tests//:commons-logging.commons-logging_1.1.1",
-        "@maven_tests//:org.jdeferred.jdeferred-android-aar_1.2.3",
-        "@maven_tests//:org.mockito.mockito-core_3.0.0",
-        "@maven_tests//:org.robolectric.android-all_7.0.0_r1-robolectric-r1",
-        "@maven_tests//:org.robolectric.robolectric_4.2.1",
+        "@maven//:android.arch.lifecycle.livedata_1.1.1",
+        "@maven//:com.android.support.constraint.constraint-layout_1.0.2",
+        "@maven//:com.google.guava.guava_19.0",
+        "@maven//:commons-logging.commons-logging_1.1.1",
+        "@maven//:org.jdeferred.jdeferred-android-aar_1.2.3",
+        "@maven//:org.mockito.mockito-core_3.0.0",
+        "@maven//:org.robolectric.android-all_7.0.0_r1-robolectric-r1",
+        "@maven//:org.robolectric.robolectric_4.2.1",
     ],
     visibility = ["__subpackages__"],
 )

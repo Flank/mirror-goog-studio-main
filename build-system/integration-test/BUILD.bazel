@@ -29,15 +29,15 @@ load("//tools/base/bazel:maven.bzl", "maven_repository")
 maven_repository(
     name = "support_library_latest",
     artifacts = [
-        "@maven_tests//:com.android.support.design_" + LATEST_SUPPORT,
-        "@maven_tests//:com.android.support.leanback-v17_" + LATEST_SUPPORT,
-        "@maven_tests//:com.android.support.support-v13_" + LATEST_SUPPORT,
-        "@maven_tests//:com.android.support.support-v4_" + LATEST_SUPPORT,
-        "@maven_tests//:android.arch.navigation.navigation-fragment_1.0.0",
-        "@maven_tests//:android.arch.persistence.room.runtime_1.0.0",
-        "@maven_tests//:com.android.support.test.rules_1.0.2",
-        "@maven_tests//:com.android.support.test.runner_1.0.2",
-        "@maven_tests//:org.jacoco.org.jacoco.ant_0.8.3",
+        "@maven//:com.android.support.design_" + LATEST_SUPPORT,
+        "@maven//:com.android.support.leanback-v17_" + LATEST_SUPPORT,
+        "@maven//:com.android.support.support-v13_" + LATEST_SUPPORT,
+        "@maven//:com.android.support.support-v4_" + LATEST_SUPPORT,
+        "@maven//:android.arch.navigation.navigation-fragment_1.0.0",
+        "@maven//:android.arch.persistence.room.runtime_1.0.0",
+        "@maven//:com.android.support.test.rules_1.0.2",
+        "@maven//:com.android.support.test.runner_1.0.2",
+        "@maven//:org.jacoco.org.jacoco.ant_0.8.3",
     ],
     visibility = [":__subpackages__"],
 )
@@ -45,12 +45,12 @@ maven_repository(
 maven_repository(
     name = "androidx_latest",
     artifacts = [
-        "@maven_tests//:androidx.room.room-compiler_" + LATEST_ANDROID_X_ARCH,
-        "@maven_tests//:androidx.room.room-runtime_" + LATEST_ANDROID_X_ARCH,
-        "@maven_tests//:androidx.appcompat.appcompat_" + LATEST_ANDROID_X_SUPPORT,
-        "@maven_tests//:androidx.preference.preference_" + LATEST_ANDROID_X_SUPPORT,
-        "@maven_tests//:androidx.constraintlayout.constraintlayout_" + LATEST_ANDROID_X_CONSTRAINTLAYOUT,
-        "@maven_tests//:androidx.legacy.legacy-support-v4_" + LATEST_ANDROID_X_SUPPORT,
+        "@maven//:androidx.room.room-compiler_" + LATEST_ANDROID_X_ARCH,
+        "@maven//:androidx.room.room-runtime_" + LATEST_ANDROID_X_ARCH,
+        "@maven//:androidx.appcompat.appcompat_" + LATEST_ANDROID_X_SUPPORT,
+        "@maven//:androidx.preference.preference_" + LATEST_ANDROID_X_SUPPORT,
+        "@maven//:androidx.constraintlayout.constraintlayout_" + LATEST_ANDROID_X_CONSTRAINTLAYOUT,
+        "@maven//:androidx.legacy.legacy-support-v4_" + LATEST_ANDROID_X_SUPPORT,
     ],
     visibility = [":__subpackages__"],
 )
@@ -59,9 +59,9 @@ maven_repository(
     name = "androidx_test_latest",
     # keep sorted
     artifacts = [
-        "@maven_tests//:androidx.test.ext.junit_1.1.2",
-        "@maven_tests//:androidx.test.rules_1.3.0",
-        "@maven_tests//:androidx.test.runner_1.3.0",
+        "@maven//:androidx.test.ext.junit_1.1.2",
+        "@maven//:androidx.test.rules_1.3.0",
+        "@maven//:androidx.test.runner_1.3.0",
     ],
     visibility = [":__subpackages__"],
 )
@@ -71,9 +71,9 @@ maven_repository(
     name = "gradle_kotlin_dsl_prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-reflect_1.5.21",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.21",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib_1.5.21",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.5.21",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.21",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib_1.5.21",
     ],
     visibility = [":__subpackages__"],
 )
@@ -83,8 +83,8 @@ maven_repository(
     name = "dagger_prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.google.dagger.dagger-compiler_2.28.3",
-        "@maven_tests//:com.google.dagger.dagger_2.28.3",
+        "@maven//:com.google.dagger.dagger-compiler_2.28.3",
+        "@maven//:com.google.dagger.dagger_2.28.3",
     ],
     visibility = [":__subpackages__"],
 )
@@ -94,12 +94,12 @@ maven_repository(
     name = "kotlin_gradle_plugin_prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.5.30",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.5.30",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.5.30",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-reflect_1.5.30",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-script-runtime_1.5.30",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.30",
+        "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.5.30",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.5.30",
     ],
     visibility = ["//visibility:public"],
 )
@@ -109,8 +109,8 @@ maven_repository(
     name = "kotlin_gradle_plugin_1_4_32_prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
-        "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
     ],
     visibility = ["__subpackages__"],
 )
@@ -118,7 +118,7 @@ maven_repository(
 maven_repository(
     name = "prefab_repo",
     artifacts = [
-        "@maven_tests//:com.google.prefab.cli_2.0.0",
+        "@maven//:com.google.prefab.cli_2.0.0",
     ],
     visibility = [":__subpackages__"],
 )
@@ -138,9 +138,9 @@ maven_repository(
         "//tools/base/utp/android-test-plugin-host-logcat:android-test-plugin-host-logcat",
         "//tools/base/utp/android-test-plugin-host-retention:android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-result-listener-gradle:android-test-plugin-result-listener-gradle",
-        "@maven_tests//:com.google.testing.platform.android-driver-instrumentation_0.0.8-alpha07",
-        "@maven_tests//:com.google.testing.platform.android-test-plugin_0.0.8-alpha07",
-        "@maven_tests//:com.google.testing.platform.core_0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.android-driver-instrumentation_0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.android-test-plugin_0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.core_0.0.8-alpha07",
     ],
     visibility = ["__subpackages__"],
 )

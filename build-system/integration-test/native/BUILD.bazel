@@ -415,8 +415,8 @@ maven_repository(
     name = "prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.support.constraint.constraint-layout_1.0.2",
-        "@maven_tests//:com.android.support.multidex_1.0.2",
-        "@maven_tests//:com.google.guava.guava_19.0",
+        "@maven//:com.android.support.constraint.constraint-layout_1.0.2",
+        "@maven//:com.android.support.multidex_1.0.2",
+        "@maven//:com.google.guava.guava_19.0",
     ],
 )

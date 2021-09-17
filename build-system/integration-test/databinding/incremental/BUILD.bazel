@@ -52,13 +52,13 @@ maven_repository(
     name = "prebuilts",
     # keep sorted
     artifacts = [
-        "@maven_tests//:android.arch.lifecycle.runtime_1.0.3",
-        "@maven_tests//:androidx.appcompat.appcompat_1.0.0",
-        "@maven_tests//:androidx.constraintlayout.constraintlayout_1.1.3",
-        "@maven_tests//:androidx.lifecycle.lifecycle-extensions_2.2.0",
-        "@maven_tests//:androidx.lifecycle.lifecycle-runtime-ktx_2.2.0",
-        "@maven_tests//:androidx.lifecycle.lifecycle-runtime_2.0.0",
-        "@maven_tests//:androidx.lifecycle.lifecycle-runtime_2.2.0",
-        "@maven_tests//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.4.1",
+        "@maven//:android.arch.lifecycle.runtime_1.0.3",
+        "@maven//:androidx.appcompat.appcompat_1.0.0",
+        "@maven//:androidx.constraintlayout.constraintlayout_1.1.3",
+        "@maven//:androidx.lifecycle.lifecycle-extensions_2.2.0",
+        "@maven//:androidx.lifecycle.lifecycle-runtime-ktx_2.2.0",
+        "@maven//:androidx.lifecycle.lifecycle-runtime_2.0.0",
+        "@maven//:androidx.lifecycle.lifecycle-runtime_2.2.0",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.4.1",
     ],
 )

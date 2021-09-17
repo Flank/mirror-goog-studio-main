@@ -3,7 +3,7 @@ load("//tools/base/bazel:gradle.bzl", "gradle_build")
 
 #keep sorted
 AGP_7_0_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.gradle_7.0.0",
+    "@maven//:com.android.tools.build.gradle_7.0.0",
 ]
 
 maven_repository(
@@ -13,7 +13,7 @@ maven_repository(
 )
 
 AGP_4_2_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.gradle_4.2.0",
+    "@maven//:com.android.tools.build.gradle_4.2.0",
 ]
 
 maven_repository(
@@ -23,9 +23,9 @@ maven_repository(
 )
 
 AGP_4_1_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.gradle_4.1.0",
-    "@maven_tests//:com.android.tools.build.aapt2_4.1.0-6503028",
-    "@maven_tests//:com.android.tools.lint.lint-gradle_27.1.0",
+    "@maven//:com.android.tools.build.gradle_4.1.0",
+    "@maven//:com.android.tools.build.aapt2_4.1.0-6503028",
+    "@maven//:com.android.tools.lint.lint-gradle_27.1.0",
 ]
 
 maven_repository(
@@ -35,9 +35,9 @@ maven_repository(
 )
 
 AGP_4_0_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.gradle_4.0.0",
-    "@maven_tests//:com.android.tools.build.aapt2_4.0.0-6051327",
-    "@maven_tests//:com.android.tools.lint.lint-gradle_27.0.0",
+    "@maven//:com.android.tools.build.gradle_4.0.0",
+    "@maven//:com.android.tools.build.aapt2_4.0.0-6051327",
+    "@maven//:com.android.tools.lint.lint-gradle_27.0.0",
 ]
 
 maven_repository(
@@ -47,8 +47,8 @@ maven_repository(
 )
 
 KOTLIN_GRADLE_PLUGIN_1_3_72_ARTIFACTS = [
-    "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.3.72",
-    "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.3.72",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.3.72",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.3.72",
 ]
 
 maven_repository(
@@ -59,15 +59,15 @@ maven_repository(
 
 # keep sorted
 AGP_3_5_0_ARTIFACTS = [
-    "@maven_tests//:com.android.tools.build.aapt2_3.5.0-5435860",
-    "@maven_tests//:com.android.tools.build.gradle_3.5.0",
-    "@maven_tests//:com.android.tools.lint.lint-gradle_26.5.0",
+    "@maven//:com.android.tools.build.aapt2_3.5.0-5435860",
+    "@maven//:com.android.tools.build.gradle_3.5.0",
+    "@maven//:com.android.tools.lint.lint-gradle_26.5.0",
 ]
 
 # keep sorted
 KOTLIN_GRADLE_PLUGIN_1_3_41_ARTIFACTS = [
-    "@maven_tests//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.3.41",
-    "@maven_tests//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.3.41",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.3.41",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.3.41",
 ]
 
 maven_repository(
@@ -109,9 +109,9 @@ maven_repository(
     name = "3.3.2",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.aapt2_3.3.2-5309881",
-        "@maven_tests//:com.android.tools.build.gradle_3.3.2",
-        "@maven_tests//:com.android.tools.lint.lint-gradle_26.3.2",
+        "@maven//:com.android.tools.build.aapt2_3.3.2-5309881",
+        "@maven//:com.android.tools.build.gradle_3.3.2",
+        "@maven//:com.android.tools.lint.lint-gradle_26.3.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -142,7 +142,7 @@ maven_repository(
     name = "3.0.0",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.gradle_3.0.0",
+        "@maven//:com.android.tools.build.gradle_3.0.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -167,7 +167,7 @@ maven_repository(
     name = "2.3.2",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.gradle_2.3.2",
+        "@maven//:com.android.tools.build.gradle_2.3.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -176,7 +176,7 @@ maven_repository(
     name = "2.2.0",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.gradle_2.2.0",
+        "@maven//:com.android.tools.build.gradle_2.2.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -185,7 +185,7 @@ maven_repository(
     name = "1.5.0",
     # keep sorted
     artifacts = [
-        "@maven_tests//:com.android.tools.build.gradle_1.5.0",
+        "@maven//:com.android.tools.build.gradle_1.5.0",
     ],
     visibility = ["//visibility:public"],
 )

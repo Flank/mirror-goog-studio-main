@@ -210,11 +210,11 @@ maven_repository(
     artifacts = GRADLE_PLUGIN_ARTIFACTS + [
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
-        "@maven_tests//:androidx.activity.activity-compose_1.3.0-alpha02",
-        "@maven_tests//:androidx.compose.compiler.compiler_1.0.0-beta07",
-        "@maven_tests//:androidx.compose.material.material_1.0.0-beta07",
-        "@maven_tests//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
-        "@maven_tests//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
+        "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
+        "@maven//:androidx.compose.compiler.compiler_1.0.0-beta07",
+        "@maven//:androidx.compose.material.material_1.0.0-beta07",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
