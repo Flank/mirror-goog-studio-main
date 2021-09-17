@@ -3,7 +3,6 @@ load("//tools/base/common:version.bzl", "BASE_VERSION")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
-load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
 # managed by go/iml_to_build
@@ -71,15 +70,13 @@ java_library(
     ],
 )
 
-fileset(
+java_library(
     name = "tools.ddmlib.resources",
-    srcs = [
+    resource_strip_prefix = "tools/base/ddmlib/src/main/proto/",
+    resources = [
         "src/main/proto/app_processes.proto",
         "src/main/proto/instrumentation-data.proto",
     ],
-    mappings = {
-        "src/main/proto/": "",
-    },
 )
 
 # For now instead of combining ddmlib-base and its add-ons, we recompile all together
@@ -96,14 +93,12 @@ maven_library(
     bundled_deps = [
         ":am-instrumentation-data-proto",
         ":app-processes-proto",
+        ":tools.ddmlib.resources",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
     module_name = "ddmlib",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/ddmlib",
-    resources = [
-        ":tools.ddmlib.resources",
-    ],
     visibility = ["//visibility:public"],
     exports = [
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
