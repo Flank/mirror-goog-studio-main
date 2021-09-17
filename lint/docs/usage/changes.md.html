@@ -69,16 +69,12 @@ lint check authors, see the API Guide.
   lint task instead of running it across all variants and accumulating
   results. This is much faster, is usually what you want, and now the
   target name will not change based on whether the project has product
-  flavors, so you can start just running `./gradlew:app:lint` instead
+  flavors, so you can start just running `./gradlew :app:lint` instead
   of `./gradlew :app:lintDebug` or `:app:lintProDebug` etc.
   Furthermore, the `lintOptions` block is now just named `lint`
   instead.
 
-* Lint “partial analysis” mode is now integrated in lint. It is
-  enabled by default, but you can disable it by modifying
-  `gradle.properties` to include
-
-      `android.enableParallelLint=false`
+* Lint “partial analysis” mode is now integrated in lint.
 
 * The API check now also looks up operator overloading functions.
 
