@@ -367,6 +367,17 @@ class AndroidLintAnalysisTaskCacheabilityTest {
         assertThat(project1.buildResult.getTask(":lib:lintAnalyzeDebug")).didWork()
         assertThat(project1.buildResult.getTask(":lib:generateDebugLintModel")).didWork()
     }
+
+    @Test
+    fun testLintAnalysisTasksFromCache() {
+        TestFileUtils.appendToFile(project1.gradlePropertiesFile, "\norg.gradle.caching=true\n")
+        project1.executor().run("clean", ":app:lintDebug")
+        project1.executor().run("clean", ":app:lintDebug")
+        assertThat(project1.buildResult.getTask(":app:lintAnalyzeDebug")).wasFromCache()
+        assertThat(project1.buildResult.getTask(":feature:lintAnalyzeDebug")).wasFromCache()
+        assertThat(project1.buildResult.getTask(":lib:lintAnalyzeDebug")).wasFromCache()
+        assertThat(project1.buildResult.getTask(":java-lib:lintAnalyze")).wasFromCache()
+    }
 }
 
 /**
