@@ -88,8 +88,6 @@ class OptionVersionTest {
 
         checkViolatingProjectOptions(
                 violatingOptions = violatingOptions,
-                // This can be removed after the AGP version increments to 7.2
-                ignoreList = listOf(BooleanOption.USE_LINT_PARTIAL_ANALYSIS),
                 requirement = "Removed options must not have removed versions in the future."
         )
     }
