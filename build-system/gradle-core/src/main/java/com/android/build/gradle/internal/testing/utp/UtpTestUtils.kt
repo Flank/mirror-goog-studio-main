@@ -172,12 +172,11 @@ private fun runUtpTestSuite(
     workQueue: WorkQueue
 ) {
     val utpRunTempDir = createUtpTempDirectory("utpRunTemp")
-    val runnerConfigProtoFile =
-        File.createTempFile("runnerConfig", ".pb").also { file ->
-            FileOutputStream(file).use { writer ->
-                config.runnerConfig(resultListenerServerMetadata, utpRunTempDir).writeTo(writer)
-            }
+    val runnerConfigProtoFile = createUtpTempFile("runnerConfig", ".pb").also { file ->
+        FileOutputStream(file).use { writer ->
+            config.runnerConfig(resultListenerServerMetadata, utpRunTempDir).writeTo(writer)
         }
+    }
     val serverConfigProtoFile = createUtpTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
             config.serverConfig.writeTo(writer)
