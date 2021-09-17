@@ -56,7 +56,7 @@ object ImageDiffUtil {
     @JvmStatic
     @JvmOverloads
     fun assertImageSimilar(goldenFile: Path, actual: BufferedImage, maxPercentDifferent: Double,
-            maxSizeDifference: Int = 1) {
+            maxSizeDifference: Int = 0) {
         if (Files.notExists(goldenFile)) {
             val converted = convertToARGB(actual)
             Files.createDirectories(goldenFile.parent)
@@ -80,7 +80,7 @@ object ImageDiffUtil {
         goldenImage: BufferedImage,
         image: Image,
         maxPercentDifferent: Double,
-        maxSizeDifference: Int = 1
+        maxSizeDifference: Int = 0
     ) {
         // If we get exactly the same object, no need to check--and they might be mocks anyway.
         if (goldenImage === image) {
