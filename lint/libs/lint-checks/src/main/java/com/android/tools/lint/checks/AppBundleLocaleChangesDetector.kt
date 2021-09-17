@@ -32,7 +32,6 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
-import java.util.EnumSet
 import org.jetbrains.kotlin.psi.KtValueArgumentName
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 import org.jetbrains.uast.UBinaryExpression
@@ -41,6 +40,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.tryResolve
+import java.util.EnumSet
 
 class AppBundleLocaleChangesDetector : Detector(), SourceCodeScanner, GradleScanner {
 

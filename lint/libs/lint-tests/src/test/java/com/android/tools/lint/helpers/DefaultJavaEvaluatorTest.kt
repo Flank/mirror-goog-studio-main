@@ -31,9 +31,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.openapi.util.Disposer
-import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.PsiModifierListOwner
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertFalse
@@ -394,7 +392,8 @@ class DefaultJavaEvaluatorTest {
                 context.report(
                     ISSUE,
                     context.getNameLocation(method),
-                    "Found reference to `test.pkg.TargetClass.foo`")
+                    "Found reference to `test.pkg.TargetClass.foo`"
+                )
             }
         }
 

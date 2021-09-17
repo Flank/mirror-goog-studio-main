@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
 import com.android.SdkConstants.ATTR_TRANSLATABLE
 import com.android.SdkConstants.TAG_PLURALS
 import com.android.SdkConstants.TAG_STRING
@@ -192,7 +191,11 @@ class TypoDetector : ResourceXmlDetector() {
     }
 
     private fun checkForExclamation(
-        context: XmlContext, node: Node, text: String, index: Int, begin: Int
+        context: XmlContext,
+        node: Node,
+        text: String,
+        index: Int,
+        begin: Int
     ) {
         // Peek ahead: if we find punctuation or lower case letter don't flag it
         var problem = true
@@ -207,7 +210,7 @@ class TypoDetector : ResourceXmlDetector() {
             } else if (ch == '!') {
                 // Allow repeated 1's or !'s
             } else if (!ch.isWhitespace()) {
-                if (ch.isLowerCase()|| ch.isDigit()) {
+                if (ch.isLowerCase() || ch.isDigit()) {
                     problem = false
                 } else if (ch == ',' || ch == '.' || ch == ':' || ch == ';') {
                     problem = false
@@ -342,7 +345,11 @@ class TypoDetector : ResourceXmlDetector() {
 
     /** Report the typo found at the given offset and suggest the given replacements  */
     private fun reportTypo(
-        context: XmlContext, node: Node, text: String, begin: Int, replacements: List<String>
+        context: XmlContext,
+        node: Node,
+        text: String,
+        begin: Int,
+        replacements: List<String>
     ) {
         if (replacements.size < 2) {
             return
@@ -394,7 +401,12 @@ class TypoDetector : ResourceXmlDetector() {
 
     /** Reports a repeated word  */
     private fun reportRepeatedWord(
-        context: XmlContext, node: Node, text: String, lastWordBegin: Int, begin: Int, end: Int
+        context: XmlContext,
+        node: Node,
+        text: String,
+        lastWordBegin: Int,
+        begin: Int,
+        end: Int
     ) {
         val word = text.substring(begin, end)
         if (isAllowed(word)) {

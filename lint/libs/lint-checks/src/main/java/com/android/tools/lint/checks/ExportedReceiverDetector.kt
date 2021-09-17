@@ -41,11 +41,13 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
         if ((intentFilter != null || navGraph != null) && exported == null) {
             val message = """
                 As of Android 12, `android:exported` must be set; use `true` to make the activity \
-                available to other apps, and `false` otherwise.""".trimIndent()
+                available to other apps, and `false` otherwise.
+            """.trimIndent()
 
             // Check if the intent filter is for a launcher activity
             val incident = if (intentFilter?.subtag(TAG_ACTION)?.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                    ?.equals(mainActivityAction) == true) {
+                ?.equals(mainActivityAction) == true
+            ) {
                 Incident(
                     ISSUE,
                     element,

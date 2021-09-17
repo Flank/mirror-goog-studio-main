@@ -272,20 +272,24 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             )
-        ).run().expect("""
+        ).run().expect(
+            """
         AndroidManifest.xml:8: Warning: As of Android 12, android:exported must be set; use true to make the activity available to other apps, and false otherwise. For launcher activities, this should be set to true. [IntentFilterExportedReceiver]
                                 <activity android:name="MyActivity">
                                  ~~~~~~~~
         0 errors, 1 warnings
-        """)
-            .expectFixDiffs("""
+        """
+        )
+            .expectFixDiffs(
+                """
                 Fix for AndroidManifest.xml line 8: Set exported="true":
                 @@ -8 +8
                 -         <activity android:name="MyActivity" >
                 +         <activity
                 +             android:name="MyActivity"
                 +             android:exported="true" >
-            """)
+            """
+            )
     }
 
     fun testNonExportedLauncherActivity() {
@@ -310,17 +314,20 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                 </manifest>
                 """
             )
-        ).run().expect("""
+        ).run().expect(
+            """
             AndroidManifest.xml:10: Error: A launchable activity must be exported as of Android 12, which also makes it available to other apps. [IntentFilterExportedReceiver]
                                         android:exported="false">
                                         ~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
-        ).expectFixDiffs("""
+        ).expectFixDiffs(
+            """
             Fix for AndroidManifest.xml line 10: Set exported="true":
             @@ -10 +10
             -             android:exported="false" >
             +             android:exported="true" >
-        """)
+        """
+        )
     }
 }
