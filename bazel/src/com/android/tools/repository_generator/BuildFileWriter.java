@@ -68,7 +68,7 @@ public class BuildFileWriter {
         for (ResolutionResult.Dependency dep : result.dependencies) {
             write(dep, false);
         }
-        for (ResolutionResult.Dependency dep : result.conflictLosers) {
+        for (ResolutionResult.Dependency dep : result.unresolvedDependencies) {
             write(dep, true);
         }
         for (ResolutionResult.Parent parent : result.parents) {

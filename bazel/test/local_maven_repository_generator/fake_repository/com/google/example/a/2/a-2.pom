@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<modelVersion>4.0.0</modelVersion>
+  <groupId>com.google.example</groupId>
+  <artifactId>a</artifactId>
+  <version>2</version>
+  <packaging>jar</packaging>
+  <name>A library</name>
+  <parent>
+    <groupId>com.google.example</groupId>
+    <artifactId>a-parent</artifactId>
+    <version>1</version>
+  </parent>
+  <description>
+    ignore me
+  </description>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.example</groupId>
+      <artifactId>c</artifactId>
+      <version>1</version>
+    </dependency>
+  </dependencies>
+</project>

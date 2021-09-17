@@ -28,9 +28,9 @@ public class ResolutionResult {
     public List<Dependency> dependencies = new ArrayList<>();
 
     /** Dependencies in the dependency graph that are eliminated after conflict resolution. */
-    public List<Dependency> conflictLosers = new ArrayList<>();
+    public List<Dependency> unresolvedDependencies = new ArrayList<>();
 
-    /** Transitive parents of all dependencies and conflictLosers. */
+    /** Transitive parents of all dependencies. */
     public List<Parent> parents = new ArrayList<>();
 
     public static class Dependency {
@@ -84,7 +84,7 @@ public class ResolutionResult {
 
     public void sortByCoord() {
         dependencies.sort(Comparator.comparing(d -> d.coord));
-        conflictLosers.sort(Comparator.comparing(d -> d.coord));
+        unresolvedDependencies.sort(Comparator.comparing(d -> d.coord));
         parents.sort(Comparator.comparing(d -> d.coord));
     }
 
@@ -99,15 +99,15 @@ public class ResolutionResult {
         dependencies.add(dependency);
     }
 
-    public void addConflictLoser(Dependency dependency) {
-        for (Dependency existingDependency : conflictLosers) {
+    public void addUnresolvedDependency(Dependency dependency) {
+        for (Dependency existingDependency : unresolvedDependencies) {
             if (existingDependency.coord.equals(dependency.coord)) {
                 mergeDependencies(existingDependency, dependency);
                 return;
             }
         }
 
-        conflictLosers.add(dependency);
+        unresolvedDependencies.add(dependency);
     }
 
     /**

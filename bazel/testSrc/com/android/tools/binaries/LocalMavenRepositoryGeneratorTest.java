@@ -23,6 +23,7 @@ import com.android.testutils.TestUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,10 +43,18 @@ public class LocalMavenRepositoryGeneratorTest {
             "com.google.example:l:1",
             "com.google.example:p:1"
         );
+        List<String> data = Arrays.asList("com.google.example:a:2");
         String outputBuildFile = "generated.BUILD";
         LocalMavenRepositoryGenerator generator =
                 new LocalMavenRepositoryGenerator(
-                        repoPath, outputBuildFile, coords, true, false, Collections.emptyMap(), false);
+                        repoPath,
+                        outputBuildFile,
+                        coords,
+                        data,
+                        true,
+                        false,
+                        Collections.emptyMap(),
+                        false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.golden");
@@ -73,10 +82,18 @@ public class LocalMavenRepositoryGeneratorTest {
                         "com.google.example:b:1",
                         "com.google.example:h:pom:1",
                         "com.google.example:j:jar:linux:1");
+        List<String> data = new ArrayList<>();
         String outputBuildFile = "generated.noresolve.BUILD";
         LocalMavenRepositoryGenerator generator =
                 new LocalMavenRepositoryGenerator(
-                        repoPath, outputBuildFile, coords, false, false, Collections.emptyMap(), false);
+                        repoPath,
+                        outputBuildFile,
+                        coords,
+                        data,
+                        false,
+                        false,
+                        Collections.emptyMap(),
+                        false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.noresolve.golden");

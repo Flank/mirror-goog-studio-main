@@ -117,10 +117,10 @@ def _local_maven_repository_impl(repository_ctx):
         fail("Failed to find java binary at: " + str(java))
 
     # Invoke build file generator tool.
-    inputs = repository_ctx.attr.artifacts
     arguments = (
         [java, "-jar", repository_ctx.path(repository_ctx.attr._generator)] +
-        inputs +
+        repository_ctx.attr.artifacts +
+        ["+" + coordinate for coordinate in repository_ctx.attr.data] +
         ["-o", "BUILD"] +
         ["--repo-path", repo_path] +
         [
@@ -146,6 +146,7 @@ _local_maven_repository = repository_rule(
         "_this_file": attr.label(default = "@//tools/base/bazel:maven.bzl"),
         "resolve": attr.bool(),
         "artifacts": attr.string_list(),
+        "data": attr.string_list(),
         "remote_repositories": attr.string_dict(),
         "_generator": attr.label(default = "@//tools/base/bazel:maven/generator.jar"),
         "_pom": attr.label(
@@ -176,17 +177,23 @@ _local_maven_repository = repository_rule(
 #
 # Args:
 #   path: Local path to a Maven repository relative to the workspace root
-#   artifacts: Coordinates of the Maven artifacts to resolve
+#   artifacts: Coordinates of the Maven artifacts to resolve. These artifacts
+#              will generate version-less maven_library rules to be used
+#              for compilation.
+#   data: Coordinates of the Maven artifacts to include as data. These
+#         artifacts versions will not be resolved and only maven_artifacts will be
+#         generated for these.
 #   resolve: If True, Maven conflict resolution will be enabled
 #   fetch: If True, artifacts will be downloaded from remote_repositories
 #          to the local repository
 #   remote_repositories: A dictionary that maps remote repository names to urls
-def local_maven_repository(name, path, resolve, artifacts, remote_repositories):
+def local_maven_repository(name, path, resolve, artifacts, remote_repositories, data = []):
     _local_maven_repository(
         name = name,
         path = path,
         resolve = resolve,
         artifacts = artifacts,
+        data = data,
         remote_repositories = remote_repositories,
     )
 

@@ -19,18 +19,14 @@ package com.android.tools.binaries;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.tools.json.JsonFileWriter;
-import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.HandleAarDescriptorReaderDelegate;
 import com.android.tools.maven.HighestVersionSelector;
 import com.android.tools.repository_generator.BuildFileWriter;
 import com.android.tools.repository_generator.ResolutionResult;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.lang.reflect.Constructor;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -44,8 +40,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Strings;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -71,8 +65,6 @@ import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.impl.VersionRangeResolver;
-import org.eclipse.aether.metadata.DefaultMetadata;
-import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactRequest;
@@ -113,10 +105,15 @@ public class LocalMavenRepositoryGenerator {
      */
     private final List<String> coords;
 
+    /**
+     * Additional coordinates to generate maven_artifact for without resolving version conflicts.
+     */
+    private final List<String> noresolveCoords;
+
     /** The location of the BUILD file that will be produced. */
     private final String outputBuildFile;
 
-    /** Location of the local maven repository for which the BUILD rules wil be generated. */
+    /** Location of the local maven repository for which the BUILD rules will be generated. */
     private final Path repoPath;
 
     /** Handle to the repo object that encapsulates Aether operations. */
@@ -136,10 +133,12 @@ public class LocalMavenRepositoryGenerator {
             Path repoPath,
             String outputBuildFile,
             List<String> coords,
+            List<String> noresolveCoords,
             boolean resolve,
             boolean fetch,
             Map<String, String> remoteRepositories,
             boolean verbose) {
+        this.noresolveCoords = noresolveCoords;
         this.coords = coords;
         this.outputBuildFile = outputBuildFile;
         this.repoPath = repoPath.toAbsolutePath();
@@ -172,9 +171,11 @@ public class LocalMavenRepositoryGenerator {
         ResolutionResult result = new ResolutionResult();
 
         // Compute dependency graph with version resolution, but without conflict resolution.
+        List<String> allCoords = new ArrayList<>();
+        allCoords.addAll(coords);
+        allCoords.addAll(noresolveCoords);
         List<DependencyNode> unresolvedNodes =
-                collectNodes(repo.resolveDependencies(coords, false));
-
+                collectNodes(repo.resolveDependencies(allCoords, false));
         if (resolve) {
             // Compute dependency graph with version resolution and with conflict resolution.
             List<DependencyNode> resolvedNodes =
@@ -183,26 +184,25 @@ public class LocalMavenRepositoryGenerator {
             // Add the nodes in the conflict-resolved graph into the |dependencies| section of
             // |result|.
             for (DependencyNode node : resolvedNodes) {
-                processNode(node, false, result);
+                processNode(node, true, result);
             }
 
             // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved
-            // graph
-            // into the |conflictLosers| section of |result|.
+            // graph into the |unresolvedDependencies| section of |result|.
             Set<String> resolvedNodeCoords =
                     resolvedNodes.stream()
                             .map(d -> d.getArtifact().toString())
                             .collect(Collectors.toSet());
-            Set<DependencyNode> conflictLoserNodes =
+            Set<DependencyNode> unresolvedDependencies =
                     unresolvedNodes.stream()
                             .filter(d -> !resolvedNodeCoords.contains(d.getArtifact().toString()))
                             .collect(Collectors.toSet());
-            for (DependencyNode node : conflictLoserNodes) {
-                processNode(node, true, result);
+            for (DependencyNode node : unresolvedDependencies) {
+                processNode(node, false, result);
             }
         } else {
             for (DependencyNode node : unresolvedNodes) {
-                processNode(node, true, result);
+                processNode(node, false, result);
             }
         }
 
@@ -307,8 +307,7 @@ public class LocalMavenRepositoryGenerator {
      * Processes the given node, converts it into a {@link ResolutionResult.Dependency} object, and
      * adds it into result.
      */
-    private void processNode(
-            DependencyNode node, boolean isConflictLoser, ResolutionResult result) {
+    private void processNode(DependencyNode node, boolean isResolved, ResolutionResult result) {
         // node does not contain any information about parent or pom file.
         // To obtain those, we use the maven-model-builder plugin.
         Model model = repo.getMavenModel(node.getArtifact());
@@ -343,7 +342,7 @@ public class LocalMavenRepositoryGenerator {
             originalDeps.add(child.getArtifact().toString());
         }
 
-        if (!isConflictLoser) {
+        if (isResolved) {
             for (DependencyNode child : node.getChildren()) {
                 DependencyNode winnerChildNode = getWinner(child);
                 if (winnerChildNode == null
@@ -370,8 +369,8 @@ public class LocalMavenRepositoryGenerator {
             }
         }
 
-        if (isConflictLoser) {
-            result.addConflictLoser(
+        if (!isResolved) {
+            result.addUnresolvedDependency(
                     new ResolutionResult.Dependency(
                             node.getArtifact().toString(),
                             repoPath.relativize(node.getArtifact().getFile().toPath()).toString(),
@@ -410,6 +409,7 @@ public class LocalMavenRepositoryGenerator {
     }
 
     public static void main(String[] args) throws Exception {
+        List<String> noresolveCoords = new ArrayList<>();
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
@@ -465,7 +465,13 @@ public class LocalMavenRepositoryGenerator {
             }
 
             // All other arguments are coords.
-            coords.add(args[i]);
+            // If a coordinate is passed in with a leading '+', like +com.example:id:art,
+            // We treat it as additional coordinates that won't get resolved.
+            if (args[i].startsWith("+")) {
+                noresolveCoords.add(args[i].substring(1));
+            } else {
+                coords.add(args[i]);
+            }
         }
         if (repoPath == null) {
             System.err.println("Missing argument: --repo-path");
@@ -477,7 +483,15 @@ public class LocalMavenRepositoryGenerator {
             System.exit(1);
         }
 
-        new LocalMavenRepositoryGenerator(repoPath, outputFile, coords, resolve, fetch, remoteRepositories, verbose)
+        new LocalMavenRepositoryGenerator(
+                        repoPath,
+                        outputFile,
+                        coords,
+                        noresolveCoords,
+                        resolve,
+                        fetch,
+                        remoteRepositories,
+                        verbose)
                 .run();
     }
 
@@ -514,7 +528,7 @@ public class LocalMavenRepositoryGenerator {
          * <p>If resolveConflicts is true, then it also performs dependency conflict resolution in
          * verbose mode, which effectively reduces the dependency graph into a dependency tree
          * (except for the effects of verbose mode, which preserves some extra information about the
-         * conflict loser nodes that are directly reachable by conflict winners).
+         * unresolved nodes that are directly reachable by conflict winners).
          *
          * <p>If resolveConflicts is false, the dependency graph is returned as-is, without any
          * dependency conflict resolution.

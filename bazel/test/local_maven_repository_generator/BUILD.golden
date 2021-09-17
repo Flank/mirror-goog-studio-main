@@ -451,6 +451,18 @@ maven_import(
 )
 
 maven_artifact(
+    name = "com.google.example.a_2",
+    pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/a/2/a-2.pom",
+    repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
+    repo_path = "com/google/example/a/2",
+    parent = "com.google.example.a-parent_1",
+    deps = [
+        "com.google.example.c_1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.example.c_1",
     pom = "tools/base/bazel/test/local_maven_repository_generator/fake_repository/com/google/example/c/1/c-1.pom",
     repo_root_path = "tools/base/bazel/test/local_maven_repository_generator/fake_repository",
