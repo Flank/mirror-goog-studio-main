@@ -127,8 +127,7 @@ def _local_maven_repository_impl(repository_ctx):
             remote_repo
             for k, v in repository_ctx.attr.remote_repositories.items()
             for remote_repo in ("--remote-repo", k + "=" + v)
-        ] +
-        (["--noresolve"] if not repository_ctx.attr.resolve else [])
+        ]
     )
     result = repository_ctx.execute(
         arguments,
@@ -144,7 +143,6 @@ _local_maven_repository = repository_rule(
     attrs = {
         "path": attr.string(),
         "_this_file": attr.label(default = "@//tools/base/bazel:maven.bzl"),
-        "resolve": attr.bool(),
         "artifacts": attr.string_list(),
         "data": attr.string_list(),
         "remote_repositories": attr.string_dict(),
@@ -183,15 +181,13 @@ _local_maven_repository = repository_rule(
 #   data: Coordinates of the Maven artifacts to include as data. These
 #         artifacts versions will not be resolved and only maven_artifacts will be
 #         generated for these.
-#   resolve: If True, Maven conflict resolution will be enabled
 #   fetch: If True, artifacts will be downloaded from remote_repositories
 #          to the local repository
 #   remote_repositories: A dictionary that maps remote repository names to urls
-def local_maven_repository(name, path, resolve, artifacts, remote_repositories, data = []):
+def local_maven_repository(name, path, artifacts, remote_repositories, data = []):
     _local_maven_repository(
         name = name,
         path = path,
-        resolve = resolve,
         artifacts = artifacts,
         data = data,
         remote_repositories = remote_repositories,

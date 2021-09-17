@@ -114,7 +114,6 @@ local_repository(
 local_maven_repository(
     name = "maven",
     path = "prebuilts/tools/common/m2/repository/",
-    resolve = True,
     # keep sorted: for buildifier
     artifacts = [
         "androidx.annotation:annotation:1.1.0",

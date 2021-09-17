@@ -51,52 +51,12 @@ public class LocalMavenRepositoryGeneratorTest {
                         outputBuildFile,
                         coords,
                         data,
-                        true,
                         false,
                         Collections.emptyMap(),
                         false);
         generator.run();
 
         Path golden = repoPath.resolveSibling("BUILD.golden");
-        Path generated = Paths.get(outputBuildFile);
-
-        assertTrue(generated.toFile().exists());
-        String goldenFileContents = Files.readString(golden);
-        String generatedFileContents = Files.readString(generated);
-        if (!goldenFileContents.equals(generatedFileContents)) {
-            System.err.println("=== Start generated file contents ===");
-            System.err.println(generatedFileContents);
-            System.err.println("=== End generated file contents ===");
-            Files.copy(generated, TestUtils.getTestOutputDir().resolve(outputBuildFile));
-        }
-        assertEquals("The files differ!", goldenFileContents, generatedFileContents);
-    }
-
-    @Test
-    public void testGeneratorNoResolve() throws Exception {
-        Path repoPath =
-                Paths.get("tools/base/bazel/test/local_maven_repository_generator/fake_repository");
-        List<String> coords =
-                Arrays.asList(
-                        "com.google.example:a:1",
-                        "com.google.example:b:1",
-                        "com.google.example:h:pom:1",
-                        "com.google.example:j:jar:linux:1");
-        List<String> data = new ArrayList<>();
-        String outputBuildFile = "generated.noresolve.BUILD";
-        LocalMavenRepositoryGenerator generator =
-                new LocalMavenRepositoryGenerator(
-                        repoPath,
-                        outputBuildFile,
-                        coords,
-                        data,
-                        false,
-                        false,
-                        Collections.emptyMap(),
-                        false);
-        generator.run();
-
-        Path golden = repoPath.resolveSibling("BUILD.noresolve.golden");
         Path generated = Paths.get(outputBuildFile);
 
         assertTrue(generated.toFile().exists());

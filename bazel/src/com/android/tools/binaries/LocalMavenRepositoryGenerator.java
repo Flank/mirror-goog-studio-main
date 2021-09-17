@@ -125,16 +125,12 @@ public class LocalMavenRepositoryGenerator {
     /** Whether to fetch dependencies from remote repositories. */
     private final boolean fetch;
 
-    /** Whether to resolve versions and generate java_library like rules. */
-    private final boolean resolve;
-
     @VisibleForTesting
     public LocalMavenRepositoryGenerator(
             Path repoPath,
             String outputBuildFile,
             List<String> coords,
             List<String> noresolveCoords,
-            boolean resolve,
             boolean fetch,
             Map<String, String> remoteRepositories,
             boolean verbose) {
@@ -143,7 +139,6 @@ public class LocalMavenRepositoryGenerator {
         this.outputBuildFile = outputBuildFile;
         this.repoPath = repoPath.toAbsolutePath();
         this.verbose = verbose;
-        this.resolve = resolve;
         this.fetch = fetch;
 
         // This is where the artifacts will be downloaded from. We make it point to our own local
@@ -176,34 +171,27 @@ public class LocalMavenRepositoryGenerator {
         allCoords.addAll(noresolveCoords);
         List<DependencyNode> unresolvedNodes =
                 collectNodes(repo.resolveDependencies(allCoords, false));
-        if (resolve) {
-            // Compute dependency graph with version resolution and with conflict resolution.
-            List<DependencyNode> resolvedNodes =
-                    collectNodes(repo.resolveDependencies(coords, true));
+        // Compute dependency graph with version resolution and with conflict resolution.
+        List<DependencyNode> resolvedNodes = collectNodes(repo.resolveDependencies(coords, true));
 
-            // Add the nodes in the conflict-resolved graph into the |dependencies| section of
-            // |result|.
-            for (DependencyNode node : resolvedNodes) {
-                processNode(node, true, result);
-            }
+        // Add the nodes in the conflict-resolved graph into the |dependencies| section of
+        // |result|.
+        for (DependencyNode node : resolvedNodes) {
+            processNode(node, true, result);
+        }
 
-            // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved
-            // graph into the |unresolvedDependencies| section of |result|.
-            Set<String> resolvedNodeCoords =
-                    resolvedNodes.stream()
-                            .map(d -> d.getArtifact().toString())
-                            .collect(Collectors.toSet());
-            Set<DependencyNode> unresolvedDependencies =
-                    unresolvedNodes.stream()
-                            .filter(d -> !resolvedNodeCoords.contains(d.getArtifact().toString()))
-                            .collect(Collectors.toSet());
-            for (DependencyNode node : unresolvedDependencies) {
-                processNode(node, false, result);
-            }
-        } else {
-            for (DependencyNode node : unresolvedNodes) {
-                processNode(node, false, result);
-            }
+        // Add the nodes in the conflict-unresolved graph, but not in the conflict-resolved
+        // graph into the |unresolvedDependencies| section of |result|.
+        Set<String> resolvedNodeCoords =
+                resolvedNodes.stream()
+                        .map(d -> d.getArtifact().toString())
+                        .collect(Collectors.toSet());
+        Set<DependencyNode> unresolvedDependencies =
+                unresolvedNodes.stream()
+                        .filter(d -> !resolvedNodeCoords.contains(d.getArtifact().toString()))
+                        .collect(Collectors.toSet());
+        for (DependencyNode node : unresolvedDependencies) {
+            processNode(node, false, result);
         }
 
         // Add the transitive parents of all nodes in the conflict-unresolved graph into the
@@ -413,7 +401,6 @@ public class LocalMavenRepositoryGenerator {
         List<String> coords = new ArrayList<>();
         Path repoPath = null;
         boolean verbose = false;
-        boolean resolve = true;
         boolean fetch = !Strings.isNullOrEmpty(System.getenv("MAVEN_FETCH"));
         Map<String, String> remoteRepositories = new TreeMap<>();
         String outputFile = "output.BUILD";
@@ -459,10 +446,6 @@ public class LocalMavenRepositoryGenerator {
                 fetch = true;
                 continue;
             }
-            if (arg.equals("--noresolve")) {
-                resolve = false;
-                continue;
-            }
 
             // All other arguments are coords.
             // If a coordinate is passed in with a leading '+', like +com.example:id:art,
@@ -488,7 +471,6 @@ public class LocalMavenRepositoryGenerator {
                         outputFile,
                         coords,
                         noresolveCoords,
-                        resolve,
                         fetch,
                         remoteRepositories,
                         verbose)
