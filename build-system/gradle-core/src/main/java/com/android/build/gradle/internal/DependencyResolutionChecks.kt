@@ -49,6 +49,8 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
         project.gradle.projectsEvaluated { isProjectEvaluated.set(true) }
     }
 
+    val modelOnly = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY] || projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY_V2]
+
     project.configurations.all { configuration ->
         configuration.incoming.beforeResolve {
             if (isProjectEvaluated.get()) {
@@ -57,9 +59,7 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
             if (configuration.name == "classpath") {
                 return@beforeResolve
             }
-            if (project.findProperty(BooleanOption.IDE_BUILD_MODEL_ONLY.propertyName)
-                    ?.let { BooleanOption.IDE_BUILD_MODEL_ONLY.parse(it) } == true
-            ) {
+            if (modelOnly) {
                 return@beforeResolve
             }
 

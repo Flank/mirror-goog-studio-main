@@ -24,7 +24,6 @@ import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
-import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR;
 import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR;
 
@@ -828,7 +827,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             String rootLocation = extension.getTestOptions().getResultsDir();
             if (rootLocation == null) {
-                rootLocation = project.getBuildDir() + "/" + FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
+                rootLocation =
+                        project.getBuildDir()
+                                + "/"
+                                + SdkConstants.FD_OUTPUTS
+                                + "/"
+                                + FD_ANDROID_RESULTS;
             }
             task.getResultsDir().set(new File(rootLocation + subFolder));
 

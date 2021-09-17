@@ -276,7 +276,8 @@ class VariantDependencies internal constructor(
                 attributes?.addAttributesToContainer(container)
             }
         val filter = getComponentFilter(scope)
-        val lenientMode = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY]
+        val lenientMode =
+            projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY] || projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY_V2]
 
         return configuration
             .incoming

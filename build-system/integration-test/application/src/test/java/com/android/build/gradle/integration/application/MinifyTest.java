@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.SdkConstants;
 import com.android.Version;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -107,7 +108,7 @@ public class MinifyTest {
         File defaultProguardFile =
                 project.file(
                         "build/"
-                                + AndroidProject.FD_INTERMEDIATES
+                                + SdkConstants.FD_INTERMEDIATES
                                 + "/default_proguard_files/global"
                                 + "/proguard-android.txt"
                                 + "-"

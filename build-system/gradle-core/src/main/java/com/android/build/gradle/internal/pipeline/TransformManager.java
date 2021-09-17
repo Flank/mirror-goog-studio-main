@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.pipeline;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
@@ -34,7 +35,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.annotations.VisibleForTesting;
@@ -326,7 +326,7 @@ public class TransformManager extends FilterableStreamCollection {
                 FileUtils.join(
                         buildDir,
                         StringHelper.toStrings(
-                                AndroidProject.FD_INTERMEDIATES,
+                                SdkConstants.FD_INTERMEDIATES,
                                 FD_TRANSFORMS,
                                 transform.getName(),
                                 creationConfig.getVariantDslInfo().getDirectorySegments()));

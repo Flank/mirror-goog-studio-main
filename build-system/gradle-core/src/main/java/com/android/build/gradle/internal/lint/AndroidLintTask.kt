@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.Version
@@ -36,11 +37,11 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -63,14 +64,13 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.Collections
 import javax.inject.Inject
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.work.DisableCachingByDefault
 
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
 @DisableCachingByDefault
@@ -710,7 +710,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
+            project.layout.buildDirectory.dir("${SdkConstants.FD_INTERMEDIATES}/lint-cache")
         )
 
         val locationBuildService = getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)

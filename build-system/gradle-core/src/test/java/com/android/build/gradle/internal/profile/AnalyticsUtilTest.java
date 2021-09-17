@@ -342,6 +342,7 @@ public class AnalyticsUtilTest {
     public void checkSomeEmptyProjectOptions() {
         ImmutableMap.Builder<String, Object> properties = ImmutableMap.builder();
         properties.put(BooleanOption.IDE_BUILD_MODEL_ONLY.getPropertyName(), true);
+        properties.put(BooleanOption.IDE_BUILD_MODEL_ONLY_V2.getPropertyName(), true);
         properties.put(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED.getPropertyName(), false);
         properties.put(OptionalBooleanOption.SIGNING_V1_ENABLED.getPropertyName(), true);
         properties.put(OptionalBooleanOption.SIGNING_V2_ENABLED.getPropertyName(), false);
@@ -357,7 +358,9 @@ public class AnalyticsUtilTest {
         assertThat(gradleProjectOptionsSettings.getTrueBooleanOptionsList())
                 .containsExactly(
                         com.android.tools.build.gradle.internal.profile.BooleanOption
-                                .IDE_BUILD_MODEL_ONLY_VALUE);
+                                .IDE_BUILD_MODEL_ONLY_VALUE,
+                        com.android.tools.build.gradle.internal.profile.BooleanOption
+                                .IDE_BUILD_MODEL_ONLY_V2_VALUE);
         assertThat(gradleProjectOptionsSettings.getFalseBooleanOptionsList())
                 .containsExactly(
                         com.android.tools.build.gradle.internal.profile.BooleanOption

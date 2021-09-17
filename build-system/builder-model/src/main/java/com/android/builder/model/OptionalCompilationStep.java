@@ -20,7 +20,10 @@ package com.android.builder.model;
  * enum describing possible optional compilation steps. This can be used to turn on java byte code
  * manipulation in order to support instant reloading, or profiling, or anything related to
  * transforming java compiler .class files before they are processed into .dex files.
+ *
+ * @deprecated this is not used anymore
  */
+@Deprecated
 public enum OptionalCompilationStep {
 
     /**

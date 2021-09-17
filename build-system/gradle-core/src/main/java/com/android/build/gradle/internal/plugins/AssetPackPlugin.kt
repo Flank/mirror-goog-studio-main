@@ -21,7 +21,6 @@ import com.android.build.api.dsl.AssetPackExtension
 import com.android.build.gradle.internal.dsl.AssetPackExtensionImpl
 import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -36,7 +35,7 @@ class AssetPackPlugin : Plugin<Project> {
             manifestGenerationTask.variantName = ""
             manifestGenerationTask.manifestFile.setDisallowChanges(
                 project.layout.buildDirectory.get().dir(
-                    FD_INTERMEDIATES
+                    SdkConstants.FD_INTERMEDIATES
                 ).dir("asset_pack_manifest").file(SdkConstants.FN_ANDROID_MANIFEST_XML)
             )
             manifestGenerationTask.packName.setDisallowChanges(extension.packName)

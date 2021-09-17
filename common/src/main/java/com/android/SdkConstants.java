@@ -17,7 +17,6 @@
 package com.android;
 
 import com.android.support.AndroidxName;
-
 import java.io.File;
 
 /**
@@ -445,6 +444,15 @@ public final class SdkConstants {
 
     /** jars folder */
     public static final String FD_JARS = "jars";
+
+    /** Intermediates folder under the build directory */
+    public static final String FD_INTERMEDIATES = "intermediates";
+    /** logs folder under the build directory */
+    public static final String FD_LOGS = "logs";
+    /** outputs folder under the build directory */
+    public static final String FD_OUTPUTS = "outputs";
+    /** generated folder under the build directory */
+    public static final String FD_GENERATED = "generated";
 
     /* Folder Names for the Android SDK */
 

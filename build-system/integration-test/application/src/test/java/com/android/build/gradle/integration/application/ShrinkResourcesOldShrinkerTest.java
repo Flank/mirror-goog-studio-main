@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.res.shrinker.DummyContent;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.packaging.ApkCreatorType;
-import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -211,7 +211,7 @@ public class ShrinkResourcesOldShrinkerTest {
                         apkPipeline.taskName("Debug"),
                         apkPipeline.taskName("MinifyDontShrink"));
 
-        File intermediates = project.file("build/" + AndroidProject.FD_INTERMEDIATES);
+        File intermediates = project.file("build/" + SdkConstants.FD_INTERMEDIATES);
 
         // The release target has shrinking enabled.
         // The minifyDontShrink target has proguard but no shrinking enabled.

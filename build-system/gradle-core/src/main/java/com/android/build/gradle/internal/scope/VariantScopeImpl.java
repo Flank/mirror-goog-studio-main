@@ -131,9 +131,6 @@ public class VariantScopeImpl implements VariantScope {
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
         this.testedVariantProperties = testedVariantProperties;
 
-        if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
-            throw new RuntimeException("InstantRun mode is not supported");
-        }
         this.postProcessingOptions = variantDslInfo.getPostProcessingOptions();
 
         configureNdk();

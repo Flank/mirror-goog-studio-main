@@ -187,7 +187,7 @@ class ModelBuilderV2 internal constructor(
      * Can be used both when just fetching models or when also scheduling tasks to be run.
      */
     private fun <T> buildModel(executor: BuildActionExecuter<T>): Pair<T, GradleBuildResult> {
-        with(BooleanOption.IDE_BUILD_MODEL_ONLY, true)
+        with(BooleanOption.IDE_BUILD_MODEL_ONLY_V2, true)
         with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
         setJvmArguments(executor)
 

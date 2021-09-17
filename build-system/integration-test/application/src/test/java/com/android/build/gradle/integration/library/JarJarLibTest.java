@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static org.junit.Assert.assertEquals;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
@@ -99,7 +100,7 @@ public class JarJarLibTest {
         File jarFile =
                 project.file(
                         "build/"
-                                + AndroidProject.FD_INTERMEDIATES
+                                + SdkConstants.FD_INTERMEDIATES
                                 + "/"
                                 + "bundles/"
                                 + "debug/"

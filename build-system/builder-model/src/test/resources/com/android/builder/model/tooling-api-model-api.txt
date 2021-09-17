@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d93cd02ba789da8ad2d63a99b31c994ea0eac6aa5295ba811d585c22c48ffc9c
+e7576c83aab5a92ba7b5cbf153192300aea0951efd4adae0cda9a8de0e946465
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -195,6 +195,7 @@ com.android.builder.model.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.builder.model.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.builder.model.DimensionAware
 com.android.builder.model.DimensionAware.getDimension: java.lang.String ()
+com.android.builder.model.InjectedProperties
 com.android.builder.model.InstantAppProjectBuildOutput
 com.android.builder.model.InstantAppProjectBuildOutput.getInstantAppVariantsBuildOutput: java.util.Collection<com.android.builder.model.InstantAppVariantBuildOutput> ()
 com.android.builder.model.InstantAppVariantBuildOutput
@@ -758,7 +759,6 @@ com.android.builder.model.v2.models.AndroidDsl.getLintOptions: com.android.build
 com.android.builder.model.v2.models.AndroidDsl.getProductFlavors: java.util.List<com.android.builder.model.v2.dsl.ProductFlavor> ()
 com.android.builder.model.v2.models.AndroidDsl.getSigningConfigs: java.util.Collection<com.android.builder.model.v2.dsl.SigningConfig> ()
 com.android.builder.model.v2.models.AndroidProject implements com.android.builder.model.v2.AndroidModel
-com.android.builder.model.v2.models.AndroidProject$Companion
 com.android.builder.model.v2.models.AndroidProject.getAndroidTestNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getBootClasspath: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getBuildFolder: java.io.File ()

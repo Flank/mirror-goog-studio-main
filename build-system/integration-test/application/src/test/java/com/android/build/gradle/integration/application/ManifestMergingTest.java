@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.SdkConstants;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -79,7 +79,7 @@ public class ManifestMergingTest {
         File fileOutput =
                 libsTest.file(
                         "libapp/build/"
-                                + FD_INTERMEDIATES
+                                + SdkConstants.FD_INTERMEDIATES
                                 + File.separator
                                 + SingleArtifact.MERGED_MANIFEST.INSTANCE.getFolderName()
                                 + "/debug/AndroidManifest.xml");
@@ -89,7 +89,7 @@ public class ManifestMergingTest {
         fileOutput =
                 libsTest.file(
                         "libapp/build/"
-                                + FD_INTERMEDIATES
+                                + SdkConstants.FD_INTERMEDIATES
                                 + File.separator
                                 + SingleArtifact.MERGED_MANIFEST.INSTANCE.getFolderName()
                                 + "/release/AndroidManifest.xml");

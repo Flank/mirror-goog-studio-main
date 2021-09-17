@@ -18,10 +18,10 @@ package com.android.build.gradle;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -95,7 +95,7 @@ public class ProguardFiles {
     public static File getDefaultProguardFileDir(@NonNull DirectoryProperty buildDirectory) {
         return FileUtils.join(
                 buildDirectory.get().getAsFile(),
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE.getFolderName(),
                 "global");
     }

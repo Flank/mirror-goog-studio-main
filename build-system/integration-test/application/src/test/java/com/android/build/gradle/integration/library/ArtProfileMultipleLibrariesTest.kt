@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.apkEntryName
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.v2.models.AndroidProject
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
 import com.android.utils.FileUtils
@@ -131,7 +130,7 @@ class ArtProfileMultipleLibrariesTest {
         for (i in 1..3) {
             val libFile = FileUtils.join(
                     project.getSubproject(":lib$i").buildDir,
-                    AndroidProject.FD_INTERMEDIATES,
+                    SdkConstants.FD_INTERMEDIATES,
                     InternalArtifactType.LIBRARY_ART_PROFILE.getFolderName(),
                     "release",
                     SdkConstants.FN_ART_PROFILE,
@@ -158,7 +157,7 @@ class ArtProfileMultipleLibrariesTest {
 
         val mergedFile = FileUtils.join(
                 project.getSubproject(":app").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.MERGED_ART_PROFILE.getFolderName(),
                 "release",
                 SdkConstants.FN_ART_PROFILE,
@@ -172,7 +171,7 @@ class ArtProfileMultipleLibrariesTest {
 
         val binaryProfile = FileUtils.join(
                 project.getSubproject(":app").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.BINARY_ART_PROFILE.getFolderName(),
                 "release",
                 SdkConstants.FN_BINARY_ART_PROFILE,

@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal.variant
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
-import com.android.builder.model.AndroidProject
 import com.android.utils.toStrings
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -39,13 +38,13 @@ class VariantPathHelper(
 ) {
 
     fun intermediatesDir(vararg subDirs: String): Provider<Directory> =
-        getBuildSubDir(AndroidProject.FD_INTERMEDIATES, subDirs)
+        getBuildSubDir(SdkConstants.FD_INTERMEDIATES, subDirs)
 
     fun outputDir(vararg subDirs: String): Provider<Directory> =
-        getBuildSubDir(AndroidProject.FD_OUTPUTS, subDirs)
+        getBuildSubDir(SdkConstants.FD_OUTPUTS, subDirs)
 
     fun generatedDir(vararg subDirs: String): Provider<Directory> =
-        getBuildSubDir(AndroidProject.FD_GENERATED, subDirs)
+        getBuildSubDir(SdkConstants.FD_GENERATED, subDirs)
 
     fun reportsDir(vararg subDirs: String): Provider<Directory> =
         getBuildSubDir(BuilderConstants.FD_REPORTS, subDirs)
@@ -65,7 +64,7 @@ class VariantPathHelper(
     val renderscriptObjOutputDir: Provider<Directory>
             by lazy {
                 getBuildSubDir(
-                    AndroidProject.FD_INTERMEDIATES,
+                    SdkConstants.FD_INTERMEDIATES,
                     toStrings("rs", variantDslInfo.directorySegments, "obj").toTypedArray()
                 )
             }

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.connected.testing
 
+import com.android.SdkConstants
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -202,10 +203,13 @@ class CustomTestedApksTest {
         Truth.assertThat(testedTargetVariants.first().targetVariant).isEqualTo("benchmark")
 
         // check the benchmark manifest file, it should self instrument itself.
-        val packagedManifestFolder = FileUtils.join(project.getSubproject("test").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+        val packagedManifestFolder =
+            FileUtils.join(
+                project.getSubproject("test").buildDir,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.PACKAGED_MANIFESTS.getFolderName(),
-                "benchmark")
+                "benchmark"
+            )
         Truth.assertThat(packagedManifestFolder.exists()).isTrue()
         val manifests = BuiltArtifactsLoaderImpl.loadFromDirectory(packagedManifestFolder)
                 ?: throw RuntimeException("No manifest file generated !")

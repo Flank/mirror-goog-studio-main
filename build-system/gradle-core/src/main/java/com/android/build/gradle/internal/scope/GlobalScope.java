@@ -59,7 +59,6 @@ public class GlobalScope {
     @NonNull private final Provider<SdkComponentsBuildService> sdkComponents;
     @NonNull private final Provider<AvdComponentsBuildService> avdComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
-    @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final SoftwareComponentFactory componentFactory;
 
@@ -92,8 +91,6 @@ public class GlobalScope {
         this.sdkComponents = sdkComponents;
         this.avdComponents = avdComponents;
         this.toolingRegistry = checkNotNull(toolingRegistry);
-        this.optionalCompilationSteps =
-                checkNotNull(dslServices.getProjectOptions().getOptionalCompilationSteps());
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
 
@@ -140,10 +137,6 @@ public class GlobalScope {
     @NonNull
     public ToolingModelBuilderRegistry getToolingRegistry() {
         return toolingRegistry;
-    }
-
-    public boolean isActive(OptionalCompilationStep step) {
-        return optionalCompilationSteps.contains(step);
     }
 
     public void setLintChecks(@NonNull Configuration lintChecks) {

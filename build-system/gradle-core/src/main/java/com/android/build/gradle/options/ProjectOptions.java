@@ -190,20 +190,6 @@ public final class ProjectOptions {
         return testRunnerArgs;
     }
 
-    @NonNull
-    public Set<OptionalCompilationStep> getOptionalCompilationSteps() {
-        String values = get(StringOption.IDE_OPTIONAL_COMPILATION_STEPS);
-        if (values != null) {
-            List<OptionalCompilationStep> optionalCompilationSteps = new ArrayList<>();
-            StringTokenizer st = new StringTokenizer(values, ",");
-            while (st.hasMoreElements()) {
-                optionalCompilationSteps.add(OptionalCompilationStep.valueOf(st.nextToken()));
-            }
-            return EnumSet.copyOf(optionalCompilationSteps);
-        }
-        return EnumSet.noneOf(OptionalCompilationStep.class);
-    }
-
     public boolean isAnalyticsEnabled() {
         return AnalyticsSettings.getOptedIn()
                 || get(BooleanOption.ENABLE_PROFILE_JSON)

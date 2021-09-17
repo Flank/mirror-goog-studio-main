@@ -715,12 +715,12 @@ allprojects { proj ->
 
     /** Return the output directory from Android plugins.  */
     val outputDir: File
-        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_OUTPUTS)
+        get() = FileUtils.join(projectDir, "build", SdkConstants.FD_OUTPUTS)
 
     /** Return the output directory from Android plugins.  */
     val intermediatesDir: File
         get() = FileUtils
-            .join(projectDir, "build", AndroidProject.FD_INTERMEDIATES)
+            .join(projectDir, "build", SdkConstants.FD_INTERMEDIATES)
 
     /** Return a File under the output directory from Android plugins.  */
     fun getOutputFile(apkLocation: ApkLocation, vararg paths: String?): File {
@@ -743,7 +743,7 @@ allprojects { proj ->
     }
 
     val generatedDir: File
-        get() = FileUtils.join(projectDir, "build", AndroidProject.FD_GENERATED)
+        get() = FileUtils.join(projectDir, "build", SdkConstants.FD_GENERATED)
 
     /**
      * Returns the directory in which profiles will be generated. A null value indicates that

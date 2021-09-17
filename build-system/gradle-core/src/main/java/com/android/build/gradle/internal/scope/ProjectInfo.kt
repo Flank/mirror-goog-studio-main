@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.SdkConstants
 import com.android.build.gradle.BaseExtension
 import com.android.builder.core.BuilderConstants
-import com.android.builder.model.AndroidProject
 import com.google.common.base.Preconditions
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePluginConvention
@@ -54,7 +54,7 @@ class ProjectInfo(project: Project) {
     }
 
     fun getIntermediatesDir(): File {
-        return File(getBuildDir(), AndroidProject.FD_INTERMEDIATES)
+        return File(getBuildDir(), SdkConstants.FD_INTERMEDIATES)
     }
 
     fun getTmpFolder(): File {
@@ -62,7 +62,7 @@ class ProjectInfo(project: Project) {
     }
 
     fun getOutputsDir(): File {
-        return File(getBuildDir(), AndroidProject.FD_OUTPUTS)
+        return File(getBuildDir(), SdkConstants.FD_OUTPUTS)
     }
 
     fun getJacocoAgentOutputDirectory(): File {
@@ -74,6 +74,6 @@ class ProjectInfo(project: Project) {
     }
 
     fun getExtension(): BaseExtension {
-        return getProject().extensions.getByName("android") as BaseExtension
+        return project.extensions.getByName("android") as BaseExtension
     }
 }

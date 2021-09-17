@@ -27,6 +27,13 @@ import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationT
 import com.android.build.gradle.options.Version.VERSION_7_2
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.AndroidProject.PROPERTY_BUILD_MODEL_ONLY
+import com.android.builder.model.PROPERTY_BUILD_MODEL_V2_ONLY
+import com.android.builder.model.PROPERTY_BUILD_WITH_STABLE_IDS
+import com.android.builder.model.PROPERTY_DEPLOY_AS_INSTANT_APP
+import com.android.builder.model.PROPERTY_EXTRACT_INSTANT_APK
+import com.android.builder.model.PROPERTY_INVOKED_FROM_IDE
+import com.android.builder.model.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL
 
 enum class BooleanOption(
     override val propertyName: String,
@@ -39,25 +46,25 @@ enum class BooleanOption(
      */
 
     // IDE properties
-    IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE, false, ApiStage.Stable),
-    IDE_BUILD_MODEL_ONLY_V2(com.android.builder.model.v2.models.AndroidProject.PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
-    @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
-    IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
+    IDE_INVOKED_FROM_IDE(PROPERTY_INVOKED_FROM_IDE, false, ApiStage.Stable),
+    IDE_BUILD_MODEL_ONLY_V2(PROPERTY_BUILD_MODEL_V2_ONLY, false, ApiStage.Stable),
+    @Deprecated("This is for model v1 only. Please also use IDE_BUILD_MODEL_ONLY_V2")
+    IDE_BUILD_MODEL_ONLY(PROPERTY_BUILD_MODEL_ONLY, false, ApiStage.Stable),
     @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
     IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED, false, ApiStage.Stable),
     @Deprecated("Use IDE_BUILD_MODEL_ONLY_V2")
     IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES(AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, false, ApiStage.Stable),
-    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, false, ApiStage.Stable),
-    IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, false, ApiStage.Stable),
+    IDE_REFRESH_EXTERNAL_NATIVE_MODEL(PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, false, ApiStage.Stable),
+    //IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, false, ApiStage.Stable),
 
     // tell bundletool to only extract instant APKs.
-    IDE_EXTRACT_INSTANT(AndroidProject.PROPERTY_EXTRACT_INSTANT_APK, false, ApiStage.Stable),
+    IDE_EXTRACT_INSTANT(PROPERTY_EXTRACT_INSTANT_APK, false, ApiStage.Stable),
 
     // Flag used to indicate a "deploy as instant" run configuration.
-    IDE_DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false, ApiStage.Stable),
+    IDE_DEPLOY_AS_INSTANT_APP(PROPERTY_DEPLOY_AS_INSTANT_APP, false, ApiStage.Stable),
 
     ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, ApiStage.Stable),
-    ENABLE_STABLE_IDS("android.injected.enableStableIds", false, ApiStage.Stable),
+    ENABLE_STABLE_IDS(PROPERTY_BUILD_WITH_STABLE_IDS, false, ApiStage.Stable),
 
     // Features' default values
     BUILD_FEATURE_AIDL("android.defaults.buildfeatures.aidl", true, ApiStage.Stable),

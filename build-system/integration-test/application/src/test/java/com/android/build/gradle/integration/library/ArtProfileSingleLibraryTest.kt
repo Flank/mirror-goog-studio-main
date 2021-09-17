@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.v2.models.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
@@ -134,7 +133,7 @@ class ArtProfileSingleLibraryTest {
 
         val libFile = FileUtils.join(
                 project.getSubproject(":lib").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.LIBRARY_ART_PROFILE.getFolderName(),
                 "release",
                 SdkConstants.FN_ART_PROFILE,
@@ -150,7 +149,7 @@ class ArtProfileSingleLibraryTest {
 
         val mergedFile = FileUtils.join(
                 project.getSubproject(":app").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.MERGED_ART_PROFILE.getFolderName(),
                 "release",
                 SdkConstants.FN_ART_PROFILE,
@@ -168,7 +167,7 @@ class ArtProfileSingleLibraryTest {
 
         val binaryProfile = FileUtils.join(
                 project.getSubproject(":app").buildDir,
-                AndroidProject.FD_INTERMEDIATES,
+                SdkConstants.FD_INTERMEDIATES,
                 InternalArtifactType.BINARY_ART_PROFILE.getFolderName(),
                 "release",
                 SdkConstants.FN_BINARY_ART_PROFILE,

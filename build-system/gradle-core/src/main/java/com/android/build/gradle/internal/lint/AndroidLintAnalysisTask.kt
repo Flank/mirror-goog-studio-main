@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -32,7 +33,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -301,7 +301,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         this.offline.setDisallowChanges(project.gradle.startParameter.isOffline)
         this.android.setDisallowChanges(isAndroid)
         this.lintCacheDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("${AndroidProject.FD_INTERMEDIATES}/lint-cache")
+            project.layout.buildDirectory.dir("${SdkConstants.FD_INTERMEDIATES}/lint-cache")
         )
 
         val locationBuildService =

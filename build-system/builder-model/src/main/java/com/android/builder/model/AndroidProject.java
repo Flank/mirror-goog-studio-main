@@ -28,6 +28,15 @@ import java.util.List;
  * project, or a dynamic feature split project.
  */
 public interface AndroidProject {
+    // **************************************************************
+    // **************************************************************
+    // DO *NOT* ADD NEW VALUES HERE.
+    // ADD VALUES TO InjectedProperties.kt only.
+    //
+    // Properties in this file are related to model v1 only.
+    // **************************************************************
+    // **************************************************************
+
     //  Injectable properties to use with -P
     // Sent by Studio 1.0 ONLY
     String PROPERTY_BUILD_MODEL_ONLY = "android.injected.build.model.only";
@@ -56,103 +65,15 @@ public interface AndroidProject {
     // with the plugin, we could safely remove deprecated methods in the builder-model interfaces.
     String PROPERTY_ANDROID_SUPPORT_VERSION = "android.injected.studio.version";
 
-    // Sent in when external native projects models requires a refresh.
-    String PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL = "android.injected.refresh.external.native.model";
-
-    // Sent by Studio 2.2+
-    // This property is sent when a run or debug is invoked.  APK built with this property should
-    // be marked with android:testOnly="true" in the AndroidManifest.xml such that it will be
-    // rejected by the Play store.
-    String PROPERTY_TEST_ONLY = "android.injected.testOnly";
-
-    // Sent by Studio 1.5+
-
-    // The version api level of the target device.
-    String PROPERTY_BUILD_API = "android.injected.build.api";
-    // The version codename of the target device. Null for released versions,
-    String PROPERTY_BUILD_API_CODENAME = "android.injected.build.codename";
-
-    String PROPERTY_BUILD_ABI = "android.injected.build.abi";
-    String PROPERTY_BUILD_DENSITY = "android.injected.build.density";
-
-    // Has the effect of telling the Gradle plugin to
-    //   1) Generate machine-readable errors
-    //   2) Generate build metadata JSON files
-    String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
-
     // deprecated. Kept here so that newew Studio can still inject it for older plugin
     // but newer plugin don't do anything different based on this property.
     @SuppressWarnings("unused")
     String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
 
-    String PROPERTY_SIGNING_STORE_FILE = "android.injected.signing.store.file";
-    String PROPERTY_SIGNING_STORE_PASSWORD = "android.injected.signing.store.password";
-    String PROPERTY_SIGNING_KEY_ALIAS = "android.injected.signing.key.alias";
-    String PROPERTY_SIGNING_KEY_PASSWORD = "android.injected.signing.key.password";
-    String PROPERTY_SIGNING_STORE_TYPE = "android.injected.signing.store.type";
-    String PROPERTY_SIGNING_V1_ENABLED = "android.injected.signing.v1-enabled";
-    String PROPERTY_SIGNING_V2_ENABLED = "android.injected.signing.v2-enabled";
-
-    String PROPERTY_DEPLOY_AS_INSTANT_APP = "android.injected.deploy.instant-app";
-
-    String PROPERTY_BUILD_WITH_STABLE_IDS = "android.injected.enableStableIds";
-
-    String PROPERTY_SIGNING_COLDSWAP_MODE = "android.injected.coldswap.mode";
-
-    String PROPERTY_APK_SELECT_CONFIG = "android.inject.apkselect.config";
-
-    String PROPERTY_EXTRACT_INSTANT_APK = "android.inject.bundle.extractinstant";
-
-    /** Version code to be used in the built APK. */
-    String PROPERTY_VERSION_CODE = "android.injected.version.code";
-
-    /** Version code injected by Android Studio when using Instant Run. */
-    int INSTANT_RUN_VERSION_CODE = Integer.MAX_VALUE;
-
-    /** Version name to be used in the built APK. */
-    String PROPERTY_VERSION_NAME = "android.injected.version.name";
-
-    /** Version name injected by Android Studio when using Instant Run. */
-    String INSTANT_RUN_VERSION_NAME = "INSTANT_RUN";
-
-    /**
-     * Comma-separated list of {@link OptionalCompilationStep} value names, used with Instant Run.
-     */
-    String PROPERTY_OPTIONAL_COMPILATION_STEPS = "android.optional.compilation";
-
-    /**
-     * Location for APKs. If defined as a relative path, then it is resolved against the
-     * project's path.
-     */
-    String PROPERTY_APK_LOCATION = "android.injected.apk.location";
-
-    /**
-     * Location of the build attribution file produced by the gradle plugin to be deserialized and
-     * used in the IDE build attribution.
-     */
-    String PROPERTY_ATTRIBUTION_FILE_LOCATION = "android.injected.attribution.file.location";
-
-    /** Absolute path to a file containing the result of the `CheckJetifier` task. */
-    String PROPERTY_CHECK_JETIFIER_RESULT_FILE = "android.injected.checkJetifier.resultFile";
-
-    /**
-     * Comma separated list of on-demand dynamic modules or instant app modules names that are
-     * selected by the user for installation on the device during deployment.
-     */
-    String PROPERTY_INJECTED_DYNAMIC_MODULES_LIST = "android.injected.modules.install.list";
-
-    /** Logging level of native build output. Possible values are "quiet" and "verbose". */
-    String PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL = "android.native.buildOutput";
-
     String ARTIFACT_MAIN = "_main_";
     String ARTIFACT_ANDROID_TEST = "_android_test_";
     String ARTIFACT_UNIT_TEST = "_unit_test_";
     String ARTIFACT_TEST_FIXTURES = "_test_fixtures_";
-
-    String FD_INTERMEDIATES = "intermediates";
-    String FD_LOGS = "logs";
-    String FD_OUTPUTS = "outputs";
-    String FD_GENERATED = "generated";
 
     int GENERATION_ORIGINAL = 1;
     int GENERATION_COMPONENT = 2; // component plugin is not supported since 3.5

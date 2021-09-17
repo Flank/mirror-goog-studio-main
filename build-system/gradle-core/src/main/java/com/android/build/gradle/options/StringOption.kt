@@ -17,6 +17,21 @@
 package com.android.build.gradle.options
 
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.PROPERTY_APK_LOCATION
+import com.android.builder.model.PROPERTY_APK_SELECT_CONFIG
+import com.android.builder.model.PROPERTY_ATTRIBUTION_FILE_LOCATION
+import com.android.builder.model.PROPERTY_BUILD_ABI
+import com.android.builder.model.PROPERTY_BUILD_API_CODENAME
+import com.android.builder.model.PROPERTY_BUILD_DENSITY
+import com.android.builder.model.PROPERTY_CHECK_JETIFIER_RESULT_FILE
+import com.android.builder.model.PROPERTY_INJECTED_DYNAMIC_MODULES_LIST
+import com.android.builder.model.PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL
+import com.android.builder.model.PROPERTY_SIGNING_KEY_ALIAS
+import com.android.builder.model.PROPERTY_SIGNING_KEY_PASSWORD
+import com.android.builder.model.PROPERTY_SIGNING_STORE_FILE
+import com.android.builder.model.PROPERTY_SIGNING_STORE_PASSWORD
+import com.android.builder.model.PROPERTY_SIGNING_STORE_TYPE
+import com.android.builder.model.PROPERTY_VERSION_NAME
 
 enum class StringOption(
     override val propertyName: String,
@@ -27,33 +42,30 @@ enum class StringOption(
      * STABLE APIs
      */
 
-    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY, ApiStage.Stable),
-    IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, ApiStage.Stable),
+    IDE_BUILD_TARGET_DENSITY(PROPERTY_BUILD_DENSITY, ApiStage.Stable),
+    IDE_BUILD_TARGET_ABI(PROPERTY_BUILD_ABI, ApiStage.Stable),
 
-    IDE_ATTRIBUTION_FILE_LOCATION(AndroidProject.PROPERTY_ATTRIBUTION_FILE_LOCATION, ApiStage.Stable),
+    IDE_ATTRIBUTION_FILE_LOCATION(PROPERTY_ATTRIBUTION_FILE_LOCATION, ApiStage.Stable),
 
     /** Absolute path to a file containing the result of the `CheckJetifier` task. */
-    IDE_CHECK_JETIFIER_RESULT_FILE(AndroidProject.PROPERTY_CHECK_JETIFIER_RESULT_FILE, ApiStage.Stable),
+    IDE_CHECK_JETIFIER_RESULT_FILE(PROPERTY_CHECK_JETIFIER_RESULT_FILE, ApiStage.Stable),
 
     // Signing options
-    IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE, ApiStage.Stable),
-    IDE_SIGNING_STORE_FILE(AndroidProject.PROPERTY_SIGNING_STORE_FILE, ApiStage.Stable),
-    IDE_SIGNING_STORE_PASSWORD(AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD, ApiStage.Stable),
-    IDE_SIGNING_KEY_ALIAS(AndroidProject.PROPERTY_SIGNING_KEY_ALIAS, ApiStage.Stable),
-    IDE_SIGNING_KEY_PASSWORD(AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD, ApiStage.Stable),
+    IDE_SIGNING_STORE_TYPE(PROPERTY_SIGNING_STORE_TYPE, ApiStage.Stable),
+    IDE_SIGNING_STORE_FILE(PROPERTY_SIGNING_STORE_FILE, ApiStage.Stable),
+    IDE_SIGNING_STORE_PASSWORD(PROPERTY_SIGNING_STORE_PASSWORD, ApiStage.Stable),
+    IDE_SIGNING_KEY_ALIAS(PROPERTY_SIGNING_KEY_ALIAS, ApiStage.Stable),
+    IDE_SIGNING_KEY_PASSWORD(PROPERTY_SIGNING_KEY_PASSWORD, ApiStage.Stable),
 
     // device config for ApkSelect
-    IDE_APK_SELECT_CONFIG(AndroidProject.PROPERTY_APK_SELECT_CONFIG, ApiStage.Stable),
+    IDE_APK_SELECT_CONFIG(PROPERTY_APK_SELECT_CONFIG, ApiStage.Stable),
 
     // location where to write the APK/BUNDLE
-    IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, ApiStage.Stable),
+    IDE_APK_LOCATION(PROPERTY_APK_LOCATION, ApiStage.Stable),
 
-    // Instant run
-    IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS, ApiStage.Stable),
-    IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, ApiStage.Stable),
-    IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME, ApiStage.Stable),
+    IDE_VERSION_NAME_OVERRIDE(PROPERTY_VERSION_NAME, ApiStage.Stable),
 
-    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME, ApiStage.Stable),
+    IDE_TARGET_DEVICE_CODENAME(PROPERTY_BUILD_API_CODENAME, ApiStage.Stable),
 
     // Profiler plugin
     IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms", ApiStage.Stable),
@@ -65,7 +77,7 @@ enum class StringOption(
     IDE_AGDE_VERSION("agde.version", ApiStage.Stable),
 
     // Native
-    NATIVE_BUILD_OUTPUT_LEVEL(AndroidProject.PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL, ApiStage.Stable),
+    NATIVE_BUILD_OUTPUT_LEVEL(PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL, ApiStage.Stable),
 
     // AGP suggests it should be upgraded if the compile sdk is newer than the version it was tested
     // with. This option allows developers to suppress that warning.
@@ -77,7 +89,7 @@ enum class StringOption(
      */
 
     // Installation related options
-    IDE_INSTALL_DYNAMIC_MODULES_LIST(AndroidProject.PROPERTY_INJECTED_DYNAMIC_MODULES_LIST, ApiStage.Experimental),
+    IDE_INSTALL_DYNAMIC_MODULES_LIST(PROPERTY_INJECTED_DYNAMIC_MODULES_LIST, ApiStage.Experimental),
 
     // Testing
     DEVICE_POOL_SERIAL("com.android.test.devicepool.serial", ApiStage.Experimental),
