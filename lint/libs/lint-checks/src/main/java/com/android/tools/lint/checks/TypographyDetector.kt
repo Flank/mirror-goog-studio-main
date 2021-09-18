@@ -32,7 +32,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.utils.SdkUtils
 import com.android.utils.childrenIterator
-import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.w3c.dom.Node.ELEMENT_NODE
@@ -380,8 +379,7 @@ class TypographyDetector : ResourceXmlDetector() {
          * n dashes: a numeric range with a hyphen in the middle (and
          * possibly spaces)
          */
-        @VisibleForTesting
-        val HYPHEN_RANGE_PATTERN = Pattern.compile(".*(\\d+\\s*)-(\\s*\\d+).*")
+        private val HYPHEN_RANGE_PATTERN: Pattern = Pattern.compile(".*(\\d+\\s*)-(\\s*\\d+).*")
 
         /**
          * Pattern used to detect scenarios where a grave accent mark is
@@ -389,15 +387,13 @@ class TypographyDetector : ResourceXmlDetector() {
          * which is frowned upon. This pattern tries to avoid falsely
          * complaining about strings like "Type Option-` then 'Escape'."
          */
-        @VisibleForTesting
-        val GRAVE_QUOTATION = Pattern.compile("(^[^`]*`[^'`]+'[^']*$)|(^[^`]*``[^'`]+''[^']*$)")
+        private val GRAVE_QUOTATION: Pattern = Pattern.compile("(^[^`]*`[^'`]+'[^']*$)|(^[^`]*``[^'`]+''[^']*$)")
 
         /**
          * Pattern used to detect common fractions, e.g. 1/2, 1/3, 2/3,
          * 1/4, 3/4 and variations like 2 / 3, but not 11/22 and so on.
          */
-        @VisibleForTesting
-        val FRACTION_PATTERN = Pattern.compile(".*\\b([13])\\s*/\\s*([234])\\b.*")
+        private val FRACTION_PATTERN: Pattern = Pattern.compile(".*\\b([13])\\s*/\\s*([234])\\b.*")
 
         /**
          * Pattern used to detect single quote strings, such as 'hello',
@@ -405,8 +401,7 @@ class TypographyDetector : ResourceXmlDetector() {
          * not sentences where there are multiple apostrophes but
          * not in a quoting context such as "Mind Your P's and Q's".
          */
-        @VisibleForTesting
-        val SINGLE_QUOTE = Pattern.compile(".*\\W*'[^']+'(\\W.*)?", Pattern.UNICODE_CHARACTER_CLASS)
+        private val SINGLE_QUOTE: Pattern = Pattern.compile(".*\\W*'[^']+'(\\W.*)?", Pattern.UNICODE_CHARACTER_CLASS)
 
         private const val FRACTION_MESSAGE = "Use fraction character %1\$c (%2\$s) instead of %3\$s ?"
         private const val FRACTION_MESSAGE_PATTERN = "Use fraction character (.+) \\((.+)\\) instead of (.+) \\?"

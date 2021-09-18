@@ -21,9 +21,15 @@ import com.android.SdkConstants.TAG_STRING
 import com.android.SdkConstants.TAG_STRING_ARRAY
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.checks.TypoLookup.Companion.isLetter
-import com.android.tools.lint.detector.api.*
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope.Companion.RESOURCE_FILE_SCOPE
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.getLocale
 import com.android.utils.childrenIterator
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.Charsets
