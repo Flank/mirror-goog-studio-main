@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -37,13 +38,11 @@ class LibWithNavigationTest {
                             <nav-graph android:value="@navigation/nav1" />
                         </activity>
                      </application>
-                </manifest>""".trimIndent()
-            )
+                </manifest>""".trimIndent())
 
     private val testApp = MultiModuleTestProject.builder().subproject(":library", library).build()
 
-    @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(testApp).create()
+    @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     /**
      * Test that we can build a release AAR when there are <nav-graph> tags in the library manifest.
@@ -53,8 +52,35 @@ class LibWithNavigationTest {
     fun testAssembleReleaseWithNavGraphTagInManifest() {
         project.execute("clean", ":library:assembleRelease")
         project.getSubproject("library").withAar("release") {
-            assertThat(androidManifestContentsAsString).contains(
-                "<nav-graph android:value=\"@navigation/nav1\" />")
+            assertThat(androidManifestContentsAsString)
+                .contains("<nav-graph android:value=\"@navigation/nav1\" />")
+        }
+    }
+
+    /**
+     * Test that ExtractDeepLinksTask is/isn't created when buildFeatures.androidResources is/isn't set.
+     */
+    @Test
+    fun testDisablingAndroidResourcesDisablesExtractDeepLinksTask() {
+        val subprojectPath = ":library"
+        val taskName = "extractDeepLinksDebug"
+        val fullTaskName = "$subprojectPath:$taskName"
+
+        project.executor().run(fullTaskName).apply {
+            assertThat(getTask(fullTaskName)).didWork()
+        }
+
+        project
+            .getSubproject(subprojectPath)
+            .buildFile
+            .appendText("\n\n android.buildFeatures.androidResources=false\n\n")
+        project.executeExpectingFailure(fullTaskName).let { gradleException ->
+            // The outermost GradleConnectionException does not contain the needed info, but the
+            // message of the next exception down the stack contains a complete stacktrace
+            assertThat(gradleException)
+                .hasCauseThat()
+                .hasMessageThat()
+                .contains("Task '$taskName' not found in project '$subprojectPath'.")
         }
     }
 }
