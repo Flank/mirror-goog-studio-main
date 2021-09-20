@@ -90,6 +90,14 @@ const ModifyParameterTransform kApplicationLoadersTransform(
     /* parameter index to modify */ 3,
     /* parameter transform function */ "modifyNativeSearchPath");
 
+// Instrumentation for IWI swap w/ resources.
+const HookTransform kResourcesManager(
+    /* target class */ "android/app/ResourcesManager",
+    /* target method */ "applyNewResourceDirsLocked",
+    /* target signature */
+    "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
+    "addResourceOverlays", MethodHooks::kNoHook);
+
 // Instrumentation for IWI w/ resources.
 const HookTransform kLoadedApkTransform(
     /* target class */ "android/app/LoadedApk",
@@ -346,24 +354,6 @@ std::string SetUpInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   return instrument_jar_path;
 }
 
-static HookTransform GetResourceManagerTransform(JNIEnv* jni) {
-  JniClass version(jni, "android/os/Build$VERSION");
-  jint sdk = version.GetStaticIntField("SDK_INT", "I");
-
-  // This method was renamed in Android S.
-  const char* target_method;
-  if (sdk < 31) {
-    target_method = "applyNewResourceDirsLocked";
-  } else {
-    target_method = "applyNewResourceDirs";
-  }
-  return HookTransform(
-      /* target class */ "android/app/ResourcesManager", target_method,
-      /* target signature */
-      "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
-      "addResourceOverlays", MethodHooks::kNoHook);
-}
-
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                            const std::string& package_name, bool overlay_swap) {
   std::string instrument_jar_path =
@@ -383,10 +373,9 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
 
   bool success = false;
   if (overlay_swap) {
-    auto res_manager = GetResourceManagerTransform(jni);
     success = instrumenter.Instrument(
         {&kApplicationLoadersTransform, &kThreadTransform,
-         &kDexPathListTransform, &kLoadedApkTransform, &res_manager});
+         &kDexPathListTransform, &kLoadedApkTransform, &kResourcesManager});
   } else {
     // Disable caching for non-overlay swap, as the cache directory gets cleared
     // on installation.

@@ -20,8 +20,7 @@ package android.os;
 public class Build {
     /** Various version strings. */
     public static class VERSION {
-        // Non-final because we need to set it for some deployer tests.
-        public static int SDK_INT = 0;
+        public static final int SDK_INT = 0;
     }
     public static class VERSION_CODES {
         public static final int M = 23;
