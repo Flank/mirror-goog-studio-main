@@ -31,14 +31,12 @@ fun RecipeExecutor.blankFragmentRecipe(
   layoutName: String
 ) {
   val (projectData, srcOut, resOut, _) = moduleData
-  val appCompatVersion = moduleData.apis.appCompatVersion
   val packageName = moduleData.packageName
   val applicationPackage = moduleData.projectTemplateData.applicationPackage
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   save(fragmentBlankXml(className, packageName), resOut.resolve("layout/${layoutName}.xml"))
   open(resOut.resolve("layout/${layoutName}.xml"))
