@@ -72,6 +72,7 @@ import com.android.tools.lint.checks.VersionChecks.Companion.codeNameToApi
 import com.android.tools.lint.checks.VersionChecks.Companion.getVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersionCheckExit
 import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.client.api.UElementHandler
@@ -103,8 +104,8 @@ import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.getChildren
 import com.android.tools.lint.detector.api.getInternalMethodName
+import com.android.tools.lint.detector.api.isInlined
 import com.android.tools.lint.detector.api.isKotlin
-import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.resolveOperator
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
@@ -119,7 +120,6 @@ import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierListOwner
-import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSuperExpression
 import com.intellij.psi.PsiType
@@ -676,7 +676,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 AnnotationUsageType.FIELD_REFERENCE -> "Field"
                 else -> "Call"
             }
-            ApiVisitor(context).report(UNSUPPORTED, element, location, type, fqcn, api, minSdk, apiLevelFix(api))
+            val field = usageInfo.referenced
+            val issue = if (field is PsiField && isInlined(field, context.evaluator)) {
+                if (isBenignConstantUsage(context.evaluator, field, element, field.name, field.containingClass?.qualifiedName ?: "")) {
+                    return
+                }
+                INLINED
+            } else {
+                UNSUPPORTED
+            }
+
+            ApiVisitor(context).report(issue, element, location, type, fqcn, api, minSdk, apiLevelFix(api))
         }
     }
 
@@ -2083,7 +2093,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          */
         private fun checkField(node: UElement, field: PsiField) {
             val apiDatabase = apiDatabase ?: return
-            val type = field.type
             val name = field.name
 
             val containingClass = field.containingClass ?: return
@@ -2099,13 +2108,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val minSdk = getMinSdk(context)
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
-                    var issue = if (evaluator.isStatic(field) && evaluator.isFinal(field))
-                        INLINED
-                    else
-                        UNSUPPORTED
-                    if (type !is PsiPrimitiveType && !isString(type)) {
-                        issue = UNSUPPORTED
-
+                    val issue = if (isInlined(field, evaluator)) INLINED else UNSUPPORTED
+                    if (issue == UNSUPPORTED) {
                         // Declaring enum constants are safe; they won't be called on older
                         // platforms.
                         val parent = skipParenthesizedExprUp(node.uastParent)
@@ -2116,7 +2120,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 return
                             }
                         }
-                    } else if (issue == INLINED && isBenignConstantUsage(node, name, owner)) {
+                    } else if (issue == INLINED && isBenignConstantUsage(evaluator, field, node, name, owner)) {
                         return
                     }
 
@@ -2739,6 +2743,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          * a constant defined in a later version of Android than the
          * application's `minSdkVersion`.
          *
+         * @param evaluator evaluator for annotation lookup
          * @param node the instruction to check
          * @param name the name of the constant
          * @param owner the field owner
@@ -2746,6 +2751,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          *     than the introduction level of the constant
          */
         fun isBenignConstantUsage(
+            evaluator: JavaEvaluator,
+            field: PsiField,
             node: UElement?,
             name: String,
             owner: String
