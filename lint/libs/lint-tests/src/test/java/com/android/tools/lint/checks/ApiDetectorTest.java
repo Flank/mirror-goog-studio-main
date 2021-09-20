@@ -4770,13 +4770,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
+                                + "src/test/pkg/RequiresApiFieldTest.java:20: Warning: Field requires API level 24 (current min is 15): Field24 [InlinedApi]\n"
+                                + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n"
+                                + "                                             ~~~~~~~\n"
                                 + "src/test/pkg/RequiresApiFieldTest.java:16: Error: Call requires API level 24 (current min is 15): Method24 [NewApi]\n"
                                 + "        Log.d(\"zzzz\", \"ReferenceMethod24: \" + Method24());\n"
                                 + "                                              ~~~~~~~~\n"
-                                + "src/test/pkg/RequiresApiFieldTest.java:20: Error: Field requires API level 24 (current min is 15): Field24 [NewApi]\n"
-                                + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n"
-                                + "                                             ~~~~~~~\n"
-                                + "2 errors, 0 warnings\n");
+                                + "1 errors, 1 warnings\n");
     }
 
     public void testPackageRequiresApi() {

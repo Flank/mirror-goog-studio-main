@@ -60,6 +60,7 @@ import com.android.resources.ResourceType
 import com.android.resources.ResourceUrl
 import com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines
 import com.android.sdklib.SdkVersionInfo.underlinesToCamelCase
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
@@ -101,11 +102,13 @@ import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiField
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
@@ -1908,6 +1911,19 @@ fun isString(type: PsiType): Boolean {
         }
     }
     return CommonClassNames.JAVA_LANG_STRING == type.canonicalText
+}
+
+/**
+ * Returns whether the given [field] has a value that will be inlined a
+ * compile time. See JLS 15.28 and JLS 13.4.9.
+ */
+fun isInlined(field: PsiField, evaluator: JavaEvaluator): Boolean {
+    val type = field.type
+    return if (type is PsiPrimitiveType || isString(type)) {
+        evaluator.isStatic(field) && evaluator.isFinal(field)
+    } else {
+        false
+    }
 }
 
 fun getAutoBoxedType(primitive: String): String? {
