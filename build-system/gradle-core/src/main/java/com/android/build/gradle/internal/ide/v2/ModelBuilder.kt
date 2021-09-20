@@ -704,6 +704,10 @@ class ModelBuilder<
             BooleanFlag.TRANSITIVE_R_CLASS,
             !projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         )
+        flags.put(
+            BooleanFlag.UNIFIED_TEST_PLATFORM,
+            projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
+        )
 
         return AndroidGradlePluginProjectFlagsImpl(flags.build())
     }

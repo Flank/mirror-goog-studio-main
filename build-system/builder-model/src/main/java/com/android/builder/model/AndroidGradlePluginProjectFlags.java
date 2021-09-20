@@ -64,6 +64,9 @@ public interface AndroidGradlePluginProjectFlags {
 
         /** Whether the ML model binding feature is enabled for this project. */
         ML_MODEL_BINDING(false),
+
+        /** Whether the Android Test Platform is enabled for this project. */
+        UNIFIED_TEST_PLATFORM(false),
         ;
 
         private final boolean legacyDefault;

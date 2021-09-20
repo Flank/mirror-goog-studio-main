@@ -525,6 +525,10 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 variantProperties ->
                                         variantProperties.getBuildFeatures().getMlModelBinding()));
 
+        flags.put(
+                AndroidGradlePluginProjectFlags.BooleanFlag.UNIFIED_TEST_PLATFORM,
+                projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM));
+
         boolean transitiveRClass = !projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);
 

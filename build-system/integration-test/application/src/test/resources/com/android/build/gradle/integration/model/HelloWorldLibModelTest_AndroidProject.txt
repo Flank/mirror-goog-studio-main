@@ -399,5 +399,6 @@
       * "ML_MODEL_BINDING -> false"
       * "TEST_R_CLASS_CONSTANT_IDS -> true"
       * "TRANSITIVE_R_CLASS -> true"
+      * "UNIFIED_TEST_PLATFORM -> true"
    - lintChecksJars        = []
 < AndroidProject
