@@ -19,7 +19,6 @@ package com.android.build.gradle.options
 import com.android.builder.model.AndroidProject
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.PROPERTY_BUILD_API
-import com.android.builder.model.PROPERTY_VERSION_CODE
 
 enum class IntegerOption(
     override val propertyName: String,
@@ -49,8 +48,6 @@ enum class IntegerOption(
      * StringOption#IDE_TARGET_DEVICE_CODENAME} will also be set.
      */
     IDE_TARGET_DEVICE_API(PROPERTY_BUILD_API, ApiStage.Stable),
-
-    IDE_VERSION_CODE_OVERRIDE(PROPERTY_VERSION_CODE, ApiStage.Stable),
 
     /**
      * Size of the buffers in kilobytes used to read .class files and storage for writing .dex files

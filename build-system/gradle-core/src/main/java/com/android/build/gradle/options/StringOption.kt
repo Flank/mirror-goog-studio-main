@@ -31,7 +31,6 @@ import com.android.builder.model.PROPERTY_SIGNING_KEY_PASSWORD
 import com.android.builder.model.PROPERTY_SIGNING_STORE_FILE
 import com.android.builder.model.PROPERTY_SIGNING_STORE_PASSWORD
 import com.android.builder.model.PROPERTY_SIGNING_STORE_TYPE
-import com.android.builder.model.PROPERTY_VERSION_NAME
 
 enum class StringOption(
     override val propertyName: String,
@@ -62,8 +61,6 @@ enum class StringOption(
 
     // location where to write the APK/BUNDLE
     IDE_APK_LOCATION(PROPERTY_APK_LOCATION, ApiStage.Stable),
-
-    IDE_VERSION_NAME_OVERRIDE(PROPERTY_VERSION_NAME, ApiStage.Stable),
 
     IDE_TARGET_DEVICE_CODENAME(PROPERTY_BUILD_API_CODENAME, ApiStage.Stable),
 

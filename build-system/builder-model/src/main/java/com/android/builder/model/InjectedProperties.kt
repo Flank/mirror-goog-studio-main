@@ -96,13 +96,3 @@ const val PROPERTY_EXTRACT_INSTANT_APK = "android.inject.bundle.extractinstant"
  * selected by the user for installation on the device during deployment.
  */
 const val PROPERTY_INJECTED_DYNAMIC_MODULES_LIST = "android.injected.modules.install.list"
-
-// ------------------
-// ?
-// ------------------
-
-/** Version code to be used in the built APK.  */
-const val PROPERTY_VERSION_CODE = "android.injected.version.code"
-
-/** Version name to be used in the built APK.  */
-const val PROPERTY_VERSION_NAME = "android.injected.version.name"
