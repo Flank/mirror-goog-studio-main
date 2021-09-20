@@ -63,7 +63,10 @@ interface AndroidGradlePluginProjectFlags {
         JETPACK_COMPOSE(false),
 
         /** Whether the ML model binding feature is enabled for this project.  */
-        ML_MODEL_BINDING(false);
+        ML_MODEL_BINDING(false),
+
+        /** Whether the Android Test Platform is enabled for this project.  */
+        UNIFIED_TEST_PLATFORM(false),
 
         /**
          * The apparent value of this flag from Studio if it is not explicitly set in the AGP model.
