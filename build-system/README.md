@@ -15,10 +15,10 @@ under `tools/base`
 ## Building and editing the Android Gradle plugin
 
 To edit the plugin import the Gradle project rooted in the `tools` directory in
-to the 
+to the
 [most recent Intellij IDEA EAP](https://www.jetbrains.com/toolbox-app/).
 
-You can run unit and integration tests directly from within Intellij IDEA. 
+You can run unit and integration tests directly from within Intellij IDEA.
 You can also run them with Gradle
 [from the command line](from-the-command-line.md)
 
@@ -52,7 +52,7 @@ run from integration tests:
 ### Using locally built plugin in a project
 
 To test your own Gradle projects, using your modified Android Gradle plugin,
-modify the build.gradle file to point to your local repository
+modify the `settings.gradle` file to point to your local repository
 (where the above publishLocal target installed your build).
 
 For example, if you ran the repo init command above in `/my/aosp/work`, then
@@ -68,17 +68,19 @@ For example:
 |||---|||
 #### Before
 ```
-buildscript {
+pluginManagement {
     repositories {
+        gradlePluginPortal()
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.0'
+        classpath 'com.android.tools.build:gradle:7.1.0'
     }
 }
 
-allprojects {
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -89,18 +91,20 @@ allprojects {
 #### After
 
 ```
-buildscript {
+pluginManagement {
     repositories {
         maven { url '/my/aosp/work/out/repo' }
+        gradlePluginPortal()
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0-dev'
+        classpath 'com.android.tools.build:gradle:7.2.0-dev'
     }
 }
 
-allprojects {
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         maven { url '/my/aosp/work/out/repo' }
         google()
@@ -109,6 +113,12 @@ allprojects {
 }
 ```
 |||---|||
+
+If your project does not have a `pluginManagement` or `dependencyResolutionManagement`
+block in `settings.gradle`, look in `build.gradle` for a `buildscript` or `allProjects` block,
+respectively, and make the changes there instead.
+
+### Debugging
 
 To debug a project like this simply run
 
