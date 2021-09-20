@@ -256,7 +256,7 @@ public class BasicTest2 {
                 "DEFAULT", "true", "FOO", "\"foo2\"");
 
         Map<String, ClassField> resValues = defaultConfig.getResValues();
-        testMap(resValues, "defaultConfig resValues", ClassField::getValue, "foo", "foo");
+        testMap(resValues, "defaultConfig resValues", ClassField::getValue, "string/foo", "foo");
 
         // test on the debug build type.
         Collection<BuildTypeContainer> buildTypes = model.getBuildTypes();
@@ -268,7 +268,7 @@ public class BasicTest2 {
                         "FOO", "\"bar\"");
 
                 resValues = buildTypeContainer.getBuildType().getResValues();
-                testMap(resValues, "debug resValues", ClassField::getValue, "foo", "foo2");
+                testMap(resValues, "debug resValues", ClassField::getValue, "string/foo", "foo2");
             }
         }
 
@@ -280,7 +280,7 @@ public class BasicTest2 {
                 "DEFAULT", "true", "FOO", "\"foo2\"");
 
         resValues = mergedFlavor.getResValues();
-        testMap(resValues, "mergedFlavor resValues", ClassField::getValue, "foo", "foo");
+        testMap(resValues, "mergedFlavor resValues", ClassField::getValue, "string/foo", "foo");
     }
 
     @Test

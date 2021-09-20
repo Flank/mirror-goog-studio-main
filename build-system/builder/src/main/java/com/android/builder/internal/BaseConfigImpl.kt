@@ -85,8 +85,8 @@ abstract class BaseConfigImpl : Serializable,
     /**
      * Adds a generated resource value.
      */
-    fun addResValue(field: ClassField) {
-        mResValues[field.name] = field
+    fun addResValue(resValueKey: String, field: ClassField) {
+        mResValues[resValueKey] = field
     }
 
     /**

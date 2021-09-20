@@ -215,11 +215,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     private void addDynamicResources(
             @NonNull Project project, @NonNull Map<String, LintModelResourceField> resValues) {
-        Set<String> keys = resValues.keySet();
-        if (!keys.isEmpty()) {
+        Collection<LintModelResourceField> resFields = resValues.values();
+        if (!resFields.isEmpty()) {
             Location location = Lint.guessGradleLocation(project);
-            for (String name : keys) {
-                LintModelResourceField field = resValues.get(name);
+            for (LintModelResourceField field : resFields) {
                 ResourceType type = ResourceType.fromClassName(field.getType());
                 if (type == null) {
                     // Highly unlikely. This would happen if in the future we add
@@ -228,7 +227,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     // doesn't yet have this ResourceType in its enum.
                     continue;
                 }
-                LintResource resource = (LintResource) model.declareResource(type, name, null);
+                LintResource resource =
+                        (LintResource) model.declareResource(type, field.getName(), null);
                 resource.recordLocation(location);
             }
         }

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
@@ -59,8 +58,8 @@ class MergedFlavorTest {
             custom.addManifestPlaceholders(
                 ImmutableMap.of<String, Any>("one", "oneValue", "two", "twoValue")
             )
-            custom.addResValue(ClassFieldImpl("foo", "one", "oneValue"))
-            custom.addResValue(ClassFieldImpl("foo", "two", "twoValue"))
+            custom.addResValue("foo/one", ClassFieldImpl("foo", "one", "oneValue"))
+            custom.addResValue("foo/two", ClassFieldImpl("foo", "two", "twoValue"))
             custom.addBuildConfigField(ClassFieldImpl("foo", "one", "oneValue"))
             custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
             custom.versionNameSuffix = "custom"
@@ -72,8 +71,8 @@ class MergedFlavorTest {
             custom2.addResourceConfigurations("ldpi", "hdpi")
             custom2.addManifestPlaceholders(
                 ImmutableMap.of<String, Any>("two", "twoValueBis", "three", "threeValue"))
-            custom2.addResValue(ClassFieldImpl("foo", "two", "twoValueBis"))
-            custom2.addResValue(ClassFieldImpl("foo", "three", "threeValue"))
+            custom2.addResValue("foo/two", ClassFieldImpl("foo", "two", "twoValueBis"))
+            custom2.addResValue("foo/three", ClassFieldImpl("foo", "three", "threeValue"))
             custom2.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValueBis"))
             custom2.addBuildConfigField(ClassFieldImpl("foo", "three", "threeValue"))
             custom2.applicationIdSuffix = "custom2"
@@ -201,9 +200,9 @@ class MergedFlavorTest {
 
         val resValues = flavor.resValues
         assertThat(resValues).hasSize(3)
-        assertThat(resValues["one"]?.value).isEqualTo("oneValue")
-        assertThat(resValues["two"]?.value).isEqualTo("twoValue")
-        assertThat(resValues["three"]?.value).isEqualTo("threeValue")
+        assertThat(resValues["foo/one"]?.value).isEqualTo("oneValue")
+        assertThat(resValues["foo/two"]?.value).isEqualTo("twoValue")
+        assertThat(resValues["foo/three"]?.value).isEqualTo("threeValue")
     }
 
     @Test

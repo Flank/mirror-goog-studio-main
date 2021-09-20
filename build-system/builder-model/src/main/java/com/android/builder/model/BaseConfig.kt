@@ -44,7 +44,7 @@ interface BaseConfig: Named {
     val buildConfigFields: Map<String, ClassField>
 
     /**
-     * Map of generated res values where the key is the res name.
+     * Map of generated res values where the key is the res "type/name".
      */
     val resValues: Map<String, ClassField>
 

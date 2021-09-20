@@ -142,9 +142,9 @@ public class ResValueTest {
     @Test
     public void modelFlavor1() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_FLAVOR", "10");
-        map.put("VALUE_DEBUG", "10");
-        map.put("VALUE_VARIANT", "10");
+        map.put("string/VALUE_FLAVOR", "10");
+        map.put("string/VALUE_DEBUG", "10");
+        map.put("string/VALUE_VARIANT", "10");
         checkFlavor(model, "flavor1", map);
     }
 
@@ -173,9 +173,9 @@ public class ResValueTest {
     @Test
     public void modelFlavor2() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_FLAVOR", "20");
-        map.put("VALUE_DEBUG", "20");
-        map.put("VALUE_VARIANT", "20");
+        map.put("string/VALUE_FLAVOR", "20");
+        map.put("string/VALUE_DEBUG", "20");
+        map.put("string/VALUE_VARIANT", "20");
         checkFlavor(model, "flavor2", map);
     }
 
@@ -204,8 +204,8 @@ public class ResValueTest {
     @Test
     public void modelDebug() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEBUG", "100");
-        map.put("VALUE_VARIANT", "100");
+        map.put("string/VALUE_DEBUG", "100");
+        map.put("string/VALUE_VARIANT", "100");
         checkBuildType(model, "debug", map);
     }
 
@@ -240,10 +240,10 @@ public class ResValueTest {
     @Test
     public void modelDefaultConfig() {
         Map<String, String> map = Maps.newHashMap();
-        map.put("VALUE_DEFAULT", "1");
-        map.put("VALUE_FLAVOR", "1");
-        map.put("VALUE_DEBUG", "1");
-        map.put("VALUE_VARIANT", "1");
+        map.put("string/VALUE_DEFAULT", "1");
+        map.put("string/VALUE_FLAVOR", "1");
+        map.put("string/VALUE_DEBUG", "1");
+        map.put("string/VALUE_VARIANT", "1");
 
         checkMaps(map, model.getDefaultConfig().getProductFlavor().getResValues(), "DefaultConfig");
     }

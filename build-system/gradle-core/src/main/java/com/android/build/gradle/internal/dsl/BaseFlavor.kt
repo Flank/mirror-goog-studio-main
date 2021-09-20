@@ -23,11 +23,11 @@ import com.android.build.api.dsl.LibraryBaseFlavor
 import com.android.build.api.dsl.Ndk
 import com.android.build.api.dsl.Shaders
 import com.android.build.api.dsl.TestBaseFlavor
+import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
@@ -36,7 +36,6 @@ import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import java.io.File
 import org.gradle.api.Action
-import org.gradle.api.plugins.ExtensionAware
 
 /** Base DSL object used to configure product flavors.  */
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
@@ -230,25 +229,26 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     }
 
     override fun resValue(type: String, name: String, value: String) {
-        val alreadyPresent = resValues[name]
+        val resValueKey = ResValueKeyImpl(type, name)
+        val alreadyPresent = resValues[resValueKey.toString()]
         if (alreadyPresent != null) {
             val flavorName = getName()
             if (BuilderConstants.MAIN == flavorName) {
                 dslServices.logger
                     .info(
                         "DefaultConfig: resValue '{}' value is being replaced.",
-                        name,
+                        resValueKey.toString(),
                     )
             } else {
                 dslServices.logger
                     .info(
                         "ProductFlavor({}): resValue '{}' value is being replaced.",
                         flavorName,
-                        name,
+                        resValueKey.toString(),
                     )
             }
         }
-        addResValue(ClassFieldImpl(type, name, value))
+        addResValue(resValueKey.toString(), ClassFieldImpl(type, name, value))
     }
 
     override val proguardFiles: MutableList<File>

@@ -52,8 +52,8 @@ class AbstractProductFlavorTest {
                 "twoValue"
             )
         )
-        custom.addResValue(ClassFieldImpl("foo", "one", "oneValue"))
-        custom.addResValue(ClassFieldImpl("foo", "two", "twoValue"))
+        custom.addResValue("foo/one", ClassFieldImpl("foo", "one", "oneValue"))
+        custom.addResValue("foo/two", ClassFieldImpl("foo", "two", "twoValue"))
         custom.addBuildConfigField(ClassFieldImpl("foo", "one", "oneValue"))
         custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
         custom.setVersionNameSuffix("custom")

@@ -79,7 +79,7 @@ public class BasicMultiFlavorTest {
         Variant variant =
                 AndroidProjectUtils.findVariantByName(model.getOnlyModel(), "freeBetaDebug");
 
-        assertThat(variant.getMergedFlavor().getResValues().get("VALUE_DEBUG").getValue())
+        assertThat(variant.getMergedFlavor().getResValues().get("string/VALUE_DEBUG").getValue())
                 .isEqualTo("10"); // Value from "beta".
 
         assertThat(variant.getMergedFlavor().getManifestPlaceholders().get("holder"))
