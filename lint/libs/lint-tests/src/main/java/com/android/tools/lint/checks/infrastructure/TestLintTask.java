@@ -434,7 +434,7 @@ public class TestLintTask {
 
     /**
      * Normally, when lint runs the test through each {@link TestMode}, it will also assert that the
-     * output is identical. There are some scenarios where the output is expected to be difficult.
+     * output is identical. There are some scenarios where the output is expected to be different.
      * In this case, instead of just limiting your check to a specific set of types via {@link
      * #testModes}, you can turn off this enforcement here, and then call {@link
      * TestLintResult#expect(String, Class, TestResultTransformer, TestMode)} repeatedly with each
