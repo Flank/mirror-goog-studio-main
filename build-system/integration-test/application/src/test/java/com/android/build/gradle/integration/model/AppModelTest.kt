@@ -509,3 +509,34 @@ class LintChecksInAppModelTest: ReferenceModelComparator(
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
 }
+
+class ResValuesInAppModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                buildTypes {
+                    named("debug") {
+                        resValue("string", "foo", "val")
+                        resValue("drawable", "foo", "val")
+                    }
+                }
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
+    }
+}

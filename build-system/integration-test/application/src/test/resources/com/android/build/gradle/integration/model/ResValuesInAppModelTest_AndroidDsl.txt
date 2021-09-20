@@ -1,0 +1,11 @@
+> AndroidDsl:
+   - buildTypes:
+      - debug:
+         - resValues:
+            - drawable/foo{ADDED}:
+               - name          = "foo"
+               - type          = "drawable"
+               - value         = "val"
+               - documentation = ""
+               - annotations   = []
+< AndroidDsl

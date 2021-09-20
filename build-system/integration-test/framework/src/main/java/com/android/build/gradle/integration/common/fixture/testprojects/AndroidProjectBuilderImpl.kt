@@ -121,6 +121,9 @@ internal class AndroidProjectBuilderImpl(
                 item.testCoverageEnabled?.let {
                     sb.append("      testCoverageEnabled = $it\n")
                 }
+                item.resValues.forEach {
+                    sb.append("      resValue(\"${it.first}\", \"${it.second}\", \"${it.third}\")\n")
+                }
                 sb.append("    }\n")
             }
             sb.append("  }\n") // BUILD-TYPES
@@ -207,6 +210,11 @@ internal class ProductFlavorContainerBuilderImpl: ContainerBuilder<ProductFlavor
 internal class BuildTypeBuilderImpl(override val name: String): BuildTypeBuilder {
     override var isDefault: Boolean? = null
     override var testCoverageEnabled: Boolean? = null
+    override val resValues: MutableList<Triple<String, String, String>> = mutableListOf()
+
+    override fun resValue(type: String, name: String, value: String) {
+        resValues.add(Triple(type, name, value))
+    }
 }
 
 internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {

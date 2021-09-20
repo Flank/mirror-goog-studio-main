@@ -178,6 +178,8 @@ interface BuildTypeBuilder {
     val name: String
     var isDefault: Boolean?
     var testCoverageEnabled: Boolean?
+    fun resValue(type: String, name: String, value: String)
+    val resValues: List<Triple<String, String, String>>
 }
 
 interface ProductFlavorBuilder {
