@@ -505,6 +505,10 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
                 validateResourceName(resourceName, resourceType, file);
                 BasicValueResourceItemBase item = createResourceItem(resourceType, resourceName, sourceFile);
                 addValueResourceItem(item);
+              } else {
+                  // Do nothing with the sub tags when the tag of a valid resource type doesn't have
+                  // a name.
+                  forSubTags(null, () -> {});
               }
             }
           }
