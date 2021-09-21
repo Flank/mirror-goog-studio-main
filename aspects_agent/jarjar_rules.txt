@@ -1,1 +1,2 @@
 rule org.objectweb.** com.android.tools.checker.org.objectweb.@1
+rule com.google.gson.** com.android.tools.checker.com.google.gson.@1
