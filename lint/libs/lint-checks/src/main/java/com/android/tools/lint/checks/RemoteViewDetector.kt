@@ -22,6 +22,7 @@ import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_MERGE
 import com.android.ide.common.rendering.api.ResourceNamespace.TODO
 import com.android.resources.ResourceType.LAYOUT
+import com.android.tools.lint.checks.RtlDetector.getFolderVersion
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
@@ -37,6 +38,7 @@ import org.jetbrains.uast.UCallExpression
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
+import kotlin.math.max
 
 /** Checks related to RemoteViews. */
 class RemoteViewDetector : Detector(), SourceCodeScanner {
@@ -92,13 +94,14 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
         var tags: MutableSet<String>? = null
         val paths = items.asSequence().mapNotNull { it.source }.toSet()
         for (path in paths) {
+            val min = max(context.project.minSdk, getFolderVersion(path.rawPath))
             try {
                 val parser = client.createXmlPullParser(path) ?: continue
                 while (true) {
                     val event = parser.next()
                     if (event == XmlPullParser.START_TAG) {
                         val tag = parser.name ?: continue
-                        if (!isSupportedTag(tag)) {
+                        if (!isSupportedTag(tag, min)) {
                             (tags ?: HashSet<String>().also { tags = it }).add(tag)
                         }
                     } else if (event == XmlPullParser.END_DOCUMENT) {
@@ -120,7 +123,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    private fun isSupportedTag(tag: String): Boolean {
+    private fun isSupportedTag(tag: String, min: Int): Boolean {
         return when (tag) {
             "AdapterViewFlipper",
             "FrameLayout",
@@ -139,6 +142,11 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
             "ProgressBar",
             "TextClock",
             "TextView" -> true
+
+            "CheckBox",
+            "Switch",
+            "RadioButton",
+            "RadioGroup" -> min >= 31
 
             // These are not listed in the docs for RemoteView, but are annotated with
             // @RemoteView in the source code:
