@@ -76,17 +76,20 @@ class StructuredLog(private val temp : TemporaryFolder) {
             ::decodeLoggingMessage)
     }
 
-    private fun assertLoggingMessage(code: Int) {
+    private fun assertLoggingMessage(code: Int, text : String?) {
         val message = getLoggingMessages().second.filter { it.diagnosticCode == code }
         assertThat(message).hasSize(1)
+        if (text != null) {
+            assertThat(message.single().message).isEqualTo(text)
+        }
     }
 
-    fun assertWarning(code: CxxDiagnosticCode) {
-        assertLoggingMessage(code.warningCode)
+    fun assertWarning(code: CxxDiagnosticCode, text : String? = null) {
+        assertLoggingMessage(code.warningCode, text)
     }
 
-    fun assertError(code: CxxDiagnosticCode) {
-        assertLoggingMessage(code.errorCode)
+    fun assertError(code: CxxDiagnosticCode, text : String? = null) {
+        assertLoggingMessage(code.errorCode, text)
     }
 
     fun assertNoErrors() {
