@@ -58,10 +58,10 @@ val viewModelActivityTemplate
 
     val activityLayout = stringParameter {
       name = "Activity Layout Name"
-      default = "main_activity"
+      default = "activity_main"
       help = "The name of the layout to create for the activity"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
-      suggest = { "${classToResource(activityClass.value)}_activity" }
+      suggest = { "activity_${classToResource(activityClass.value)}" }
     }
 
     val fragmentClass = stringParameter {
@@ -74,10 +74,10 @@ val viewModelActivityTemplate
 
     val fragmentLayout = stringParameter {
       name = "Fragment Layout Name"
-      default = "main_fragment"
+      default = "fragment_main"
       help = "The name of the layout to create for the fragment"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
-      suggest = { "${classToResource(fragmentClass.value)}_fragment" }
+      suggest = { "fragment_${classToResource(fragmentClass.value)}" }
     }
 
     val viewModelClass = stringParameter {
