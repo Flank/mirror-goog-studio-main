@@ -53,16 +53,24 @@ public class PatchTest {
         }
     }
 
-    private static void createSimpleZip(Path file, byte[] bytes, String entryName)
+    // Create an archive with numEntries of size bytes.length
+    private static void createSimpleZip(Path file, int numEntries, byte[] bytes, String entryName)
             throws IOException {
         Files.deleteIfExists(file);
         Path manifestFile = TestUtils.resolveWorkspacePath(BASE + "AndroidManifest.xml");
         BytesSource manifestSource =
                 new BytesSource(manifestFile, "AndroidManifest.xml", Deflater.NO_COMPRESSION);
         try (ZipArchive archive = new ZipArchive(file)) {
-            archive.add(new BytesSource(bytes, entryName, Deflater.NO_COMPRESSION));
+            for (int i = 0; i < numEntries; i++) {
+                archive.add(new BytesSource(bytes, entryName + i, Deflater.NO_COMPRESSION));
+            }
             archive.add(manifestSource);
         }
+    }
+
+    private static void createSimpleZip(Path file, byte[] bytes, String entryName)
+            throws IOException {
+        createSimpleZip(file, 1, bytes, entryName);
     }
 
     @Test
@@ -128,5 +136,35 @@ public class PatchTest {
                 "Patch size is too big",
                 patch.status,
                 PatchGenerator.Patch.Status.SizeThresholdExceeded);
+    }
+
+    @Test
+    public void testPatchWithVeryLargeArchive() throws IOException, DeployerException {
+
+        int fileSize = 1 << 20; // 1 MiB
+        byte[] bytes = new byte[fileSize];
+
+        // Create a large (3 GiB) archive
+        Path remote = tempDirectory.resolve("local.apk");
+        createSimpleZip(remote, 3000, bytes, "f");
+
+        bytes[0] = 1;
+        Path local = tempDirectory.resolve("remote.apk");
+        createSimpleZip(local, bytes, "f");
+
+        ApkParser apkParser = new ApkParser();
+        List<Apk> remoteApks =
+                apkParser.parsePaths(singletonList(remote.toAbsolutePath().toString()));
+        List<Apk> localApks =
+                apkParser.parsePaths(singletonList(local.toAbsolutePath().toString()));
+        Apk remoteApk = remoteApks.get(0);
+        Apk localApk = localApks.get(0);
+
+        PatchGenerator patchGenerator = new PatchGenerator(new NullLogger());
+        PatchGenerator.Patch patch = patchGenerator.generate(localApk, remoteApk);
+        Assert.assertSame(
+                "Large patch size not detected",
+                PatchGenerator.Patch.Status.SizeThresholdExceeded,
+                patch.status);
     }
 }

@@ -84,8 +84,9 @@ public class PatchGenerator {
         // Generate maps from each apk, based on the content directory.
         List<ApkMap.Area> dirtyAreas = generateDirtyMap(remoteApk, localApk);
 
-        // Use the map of what is dirty and what is clean in the archive to build the patching instruction.
-        int patchSize = 0;
+        // Use the map of what is dirty and what is clean in the archive to build the patching
+        // instruction.
+        long patchSize = 0;
         for (ApkMap.Area dirtyArea : dirtyAreas) {
             patchSize += dirtyArea.size();
         }
@@ -94,7 +95,7 @@ public class PatchGenerator {
             return new Patch(Patch.Status.SizeThresholdExceeded);
         }
 
-        ByteBuffer data = ByteBuffer.wrap(new byte[patchSize]);
+        ByteBuffer data = ByteBuffer.wrap(new byte[Math.toIntExact(patchSize)]);
         ByteBuffer instructions =
                 ByteBuffer.wrap(new byte[dirtyAreas.size() * 8]).order(ByteOrder.LITTLE_ENDIAN);
 
