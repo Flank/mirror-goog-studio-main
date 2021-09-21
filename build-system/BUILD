@@ -236,7 +236,6 @@ filegroup(
         "manifest-merger/src/main/**/*.kt",
         "manifest-merger/src/main/resources/**",
     ]) + [
-        "artifacts-built-with-bazel.properties",
         "manifest-merger/build.gradle",
         "manifest-merger/NOTICE",
     ],
