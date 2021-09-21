@@ -30,6 +30,7 @@ data class JavaArtifactImpl(
     override val compileTaskName: String,
     override val assembleTaskName: String,
     override val classesFolders: Set<File>,
+    override val additionalClassesFolders: Set<File>,
     override val runtimeResourceFolder: File?,
     override val variantSourceProvider: SourceProvider?,
     override val multiFlavorSourceProvider: SourceProvider?,

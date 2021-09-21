@@ -84,6 +84,7 @@ import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -604,7 +605,9 @@ abstract class ComponentImpl(
         sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
     }
 
-    /** Returns the path(s) to compiled R classes (R.jar). */
+    /**
+     * Returns the path(s) to compiled R classes (R.jar).
+     */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
         return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
             internalServices.fileCollection().also { fileCollection ->
@@ -656,6 +659,51 @@ abstract class ComponentImpl(
                         internalServices.fileCollection(variantScope.rJarForUnitTests)
                     } else {
                         internalServices.fileCollection()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the artifact for the compiled R class
+     *
+     * This can be null for unit tests without resource support.
+     */
+    fun getCompiledRClassArtifact(): Provider<RegularFile>? {
+        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
+            artifacts.get(COMPILE_R_CLASS_JAR)
+        } else {
+            val variantType = variantDslInfo.variantType
+
+            if (testedConfig == null) {
+                // TODO(b/138780301): Also use it in android tests.
+                val useCompileRClassInApp = (internalServices
+                    .projectOptions[BooleanOption
+                    .ENABLE_APP_COMPILE_TIME_R_CLASS]
+                        && !variantType.isForTesting)
+                if (variantType.isAar || useCompileRClassInApp) {
+                    if (androidResourcesEnabled) {
+                        artifacts.get(COMPILE_R_CLASS_JAR)
+                    } else {
+                        null
+                    }
+                } else {
+                    Preconditions.checkState(
+                        variantType.isApk,
+                        "Expected APK type but found: $variantType"
+                    )
+
+                    artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                }
+            } else { // Android test or unit test
+                if (variantType === VariantTypeImpl.ANDROID_TEST) {
+                    artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                } else {
+                    if (androidResourcesEnabled) {
+                        variantScope.rJarForUnitTests
+                    } else {
+                        null
                     }
                 }
             }
