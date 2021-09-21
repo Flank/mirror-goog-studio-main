@@ -232,17 +232,15 @@ fun readCmakeFileApiReply(
                         .filter {
                             // Just 'libraries' role
                             it.role == "libraries" &&
-                            // Ignore '-llog', etc
-                            !it.fragment.startsWith("-l") &&
-                            // Ignore *.a and *.o
-                            !it.fragment.endsWith(".a") && !it.fragment.endsWith(".o") &&
+                            // Only accept .so
+                            it.fragment.endsWith(".so") &&
                             // Ignore libraries under sysroot
                             !it.fragment.startsWith(link.sysroot)
                         }
                         .map {
                             File(cmakeFiles.paths.build)
-                                    .resolve(it.fragment)
-                                    .normalize()
+                                .resolve(it.fragment)
+                                .normalize()
                         }
                         .toList()
     }

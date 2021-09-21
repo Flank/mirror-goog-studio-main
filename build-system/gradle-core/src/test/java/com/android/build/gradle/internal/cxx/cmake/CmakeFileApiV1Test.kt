@@ -428,6 +428,17 @@ class CmakeFileApiV1Test {
             result
                 .libraries!!
                 .getValue("AB::@6890427a1f51a3e7e1df")
-                .output).isNull()
+                .output
+        ).isNull()
+    }
+
+    @Test
+    fun `bug 200065980 runtime file was not 'so'`() {
+        val replyFolder = prepareReplyFolder("b200065980")
+        val result = readCmakeFileApiReply(replyFolder) { }
+        assertThat(result
+            .libraries!!.getValue("alpha::@6890427a1f51a3e7e1df")
+            .runtimeFiles!!.size)
+            .isEqualTo(1)
     }
 }
