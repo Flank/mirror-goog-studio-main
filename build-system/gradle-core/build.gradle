@@ -121,7 +121,7 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
     implementation project(':base:repository')
-    implementation project(':base:ddmlib')
+    implementation libs.com.android.tools.ddms.ddmlib
     implementation project(':base:build-system:aapt2-proto')
     implementation project(':base:build-system:aaptcompiler')
     implementation project(':analytics-library:crash')

@@ -17,7 +17,7 @@ dependencies {
     implementation project(':base:sdklib')
     implementation project(':base:builder-test-api')
     implementation project(':base:builder-model')
-    implementation project(':base:ddmlib')
+    implementation libs.com.android.tools.ddms.ddmlib
     implementation project(':base:layoutlib-api')
     implementation libs.com.android.tools.common
     implementation libs.com.android.tools.analyticsLibrary.shared

@@ -11,7 +11,7 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation libs.com.android.tools.common
     api project(':base:manifest-merger')
-    implementation project(':base:ddmlib')
+    implementation libs.com.android.tools.ddms.ddmlib
     api project(':base:zipflinger')
     implementation project(':base:signflinger')
 

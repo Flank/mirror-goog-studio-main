@@ -22,7 +22,7 @@ dependencies {
     implementation project(':base:builder-model')
     implementation project(':base:build-system:gradle-core')
     implementation project(':base:sdk-common')
-    api project(':base:ddmlib')
+    api libs.com.android.tools.ddms.ddmlib
     implementation project(':base:sdklib')
     implementation project(':base:testing-infrastructure:device-pool:device-provider')
     implementation project(':base:testutils')

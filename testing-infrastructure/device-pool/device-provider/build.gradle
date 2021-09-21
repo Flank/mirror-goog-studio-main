@@ -4,7 +4,7 @@ dependencies {
     implementation gradleApi()
     compileOnly project(":base:builder")
     compileOnly libs.com.android.tools.common
-    compileOnly project(":base:ddmlib")
+    compileOnly libs.com.android.tools.ddms.ddmlib
     compileOnly project(":base:builder-test-api")
     compileOnly project(":base:build-system:gradle-core")
     compileOnly libs.guava

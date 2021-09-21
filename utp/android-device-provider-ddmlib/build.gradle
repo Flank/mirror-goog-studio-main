@@ -25,7 +25,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     implementation libs.com.android.tools.common
-    implementation project(':base:ddmlib')
+    implementation libs.com.android.tools.ddms.ddmlib
     implementation libs.protobuf
     implementation project(':base:utp:android-device-provider-ddmlib-proto')
     implementation libs.kotlin_stdlib
