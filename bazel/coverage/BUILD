@@ -696,7 +696,7 @@ coverage_report(
 coverage_report(
     name = "wear-pairing-assistant",
     srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/wearparing",
+        "tools/adt/idea/android/src/com/android/tools/idea/wearpairing",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
