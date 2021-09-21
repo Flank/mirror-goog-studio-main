@@ -11,7 +11,7 @@ dependencies {
     implementation project(':base:build-system:gradle-core')
 
     testImplementation project(':base:build-system:integration-test:framework')
-    testImplementation project(':analytics-library:protos')
+    testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation project(':apksig')
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')

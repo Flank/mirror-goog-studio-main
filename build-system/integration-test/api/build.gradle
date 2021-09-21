@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
     testImplementation project(':base:build-system:integration-test:framework')
-    testImplementation project(':analytics-library:protos')
+    testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
     testImplementation project(':base:sdk-common')

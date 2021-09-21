@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     compileOnly(project(':base:profile'))
-    implementation project(':analytics-library:protos')
+    implementation libs.com.android.tools.analyticsLibrary.protos
     implementation project(':apksig')
     implementation project(':base:builder')
     implementation project(':base:builder-model')

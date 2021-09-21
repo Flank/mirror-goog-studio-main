@@ -253,12 +253,8 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools:agp_gradle_build_files",
     "//tools/analytics-library/crash:agp_gradle_build_files",
     "//tools/analytics-library/inspector:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/analytics-library/protos:agp_gradle_build_files",
-    "//tools/analytics-library/protos/src/main/proto:agp_gradle_build_files",
     "//tools/analytics-library/publisher:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/analytics-library/shared:agp_gradle_build_files",
     "//tools/analytics-library/testing:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/analytics-library/tracker:agp_gradle_build_files",
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
     "//tools/base:agp_artifacts.zip",

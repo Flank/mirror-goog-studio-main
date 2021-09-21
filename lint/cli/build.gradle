@@ -24,9 +24,9 @@ dependencies {
     implementation project(':base:intellij-core')
     implementation project(':base:manifest-merger')
     implementation project(':base:layoutlib-api')
-    implementation project(':analytics-library:shared')
-    implementation project(':analytics-library:protos')
-    implementation project(':analytics-library:tracker')
+    implementation libs.com.android.tools.analyticsLibrary.shared
+    implementation libs.com.android.tools.analyticsLibrary.protos
+    implementation libs.com.android.tools.analyticsLibrary.tracker
 
     implementation libs.guava
     implementation libs.kotlin_reflect

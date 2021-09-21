@@ -24,9 +24,9 @@ dependencies {
     implementation libs.kxml
 
     testImplementation project(':base:testutils')
-    testImplementation project(':analytics-library:shared')
-    testImplementation project(':analytics-library:protos')
-    testImplementation project(':analytics-library:tracker')
+    testImplementation libs.com.android.tools.analyticsLibrary.shared
+    testImplementation libs.com.android.tools.analyticsLibrary.protos
+    testImplementation libs.com.android.tools.analyticsLibrary.tracker
     testImplementation project(':analytics-library:testing')
     testImplementation project(':base:apkparser:binary-resources')
     testImplementation project(':base:apkparser:apkanalyzer')

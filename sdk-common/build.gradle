@@ -20,7 +20,7 @@ dependencies {
     implementation project(':base:ddmlib')
     implementation project(':base:layoutlib-api')
     implementation libs.com.android.tools.common
-    implementation project(':analytics-library:shared')
+    implementation libs.com.android.tools.analyticsLibrary.shared
     implementation libs.bouncycastle_pkix
     implementation libs.bouncycastle_prov
     implementation libs.kotlin_stdlib
