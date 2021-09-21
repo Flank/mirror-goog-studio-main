@@ -793,6 +793,9 @@ public final class SdkConstants {
     public static final String CLASS_ANDROIDX_ACTION_PROVIDER = "androidx.core.view.ActionProvider";
 
     public static final String CLASS_BACKUP_AGENT = "android.app.backup.BackupAgent";
+
+    public static final String CLASS_DRAWABLE = "android.graphics.drawable.Drawable";
+
     /**
      * MockView is part of the layoutlib bridge and used to display classes that have no rendering
      * in the graphical layout editor.
