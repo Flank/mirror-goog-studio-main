@@ -100,6 +100,8 @@ class SdkCommandLineToolsSmokeTest {
                                         package listing. With --update, update obsolete
                                         packages as well as non-obsolete.
 
+                    --newer: With --list, show only new and/or updatable packages.
+
                     --no_https: Force all connections to use http rather than https.
 
                     --proxy=<http | socks>: Connect via a proxy of the given type.

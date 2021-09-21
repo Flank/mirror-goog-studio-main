@@ -72,12 +72,13 @@ class ListAction extends SdkAction {
             }
         }
 
+        Set<RemotePackage> news = new TreeSet<>(packages.getNewPkgs());
         Set<UpdatablePackage> updates = new TreeSet<>(packages.getUpdatedPkgs());
 
         if (mSettings.isVerbose()) {
-            printListVerbose(locals, localObsoletes, remotes, remoteObsoletes, updates);
+            printListVerbose(locals, localObsoletes, remotes, remoteObsoletes, news, updates);
         } else {
-            printList(locals, localObsoletes, remotes, remoteObsoletes, updates);
+            printList(locals, localObsoletes, remotes, remoteObsoletes, news, updates);
         }
     }
 
@@ -98,7 +99,26 @@ class ListAction extends SdkAction {
             @NonNull Collection<LocalPackage> localObsoletes,
             @NonNull Collection<RemotePackage> remotes,
             @NonNull Collection<RemotePackage> remoteObsoletes,
+            @NonNull Set<RemotePackage> news,
             @NonNull Set<UpdatablePackage> updates) {
+        if (mSettings.isNewer()) {
+            locals.clear();
+            localObsoletes.clear();
+            remotes.clear();
+            remoteObsoletes.clear();
+            if (!news.isEmpty()) {
+                if (mSettings.includeObsolete()) {
+                    news.forEach(
+                            p -> {
+                                if (p.obsolete()) {
+                                    remoteObsoletes.add(p);
+                                }
+                            });
+                }
+                news.removeIf(RepoPackage::obsolete);
+                remotes.addAll(news);
+            }
+        }
 
         if (!locals.isEmpty()) {
             getOutputStream().println("Installed packages:");
@@ -178,7 +198,27 @@ class ListAction extends SdkAction {
             @NonNull Collection<LocalPackage> localObsoletes,
             @NonNull Collection<RemotePackage> remotes,
             @NonNull Collection<RemotePackage> remoteObsoletes,
+            @NonNull Set<RemotePackage> news,
             @NonNull Set<UpdatablePackage> updates) {
+        if (mSettings.isNewer()) {
+            locals.clear();
+            localObsoletes.clear();
+            remotes.clear();
+            remoteObsoletes.clear();
+            if (!news.isEmpty()) {
+                if (mSettings.includeObsolete()) {
+                    news.forEach(
+                            p -> {
+                                if (p.obsolete()) {
+                                    remoteObsoletes.add(p);
+                                }
+                            });
+                }
+                news.removeIf(RepoPackage::obsolete);
+                remotes.addAll(news);
+            }
+        }
+
         TableFormatter<LocalPackage> localTable = new TableFormatter<>();
         localTable.addColumn("Path", RepoPackage::getPath, 9999, 0);
         localTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);

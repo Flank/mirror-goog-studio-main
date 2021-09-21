@@ -450,6 +450,111 @@ public class SdkManagerCliTest {
 
     }
 
+    /** List the packages that are available and updatable. */
+    @Test
+    public void newerList() throws Exception {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--list", "--newer", "--sdk_root=" + mSdkLocation),
+                        mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run(new FakeProgressIndicator());
+        String expected =
+                "\n"
+                        + "Available Packages:\n"
+                        + "  Path         | Version | Description \n"
+                        + "  -------      | ------- | -------     \n"
+                        + "  depended_on  | 1       | fake package\n"
+                        + "  depends_on   | 1       | fake package\n"
+                        + "  test;remote1 | 1       | fake package\n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "  ID      | Installed | Available\n"
+                        + "  ------- | -------   | -------  \n"
+                        + "  upgrade | 1         | 2        \n";
+        assertEquals(
+                expected, out.toString().replaceAll("\\r\\n", "\n").replaceAll("\\r\\n", "\n"));
+    }
+
+    /** List the packages that are available and updatable, including obsoletes. */
+    @Test
+    public void newerObsoleteList() throws Exception {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of(
+                                "--list",
+                                "--newer",
+                                "--include_obsolete",
+                                "--sdk_root=" + mSdkLocation),
+                        mFileOp.getFileSystem());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertNotNull("Arguments should be valid", settings);
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run(new FakeProgressIndicator());
+        String expected =
+                "\n"
+                        + "Available Packages:\n"
+                        + "  Path         | Version | Description \n"
+                        + "  -------      | ------- | -------     \n"
+                        + "  depended_on  | 1       | fake package\n"
+                        + "  depends_on   | 1       | fake package\n"
+                        + "  test;remote1 | 1       | fake package\n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "  ID       | Installed | Available\n"
+                        + "  -------  | -------   | -------  \n"
+                        + "  obsolete | 1         | 2        \n"
+                        + "  upgrade  | 1         | 2        \n";
+        assertEquals(
+                expected, out.toString().replaceAll("\\r\\n", "\n").replaceAll("\\r\\n", "\n"));
+    }
+
+    /** Verbosely list the packages that are available and updatable. */
+    @Test
+    public void verboseNewerList() throws Exception {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of(
+                                "--list", "--sdk_root=" + mSdkLocation, "--verbose", "--newer"),
+                        mFileOp.getFileSystem());
+        assertNotNull("Arguments should be valid", settings);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run(new FakeProgressIndicator());
+        String expected =
+                "Available Packages:\n"
+                        + "--------------------------------------\n"
+                        + "depended_on\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "\n"
+                        + "depends_on\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "    Dependencies:\n"
+                        + "        depended_on\n"
+                        + "\n"
+                        + "test;remote1\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "--------------------------------------\n"
+                        + "obsolete\n"
+                        + "    Installed Version: 1\n"
+                        + "    Available Version: 2\n"
+                        + "    (Obsolete)\n"
+                        + "upgrade\n"
+                        + "    Installed Version: 1\n"
+                        + "    Available Version: 2\n";
+        assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
+    }
+
     /**
      * Install a package.
      */

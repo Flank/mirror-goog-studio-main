@@ -60,6 +60,7 @@ class SdkManagerCliSettings implements SettingsController {
     private static final String HELP_ARG = "--help";
     private static final String NO_HTTPS_ARG = "--no_https";
     private static final String VERBOSE_ARG = "--verbose";
+    private static final String NEWER_ARG = "--newer";
     private static final String PROXY_TYPE_ARG = "--proxy=";
     private static final String PROXY_HOST_ARG = "--proxy_host=";
     private static final String PROXY_PORT_ARG = "--proxy_port=";
@@ -93,6 +94,7 @@ class SdkManagerCliSettings implements SettingsController {
     private boolean mDisableSdkPatches = false;
     private boolean mForceNoProxy = false;
     private boolean mVerbose = false;
+    private boolean mNewer = false;
     private Proxy.Type mProxyType;
     private SocketAddress mProxyHost;
     private String mProxyHostStr;
@@ -224,6 +226,10 @@ class SdkManagerCliSettings implements SettingsController {
 
     public boolean isVerbose() {
         return mVerbose;
+    }
+
+    public boolean isNewer() {
+        return mNewer;
     }
 
     public boolean includeObsolete() {
@@ -371,6 +377,9 @@ class SdkManagerCliSettings implements SettingsController {
                 argIter.remove();
             } else if (arg.equals(VERBOSE_ARG)) {
                 mVerbose = true;
+                argIter.remove();
+            } else if (arg.equals(NEWER_ARG)) {
+                mNewer = true;
                 argIter.remove();
             } else if (arg.equals(INCLUDE_OBSOLETE_ARG)) {
                 mIncludeObsolete = true;

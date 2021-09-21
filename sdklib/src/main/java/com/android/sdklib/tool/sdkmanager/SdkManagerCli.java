@@ -180,6 +180,8 @@ public class SdkManagerCli {
         out.println("                        package listing. With --update, update obsolete");
         out.println("                        packages as well as non-obsolete.");
         out.println();
+        out.println("    --newer: With --list, show only new and/or updatable packages.");
+        out.println();
         out.println("    --no_https: Force all connections to use http rather than https.");
         out.println();
         out.println("    --proxy=<http | socks>: Connect via a proxy of the given type.");
