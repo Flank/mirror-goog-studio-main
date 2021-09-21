@@ -24,19 +24,21 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
         return RemoteViewDetector()
     }
 
+    private val kotlinSample = kotlin(
+        """
+        package test.pkg
+        import android.widget.RemoteViews
+
+        fun test(packageName: String) {
+            val remoteView = RemoteViews(packageName, R.layout.test)
+        }
+        """
+    ).indented()
+
     fun testBasic() {
         lint()
             .files(
-                kotlin(
-                    """
-                    package test.pkg
-                    import android.widget.RemoteViews
-
-                    fun test(packageName: String) {
-                        val remoteView = RemoteViews(packageName, R.layout.test)
-                    }
-                    """
-                ).indented(),
+                kotlinSample,
                 xml(
                     "res/layout/test.xml",
                     """
@@ -60,6 +62,10 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
                         <TextClock />
                         <TextView />
                         <DatePicker />
+                        <CheckBox />
+                        <Switch />
+                        <RadioButton />
+                        <RadioGroup />
                         <androidx.appcompat.widget.AppCompatTextView />
                     </merge>
                     """
@@ -67,11 +73,49 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
                 rClass("test.pkg", "@layout/test")
             ).run().expect(
                 """
-                src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: DatePicker, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
+                src/test/pkg/test.kt:5: Error: @layout/test includes views not allowed in a RemoteView: CheckBox, DatePicker, RadioButton, RadioGroup, Switch, androidx.appcompat.widget.AppCompatTextView [RemoteViewLayout]
                     val remoteView = RemoteViews(packageName, R.layout.test)
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )
+    }
+
+    fun testLayoutFolder31() {
+        // http://b/200165599 Update RemoteViewDetector for new @RemoteViews added in API 31
+        lint().files(
+            manifest().minSdk(31),
+            kotlinSample,
+            xml(
+                "res/layout-v31/test.xml",
+                """
+                <merge>
+                    <CheckBox />
+                    <Switch />
+                    <RadioButton />
+                    <RadioGroup />
+                </merge>
+                """
+            ).indented(),
+            rClass("test.pkg", "@layout/test")
+        ).run().expectClean()
+    }
+
+    fun testMin31() {
+        lint().files(
+            kotlinSample,
+            xml(
+                "res/layout-v31/test.xml",
+                """
+                <merge>
+                    <CheckBox />
+                    <Switch />
+                    <RadioButton />
+                    <RadioGroup />
+                </merge>
+                """
+            ).indented(),
+            rClass("test.pkg", "@layout/test")
+        ).run().expectClean()
     }
 }
