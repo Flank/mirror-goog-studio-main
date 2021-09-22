@@ -30,14 +30,14 @@ import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.s
 fun RecipeExecutor.viewModelFragmentRecipe(
   moduleData: ModuleTemplateData, fragmentClass: String,
   layoutName: String,
-  viewModelName: String
+  viewModelName: String,
+  packageName: String
 ) {
   val (projectData, srcOut, resOut ) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
-  val packageName = moduleData.packageName
   val applicationPackage = projectData.applicationPackage
 
   addDependency("com.android.support:support-v4:${appCompatVersion}.+")

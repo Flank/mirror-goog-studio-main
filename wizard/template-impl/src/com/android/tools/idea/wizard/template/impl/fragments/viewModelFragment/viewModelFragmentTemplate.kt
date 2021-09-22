@@ -24,11 +24,13 @@ import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
+import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.underscoreToCamelCase
@@ -66,16 +68,19 @@ val viewModelFragmentTemplate
       suggest = { "${underscoreToCamelCase(classToResource(fragmentClass.value))}ViewModel" }
     }
 
+    val packageName = defaultPackageNameParameter
+
     widgets(
       TextFieldWidget(fragmentClass),
       TextFieldWidget(layoutName),
       TextFieldWidget(viewModelName),
+      PackageNameWidget(packageName),
       LanguageWidget()
     )
 
     thumb { File("template_blank_fragment.png") }
 
     recipe = { data: TemplateData ->
-      viewModelFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, viewModelName.value)
+      viewModelFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, viewModelName.value, packageName.value)
     }
   }
