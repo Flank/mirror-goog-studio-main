@@ -16,33 +16,58 @@
 
 package com.android.tools.test;
 
-import com.android.Version;
+
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.io.Resources;
 import com.google.common.truth.Expect;
 import java.io.BufferedInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import org.junit.Rule;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-/** Verifies what we distribute to the Google maven repository */
+/**
+ * Verifies what we distribute to the Google maven repository
+ *
+ * <p>To update the snapshot file run: <code>
+ * bazel test //tools/base/gmaven:tests --nocache_test_results --strategy=TestRunner=standalone --jvmopt="-DUPDATE_TEST_SNAPSHOTS=$(bazel info workspace)" --test_output=streamed
+ * </code>
+ */
 public class GmavenZipTest {
+
+    private String UPDATE_TEST_SNAPSHOTS = System.getProperty("UPDATE_TEST_SNAPSHOTS");
 
     private static final Set<String> LICENSE_NAMES =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "LICENSE");
@@ -3348,6 +3373,135 @@ public class GmavenZipTest {
         EXPECTED = expected.build();
     }
 
+    private static class PomInfo implements Comparable<PomInfo> {
+
+        private static final DocumentBuilder documentBuilder;
+        private static final XPathFactory xPathFactory = XPathFactory.newInstance();
+        private static final XPathExpression projectPath;
+        private static final XPathExpression groupIdPath;
+        private static final XPathExpression artifactIdPath;
+        private static final XPathExpression pomNamePath;
+        private static final XPathExpression descriptionPath;
+        private static final XPathExpression dependenciesPath;
+        private static final XPathExpression scopePath;
+
+        static {
+            try {
+                documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                projectPath = xPathFactory.newXPath().compile("/project");
+                groupIdPath = xPathFactory.newXPath().compile("groupId");
+                artifactIdPath = xPathFactory.newXPath().compile("artifactId");
+                pomNamePath = xPathFactory.newXPath().compile("name");
+                descriptionPath = xPathFactory.newXPath().compile("description");
+                dependenciesPath = xPathFactory.newXPath().compile("dependencies/dependency");
+                scopePath = xPathFactory.newXPath().compile("scope");
+            } catch (XPathExpressionException | ParserConfigurationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        private static class Dependency {
+            private final String groupId;
+            private final String artifactId;
+            private final String scope;
+
+            private Dependency(String groupId, String artifactId, String scope) {
+                this.groupId = groupId;
+                this.artifactId = artifactId;
+                this.scope = scope;
+            }
+
+            static Dependency fromNode(Node n) throws XPathExpressionException {
+                return new Dependency(
+                        groupIdPath.evaluate(n), artifactIdPath.evaluate(n), scopePath.evaluate(n));
+            }
+
+            @Override
+            public String toString() {
+                return groupId + ':' + artifactId + " (" + scope + ")";
+            }
+        }
+
+        private final String groupId;
+        private final String artifactId;
+        private final String pomName;
+        private final String description;
+        private final List<Dependency> dependencies;
+
+        PomInfo(
+                String artifactAddress,
+                String artifactId,
+                String pomName,
+                String description,
+                List<Dependency> dependencies) {
+            this.groupId = artifactAddress;
+            this.artifactId = artifactId;
+            this.pomName = pomName;
+            this.description = description;
+            this.dependencies = dependencies;
+        }
+
+        public static PomInfo fromFile(Path file) {
+            try {
+                String text = Joiner.on('\n').join(Files.readAllLines(file));
+                documentBuilder.reset();
+                Document xml;
+                try (InputStream stream = new BufferedInputStream(Files.newInputStream(file))) {
+                    xml = documentBuilder.parse(stream);
+                }
+                Node project = (Node) projectPath.evaluate(xml, XPathConstants.NODE);
+
+                NodeList dependencyNodes =
+                        (NodeList) dependenciesPath.evaluate(project, XPathConstants.NODESET);
+                List<Dependency> dependencies = new ArrayList<>(dependencyNodes.getLength());
+                for (int i = 0; i < dependencyNodes.getLength(); i++) {
+                    dependencies.add(i, Dependency.fromNode(dependencyNodes.item(i)));
+                }
+
+                return new PomInfo(
+                        groupIdPath.evaluate(project),
+                        artifactIdPath.evaluate(project),
+                        pomNamePath.evaluate(project),
+                        descriptionPath.evaluate(project),
+                        dependencies);
+            } catch (IOException | SAXException | XPathExpressionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder stringBuilder =
+                    new StringBuilder()
+                            .append(groupId)
+                            .append(':')
+                            .append(artifactId)
+                            .append('\n')
+                            .append("  pomName=")
+                            .append(pomName)
+                            .append('\n')
+                            .append("  description=")
+                            .append(description)
+                            .append('\n');
+            if (!dependencies.isEmpty()) {
+                stringBuilder.append("  dependencies:\n");
+                for (Dependency dependency : dependencies) {
+                    stringBuilder.append("    ").append(dependency.toString()).append("\n");
+                }
+            }
+            return stringBuilder.toString();
+        }
+
+        @Override
+        public int compareTo(PomInfo o) {
+            int group = this.groupId.compareTo(o.groupId);
+            if (group != 0) {
+                return group;
+            }
+            return this.artifactId.compareTo(o.artifactId);
+        }
+    }
+
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
     @Test
@@ -3363,7 +3517,6 @@ public class GmavenZipTest {
                                 path ->
                                         path.toString().endsWith(".jar")
                                                 || path.toString().endsWith(".aar"))
-                        .filter(GmavenZipTest::isCurrentVersion)
                         .collect(Collectors.toList());
 
         for (Path jar : ourJars) {
@@ -3377,6 +3530,35 @@ public class GmavenZipTest {
             }
         }
         expect.that(jarNames).named("Jars and aars").containsExactlyElementsIn(EXPECTED.keySet());
+
+        String poms;
+        try (Stream<Path> files = Files.walk(repo)) {
+            poms =
+                    files.filter(path -> path.toString().endsWith(".pom"))
+                            .map(PomInfo::fromFile)
+                            .sorted()
+                            .map(PomInfo::toString)
+                            .collect(Collectors.joining("\n"));
+        }
+
+        URL gmavenPomsResource = this.getClass().getResource("gmaven-poms.txt");
+        String expected = Resources.asCharSource(gmavenPomsResource, StandardCharsets.UTF_8).read();
+        if (UPDATE_TEST_SNAPSHOTS != null) {
+            Path expectationFile =
+                    Paths.get(UPDATE_TEST_SNAPSHOTS)
+                            .resolve(
+                                    "tools/base/gmaven/src/test/resources/com/android/tools/test/gmaven-poms.txt");
+            System.err.println("Updating " + expectationFile);
+
+            if (expected.equals(poms)) {
+                System.err.println("Pom files data up to date");
+            } else {
+                Files.write(expectationFile, poms.getBytes(StandardCharsets.UTF_8));
+                System.err.println("Pom files expectations updated");
+            }
+        } else {
+            expect.that(poms).named("pom file data").isEqualTo(expected);
+        }
     }
 
     private void checkSourcesJar(Path jarPath, Path repo) throws IOException {
@@ -3407,11 +3589,6 @@ public class GmavenZipTest {
         } else if (!found && !knownMissing) {
             expect.fail("No license file in " + jarPath + " with key " + key);
         }
-    }
-
-    private static boolean isCurrentVersion(Path path) {
-        return path.toString().contains(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-                || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
     private static String jarRelativePathWithoutVersionWithClassifier(Path jar, Path repo) {

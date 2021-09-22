@@ -14,6 +14,7 @@ merged_zip(
 java_library(
     name = "java_tests",
     srcs = ["src/test/java/com/android/tools/test/GmavenZipTest.java"],
+    resources = ["src/test/resources/com/android/tools/test/gmaven-poms.txt"],
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
