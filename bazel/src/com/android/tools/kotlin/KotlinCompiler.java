@@ -16,7 +16,7 @@
 
 package com.android.tools.kotlin;
 
-import static org.jetbrains.kotlin.cli.common.messages.PlainTextMessageRenderer.KOTLIN_COLORS_ENABLED_PROPERTY;
+import static org.jetbrains.kotlin.cli.common.CompilerSystemProperties.KOTLIN_COLORS_ENABLED_PROPERTY;
 
 import com.android.tools.utils.BazelWorker;
 import com.android.tools.utils.JarOutputCompiler;
@@ -47,7 +47,7 @@ public class KotlinCompiler extends JarOutputCompiler {
     protected boolean compile(List<String> forwardedArgs, String classPath, File outDir) {
         // Extracted from CLITool.doMain:
         System.setProperty("java.awt.headless", "true");
-        System.setProperty(KOTLIN_COLORS_ENABLED_PROPERTY, "true");
+        KOTLIN_COLORS_ENABLED_PROPERTY.setValue("true");
 
         List<String> args = new ArrayList<>(forwardedArgs.size() + 16);
 

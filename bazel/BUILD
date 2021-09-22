@@ -31,16 +31,11 @@ java_binary(
 java_binary(
     name = "kotlinc",
     srcs = ["src/com/android/tools/kotlin/KotlinCompiler.java"],
-    data = ["//prebuilts/tools/common/kotlin-plugin-ij:kotlin_plugin"],
     main_class = "com.android.tools.kotlin.KotlinCompiler",
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
-    ],
     deps = [
         ":utils",
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-compiler",
+        "//prebuilts/tools/common/m2:kotlin-compiler",
     ],
 )
 

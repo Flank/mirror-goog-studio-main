@@ -436,6 +436,7 @@ local_maven_repository(
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.4.32",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.21",
         "org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.5.30",
+        "org.jetbrains.kotlin:kotlin-compiler:1.5.31",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41",
         "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72",
