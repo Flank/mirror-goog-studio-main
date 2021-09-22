@@ -52,10 +52,10 @@ val viewModelFragmentTemplate
 
     val layoutName = stringParameter {
       name = "Fragment Layout Name"
-      default = "blank_fragment"
+      default = "fragment_blank"
       help = "The name of the layout to create"
       constraints = listOf(LAYOUT, NONEMPTY, UNIQUE)
-      suggest = { "${classToResource(fragmentClass.value)}_fragment" }
+      suggest = { "fragment_${classToResource(fragmentClass.value)}" }
     }
 
     val viewModelName = stringParameter {
