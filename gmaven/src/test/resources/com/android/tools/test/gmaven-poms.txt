@@ -268,8 +268,8 @@ com.android.tools.analytics-library:inspector
     com.google.code.gson:gson (runtime)
 
 com.android.tools.analytics-library:protos
-  pomName=com.android.tools.analytics-library.protos
-  description=
+  pomName=Android Tools Analytics Protobufs
+  description=Library containing protobufs for usage analytics.
   dependencies:
     com.google.protobuf:protobuf-java (compile)
 
@@ -286,8 +286,8 @@ com.android.tools.analytics-library:publisher
     com.google.guava:guava (runtime)
 
 com.android.tools.analytics-library:shared
-  pomName=com.android.tools.analytics-library.shared
-  description=
+  pomName=Android Tools Analytics Shared Library
+  description=Helper Library for tracking usage analytics.
   dependencies:
     com.android.tools.analytics-library:protos (compile)
     com.android.tools:annotations (runtime)
@@ -312,8 +312,8 @@ com.android.tools.analytics-library:testing
     com.google.code.gson:gson (runtime)
 
 com.android.tools.analytics-library:tracker
-  pomName=com.android.tools.analytics-library.tracker
-  description=
+  pomName=Android Tools Analytics Tracker
+  description=Library for tracking usage analytics.
   dependencies:
     com.android.tools.analytics-library:protos (compile)
     com.android.tools.analytics-library:shared (compile)
@@ -506,8 +506,8 @@ com.android.tools.chunkio:chunkio
   description=annotations for use with chunkio-processor, and runtime supporting APIs
 
 com.android.tools.ddms:ddmlib
-  pomName=com.android.tools.ddms.ddmlib
-  description=
+  pomName=Android Tools ddmlib
+  description=Library providing APIs to talk to Android devices
   dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
     com.android.tools:common (runtime)

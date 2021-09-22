@@ -96,8 +96,10 @@ maven_library(
         ":tools.ddmlib.resources",
     ],
     coordinates = "com.android.tools.ddms:ddmlib:" + BASE_VERSION,
+    description = "Library providing APIs to talk to Android devices",
     module_name = "ddmlib",
     notice = "NOTICE",
+    pom_name = "Android Tools ddmlib",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
     exports = [
