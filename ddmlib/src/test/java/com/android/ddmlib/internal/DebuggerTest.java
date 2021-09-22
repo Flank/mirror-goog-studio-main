@@ -24,11 +24,6 @@ import com.android.ddmlib.ClientTracker;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.ClientTracker;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.internal.Debugger;
-import com.android.ddmlib.JdwpHandshake;
-import com.android.ddmlib.Log;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpCommands;
@@ -37,6 +32,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -102,7 +98,17 @@ public class DebuggerTest extends TestCase {
             }
 
             if (emptyAdbServerFuture != null) {
-                emptyAdbServerFuture.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                try {
+                    emptyAdbServerFuture.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof AsynchronousCloseException) {
+                        Log.d("test", e.getCause());
+                    } else {
+                        Log.d("test", e);
+                    }
+                } catch (Exception e) {
+                    Log.d("test", e);
+                }
             }
             Log.removeLogger(testLog);
         } finally {
