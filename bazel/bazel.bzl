@@ -365,7 +365,7 @@ _iml_module_ = rule(
             cfg = "host",
         ),
         "_kotlin": attr.label(
-            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
+            default = Label("@maven//:org.jetbrains.kotlin.kotlin-stdlib"),
             allow_files = True,
         ),
         "_formc": attr.label(

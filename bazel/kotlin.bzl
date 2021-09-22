@@ -177,7 +177,7 @@ def kotlin_library(
         lint_timeout = None,
         compress_resources = False,
         testonly = False,
-        stdlib = "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
+        stdlib = "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 

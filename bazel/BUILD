@@ -44,7 +44,7 @@ java_binary(
     srcs = ["src/com/android/tools/form/FormCompiler.java"],
     main_class = "com.android.tools.form.FormCompiler",
     visibility = ["//visibility:public"],
-    runtime_deps = ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
+    runtime_deps = ["@maven//:org.jetbrains.kotlin.kotlin-stdlib"],
     deps = [
         ":utils",
         "//prebuilts/tools/common/bazel/formc-deps",

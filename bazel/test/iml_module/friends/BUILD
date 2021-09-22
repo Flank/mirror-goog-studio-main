@@ -5,7 +5,7 @@ iml_module(
     srcs = ["src"],
     iml_files = ["friends.impl.iml"],
     visibility = ["//visibility:public"],
-    deps = ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
+    deps = ["@maven//:org.jetbrains.kotlin.kotlin-stdlib"],
 )
 
 iml_module(
@@ -17,6 +17,6 @@ iml_module(
     visibility = ["//visibility:public"],
     deps = [
         ":friends.impl[module, test]",
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
     ],
 )
