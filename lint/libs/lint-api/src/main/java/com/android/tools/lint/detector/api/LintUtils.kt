@@ -2013,7 +2013,7 @@ fun resolvePlaceHolders(
         )
         val replacement = resolvePlaceHolder(project, name) ?: fallbacks?.get(name) ?: ""
         s = s.substring(0, start) + replacement +
-            s.substring(end + MANIFEST_PLACEHOLDER_PREFIX.length)
+            s.substring(end + MANIFEST_PLACEHOLDER_SUFFIX.length)
     }
 }
 
