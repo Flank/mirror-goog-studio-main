@@ -642,6 +642,26 @@ class LintUtilsTest : TestCase() {
             .isEqualTo(if (File.separatorChar == '/') "foo/bar.baz" else "foo\\\\bar.baz")
     }
 
+    fun testResolvePlaceholders() {
+        assertEquals("test", resolvePlaceHolders(null, "test", null))
+        assertEquals("", resolvePlaceHolders(null, "\${test}", null))
+        assertEquals("Test", resolvePlaceHolders(null, "\${test}", mapOf("test" to "Test")))
+        assertEquals(
+            "FirstSecond",
+            resolvePlaceHolders(
+                null, "\${abc}\${def}",
+                mapOf("abc" to "First", "def" to "Second")
+            )
+        )
+        assertEquals(
+            " First Second ",
+            resolvePlaceHolders(
+                null, " \${abc} \${def} ",
+                mapOf("abc" to "First", "def" to "Second")
+            )
+        )
+    }
+
     fun testJavaKeyword() {
         assertThat(isJavaKeyword("")).isFalse()
         assertThat(isJavaKeyword("iff")).isFalse()
