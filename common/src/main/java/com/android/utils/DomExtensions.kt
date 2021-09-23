@@ -25,8 +25,8 @@ import org.w3c.dom.Node
 // Extension methods to make operating on DOM more convenient
 
 /**
- * Adds an iterable implementation on Element such that we can use it in a for loop to iterate
- * over the children
+ * Adds an iterable implementation on Element such that we can use it in a
+ * for loop to iterate over the children
  */
 operator fun Element.iterator(): Iterator<Element> {
     return object : Iterator<Element> {
@@ -83,7 +83,9 @@ fun Element.next(tag: String): Element? {
     return XmlUtils.getNextTagByName(this, tag)
 }
 
-/** Provides an iterator for the sub tags of this element with the given tag */
+/**
+ * Provides an iterator for the sub tags of this element with the given tag
+ */
 fun Element.subtags(tag: String): Iterator<Element> {
     return XmlUtils.getSubTagsByName(this, tag).iterator()
 }
@@ -118,6 +120,30 @@ fun Element.visitAttributes(visitor: (Attr) -> Boolean): Boolean {
     while (child != null) {
         if (child.nodeType == Node.ELEMENT_NODE) {
             val done = (child as Element).visitAttributes(visitor)
+            if (done) {
+                return true
+            }
+        }
+        child = child.nextSibling
+    }
+
+    return false
+}
+
+/**
+ * Visits all the elements of the given element transitively. The [visitor]
+ * should return false, or true to abort visiting when it has found what
+ * it was looking for. Returns true if any visited element returned true.
+ */
+fun Element.visitElements(visitor: (Element) -> Boolean): Boolean {
+    if (visitor(this)) {
+        return true
+    }
+
+    var child = firstChild
+    while (child != null) {
+        if (child.nodeType == Node.ELEMENT_NODE) {
+            val done = (child as Element).visitElements(visitor)
             if (done) {
                 return true
             }

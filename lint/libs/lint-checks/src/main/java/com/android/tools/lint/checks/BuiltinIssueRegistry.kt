@@ -435,6 +435,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ViewTypeDetector.WRONG_VIEW_CAST,
                 WakelockDetector.ISSUE,
                 WakelockDetector.TIMEOUT,
+                WearableConfigurationActionDetector.ISSUE,
                 WatchFaceEditorDetector.ISSUE,
                 WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE,
                 WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
