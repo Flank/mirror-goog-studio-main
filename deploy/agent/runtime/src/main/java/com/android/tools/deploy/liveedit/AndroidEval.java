@@ -22,6 +22,7 @@ import com.android.tools.deploy.interpreter.Eval;
 import com.android.tools.deploy.interpreter.FieldDescription;
 import com.android.tools.deploy.interpreter.FloatValue;
 import com.android.tools.deploy.interpreter.IntValue;
+import com.android.tools.deploy.interpreter.JNI;
 import com.android.tools.deploy.interpreter.LongValue;
 import com.android.tools.deploy.interpreter.MethodDescription;
 import com.android.tools.deploy.interpreter.ObjectValue;
@@ -30,9 +31,29 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class AndroidEval implements Eval {
+
+    // Lookup table used to encode unboxing instructions when forwarding invokespecial to JNI.
+    // This table *must* match what is in
+    // tools/base/deploy/agent/native/interpreter/jni_interpreter.cc
+    private static final int NO_UNBOXING = 0;
+    private static Map<Type, Integer> classToInst =
+            new HashMap<Type, Integer>() {
+                {
+                    put(Type.BOOLEAN_TYPE, 1 << 0);
+                    put(Type.BYTE_TYPE, 1 << 1);
+                    put(Type.CHAR_TYPE, 1 << 2);
+                    put(Type.SHORT_TYPE, 1 << 3);
+                    put(Type.INT_TYPE, 1 << 4);
+                    put(Type.LONG_TYPE, 1 << 5);
+                    put(Type.FLOAT_TYPE, 1 << 6);
+                    put(Type.DOUBLE_TYPE, 1 << 7);
+                }
+            };
 
     private final ClassLoader classloader;
 
@@ -96,6 +117,147 @@ class AndroidEval implements Eval {
 
     @NonNull
     @Override
+    public Value invokeSpecial(
+            @NonNull Value target,
+            MethodDescription methodDesc,
+            @NonNull List<? extends Value> argsValues) {
+        try {
+            String name = methodDesc.getName();
+            String description = methodDesc.getDesc();
+            Type[] parameterType = Type.getArgumentTypes(description);
+            Class<?>[] parameterClass = new Class[parameterType.length];
+
+            for (int i = 0; i < parameterClass.length; i++) {
+                parameterClass[i] = typeToClass(parameterType[i]);
+            }
+
+            Object[] args = new Object[argsValues.size()];
+            for (int i = 0; i < args.length; i++) {
+                args[i] = argsValues.get(i).obj(parameterType[i]);
+            }
+
+            ObjectValue objTarget = (ObjectValue) target;
+            Class klass = forName(methodDesc.getOwnerInternalName());
+
+            // This is a constructor call. We don't use invokespecial yet since we also need
+            // to support ALLOC opcode to go along with it.
+            if ("<init>".equals(name)) {
+                if (objTarget.getValue() != null) {
+                    // This is a call to super.<init> which we currently not handle.
+                    throw new IllegalStateException("Unable to do super.<init>");
+                }
+                Constructor constructor = klass.getDeclaredConstructor(parameterClass);
+                constructor.setAccessible(true);
+                Object obj = constructor.newInstance(args);
+                objTarget.setValue(obj);
+                return new ObjectValue(obj, objTarget.getAsmType());
+            }
+
+            if (!(klass.isInstance(target.obj()))) {
+                String f = "Cannot invokespecial '%s' on a '%s' (obj is '%s')";
+                String targetObjClass = objTarget.obj().getClass().getCanonicalName();
+                String m = String.format(f, methodDesc, klass, targetObjClass);
+                throw new IllegalStateException(m);
+            }
+
+            // Build unboxing instructions so the jni does not have to reparse again the function
+            // descriptor.
+            int[] unbox = buildUnboxingInst(parameterType);
+
+            // invokespecial towards super or private method
+            Type returnType = Type.getReturnType(description);
+            int type = returnType.getSort();
+            switch (type) {
+                case Type.VOID:
+                    {
+                        JNI.invokespecial(target.obj(), klass, name, description, args, unbox);
+                        return makeValue(null, returnType);
+                    }
+                case Type.INT:
+                    {
+                        int i =
+                                JNI.invokespecialI(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(i, returnType);
+                    }
+                case Type.SHORT:
+                    {
+                        short s =
+                                JNI.invokespecialS(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(s, returnType);
+                    }
+                case Type.BOOLEAN:
+                    {
+                        boolean z =
+                                JNI.invokespecialZ(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(z, returnType);
+                    }
+                case Type.CHAR:
+                    {
+                        char c =
+                                JNI.invokespecialC(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(c, returnType);
+                    }
+                case Type.BYTE:
+                    {
+                        byte b =
+                                JNI.invokespecialB(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(b, returnType);
+                    }
+                case Type.LONG:
+                    {
+                        long j =
+                                JNI.invokespecialJ(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(j, returnType);
+                    }
+                case Type.FLOAT:
+                    {
+                        float f =
+                                JNI.invokespecialF(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(f, returnType);
+                    }
+                case Type.DOUBLE:
+                    {
+                        double d =
+                                JNI.invokespecialD(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(d, returnType);
+                    }
+                case Type.OBJECT:
+                    {
+                        Object o =
+                                JNI.invokespecialL(
+                                        target.obj(), klass, name, description, args, unbox);
+                        return makeValue(o, returnType);
+                    }
+                default:
+                    {
+                        String msg = String.format("invokespecial for return type %d", type);
+                        throw new IllegalStateException(msg);
+                    }
+            }
+        } catch (Exception e) {
+            handleThrowable(e);
+        }
+        throw new IllegalStateException("Reached end of invokespecial");
+    }
+
+    private static int[] buildUnboxingInst(Type[] types) {
+        int[] inst = new int[types.length];
+        for (int i = 0; i < types.length; i++) {
+            inst[i] = classToInst.getOrDefault(types[i], NO_UNBOXING);
+        }
+        return inst;
+    }
+
+    @NonNull
+    @Override
     public Value invokeMethod(
             @NonNull Value target,
             MethodDescription methodDesc,
@@ -116,23 +278,6 @@ class AndroidEval implements Eval {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            // This is a constructor call.
-            if (invokeSpecial && "<init>".equals(name)) {
-                ObjectValue objTarget = (ObjectValue) target;
-                if (objTarget.getValue() != null) {
-                    // This is a call to super.<init> which we currently not handle.
-                    throw new IllegalStateException("Unable to do super.<init>");
-                }
-                Class klass = typeToClass(objTarget.getAsmType());
-                Constructor constructor = klass.getDeclaredConstructor(parameterClass);
-                constructor.setAccessible(true);
-                Object obj = constructor.newInstance(argValues);
-                objTarget.setValue(obj);
-                return new ObjectValue(obj, objTarget.getAsmType());
-            }
-
-            // We use invokevirtual for everything else which is inaccurate for private methods
-            // and super methods invocations.
             Method method = methodLookup(owner, name, parameterClass);
             if (method == null) {
                 // Unlikely since we know that the class compiles.

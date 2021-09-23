@@ -93,9 +93,13 @@ coverage_java_test(
     name = "runtime_java_test",
     size = "small",
     srcs = glob(["src/test/java/**/*.java"]),
+    data = [
+        "//tools/base/deploy/agent/native/jni_dispatch:jni_dispatch_dso",
+    ],
     jvm_flags = [
         "-Dtest.suite.jar=runtime_java_test.jar",
         "-Ddashboards.enabled=true",
+        "-Djava.library.path=tools/base/deploy/agent/native/jni_dispatch",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

@@ -61,4 +61,9 @@ public class MethodDescription {
     public boolean isStatic() {
         return isStatic;
     }
+
+    public String toString() {
+        String d = String.format("%s.%s%s", ownerInternalName, name, desc);
+        return d;
+    }
 }

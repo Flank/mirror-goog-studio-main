@@ -685,8 +685,12 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     return eval.newMultiDimensionalArray(Type.getType(node.desc), args);
                 }
 
-            case INVOKEVIRTUAL:
             case INVOKESPECIAL:
+                return eval.invokeSpecial(
+                        values.get(0),
+                        new MethodDescription((MethodInsnNode) insn),
+                        values.subList(1, values.size()));
+            case INVOKEVIRTUAL:
             case INVOKEINTERFACE:
                 {
                     return eval.invokeMethod(

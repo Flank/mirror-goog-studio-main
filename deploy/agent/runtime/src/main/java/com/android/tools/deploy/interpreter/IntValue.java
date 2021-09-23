@@ -27,19 +27,19 @@ public class IntValue extends AbstractValue<Integer> {
         super(Integer.valueOf(value), Type.INT_TYPE);
     }
 
-    static IntValue fromBool(boolean b) {
+    public static IntValue fromBool(boolean b) {
         return new IntValue(b ? 1 : 0, Type.BOOLEAN_TYPE);
     }
 
-    static IntValue fromShort(short s) {
+    public static IntValue fromShort(short s) {
         return new IntValue(s, Type.SHORT_TYPE);
     }
 
-    static IntValue fromChar(char c) {
+    public static IntValue fromChar(char c) {
         return new IntValue(c, Type.CHAR_TYPE);
     }
 
-    static IntValue fromByte(byte b) {
+    public static IntValue fromByte(byte b) {
         return new IntValue(b, Type.BYTE_TYPE);
     }
 }
