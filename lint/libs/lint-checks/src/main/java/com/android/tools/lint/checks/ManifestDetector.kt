@@ -26,6 +26,7 @@ import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.ATTR_TARGET_SDK_VERSION
 import com.android.SdkConstants.ATTR_VERSION_CODE
 import com.android.SdkConstants.ATTR_VERSION_NAME
+import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.DRAWABLE_PREFIX
 import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.TAG_ACTIVITY
@@ -814,7 +815,7 @@ class ManifestDetector :
         val project = context.project
         val folder = project.resourceFolders.firstOrNull() ?: return null
         val name = "data_extraction_rules"
-        val file = File(folder, "xml$separator$name")
+        val file = File(folder, "xml$separator$name$DOT_XML")
         if (file.exists()) {
             return null
         }
