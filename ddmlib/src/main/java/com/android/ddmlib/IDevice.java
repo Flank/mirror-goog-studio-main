@@ -533,8 +533,10 @@ public interface IDevice extends IShellEnabledDevice {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    void removeForward(int localPort)
-            throws TimeoutException, AdbCommandRejectedException, IOException;
+    default void removeForward(int localPort)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /** @deprecated Use {@link #removeForward(int)} */
     @Deprecated
