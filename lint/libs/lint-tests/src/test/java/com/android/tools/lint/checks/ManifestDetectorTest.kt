@@ -2011,10 +2011,10 @@ class ManifestDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-            Fix for AndroidManifest.xml line 5: Create data_extraction_rules:
+            Fix for AndroidManifest.xml line 5: Create data_extraction_rules.xml:
             @@ -11 +11
             +         android:dataExtractionRules="@xml/data_extraction_rules"
-            res/xml/data_extraction_rules:
+            res/xml/data_extraction_rules.xml:
             @@ -1 +1
             + <data-extraction-rules>
             +     <cloud-backup>
@@ -2066,10 +2066,10 @@ class ManifestDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-            Fix for AndroidManifest.xml line 5: Create data_extraction_rules:
+            Fix for AndroidManifest.xml line 5: Create data_extraction_rules.xml:
             @@ -11 +11
             +         android:dataExtractionRules="@xml/data_extraction_rules"
-            res/xml/data_extraction_rules:
+            res/xml/data_extraction_rules.xml:
             @@ -1 +1
             + <!-- Our copyright here -->
             + <data-extraction-rules>
@@ -2111,13 +2111,13 @@ class ManifestDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-            Fix for AndroidManifest.xml line 4: Create data_extraction_rules:
+            Fix for AndroidManifest.xml line 4: Create data_extraction_rules.xml:
             @@ -9 +9
             -     <application android:allowBackup="false" >
             +     <application
             +         android:allowBackup="false"
             +         android:dataExtractionRules="@xml/data_extraction_rules" >
-            res/xml/data_extraction_rules:
+            res/xml/data_extraction_rules.xml:
             @@ -1 +1
             + <?xml version="1.0" encoding="utf-8"?>
             + <!--
