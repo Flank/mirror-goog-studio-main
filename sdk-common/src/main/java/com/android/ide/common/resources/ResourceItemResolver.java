@@ -31,6 +31,7 @@ import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceUrl;
 import java.util.List;
+import org.jetbrains.annotations.Contract;
 
 /**
  * Like {@link ResourceResolver} but for a single item, so it does not need the full resource maps
@@ -70,6 +71,7 @@ public class ResourceItemResolver extends RenderResources {
         myAppResources = appResources;
     }
 
+    @Contract("!null -> !null")
     @Override
     @Nullable
     public ResourceValue resolveResValue(@Nullable ResourceValue resValue) {
