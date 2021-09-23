@@ -48,4 +48,65 @@ public class TestInvokeSpecial {
         Assert.assertEquals(
                 "invokespecial (super.hash)", obj.callgetArrayValue(array, index), result);
     }
+
+    @org.junit.Test
+    public void testInvokeSuperParameters() throws Exception {
+        byte[] bc = buildClass(InvokeSpecialChild.class);
+        InvokeSpecialChild obj = new InvokeSpecialChild();
+        String type = classToType(InvokeSpecialChild.class);
+        Object result = null;
+        MethodBodyEvaluator method = null;
+
+        boolean z = true;
+        method = new MethodBodyEvaluator(bc, "callSuperParamBool(Z)Z");
+        result = method.eval(obj, type, new Object[] {z});
+        Assert.assertEquals("invokespecial bool", obj.callSuperParamBool(z), result);
+
+        char c = 'f';
+        method = new MethodBodyEvaluator(bc, "callSuperParamChar(C)C");
+        result = method.eval(obj, type, new Object[] {c});
+        Assert.assertEquals("invokespecial char", obj.callSuperParamChar(c), result);
+
+        byte b = 0x1;
+        method = new MethodBodyEvaluator(bc, "callSuperParamByte(B)B");
+        result = method.eval(obj, type, new Object[] {b});
+        Assert.assertEquals("invokespecial byte", obj.callSuperParamByte(b), result);
+
+        short s = 0x2;
+        method = new MethodBodyEvaluator(bc, "callSuperParamShort(S)S");
+        result = method.eval(obj, type, new Object[] {s});
+        Assert.assertEquals("invokespecial short ", obj.callSuperParamShort(s), result);
+
+        int i = 1000;
+        method = new MethodBodyEvaluator(bc, "callSuperParamInt(I)I");
+        result = method.eval(obj, type, new Object[] {i});
+        Assert.assertEquals("invokespecial int", obj.callSuperParamInt(i), result);
+
+        long j = 2000;
+        method = new MethodBodyEvaluator(bc, "callSuperParamLong(J)J");
+        result = method.eval(obj, type, new Object[] {j});
+        Assert.assertEquals("invokespecial long", obj.callSuperParamLong(j), result);
+
+        float f = 3000.0f;
+        method = new MethodBodyEvaluator(bc, "callSuperParamFloat(F)F");
+        result = method.eval(obj, type, new Object[] {f});
+        Assert.assertEquals("invokespecial float", obj.callSuperParamFloat(f), result);
+
+        double d = 4000.0;
+        method = new MethodBodyEvaluator(bc, "callSuperParamDouble(D)D");
+        result = method.eval(obj, type, new Object[] {d});
+        Assert.assertEquals("invokespecial double", obj.callSuperParamDouble(d), result);
+
+        Object o = Integer.valueOf(5000);
+        method =
+                new MethodBodyEvaluator(
+                        bc, "callSuperParamObject(Ljava/lang/Object;)Ljava/lang/Object;");
+        result = method.eval(obj, type, new Object[] {o});
+        Assert.assertEquals("invokespecial object", obj.callSuperParamObject(o), result);
+
+        int[] a = new int[] {6000};
+        method = new MethodBodyEvaluator(bc, "callSuperParamArray([I)[I");
+        result = method.eval(obj, type, new Object[] {a});
+        Assert.assertEquals("invokespecial array", obj.callSuperParamArray(a), result);
+    }
 }

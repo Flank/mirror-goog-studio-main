@@ -332,4 +332,14 @@ Java_com_android_tools_deploy_interpreter_JNI_invokespecialD(
   return env->CallNonvirtualDoubleMethodA(obj, cls, info.methodID(),
                                           info.values());
 }
+
+JNIEXPORT jchar JNICALL
+Java_com_android_tools_deploy_interpreter_JNI_invokespecialC(
+    JNIEnv* env, jclass, jobject obj, jclass cls, jstring method, jstring desc,
+    jobjectArray args, jintArray unbox) {
+  CallInfo info(env, cls, method, desc, args, unbox);
+  if (!info.Get()) return 0;
+  return env->CallNonvirtualCharMethodA(obj, cls, info.methodID(),
+                                        info.values());
+}
 }  // extern "C"

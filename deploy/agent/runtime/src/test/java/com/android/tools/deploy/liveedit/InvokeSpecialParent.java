@@ -23,4 +23,44 @@ public class InvokeSpecialParent {
     int getArrayValue(int[] array, int index) {
         return array[index];
     }
+
+    public boolean paramBoolean(boolean b) {
+        return b;
+    }
+
+    public char paramChar(char c) {
+        return c;
+    }
+
+    public byte paramByte(byte b) {
+        return b;
+    }
+
+    public short paramShort(short s) {
+        return s;
+    }
+
+    public int paramInt(int i) {
+        return i;
+    }
+
+    public long paramLong(long l) {
+        return l;
+    }
+
+    public float paramFloat(float f) {
+        return f;
+    }
+
+    public double paramDouble(double d) {
+        return d;
+    }
+
+    public Object paramObject(Object o) {
+        return o;
+    }
+
+    public int[] paramArray(int[] i) {
+        return i;
+    }
 }

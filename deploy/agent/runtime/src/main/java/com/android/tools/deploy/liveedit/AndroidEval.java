@@ -230,6 +230,7 @@ class AndroidEval implements Eval {
                         return makeValue(d, returnType);
                     }
                 case Type.OBJECT:
+                case Type.ARRAY:
                     {
                         Object o =
                                 JNI.invokespecialL(
@@ -238,7 +239,8 @@ class AndroidEval implements Eval {
                     }
                 default:
                     {
-                        String msg = String.format("invokespecial for return type %d", type);
+                        String fmt = "invokespecial error: Missing case for return type %d";
+                        String msg = String.format(fmt, type);
                         throw new IllegalStateException(msg);
                     }
             }
