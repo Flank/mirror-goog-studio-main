@@ -48,6 +48,7 @@ import ${superClassFqcn};
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
@@ -223,7 +224,7 @@ ${renderIf(isViewBindingSupported) {"""
         }
     };
 
-    private final Handler mHideHandler = new Handler();
+    private final Handler mHideHandler = new Handler(Looper.myLooper());
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {

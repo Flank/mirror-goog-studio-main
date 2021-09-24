@@ -25,6 +25,7 @@ package ${packageName};
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,7 +74,7 @@ public class BrowseErrorActivity extends FragmentActivity {
                 .add(R.id.main_browse_fragment, mSpinnerFragment)
                 .commit();
 
-        final Handler handler = new Handler();
+        final Handler handler = new Handler(Looper.myLooper());
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {

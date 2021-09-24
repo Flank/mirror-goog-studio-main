@@ -41,6 +41,7 @@ package ${packageName}
 
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -55,7 +56,7 @@ ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Langua
  * status bar and navigation/system bar) with user interaction.
  */
 class ${fragmentClass} : Fragment() {
-    private val hideHandler = Handler()
+    private val hideHandler = Handler(Looper.myLooper()!!)
     @Suppress("InlinedApi")
     private val hidePart2Runnable = Runnable {
         // Delayed removal of status and navigation bar
