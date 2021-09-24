@@ -94,8 +94,8 @@ maven_repository(
 # Test only dependencies that are not published to gmaven,
 # and are now just directly consumed as jars
 AGP_TEST_ONLY_DEPENDENCIES = [
-    "//tools/base/common:tools.fixtures",
-    "//tools/base/repository:tools.testlib",
+    "//tools/base/common:libtools.fixtures.jar",
+    "//tools/base/repository:libtools.testlib.jar",
 ]
 
 # The Android Gradle Plugin gradle build invokes this to
