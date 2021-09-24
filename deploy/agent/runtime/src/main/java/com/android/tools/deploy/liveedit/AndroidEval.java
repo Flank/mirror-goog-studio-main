@@ -43,49 +43,16 @@ class AndroidEval implements Eval {
     @NonNull
     @Override
     public Value getArrayElement(Value array, @NonNull Value index) {
-        try {
-            if (array.getAsmType().getDimensions() > 1) {
-                // This is multi-dimension array. We return an object array with dimension -1.
-                // e.g. [[I returns [I.
-                String subDescriptor = array.getAsmType().getDescriptor().substring(1);
-                Type type = Type.getType(subDescriptor);
-                return new ObjectValue(Array.get(array.obj(), index.getInt()), type);
-            }
-
-            // This is an array of dimension 1.
-            Type elementType = array.getAsmType().getElementType();
-            switch (elementType.getSort()) {
-                case Type.BOOLEAN:
-                    boolean b = Array.getBoolean(array.obj(), index.getInt());
-                    return new IntValue(b ? 1 : 0, Type.BOOLEAN_TYPE);
-                case Type.CHAR:
-                    return new IntValue(Array.getChar(array.obj(), index.getInt()), Type.CHAR_TYPE);
-                case Type.BYTE:
-                    return new IntValue(Array.getByte(array.obj(), index.getInt()), Type.BYTE_TYPE);
-                case Type.SHORT:
-                    return new IntValue(
-                            Array.getShort(array.obj(), index.getInt()), Type.SHORT_TYPE);
-                case Type.INT:
-                    return new IntValue(Array.getInt(array.obj(), index.getInt()), Type.INT_TYPE);
-                case Type.FLOAT:
-                    return new FloatValue(Array.getFloat(array.obj(), index.getInt()));
-                case Type.LONG:
-                    return new LongValue(Array.getLong(array.obj(), index.getInt()));
-                case Type.DOUBLE:
-                    return new DoubleValue(Array.getDouble(array.obj(), index.getInt()));
-                case Type.OBJECT:
-                    return new ObjectValue(Array.get(array.obj(), index.getInt()), elementType);
-                default:
-                    String msg =
-                            String.format(
-                                    "getArrayElement undefined for type '%s' ",
-                                    elementType.getClassName());
-                    throw new ClassNotFoundException(msg);
-            }
-        } catch (ClassNotFoundException e) {
-            handleThrowable(e);
+        if (array.getAsmType().getDimensions() > 1) {
+            // This is multi-dimension array. We return an object array with dimension -1.
+            // e.g. [[I returns [I.
+            String subDescriptor = array.getAsmType().getDescriptor().substring(1);
+            Type type = Type.getType(subDescriptor);
+            return new ObjectValue(Array.get(array.obj(), index.getInt()), type);
         }
-        throw new IllegalStateException();
+
+        Type elementType = array.getAsmType().getElementType();
+        return makeValue(Array.get(array.obj(), index.getInt()), elementType);
     }
 
     @NonNull
@@ -278,57 +245,16 @@ class AndroidEval implements Eval {
 
     @Override
     public void setArrayElement(Value array, Value index, @NonNull Value newValue) {
-        try {
-            Type elementType = array.getAsmType().getElementType();
-            Object arrayObject = array.obj();
-            int arrayIndex = index.getInt();
+        Type elementType = array.getAsmType().getElementType();
+        Object arrayObject = array.obj();
+        int arrayIndex = index.getInt();
 
-            // This is a multi-dimension array for which the incoming value MUST be an object.
-            if (array.getAsmType().getDimensions() > 1) {
-                Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
-                return;
-            }
-
-            switch (elementType.getSort()) {
-                case Type.INT:
-                    Array.setInt(arrayObject, arrayIndex, newValue.getInt());
-                    break;
-                case Type.BYTE:
-                    Array.setByte(arrayObject, arrayIndex, (byte) newValue.getInt());
-                    break;
-                case Type.OBJECT:
-                    Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
-                    break;
-                case Type.SHORT:
-                    Array.setShort(arrayObject, arrayIndex, (short) newValue.getInt());
-                    break;
-                case Type.CHAR:
-                    Array.setChar(arrayObject, arrayIndex, (char) newValue.getInt());
-                    break;
-                case Type.BOOLEAN:
-                    Array.setBoolean(arrayObject, arrayIndex, newValue.getBoolean());
-                    break;
-                case Type.LONG:
-                    Array.setLong(arrayObject, arrayIndex, newValue.getLong());
-                    break;
-                case Type.FLOAT:
-                    Array.setFloat(arrayObject, arrayIndex, newValue.getFloat());
-                    break;
-                case Type.DOUBLE:
-                    Array.setDouble(arrayObject, arrayIndex, newValue.getDouble());
-                    break;
-                default:
-                    String msg =
-                            String.format(
-                                    "setArrayElement undefined for type '%s' ",
-                                    newValue.getAsmType());
-                    throw new ClassNotFoundException(msg);
-            }
-            return;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        // This is a multi-dimension array for which the incoming value MUST be an object.
+        if (array.getAsmType().getDimensions() > 1) {
+            Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
+        } else {
+            Array.set(arrayObject, arrayIndex, newValue.obj(elementType));
         }
-        throw new IllegalStateException();
     }
 
     @Override
@@ -338,25 +264,7 @@ class AndroidEval implements Eval {
         try {
             Field field = Class.forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
-            if (description.getDesc().equals("I")) {
-                field.setInt(owner.obj(), ((IntValue) value).getValue());
-            } else if (description.getDesc().equals("Z")) {
-                field.setBoolean(owner.obj(), ((IntValue) value).getValue() == 1);
-            } else if (description.getDesc().equals("B")) {
-                field.setByte(owner.obj(), ((IntValue) value).getValue().byteValue());
-            } else if (description.getDesc().equals("C")) {
-                field.setChar(owner.obj(), (char) ((IntValue) value).getValue().intValue());
-            } else if (description.getDesc().equals("S")) {
-                field.setShort(owner.obj(), ((IntValue) value).getValue().shortValue());
-            } else if (description.getDesc().equals("D")) {
-                field.setDouble(owner.obj(), ((DoubleValue) value).getValue());
-            } else if (description.getDesc().equals("F")) {
-                field.setFloat(owner.obj(), ((FloatValue) value).getValue());
-            } else if (description.getDesc().equals("J")) {
-                field.setLong(owner.obj(), ((LongValue) value).getValue());
-            } else {
-                field.set(owner.obj(), value.obj());
-            }
+            field.set(owner.obj(), value.obj());
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
@@ -372,25 +280,7 @@ class AndroidEval implements Eval {
             Class<?> ownerClass = forName(ownerClassName);
             Field field = ownerClass.getDeclaredField(name);
             field.setAccessible(true);
-            if (description.getDesc().equals("I")) {
-                field.setInt(ownerClass, ((IntValue) value).getValue());
-            } else if (description.getDesc().equals("Z")) {
-                field.setBoolean(ownerClass, ((IntValue) value).getValue() == 1);
-            } else if (description.getDesc().equals("B")) {
-                field.setByte(ownerClass, ((IntValue) value).getValue().byteValue());
-            } else if (description.getDesc().equals("C")) {
-                field.setChar(ownerClass, (char) ((IntValue) value).getValue().intValue());
-            } else if (description.getDesc().equals("S")) {
-                field.setShort(ownerClass, ((IntValue) value).getValue().shortValue());
-            } else if (description.getDesc().equals("D")) {
-                field.setDouble(ownerClass, ((DoubleValue) value).getValue());
-            } else if (description.getDesc().equals("F")) {
-                field.setFloat(ownerClass, ((FloatValue) value).getValue());
-            } else if (description.getDesc().equals("J")) {
-                field.setLong(ownerClass, ((LongValue) value).getValue());
-            } else {
-                field.set(ownerClass, value.obj());
-            }
+            field.set(ownerClass, value.obj());
             return;
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
