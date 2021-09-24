@@ -293,4 +293,116 @@ class TestTarget {
     private static int lengthSumStatic(int[] first, String[] second) {
         return first.length + second.length;
     }
+
+    public static int testMultiIntArray() {
+        int acc = 0;
+        int [][] array = new int[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        int[] newArray = new int[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static int testMultiCharacterArray() {
+        int acc = 0;
+        char [][] array = new char[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        char[] newArray = new char[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static int testMultiByteArray() {
+        int acc = 0;
+        byte [][] array = new byte[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        byte[] newArray = new byte[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static int testMultiShortArray() {
+        int acc = 0;
+        short [][] array = new short[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        short[] newArray = new short[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static long testMultiLongArray() {
+        long acc = 0;
+        long [][] array = new long[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        long[] newArray = new long[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static float testMultiFloatArray() {
+        float acc = 0f;
+        float[][] array = new float[1][1];
+        array[0][0] = 2f;
+        acc += array[0][0];
+
+        float[] newArray = new float[1];
+        array[0] = newArray;
+        newArray[0] = 22f;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static double testMultiDoubleArray() {
+        double acc = 0;
+        double[][] array = new double[1][1];
+        array[0][0] = 2.0;
+        acc += array[0][0];
+
+        double[] newArray = new double[1];
+        array[0] = newArray;
+        newArray[0] = 22.0;
+        acc += array[0][0];
+
+        return acc;
+    }
+
+    public static Integer testMultiObjectArray() {
+        int acc = 0;
+        Integer[][] array = new Integer[1][1];
+        array[0][0] = 2;
+        acc += array[0][0];
+
+        Integer[] newArray = new Integer[1];
+        array[0] = newArray;
+        newArray[0] = 22;
+        acc += array[0][0];
+
+        return acc;
+    }
 }

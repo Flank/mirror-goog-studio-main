@@ -26,6 +26,8 @@ import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
 
+    private static final float NO_DELTA = 0.0f;
+
     @org.junit.Test
     public void testSimpleReturn() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
@@ -556,5 +558,83 @@ public class MethodBodyEvaluatorTest {
                         .evalStatic(new Object[0]);
         Integer i = (Integer) result;
         Assert.assertEquals("Array parameters", TestTarget.testArrayParameters(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayIntParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiIntArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Int get/set", TestTarget.testMultiIntArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayCharParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiCharacterArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Char get/set", TestTarget.testMultiCharacterArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayByteParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiByteArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Byte get/set", TestTarget.testMultiByteArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayShortParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiShortArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Short get/set", TestTarget.testMultiShortArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayLongParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiLongArray()J")
+                        .evalStatic(new Object[0]);
+        Long l = (Long) result;
+        Assert.assertEquals("Multi Array Long get/set", TestTarget.testMultiLongArray(), l.longValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayFloatParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiFloatArray()F")
+                        .evalStatic(new Object[0]);
+        Float f = (Float) result;
+        Assert.assertEquals(TestTarget.testMultiFloatArray(), f.floatValue(), NO_DELTA);
+    }
+    @org.junit.Test
+    public void testMultiArrayDoubleParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiDoubleArray()D")
+                        .evalStatic(new Object[0]);
+        Double d = (Double) result;
+        Assert.assertEquals(TestTarget.testMultiDoubleArray(), d.doubleValue(), NO_DELTA);
+    }
+
+    @org.junit.Test
+    public void testMultiArrayObjectParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiObjectArray()Ljava/lang/Integer;")
+                        .evalStatic(new Object[0]);
+        Assert.assertEquals("Multi Array Object get/set", TestTarget.testMultiObjectArray(), result);
     }
 }

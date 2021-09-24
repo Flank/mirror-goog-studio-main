@@ -44,6 +44,15 @@ class AndroidEval implements Eval {
     @Override
     public Value getArrayElement(Value array, @NonNull Value index) {
         try {
+            if (array.getAsmType().getDimensions() > 1) {
+                // This is multi-dimension array. We return an object array with dimension -1.
+                // e.g. [[I returns [I.
+                String subDescriptor = array.getAsmType().getDescriptor().substring(1);
+                Type type = Type.getType(subDescriptor);
+                return new ObjectValue(Array.get(array.obj(), index.getInt()), type);
+            }
+
+            // This is an array of dimension 1.
             Type elementType = array.getAsmType().getElementType();
             switch (elementType.getSort()) {
                 case Type.BOOLEAN:
@@ -272,6 +281,12 @@ class AndroidEval implements Eval {
             Type elementType = array.getAsmType().getElementType();
             Object arrayObject = array.obj();
             int arrayIndex = index.getInt();
+
+            // This is a multi-dimension array for which the incoming value MUST be an object.
+            if (array.getAsmType().getDimensions() > 1) {
+                Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
+                return;
+            }
 
             switch (elementType.getSort()) {
                 case Type.INT:
