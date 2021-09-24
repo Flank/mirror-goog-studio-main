@@ -101,10 +101,11 @@ class AndroidEval implements Eval {
         String name = description.getName();
         String type = description.getDesc();
         try {
-            Field field = owner.getClass().getDeclaredField(name);
+            String ownerClass = description.getOwnerInternalName();
+            Field field = forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
             return makeValue(field.get(owner), Type.getType(type));
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
         }
         throw new IllegalStateException();

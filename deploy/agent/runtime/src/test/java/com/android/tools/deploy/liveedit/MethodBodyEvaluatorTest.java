@@ -635,6 +635,23 @@ public class MethodBodyEvaluatorTest {
         Object result =
                 new MethodBodyEvaluator(classInput, "testMultiObjectArray()Ljava/lang/Integer;")
                         .evalStatic(new Object[0]);
-        Assert.assertEquals("Multi Array Object get/set", TestTarget.testMultiObjectArray(), result);
+        Assert.assertEquals(
+                "Multi Array Object get/set", TestTarget.testMultiObjectArray(), result);
+    }
+
+    @org.junit.Test
+    public void testAccessProtectedParent() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        Child child = new Child(0);
+        int protectedFieldValue = 5;
+        Object result =
+                new MethodBodyEvaluator(classInput, "accessParentProtectedField(I)I")
+                        .eval(child, Child.class.getTypeName(), new Object[] {protectedFieldValue});
+        Integer i = (Integer) result;
+
+        Assert.assertEquals(
+                "Accessed parent field",
+                child.accessParentProtectedField(protectedFieldValue),
+                i.intValue());
     }
 }

@@ -32,4 +32,9 @@ public class Child extends Parent {
     Parent callProtectedConstructor() {
         return new Parent(1, 2);
     }
+
+    int accessParentProtectedField(int v) {
+        super.protectedField = v;
+        return super.protectedField;
+    }
 }

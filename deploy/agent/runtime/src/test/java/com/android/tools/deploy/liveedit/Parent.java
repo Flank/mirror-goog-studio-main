@@ -18,6 +18,7 @@ package com.android.tools.deploy.liveedit;
 public class Parent {
 
     protected int id = 0xFAB;
+    protected int protectedField;
 
     public Parent() {}
 
