@@ -49,17 +49,11 @@ class LintSystemPropertiesTest {
         val systemProperties =
             listOf(
                 "android.lint.log-jar-problems",
-                "gradle.user.home",
-                "LINT_API_DATABASE",
                 "java.vendor",
                 "java.version",
-                "com.android.tools.lint.bindir",
-                "lint.configuration.override",
                 "lint.nullness.ignore-deprecated",
                 "lint.unused-resources.exclude-tests",
-                "lint.unused-resources.include-tests",
-                "com.android.tools.lint.workdir",
-                "user.home"
+                "lint.unused-resources.include-tests"
             )
 
         for (systemProperty in systemProperties) {
@@ -84,7 +78,8 @@ class LintSystemPropertiesTest {
             listOf(
                 "lint.autofix",
                 "lint.baselines.continue",
-                "lint.html.prefs"
+                "lint.html.prefs",
+                "user.home"
             )
 
         for (systemProperty in reportTaskSystemProperties) {

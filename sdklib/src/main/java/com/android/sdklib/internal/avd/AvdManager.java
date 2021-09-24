@@ -500,7 +500,7 @@ public class AvdManager {
             } catch (AndroidLocationsException e) {
                 throw e;
             } catch (Exception e) {
-                log.warning("Exception during AvdManager initialization: %1$s", e);
+                log.error(e, "Exception during AvdManager initialization");
                 return null;
             }
             mManagers.put(key, new WeakReference<>(manager));

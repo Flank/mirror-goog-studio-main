@@ -43,6 +43,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUMethod
+import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
@@ -217,8 +218,11 @@ class SamDetector : Detector(), SourceCodeScanner {
                         }
                     } else if (parent is UBinaryExpression) {
                         val kind = parent.operator
-                        if (kind == UastBinaryOperator.IDENTITY_EQUALS ||
-                            kind == UastBinaryOperator.IDENTITY_NOT_EQUALS
+                        if ((
+                            kind == UastBinaryOperator.IDENTITY_EQUALS ||
+                                kind == UastBinaryOperator.IDENTITY_NOT_EQUALS
+                            ) &&
+                            !parent.rightOperand.isNullLiteral()
                         ) {
                             storesLambda = true
                         } else if (kind == UastBinaryOperator.ASSIGN && parent.rightOperand == node) {

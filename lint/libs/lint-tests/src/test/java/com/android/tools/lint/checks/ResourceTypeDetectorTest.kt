@@ -2151,4 +2151,37 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             """
         )
     }
+
+    fun testCornerCase() {
+        // This test case was broken for parenthesis mode until the corresponding fix went in
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+
+                import androidx.annotation.DrawableRes;
+
+                public abstract class ResourceTypes {
+                    public void testResourceTypeParameters(Context context) {
+                        if (testResourceTypeReturnValues(context, true) == R.string.app_name) {
+                        }
+                    }
+
+                    @DrawableRes abstract int testResourceTypeReturnValues(Context context, boolean useString);
+                }
+                """
+            ).indented(),
+            rClass("test.pkg", "@string/app_name"),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/ResourceTypes.java:9: Error: Expected resource of type drawable [ResourceType]
+                    if (testResourceTypeReturnValues(context, true) == R.string.app_name) {
+                                                                       ~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

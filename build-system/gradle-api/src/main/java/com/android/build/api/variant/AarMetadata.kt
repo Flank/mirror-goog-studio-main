@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant
 
+import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
@@ -28,4 +29,14 @@ interface AarMetadata {
      * module must use in order to import this library.
      */
     val minCompileSdk: Property<Int>
+
+    /**
+     * Minimum Android Gradle Plugin version needed to consume this library. This is the minimum AGP
+     * version a module must use in order to import this library.
+     *
+     * minAgpVersion must be a stable AGP version, and it must be formatted with major, minor, and
+     * micro values (for example, "4.0.0").
+     */
+    @get:Incubating
+    val minAgpVersion: Property<String>
 }

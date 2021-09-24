@@ -55,7 +55,6 @@
   </mainArtifact>
   <androidTestArtifact
       applicationId="com.example.android.lint.kotlin.test"
-      generatedSourceFolders="build/generated/ap_generated_sources/debugAndroidTest/out:build/generated/aidl_source_output_dir/debugAndroidTest/out:build/generated/source/buildConfig/androidTest/debug:build/generated/renderscript_source_output_dir/debugAndroidTest/out"
       generatedResourceFolders="build/generated/res/rs/androidTest/debug:build/generated/res/resValues/androidTest/debug">
   </androidTestArtifact>
   <testArtifact>

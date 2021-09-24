@@ -46,8 +46,13 @@ class CacheabilityTestHelper(
 
     /** Runs the specified tasks on both projects. */
     fun runTasks(vararg tasks: String): CacheabilityTestHelperAssertionStage {
+        for (project in listOf(projectCopy1, projectCopy2)) {
+            setBuildCacheDirForProject(project, buildCacheDir)
+            // Set rootProject.name because the maven group is an input for the lint analysis task
+            TestFileUtils.appendToFile(project.settingsFile, "\n\nrootProject.name = \"Project\"\n")
+        }
+
         // Run tasks on the first project
-        setBuildCacheDirForProject(projectCopy1, buildCacheDir)
         projectCopy1
             .executor()
             .withArgument("--build-cache")
@@ -58,7 +63,6 @@ class CacheabilityTestHelper(
         assertThat(buildCacheDir).exists()
 
         // Run tasks on the second project
-        setBuildCacheDirForProject(projectCopy2, buildCacheDir)
         val result =
             projectCopy2
                 .executor()

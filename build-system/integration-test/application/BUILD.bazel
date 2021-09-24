@@ -257,6 +257,7 @@ single_gradle_integration_test_per_source(
             "src/test/java/com/android/build/gradle/integration/testing/**",
             "src/test/java/com/android/build/gradle/integration/resources/**",
             "src/test/java/com/android/build/gradle/integration/dependencies/**",
+            "src/test/java/com/android/build/gradle/integration/application/Java11CompileTest.kt",
         ],
     ),
     data = TEST_DATA + OLD_SDKS,
@@ -276,6 +277,23 @@ single_gradle_integration_test_per_source(
     very_flaky_targets = [
         "GradlePluginMemoryLeakTest",  # b/153972155
     ],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "java-11-compile-tests",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/application/Java11CompileTest.kt",
+        ],
+    ),
+    data = TEST_DATA + ["//prebuilts/studio/jdk"],
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:dagger_prebuilts",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+    ],
+    resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
 

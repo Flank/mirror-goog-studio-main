@@ -209,4 +209,5 @@ fun getBuildSrcPlugins(classLoader: ClassLoader): Set<String> {
     return buildSrcPlugins
 }
 
+const val ANDROID_GRADLE_PLUGIN_ID = "com.android.base"
 private const val AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED = "AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED"

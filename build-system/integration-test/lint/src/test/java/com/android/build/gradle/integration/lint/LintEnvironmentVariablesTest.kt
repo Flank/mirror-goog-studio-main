@@ -48,16 +48,10 @@ class LintEnvironmentVariablesTest {
 
         val environmentVariables =
             listOf(
-                "ANDROID_HOME",
                 "ANDROID_LINT_INCLUDE_LDPI",
                 "ANDROID_LINT_MAX_DEPTH",
                 "ANDROID_LINT_MAX_VIEW_COUNT",
-                "ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED",
-                "ANDROID_SDK_ROOT",
-                "JAVA_HOME",
-                "LINT_API_DATABASE",
-                "LINT_XML_ROOT",
-                "LINT_OVERRIDE_CONFIGURATION"
+                "ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED"
             )
 
         for (environmentVariable in environmentVariables) {
@@ -78,11 +72,19 @@ class LintEnvironmentVariablesTest {
             project.executor().run(":lintDebug")
         }
 
-        // check that the lint reporting task is not up-to-date if we run with
-        // LINT_HTML_PREFS=foo (the lint analysis task should be up-to-date)
-        project.executor()
-            .withEnvironmentVariables(mapOf("LINT_HTML_PREFS" to "foo"))
-            .run(":lintDebug")
-            .also { result -> assertThat(result.getTask(":lintReportDebug")).didWork() }
+        val reportTaskEnvironmentVariables =
+            listOf(
+                "LINT_HTML_PREFS",
+                "LINT_XML_ROOT"
+            )
+
+        for (environmentVariable in reportTaskEnvironmentVariables) {
+            // check that the lint reporting task is not up-to-date if we set the environment
+            // variable (the lint analysis task should be up-to-date)
+            project.executor()
+                .withEnvironmentVariables(mapOf(environmentVariable to "foo"))
+                .run(":lintDebug")
+                .also { result -> assertThat(result.getTask(":lintReportDebug")).didWork() }
+        }
     }
 }

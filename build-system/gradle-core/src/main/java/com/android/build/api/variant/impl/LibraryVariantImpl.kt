@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
@@ -123,6 +124,9 @@ open class  LibraryVariantImpl @Inject constructor(
     override val aarMetadata: AarMetadata =
         internalServices.newInstance(AarMetadata::class.java).also {
             it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+            it.minAgpVersion.set(
+                variantDslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
+            )
         }
 
     // ---------------------------------------------------------------------------------------------

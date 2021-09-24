@@ -318,6 +318,43 @@ class MissingClassDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testManifestPlaceholders() {
+        lint().issues(MISSING).files(
+            manifest(
+                """
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        package="test.pkg"
+                        android:versionCode="1"
+                        android:versionName="1.0" >
+                        <uses-sdk android:minSdkVersion="10" />
+                        <application
+                            android:icon="@drawable/ic_launcher"
+                            android:label="@string/app_name" >
+                            <activity android:name="＄{activityName}" /> <!-- OK, can't resolve place holder -->
+                            <activity android:name="＄{myPrefix}ActivityBase" /> <!-- ERROR -->
+                        </application>
+                    </manifest>
+                    """
+            ).indented(),
+            gradle(
+                """
+                android {
+                  defaultConfig {
+                    manifestPlaceholders = [ "myPrefix": "My" ]
+                  }
+                }
+                """
+            )
+        ).run().expect(
+            """
+            src/main/AndroidManifest.xml:10: Error: Class referenced in the manifest, test.pkg.MyActivityBase, was not found in the project or the libraries [MissingClass]
+                    <activity android:name="＄{myPrefix}ActivityBase" /> <!-- ERROR -->
+                                            ~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     fun testManifestWrongType() {
         lint().issues(MISSING, INSTANTIATABLE).files(
             manifest(

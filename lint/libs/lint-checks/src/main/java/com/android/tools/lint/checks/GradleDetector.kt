@@ -844,9 +844,16 @@ open class GradleDetector : Detector(), GradleScanner {
                         getGoogleMavenRepoVersion(context, dependency, filter)
                     )
 
-                    // Compare with what's in the Gradle cache.
-                    newerVersion =
-                        GradleVersion.max(newerVersion, findCachedNewerVersion(dependency, filter))
+                    // Compare with what's in the Gradle cache, except when lint is invoked from
+                    // Gradle (because checking the Gradle cache is incompatible with Gradle task
+                    // cacheability).
+                    if (!LintClient.isGradle) {
+                        newerVersion =
+                            GradleVersion.max(
+                                newerVersion,
+                                findCachedNewerVersion(dependency, filter)
+                            )
+                    }
 
                     // Compare with IDE's repository cache, if available.
                     newerVersion = GradleVersion.max(

@@ -29,6 +29,9 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.psi.JavaElementVisitor
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -266,6 +269,73 @@ class DefaultJavaEvaluatorTest {
                 Severity.ERROR,
                 Implementation(
                     RangeTestDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
+                )
+            )
+        }
+    }
+
+    @Test
+    fun test200186871() {
+        // Regression test for http://b/200186871
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                object Test {
+                    fun test() {
+                        TargetClass.foo()
+                        OtherClass.foo()
+                    }
+                }
+
+                object TargetClass {
+                    fun foo() {}
+                }
+
+                object OtherClass {
+                    fun foo() {}
+                }
+                """
+            ).indented()
+        )
+            .sdkHome(TestUtils.getSdk().toFile())
+            .issues(MethodMatchesDetector.ISSUE)
+            .run().expect(
+                """
+                src/test/pkg/Test.kt:11: Error: Found reference to test.pkg.TargetClass.foo [_FakeIssueId]
+                    fun foo() {}
+                        ~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    class MethodMatchesDetector : Detector(), Detector.UastScanner {
+
+        override fun getApplicableMethodNames(): List<String> = listOf("foo")
+
+        override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+            if (context.evaluator.methodMatches(method, "test.pkg.TargetClass", false)) {
+                context.report(
+                    ISSUE,
+                    context.getNameLocation(method),
+                    "Found reference to `test.pkg.TargetClass.foo`")
+            }
+        }
+
+        companion object {
+            @JvmField
+            val ISSUE = Issue.create(
+                "_FakeIssueId",
+                "Fake description",
+                "Fake explanation",
+                Category.CORRECTNESS,
+                6,
+                Severity.ERROR,
+                Implementation(
+                    MethodMatchesDetector::class.java,
                     Scope.JAVA_FILE_SCOPE
                 )
             )

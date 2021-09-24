@@ -634,9 +634,8 @@ object LintResourcePersistence {
                     }
                     type == ResourceType.STYLEABLE -> {
                         val style = StyleableResourceValueImpl(namespace, name, null, library)
-                        //noinspection ExpensiveAssertion
-
-                        assert(reader.next() == '-')
+                        val separator = reader.next()
+                        assert(separator == '-')
                         while (!reader.eof()) {
                             val attrName = reader.readString(':')
                             val attr = AttrResourceValueImpl(namespace, attrName, library)

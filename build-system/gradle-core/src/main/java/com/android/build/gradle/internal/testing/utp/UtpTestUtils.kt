@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.core.VariantType
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
 import com.android.utils.ILogger
@@ -171,12 +172,11 @@ private fun runUtpTestSuite(
     workQueue: WorkQueue
 ) {
     val utpRunTempDir = createUtpTempDirectory("utpRunTemp")
-    val runnerConfigProtoFile =
-        File.createTempFile("runnerConfig", ".pb").also { file ->
-            FileOutputStream(file).use { writer ->
-                config.runnerConfig(resultListenerServerMetadata, utpRunTempDir).writeTo(writer)
-            }
+    val runnerConfigProtoFile = createUtpTempFile("runnerConfig", ".pb").also { file ->
+        FileOutputStream(file).use { writer ->
+            config.runnerConfig(resultListenerServerMetadata, utpRunTempDir).writeTo(writer)
         }
+    }
     val serverConfigProtoFile = createUtpTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
             config.serverConfig.writeTo(writer)
@@ -231,14 +231,27 @@ fun getUtpPreferenceRootDir(): File {
     return utpPrefRootDir
 }
 
+/**
+ * Returns true when UTP should be enabled, false otherwise.
+ *
+ * @param variantType a variant type of the tested APK. Null when it is unknown.
+ */
 fun shouldEnableUtp(
     projectOptions: ProjectOptions,
-    testOptions: TestOptions?
+    testOptions: TestOptions?,
+    variantType: VariantType?,
 ): Boolean {
     if (projectOptions[BooleanOption.ENABLE_TEST_SHARDING]) {
         Logging.getLogger("UtpTestUtils").warn(
-            "Disabling ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM option because" +
-                    "ENABLE_TEST_SHARDING is specified. ENABLE_TEST_SHARDING is not" +
+            "Disabling ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM option because " +
+                    "ENABLE_TEST_SHARDING is specified. ENABLE_TEST_SHARDING is not " +
+                    "supported by ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM yet.")
+        return false
+    }
+    if (variantType != null && variantType.isDynamicFeature) {
+        Logging.getLogger("UtpTestUtils").warn(
+            "Disabling ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM option because " +
+                    "this is a dynamic-feature module. Dynamic-feature module is not " +
                     "supported by ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM yet.")
         return false
     }

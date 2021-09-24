@@ -27,9 +27,10 @@ import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.PLATFORM_ANNOTATIONS_PREFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
+import com.android.tools.lint.detector.api.AnnotationInfo
+import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
-import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_REFERENCE
 import com.android.tools.lint.detector.api.Category
@@ -44,7 +45,6 @@ import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
@@ -72,7 +72,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = when (type) {
-        METHOD_CALL, METHOD_CALL_CLASS, METHOD_CALL_PARAMETER, METHOD_REFERENCE -> true
+        METHOD_CALL, METHOD_CALL_PARAMETER, METHOD_REFERENCE -> true
         else -> false
     }
 
@@ -87,59 +87,42 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         visitedAnnotationUsages.clear()
     }
 
-    /**
-     * Handles a given UAST node relevant to our annotations.
-     *
-     * [com.android.tools.lint.client.api.AnnotationHandler] will call
-     * us repeatedly (once for every element in [annotations]) if there
-     * are multiple annotations on the target method or method parameter
-     * (see [checkThreading]), but we check every UAST node only once,
-     * against all annotations on the target and the caller at once.
-     *
-     * The reason for this is that depending on [type], [annotations] is
-     * populated from either the target ([METHOD_CALL]) or the caller
-     * ([METHOD_CALL_PARAMETER]), which makes it hard to handle the two
-     * cases consistently.
-     *
-     * Marking the node also means we will ignore class-level
-     * annotations if method-level annotations were present, since
-     * [com.android.tools.lint.client.api.AnnotationHandler] handles
-     * [METHOD_CALL] before [METHOD_CALL_CLASS].
-     */
     override fun visitAnnotationUsage(
         context: JavaContext,
-        usage: UElement,
-        type: AnnotationUsageType,
-        annotation: UAnnotation,
-        qualifiedName: String,
-        method: PsiMethod?,
-        referenced: PsiElement?,
-        annotations: List<UAnnotation>,
-        allMemberAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>,
-        allPackageAnnotations: List<UAnnotation>
+        element: UElement,
+        annotationInfo: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
     ) {
-        if (method == null) return
-        val usagePsi = usage.sourcePsi ?: return
+        if (usageInfo.anyCloser { it.isThreadingAnnotation() }) {
+            return
+        }
+
+        val method = usageInfo.referenced as? PsiMethod ?: return
+
+        // Make sure we're only checking the same underlying source element once,
+        // since we're listening for both calls and lambda references and sometimes
+        // this ends up getting the same element checked twice (which would result
+        // in duplicate reports)
+        val usagePsi = element.sourcePsi ?: return
         if (!visitedAnnotationUsages.add(usagePsi)) return
 
         // Meaning of the arguments we are given depends on `type`, get what we need accordingly:
-        when (type) {
-            METHOD_CALL, METHOD_CALL_CLASS -> {
+        when (usageInfo.type) {
+            METHOD_CALL -> {
                 checkThreading(
                     context,
-                    usage,
+                    element,
                     method,
-                    getThreadContext(context, usage) ?: return,
+                    getThreadContext(context, element) ?: return,
                     getThreadsFromMethod(context, method) ?: return
                 )
             }
             METHOD_CALL_PARAMETER, METHOD_REFERENCE -> {
-                val reference = usage as? UCallableReferenceExpression ?: return
+                val reference = element as? UCallableReferenceExpression ?: return
                 val referencedMethod = reference.resolve() as? PsiMethod ?: return
                 checkThreading(
                     context,
-                    usage,
+                    element,
                     referencedMethod,
                     getThreadsFromExpressionContext(context, reference) ?: return,
                     getThreadsFromMethod(context, referencedMethod) ?: return,
@@ -211,13 +194,6 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         )
         val location = context.getLocation(node)
         report(context, THREAD, node, location, message)
-    }
-
-    private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
-        val signature = this.qualifiedName
-        return signature != null &&
-            signature.endsWith(THREAD_SUFFIX) &&
-            (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature) || isPlatformAnnotation(signature))
     }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
@@ -475,4 +451,13 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
     }
+}
+
+fun AnnotationInfo.isThreadingAnnotation(): Boolean = qualifiedName.isThreadingAnnotation()
+private fun PsiAnnotation.isThreadingAnnotation(): Boolean = qualifiedName?.isThreadingAnnotation() ?: false
+
+private fun String.isThreadingAnnotation(): Boolean {
+    val signature = this
+    return signature.endsWith(THREAD_SUFFIX) &&
+        (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature) || isPlatformAnnotation(signature))
 }

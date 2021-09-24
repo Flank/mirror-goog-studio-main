@@ -65,12 +65,26 @@ class KotlinDslTest {
     }
 
     @Test
+    fun testCompileSdk() {
+        val androidImpl = android as BaseAppModuleExtension
+
+        android.compileSdk = 28
+        assertThat(androidImpl.compileSdkVersion).isEqualTo("android-28")
+
+        android.compileSdkExtension = 2
+        assertThat(androidImpl.compileSdkVersion).isEqualTo("android-28-ext2")
+
+        android.compileSdk = null
+        assertThat(androidImpl.compileSdkVersion).isNull()
+    }
+
+    @Test
     fun testCompileSdkPreview() {
         android.compileSdk = 28
-        assertThat(android.compileSdkPreview).isEqualTo("28")
+        assertThat(android.compileSdkPreview).isNull()
 
-        android.compileSdkPreview = "29"
-        assertThat(android.compileSdkPreview).isEqualTo("29")
+        assertThat(attempt { android.compileSdkPreview = "29" })
+            .isEqualTo("Invalid Preview value '29'.")
 
         android.compileSdkPreview = "S"
         assertThat(android.compileSdkPreview).isEqualTo("S")
@@ -98,9 +112,26 @@ class KotlinDslTest {
         android.compileSdkVersion("android-S")
         assertThat(android.compileSdkPreview).isEqualTo("S")
 
-        android.compileSdkVersion("MadeUp")
+        assertThat(attempt { android.compileSdkVersion("MadeUp") }).isEqualTo(
+            """
+                Unsupported value: MadeUp. Format must be one of:
+                - android-31
+                - android-31-ext2
+                - android-T
+                - vendorName:addonName:31
+            """.trimIndent()
+        )
         assertThat(android.compileSdk).isNull()
         assertThat(android.compileSdkPreview).isNull()
+    }
+
+    private inline fun attempt(action: () -> Unit): String? {
+        return try {
+            action()
+            null
+        } catch (t: Throwable) {
+            t.message
+        }
     }
 
     @Test
@@ -111,7 +142,7 @@ class KotlinDslTest {
         }
         assertThat(exception).hasMessageThat().isEqualTo(
             """
-                It is too late to set compileSdkVersion
+                It is too late to set compileSdk
                 It has already been read to configure this project.
                 Consider either moving this call to be during evaluation,
                 or using the variant API.""".trimIndent()

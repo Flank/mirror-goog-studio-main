@@ -785,6 +785,8 @@ interface CommonExtension<
      */
     var compileSdk: Int?
 
+    var compileSdkExtension: Int?
+
     /**
      * Specify a preview API to compile your project against.
      *

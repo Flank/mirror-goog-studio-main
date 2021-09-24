@@ -33,6 +33,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -124,8 +125,7 @@ class ArtifactCollectionsInputsImpl constructor(
             AndroidArtifacts.ArtifactType.LINT
         )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val runtimeLintJarsFileCollection: FileCollection
         get() = runtimeLintJars.artifactFiles
 
@@ -138,8 +138,7 @@ class ArtifactCollectionsInputsImpl constructor(
             AndroidArtifacts.ArtifactType.LINT
         )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val compileLintJarsFileCollection: FileCollection
         get() = compileLintJars.artifactFiles
 
@@ -171,8 +170,7 @@ class Level1RuntimeArtifactCollections(variantDependencies: VariantDependencies)
             AndroidArtifacts.ArtifactScope.ALL, AndroidArtifacts.ArtifactType.AAR_OR_JAR
         )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val runtimeArtifactsFileCollection: FileCollection
         get() = runtimeArtifacts.artifactFiles
 
@@ -189,8 +187,7 @@ class Level1RuntimeArtifactCollections(variantDependencies: VariantDependencies)
         AndroidArtifacts.ArtifactScope.EXTERNAL, AndroidArtifacts.ArtifactType.PROCESSED_JAR
     )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val runtimeExternalJarsFileCollection: FileCollection
         get() = runtimeExternalJars.artifactFiles
 }
@@ -236,8 +233,7 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactType.AAR_OR_JAR
     )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val allFileCollection: FileCollection
         get() = all.artifactFiles
 
@@ -285,8 +281,7 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactType.JAR
     )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val projectJarsFileCollection: FileCollection
         get() = projectJars.artifactFiles
 

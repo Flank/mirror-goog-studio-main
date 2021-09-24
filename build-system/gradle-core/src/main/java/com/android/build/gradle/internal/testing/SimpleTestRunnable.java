@@ -247,12 +247,14 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 additionalTestOutputDir =
                         findAdditionalTestOutputDirectoryOnDevice(device, testData);
 
-                MultiLineReceiver receiver = getOutputReceiver();
-                String mkdirp = "mkdir -p " + additionalTestOutputDir;
-                executeShellCommand(mkdirp, receiver);
+                if (additionalTestOutputDir != null) {
+                    MultiLineReceiver receiver = getOutputReceiver();
+                    String mkdirp = "mkdir -p " + additionalTestOutputDir;
+                    executeShellCommand(mkdirp, receiver);
 
-                setUpDirectories(additionalTestOutputDir, userId);
-                runner.setAdditionalTestOutputLocation(additionalTestOutputDir);
+                    setUpDirectories(additionalTestOutputDir, userId);
+                    runner.setAdditionalTestOutputLocation(additionalTestOutputDir);
+                }
             }
 
             if (testData.isTestCoverageEnabled()) {

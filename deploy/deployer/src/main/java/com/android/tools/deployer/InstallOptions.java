@@ -23,17 +23,23 @@ import java.util.List;
 
 public final class InstallOptions {
 
-    private final List<String> flags;
+    private final List<String> allFlags;
+    private final List<String> userFlags;
 
     private final Canceller canceller;
 
-    private InstallOptions(List<String> flags, Canceller canceller) {
-        this.flags = flags;
+    private InstallOptions(List<String> allFlags, List<String> userFlags, Canceller canceller) {
+        this.allFlags = allFlags;
+        this.userFlags = userFlags;
         this.canceller = canceller;
     }
 
     public List<String> getFlags() {
-        return flags;
+        return allFlags;
+    }
+
+    public List<String> getUserFlags() {
+        return userFlags;
     }
 
     public Canceller getCancelChecker() {
@@ -46,11 +52,13 @@ public final class InstallOptions {
 
     public static final class Builder {
         private final List<String> flags;
+        private final List<String> userFlags;
 
         private Canceller canceller = Canceller.NO_OP;
 
         private Builder() {
             this.flags = new ArrayList<>();
+            this.userFlags = new ArrayList<>();
         }
 
         // Allows test packages to be installed.
@@ -105,6 +113,7 @@ public final class InstallOptions {
                 return this;
             }
             flags.addAll(Arrays.asList(userSpecifiedFlags));
+            userFlags.addAll(Arrays.asList(userSpecifiedFlags));
             return this;
         }
 
@@ -113,6 +122,7 @@ public final class InstallOptions {
                 return this;
             }
             flags.add(userSpecifiedFlag);
+            userFlags.add(userSpecifiedFlag);
             return this;
         }
 
@@ -122,7 +132,7 @@ public final class InstallOptions {
         }
 
         public InstallOptions build() {
-            return new InstallOptions(flags, canceller);
+            return new InstallOptions(flags, userFlags, canceller);
         }
     }
 
@@ -135,11 +145,11 @@ public final class InstallOptions {
             return false;
         }
         InstallOptions that = (InstallOptions) o;
-        return flags.equals(that.flags);
+        return allFlags.equals(that.allFlags);
     }
 
     @Override
     public int hashCode() {
-        return flags.hashCode();
+        return allFlags.hashCode();
     }
 }

@@ -18,16 +18,19 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
+import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginVersion
+import com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
@@ -48,8 +51,10 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     abstract val aarMetadataVersion: Property<String>
 
     @get:Input
-    @get:Optional
     abstract val minCompileSdk: Property<Int>
+
+    @get:Input
+    abstract val minAgpVersion: Property<String>
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(AarMetadataWorkAction::class.java) {
@@ -58,6 +63,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.minCompileSdk.set(minCompileSdk)
+            it.minAgpVersion.set(minAgpVersion)
         }
     }
 
@@ -88,6 +94,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             task.aarFormatVersion.setDisallowChanges(AAR_FORMAT_VERSION)
             task.aarMetadataVersion.setDisallowChanges(AAR_METADATA_VERSION)
             task.minCompileSdk.setDisallowChanges(creationConfig.aarMetadata.minCompileSdk)
+            task.minAgpVersion.setDisallowChanges(creationConfig.aarMetadata.minAgpVersion)
         }
     }
 
@@ -97,6 +104,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             "META-INF/com/android/build/gradle/$AAR_METADATA_FILE_NAME"
         const val AAR_FORMAT_VERSION = "1.0"
         const val AAR_METADATA_VERSION = "1.0"
+        const val DEFAULT_MIN_AGP_VERSION = "1.0.0"
     }
 }
 
@@ -104,11 +112,26 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 abstract class AarMetadataWorkAction: ProfileAwareWorkAction<AarMetadataWorkParameters>() {
 
     override fun run() {
+        val minAgpVersion = parameters.minAgpVersion.get()
+        val parsedMinAgpVersion = tryParseStableAndroidGradlePluginVersion(minAgpVersion)
+            ?: throw RuntimeException(
+                "The specified minAgpVersion ($minAgpVersion) is not valid. The minAgpVersion " +
+                        "must be a stable AGP version, formatted with major, minor, and micro " +
+                        "values (for example \"4.0.0\")."
+            )
+        val currentAgpVersion = parseAndroidGradlePluginVersion(ANDROID_GRADLE_PLUGIN_VERSION)
+        if (parsedMinAgpVersion > currentAgpVersion) {
+            throw RuntimeException(
+                "The specified minAgpVersion ($minAgpVersion) is not valid because it is a later " +
+                        "version than the version of AGP used for this build ($currentAgpVersion)."
+            )
+        }
         writeAarMetadataFile(
             parameters.output.get().asFile,
             parameters.aarFormatVersion.get(),
             parameters.aarMetadataVersion.get(),
-            parameters.minCompileSdk.get()
+            parameters.minCompileSdk.get(),
+            parameters.minAgpVersion.get()
         )
     }
 }
@@ -119,6 +142,7 @@ abstract class AarMetadataWorkParameters: ProfileAwareWorkAction.Parameters() {
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
     abstract val minCompileSdk: Property<Int>
+    abstract val minAgpVersion: Property<String>
 }
 
 /** Writes an AAR metadata file with the given parameters */
@@ -126,14 +150,16 @@ fun writeAarMetadataFile(
     file: File,
     aarFormatVersion: String,
     aarMetadataVersion: String,
-    minCompileSdk: Int
+    minCompileSdk: Int,
+    minAgpVersion: String
 ) {
     // We write the file manually instead of using the java.util.Properties API because (1) that API
     // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
     // timestamp in the file.
-    val stringBuilder = StringBuilder()
-    stringBuilder.appendln("$AAR_FORMAT_VERSION_PROPERTY=$aarFormatVersion")
-    stringBuilder.appendln("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
-    stringBuilder.appendln("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
-    file.writeText(stringBuilder.toString())
+    file.bufferedWriter().use { writer ->
+        writer.appendLine("$AAR_FORMAT_VERSION_PROPERTY=$aarFormatVersion")
+        writer.appendLine("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
+        writer.appendLine("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
+        writer.appendLine("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$minAgpVersion")
+    }
 }

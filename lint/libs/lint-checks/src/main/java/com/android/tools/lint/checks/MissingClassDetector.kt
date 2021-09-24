@@ -62,6 +62,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getInternalName
+import com.android.tools.lint.detector.api.resolvePlaceHolders
 import com.android.utils.SdkUtils.endsWith
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiClass
@@ -117,10 +118,12 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                     val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
                     val pkg = context.document.documentElement.getAttributeNode(ATTR_PACKAGE)?.value
                         ?: context.project.getPackage()
+                    val className = resolvePlaceHolders(context.project, attr.value, null)
+                    if (className.isEmpty()) return
                     checkClassReference(
                         context,
                         pkg,
-                        attr.value,
+                        className,
                         attr,
                         element,
                         requireInstantiatable = true,

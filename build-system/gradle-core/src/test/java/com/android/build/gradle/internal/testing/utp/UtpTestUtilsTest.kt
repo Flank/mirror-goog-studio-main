@@ -16,14 +16,19 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkParameters
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.core.VariantType
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
 import com.android.testutils.MockitoKt.eq
+import com.android.testutils.MockitoKt.mock
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.ILogger
+import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.protobuf.TextFormat
@@ -47,15 +52,13 @@ import org.mockito.Mockito.nullable
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
-import org.mockito.quality.Strictness
 
 /**
  * Unit tests for UtpTestUtils.kt.
  */
 class UtpTestUtilsTest {
     @get:Rule
-    val mockitoJUnitRule: MockitoRule =
-        MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
+    val mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
 
     @get:Rule
     val temporaryFolderRule = TemporaryFolder()
@@ -272,5 +275,25 @@ class UtpTestUtilsTest {
             """<property name="project" value="projectName" />""",
             """<testcase name="useAppContext" classname="com.example.application.ExampleInstrumentedTest""""
         )
+    }
+
+    @Test
+    fun utpShouldBeEnabledByDefault() {
+        val projectOptions = ProjectOptions(
+            ImmutableMap.of(),
+            FakeProviderFactory(FakeProviderFactory.factory, mapOf()))
+
+        assertThat(shouldEnableUtp(projectOptions, testOptions = null, variantType = null)).isTrue()
+    }
+
+    @Test
+    fun utpShouldBeDisabledForDynamicFeatureModule() {
+        val projectOptions = ProjectOptions(
+            ImmutableMap.of(),
+            FakeProviderFactory(FakeProviderFactory.factory, mapOf()))
+        val variantType = mock<VariantType>()
+        `when`(variantType.isDynamicFeature).thenReturn(true)
+
+        assertThat(shouldEnableUtp(projectOptions, testOptions = null, variantType)).isFalse()
     }
 }

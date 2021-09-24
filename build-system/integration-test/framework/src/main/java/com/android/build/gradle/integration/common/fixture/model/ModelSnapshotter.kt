@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.model.SnapshotItemWriter.Companion.NULL_STRING
 import com.android.build.gradle.internal.ide.dependencies.LOCAL_AAR_GROUPID
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import java.io.File
 
 
@@ -193,7 +194,7 @@ class ModelSnapshotter<ModelT>(
             "$LOCAL_JAR_PREFIX${path.toNormalizedStrings(normalizer)}${address.subSequence(IntRange(secondPipe, address.length - 1))}"
         } else {
             address
-        }
+        }.normalizeAgpVersion()
     }
 
     fun <PropertyT> list(
@@ -347,8 +348,12 @@ internal fun Any?.toNormalizedStrings(normalizer: FileNormalizer): Any = when (t
     null -> NULL_STRING
     is File -> normalizer.normalize(this)
     is Collection<*> -> map { it.toNormalizedStrings(normalizer) }
-    is String -> "\"$this\""
+    is String -> "\"$this\"".normalizeAgpVersion()
     is Enum<*> -> name
     else -> toString()
+}
+
+fun String.normalizeAgpVersion(): String {
+    return this.replace(ANDROID_GRADLE_PLUGIN_VERSION, "{AGP_Version}")
 }
 

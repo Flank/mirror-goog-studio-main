@@ -21,8 +21,12 @@ import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class OptimisticApkInstaller {
 
@@ -73,13 +77,14 @@ class OptimisticApkInstaller {
      * The set of "files to add" are extracted from the APK and pushed to the device. The set of
      * "files to delete" are removed from the overlay.
      */
-    public OverlayId install(String packageName, List<Apk> apks) throws DeployerException {
+    public OverlayId install(String packageName, List<Apk> apks, List<String> userFlags)
+            throws DeployerException {
         if (hasInstrumentedTests(apks)) {
             throw DeployerException.runTestsNotSupported();
         }
 
         try {
-            return tracedInstall(packageName, apks);
+            return tracedInstall(packageName, apks, userFlags);
         } catch (DeployerException ex) {
             metrics.finish(ex.getError());
             throw ex;
@@ -90,9 +95,11 @@ class OptimisticApkInstaller {
         }
     }
 
-    private OverlayId tracedInstall(String packageName, List<Apk> apks) throws DeployerException {
+    private OverlayId tracedInstall(String packageName, List<Apk> apks, List<String> userFlags)
+            throws DeployerException {
         final String deviceSerial = adb.getSerial();
-        final Deploy.Arch targetArch = adb.getArchFromApk(apks);
+        final String targetAbi = adb.getAbiForApks(apks);
+        final Deploy.Arch targetArch = AdbClient.getArchForAbi(targetAbi);
 
         metrics.start(DUMP_METRIC);
         DeploymentCacheDatabase.Entry entry = cache.get(deviceSerial, packageName);
@@ -107,14 +114,18 @@ class OptimisticApkInstaller {
         metrics.finish();
 
         metrics.start(DIFF_METRIC);
+        if (!userFlags.isEmpty()) {
+            throw DeployerException.pmFlagsNotSupported();
+        }
         final OverlayId overlayId = entry.getOverlayId();
         OverlayDiffer.Result diff =
                 new OverlayDiffer(options.optimisticInstallSupport).diff(apks, overlayId);
         metrics.finish();
 
         metrics.start(EXTRACT_METRIC);
+        List<ApkEntry> filesToAdd = filterIncompatibleNativeLibraries(targetAbi, diff.filesToAdd);
         Map<ApkEntry, ByteString> overlayFiles =
-                new ApkEntryExtractor().extractFromEntries(diff.filesToAdd);
+                new ApkEntryExtractor().extractFromEntries(filesToAdd);
         metrics.finish();
 
         metrics.start(UPDATE_METRIC);
@@ -162,5 +173,20 @@ class OptimisticApkInstaller {
 
     private static boolean hasInstrumentedTests(List<Apk> apks) {
         return apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty());
+    }
+
+    private static List<ApkEntry> filterIncompatibleNativeLibraries(
+            String targetAbi, Collection<ApkEntry> entries) {
+        return entries.stream()
+                .filter(
+                        entry -> {
+                            Path overlayPath = Paths.get(entry.getName());
+                            if (overlayPath.startsWith("lib")) {
+                                String abi = overlayPath.getParent().getFileName().toString();
+                                return targetAbi.equals(abi);
+                            }
+                            return true;
+                        })
+                .collect(Collectors.toList());
     }
 }

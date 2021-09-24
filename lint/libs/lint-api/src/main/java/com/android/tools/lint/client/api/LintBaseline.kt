@@ -483,7 +483,10 @@ class LintBaseline(
         }
     }
 
-    /** Writes out the baseline listing exactly the incidents that were reported */
+    /**
+     * Writes out the baseline listing exactly the incidents that were
+     * reported
+     */
     fun write(file: File) {
         val parentFile = file.parentFile
         if (parentFile != null && !parentFile.exists()) {

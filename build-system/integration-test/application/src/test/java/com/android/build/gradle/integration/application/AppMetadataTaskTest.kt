@@ -16,19 +16,24 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.SdkConstants.ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_ENTRY_PATH
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.Zip
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.util.Properties
 import java.util.function.Consumer
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.bufferedReader
 import kotlin.test.fail
 
 /**
@@ -114,13 +119,7 @@ class AppMetadataTaskTest {
     @Test
     fun testAppMetadataInBundle() {
         project.executor().run(":app:bundleDebug")
-        val bundleFile =
-            project.model()
-                .fetchContainer(AppBundleProjectBuildOutput::class.java)
-                .rootBuildModelMap[":app"]
-                ?.getOutputByName("debug")
-                ?.bundleFile
-                ?: fail("Failed to find app bundle file.")
+        val bundleFile = project.locateBundleFileViaModel()
         Zip(bundleFile).use {
             assertThat(
                 it.getEntry(
@@ -129,4 +128,44 @@ class AppMetadataTaskTest {
             ).isNotNull()
         }
     }
+
+
+    @OptIn(ExperimentalPathApi::class)
+    @Test
+    fun testAppMetadataWithAgdeVersionInApk() {
+        project.executor().with(StringOption.IDE_AGDE_VERSION, "2.72").run(":app:assembleDebug")
+        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            val metadataFile = apk.getJavaResource(APP_METADATA_ENTRY_PATH)
+            assertThat(metadataFile).isNotNull()
+
+            // Load the App Metadata File as java Properties object
+            val properties = Properties().apply {metadataFile!!.bufferedReader().use {load(it)}}
+            assertThat(properties.getProperty(ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY))
+                    .isEqualTo("2.72")
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    @Test
+    fun testAppMetadataWithAgdeVersionInBundle() {
+        project.executor().with(StringOption.IDE_AGDE_VERSION, "9.81").run(":app:bundleDebug")
+        val bundleFile = project.locateBundleFileViaModel()
+        Zip(bundleFile).use {
+            val metadataFile =
+                it.getEntry(
+                    "BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.properties")
+            assertThat(metadataFile).named("App Metadata file inside Bundle").isNotNull()
+
+            // Load the App Metadata File as java Properties object
+            val properties = Properties().apply {metadataFile!!.bufferedReader().use {load(it)}}
+            assertThat(properties.getProperty(ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY))
+                .isEqualTo("9.81")
+        }
+    }
+
+    private fun GradleTestProject.locateBundleFileViaModel() =
+        model().fetchContainer(AppBundleProjectBuildOutput::class.java).rootBuildModelMap[":app"]
+            ?.getOutputByName("debug")
+            ?.bundleFile
+            ?: fail("Failed to find app bundle file.")
 }

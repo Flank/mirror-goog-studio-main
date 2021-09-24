@@ -190,7 +190,7 @@ class AssetPackBundlePlugin : Plugin<Project> {
         val tasks = TaskFactoryImpl(project.tasks)
         val artifacts = ArtifactsImpl(project, "global")
 
-        tasks.register(AppMetadataTask.CreationAction(artifacts, variantName = ""))
+        tasks.register(AppMetadataTask.CreationForAssetPackBundleAction(artifacts, projectServices.projectOptions))
 
         tasks.register(
             ProcessAssetPackManifestTask.CreationForAssetPackBundleAction(

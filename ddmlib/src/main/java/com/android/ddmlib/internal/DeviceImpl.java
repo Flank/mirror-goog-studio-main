@@ -21,6 +21,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.AvdData;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientTracker;
 import com.android.ddmlib.CollectingOutputReceiver;
@@ -50,6 +51,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,10 +78,8 @@ public final class DeviceImpl implements IDevice {
     /** Serial number of the device */
     private final String mSerialNumber;
 
-    /** Name of the AVD */
-    @Nullable private String mAvdName;
-
-    @Nullable private String mAvdPath;
+    /** Name and path of the AVD */
+    private final SettableFuture<AvdData> mAvdData = SettableFuture.create();
 
     /** State of the device. */
     private DeviceState mState;
@@ -160,31 +160,34 @@ public final class DeviceImpl implements IDevice {
     @Nullable
     @Override
     public String getAvdName() {
-        return mAvdName;
-    }
-
-    /** Sets the name of the AVD */
-    void setAvdName(String avdName) {
-        if (!isEmulator()) {
-            throw new IllegalArgumentException(
-                    "Cannot set the AVD name of the device is not an emulator");
-        }
-
-        mAvdName = avdName;
+        AvdData avdData = getCurrentAvdData();
+        return avdData != null ? avdData.getName() : null;
     }
 
     @Nullable
     @Override
     public String getAvdPath() {
-        return mAvdPath;
+        AvdData avdData = getCurrentAvdData();
+        return avdData != null ? avdData.getPath() : null;
     }
 
-    void setAvdPath(@NonNull String avdPath) {
-        if (!isEmulator()) {
-            throw new IllegalStateException();
+    @Nullable
+    private AvdData getCurrentAvdData() {
+        try {
+            return mAvdData.isDone() ? mAvdData.get() : null;
+        } catch (ExecutionException | InterruptedException e) {
+            return null;
         }
+    }
 
-        mAvdPath = avdPath;
+    @NonNull
+    @Override
+    public ListenableFuture<AvdData> getAvdData() {
+        return mAvdData;
+    }
+
+    void setAvdData(@Nullable AvdData data) {
+        mAvdData.set(data);
     }
 
     @NonNull

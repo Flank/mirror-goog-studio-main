@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants.ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY
 import com.android.SdkConstants.ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.APP_METADATA_VERSION_PROPERTY
 import com.android.Version
@@ -22,30 +23,33 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_FILE_NAME
 import com.android.utils.FileUtils
 import com.google.common.io.Files
+import java.io.File
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
-/** A task that writes the app metadata  */
+/** A task that writes the app metadata */
 @CacheableTask
 abstract class AppMetadataTask : NonIncrementalTask() {
 
-    @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    @get:OutputFile abstract val outputFile: RegularFileProperty
 
-    @get:Input
-    abstract val appMetadataVersion: Property<String>
+    @get:Input abstract val appMetadataVersion: Property<String>
 
-    @get:Input
-    abstract val agpVersion: Property<String>
+    @get:Input abstract val agpVersion: Property<String>
+
+    @get:Input @get:Optional abstract val agdeVersion: Property<String>
 
     override fun doTaskAction() {
         val appMetadataFile = outputFile.get().asFile
@@ -54,58 +58,79 @@ abstract class AppMetadataTask : NonIncrementalTask() {
         writeAppMetadataFile(
             appMetadataFile,
             appMetadataVersion.get(),
-            agpVersion.get()
+            agpVersion.get(),
+            agdeVersion.orNull,
         )
     }
 
-    class CreationAction(
-        private val artifacts: ArtifactsImpl,
-        private val variantName: String,
-        override val name: String = "writeAppMetadata"
-    ) : TaskCreationAction<AppMetadataTask>() {
+    private fun configureTaskInputs(projectOptions: ProjectOptions) {
+        appMetadataVersion.setDisallowChanges(APP_METADATA_VERSION)
+        agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        agdeVersion.setDisallowChanges(projectOptions.getProvider(StringOption.IDE_AGDE_VERSION))
+    }
 
-        constructor(creationConfig: ApplicationCreationConfig) : this(
-            creationConfig.artifacts,
-            creationConfig.name,
-            creationConfig.computeTaskName("write", "AppMetadata")
-        )
-
+    class CreationAction(creationConfig: ApplicationCreationConfig) :
+        VariantTaskCreationAction<AppMetadataTask, ApplicationCreationConfig>(creationConfig) {
         override val type = AppMetadataTask::class.java
+        override val name = computeTaskName("write", "AppMetadata")
 
         override fun handleProvider(taskProvider: TaskProvider<AppMetadataTask>) {
             super.handleProvider(taskProvider)
-            artifacts
-                .setInitialProvider(taskProvider, AppMetadataTask::outputFile)
-                .withName(APP_METADATA_FILE_NAME)
-                .on(InternalArtifactType.APP_METADATA)
+            taskProvider.configureTaskOutputs(creationConfig.artifacts)
         }
 
         override fun configure(task: AppMetadataTask) {
-            task.configureVariantProperties(variantName, task.project)
+            super.configure(task)
+            task.configureTaskInputs(creationConfig.services.projectOptions)
+        }
+    }
 
-            task.appMetadataVersion.setDisallowChanges(APP_METADATA_VERSION)
-            task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+    // CreationAction for use in AssetPackBundlePlugin
+    class CreationForAssetPackBundleAction(
+        private val artifacts: ArtifactsImpl,
+        private val projectOptions: ProjectOptions,
+    ) : TaskCreationAction<AppMetadataTask>() {
+        override val type = AppMetadataTask::class.java
+        override val name = "writeAppMetadata"
+
+        override fun handleProvider(taskProvider: TaskProvider<AppMetadataTask>) {
+            super.handleProvider(taskProvider)
+            taskProvider.configureTaskOutputs(artifacts)
+        }
+
+        override fun configure(task: AppMetadataTask) {
+            task.configureVariantProperties("", task.project)
+            task.configureTaskInputs(projectOptions)
         }
     }
 
     companion object {
-        const val APP_METADATA_VERSION = "1.0"
+        const val APP_METADATA_VERSION = "1.1"
     }
 }
 
 /** Writes an app metadata file with the given parameters */
-fun writeAppMetadataFile(
+private fun writeAppMetadataFile(
     file: File,
     appMetadataVersion: String,
-    agpVersion: String
+    agpVersion: String,
+    agdeVersion: String?,
 ) {
     // We write the file manually instead of using the java.util.Properties API because (1) that API
     // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
     // timestamp in the file.
-    file.writeText(
-        """
-            $APP_METADATA_VERSION_PROPERTY=$appMetadataVersion
-            $ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$agpVersion
-        """.trimIndent()
-    )
+    file.bufferedWriter().use { writer ->
+        writer.appendLine("$APP_METADATA_VERSION_PROPERTY=$appMetadataVersion")
+        writer.appendLine("$ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$agpVersion")
+        if (agdeVersion != null) {
+            writer.appendLine("$ANDROID_GAME_DEVELOPMENT_EXTENSION_VERSION_PROPERTY=$agdeVersion")
+        }
+    }
+}
+
+private fun TaskProvider<AppMetadataTask>.configureTaskOutputs(artifacts: ArtifactsImpl) {
+    artifacts
+        .setInitialProvider(this, AppMetadataTask::outputFile)
+        .withName(APP_METADATA_FILE_NAME)
+        .on(InternalArtifactType.APP_METADATA)
 }

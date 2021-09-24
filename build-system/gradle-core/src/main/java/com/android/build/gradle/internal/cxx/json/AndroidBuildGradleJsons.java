@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json;
 
+import static com.android.build.gradle.internal.cxx.json.LintKt.lint;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getMiniConfigFile;
 
@@ -106,6 +107,8 @@ public class AndroidBuildGradleJsons {
      * Return a {@link NativeBuildConfigValueMini} for this {@link CxxAbiModel}. Generate if missing
      * or out of date with respect to corresponding android_gradle_build.json.
      *
+     * <p>Emit lint check errors against the {@link NativeBuildConfigValueMini} if there are any.
+     *
      * @param abi the ABI to get mini config fore.
      * @param stats the stats to update
      * @return the mini config
@@ -117,21 +120,35 @@ public class AndroidBuildGradleJsons {
             throws IOException {
         File persistedMiniConfig = getMiniConfigFile(abi);
         File json = getJsonFile(abi);
-        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
-            // The mini json has already been created for us. Just read it instead of parsing
-            // again.
-            try (JsonReader reader = new JsonReader(new FileReader(persistedMiniConfig))) {
-                return parseToMiniConfig(reader);
-            }
-        }
         NativeBuildConfigValueMini result;
-        try (JsonReader reader = new JsonReader(new FileReader(json))) {
-            result =
-                    stats == null
-                            ? parseToMiniConfig(reader)
-                            : parseToMiniConfigAndGatherStatistics(reader, stats);
+        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
+            // The mini json has already been created for us. Just read it instead of parsing again.
+            try (JsonReader reader = new JsonReader(new FileReader(persistedMiniConfig))) {
+                result = parseToMiniConfig(reader);
+            }
+        } else {
+            try (JsonReader reader = new JsonReader(new FileReader(json))) {
+                result =
+                        stats == null
+                                ? parseToMiniConfig(reader)
+                                : parseToMiniConfigAndGatherStatistics(reader, stats);
+            }
+            writeNativeBuildMiniConfigValueToJsonFile(persistedMiniConfig, result);
         }
-        writeNativeBuildMiniConfigValueToJsonFile(persistedMiniConfig, result);
+
+        // Check the resulting mini config for problems. We have the right context here to attribute
+        // issues to a specific JSON or mini config JSON file name.
+        if (json.isFile()) {
+            // Report any lint-check errors against the original full JSON file rather than the mini
+            // config file that is derived from it.
+            lint(result, json);
+        } else {
+            // A metadata provider may choose to only supply the mini config (with the rest of the
+            // relevant information provided by compile_commands.json). In this case, lint checks
+            // should report errors against the mini config file rather than the non-existent full
+            // JSON.
+            lint(result, persistedMiniConfig);
+        }
         return result;
     }
 

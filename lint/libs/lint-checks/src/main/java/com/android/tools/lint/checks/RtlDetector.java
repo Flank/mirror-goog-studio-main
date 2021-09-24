@@ -305,9 +305,17 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
         }
     }
 
-    /** For a resource folder config like */
+    /**
+     * Looks up the folder version for a path, e.g. /foo/bar/values-v11/strings.xml would return 11
+     */
     static int getFolderVersion(@NonNull File resourceFile) {
-        String path = resourceFile.getPath();
+        return getFolderVersion(resourceFile.getPath());
+    }
+
+    /**
+     * Looks up the folder version for a path, e.g. /foo/bar/values-v11/strings.xml would return 11
+     */
+    static int getFolderVersion(@NonNull String path) {
         int i = path.length() - 1;
         for (; i >= 0; i--) {
             char c = path.charAt(i);

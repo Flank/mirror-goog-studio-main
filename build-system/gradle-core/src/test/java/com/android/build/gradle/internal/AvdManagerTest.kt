@@ -19,6 +19,7 @@ package com.android.build.gradle.internal
 import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.testframework.MockFileOp
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -52,6 +53,7 @@ class AvdManagerTest {
     private lateinit var emulatorFolder: Path
     private lateinit var androidPrefsFolder: Path
     private lateinit var avdFolder: Path
+    private lateinit var adbExecutable: Path
     private lateinit var snapshotHandler: AvdSnapshotHandler
     private lateinit var versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
 
@@ -69,6 +71,7 @@ class AvdManagerTest {
         Files.createDirectories(emulatorFolder)
         androidPrefsFolder = fileOp.toPath("/android-home")
         avdFolder = fileOp.toPath("/avd")
+        adbExecutable = fileOp.toPath("/adb")
         Files.createDirectories(avdFolder)
 
         snapshotHandler = mock(AvdSnapshotHandler::class.java)
@@ -208,6 +211,7 @@ class AvdManagerTest {
                 anyString(),
                 any(File::class.java),
                 any(File::class.java),
+                any(File::class.java),
                 any(ILogger::class.java))
     }
 
@@ -240,6 +244,7 @@ class AvdManagerTest {
                 anyString(),
                 any(File::class.java),
                 any(File::class.java),
+                any(File::class.java),
                 any(ILogger::class.java))
     }
 
@@ -251,6 +256,8 @@ class AvdManagerTest {
                 .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))))
             `when`(it.emulatorDirectoryProvider)
                 .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(emulatorFolder))))
+            `when`(it.adbExecutableProvider)
+                .thenReturn(FakeGradleProvider(FakeGradleRegularFile(fileOp.toFile(adbExecutable))))
         }
 
     private fun setupSdkHandler(): AndroidSdkHandler {

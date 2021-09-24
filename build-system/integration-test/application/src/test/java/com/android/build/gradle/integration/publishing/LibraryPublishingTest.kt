@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.publishing
 
+import com.android.Version
+import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -25,6 +27,9 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.testutils.truth.PathSubject
+import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.attributes.Usage
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -448,6 +453,30 @@ class LibraryPublishingTest {
             ScannerSubject.assertThat(it).contains(
                 "'android.disableAutomaticComponentCreation=false' is deprecated")
         }
+    }
+
+    @Test
+    fun testConfigurationsNotHavingAgpVersionAttribute() {
+        addPublication(RELEASE)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        singleVariant("release")
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+
+        val module = project.projectDir
+            .resolve("testrepo/com/example/android/myLib/1.0/myLib-1.0.module")
+        PathSubject.assertThat(module).exists()
+        PathSubject.assertThat(module).contains(Usage.USAGE_ATTRIBUTE.name)
+        PathSubject.assertThat(module).doesNotContain(AgpVersionAttr.ATTRIBUTE.name)
+        PathSubject.assertThat(module).doesNotContain(Version.ANDROID_GRADLE_PLUGIN_VERSION)
     }
 
     private fun addPublication(componentName: String) {

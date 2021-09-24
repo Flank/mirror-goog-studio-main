@@ -1735,10 +1735,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createTestDevicesTasks() {
-        if (!shouldEnableUtp(projectOptions, extension.testOptions)) {
+        if (!shouldEnableUtp(projectOptions, extension.testOptions, variantType = null)) {
             return
         }
 
+        if (extension.testOptions.devices.isNotEmpty()) {
+            logger.warn(
+                "WARNING: The Gradle Managed Device DSL and associated tests are experimental")
+        }
         val managedDevices = mutableListOf<ManagedVirtualDevice>()
         extension
                 .testOptions
@@ -1875,7 +1879,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (shouldEnableUtp(projectOptions, extension.testOptions)) {
+        if (shouldEnableUtp(projectOptions, extension.testOptions, testedVariant.variantType)) {
             // Now for each managed device defined in the dsl
             val managedDevices = mutableListOf<ManagedVirtualDevice>()
             extension

@@ -96,7 +96,8 @@ class TokenizedCommandLine(
         token: String,
         extra: Int,
         matchPrefix: Boolean = false,
-        returnFirstExtra: Boolean = false) : String? {
+        returnFirstExtra: Boolean = false,
+        filePathSlashAgnostic: Boolean = false) : String? {
         checkGeneration()
         invalidate()
         var read = 1
@@ -114,7 +115,7 @@ class TokenizedCommandLine(
 
             // If token matches the one pointed to be read pointer then skip it and also
             // skip any extra tokens.
-            if (tokenMatches(token, read, matchPrefix)) {
+            if (tokenMatches(token, read, matchPrefix, filePathSlashAgnostic)) {
                 if (returnFirstExtra) {
                     firstExtra = if (matchPrefix) {
                         tokenStartingAt(read + token.length)
@@ -418,7 +419,12 @@ class TokenizedCommandLine(
      * account for the generation counter.
      */
     @VisibleForTesting
-    fun tokenMatches(token: String, offset: Int, matchPrefix: Boolean) : Boolean {
+    fun tokenMatches(
+        token: String,
+        offset: Int,
+        matchPrefix: Boolean,
+        filePathSlashAgnostic: Boolean = false
+    ) : Boolean {
         checkGeneration()
         var i = 0
         var index = indexes[offset]
@@ -430,13 +436,22 @@ class TokenizedCommandLine(
             if (endOfToken) {
                 return false
             }
-            if (token[i] != commandLine[index]) {
+            val c1 = token[i]
+            val c2 = commandLine[index]
+            if (c1 != c2 &&
+                (!filePathSlashAgnostic || !bothSlash(c1, c2))) {
                 return false
             }
             ++i
             index = indexes[offset + i]
         }
         return false
+    }
+
+    private fun bothSlash(c1 : Char, c2 : Char) : Boolean {
+        if (c1 != '\\' && c1 != '/') return false
+        if (c2 != '\\' && c2 != '/') return false
+        return true
     }
 
     /**

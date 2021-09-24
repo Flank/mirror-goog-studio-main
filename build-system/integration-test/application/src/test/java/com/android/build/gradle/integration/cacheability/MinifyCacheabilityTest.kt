@@ -56,6 +56,7 @@ class MinifyCacheabilityTest {
             ":checkMinifiedDuplicateClasses",
             ":compileMinifiedJavaWithJavac",
             ":compressMinifiedAssets",
+            ":createMinifiedCompatibleScreenManifests",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
             ":generateMinifiedJacocoPropertiesFile",
@@ -67,6 +68,8 @@ class MinifyCacheabilityTest {
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedShaders",
             ":minifyMinifiedWithR8",
+            ":processMinifiedMainManifest",
+            ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
             ":writeMinifiedAppMetadata",
@@ -81,13 +84,10 @@ class MinifyCacheabilityTest {
         ),
         DID_WORK to setOf(
             ":createMinifiedApkListingFileRedirect",
-            ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
-            ":processMinifiedMainManifest",
-            ":processMinifiedManifest",
             ":processMinifiedResources"
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {

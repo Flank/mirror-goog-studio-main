@@ -227,9 +227,14 @@ public class Deployer {
             OptimisticApkInstaller apkInstaller =
                     new OptimisticApkInstaller(
                             installer, adb, deployCache, metrics, options, logger);
+            Task<List<String>> userFlags = runner.create(installOptions.getUserFlags());
             Task<OverlayId> overlayId =
                     runner.create(
-                            Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
+                            Tasks.OPTIMISTIC_INSTALL,
+                            apkInstaller::install,
+                            packageName,
+                            apks,
+                            userFlags);
 
             if (useCoroutineDebugger()) {
                 // TODO(b/185399333): instead of using apks, add task to get arch by opening
@@ -329,7 +334,7 @@ public class Deployer {
 
     private boolean installCoroutineDebugger(String packageName, List<Apk> apk)
             throws DeployerException {
-        Deploy.Arch arch = adb.getArchFromApk(apk);
+        Deploy.Arch arch = AdbClient.getArchForAbi(adb.getAbiForApks(apk));
         try {
             Deploy.InstallCoroutineAgentResponse response =
                     installer.installCoroutineAgent(packageName, arch);

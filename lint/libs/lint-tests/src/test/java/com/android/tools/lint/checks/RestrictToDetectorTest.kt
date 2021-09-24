@@ -176,9 +176,9 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     Library.privateMethod(); // ERROR
                             ~~~~~~~~~~~~~
-            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
+            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     PrivateClass.method(); // ERROR
-                    ~~~~~~~~~~~~
+                                 ~~~~~~
             src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (referenced groupId=my.group.id from groupId=<unknown>) [RestrictedApi]
                     InternalClass.method(); // ERROR
                                   ~~~~~~
@@ -2239,6 +2239,49 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 AAPT_TOOL_NAME to BuildErrorMessage.ErrorType.AAPT,
                 ~~~~~~~~~~~~~~
             0 errors, 1 warnings
+            """
+        )
+    }
+
+    fun testVisibleForTestingOnConstructorProperty() {
+        // Having @VisibleForTesting on a parameter is kind of nonsensical but this tests
+        // the actual annotation type mapping. The AnnotationDetector will separately add
+        // a check for this. See
+        // https://kotlinlang.org/docs/annotations.html#annotation-use-site-targets
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.VisibleForTesting
+
+                class TestClass1(@VisibleForTesting val parameter: String) // defaults to @param: so same as 4
+                class TestClass2(@field:VisibleForTesting val parameter: String)
+                class TestClass3(@get:VisibleForTesting val parameter: String)
+                class TestClass4(@param:VisibleForTesting val parameter: String)
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                fun test(foo: String) {
+                    TestClass1(foo) // WARN 1
+                    TestClass2(foo) // OK 1
+                    TestClass3(foo) // OK 2
+                    TestClass4(foo) // WARN 2
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:3: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass1(foo) // WARN 1
+                           ~~~
+            src/test/pkg/test.kt:6: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                TestClass4(foo) // WARN 2
+                           ~~~
+            0 errors, 2 warnings
             """
         )
     }

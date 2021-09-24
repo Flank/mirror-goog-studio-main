@@ -65,7 +65,7 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
         getExecutor().expectFailure().run("clean", ":app:lintDebug")
         getExecutor().expectFailure().run(":app:clean", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("8 errors, 4 warnings")
+        assertThat(lintResults).contains("9 errors, 4 warnings")
 
         val lintModelDir =
             project.getSubproject("app").intermediatesDir.toPath()
@@ -129,7 +129,7 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
         // Check lint runs correctly before asserting about the model.
         getExecutor().expectFailure().run(":app:clean", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("8 errors, 4 warnings")
+        assertThat(lintResults).contains("9 errors, 4 warnings")
 
         val lintModelDir =
             project.getSubproject("app")

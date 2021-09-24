@@ -27,6 +27,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -314,6 +315,39 @@ public class SimpleTestRunnableTest {
                 .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
         verify(deviceConnector, times(1))
                 .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+    }
+
+    @Test
+    public void checkAdditionalTestOutputNotSupportedWith29() throws Exception {
+        testedApplicationId = "com.example.app.test";
+        instrumentationTargetPackageId = "com.example.app.test";
+
+        useApiVersion(29);
+        when(deviceConnector.getName()).thenReturn("FakeDevice");
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = new ArrayList<>();
+        testedApks.add(new File(prodApks, "app" + 1 + ".apk"));
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        true,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        ImmutableList.of());
+
+        runnable.run();
+
+        verify(deviceConnector, times(0))
+                .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
+        verify(deviceConnector, times(1))
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+        verify(deviceConnector, never()).pullFile(anyString(), anyString());
     }
 
     @Test

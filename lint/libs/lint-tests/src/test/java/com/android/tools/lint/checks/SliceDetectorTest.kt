@@ -987,7 +987,7 @@ class SliceDetectorTest : AbstractCheckTest() {
                         primary: SliceAction): Slice = ListBuilder(context, sliceUri, 5L)
                         .apply {
                             addRow(ListBuilder.RowBuilder(context, sliceUri)
-                                    .setTitle("URI found.")
+                                    .setTitle("URI found.")!!
                                     .setPrimaryAction(primary))
                         }.build()
 
