@@ -80,7 +80,11 @@ public class MainTest extends AbstractCheckTest {
 
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
+
+        String internalProperty = "idea.is.internal";
+        String wasInternal = System.getProperty(internalProperty);
         try {
+            System.setProperty(internalProperty, SdkConstants.VALUE_TRUE);
             final ByteArrayOutputStream output = new ByteArrayOutputStream();
             System.setOut(new PrintStream(output));
             final ByteArrayOutputStream error = new ByteArrayOutputStream();
@@ -127,6 +131,11 @@ public class MainTest extends AbstractCheckTest {
         } finally {
             System.setOut(previousOut);
             System.setErr(previousErr);
+            if (wasInternal != null) {
+                System.setProperty(internalProperty, wasInternal);
+            } else {
+                System.clearProperty(internalProperty);
+            }
         }
     }
 
@@ -1113,8 +1122,12 @@ public class MainTest extends AbstractCheckTest {
         File project = getProjectDir(null, mAccessibility2);
 
         File outputDir = new File(project, "build");
-        assertTrue(outputDir.mkdirs());
-        assertTrue(outputDir.setWritable(true));
+        if (!outputDir.exists()) {
+            assertTrue(outputDir.mkdirs());
+        }
+        if (!outputDir.canWrite()) {
+            assertTrue(outputDir.setWritable(true));
+        }
 
         checkDriver(
                 "",

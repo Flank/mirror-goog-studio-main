@@ -130,4 +130,8 @@ class LintBatchAnalyticsTest : AbstractCheckTest() {
             assertThat(resourceFileCount).isEqualTo(0)
         }
     }
+
+    // All the unit tests that are run via MainTest#checkDriver will test the
+    // usage tracker initialization scenario from issue 194525628, where we
+    // don't initialize a specific version of the analytics settings
 }
