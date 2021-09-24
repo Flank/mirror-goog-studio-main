@@ -33,30 +33,7 @@ class SdkCommandLineToolsSmokeTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @Before
-    fun assumeLinux() {
-        AssumeUtil.assumeIsLinux()
-    }
-
-    @Test
-    fun sdkManagerSmokeTestOnLinux() {
-        val extractedDir = extract()
-
-        val sdkManagerBinary = extractedDir.resolve("cmdline-tools/bin/sdkmanager")
-
-        val outFile = temporaryFolder.newFile("out")
-        val errFile = temporaryFolder.newFile("err")
-        val processBuilder = ProcessBuilder()
-            .redirectError(errFile)
-            .redirectOutput(outFile)
-            .command("sh", sdkManagerBinary.toString(), "--help")
-
-        val returnCode = processBuilder.start().waitFor()
-        assertThat(returnCode).named("returnCode").isEqualTo(1)
-
-        assertThat(Files.readAllLines(outFile.toPath())).isEmpty()
-        assertThat(Files.readAllLines(errFile.toPath()).joinToString("\n"))
-            .isEqualTo("""
+    val usage = """
                 Usage:
                   sdkmanager [--uninstall] [<common args>] [--package_file=<file>] [<packages>...]
                   sdkmanager --update [<common args>]
@@ -114,7 +91,42 @@ class SdkCommandLineToolsSmokeTest {
 
                 * If the env var REPO_OS_OVERRIDE is set to "windows",
                   "macosx", or "linux", packages will be downloaded for that OS.
-                """.trimIndent())
+    """.trimIndent()
+
+    @Before
+    fun assumeLinux() {
+        AssumeUtil.assumeIsLinux()
+    }
+
+    @Test
+    fun sdkManagerSmokeTestOnLinux() {
+        val extractedDir = extract()
+
+        val sdkManagerBinary = extractedDir.resolve("cmdline-tools/bin/sdkmanager")
+
+        var outFile = temporaryFolder.newFile("out")
+        var errFile = temporaryFolder.newFile("err")
+        var processBuilder = ProcessBuilder()
+            .redirectError(errFile)
+            .redirectOutput(outFile)
+            .command("sh", sdkManagerBinary.toString())
+
+        var returnCode = processBuilder.start().waitFor()
+        assertThat(returnCode).named("returnCode").isEqualTo(1)
+        assertThat(Files.readAllLines(outFile.toPath())).isEmpty()
+        assertThat(Files.readAllLines(errFile.toPath()).joinToString("\n")).isEqualTo(usage)
+
+        outFile = temporaryFolder.newFile("outHelp")
+        errFile = temporaryFolder.newFile("errHelp")
+        processBuilder = ProcessBuilder()
+            .redirectError(errFile)
+            .redirectOutput(outFile)
+            .command("sh", sdkManagerBinary.toString(), "--help")
+
+        returnCode = processBuilder.start().waitFor()
+        assertThat(returnCode).named("returnCode").isEqualTo(1)
+        assertThat(Files.readAllLines(outFile.toPath())).isEmpty()
+        assertThat(Files.readAllLines(errFile.toPath()).joinToString("\n")).isEqualTo(usage)
     }
 
     fun extract(): Path {
