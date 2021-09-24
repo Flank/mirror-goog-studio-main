@@ -245,23 +245,26 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
  * to true.
  */
 bool setAgentInstallationType(JNIEnv* jni) {
-  const char* class_name = "AgentInstallationType";
-  const char* class_full_name =
-      ("kotlinx/coroutines/debug/internal/" + std::string(class_name)).c_str();
-  const char* method_name = "setInstalledStatically$kotlinx_coroutines_core";
+  const std::string class_name = "AgentInstallationType";
+  const std::string class_full_name =
+      "kotlinx/coroutines/debug/internal/" + class_name;
+  const std::string method_name =
+      "setInstalledStatically$kotlinx_coroutines_core";
 
-  jclass klass_agentInstallationType = jni->FindClass(class_full_name);
+  jclass klass_agentInstallationType = jni->FindClass(class_full_name.c_str());
   if (klass_agentInstallationType == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found.", class_name);
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found.",
+           class_full_name.c_str());
     return false;
   }
 
-  jfieldID instance_filedId =
-      jni->GetStaticFieldID(klass_agentInstallationType, "INSTANCE",
-                            ("L" + std::string(class_full_name) + ";").c_str());
+  const std::string sig = "L" + class_full_name + ";";
+  jfieldID instance_filedId = jni->GetStaticFieldID(klass_agentInstallationType,
+                                                    "INSTANCE", sig.c_str());
 
   if (instance_filedId == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#INSTANCE not found.", class_name);
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#INSTANCE not found.",
+           class_full_name.c_str());
     return false;
   }
 
@@ -269,15 +272,15 @@ bool setAgentInstallationType(JNIEnv* jni) {
       jni->GetStaticObjectField(klass_agentInstallationType, instance_filedId);
   if (obj_agentInstallationType == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "Failed to retrieve %s#INSTANCE.",
-           class_name);
+           class_full_name.c_str());
     return false;
   }
 
-  jmethodID mid_setIsInstalledStatically =
-      jni->GetMethodID(klass_agentInstallationType, method_name, "(Z)V");
+  jmethodID mid_setIsInstalledStatically = jni->GetMethodID(
+      klass_agentInstallationType, method_name.c_str(), "(Z)V");
   if (mid_setIsInstalledStatically == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V not found.", class_name,
-           method_name);
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V not found.",
+           class_name.c_str(), method_name.c_str());
     return false;
   }
 
@@ -286,13 +289,13 @@ bool setAgentInstallationType(JNIEnv* jni) {
 
   if (jni->ExceptionOccurred()) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V threw an exception.",
-           class_name, method_name);
+           class_name.c_str(), method_name.c_str());
     printStackTrace(jni);
     return false;
   }
 
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s set to true.", class_name,
-         method_name);
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s set to true.", class_name.c_str(),
+         method_name.c_str());
   return true;
 }
 
