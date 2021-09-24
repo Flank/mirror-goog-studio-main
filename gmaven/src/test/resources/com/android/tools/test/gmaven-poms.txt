@@ -247,25 +247,25 @@ com.android.tools:testutils
     org.ow2.asm:asm (runtime)
 
 com.android.tools.analytics-library:crash
-  pomName=com.android.tools.analytics-library.crash
+  pomName=Android Tools Analytics Crash Library
   description=Helper Library for uploading crash reports.
   dependencies:
     com.android.tools:annotations (runtime)
     com.google.guava:guava (runtime)
-    org.apache.httpcomponents:httpmime (runtime)
-    org.apache.httpcomponents:httpcore (runtime)
     org.apache.httpcomponents:httpclient (runtime)
+    org.apache.httpcomponents:httpcore (runtime)
+    org.apache.httpcomponents:httpmime (runtime)
 
 com.android.tools.analytics-library:inspector
-  pomName=com.android.tools.analytics-library.inspector
+  pomName=Android Tools Analytics Inspector
   description=Tool for debugging usage analytics spool files.
   dependencies:
-    com.android.tools:annotations (runtime)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
-    com.google.protobuf:protobuf-java (runtime)
-    com.google.guava:guava (runtime)
+    com.android.tools:annotations (runtime)
     com.google.code.gson:gson (runtime)
+    com.google.guava:guava (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:protos
   pomName=Android Tools Analytics Protobufs
@@ -274,16 +274,16 @@ com.android.tools.analytics-library:protos
     com.google.protobuf:protobuf-java (compile)
 
 com.android.tools.analytics-library:publisher
-  pomName=com.android.tools.analytics-library.publisher
+  pomName=Android Tools Analytics Publisher
   description=Library for publishing usage analytics.
   dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
-    com.android.tools:annotations (runtime)
-    com.android.tools:common (runtime)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
-    com.google.protobuf:protobuf-java (runtime)
+    com.android.tools:annotations (runtime)
+    com.android.tools:common (runtime)
     com.google.guava:guava (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:shared
   pomName=Android Tools Analytics Shared Library
@@ -298,10 +298,9 @@ com.android.tools.analytics-library:shared
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.analytics-library:testing
-  pomName=com.android.tools.analytics-library.testing
+  pomName=Android Tools Analytics Testing Library
   description=Library for tracking usage analytics.
   dependencies:
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
     com.android.tools.analytics-library:tracker (runtime)
@@ -309,7 +308,7 @@ com.android.tools.analytics-library:testing
     com.android.tools:common (runtime)
     com.android.tools:testutils (runtime)
     com.google.guava:guava (runtime)
-    com.google.code.gson:gson (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:tracker
   pomName=Android Tools Analytics Tracker

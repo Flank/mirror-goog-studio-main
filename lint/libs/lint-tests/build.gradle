@@ -27,7 +27,7 @@ dependencies {
     testImplementation libs.com.android.tools.analyticsLibrary.shared
     testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation libs.com.android.tools.analyticsLibrary.tracker
-    testImplementation project(':analytics-library:testing')
+    testImplementation libs.com.android.tools.analyticsLibrary.testing
     testImplementation project(':base:apkparser:binary-resources')
     testImplementation project(':base:apkparser:apkanalyzer')
     testImplementation libs.gson

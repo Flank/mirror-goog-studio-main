@@ -1,10 +1,22 @@
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 load("//tools/base/bazel:utils.bzl", "merged_zip")
+
+# Gmaven artifacts that are not used by the gradle builds
+maven_repository(
+    name = "other_gmaven_artifacts",
+    artifacts = [
+        "//tools/analytics-library/inspector",
+        "//tools/analytics-library/publisher",
+    ],
+    include_transitive_deps = False,
+)
 
 # The Gmaven repository as built with the hybrid gradle/bazel build.
 merged_zip(
     name = "gmaven",
     srcs = [
+        ":other_gmaven_artifacts.zip",
         "//tools/base:agp_artifacts.zip",
         "//tools/base/build-system:android_gradle_plugin.zip",
         "//tools/data-binding:data_binding_runtime.zip",

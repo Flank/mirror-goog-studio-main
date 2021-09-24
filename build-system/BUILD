@@ -250,10 +250,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//prebuilts/tools/common/lint-psi/kotlin-compiler:agp_gradle_build_files",
     "//prebuilts/tools/common/lint-psi/uast:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
-    "//tools/analytics-library/crash:agp_gradle_build_files",
-    "//tools/analytics-library/inspector:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/analytics-library/publisher:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/analytics-library/testing:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
     "//tools/base:agp_artifacts.zip",

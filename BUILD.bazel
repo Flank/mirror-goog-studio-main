@@ -82,6 +82,8 @@ maven_repository(
         "//tools/analytics-library/protos/src/main/proto:proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
+        "//tools/analytics-library/crash:tools.analytics-crash",
+        "//tools/analytics-library/testing:tools.analytics-testing",  # TODO: Only required for AGP tests
     ],
     include_transitive_deps = False,
     visibility = [
