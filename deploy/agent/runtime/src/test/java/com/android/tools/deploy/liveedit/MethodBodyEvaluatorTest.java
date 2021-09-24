@@ -546,4 +546,15 @@ public class MethodBodyEvaluatorTest {
         Long l = (Long) result;
         Assert.assertTrue("Overload (L)L", TestTarget.returnMax(0L) == l);
     }
+
+    // Tests passing arrays to static and non-static methods.
+    @org.junit.Test
+    public void testArrayParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testArrayParameters()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Array parameters", TestTarget.testArrayParameters(), i.intValue());
+    }
 }

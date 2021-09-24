@@ -278,4 +278,19 @@ class TestTarget {
     public static long returnMax(long l) {
         return Long.MAX_VALUE;
     }
+
+    public static int testArrayParameters() {
+        int[] first = new int[] {1, 2, 3, 4};
+        String[] second = new String[] {"a", "b", "c"};
+        TestTarget target = new TestTarget();
+        return lengthSumStatic(first, second) + target.lengthSum(first, second);
+    }
+
+    private int lengthSum(int[] first, String[] second) {
+        return first.length + second.length;
+    }
+
+    private static int lengthSumStatic(int[] first, String[] second) {
+        return first.length + second.length;
+    }
 }

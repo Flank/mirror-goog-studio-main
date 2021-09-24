@@ -411,10 +411,6 @@ class AndroidEval implements Eval {
         return Class.forName(className.replace('/', '.'), true, classloader);
     }
 
-    Class<?> forName(Type type) throws ClassNotFoundException {
-        return forName(type.getClassName());
-    }
-
     public Class<?> typeToClass(Type type) throws ClassNotFoundException {
         switch (type.getSort()) {
             case Type.INT:
@@ -435,8 +431,10 @@ class AndroidEval implements Eval {
                 return double.class;
             case Type.VOID:
                 return void.class;
+            case Type.ARRAY:
+                return forName(type.getDescriptor());
             default:
-                return forName(type);
+                return forName(type.getClassName());
         }
     }
 
