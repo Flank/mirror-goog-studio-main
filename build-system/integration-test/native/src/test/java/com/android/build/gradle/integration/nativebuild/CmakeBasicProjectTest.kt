@@ -441,6 +441,13 @@ class CmakeBasicProjectTest(
     @Test
     fun `configuration build command golden flags`() {
         val golden = project.goldenConfigurationFlags(Abi.X86_64)
+                // Special fix for NDKs <= r16
+                .replace(
+            "-DCMAKE_SYSTEM_VERSION=21",
+            "-DCMAKE_SYSTEM_VERSION=16")
+                .replace(
+            "-DANDROID_PLATFORM=android-21",
+            "-DANDROID_PLATFORM=android-16")
         println(golden)
         Truth.assertThat(golden).isEqualTo("""
             -B{PROJECT}/.cxx/{DEBUG}/x86_64

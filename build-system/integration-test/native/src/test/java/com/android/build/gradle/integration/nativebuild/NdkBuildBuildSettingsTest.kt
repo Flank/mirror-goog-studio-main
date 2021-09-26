@@ -160,6 +160,12 @@ class NdkBuildBuildSettingsTest {
     @Test
     fun `configuration build command golden flags`() {
         val golden = project.goldenConfigurationFlags(Abi.ARMEABI_V7A)
+            // Special fix to accommodate bug in NDKs <= r16
+            // Until r16 NDK emitted 'android-21' as a default even though
+            // armeabi-v7a supports 'android-16'
+            .replace(
+                "APP_PLATFORM=android-21",
+                "APP_PLATFORM=android-16")
         println(golden)
         assertThat(golden).isEqualTo("""
             -B

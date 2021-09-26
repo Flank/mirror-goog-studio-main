@@ -81,6 +81,11 @@ Hash of this CMakeSettings configuration.
 - example: 1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519
 - environment: android-gradle
 
+## ${ndk.intermediatesParentDir}
+The intermediates folder but without the ABI at the end.
+- example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}
+- environment: android-gradle
+
 ## ${ndk.maxPlatform}
 The maximum Android platform supported by the current Android NDK.
 - example: 29
@@ -195,17 +200,6 @@ If present, the STL .so file that needs to be distributed with the libraries bui
 - example: ${ndk.moduleNdkDir}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so
 - environment: android-gradle
 
-## ${ndk.variantBuildIntermediatesDir}
-The variant level build intermediates folder.
-- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx/Debug/${ndk.configurationHash}
-- environment: android-gradle
-
-## ${ndk.variantBuildRoot}
-The default variant-level CMake or ndk-build build root that gradle uses.
-- cmake example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}
-- ndk-build example: ${ndk.moduleDir}/build/.cxx/Debug/${ndk.configurationHash}
-- environment: android-gradle
-
 ## ${ndk.variantCFlags}
 The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.
 - example: -DC_FLAG_DEFINED
@@ -224,18 +218,6 @@ Name of the gradle variant.
 ## ${ndk.variantOptimizationTag}
 The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debug, Release, RelWithDebInfo, or MinSizeRel.
 - example: Debug
-- environment: android-gradle
-
-## ${ndk.variantSoOutputDir}
-The variant-level folder where .so files are written.
-- cmake example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj
-- ndk-build example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj/local
-- environment: android-gradle
-
-## ${ndk.variantSoRepublishDir}
-A folder with a predictable name where final build outputs (mainly .so) are hard linked or copied after the build completes. The purpose is so scripts and other external tools have a known path, with no embedded hashcode, to locate these files.
-- cmake example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj
-- ndk-build example: ${ndk.moduleDir}/build/intermediates/ndkBuild/debug/obj/local
 - environment: android-gradle
 
 ## ${ndk.variantStlType}

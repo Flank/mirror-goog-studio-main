@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNat
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.ifLogNativeCleanToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.logNativeCleanToLifecycle
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -32,11 +32,11 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.ProcessInfoBuilder
-import com.google.common.base.Joiner
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -61,9 +61,10 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             infoln("starting clean")
             infoln("finding existing JSONs")
             val existingJsonAbis = mutableListOf<CxxAbiModel>()
+            val allAbis = configurationModel.activeAbis + configurationModel.unusedAbis
             // Include unused ABIs since changes to build.gradle may have changed the set of
             // ABIs that are built. We want to clean the old ones too.
-            for (abi in (configurationModel.activeAbis + configurationModel.unusedAbis)) {
+            for (abi in allAbis) {
                 if (abi.jsonFile.isFile) {
                     existingJsonAbis.add(abi)
                 } else {
@@ -72,55 +73,63 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                     infoln("Json file not found so contents couldn't be cleaned ${abi.jsonFile}")
                 }
             }
-            val configValueList = getNativeBuildMiniConfigs(
-                    existingJsonAbis,
-                    null)
-            val cleanCommands = mutableListOf<List<String>>()
-            val targetNames = mutableListOf<String>()
-
-            for (config in configValueList) {
-                cleanCommands.addAll(config.cleanCommandsComponents)
-                val targets = mutableSetOf<String>()
-                for (library in config.libraries.values) {
-                    targets.add(String.format("%s %s", library.artifactName, library.abi))
-                }
-                targetNames.add(Joiner.on(",").join(targets))
+            val configValueList = getNativeBuildMiniConfigs(existingJsonAbis,null)
+            val abiToLogFolder = allAbis
+                    .associate { it.abi.tag to it.intermediatesParentFolder }
+            val batch = configValueList.map { config ->
+                val abiName = config.libraries.values.mapNotNull { it.abi }.single()
+                CleanProcessInfo(
+                    commands = config.cleanCommandsComponents,
+                    logFolder = abiToLogFolder.getValue(abiName),
+                    targets = config.libraries.values.joinToString { library ->
+                        "${library.artifactName}-${library.abi}"
+                    }
+                )
             }
-            infoln("about to execute %s clean commands", cleanCommands.size)
-            executeProcessBatch(cleanCommands, targetNames)
+            infoln("about to execute %s clean command batches", batch.size)
+            executeProcessBatch(batch)
             infoln("clean complete")
         }
     }
 
     /**
-     * Given a list of build commands, execute each. If there is a failure, processing is stopped at
+     * Information about a batch of clean commands to execute. There is one command for each
+     * element of [commands] outer list. The inner list first contains the executable to run
+     * then each subsequent command-line parameter for it.
+     */
+    private data class CleanProcessInfo(
+        val logFolder : File,
+        val commands : List<List<String>>,
+        val targets : String
+    )
+
+    /**
+     * Given a list of clean commands, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    private fun executeProcessBatch(
-            commands: List<List<String>>,
-            targetNames: List<String>
-    ) {
-        for (commandIndex in commands.indices) {
-            val tokens = commands[commandIndex]
-            val target = targetNames[commandIndex]
-            logger.lifecycle(String.format("Clean %s", target))
-            val processBuilder = ProcessInfoBuilder()
-            processBuilder.setExecutable(tokens[0])
-            for (i in 1 until tokens.size) {
-                processBuilder.addArgs(tokens[i])
-            }
-            infoln("$processBuilder")
-            createProcessOutputJunction(
-                    configurationModel.variant.soFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
-                    configurationModel.variant.soFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
-                    configurationModel.variant.soFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
+    private fun executeProcessBatch(cleanProcessInfos: List<CleanProcessInfo>) {
+        val logFullStdout = configurationModel.variant.logNativeCleanToLifecycle
+        for (cleanProcessInfo in cleanProcessInfos) with(cleanProcessInfo) {
+            for (commandIndex in commands.indices) {
+                val number = if (commandIndex == 0) "" else " [$commandIndex]"
+                val tokens = commands[commandIndex]
+                logger.lifecycle("Clean $targets$number")
+                val processBuilder = ProcessInfoBuilder()
+                processBuilder.setExecutable(tokens[0])
+                processBuilder.addArgs(tokens.drop(1))
+                infoln("$processBuilder")
+                createProcessOutputJunction(
+                    logFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
+                    logFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
+                    logFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
                     processBuilder,
                     ""
-            )
+                )
                     .logStderr()
                     .logStdout()
-                    .logFullStdout(configurationModel.variant.ifLogNativeCleanToLifecycle { true } ?: false)
+                    .logFullStdout(logFullStdout)
                     .execute(ops::exec)
+            }
         }
     }
 }

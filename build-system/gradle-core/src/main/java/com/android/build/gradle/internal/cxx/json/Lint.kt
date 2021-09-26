@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json
 
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_FILE_DID_NOT_EXIST
@@ -23,6 +24,9 @@ import com.android.utils.cxx.CxxDiagnosticCode.BUILD_TARGET_COMMAND_COMPONENTS_C
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_TARGET_COMMAND_COMPONENTS_DID_NOT_EXIST
 import com.android.utils.cxx.CxxDiagnosticCode.COULD_NOT_CANONICALIZE_PATH
 import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ARTIFACT_NAME_DID_NOT_EXIST
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ABI_NAME_DID_NOT_EXIST
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_HAD_MULTIPLE_ABIS
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ABI_NAME_IS_INVALID
 import java.io.File
 import java.io.IOException
 
@@ -75,6 +79,27 @@ fun NativeBuildConfigValueMini.lint(json : File) {
                     "$name.runtimeFiles",
                     runtimeFile)
             }
+            val abiName = library.abi ?: ""
+            if (abiName.isEmpty()) {
+                errorln(LIBRARY_ABI_NAME_DID_NOT_EXIST, "expected ${name}.abi to exist")
+            } else {
+                val abi = Abi.getByName(abiName)
+                if (abi == null) {
+                    errorln(
+                        LIBRARY_ABI_NAME_IS_INVALID,
+                        "${name}.abi '$abiName' is invalid. Valid values are '${Abi.getDefaultValues().joinToString { it.tag }}'")
+                }
+            }
+        }
+
+        // Libraries for a single JSON should all have the same ABI
+        val allAbis = libraries.values
+            .mapNotNull { it.abi }
+            .mapNotNull { Abi.getByName(it) }
+            .mapNotNull { it.tag }
+            .distinct()
+        if (allAbis.size > 1) {
+            errorln(LIBRARY_HAD_MULTIPLE_ABIS, "unexpected mismatched library ABIs: ${allAbis.joinToString()}")
         }
     }
 }

@@ -55,9 +55,6 @@ import kotlin.streams.toList
  * Build a C/C++ project.
  */
 class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
-    override val objFolder: File get() = abi.objFolder
-    override val soFolder: File get() = abi.soFolder
-
     private val variant get() = abi.variant
 
     /**
@@ -178,12 +175,8 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             // (2) ExternalNativeCleanTask calls the individual clean targets for everything
             //     that was built. This is expected to delete the .so file but it is up to the
             //     CMakeLists.txt or Android.mk author to ensure this.
-            val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
-                "Unknown ABI seen ${library.abi}"
-            )
             val expectedOutputFile = FileUtils.join(
-                variant.soFolder,
-                abi.tag,
+                abi.soFolder,
                 output.name
             )
             if (!FileUtils.isSameFile(output, expectedOutputFile)) {
@@ -197,7 +190,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             }
 
             for (runtimeFile in library.runtimeFiles) {
-                val dest = FileUtils.join(variant.soFolder, abi.tag, runtimeFile.name)
+                val dest = FileUtils.join(abi.soFolder, runtimeFile.name)
                 hardLinkOrCopy(runtimeFile, dest)
             }
         }

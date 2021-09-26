@@ -17,11 +17,15 @@
 package com.android.build.gradle.internal.cxx.json
 
 import com.android.build.gradle.internal.cxx.StructuredLog
+import com.android.utils.cxx.CxxDiagnosticCode
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_FILE_DID_NOT_EXIST
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_TARGET_COMMAND_COMPONENTS_COMMAND_DID_NOT_EXIST
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_TARGET_COMMAND_COMPONENTS_DID_NOT_EXIST
 import com.android.utils.cxx.CxxDiagnosticCode.COULD_NOT_CANONICALIZE_PATH
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ABI_NAME_DID_NOT_EXIST
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ABI_NAME_IS_INVALID
 import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_ARTIFACT_NAME_DID_NOT_EXIST
+import com.android.utils.cxx.CxxDiagnosticCode.LIBRARY_HAD_MULTIPLE_ABIS
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -112,6 +116,80 @@ class LintKtTest {
             COULD_NOT_CANONICALIZE_PATH,
             "Could not canonicalize '\u0000' in lib1.runtimeFiles due to IOException"
         )
+    }
+
+    @Test
+    fun `missing ABI`() {
+        NativeBuildConfigValueMini().apply {
+            libraries = mutableMapOf()
+            libraries["lib1"] = NativeLibraryValueMini().apply {
+            }
+        }.lint(fileBeingLinted)
+        log.assertError(
+            LIBRARY_ABI_NAME_DID_NOT_EXIST,
+            "expected lib1.abi to exist"
+        )
+    }
+
+    @Test
+    fun `misspelled ABI name`() {
+        val buildCommand = tempFolder.newFile("cmake")
+        buildCommand.writeText("")
+        NativeBuildConfigValueMini().apply {
+            libraries = mutableMapOf()
+            libraries["lib1"] = NativeLibraryValueMini().apply {
+                buildCommandComponents = listOf(buildCommand.path)
+                artifactName = "liblib1"
+                abi = "x86_65"
+            }
+        }.lint(fileBeingLinted)
+        log.assertError(
+            LIBRARY_ABI_NAME_IS_INVALID,
+            "lib1.abi 'x86_65' is invalid. Valid values are 'armeabi-v7a, arm64-v8a, x86, x86_64'"
+        )
+    }
+
+    @Test
+    fun `mismatched ABI names`() {
+        val buildCommand = tempFolder.newFile("cmake")
+        buildCommand.writeText("")
+        NativeBuildConfigValueMini().apply {
+            libraries = mutableMapOf()
+            libraries["lib1"] = NativeLibraryValueMini().apply {
+                buildCommandComponents = listOf(buildCommand.path)
+                artifactName = "liblib1"
+                abi = "x86_64"
+            }
+            libraries["lib2"] = NativeLibraryValueMini().apply {
+                buildCommandComponents = listOf(buildCommand.path)
+                artifactName = "liblib2"
+                abi = "x86"
+            }
+        }.lint(fileBeingLinted)
+        log.assertError(
+            LIBRARY_HAD_MULTIPLE_ABIS,
+            "unexpected mismatched library ABIs: x86_64, x86"
+        )
+    }
+
+    @Test
+    fun `same ABI twice is not an error`() {
+        val buildCommand = tempFolder.newFile("cmake")
+        buildCommand.writeText("")
+        NativeBuildConfigValueMini().apply {
+            libraries = mutableMapOf()
+            libraries["lib1"] = NativeLibraryValueMini().apply {
+                buildCommandComponents = listOf(buildCommand.path)
+                artifactName = "liblib1"
+                abi = "armeabi-v7a"
+            }
+            libraries["lib2"] = NativeLibraryValueMini().apply {
+                buildCommandComponents = listOf(buildCommand.path)
+                artifactName = "liblib2"
+                abi = "armeabi-v7a"
+            }
+        }.lint(fileBeingLinted)
+        log.assertNoErrors()
     }
 
     @Rule @JvmField val tempFolder = TemporaryFolder()

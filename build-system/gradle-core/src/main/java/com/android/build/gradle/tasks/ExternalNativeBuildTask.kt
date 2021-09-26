@@ -23,7 +23,10 @@ import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder
 import com.android.build.gradle.internal.cxx.build.CxxRepublishBuilder
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.objFolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
@@ -31,12 +34,10 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.caching.internal.controller.BuildCacheController
-import org.gradle.internal.filewatch.FileWatcherFactory
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
-import org.gradle.internal.hash.FileHasher
 import org.gradle.work.DisableCachingByDefault
+import org.gradle.api.file.DirectoryProperty
 
 /**
  * Task that performs a C/C++ build action or refers to a build from a different task.
@@ -50,15 +51,13 @@ abstract class ExternalNativeBuildTask :
 
 
     @get:Internal
-    internal lateinit var configurationModel: CxxConfigurationModel
+    internal lateinit var variant: CxxVariantModel
 
     @get:OutputDirectory
-    val objFolder
-        get() = builder.objFolder
+    abstract val objFolder : DirectoryProperty
 
     @get:OutputDirectory
-    val soFolder
-        get() = builder.soFolder
+    abstract val soFolder : DirectoryProperty
 
     @Inject
     protected abstract fun getExecOperations(): ExecOperations
@@ -68,7 +67,7 @@ abstract class ExternalNativeBuildTask :
             IssueReporterLoggingEnvironment(
                 DefaultIssueReporter(LoggerWrapper(logger)),
                 analyticsService.get(),
-                configurationModel.variant
+                variant
             ).use {
                 builder.build(getExecOperations())
             }
@@ -91,7 +90,22 @@ fun createRepublishCxxBuildTask(
     override fun configure(task: ExternalNativeBuildTask) {
         super.configure(task)
         task.builder = CxxRepublishBuilder(configurationModel)
-        task.configurationModel = configurationModel
+        task.variant = configurationModel.variant
+        // We use all ABIs not just active ABIs to cover the case where active ABIs is
+        // empty. This is a corner case but it does happen in legitimate scenarios.
+        // See b/65323727
+        val allAbis = (configurationModel.activeAbis + configurationModel.unusedAbis)
+        val soParentFolders = allAbis
+            .map { it.soRepublishFolder.parentFile }
+            .distinct()
+        if (soParentFolders.size != 1) {
+            errorln("More than one SO folder: ${soParentFolders.joinToString { it.path }}")
+        }
+        val objFolders = allAbis
+            .map { it.intermediatesParentFolder }
+            .first() // Note: there can be multiple .o folders. We have to choose one for backcompat.
+        task.soFolder.set(soParentFolders.single())
+        task.objFolder.set(objFolders)
     }
 }
 
@@ -110,10 +124,8 @@ fun createWorkingCxxBuildTask(
         super.configure(task)
         task.builder = CxxRegularBuilder(abi)
         task.variantName = abi.variant.variantName
-        task.configurationModel = CxxConfigurationModel(
-            variant = abi.variant,
-            activeAbis = listOf(abi).filter { it.isActiveAbi },
-            unusedAbis = listOf(abi).filter { !it.isActiveAbi },
-        )
+        task.variant = abi.variant
+        task.soFolder.set(abi.soFolder)
+        task.objFolder.set(abi.objFolder)
     }
 }

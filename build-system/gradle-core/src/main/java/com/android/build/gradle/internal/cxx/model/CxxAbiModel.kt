@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
-import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -109,6 +108,13 @@ data class CxxAbiModel(
      * If present, the STL .so file that needs to be distributed with the libraries built.
      */
     val stlLibraryFile: File?,
+
+    /**
+     * This ABI's intermediates folder but without the ABI at the end. This can't be stored
+     * on the variant because {hashcode} may be different between two ABIs in the same variant.
+     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}
+     */
+    val intermediatesParentFolder: File
 ) {
     override fun toString() = "${abi.tag}:${variant.variantName}${variant.module.gradleModulePathName}"
 }
@@ -126,6 +132,14 @@ val CxxAbiModel.jsonFile: File
  */
 val CxxAbiModel.miniConfigFile: File
     get() = join(modelMetadataFolder, "android_gradle_build_mini.json")
+
+/**
+ * Location of model generation metadata
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta
+ */
+private val CxxAbiModel.modelMetadataFolder: File
+    get() = join(intermediatesParentFolder, "meta", abi.tag)
+
 
 /**
  * Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
@@ -172,15 +186,8 @@ val CxxAbiModel.ninjaDepsFile: File
 val CxxAbiModel.objFolder: File
     get() = when(variant.module.buildSystem) {
         CMAKE -> join(cxxBuildFolder, "CMakeFiles")
-        NDK_BUILD -> join(variant.soFolder, abi.tag)
+        NDK_BUILD -> soFolder
     }
-
-/**
- * Location of model generation metadata
- *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta
- */
-private val CxxAbiModel.modelMetadataFolder: File
-    get() = join(variant.intermediatesFolder, "meta", abi.tag)
 
 /**
  * Output file of the Cxx*Model structure
@@ -324,12 +331,6 @@ fun <T> CxxAbiModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
  */
 fun <T> CxxAbiModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
     variant.ifLogNativeBuildToLifecycle(compute)
-
-/**
- * Call [compute] if logging native clean to lifecycle
- */
-fun <T> CxxAbiModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
-    variant.ifLogNativeCleanToLifecycle(compute)
 
 /**
  * Returns the Ninja build commands from CMakeSettings.json.

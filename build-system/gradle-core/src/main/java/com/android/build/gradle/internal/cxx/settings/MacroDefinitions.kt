@@ -258,12 +258,6 @@ enum class Macro(
         tag = "moduleBuildIntermediatesDir",
         example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx",
         bind = CxxModuleModel::intermediatesFolder),
-    NDK_VARIANT_BUILD_INTERMEDIATES_DIR(
-        description = "The variant level build intermediates folder.",
-        environment = GRADLE,
-        tag = "variantBuildIntermediatesDir",
-        example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
-        bind = CxxVariantModel::intermediatesFolder),
     NDK_VARIANT_NAME(
         description = "Name of the gradle variant.",
         environment = GRADLE,
@@ -283,13 +277,6 @@ enum class Macro(
         example = "${NDK_MODULE_DIR.ref}/.cxx",
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx",
         bind = CxxModuleModel::cxxFolder),
-    NDK_VARIANT_BUILD_ROOT(
-        description = "The default variant-level CMake or ndk-build build root that gradle uses.",
-        environment = GRADLE,
-        tag = "variantBuildRoot",
-        example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
-        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
-        bind = CxxVariantModel::cxxBuildFolder),
     NDK_BUILD_ROOT(
         description = "The default CMake or ndk-build build root that gradle uses.",
         environment = GRADLE,
@@ -311,23 +298,6 @@ enum class Macro(
         example = "-DCPP_FLAG_DEFINED",
         cmakeProperties = listOf(CMAKE_CXX_FLAGS),
         bind = CxxVariantModel::cppFlags),
-    NDK_VARIANT_SO_OUTPUT_DIR(
-        description = "The variant-level folder where .so files are written.",
-        environment = GRADLE,
-        tag = "variantSoOutputDir",
-        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj",
-        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj/local",
-        bind = CxxVariantModel::soFolder),
-    NDK_VARIANT_SO_REPUBLISH_DIR(
-        description = "A folder with a predictable name where final build outputs (mainly .so) are " +
-                "hard linked or copied after the build completes. The purpose is so scripts " +
-                "and other external tools have a known path, with no embedded hashcode, to locate " +
-                "these files.",
-        environment = GRADLE,
-        tag = "variantSoRepublishDir",
-        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj",
-        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local",
-        bind = CxxVariantModel::soRepublishFolder),
     NDK_SO_OUTPUT_DIR(
         description = "The ABI-level folder where .so files are written.",
         environment = GRADLE,
@@ -346,6 +316,12 @@ enum class Macro(
         example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64",
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local/x86_64",
         bind = CxxAbiModel::soRepublishFolder),
+    NDK_INTERMEDIATES_PARENT_DIR(
+        description = "The intermediates folder but without the ABI at the end.",
+        environment = GRADLE,
+        tag = "intermediatesParentDir",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
+        bind = CxxAbiModel::intermediatesParentFolder),
     NDK_VARIANT_OPTIMIZATION_TAG(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",
