@@ -19,7 +19,6 @@ import com.android.SdkConstants;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.manifest.parser.ManifestInfo;
 import com.android.tools.tracer.Trace;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +26,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -114,10 +111,12 @@ public class ApkParser {
                         .setServices(manifest.services());
 
         for (ZipUtils.ZipEntry entry : zipEntries) {
-            Path path = Paths.get(entry.name);
-            if (path.startsWith("lib")) {
-                // Native libraries are stored in the APK under lib/<ABI>/
-                builder.addLibraryAbi(path.getName(1).toString());
+            // Native libraries are stored in the APK under lib/<ABI>/
+            if (entry.name.startsWith("lib/")) {
+                String[] paths = entry.name.split("/");
+                if (paths.length > 1) {
+                    builder.addLibraryAbi(paths[1]);
+                }
             }
             builder.addApkEntry(entry);
         }
