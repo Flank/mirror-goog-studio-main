@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.api.attributes.BuildTypeAttr
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.dependency.ResolutionResultProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType.ANDROID
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.builder.errors.FakeIssueReporter
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
@@ -112,11 +112,19 @@ internal class FullDependencyGraphBuilderTest {
                 dependencyType = ANDROID
                 file = File("path/to/mergedManifest/debug/AndroidManifest.xml")
                 capability("foo", "bar", "1.0")
+                attribute(
+                    VariantAttr.ATTRIBUTE,
+                    objectFactory.named(VariantAttr::class.java, "debug")
+                )
             }
             project(":foo") {
                 dependencyType = ANDROID
                 file = File("path/to/mergedManifest/debugTestFixtures/AndroidManifest.xml")
                 capability("foo", "bar-test-fixtures", "1.0")
+                attribute(
+                    VariantAttr.ATTRIBUTE,
+                    objectFactory.named(VariantAttr::class.java, "debug")
+                )
 
                 dependency(mainLib)
             }
@@ -126,14 +134,14 @@ internal class FullDependencyGraphBuilderTest {
         Truth
             .assertThat(compileDependencies.map { it.key })
             .containsExactly(
-                "defaultBuildName|:foo||foo:bar:1.0",
-                "defaultBuildName|:foo||foo:bar-test-fixtures:1.0"
+                "defaultBuildName|:foo|com.android.build.gradle.internal.attributes.VariantAttr>debug|foo:bar:1.0",
+                "defaultBuildName|:foo|com.android.build.gradle.internal.attributes.VariantAttr>debugTestFixtures|foo:bar-test-fixtures:1.0"
             )
 
         // check that the dependency instance of the fixture is the same instance as the main
         val fixture =
-            compileDependencies.single { it.key == "defaultBuildName|:foo||foo:bar-test-fixtures:1.0" }
-        val main = compileDependencies.single { it.key == "defaultBuildName|:foo||foo:bar:1.0" }
+            compileDependencies.single { it.key == "defaultBuildName|:foo|com.android.build.gradle.internal.attributes.VariantAttr>debugTestFixtures|foo:bar-test-fixtures:1.0" }
+        val main = compileDependencies.single { it.key == "defaultBuildName|:foo|com.android.build.gradle.internal.attributes.VariantAttr>debug|foo:bar:1.0" }
 
         Truth.assertThat(fixture.dependencies.single()).isSameInstanceAs(main)
     }

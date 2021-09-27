@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -151,7 +151,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
 fun ResolvedArtifactResult.toIdString(): String {
     return id.componentIdentifier.toIdString {
-        variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
+        variant.getVariantName()
     }
 }
 

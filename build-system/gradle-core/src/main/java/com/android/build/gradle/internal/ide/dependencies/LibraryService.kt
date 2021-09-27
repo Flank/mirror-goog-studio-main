@@ -17,9 +17,11 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.v2.LibraryImpl
 import com.android.build.gradle.internal.ide.v2.LibraryInfoImpl
 import com.android.build.gradle.internal.ide.v2.ProjectInfoImpl
+import com.android.builder.core.VariantType
 import com.android.builder.model.v2.ide.Library
 import com.android.ide.common.caching.CreatingCache
 import com.android.utils.FileUtils
@@ -120,9 +122,27 @@ class LibraryServiceImpl(
     private fun getProjectInfo(variant: ResolvedVariantResult): ProjectInfoImpl =
             projectInfoCache.computeIfAbsent(variant) {
                 val component = it.owner as ProjectComponentIdentifier
+                val isTestFixturesVariant = variant.isTestFixturesVariant()
 
                 ProjectInfoImpl(
-                    getAttributeMap(it),
+                    // For testFixtures artifacts, the variantAttr is set to the main variant
+                    // instead of the testFixtures variant because when querying for the artifact
+                    // from a module that has a dependency on the testFixtures component of another
+                    // module (or from tests in the same module), the artifact of the main component
+                    // and the testFixtures component should both be returned, and to do that Gradle
+                    // requires them to have all the attributes that are not specified in the query
+                    // to be matching.
+                    // Here we modify the variantAttr to set it back to the testFixtures variant as
+                    // the IDE depends on the variant pointing to the actual variant that produces
+                    // the artifact.
+                    getAttributeMap(it) { attribute ->
+                        return@getAttributeMap if (isTestFixturesVariant &&
+                            attribute.first == VariantAttr::class.java.name) {
+                            attribute.first to attribute.second + VariantType.TEST_FIXTURES_SUFFIX
+                        } else {
+                            attribute
+                        }
+                    },
                     getCapabilityList(it),
                     stringCache.cacheString(component.build.name),
                     stringCache.cacheString(component.projectPath)
@@ -249,9 +269,18 @@ class LibraryServiceImpl(
     }
 
     private fun getAttributeMap(variant: ResolvedVariantResult): Map<String, String> =
+        getAttributeMap(variant) { it }
+
+    private fun getAttributeMap(
+        variant: ResolvedVariantResult,
+        attributeTransform: (Pair<String, String>) -> Pair<String, String>
+    ): Map<String, String> =
             variant.attributes.keySet().mapNotNull { key ->
                 val attr = variant.attributes.getAttribute(key)
-                attr?.let { stringCache.cacheString(key.name) to stringCache.cacheString(it.toString()) }
+                attr?.let {
+                    val attribute = attributeTransform(key.name to it.toString())
+                    stringCache.cacheString(attribute.first) to stringCache.cacheString(attribute.second)
+                }
             }
                 // this is a residual information from the way we combine the dependency graph and
                 // the artifacts queried via ArtifactCollection, and the later always include the
