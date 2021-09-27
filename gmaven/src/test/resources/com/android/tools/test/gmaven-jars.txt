@@ -165,7 +165,6 @@ com/android/tools/apkparser/apkanalyzer
   com/android/tools/apk/analyzer/internal/rewriters/
 
 com/android/tools/apkparser/binary-resources
-  LICENSE
   META-INF/
   META-INF/MANIFEST.MF
   NOTICE

@@ -1,5 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
+load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -47,6 +49,31 @@ coverage_java_library(
     ],
 )
 
+# Sepeare for now as the archive-patcher jars are not shipped to maven.
+maven_library(
+    name = "tools.analyzer.maven",
+    srcs = [],
+    bundled_deps = [
+        ":tools.analyzer",
+    ],
+    coordinates = "com.android.tools.apkparser:apkanalyzer:" + BASE_VERSION,
+    description = "Library for parsing and analyzing information from APK files",
+    notice = "NOTICE",
+    pom_name = "Apk Analyzer library",
+    resource_strip_prefix = "tools/base/apkparser/analyzer",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/apkparser:tools.binary-resources",
+        "//tools/base/common:tools.common",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.smali.baksmali",
+        "@maven//:org.smali.dexlib2",
+    ],
+)
+
 coverage_java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
@@ -63,20 +90,4 @@ coverage_java_test(
         "@maven//:junit.junit",
         "@maven//:org.smali.dexlib2",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-        "//prebuilts/tools/common/archive-patcher:explainer",
-        "//prebuilts/tools/common/archive-patcher:generator",
-        "//prebuilts/tools/common/archive-patcher:shared",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

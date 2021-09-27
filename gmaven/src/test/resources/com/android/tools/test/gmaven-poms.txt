@@ -323,24 +323,24 @@ com.android.tools.analytics-library:tracker
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.apkparser:apkanalyzer
-  pomName=com.android.tools.apkparser.apkanalyzer
+  pomName=Apk Analyzer library
   description=Library for parsing and analyzing information from APK files
   dependencies:
-    org.smali:dexlib2 (runtime)
-    org.smali:baksmali (runtime)
-    com.android.tools:sdk-common (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools:sdklib (runtime)
     com.android.tools:annotations (runtime)
     com.android.tools.apkparser:binary-resources (runtime)
+    com.android.tools:common (runtime)
+    com.android.tools:sdk-common (runtime)
+    com.android.tools:sdklib (runtime)
+    com.google.guava:guava (runtime)
+    org.smali:baksmali (runtime)
+    org.smali:dexlib2 (runtime)
 
 com.android.tools.apkparser:binary-resources
-  pomName=com.android.tools.apkparser.binary-resources
+  pomName=Binary Resources parser
   description=Library for parsing the resources.arsc file
   dependencies:
-    com.google.guava:guava (runtime)
-    com.google.code.findbugs:jsr305 (runtime)
     com.android.tools:annotations (runtime)
+    com.google.guava:guava (runtime)
 
 com.android.tools.build:aapt2
   pomName=com.android.tools.build.aapt2

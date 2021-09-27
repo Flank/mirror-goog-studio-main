@@ -1,5 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -19,9 +21,14 @@ iml_module(
     ],
 )
 
-coverage_java_library(
+maven_library(
     name = "tools.binary-resources",
     srcs = glob(["binary-resources/src/main/java/**"]),
+    coordinates = "com.android.tools.apkparser:binary-resources:" + BASE_VERSION,
+    description = "Library for parsing the resources.arsc file",
+    notice = "binary-resources/NOTICE",
+    pom_name = "Binary Resources parser",
+    resource_strip_prefix = "tools/base/apkparser/binary-resources",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -41,16 +48,4 @@ coverage_java_test(
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "binary-resources/src/main/**/*.java",
-    ]) + [
-        "binary-resources/build.gradle",
-        "binary-resources/NOTICE",
-        "binary-resources/LICENSE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

@@ -28,8 +28,8 @@ dependencies {
     testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation libs.com.android.tools.analyticsLibrary.tracker
     testImplementation libs.com.android.tools.analyticsLibrary.testing
-    testImplementation project(':base:apkparser:binary-resources')
-    testImplementation project(':base:apkparser:apkanalyzer')
+    testImplementation libs.com.android.tools.apkparser.binaryResources
+    testImplementation libs.com.android.tools.apkparser.apkanalyzer
     testImplementation libs.gson
     testImplementation libs.truth
     testImplementation libs.kxml

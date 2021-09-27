@@ -191,8 +191,8 @@ dependencies {
     testImplementation libs.kotlin_gradle_plugin
     testImplementation externalTestFixtures.repository
     testImplementation testFixtures(project(":base:builder"))
-    apiTestImplementation project(":base:apkparser:apkanalyzer")
-    apiTestImplementation project(":base:apkparser:apkanalyzer-cli")
+    apiTestImplementation libs.com.android.tools.apkparser.apkanalyzer
+    apiTestImplementation externalTestFixtures.apkanalyzer
     testCompileOnly project(':base:profile')
 
     // mlkit-common
