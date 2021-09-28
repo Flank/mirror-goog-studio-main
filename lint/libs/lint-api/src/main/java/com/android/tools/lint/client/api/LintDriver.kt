@@ -233,6 +233,15 @@ class LintDriver(
      */
     var allowSuppress = false
 
+    /**
+     * If [allowSuppress] is true, no suppress annotations or baselining
+     * or build DSL flags or `lint.xml` configuration flags can be used
+     * to suppress issues marked with [Issue.suppressNames]. However, if
+     * the [allowBaselineSuppress] is set, baselines will be allowed to
+     * suppress after all.
+     */
+    var allowBaselineSuppress = false
+
     private var parserErrors: Boolean = false
 
     /** Whether we should run all normal checks on test sources. */
@@ -2541,7 +2550,7 @@ class LintDriver(
             ) {
                 val filtered = baseline.findAndMark(incident)
                 if (filtered) {
-                    if (!allowSuppress && issue.suppressNames != null) {
+                    if (!allowBaselineSuppress && !allowSuppress && issue.suppressNames != null) {
                         flagInvalidSuppress(
                             context, issue, Location.create(baseline.file),
                             null, issue.suppressNames

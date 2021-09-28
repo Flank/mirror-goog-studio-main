@@ -1036,8 +1036,8 @@ class LintBaselineTest {
 
     /**
      * Read the given [baseline] file and strip out the version details
-     * in the root tag which can change over time to make the golden files
-     * stable.
+     * in the root tag which can change over time to make the golden
+     * files stable.
      */
     private fun readBaseline(baseline: File): String {
         val newBaseline = baseline.readText().trim().let {

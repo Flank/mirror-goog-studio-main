@@ -813,6 +813,7 @@ open class LintCliClient : LintClient {
         driver.fatalOnlyMode = flags.isFatalOnly
         driver.checkDependencies = flags.isCheckDependencies
         driver.allowSuppress = flags.allowSuppress
+        driver.allowBaselineSuppress = flags.allowBaselineSuppress
         val baselineFile = flags.baselineFile
         if (baselineFile != null) {
             val baseline = LintBaseline(this, baselineFile)

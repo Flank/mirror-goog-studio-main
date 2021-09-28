@@ -1449,6 +1449,8 @@ public class Main {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
                 flags.setAllowSuppress(false);
+            } else if (arg.equals("--XallowBaselineSuppress")) {
+                flags.setAllowBaselineSuppress(true);
             } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
                 flags.setPrintInternalErrorStackTrace(true);
             } else if (arg.equals(ARG_ANALYZE_ONLY)) {
