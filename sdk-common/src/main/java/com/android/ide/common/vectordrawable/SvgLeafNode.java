@@ -79,29 +79,24 @@ class SvgLeafNode extends SvgNode {
             String vdValue = colorSvg2Vd(svgValue, "#000000");
 
             if (vdValue == null) {
+                if (name.equals(SVG_FILL) || name.equals(SVG_STROKE)) {
+                    SvgGradientNode gradientNode = getGradientNode(svgValue);
+                    if (gradientNode != null) {
+                        gradientNode = gradientNode.deepCopy();
+                        gradientNode.setSvgLeafNode(this);
+                        if (name.equals(SVG_FILL)) {
+                            gradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
+                            mFillGradientNode = gradientNode;
+                        } else {
+                            gradientNode.setGradientUsage(SvgGradientNode.GradientUsage.STROKE);
+                            mStrokeGradientNode = gradientNode;
+                        }
+                        continue;
+                    }
+                }
+
                 if (svgValue.endsWith("px")) {
                     vdValue = svgValue.substring(0, svgValue.length() - 2).trim();
-                } else if (svgValue.startsWith("url(#") && svgValue.endsWith(")")) {
-                    // Copies gradient from tree.
-                    vdValue = svgValue.substring(5, svgValue.length() - 1);
-                    if (name.equals(SVG_FILL)) {
-                        SvgNode node = getTree().getSvgNodeFromId(vdValue);
-                        if (node == null) {
-                            continue;
-                        }
-                        mFillGradientNode = (SvgGradientNode)node.deepCopy();
-                        mFillGradientNode.setSvgLeafNode(this);
-                        mFillGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
-                    } else if (name.equals(SVG_STROKE)) {
-                        SvgNode node = getTree().getSvgNodeFromId(vdValue);
-                        if (node == null) {
-                            continue;
-                        }
-                        mStrokeGradientNode = (SvgGradientNode)node.deepCopy();
-                        mStrokeGradientNode.setSvgLeafNode(this);
-                        mStrokeGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.STROKE);
-                    }
-                    continue;
                 } else {
                     vdValue = svgValue;
                 }
@@ -114,6 +109,18 @@ class SvgLeafNode extends SvgNode {
             writer.write(vdValue);
             writer.write("\"");
         }
+    }
+
+    @Nullable
+    private SvgGradientNode getGradientNode(@NonNull String svgValue) {
+        if (svgValue.startsWith("url(#") && svgValue.endsWith(")")) {
+            String id = svgValue.substring(5, svgValue.length() - 1);
+            SvgNode node = getTree().getSvgNodeFromId(id);
+            if (node instanceof SvgGradientNode) {
+                return (SvgGradientNode) node;
+            }
+        }
+        return null;
     }
 
     /**
@@ -197,7 +204,7 @@ class SvgLeafNode extends SvgNode {
         if (!mStackedTransform.isIdentity() || needsConvertRelativeMoveAfterClose) {
             VdPath.Node.transform(mStackedTransform, nodes);
         }
-        mPathData = VdPath.Node.nodeListToString(nodes, mSvgTree.getCoordinateFormat());
+        mPathData = VdPath.Node.nodeListToString(nodes, mSvgTree);
     }
 
     @Override
@@ -218,7 +225,7 @@ class SvgLeafNode extends SvgNode {
                     double determinant = mStackedTransform.getDeterminant();
                     if (determinant != 0) {
                         width *= sqrt(abs(determinant));
-                        mVdAttributesMap.put(SVG_STROKE_WIDTH, formatFloatValue(width));
+                        mVdAttributesMap.put(SVG_STROKE_WIDTH, mSvgTree.formatCoordinate(width));
                     }
                     if ((mStackedTransform.getType() & AffineTransform.TYPE_GENERAL_SCALE) != 0) {
                         logWarning("Scaling of the stroke width is approximate");
@@ -232,7 +239,7 @@ class SvgLeafNode extends SvgNode {
     @Override
     public void writeXml(@NonNull OutputStreamWriter writer, @NonNull String indent)
             throws IOException {
-        // First, decide whether or not we can skip this path, since it has no visible effect.
+        // First, decide whether we can skip this path, since it has no visible effect.
         if (mPathData == null || mPathData.isEmpty()) {
             return; // No path to draw.
         }

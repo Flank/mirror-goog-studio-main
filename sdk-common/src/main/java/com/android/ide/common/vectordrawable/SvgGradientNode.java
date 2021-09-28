@@ -17,7 +17,6 @@ package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.DecimalUtils.trimInsignificantZeros;
-import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -244,7 +243,7 @@ class SvgGradientNode extends SvgNode {
             // Stores the coordinates in the gradientBounds and transformedBounds arrays to apply
             // the proper transformation.
             for (Map.Entry<String, Integer> entry : vectorCoordinateMap.entrySet()) {
-                // Gets the index corresponding to x1, y1, x2 and y2.
+                // Get the index corresponding to x1, y1, x2 and y2.
                 // x1 and x2 are indexed as 0 and 2
                 // y1 and y2 are indexed as 1 and 3
                 String s = entry.getKey();
@@ -310,23 +309,27 @@ class SvgGradientNode extends SvgNode {
             Point2D transformedRadius = new Point2D.Double(r, 0);
             mLocalTransform.deltaTransform(radius, transformedRadius);
 
-            mVdAttributesMap.put("cx", formatFloatValue(transformedBounds[0]));
-            mVdAttributesMap.put("cy", formatFloatValue(transformedBounds[1]));
-            mVdAttributesMap.put("r", formatFloatValue(transformedRadius.distance(0, 0)));
+            mVdAttributesMap.put("cx", mSvgTree.formatCoordinate(transformedBounds[0]));
+            mVdAttributesMap.put("cy", mSvgTree.formatCoordinate(transformedBounds[1]));
+            mVdAttributesMap.put("r", mSvgTree.formatCoordinate(transformedRadius.distance(0, 0)));
         }
 
-        for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
-            String key = entry.getKey();
-            String gradientAttr = Svg2Vector.gradientMap.get(key);
-            String svgValue = entry.getValue().trim();
-            String vdValue;
-            vdValue = colorSvg2Vd(svgValue, "#000000");
+        for (Map.Entry<String, String> entry : Svg2Vector.gradientMap.entrySet()) {
+            String svgAttribute = entry.getKey();
+            String gradientAttr = entry.getValue();
+            String svgValue = mVdAttributesMap.get(svgAttribute);
+            if (gradientAttr.isEmpty() || svgValue == null) {
+                continue;
+            }
+            svgValue = svgValue.trim();
+            String vdValue = colorSvg2Vd(svgValue, "#000000");
 
             if (vdValue == null) {
-                if (vectorCoordinateMap.containsKey(key)) {
-                    double x = transformedBounds[vectorCoordinateMap.get(key)];
-                    vdValue = formatFloatValue(x);
-                } else if (key.equals("spreadMethod")) {
+                Integer coordinateIndex = vectorCoordinateMap.get(svgAttribute);
+                if (coordinateIndex != null) {
+                    double x = transformedBounds[coordinateIndex];
+                    vdValue = mSvgTree.formatCoordinate(x);
+                } else if (svgAttribute.equals("spreadMethod")) {
                     if (svgValue.equals("pad")) {
                         vdValue = "clamp";
                     } else if (svgValue.equals("reflect")) {
@@ -338,22 +341,21 @@ class SvgGradientNode extends SvgNode {
                         vdValue = "clamp";
                     }
                 } else if (svgValue.endsWith("%")) {
-                    vdValue = formatFloatValue(getGradientCoordinate(key, 0).getValue());
+                    double coordinate = getGradientCoordinate(svgAttribute, 0).getValue();
+                    vdValue = mSvgTree.formatCoordinate(coordinate);
                 } else {
                     vdValue = svgValue;
                 }
             }
 
-            if (!gradientAttr.isEmpty()) {
-                writer.write(System.lineSeparator());
-                writer.write(indent);
-                writer.write(INDENT_UNIT);
-                writer.write(CONTINUATION_INDENT);
-                writer.write(gradientAttr);
-                writer.write("=\"");
-                writer.write(vdValue);
-                writer.write("\"");
-            }
+            writer.write(System.lineSeparator());
+            writer.write(indent);
+            writer.write(INDENT_UNIT);
+            writer.write(CONTINUATION_INDENT);
+            writer.write(gradientAttr);
+            writer.write("=\"");
+            writer.write(vdValue);
+            writer.write("\"");
         }
         writer.write('>');
         writer.write(System.lineSeparator());

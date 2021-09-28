@@ -17,8 +17,8 @@ package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.SvgNode.CONTINUATION_INDENT;
 import static com.android.ide.common.vectordrawable.SvgNode.INDENT_UNIT;
+import static com.android.utils.DecimalUtils.trimInsignificantZeros;
 import static com.android.utils.PositionXmlParser.getPosition;
-import static com.android.utils.XmlUtils.formatFloatValue;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
@@ -105,6 +105,8 @@ class SvgTree {
      * information of that style class.
      */
     private final Map<String, String> mStyleClassAttributeMap = new HashMap<>();
+
+    @Nullable private NumberFormat mCoordinateFormat;
 
     enum SvgLogLevel {
         ERROR,
@@ -271,10 +273,12 @@ class SvgTree {
     }
 
     public float getViewportWidth() {
-        return (viewBox == null) ? -1 : viewBox[2];
+        return viewBox == null ? -1 : viewBox[2];
     }
 
-    public float getViewportHeight() { return (viewBox == null) ? -1 : viewBox[3]; }
+    public float getViewportHeight() {
+        return viewBox == null ? -1 : viewBox[3];
+    }
 
     private enum SizeType {
         PIXEL,
@@ -442,15 +446,24 @@ class SvgTree {
         return mRoot.findParent(node);
     }
 
+    /** Formats and returns the given coordinate with an appropriate precision. */
+    @NonNull
+    public String formatCoordinate(double coordinate) {
+        return trimInsignificantZeros(getCoordinateFormat().format(coordinate));
+    }
+
     /**
      * Returns a {@link NumberFormat] of sufficient precision to use for formatting coordinate
      * values within the viewport.
      */
     @NonNull
-    public NumberFormat getCoordinateFormat() {
-        float viewportWidth = getViewportWidth();
-        float viewportHeight = getViewportHeight();
-        return VdUtil.getCoordinateFormat(Math.max(viewportHeight, viewportWidth));
+    private NumberFormat getCoordinateFormat() {
+        if (mCoordinateFormat == null) {
+            float viewportWidth = getViewportWidth();
+            float viewportHeight = getViewportHeight();
+            mCoordinateFormat = VdUtil.getCoordinateFormat(Math.max(viewportHeight, viewportWidth));
+        }
+        return mCoordinateFormat;
     }
 
     public void writeXml(@NonNull OutputStream stream) throws IOException {
@@ -466,28 +479,26 @@ class SvgTree {
             writer.write(AAPT_BOUND);
             writer.write(System.lineSeparator());
         }
-        float viewportWidth = getViewportWidth();
-        float viewportHeight = getViewportHeight();
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:width=\"");
-        writer.write(formatFloatValue(getWidth() * getScaleFactor()));
+        writer.write(formatCoordinate(getWidth() * getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:height=\"");
-        writer.write(formatFloatValue(getHeight() * getScaleFactor()));
+        writer.write(formatCoordinate(getHeight() * getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportWidth=\"");
-        writer.write(formatFloatValue(viewportWidth));
+        writer.write(formatCoordinate(getViewportWidth()));
         writer.write("\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportHeight=\"");
-        writer.write(formatFloatValue(viewportHeight));
+        writer.write(formatCoordinate(getViewportHeight()));
         writer.write("\">");
         writer.write(System.lineSeparator());
 

@@ -16,7 +16,6 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
-import static com.android.utils.DecimalUtils.trimInsignificantZeros;
 import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.SdkConstants;
@@ -37,7 +36,6 @@ import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -163,7 +161,7 @@ class VdPath extends VdElement {
         }
 
         @NonNull
-        public static String nodeListToString(@NonNull Node[] nodes, @NonNull NumberFormat format) {
+        public static String nodeListToString(@NonNull Node[] nodes, @NonNull SvgTree svgTree) {
             StringBuilder result = new StringBuilder();
             for (Node node : nodes) {
                 result.append(node.mType);
@@ -185,7 +183,7 @@ class VdPath extends VdElement {
                     if (!Float.isFinite(param)) {
                         throw new IllegalArgumentException("Invalid number: " + param);
                     }
-                    String str = trimInsignificantZeros(format.format(param));
+                    String str = svgTree.formatCoordinate(param);
                     result.append(str);
                 }
             }
@@ -211,12 +209,12 @@ class VdPath extends VdElement {
                 char previousType) {
             // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters.
             // And for arcTo, we also need to isolate the parameters for transformation.
-            // Therefore looping will be necessary for such commands.
+            // Therefore, looping will be necessary for such commands.
             //
             // Note that if the matrix is translation only, then we can save many computations.
             int paramsLen = mParams.length;
             float[] tempParams = new float[2 * paramsLen];
-            // These has to be pre-transformed value. In other words, the same as it is
+            // These have to be pre-transformed values. In other words, the same as it is
             // in the pathData.
             float currentX = currentPoint.x;
             float currentY = currentPoint.y;
@@ -435,7 +433,7 @@ class VdPath extends VdElement {
                 int paramsLen) {
             double[] doubleArray = new double[paramsLen];
             for (int i = 0; i < paramsLen; i++) {
-                doubleArray[i] = (double) coordinates[i + offset];
+                doubleArray[i] = coordinates[i + offset];
             }
 
             totalTransform.deltaTransform(doubleArray, 0, doubleArray, 0, paramsLen / 2);
@@ -539,10 +537,7 @@ class VdPath extends VdElement {
         Path2D path2d = new Path2D.Double(mFillType);
         toPath(path2d);
 
-        // SWing operate the matrix is using pre-concatenate by default.
-        // Below is how this is handled in Android framework.
-        // pathMatrix.set(groupStackedMatrix);
-        // pathMatrix.postScale(scaleX, scaleY);
+        // Graphics2D transformations effectively pre-concatenate the transformation matrix.
         g.setTransform(new AffineTransform());
         g.scale(scaleX, scaleY);
         g.transform(currentMatrix);

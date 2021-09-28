@@ -19,7 +19,7 @@ import static com.android.utils.XmlUtils.formatFloatValue;
 
 /** Builds a string for SVG file's path data. */
 public class PathBuilder {
-    private StringBuilder mPathData = new StringBuilder();
+    private final StringBuilder mPathData = new StringBuilder();
 
     private static char encodeBoolean(boolean flag) {
         return flag ? '1' : '0';

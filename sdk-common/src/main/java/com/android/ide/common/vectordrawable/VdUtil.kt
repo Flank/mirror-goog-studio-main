@@ -30,7 +30,7 @@ import kotlin.math.log10
  */
 fun getCoordinateFormat(maxViewportSize: Float): NumberFormat {
   val exponent = floor(log10(maxViewportSize.toDouble())).toInt()
-  var fractionalDigits = 5 - exponent
+  var fractionalDigits = 4 - exponent
   val formatBuilder = StringBuilder("#")
   if (fractionalDigits > 0) {
     // Build a string with decimal places for "#.##...", and cap at 6 digits.
