@@ -149,6 +149,7 @@ public class CheckAll {
                     "lintCustomLocalAndPublishRules", // contains integ test for lint itself
                     "simpleCompositeBuild", // broken composite build project.
                     "multiCompositeBuild", // too complex composite build project to setup
-                    "sourceDependency" // not set up fully, just used for sync tests
+                    "sourceDependency", // not set up fully, just used for sync tests
+                    "testFixturesApp" // disabled due to bug in Gradle, b/201391004
                     );
 }
