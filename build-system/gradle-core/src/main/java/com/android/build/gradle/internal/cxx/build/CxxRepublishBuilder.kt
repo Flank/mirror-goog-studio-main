@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.cxx.build
 
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.model.objFolder
 import org.gradle.process.ExecOperations
 import java.io.File
 
@@ -44,12 +44,12 @@ class CxxRepublishBuilder(val model: CxxConfigurationModel) : CxxBuilder {
                 val republishOutputLibrary = abi.soRepublishFolder.resolve(baseOutputLibrary.name)
                 republishOutputLibrary.parentFile.mkdirs()
 
-                hardLinkOrCopy(
+                synchronizeFile(
                     baseOutputLibrary,
                     republishOutputLibrary)
 
                 for (runtimeFile in library.runtimeFiles) {
-                    hardLinkOrCopy(
+                    synchronizeFile(
                         runtimeFile,
                         abi.soRepublishFolder.resolve(runtimeFile.name))
                 }
@@ -62,7 +62,9 @@ class CxxRepublishBuilder(val model: CxxConfigurationModel) : CxxBuilder {
             if (!abi.stlLibraryFile.isFile) continue
             if (!abi.soRepublishFolder.isDirectory) continue
             val objAbi = abi.soRepublishFolder.resolve(abi.stlLibraryFile.name)
-            hardLinkOrCopy(abi.stlLibraryFile, objAbi)
+            synchronizeFile(
+                abi.stlLibraryFile,
+                objAbi)
         }
     }
 }
