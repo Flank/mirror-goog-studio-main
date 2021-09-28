@@ -19,7 +19,7 @@ package com.android.tools.lint.detector.api
 import java.util.EnumSet
 
 /**
- * Desugaring is an operating to post process the compiled code to
+ * Desugaring is an operation to post process the compiled code to
  * transform operations to work on older API levels. For example,
  * lambdas are converted into anonymous inner classes.
  */
@@ -46,7 +46,7 @@ enum class Desugaring(val constant: Int) {
     LONG_COMPARE(DESUGARING_LONG_COMPARE),
 
     /** Rewriting some Java 8 library calls into backport library. */
-    JAVA_8_LIBRARY(DESUGARING_LONG_COMPARE);
+    JAVA_8_LIBRARY(DESUGARING_JAVA_8_LIBRARY);
 
     companion object {
         /** No desugaring in effect. */
