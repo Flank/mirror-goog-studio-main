@@ -50,7 +50,7 @@ interface SnapshotContainer: NamedSnapshotItem {
                 ?.filterIsInstance(NamedSnapshotItem::class.java)
                 ?.filter { it !is SnapshotContainer || it.items.isNullOrEmpty() }
                 ?.map { it.keyLen }
-                ?.max()
+                ?.maxOrNull()
                 ?.let { it + 1 }
                     ?: 0
 }

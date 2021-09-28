@@ -403,7 +403,7 @@ class FileNormalizerImpl(
     override fun toString(): String {
         val sb = StringBuilder()
         sb.append("Path variables:")
-        val len = rootDataList.map { it.varName.length }.max()?.dec() ?: 10
+        val len = rootDataList.map { it.varName.length }.maxOrNull()?.dec() ?: 10
         for (rootData in rootDataList) {
             sb.append('\n')
             sb.append(rootData.varName)

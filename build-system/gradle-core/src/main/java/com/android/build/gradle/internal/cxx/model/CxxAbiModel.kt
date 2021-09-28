@@ -411,7 +411,7 @@ val CxxAbiModel.platformCode
         it.aliases
                 .toList()
                 .filter { (_, code) -> code == abiPlatformVersion }
-                .minBy { (alias, _) -> alias.length }
+                .minByOrNull { (alias, _) -> alias.length }
                 ?.first
     } ?: ""
 

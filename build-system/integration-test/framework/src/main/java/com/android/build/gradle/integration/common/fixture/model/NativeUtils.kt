@@ -370,7 +370,7 @@ fun Array<Array<Any?>>.minimizeUsingTupleCoverage(maxTupleSize : Int): Array<Arr
         // Choose the row that covers the most remaining uncovered tuples
         val bestRow = indices
             .filter { !result.contains(it) }
-            .minBy { (remainingTuples - tuplesOfRow(this[it], maxTupleSize)).size }!!
+            .minByOrNull { (remainingTuples - tuplesOfRow(this[it], maxTupleSize)).size }!!
         remainingTuples.removeAll(tuplesOfRow(this[bestRow], maxTupleSize))
         result.add(bestRow)
     }

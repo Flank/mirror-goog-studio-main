@@ -89,7 +89,7 @@ class VariantModelImpl(
         // Ignore test, base feature and feature variants.
         // * Test variants have corresponding production variants
         // * Hybrid feature variants have corresponding library variants.
-        val defaultComponent: VariantImpl? = variants.minWith(preferredDefaultVariantScopeComparator)
+        val defaultComponent: VariantImpl? = variants.minWithOrNull(preferredDefaultVariantScopeComparator)
 
         return defaultComponent?.name
     }

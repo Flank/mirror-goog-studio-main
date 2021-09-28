@@ -273,8 +273,8 @@ class PlatformConfigurator(private val ndkRoot: File) {
             // This should be impossible but fall back to a sensible default
             return sensibleDefaultPlatformApiVersionForErrorCase
         }
-        val min = versions.min()!!
-        val max = versions.max()!!
+        val min = versions.minOrNull()!!
+        val max = versions.maxOrNull()!!
         val clamped = clamp(minSdkVersion, displayVersion, min, max)
         if (!versions.contains(clamped)) {
             // We've seen some users remove unused platforms folders. If we matched a missing

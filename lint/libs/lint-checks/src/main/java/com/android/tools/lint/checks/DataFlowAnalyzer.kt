@@ -259,7 +259,7 @@ abstract class DataFlowAnalyzer(
                 }
             } else if (isScopingThis(node)) {
                 val args = node.valueArguments
-                if (args.size == 2 && instances.contains(args[0].skipParenthesizedExprDown()) &&
+                if (args.size == 2 && instances.contains<UElement?>(args[0].skipParenthesizedExprDown()) &&
                     args[1].skipParenthesizedExprDown() is ULambdaExpression
                 ) {
                     handleLambdaSuffix(args[1].skipParenthesizedExprDown() as ULambdaExpression, node)
