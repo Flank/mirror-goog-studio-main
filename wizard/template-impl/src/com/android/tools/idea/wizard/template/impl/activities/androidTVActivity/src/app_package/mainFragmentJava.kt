@@ -31,6 +31,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.leanback.app.BackgroundManager;
@@ -73,7 +74,7 @@ public class ${mainFragment} extends BrowseSupportFragment {
     private static final int NUM_ROWS = 6;
     private static final int NUM_COLS = 15;
 
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.myLooper());
     private Drawable mDefaultBackground;
     private DisplayMetrics mMetrics;
     private Timer mBackgroundTimer;

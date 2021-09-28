@@ -54,9 +54,9 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_INTERMEDIATES_PARENT_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_CMAKE_EXECUTABLE
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_BUILD_INTERMEDIATES_DIR
 import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.google.common.annotations.VisibleForTesting
@@ -349,8 +349,8 @@ private fun CxxAbiModel.getNdkBuildCommandLine(): List<String> {
         result.add("$NDK_DEBUG=0")
     }
     result.add("$APP_PLATFORM=android-$abiPlatformVersion")
-    result.add("$NDK_OUT=${NDK_VARIANT_BUILD_INTERMEDIATES_DIR.ref}/obj")
-    result.add("$NDK_LIBS_OUT=${NDK_VARIANT_BUILD_INTERMEDIATES_DIR.ref}/lib")
+    result.add("$NDK_OUT=${NDK_INTERMEDIATES_PARENT_DIR.ref}/obj")
+    result.add("$NDK_LIBS_OUT=${NDK_INTERMEDIATES_PARENT_DIR.ref}/lib")
 
     // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
     // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the
@@ -381,6 +381,7 @@ fun CxxAbiModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) ->
         cxxBuildFolder = rewrite(CxxAbiModel::cxxBuildFolder, cxxBuildFolder.path).toFile(),
         prefabFolder = rewrite(CxxAbiModel::prefabFolder, prefabFolder.path).toFile(),
         soFolder = rewrite(CxxAbiModel::soFolder, soFolder.path).toFile(),
+        intermediatesParentFolder = rewrite(CxxAbiModel::intermediatesParentFolder, intermediatesParentFolder.path).toFile(),
         stlLibraryFile = rewrite.fileOrNull(CxxAbiModel::stlLibraryFile, stlLibraryFile),
         buildSettings = buildSettings.rewrite(rewrite),
         configurationArguments = configurationArguments.map { rewrite(CxxAbiModel::configurationArguments, it ) }
@@ -412,9 +413,6 @@ private fun CxxModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, value:
 // Rewriter for CxxVariantModel
 private fun CxxVariantModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
         module = module.rewrite(rewrite),
-        cxxBuildFolder = rewrite(CxxVariantModel::cxxBuildFolder, cxxBuildFolder.path).toFile(),
-        intermediatesFolder = rewrite(CxxVariantModel::intermediatesFolder, intermediatesFolder.path).toFile(),
-        soFolder = rewrite(CxxVariantModel::soFolder, soFolder.path).toFile(),
         optimizationTag = rewrite(CxxVariantModel::optimizationTag, optimizationTag),
         stlType = rewrite(CxxVariantModel::stlType, stlType),
         verboseMakefile = rewrite.booleanOrNull(CxxVariantModel::verboseMakefile, verboseMakefile),

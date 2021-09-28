@@ -339,8 +339,9 @@ public final class DeviceImpl implements IDevice {
     public boolean supportsFeature(@NonNull Feature feature) {
         switch (feature) {
             case SCREEN_RECORD:
-                if (supportsFeature(HardwareFeature.WATCH)) {
-                    // Currently physical watches do not support screen recording.
+                if (supportsFeature(HardwareFeature.WATCH)
+                    && !getVersion().isGreaterOrEqualThan(30)) {
+                    // physical watches before API 30, do not support screen recording.
                     return false;
                 }
                 if (!getVersion().isGreaterOrEqualThan(19)) {

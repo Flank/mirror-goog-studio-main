@@ -16,32 +16,10 @@
 package android.app;
 
 import android.content.pm.ApplicationInfo;
-import android.content.res.Resources;
-import android.os.Build;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 
 public class ResourcesManager {
-    private ArrayList<WeakReference<Resources>> mResourceReferences = new ArrayList<>();
-    private Resources resources;
-
-    // Exists on API 30 and below
-    public void applyNewResourceDirsLocked(final ApplicationInfo appInfo, final String[] oldPaths) {
-        if (Build.VERSION.SDK_INT > 30) {
-            throw new RuntimeException("Method does not exist on API 31 and above");
-        }
-        mResourceReferences.clear();
-        resources = new Resources();
-        mResourceReferences.add(new WeakReference<>(resources));
-    }
-
-    // Exists on API 31 and above
-    public void applyNewResourceDirs(final ApplicationInfo appInfo, final String[] oldPaths) {
-        if (Build.VERSION.SDK_INT < 30) {
-            throw new RuntimeException("Method does not exist on API 30 and below");
-        }
-        mResourceReferences.clear();
-        resources = new Resources();
-        mResourceReferences.add(new WeakReference<>(resources));
+    void applyNewResourceDirsLocked(final ApplicationInfo appInfo, final String[] oldPaths) {
+        // Intentionally empty; this method just needs to exist for the Apply Changes agent to
+        // instrument. Fake implementation will follow when required by tests.
     }
 }

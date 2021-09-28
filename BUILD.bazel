@@ -82,6 +82,10 @@ maven_repository(
         "//tools/analytics-library/protos/src/main/proto:proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
+        "//tools/analytics-library/crash:tools.analytics-crash",
+        "//tools/analytics-library/testing:tools.analytics-testing",  # TODO: Only required for AGP tests
+        "//tools/base/apkparser/analyzer:tools.analyzer.maven",  # TODO(b/143864616): Only required for tests
+        "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
     ],
     include_transitive_deps = False,
     visibility = [
@@ -94,8 +98,9 @@ maven_repository(
 # Test only dependencies that are not published to gmaven,
 # and are now just directly consumed as jars
 AGP_TEST_ONLY_DEPENDENCIES = [
-    "//tools/base/common:tools.fixtures",
-    "//tools/base/repository:tools.testlib",
+    "//tools/base/common:libtools.fixtures.jar",
+    "//tools/base/repository:libtools.testlib.jar",
+    "//tools/base/apkparser/cli:libtools.analyzer-cli.jar",
 ]
 
 # The Android Gradle Plugin gradle build invokes this to

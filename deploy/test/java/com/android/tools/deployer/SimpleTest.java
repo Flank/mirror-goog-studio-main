@@ -114,38 +114,4 @@ public class SimpleTest extends AgentBasedClassRedefinerTestBase {
         Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.CLASS_NOT_FOUND, response.getStatus());
     }
-
-    @Test
-    public void testResourceLoaderInstrumentationApi30() throws Exception {
-        android.loadDex(DEX_LOCATION);
-        android.launchActivity(ACTIVITY_CLASS);
-        android.triggerMethod(ACTIVITY_CLASS, "setApi30");
-
-        Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", false);
-        request = request.toBuilder().setOverlaySwap(true).build();
-        redefiner.redefine(request);
-
-        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
-
-        android.triggerMethod(ACTIVITY_CLASS, "updateResourceDirs");
-        Assert.assertTrue(android.waitForInput("Resource providers set", RETURN_VALUE_TIMEOUT));
-    }
-
-    @Test
-    public void testResourceLoaderInstrumentationApi31() throws Exception {
-        android.loadDex(DEX_LOCATION);
-        android.launchActivity(ACTIVITY_CLASS);
-        android.triggerMethod(ACTIVITY_CLASS, "setApi31");
-
-        Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", false);
-        request = request.toBuilder().setOverlaySwap(true).build();
-        redefiner.redefine(request);
-
-        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
-
-        android.triggerMethod(ACTIVITY_CLASS, "updateResourceDirs");
-        Assert.assertTrue(android.waitForInput("Resource providers set", RETURN_VALUE_TIMEOUT));
-    }
 }

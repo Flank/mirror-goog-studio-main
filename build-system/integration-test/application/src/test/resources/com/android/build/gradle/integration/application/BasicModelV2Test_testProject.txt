@@ -250,8 +250,9 @@
             - compileTaskName               = "compileDebugSources"
             - assembleTaskName              = "assembleDebug"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debug/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
             - ideSetupTaskNames             = ["generateDebugSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
@@ -287,8 +288,9 @@
             - compileTaskName               = "compileDebugAndroidTestSources"
             - assembleTaskName              = "assembleDebugAndroidTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debugAndroidTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}
             - ideSetupTaskNames             = ["generateDebugAndroidTestSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
@@ -324,8 +326,9 @@
             - compileTaskName           = "compileDebugUnitTestSources"
             - assembleTaskName          = "assembleDebugUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
             - ideSetupTaskNames         = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/debugUnitTest/out{!}
@@ -348,8 +351,9 @@
             - compileTaskName               = "compileReleaseSources"
             - assembleTaskName              = "assembleRelease"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                * {PROJECT}/build/intermediates/javac/release/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
             - ideSetupTaskNames             = ["generateReleaseSources"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
@@ -386,8 +390,9 @@
             - compileTaskName           = "compileReleaseUnitTestSources"
             - assembleTaskName          = "assembleReleaseUnitTest"
             - classesFolders:
-               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
             - ideSetupTaskNames         = ["createMockableJar"]
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/releaseUnitTest/out{!}

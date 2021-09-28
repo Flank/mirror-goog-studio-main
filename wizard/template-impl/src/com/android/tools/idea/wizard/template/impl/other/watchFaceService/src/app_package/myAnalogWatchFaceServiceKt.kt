@@ -16,8 +16,8 @@
 
 package com.android.tools.idea.wizard.template.impl.other.watchFaceService.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
 fun myAnalogWatchFaceServiceKt(
@@ -42,6 +42,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import ${getMaterialComponentName("android.support.v7.graphics.Palette", useAndroidX)}
 import android.support.wearable.watchface.CanvasWatchFaceService
@@ -92,7 +93,7 @@ class ${serviceClass} : CanvasWatchFaceService() {
         return Engine()
     }
 
-    private class EngineHandler(reference: ${serviceClass}.Engine) : Handler() {
+    private class EngineHandler(reference: ${serviceClass}.Engine) : Handler(Looper.myLooper()!!) {
         private val mWeakReference: WeakReference<${serviceClass}.Engine> = WeakReference(reference)
 
         override fun handleMessage(msg: Message) {

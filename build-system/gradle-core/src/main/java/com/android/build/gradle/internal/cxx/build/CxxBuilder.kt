@@ -23,7 +23,5 @@ import java.io.File
  * Represents a C/C++ build operation independent of a Gradle task.
  */
 interface CxxBuilder {
-    val objFolder: File
-    val soFolder: File
     fun build(ops: ExecOperations)
 }

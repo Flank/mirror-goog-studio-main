@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.cxx.model.objFolder
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions.Companion.compileGlob
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -352,10 +353,14 @@ fun getProjectNativeLibs(
     )
 
     // add content of the local external native build if there is one
-    taskContainer.cxxConfigurationModel?.variant?.soFolder?.let { objFolder ->
+    val cxxConfiguration = taskContainer.cxxConfigurationModel
+    if (cxxConfiguration != null) {
+        val soFolders = cxxConfiguration.activeAbis
+            .map { it.soFolder.parentFile }
+            .distinct()
         nativeLibs.from(
-            creationConfig.services.fileCollection(objFolder)
-                    .builtBy(taskContainer.externalNativeBuildTask?.name)
+            creationConfig.services.fileCollection(soFolders)
+                .builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
 

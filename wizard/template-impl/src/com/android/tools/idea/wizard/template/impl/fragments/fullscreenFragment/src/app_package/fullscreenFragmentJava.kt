@@ -50,6 +50,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -79,7 +80,7 @@ public class ${fragmentClass} extends Fragment {
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
+    private final Handler mHideHandler = new Handler(Looper.myLooper());
     private View mContentView;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")

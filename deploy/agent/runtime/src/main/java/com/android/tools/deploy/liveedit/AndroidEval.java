@@ -44,6 +44,15 @@ class AndroidEval implements Eval {
     @Override
     public Value getArrayElement(Value array, @NonNull Value index) {
         try {
+            if (array.getAsmType().getDimensions() > 1) {
+                // This is multi-dimension array. We return an object array with dimension -1.
+                // e.g. [[I returns [I.
+                String subDescriptor = array.getAsmType().getDescriptor().substring(1);
+                Type type = Type.getType(subDescriptor);
+                return new ObjectValue(Array.get(array.obj(), index.getInt()), type);
+            }
+
+            // This is an array of dimension 1.
             Type elementType = array.getAsmType().getElementType();
             switch (elementType.getSort()) {
                 case Type.BOOLEAN:
@@ -92,10 +101,11 @@ class AndroidEval implements Eval {
         String name = description.getName();
         String type = description.getDesc();
         try {
-            Field field = owner.getClass().getDeclaredField(name);
+            String ownerClass = description.getOwnerInternalName();
+            Field field = forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
             return makeValue(field.get(owner), Type.getType(type));
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException e) {
             handleThrowable(e);
         }
         throw new IllegalStateException();
@@ -273,6 +283,12 @@ class AndroidEval implements Eval {
             Object arrayObject = array.obj();
             int arrayIndex = index.getInt();
 
+            // This is a multi-dimension array for which the incoming value MUST be an object.
+            if (array.getAsmType().getDimensions() > 1) {
+                Array.set(arrayObject, arrayIndex, ((ObjectValue) newValue).getValue());
+                return;
+            }
+
             switch (elementType.getSort()) {
                 case Type.INT:
                     Array.setInt(arrayObject, arrayIndex, newValue.getInt());
@@ -411,10 +427,6 @@ class AndroidEval implements Eval {
         return Class.forName(className.replace('/', '.'), true, classloader);
     }
 
-    Class<?> forName(Type type) throws ClassNotFoundException {
-        return forName(type.getClassName());
-    }
-
     public Class<?> typeToClass(Type type) throws ClassNotFoundException {
         switch (type.getSort()) {
             case Type.INT:
@@ -435,8 +447,10 @@ class AndroidEval implements Eval {
                 return double.class;
             case Type.VOID:
                 return void.class;
+            case Type.ARRAY:
+                return forName(type.getDescriptor());
             default:
-                return forName(type);
+                return forName(type.getClassName());
         }
     }
 

@@ -218,7 +218,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
                 if (diffs != null) {
                     if (reformat != null && reformat) {
                         for ((f, contents) in edited) {
-                            if (!f.endsWith(DOT_XML)) {
+                            if (!f.endsWith(DOT_XML) || initial[f]!!.isEmpty()) {
                                 continue
                             }
                             try {

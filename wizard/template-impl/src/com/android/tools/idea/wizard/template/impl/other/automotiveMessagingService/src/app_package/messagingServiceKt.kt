@@ -30,6 +30,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.Handler
+import android.os.Looper
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
@@ -117,7 +118,7 @@ class ${serviceName} : Service() {
     /**
      * Handler of incoming messages from clients.
      */
-    internal inner class IncomingHandler : Handler() {
+    internal inner class IncomingHandler : Handler(Looper.myLooper()!!) {
         override fun handleMessage(msg: Message) {
             sendNotification(1, "This is a sample message", "John Doe", System.currentTimeMillis())
         }

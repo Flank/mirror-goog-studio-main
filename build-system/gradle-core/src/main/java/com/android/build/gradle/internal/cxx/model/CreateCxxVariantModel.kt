@@ -49,7 +49,6 @@ fun createCxxVariantModel(
         val isDebuggable = configurationParameters.isDebuggable
         val variantName = configurationParameters.variantName
         val intermediates = join(intermediatesFolder, build, variantName)
-        val intermediatesBase = join(intermediatesBaseFolder, build, variantName)
 
         return CxxVariantModel(
                 buildTargetSet = configurationParameters.nativeVariantConfig.targets,
@@ -66,12 +65,8 @@ fun createCxxVariantModel(
                 cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
                 isDebuggableEnabled = isDebuggable,
                 validAbiList = validAbiList,
-                cxxBuildFolder = join(cxxFolder, build, variantName),
                 prefabClassPathFileCollection = configurationParameters.prefabClassPath,
                 prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
-                intermediatesFolder = intermediates,
-                soFolder = join(intermediates, ifCMake { "obj" } ?: "obj/local"),
-                soRepublishFolder = join(intermediatesBase, ifCMake { "obj" } ?: "obj/local"),
                 stlType = determineUsedStl(arguments).argumentName,
                 verboseMakefile = null,
                 optimizationTag = run {

@@ -26,6 +26,8 @@ import org.junit.Assert;
 
 public class MethodBodyEvaluatorTest {
 
+    private static final float NO_DELTA = 0.0f;
+
     @org.junit.Test
     public void testSimpleReturn() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
@@ -545,5 +547,111 @@ public class MethodBodyEvaluatorTest {
         result = new MethodBodyEvaluator(classInput, "returnMax(J)J").evalStatic(new Object[] {0L});
         Long l = (Long) result;
         Assert.assertTrue("Overload (L)L", TestTarget.returnMax(0L) == l);
+    }
+
+    // Tests passing arrays to static and non-static methods.
+    @org.junit.Test
+    public void testArrayParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testArrayParameters()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Array parameters", TestTarget.testArrayParameters(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayIntParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiIntArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Int get/set", TestTarget.testMultiIntArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayCharParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiCharacterArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Char get/set", TestTarget.testMultiCharacterArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayByteParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiByteArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Byte get/set", TestTarget.testMultiByteArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayShortParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiShortArray()I")
+                        .evalStatic(new Object[0]);
+        Integer i = (Integer) result;
+        Assert.assertEquals("Multi Array Short get/set", TestTarget.testMultiShortArray(), i.intValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayLongParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiLongArray()J")
+                        .evalStatic(new Object[0]);
+        Long l = (Long) result;
+        Assert.assertEquals("Multi Array Long get/set", TestTarget.testMultiLongArray(), l.longValue());
+    }
+
+    @org.junit.Test
+    public void testMultiArrayFloatParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiFloatArray()F")
+                        .evalStatic(new Object[0]);
+        Float f = (Float) result;
+        Assert.assertEquals(TestTarget.testMultiFloatArray(), f.floatValue(), NO_DELTA);
+    }
+    @org.junit.Test
+    public void testMultiArrayDoubleParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiDoubleArray()D")
+                        .evalStatic(new Object[0]);
+        Double d = (Double) result;
+        Assert.assertEquals(TestTarget.testMultiDoubleArray(), d.doubleValue(), NO_DELTA);
+    }
+
+    @org.junit.Test
+    public void testMultiArrayObjectParameter() throws Exception {
+        byte[] classInput = buildClass(TestTarget.class);
+        Object result =
+                new MethodBodyEvaluator(classInput, "testMultiObjectArray()Ljava/lang/Integer;")
+                        .evalStatic(new Object[0]);
+        Assert.assertEquals(
+                "Multi Array Object get/set", TestTarget.testMultiObjectArray(), result);
+    }
+
+    @org.junit.Test
+    public void testAccessProtectedParent() throws Exception {
+        byte[] classInput = buildClass(Child.class);
+        Child child = new Child(0);
+        int protectedFieldValue = 5;
+        Object result =
+                new MethodBodyEvaluator(classInput, "accessParentProtectedField(I)I")
+                        .eval(child, Child.class.getTypeName(), new Object[] {protectedFieldValue});
+        Integer i = (Integer) result;
+
+        Assert.assertEquals(
+                "Accessed parent field",
+                child.accessParentProtectedField(protectedFieldValue),
+                i.intValue());
     }
 }

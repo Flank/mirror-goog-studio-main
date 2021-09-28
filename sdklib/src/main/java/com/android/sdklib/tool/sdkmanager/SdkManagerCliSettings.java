@@ -338,6 +338,10 @@ class SdkManagerCliSettings implements SettingsController {
             @NonNull Map<String, String> environment,
             @NonNull ProgressIndicator progress)
             throws ShowUsageException, FailSilentlyException {
+        if (args.isEmpty()) {
+            throw new ShowUsageException();
+        }
+
         mFileSystem = fileSystem;
         mEnvironment = environment;
 

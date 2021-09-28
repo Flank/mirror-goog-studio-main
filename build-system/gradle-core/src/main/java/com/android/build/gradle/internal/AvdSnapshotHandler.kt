@@ -143,6 +143,7 @@ class AvdSnapshotHandler(
                 "@${avdName}",
                 "-no-window",
                 "-no-boot-anim",
+                "-no-audio",
                 "-id",
                 deviceId
             )

@@ -447,6 +447,7 @@ private fun ModelSnapshotter<out BaseArtifact>.snapshotBaseArtifact() {
     item("compileTaskName", BaseArtifact::compileTaskName)
     item("assembleTaskName", BaseArtifact::assembleTaskName)
     valueList("classesFolders", BaseArtifact::classesFolders) { it?.sorted() }
+    valueList("additionalClassesFolders", BaseArtifact::additionalClassesFolders) { it?.sorted() }
     list("ideSetupTaskNames", BaseArtifact::ideSetupTaskNames)
     valueList("generatedSourceFolders", BaseArtifact::generatedSourceFolders) { it?.sorted() }
     dataObject("variantSourceProvider", BaseArtifact::variantSourceProvider) {

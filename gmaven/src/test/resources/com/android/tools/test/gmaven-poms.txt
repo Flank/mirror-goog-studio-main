@@ -247,47 +247,47 @@ com.android.tools:testutils
     org.ow2.asm:asm (runtime)
 
 com.android.tools.analytics-library:crash
-  pomName=com.android.tools.analytics-library.crash
+  pomName=Android Tools Analytics Crash Library
   description=Helper Library for uploading crash reports.
   dependencies:
     com.android.tools:annotations (runtime)
     com.google.guava:guava (runtime)
-    org.apache.httpcomponents:httpmime (runtime)
-    org.apache.httpcomponents:httpcore (runtime)
     org.apache.httpcomponents:httpclient (runtime)
+    org.apache.httpcomponents:httpcore (runtime)
+    org.apache.httpcomponents:httpmime (runtime)
 
 com.android.tools.analytics-library:inspector
-  pomName=com.android.tools.analytics-library.inspector
+  pomName=Android Tools Analytics Inspector
   description=Tool for debugging usage analytics spool files.
   dependencies:
-    com.android.tools:annotations (runtime)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
-    com.google.protobuf:protobuf-java (runtime)
-    com.google.guava:guava (runtime)
+    com.android.tools:annotations (runtime)
     com.google.code.gson:gson (runtime)
+    com.google.guava:guava (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:protos
-  pomName=com.android.tools.analytics-library.protos
-  description=
+  pomName=Android Tools Analytics Protobufs
+  description=Library containing protobufs for usage analytics.
   dependencies:
     com.google.protobuf:protobuf-java (compile)
 
 com.android.tools.analytics-library:publisher
-  pomName=com.android.tools.analytics-library.publisher
+  pomName=Android Tools Analytics Publisher
   description=Library for publishing usage analytics.
   dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
-    com.android.tools:annotations (runtime)
-    com.android.tools:common (runtime)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
-    com.google.protobuf:protobuf-java (runtime)
+    com.android.tools:annotations (runtime)
+    com.android.tools:common (runtime)
     com.google.guava:guava (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:shared
-  pomName=com.android.tools.analytics-library.shared
-  description=
+  pomName=Android Tools Analytics Shared Library
+  description=Helper Library for tracking usage analytics.
   dependencies:
     com.android.tools.analytics-library:protos (compile)
     com.android.tools:annotations (runtime)
@@ -298,10 +298,9 @@ com.android.tools.analytics-library:shared
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.analytics-library:testing
-  pomName=com.android.tools.analytics-library.testing
+  pomName=Android Tools Analytics Testing Library
   description=Library for tracking usage analytics.
   dependencies:
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
     com.android.tools.analytics-library:protos (runtime)
     com.android.tools.analytics-library:shared (runtime)
     com.android.tools.analytics-library:tracker (runtime)
@@ -309,11 +308,11 @@ com.android.tools.analytics-library:testing
     com.android.tools:common (runtime)
     com.android.tools:testutils (runtime)
     com.google.guava:guava (runtime)
-    com.google.code.gson:gson (runtime)
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.analytics-library:tracker
-  pomName=com.android.tools.analytics-library.tracker
-  description=
+  pomName=Android Tools Analytics Tracker
+  description=Library for tracking usage analytics.
   dependencies:
     com.android.tools.analytics-library:protos (compile)
     com.android.tools.analytics-library:shared (compile)
@@ -324,24 +323,24 @@ com.android.tools.analytics-library:tracker
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.apkparser:apkanalyzer
-  pomName=com.android.tools.apkparser.apkanalyzer
+  pomName=Apk Analyzer library
   description=Library for parsing and analyzing information from APK files
   dependencies:
-    org.smali:dexlib2 (runtime)
-    org.smali:baksmali (runtime)
-    com.android.tools:sdk-common (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools:sdklib (runtime)
     com.android.tools:annotations (runtime)
     com.android.tools.apkparser:binary-resources (runtime)
+    com.android.tools:common (runtime)
+    com.android.tools:sdk-common (runtime)
+    com.android.tools:sdklib (runtime)
+    com.google.guava:guava (runtime)
+    org.smali:baksmali (runtime)
+    org.smali:dexlib2 (runtime)
 
 com.android.tools.apkparser:binary-resources
-  pomName=com.android.tools.apkparser.binary-resources
+  pomName=Binary Resources parser
   description=Library for parsing the resources.arsc file
   dependencies:
-    com.google.guava:guava (runtime)
-    com.google.code.findbugs:jsr305 (runtime)
     com.android.tools:annotations (runtime)
+    com.google.guava:guava (runtime)
 
 com.android.tools.build:aapt2
   pomName=com.android.tools.build.aapt2
@@ -506,8 +505,8 @@ com.android.tools.chunkio:chunkio
   description=annotations for use with chunkio-processor, and runtime supporting APIs
 
 com.android.tools.ddms:ddmlib
-  pomName=com.android.tools.ddms.ddmlib
-  description=
+  pomName=Android Tools ddmlib
+  description=Library providing APIs to talk to Android devices
   dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
     com.android.tools:common (runtime)

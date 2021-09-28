@@ -13,7 +13,7 @@ genrule(
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
         "//tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw",
         "//tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so",
     ],
     outs = [
         "Version.java",
@@ -45,10 +45,10 @@ genrule(
         "//tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/x86_64/coroutine_debugger_agent.so",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/x86_64/coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so",
         ":version.raw",
     ],
     outs = [
@@ -61,7 +61,7 @@ genrule(
        $(location //tools/base/bazel:matryoshka) \
            -i $(location :android-installer_raw/x86/android-installer_raw) \
            -o $(location android-installer/x86/installer) \
-           -p coroutine_debugger_agent.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86/android-install-server) \
            -p version=$(location :version.raw);
@@ -69,8 +69,8 @@ genrule(
        $(location //tools/base/bazel:matryoshka) \
            -i $(location :android-installer_raw/x86_64/android-installer_raw) \
            -o $(location android-installer/x86_64/installer) \
-           -p coroutine_debugger_agent.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so) \
-           -p coroutine_debugger_agent64.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/x86_64/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/x86/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent64.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/x86_64/coroutine_debugger_agent.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86_64/android-install-server) \
@@ -79,7 +79,7 @@ genrule(
        $(location //tools/base/bazel:matryoshka) \
            -i $(location :android-installer_raw/armeabi-v7a/android-installer_raw) \
            -o $(location android-installer/armeabi-v7a/installer) \
-           -p coroutine_debugger_agent.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/armeabi-v7a/android-install-server) \
            -p version=$(location :version.raw);
@@ -87,8 +87,8 @@ genrule(
        $(location //tools/base/bazel:matryoshka) \
            -i $(location :android-installer_raw/arm64-v8a/android-installer_raw) \
            -o $(location android-installer/arm64-v8a/installer) \
-           -p coroutine_debugger_agent.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so) \
-           -p coroutine_debugger_agent64.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/armeabi-v7a/coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent64.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) \
@@ -108,7 +108,7 @@ genrule(
         ":install-server",
         "//tools/base/deploy/agent/native:libswap.so",
         ":version.raw",
-        "//tools/base/debug/coroutine/native/agent:coroutine_debugger_agent.so",
+        "//tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent.so",
     ],
     outs = [
         "android-installer/test-installer",
@@ -119,7 +119,7 @@ genrule(
            -o $(location android-installer/test-installer) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:libswap.so) \
-           -p coroutine_debugger_agent.so=$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent.so) \
+           -p coroutine_debugger_agent.so=$(location //tools/base/debuggers/native/coroutine/agent:coroutine_debugger_agent.so) \
            -p install_server=$(location :install-server) \
            -p version=$(location :version.raw);
     """,

@@ -44,13 +44,27 @@ fun createCxxAbiModel(
     digest.update(configurationParameters.variantName)
     val configurationHash = digest.toBase36()
     with(variant) {
+        val build = ifCMake { "cmake" } ?: "ndkBuild"
+        val variantSoFolder = join(
+            module.intermediatesBaseFolder,
+            build,
+            variantName,
+            variant.ifCMake { "obj" } ?: "obj/local")
+        val variantCxxBuildFolder = join(
+            module.cxxFolder,
+            build,
+            variantName)
+        val variantIntermediatesFolder = join(
+            module.intermediatesFolder,
+            build,
+            variantName)
         return CxxAbiModel(
                 variant = this,
                 abi = abi,
                 info = module.ndkMetaAbiList.single { it.abi == abi },
-                cxxBuildFolder = join(variant.cxxBuildFolder, abi.tag),
-                soFolder = join(variant.soFolder, abi.tag),
-                soRepublishFolder = join(variant.soRepublishFolder, abi.tag),
+                cxxBuildFolder = join(variantCxxBuildFolder, abi.tag),
+                soFolder = join(variantSoFolder, abi.tag),
+                soRepublishFolder = join(variantSoFolder, abi.tag),
                 abiPlatformVersion =
                     sdkComponents
                             .versionedNdkHandler(
@@ -71,11 +85,12 @@ fun createCxxAbiModel(
                 fullConfigurationHash = configurationHash,
                 configurationArguments = listOf(),
                 isActiveAbi = validAbiList.contains(abi),
-                prefabFolder = join(cxxBuildFolder, "prefab", abi.tag),
+                prefabFolder = join(variantCxxBuildFolder, "prefab", abi.tag),
                 stlLibraryFile =
                     Stl.fromArgumentName(variant.stlType)
                             ?.let { module.stlSharedObjectMap.getValue(it)[abi]?.toString() }
-                            ?.let { File(it) }
+                            ?.let { File(it) },
+            intermediatesParentFolder = variantIntermediatesFolder
         )
     }
 }

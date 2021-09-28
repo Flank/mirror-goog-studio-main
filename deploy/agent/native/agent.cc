@@ -19,6 +19,7 @@
 #include <jvmti.h>
 #include <unistd.h>
 
+#include "slicer/common.h"
 #include "tools/base/deploy/agent/native/capabilities.h"
 #include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/hidden_api_silencer.h"
@@ -187,9 +188,15 @@ jint HandleAgentRequest(jvmtiEnv* jvmti, JNIEnv* jni, char* socket_name) {
   return JNI_OK;
 }
 
+static void SlicerLogger(const std::string& msg) {
+  Log::V(msg.c_str());
+  LogEvent(msg);
+}
+
 // Event that fires when the agent hooks onto a running VM.
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
                                                  void* reserved) {
+  slicer::set_logger(SlicerLogger);
   // Set up the JVMTI and JNI environment, regardless of what
   // the agent is about to perform.
   jvmtiEnv* jvmti = nullptr;

@@ -17,8 +17,6 @@ package app;
 
 import android.app.Activity;
 import android.app.ActivityThread;
-import android.app.ResourcesManager;
-import android.os.Build;
 import pkg.KotlinCompanionTarget;
 import pkg.KotlinFailedTarget;
 import pkg.KotlinSimpleTarget;
@@ -108,22 +106,6 @@ public class TestActivity extends Activity {
         Thread.class
                 .getMethod("dispatchUncaughtException", Throwable.class)
                 .invoke(Thread.currentThread(), new RuntimeException("crash"));
-    }
-
-    public void setApi30() {
-        Build.VERSION.SDK_INT = 30;
-    }
-
-    public void setApi31() {
-        Build.VERSION.SDK_INT = 31;
-    }
-
-    public void updateResourceDirs() {
-        if (Build.VERSION.SDK_INT > 30) {
-            new ResourcesManager().applyNewResourceDirs(null, null);
-        } else {
-            new ResourcesManager().applyNewResourceDirsLocked(null, null);
-        }
     }
 
     public void getStaticFinalPrimitives() {

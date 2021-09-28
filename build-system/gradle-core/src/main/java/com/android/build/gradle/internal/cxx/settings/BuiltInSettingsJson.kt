@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI_IS_DEPRECATE
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_INTERMEDIATES_PARENT_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MAX_PLATFORM
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MIN_PLATFORM
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_BUILD_INTERMEDIATES_DIR
@@ -57,12 +58,8 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_SO_OUTPUT_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_SO_REPUBLISH_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_STL_LIBRARY_FILE
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_BUILD_INTERMEDIATES_DIR
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_BUILD_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_SO_OUTPUT_DIR
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_SO_REPUBLISH_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_STL_TYPE
 import com.android.utils.FileUtils.join
 
@@ -187,14 +184,11 @@ fun CxxAbiModel.getAndroidGradleSettings() : Settings {
     val configurationSegment = join(NDK_VARIANT_OPTIMIZATION_TAG.ref, NDK_CONFIGURATION_HASH.ref)
 
     nameTable.addAll(
-        NDK_VARIANT_BUILD_ROOT to join(NDK_MODULE_BUILD_ROOT.ref, configurationSegment),
-        NDK_VARIANT_BUILD_INTERMEDIATES_DIR to join(NDK_MODULE_BUILD_INTERMEDIATES_DIR.ref, configurationSegment),
-        NDK_PREFAB_PATH to join(NDK_VARIANT_BUILD_ROOT.ref, "prefab", NDK_ABI.ref),
-        NDK_BUILD_ROOT to join(NDK_VARIANT_BUILD_ROOT.ref, NDK_ABI.ref),
-        NDK_VARIANT_SO_OUTPUT_DIR to join(NDK_VARIANT_BUILD_INTERMEDIATES_DIR.ref, ifCMake { "obj" } ?: "obj/local"),
-        NDK_VARIANT_SO_REPUBLISH_DIR to join(NDK_MODULE_BUILD_INTERMEDIATES_BASE_DIR.ref, legacyConfigurationSegment, ifCMake { "obj" } ?: "obj/local"),
-        NDK_SO_OUTPUT_DIR to join(NDK_VARIANT_SO_OUTPUT_DIR.ref, NDK_ABI.ref),
-        NDK_SO_REPUBLISH_DIR to join(NDK_VARIANT_SO_REPUBLISH_DIR.ref, NDK_ABI.ref),
+        NDK_INTERMEDIATES_PARENT_DIR to join(NDK_MODULE_BUILD_INTERMEDIATES_DIR.ref, configurationSegment),
+        NDK_PREFAB_PATH to join(NDK_MODULE_BUILD_ROOT.ref, configurationSegment, "prefab", NDK_ABI.ref),
+        NDK_BUILD_ROOT to join(NDK_MODULE_BUILD_ROOT.ref, configurationSegment, NDK_ABI.ref),
+        NDK_SO_OUTPUT_DIR to join(NDK_INTERMEDIATES_PARENT_DIR.ref, ifCMake { "obj" } ?: "obj/local", NDK_ABI.ref),
+        NDK_SO_REPUBLISH_DIR to join(NDK_MODULE_BUILD_INTERMEDIATES_BASE_DIR.ref, legacyConfigurationSegment, ifCMake { "obj" } ?: "obj/local", NDK_ABI.ref),
     )
 
     return Settings(

@@ -50,31 +50,6 @@ data class CxxVariantModel(
     val variantName: String,
 
     /**
-     * Base folder for .so files
-     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/obj
-     */
-    val soFolder: File,
-
-    /**
-     * An extra .cxx folder where build outputs are copied or symlinked too. This is also the
-     * old location where actual builds happened before configuration folding was implemented.
-     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
-     */
-    val soRepublishFolder: File,
-
-    /**
-     * The .cxx build folder
-     *   ex, $moduleRootFolder/.cxx/Debug/${hashcode}
-     */
-    val cxxBuildFolder: File,
-
-    /**
-     * The folder of intermediates.
-     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}
-     */
-    val intermediatesFolder: File,
-
-    /**
      * Whether this variant build is debuggable
      */
     val isDebuggableEnabled: Boolean,
@@ -179,10 +154,10 @@ fun <T> CxxVariantModel.ifNdkBuild(compute : () -> T?) =
     if (isNdkBuild) compute() else null
 
 /**
- * Call [compute] if logging native clean to lifecycle
+ * Return true if we should log native clean to lifecycle log
  */
-fun <T> CxxVariantModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
-    module.ifLogNativeCleanToLifecycle(compute)
+val CxxVariantModel.logNativeCleanToLifecycle : Boolean get() =
+    module.logNativeCleanToLifecycle
 
 /**
  * Call [compute] if logging native configure to lifecycle

@@ -43,6 +43,12 @@ interface BaseArtifact {
     val classesFolders: Set<File>
 
     /**
+     * Folders or jars containing additional classes (e.g., R.jar or those registered by third-party
+     * plugins like Kotlin).
+     */
+    val additionalClassesFolders: Set<File>
+
+    /**
      * A SourceProvider specific to the variant. This can be null if there is no flavors as
      * the "variant" is equal to the build type.
      */

@@ -27,6 +27,7 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -68,7 +69,7 @@ class BrowseErrorActivity : FragmentActivity() {
                 .add(R.id.main_browse_fragment, mSpinnerFragment)
                 .commit()
 
-        val handler = Handler()
+        val handler = Handler(Looper.myLooper()!!)
         handler.postDelayed({
             supportFragmentManager
                     .beginTransaction()

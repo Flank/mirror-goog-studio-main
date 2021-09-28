@@ -226,11 +226,10 @@ fun <T> CxxModuleModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
         outputOptions.contains(BUILD_STDOUT)) compute() else null
 
 /**
- * Call [compute] if logging native build to lifecycle
+ * Return true if we should log native clean to lifecycle log
  */
-fun <T> CxxModuleModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
-    if (outputOptions.contains(VERBOSE) ||
-        outputOptions.contains(CLEAN_STDOUT)) compute() else null
+val CxxModuleModel.logNativeCleanToLifecycle : Boolean get() =
+    outputOptions.contains(VERBOSE) || outputOptions.contains(CLEAN_STDOUT)
 
 /**
  * Determine, for CMake, which STL is used based on command-line arguments from the user.

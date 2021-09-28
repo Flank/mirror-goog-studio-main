@@ -28,6 +28,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -345,6 +349,14 @@ public class SyncService implements AutoCloseable {
         //TODO: use the {@link FileListingService} to get the file size.
 
         doPullFile(remoteFilepath, localFilename, monitor);
+
+        // Set modification and access time by default, same as adb pull -a
+        if (fileStat != null) {
+            FileTime time = FileTime.fromMillis(fileStat.getLastModified().getTime());
+            Path path = Paths.get(localFilename);
+            Files.setAttribute(path, "lastAccessTime", time);
+            Files.setAttribute(path, "lastModifiedTime", time);
+        }
 
         monitor.stop();
     }
