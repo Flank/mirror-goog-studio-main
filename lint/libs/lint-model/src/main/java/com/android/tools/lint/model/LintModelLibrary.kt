@@ -108,7 +108,7 @@ class DefaultLintModelAndroidLibrary(
     override val folder: File,
     override val resFolder: File,
     override val assetsFolder: File,
-    override val lintJar: File,
+    override val lintJar: File?,
     override val publicResources: File,
     override val symbolFile: File,
     override val externalAnnotations: File,
