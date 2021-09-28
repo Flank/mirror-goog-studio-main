@@ -27,8 +27,8 @@ fun androidManifestXml(
 
     <application>
         <service android:name="${packageName}.${className}"
-            android:exported="${isExported}"
-            android:enabled="${isEnabled}" >
+            android:exported="$isExported"
+            android:enabled="$isEnabled" >
         </service>
     </application>
 

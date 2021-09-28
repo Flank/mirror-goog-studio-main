@@ -30,13 +30,14 @@ fun androidManifestXml(
   themeName: String
 ): String {
   val activityLabel = if (isNewModule) """android:label="@string/app_name"""" else """android:label="@string/title_${simpleName}""""
-  val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
+  val launcher = isLauncher || isNewModule
+  val activityBody = commonActivityBody(launcher, isLibrary)
 
   return """<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
         <activity android:name="${packageName}.${activityClass}"
-            android:exported="true"
+            android:exported="$launcher"
             android:configChanges="orientation|keyboardHidden|screenSize"
             $activityLabel
             android:theme="@style/${getFullscreenTheme(themeName)}">
