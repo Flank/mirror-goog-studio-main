@@ -15,7 +15,6 @@
  */
 package com.android.tools.idea.wizard.template.impl.activities.common
 
-import com.android.tools.idea.wizard.template.ThemeData
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.renderIf
 
@@ -47,16 +46,17 @@ fun androidManifestXml(
 
   val toolsNameSpace = renderIf(isResizeable) {"xmlns:tools=\"http://schemas.android.com/tools\""}
 
+  val launcher = isLauncher || isNewModule
   return """
     <manifest xmlns:android ="http://schemas.android.com/apk/res/android"
     $toolsNameSpace>
     <application>
     <activity android:name ="${packageName}.${activityClass}"
-    android:exported="true"
+    android:exported="$launcher"
     $generateActivityTitleBlock
     $hasActionBarBlock
     $isResizeableBlock>
-    ${commonActivityBody(isLauncher || isNewModule, isLibraryProject)}
+    ${commonActivityBody(launcher, isLibraryProject)}
     </activity>
     </application>
     </manifest>

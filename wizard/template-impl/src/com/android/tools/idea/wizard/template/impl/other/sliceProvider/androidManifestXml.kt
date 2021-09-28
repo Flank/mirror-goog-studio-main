@@ -27,14 +27,14 @@ fun androidManifestXml(
 
     <application>
         <provider android:name="${packageName}.${className}"
-            android:authorities="${authorities}"
+            android:authorities="$authorities"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.app.slice.category.SLICE" />
                 <data android:scheme="http"
-                    android:host="${hostUrl}"
-                    android:pathPrefix="${pathPrefix}" />
+                    android:host="$hostUrl"
+                    android:pathPrefix="$pathPrefix" />
             </intent-filter>
         </provider>
     </application>
