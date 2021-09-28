@@ -124,8 +124,7 @@ class SvgGradientNode extends SvgNode {
 
     @Override
     public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
-        AffineTransform finalTransform = new AffineTransform(rootTransform);
-        finalTransform.concatenate(mStackedTransform);
+        // Transformation is done in the writeXml method.
     }
 
     @Override

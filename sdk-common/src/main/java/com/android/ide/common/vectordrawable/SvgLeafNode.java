@@ -192,11 +192,10 @@ class SvgLeafNode extends SvgNode {
             return;
         }
         VdPath.Node[] nodes = PathParser.parsePath(mPathData, ParseMode.SVG);
-        AffineTransform finalTransform = new AffineTransform(rootTransform);
-        finalTransform.concatenate(mStackedTransform);
+        mStackedTransform.preConcatenate(rootTransform);
         boolean needsConvertRelativeMoveAfterClose = VdPath.Node.hasRelMoveAfterClose(nodes);
-        if (!finalTransform.isIdentity() || needsConvertRelativeMoveAfterClose) {
-            VdPath.Node.transform(finalTransform, nodes);
+        if (!mStackedTransform.isIdentity() || needsConvertRelativeMoveAfterClose) {
+            VdPath.Node.transform(mStackedTransform, nodes);
         }
         mPathData = VdPath.Node.nodeListToString(nodes, mSvgTree.getCoordinateFormat());
     }
