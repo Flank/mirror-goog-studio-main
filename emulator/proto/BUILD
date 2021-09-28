@@ -5,6 +5,7 @@ maven_proto_library(
     name = "proto",
     srcs = glob(["*.proto"]),
     coordinates = "com.android.tools.emulator:proto:" + BASE_VERSION,
+    description = "A protobuf messages to control Android Emulator",
     grpc_support = True,
     java_deps = [
         "@maven//:com.google.code.gson.gson",
@@ -14,6 +15,9 @@ maven_proto_library(
         "@maven//:io.grpc.grpc-protobuf",
         "@maven//:io.grpc.grpc-stub",
     ],
+    pom_name = "Emulator protos for Android Tools",
+    resource_strip_prefix = "tools/base/emulator/proto",
+    resources = glob(["*.proto"]),
     visibility = ["//visibility:public"],
 )
 
@@ -29,10 +33,4 @@ android_java_proto_library(
     grpc_support = True,
     java_deps = ["@maven//:io.grpc.grpc-all"],
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob(["*.proto"]) + ["build.gradle"],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

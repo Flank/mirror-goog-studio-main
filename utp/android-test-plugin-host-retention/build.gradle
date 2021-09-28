@@ -36,7 +36,7 @@ dependencies {
     implementation libs.protobuf
     implementation libs.guava
     implementation project(':base:utp:android-test-plugin-host-retention-proto')
-    implementation project(':base:emulator:proto')
+    implementation libs.com.android.tools.emulator.proto
     implementation libs.unified_test_platform_device_provider
     compileOnly libs.unified_test_platform_launcher
 

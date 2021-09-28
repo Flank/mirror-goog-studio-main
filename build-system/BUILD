@@ -264,7 +264,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/profile:agp_gradle_build_files",
     "//tools/base/device_validator:agp_gradle_build_files",
     "//tools/base/draw9patch:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/base/emulator/proto:agp_gradle_build_files",
     "//tools/base/fakeadbserver:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/layoutlib-api:agp_gradle_build_files",
     "//tools/base/lint:agp_gradle_build_files",
