@@ -262,7 +262,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/gradle-api:agp_gradle_build_files",
     "//tools/base/build-system/gradle-core:agp_gradle_build_files",
     "//tools/base/build-system/profile:agp_gradle_build_files",
-    "//tools/base/chunkio:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/device_validator:agp_gradle_build_files",
     "//tools/base/draw9patch:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/emulator/proto:agp_gradle_build_files",
@@ -273,7 +272,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/lint/libs/lint-tests:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
     "//tools/base/ninepatch:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/base/pixelprobe:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/profgen/profgen:agp_gradle_build_files",
     "//tools/base/repository:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",

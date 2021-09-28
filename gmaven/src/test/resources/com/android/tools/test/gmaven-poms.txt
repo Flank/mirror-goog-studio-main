@@ -501,7 +501,7 @@ com.android.tools.build:manifest-merger
     net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.chunkio:chunkio
-  pomName=com.android.tools.chunkio.chunkio
+  pomName=ChunkIO
   description=annotations for use with chunkio-processor, and runtime supporting APIs
 
 com.android.tools.ddms:ddmlib
@@ -672,7 +672,7 @@ com.android.tools.lint:lint-tests
     net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.pixelprobe:pixelprobe
-  pomName=com.android.tools.pixelprobe.pixelprobe
+  pomName=Pixel Probe
   description=library to read pixel data and metadata from various image formats
   dependencies:
     com.android.tools.chunkio:chunkio (runtime)

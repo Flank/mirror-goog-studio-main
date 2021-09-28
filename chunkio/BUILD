@@ -1,4 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 # managed by go/iml_to_build
 iml_module(
@@ -11,15 +13,13 @@ iml_module(
     deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
+maven_library(
+    name = "tools.chunkio",
+    srcs = glob(["src/main/java/**/*.java"]),
+    coordinates = "com.android.tools.chunkio:chunkio:" + BASE_VERSION,
+    description = "annotations for use with chunkio-processor, and runtime supporting APIs",
+    notice = "NOTICE",
+    pom_name = "ChunkIO",
+    resource_strip_prefix = "tools/base/chunkio",
+    visibility = ["//visibility:public"],
 )
