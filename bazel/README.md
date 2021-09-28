@@ -170,15 +170,15 @@ In order to fetch new Maven artifacts into the local Maven repository under
 `//prebuilts/tools/common/m2/`, follow these steps:
 
 
-1. Add the dependency to the `artifacts` section of one of the two
-`local_maven_repository` rules in the `tools/base/bazel/toplevel.WORKSPACE`
+1. Add the dependency to the `artifacts` or `data` section of the
+`local_maven_repository` rule in the `tools/base/bazel/toplevel.WORKSPACE`
 file.
 
   * If the artifact is needed as a compile or runtime Java dependency in Bazel,
-    then add it to the rule named `maven`.
+    then add it to `artifacts`.
 
   * If the artifact will only be used in tests as data (i.e., passed into
-    `maven_repository` rules), then add it to the rule named `maven_tests`.
+    `maven_repository` rules), then add it to `data`.
 
 2. Use the following script to download the artifacts:
 
@@ -186,10 +186,11 @@ file.
 tools/base/bazel/maven/maven_fetch.sh
 ```
 
-3. In order to use the new artifact, use `@maven//:` prefix without the
-   artifact version, or `@maven_tests//:` prefix with artifact version.
-   E.g., `@maven//:com.google.guava.guava" or
-   `@maven_tests//:com.google.guava.guava_30.1-jre`.
+3. In order to use the new artifact, use `@maven//:` prefix. If you added
+   your  artifact to `artifacts`, then do not add the artifact version,
+   if you added your artifact to `data`, then use the artifact version.
+   E.g., `@maven//:com.google.guava.guava" (for artifacts)
+   `@maven//:com.google.guava.guava_30.1-jre` (for data).
 
    * The `@maven//` prefix points to a dynamically generated Bazel-external
      repository. You can access the generated file at
