@@ -33,16 +33,19 @@ public class AndroidAnalyticsTestListener implements TestListener {
     private final AnalyticsService analyticsService;
     private TestFilter testFilter;
     private long totalTests;
+    private boolean isIdeInvocation;
 
     public AndroidAnalyticsTestListener(
             ArtifactCollection dependencies,
             boolean coverageEnabled,
             AnalyticsService analyticsService,
-            TestFilter testFilter) {
+            TestFilter testFilter,
+            boolean isIdeInvocation) {
         this.dependencies = dependencies;
         this.coverageEnabled = coverageEnabled;
         this.analyticsService = analyticsService;
         this.testFilter = testFilter;
+        this.isIdeInvocation = isIdeInvocation;
     }
 
     @Override
@@ -59,14 +62,24 @@ public class AndroidAnalyticsTestListener implements TestListener {
                     && testResult.getResultType() != TestResult.ResultType.FAILURE
                     && (!testFilter.getIncludePatterns().isEmpty()
                             || !testFilter.getExcludePatterns().isEmpty())) {
-                recordCrashedUnitTestRun(dependencies, coverageEnabled, analyticsService);
+                recordCrashedUnitTestRun(
+                        dependencies,
+                        coverageEnabled,
+                        analyticsService,
+                        isIdeInvocation
+                );
             }
 
             // Only log the test run if there was any test that was run. otherwise, it means that no
             // test was found for the run Configuration.
             if (totalTests != 0L) {
                 recordOkUnitTestRun(
-                        dependencies, coverageEnabled, (int) totalTests, analyticsService);
+                        dependencies,
+                        coverageEnabled,
+                        (int) totalTests,
+                        analyticsService,
+                        isIdeInvocation
+                );
             }
         }
     }

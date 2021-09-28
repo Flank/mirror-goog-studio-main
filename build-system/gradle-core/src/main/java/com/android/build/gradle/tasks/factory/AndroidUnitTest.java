@@ -36,6 +36,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptionService;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
@@ -71,6 +73,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
     private ArtifactCollection dependencies;
 
+    private boolean isIdeInvoked;
+
     @Nullable private GenerateTestConfig.TestConfigInputs testConfigInputs;
 
     @Internal
@@ -105,7 +109,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                         dependencies,
                         jcoExtension != null && jcoExtension.isEnabled(),
                         getAnalyticsService().get(),
-                        this.getFilter());
+                        this.getFilter(),
+                        isIdeInvoked);
         this.addTestListener(testListener);
 
         super.executeTests();
@@ -184,11 +189,13 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             boolean includeAndroidResources =
                     extension.getTestOptions().getUnitTests().isIncludeAndroidResources();
-            boolean useRelativePathInTestConfig =
-                    creationConfig
-                            .getServices()
-                            .getProjectOptions()
-                            .get(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG);
+
+            ProjectOptions configOptions = creationConfig.getServices().getProjectOptions();
+            boolean useRelativePathInTestConfig = configOptions
+                    .get(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG);
+
+            // Get projectOptions to determine if the test is invoked from the IDE or the terminal.
+            task.isIdeInvoked = configOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE);
 
             // we run by default in headless mode, so the forked JVM doesn't steal focus.
             task.systemProperty("java.awt.headless", "true");
