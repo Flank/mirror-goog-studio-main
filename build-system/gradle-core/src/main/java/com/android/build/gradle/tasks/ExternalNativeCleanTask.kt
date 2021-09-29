@@ -77,7 +77,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             val abiToLogFolder = allAbis
                     .associate { it.abi.tag to it.intermediatesParentFolder }
             val batch = configValueList.map { config ->
-                val abiName = config.libraries.values.mapNotNull { it.abi }.single()
+                val abiName = config.libraries.values.mapNotNull { it.abi }.distinct().single()
                 CleanProcessInfo(
                     commands = config.cleanCommandsComponents,
                     logFolder = abiToLogFolder.getValue(abiName),
