@@ -14,7 +14,7 @@ app_inspection_jar(
     bundle_srcs = [
         "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common.jar",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-jvm",
     ],
     d8_flags = [
         "--min-api 29",  # Live layout inspection supported on Q+
