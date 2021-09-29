@@ -4603,6 +4603,83 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testCustomMinSdkVersionAnnotations() {
+        // 200599470: NewApi lint check doesn't honor Robolectric SDK configurations
+        lint().files(
+                        manifest().minSdk(14),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.widget.inline.InlineContentView\n"
+                                        + "import androidx.annotation.RequiresApi\n"
+                                        + "import androidx.test.filters.SdkSuppress\n"
+                                        + "import org.robolectric.annotation.Config\n"
+                                        + "\n"
+                                        + "class ApiTest {\n"
+                                        + "    fun testErrors(view: InlineContentView) {\n"
+                                        + "        // Checking both SDK API reference and @RequiresApi reference\n"
+                                        + "        // since codepaths are slightly different\n"
+                                        + "        view.isZOrderedOnTop // ERROR 1: Requires API 30\n"
+                                        + "        requires30() // ERROR 2: Requires API 30\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    // Specifying maxSdk like this is nonsensical but making sure we don't just pick\n"
+                                        + "    // first number\n"
+                                        + "    @Config(maxSdk = 29, minSdk = 30)\n"
+                                        + "    fun testOkRoboElectric(view: InlineContentView) {\n"
+                                        + "        view.isZOrderedOnTop // OK 1\n"
+                                        + "        requires30() // OK 2\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    // Specifying maxSdkVersion like this is nonsensical but making sure we don't just pick\n"
+                                        + "    // first number\n"
+                                        + "    @SdkSuppress(maxSdkVersion = 1, minSdkVersion = 30)\n"
+                                        + "    fun testOkSdkSuppress(view: InlineContentView) {\n"
+                                        + "        view.isZOrderedOnTop // OK 3\n"
+                                        + "        requires30() // OK 4\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @SdkSuppress(codeName = \"R\")\n"
+                                        + "    fun testOkSdkSuppressCodeName(view: InlineContentView) {\n"
+                                        + "        view.isZOrderedOnTop // OK 5\n"
+                                        + "        requires30() // OK 6\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(30)\n"
+                                        + "    fun requires30() { }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package org.robolectric.annotation;\n"
+                                        + "public @interface Config {\n"
+                                        + "    int minSdk() default 1;\n"
+                                        + "    int maxSdk() default -1;\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package androidx.test.filters;\n"
+                                        + "import java.lang.annotation.*;\n"
+                                        + "@Retention(RetentionPolicy.RUNTIME)\n"
+                                        + "@Target({ElementType.TYPE, ElementType.METHOD})\n"
+                                        + "public @interface SdkSuppress {\n"
+                                        + "    int minSdkVersion() default 1;\n"
+                                        + "    int maxSdkVersion() default Integer.MAX_VALUE;\n"
+                                        + "    String codeName() default \"unset\";\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/ApiTest.kt:12: Error: Call requires API level 30 (current min is 14): android.widget.inline.InlineContentView#isZOrderedOnTop [NewApi]\n"
+                                + "        view.isZOrderedOnTop // ERROR 1: Requires API 30\n"
+                                + "             ~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/ApiTest.kt:13: Error: Call requires API level 30 (current min is 14): requires30 [NewApi]\n"
+                                + "        requires30() // ERROR 2: Requires API 30\n"
+                                + "        ~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     public void testSdkLevelBoolean() {
         lint().files(
                         manifest().minSdk(1),
