@@ -149,36 +149,6 @@ public class ByteCodeInterpreter {
                         return computeReturn(insnOpcode);
                     case RETURN:
                         return new ValueReturned(Value.VOID_VALUE);
-                    case IFEQ:
-                    case IFNE:
-                    case IFLT:
-                    case IFGE:
-                    case IFGT:
-                    case IFLE:
-                    case IFNULL:
-                    case IFNONNULL:
-                        if (interpreter.checkUnaryCondition(getStackTop(frame), insnOpcode)) {
-                            frame.execute(currentInsn, interpreter);
-                            goTo(((JumpInsnNode) currentInsn).label);
-                            continue loop;
-                        }
-                        break;
-                    case IF_ICMPEQ:
-                    case IF_ICMPNE:
-                    case IF_ICMPLT:
-                    case IF_ICMPGE:
-                    case IF_ICMPGT:
-                    case IF_ICMPLE:
-                    case IF_ACMPEQ:
-                    case IF_ACMPNE:
-                        if (interpreter.checkBinaryCondition(
-                                getStackTop(frame, 1), getStackTop(frame, 0), insnOpcode)) {
-                            frame.execute(currentInsn, interpreter);
-                            goTo(((JumpInsnNode) currentInsn).label);
-                            continue loop;
-                        }
-                        break;
-
                     case ATHROW:
                         ObjectValue exceptionValue = (ObjectValue) getStackTop(frame);
                         InterpreterResult handled =

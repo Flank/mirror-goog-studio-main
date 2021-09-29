@@ -337,8 +337,13 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IFLE:
             case IFNULL:
             case IFNONNULL:
-                // Handled by interpreter loop, see checkUnaryCondition()
+                {
+                    if (checkUnaryCondition(value, insn.getOpcode())) {
+                        JumpInsnNode jmp = (JumpInsnNode) insn;
+                        looper.goTo(jmp.label);
+                    }
                 return null;
+                }
 
             case TABLESWITCH:
                 TableSwitchInsnNode ts = (TableSwitchInsnNode) insn;
@@ -634,7 +639,9 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IF_ICMPLE:
             case IF_ACMPEQ:
             case IF_ACMPNE:
-                // Handled by interpreter loop, see checkBinaryCondition()
+                if (checkBinaryCondition(value1, value2, insn.getOpcode())) {
+                    looper.goTo(((JumpInsnNode) insn).label);
+                }
                 return null;
             case PUTFIELD:
                 {
