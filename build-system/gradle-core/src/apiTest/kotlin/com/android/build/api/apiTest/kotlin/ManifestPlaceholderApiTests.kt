@@ -140,12 +140,12 @@ known at configuration time.
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.artifact.SingleArtifact
 
-            ${testingElements.getGitVersionTask()}
+            ${testingElements.getStringProducerTask("android.intent.action.MAIN")}
 
-            val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
-                File(project.buildDir, "intermediates/gitVersionProvider/output").also {
+            val androidNameProvider = tasks.register<StringProducerTask>("androidNameProvider") {
+                File(project.buildDir, "intermediates/androidNameProvider/output").also {
                     it.parentFile.mkdirs()
-                    gitVersionOutputFile.set(it)
+                    outputFile.set(it)
                 }
                 outputs.upToDateWhen { false }
             }
@@ -159,7 +159,7 @@ known at configuration time.
                 fun taskAction() {
                     val manifest = mergedManifest.asFile.get().readText()
                     // ensure that merged manifest contains the right activity name.
-                    if (!manifest.contains("activity android:name=\"com.android.build.example.minimal.NameWithGit-"))
+                    if (!manifest.contains("activity android:name=\"android.intent.action.MAIN"))
                         throw RuntimeException("Manifest Placeholder not replaced successfully")
                 }
             }
@@ -172,8 +172,8 @@ known at configuration time.
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
                         mergedManifest.set(it.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                     }
-                    it.manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
-                        "NameWithGit-" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
+                    it.manifestPlaceholders.put("MyName", androidNameProvider.map { task ->
+                        task.outputFile.get().asFile.readText(Charsets.UTF_8)
                     })
                 }
             }""".trimIndent()
