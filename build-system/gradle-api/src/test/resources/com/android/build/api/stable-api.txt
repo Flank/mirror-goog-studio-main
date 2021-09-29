@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4c49699d435fe73f67dda57f28040c5a74dacc47fc5f3f72490d9ada128a09bc
+9dc0857660e0b15e3e71623485ea0ddabaf4cce66ceb3986d0c6bfae39553fd1
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -68,6 +68,7 @@ com.android.build.api.artifact.InAndOutFileOperationRequest
 com.android.build.api.artifact.InAndOutFileOperationRequest.toTransform: void (ArtifactTypeT)
 com.android.build.api.artifact.MultipleArtifact extends com.android.build.api.artifact.Artifact$Multiple
 com.android.build.api.artifact.MultipleArtifact$MULTIDEX_KEEP_PROGUARD extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
+com.android.build.api.artifact.MultipleArtifact.<init>: com.android.build.api.artifact.MultipleArtifact<FileTypeT> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.Artifact$Category, int, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.MultipleArtifact.<init>: com.android.build.api.artifact.MultipleArtifact<FileTypeT> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.Artifact$Category, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.OutOperationRequest
 com.android.build.api.artifact.OutOperationRequest.toAppendTo: void (ArtifactTypeT)
@@ -80,6 +81,7 @@ com.android.build.api.artifact.SingleArtifact$MERGED_MANIFEST extends com.androi
 com.android.build.api.artifact.SingleArtifact$OBFUSCATION_MAPPING_FILE extends com.android.build.api.artifact.SingleArtifact
 com.android.build.api.artifact.SingleArtifact$OBFUSCATION_MAPPING_FILE.getFolderName: java.lang.String ()
 com.android.build.api.artifact.SingleArtifact$PUBLIC_ANDROID_RESOURCES_LIST extends com.android.build.api.artifact.SingleArtifact
+com.android.build.api.artifact.SingleArtifact.<init>: com.android.build.api.artifact.SingleArtifact<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.Artifact$Category, java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.SingleArtifact.<init>: com.android.build.api.artifact.SingleArtifact<T> (com.android.build.api.artifact.ArtifactKind, com.android.build.api.artifact.Artifact$Category, java.lang.String, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.SingleArtifact.getFileSystemLocationName: java.lang.String ()
 com.android.build.api.artifact.TaskBasedOperation
