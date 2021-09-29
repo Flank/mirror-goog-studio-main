@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.getErrorLines
 import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.psi.PsiAssertStatement
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiImportStaticReferenceElement
@@ -35,13 +36,12 @@ import com.intellij.psi.impl.JavaPsiFacadeEx
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.USimpleNameReferenceExpression
-import org.jetbrains.uast.java.JavaUAssertExpression
-import org.jetbrains.uast.kotlin.KotlinUImportStatement
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.io.StringWriter
 
@@ -148,7 +148,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
                         return true
                     }
                 }
-            } else if (node is KotlinUImportStatement) {
+            } else if (sourcePsi is KtImportDirective) {
                 // Static import?
                 val qualifiedExpression = importReferencePsi as? KtDotQualifiedExpression
                 val clsName = qualifiedExpression?.receiverExpression?.text
@@ -198,7 +198,7 @@ fun JavaContext.checkFile(root: UFile?, task: TestLintTask) {
         override fun visitCallExpression(node: UCallExpression): Boolean {
             val name = node.methodName ?: node.methodIdentifier?.name
             if (name != null && applicableCalls.contains(name) && node.resolve() == null &&
-                node !is JavaUAssertExpression
+                node.sourcePsi !is PsiAssertStatement
             ) {
                 val context: JavaContext = this@checkFile
                 reportResolveProblem(context, node, name, "call", "getApplicableMethodNames", "visitMethodCall")

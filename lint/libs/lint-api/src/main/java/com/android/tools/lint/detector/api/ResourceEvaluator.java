@@ -62,8 +62,7 @@ import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
-import org.jetbrains.uast.java.JavaAnnotationArrayInitializerUCallExpression;
-import org.jetbrains.uast.kotlin.KotlinUCollectionLiteralExpression;
+import org.jetbrains.uast.UastCallKind;
 
 /** Evaluates constant expressions */
 public class ResourceEvaluator {
@@ -472,8 +471,7 @@ public class ResourceEvaluator {
                             return types;
                         }
                     }
-                } else if (call instanceof JavaAnnotationArrayInitializerUCallExpression
-                        || call instanceof KotlinUCollectionLiteralExpression) {
+                } else if (call.getKind() == UastCallKind.NESTED_ARRAY_INITIALIZER) {
                     EnumSet<ResourceType> types = EnumSet.noneOf(ResourceType.class);
                     for (UExpression argument : call.getValueArguments()) {
                         EnumSet<ResourceType> resourceTypes = getResourceTypes(argument);

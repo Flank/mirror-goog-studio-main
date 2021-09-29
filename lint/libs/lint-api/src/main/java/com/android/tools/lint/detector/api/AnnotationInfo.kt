@@ -31,7 +31,6 @@
 
 package com.android.tools.lint.detector.api
 
-import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPackage
@@ -84,7 +83,8 @@ class AnnotationInfo(
         val annotated = annotated
         // First try to look by directly checking the owner element of
         // the annotation.
-        val annotationOwner = (annotation.sourcePsi as? PsiAnnotation)?.owner
+        // NB: Both JavaUAnnotation and KotlinUAnnotation have `javaPsi` of `PsiAnnotation` type.
+        val annotationOwner = annotation.javaPsi?.owner
             ?: annotation.uastParent?.sourcePsi
         val ownerPsi =
             if (annotationOwner is PsiElement) {

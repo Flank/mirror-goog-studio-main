@@ -27,13 +27,13 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.isJava
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.USwitchExpression
-import org.jetbrains.uast.java.JavaUSwitchExpression
 
 /**
  * Warns against using non-constant resource IDs in Java switch
@@ -55,7 +55,7 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
 
     class ResourceIdVisitor(val context: JavaContext) : UElementHandler() {
         override fun visitSwitchExpression(node: USwitchExpression) {
-            if (node is JavaUSwitchExpression) {
+            if (isJava(node.sourcePsi)) {
                 checkSwitchCasesForRClassReferences(node.body)
             }
         }

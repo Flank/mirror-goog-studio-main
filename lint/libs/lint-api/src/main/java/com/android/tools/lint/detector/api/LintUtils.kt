@@ -116,6 +116,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -123,6 +125,7 @@ import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
@@ -134,6 +137,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
@@ -2265,6 +2269,15 @@ fun isNumberString(s: String?): Boolean {
     }
 
     return true
+}
+
+/** Returns true if the given [UElement] is a polyadic form from [KtStringTemplateExpression] */
+@OptIn(ExperimentalContracts::class)
+fun isPolyadicFromStringTemplate(element: UElement?): Boolean {
+    contract {
+       returns(true) implies (element is UPolyadicExpression)
+    }
+    return element is UPolyadicExpression && element.sourcePsi is KtStringTemplateExpression
 }
 
 /**

@@ -53,7 +53,7 @@ import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingUFile
-import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 import java.io.File
 
 open class DefaultJavaEvaluator(
@@ -137,8 +137,10 @@ open class DefaultJavaEvaluator(
                 for (psi in psiAnnotations) {
                     val signature = psi.qualifiedName ?: continue
                     if (map[signature] == null) {
-                        map[signature] = JavaUAnnotation.wrap(psi)
-                        modified = true
+                        psi.toUElement(UAnnotation::class.java)?.let {
+                            map[signature] = it
+                            modified = true
+                        }
                     }
                 }
                 return if (modified) {
@@ -150,7 +152,7 @@ open class DefaultJavaEvaluator(
 
             // Work around bug: Passing in a UAST node to this method generates a
             // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
-            return JavaUAnnotation.wrap(psiAnnotations)
+            return psiAnnotations.mapNotNull { it.toUElement(UAnnotation::class.java) }
         }
 
         return owner.uAnnotations

@@ -64,7 +64,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUClass
-import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 import java.io.File
 
 const val TYPE_OBJECT = "java.lang.Object"
@@ -1087,7 +1087,7 @@ class JavaEvaluator {
             }
 
             if (relevant.contains(signature)) {
-                val uAnnotation = JavaUAnnotation.wrap(annotation)
+                val uAnnotation = annotation.toUElement(UAnnotation::class.java) ?: continue
 
                 // Common case: there's just one annotation; no need to create a list copy
                 if (length == 1) {

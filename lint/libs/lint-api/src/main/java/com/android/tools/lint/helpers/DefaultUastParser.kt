@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.isPolyadicFromStringTemplate
 import com.intellij.lang.Language
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
@@ -50,9 +51,7 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getIoFile
-import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
 import org.jetbrains.uast.psi.UElementWithLocation
-import org.jetbrains.uast.textRange
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.log10
@@ -245,7 +244,7 @@ open class DefaultUastParser(
             val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
             location.setSource(element)
             return location
-        } else if (element is KotlinStringTemplateUPolyadicExpression &&
+        } else if (isPolyadicFromStringTemplate(element) &&
             element.operands.size == 1
         ) {
             val literal = element.operands[0]

@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.nextStatement
 import com.android.tools.lint.detector.api.previousStatement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiSynchronizedStatement
 import com.intellij.psi.PsiType
 import org.jetbrains.uast.UAnnotationMethod
 import org.jetbrains.uast.UAnonymousClass
@@ -52,8 +53,6 @@ import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.java.JavaUTernaryIfExpression
-import org.jetbrains.uast.java.expressions.JavaUSynchronizedExpression
 import org.jetbrains.uast.skipParenthesizedExprUp
 import java.util.EnumSet
 
@@ -270,7 +269,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             @Suppress("RedundantIf")
             if (curr is UBlockExpression) {
-                if (curr is JavaUSynchronizedExpression) {
+                if (curr.sourcePsi is PsiSynchronizedStatement) {
                     return false
                 }
                 // In Java, it's apparent when an expression is unused:
@@ -328,7 +327,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             } else if (curr is UIfExpression) {
                 if (curr.condition === prev) {
                     return false
-                } else if (curr is JavaUTernaryIfExpression) {
+                } else if (curr.isTernary) {
                     // Ternary expressions can only be used as expressions, not statements,
                     // so we know that the value is used
                     return false

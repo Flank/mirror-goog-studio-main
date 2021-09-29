@@ -29,9 +29,11 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getUMethod
 import com.android.tools.lint.detector.api.isKotlin
+import com.intellij.psi.PsiAssertStatement
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.psi.KtIsExpression
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
@@ -58,8 +60,6 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.UastPostfixOperator
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.java.JavaUAssertExpression
-import org.jetbrains.uast.kotlin.KotlinUTypeCheckExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
@@ -159,8 +159,11 @@ class AssertDetector : Detector(), SourceCodeScanner {
     override fun createUastHandler(context: JavaContext): UElementHandler {
         return object : UElementHandler() {
             override fun visitCallExpression(node: UCallExpression) {
-                if (node is JavaUAssertExpression) {
-                    checkSideEffect(context, node.condition)
+                if (node.sourcePsi is PsiAssertStatement) {
+                    val condition = (node.sourcePsi as PsiAssertStatement).assertCondition ?: return
+                    UastFacade.convertElement(condition, node, UExpression::class.java)?.let {
+                        checkSideEffect(context, it as UExpression)
+                    }
                 }
             }
         }
@@ -366,7 +369,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
             return false
         }
         if (argument is UBinaryExpressionWithType) {
-            return if (argument is KotlinUTypeCheckExpression) {
+            return if (argument.sourcePsi is KtIsExpression) {
                 false
             } else {
                 isExpensive(argument.operand, depth + 1)

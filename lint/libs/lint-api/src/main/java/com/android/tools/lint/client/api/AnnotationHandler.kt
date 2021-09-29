@@ -92,9 +92,9 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
-import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -724,7 +724,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             }
 
             if (relevantAnnotations.contains(signature)) {
-                val uAnnotation = JavaUAnnotation.wrap(annotation)
+                val uAnnotation = annotation.toUElement(UAnnotation::class.java) ?: continue
 
                 // Common case: there's just one annotation; no need to create a list copy
                 if (length == 1) {

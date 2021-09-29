@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.isJava
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
@@ -48,6 +49,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.USwitchClauseExpression
+import org.jetbrains.uast.USwitchClauseExpressionWithBody
 import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UTryExpression
@@ -55,10 +57,8 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UYieldExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
-import org.jetbrains.uast.java.JavaUIfExpression
 import org.jetbrains.uast.kotlin.KotlinPostfixOperators
-import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
-import org.jetbrains.uast.kotlin.expressions.KotlinUElvisExpression
+import org.jetbrains.uast.kotlin.kinds.KotlinSpecialExpressionKinds
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
@@ -493,7 +493,7 @@ abstract class DataFlowAnalyzer(
     }
 
     override fun afterVisitSwitchClauseExpression(node: USwitchClauseExpression) {
-        if (node is KotlinUSwitchEntry) {
+        if (node is USwitchClauseExpressionWithBody) {
             for (expression in node.body.expressions) {
                 if (instances.contains(expression)) {
                     val switch = node.getParentOfType<USwitchExpression>()
@@ -525,10 +525,14 @@ abstract class DataFlowAnalyzer(
     }
 
     override fun afterVisitIfExpression(node: UIfExpression) {
-        if (node !is JavaUIfExpression) { // Does not apply to Java
+        // We can't use `isKotlin` here because `?:` is desugared to a list of expressions:
+        //   temp variable w/ lhs as an initializer,
+        //   `if` expression w/ `temp != null` condition, where `else` branch contains rhs
+        // _without_ sourcePsi. In contrast, [UIfExpression]s in Java always have sourcePsi.
+        if (!isJava(node.sourcePsi)) { // Does not apply to Java
             // Handle Elvis operator
             val parent = skipParenthesizedExprUp(node.uastParent)
-            if (parent is KotlinUElvisExpression) {
+            if (parent is UExpressionList && parent.kind == KotlinSpecialExpressionKinds.ELVIS) {
                 val then = node.thenExpression?.skipParenthesizedExprDown()
                 if (then is USimpleNameReferenceExpression) {
                     val variable = then.resolve()

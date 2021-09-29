@@ -32,7 +32,9 @@ import com.android.tools.lint.detector.api.Severity.WARNING
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.TextFormat.Companion.HTTPS_PREFIX
 import com.android.tools.lint.detector.api.TextFormat.Companion.HTTP_PREFIX
+import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.tools.lint.detector.api.isPolyadicFromStringTemplate
 import com.android.utils.usLocaleCapitalize
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiClassType
@@ -62,8 +64,6 @@ import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
-import org.jetbrains.uast.java.JavaUField
-import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.tryResolve
@@ -550,11 +550,11 @@ class LintDetectorDetector : Detector(), UastScanner {
                             // If marked @JvmField or in Java
                             val issue = resolved.toUElementOfType<UField>()
                             @Suppress("ControlFlowWithEmptyBody")
-                            if (issue is JavaUField &&
+                            if (isJava(issue?.sourcePsi) &&
                                 evaluator.inheritsFrom(
-                                        issue.getContainingUClass(),
-                                        CLASS_DETECTOR
-                                    )
+                                    issue?.getContainingUClass(),
+                                    CLASS_DETECTOR
+                                )
                             ) {
                                 // Don't need to do anything; we'll see this registration
                                 // as part of our regular detector visit
@@ -749,7 +749,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                         index = alt
                     }
                 }
-                if (argument is KotlinStringTemplateUPolyadicExpression &&
+                if (isPolyadicFromStringTemplate(argument) &&
                     argument.operands.size == 1 &&
                     location.source === argument.operands[0]
                 ) {
@@ -930,7 +930,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                         }
                     }
                 }
-            } else if (argument.uastParent !is KotlinStringTemplateUPolyadicExpression) {
+            } else if (!isPolyadicFromStringTemplate(argument.uastParent)) {
                 val constant = ConstantEvaluator.evaluateString(null, argument, true)
                 if (constant != null) {
                     return constant

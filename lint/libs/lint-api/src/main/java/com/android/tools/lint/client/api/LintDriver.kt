@@ -78,6 +78,7 @@ import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getNextInstruction
 import com.android.tools.lint.detector.api.isAnonymousClass
 import com.android.tools.lint.detector.api.isApplicableTo
+import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isXmlFile
 import com.android.tools.lint.model.PathVariables
 import com.android.utils.Pair
@@ -112,12 +113,11 @@ import org.jetbrains.uast.UCatchClause
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
+import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.java.JavaUFile
-import org.jetbrains.uast.java.JavaUImportStatement
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -3235,11 +3235,11 @@ class LintDriver(
 
             if (currentScope is UFile) {
                 return false
-            } else if (currentScope is JavaUImportStatement) {
+            } else if (currentScope is UImportStatement && isJava(currentScope.sourcePsi)) {
                 // Special case: if the error is on an import statement in Java
                 // you don't have the option of suppressing on the file, so
                 // allow suppressing on the top level class instead, if any
-                val topLevelClass = (currentScope.uastParent as? JavaUFile)?.classes?.firstOrNull()
+                val topLevelClass = (currentScope.uastParent as? UFile)?.classes?.firstOrNull()
                 if (topLevelClass != null) {
                     currentScope = topLevelClass
                     continue

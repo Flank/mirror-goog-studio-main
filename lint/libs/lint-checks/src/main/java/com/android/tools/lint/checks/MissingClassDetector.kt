@@ -68,7 +68,7 @@ import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.util.PsiUtil
-import org.jetbrains.uast.kotlin.KotlinUClass
+import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -408,7 +408,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
     }
 
     private fun hasImplicitDefaultConstructor(psiClass: PsiClass): Boolean {
-        if (psiClass is KotlinUClass && psiClass.sourcePsi == null) {
+        if (psiClass is KtLightClassForFacade) {
             // Top level kt classes (FooKt for Foo.kt) do not have implicit default constructor
             return false
         }

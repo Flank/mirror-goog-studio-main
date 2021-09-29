@@ -18,7 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.intellij.psi.PsiAnnotation
 import org.jetbrains.uast.UAnnotation
-import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 
 /**
  * General support for annotations in the Android platform source
@@ -87,7 +87,7 @@ class AndroidPlatformAnnotations(
         fun PsiAnnotation.fromPlatformAnnotation(signature: String? = null): UAnnotation {
             val qualifiedName = signature ?: this.qualifiedName!!
             assert(isPlatformAnnotation(qualifiedName))
-            return AndroidPlatformAnnotations(qualifiedName, JavaUAnnotation.wrap(this))
+            return AndroidPlatformAnnotations(qualifiedName, toUElement(UAnnotation::class.java)!!)
         }
     }
 }
