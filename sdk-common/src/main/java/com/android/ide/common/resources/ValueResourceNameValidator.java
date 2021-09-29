@@ -65,6 +65,10 @@ public final class ValueResourceNameValidator {
                 fullResourceName = fullResourceName.substring(8);
             }
         }
+        if (resourceType == ResourceType.OVERLAYABLE) {
+            // No need to validate overlayable resources as they are not represented as java symbols
+            return null;
+        }
         final String resourceName = normalizeName(fullResourceName);
 
         // Resource names must be valid Java identifiers, since they will
