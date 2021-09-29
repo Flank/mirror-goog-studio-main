@@ -32,6 +32,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Answers
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -57,8 +58,11 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
     @Mock lateinit var mockCoverageOutputDir: File
+    @Mock lateinit var mockManagedDevice: UtpManagedDevice
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    lateinit var mockManagedDevice: UtpManagedDevice
+    lateinit var mockManagedDeviceShard0: UtpManagedDevice
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    lateinit var mockManagedDeviceShard1: UtpManagedDevice
     @Mock lateinit var mockUtpTestResultListenerServerRunner: UtpTestResultListenerServerRunner
     @Mock lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
@@ -68,9 +72,6 @@ class ManagedDeviceTestRunnerTest {
 
     @Before
     fun setupMocks() {
-        `when`(mockManagedDevice.id).thenReturn("mockDeviceId")
-        `when`(mockManagedDevice.deviceName).thenReturn("mockDeviceName")
-        `when`(mockManagedDevice.api).thenReturn(28)
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
@@ -92,6 +93,22 @@ class ManagedDeviceTestRunnerTest {
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())
                 .thenReturn(ServerConfig.getDefaultInstance())
+    }
+
+    private fun setupFullManagedDevice() {
+        `when`(mockManagedDevice.id).thenReturn("mockDeviceId")
+        `when`(mockManagedDevice.deviceName).thenReturn("mockDeviceName")
+        `when`(mockManagedDevice.api).thenReturn(28)
+    }
+
+    private fun setupManagedDeviceForShards() {
+        `when`(mockManagedDeviceShard0.id).thenReturn("mockDeviceId_0")
+        `when`(mockManagedDeviceShard1.id).thenReturn("mockDeviceId_1")
+        `when`(mockManagedDeviceShard0.deviceName).thenReturn("mockDeviceName")
+        `when`(mockManagedDeviceShard1.deviceName).thenReturn("mockDeviceName")
+        `when`(mockManagedDevice.api).thenReturn(28)
+        `when`(mockManagedDevice.forShard(eq(0))).thenReturn(mockManagedDeviceShard0)
+        `when`(mockManagedDevice.forShard(eq(1))).thenReturn(mockManagedDeviceShard1)
     }
 
     private fun runUtp(result: Boolean, numShards: Int? = null): Boolean {
@@ -121,6 +138,7 @@ class ManagedDeviceTestRunnerTest {
 
     @Test
     fun runUtpAndPassed() {
+        setupFullManagedDevice()
         val result = runUtp(result = true)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
@@ -134,6 +152,7 @@ class ManagedDeviceTestRunnerTest {
 
     @Test
     fun runUtpAndFailed() {
+        setupFullManagedDevice()
         val result = runUtp(result = false)
 
         assertThat(capturedRunnerConfigs).hasSize(1)
@@ -147,6 +166,7 @@ class ManagedDeviceTestRunnerTest {
 
     @Test
     fun runUtpWithShardsAndPassed() {
+        setupManagedDeviceForShards()
         val result = runUtp(result = true, numShards = 2)
 
         assertThat(capturedRunnerConfigs).hasSize(2)
@@ -154,10 +174,12 @@ class ManagedDeviceTestRunnerTest {
             mockUtpTestResultListenerServerMetadata,
             temporaryFolderRule.newFolder("tmp1")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
+        assertThat(capturedRunnerConfigs[0].shardConfig).isEqualTo(ShardConfig(2, 0))
         assertThat(capturedRunnerConfigs[1].runnerConfig(
             mockUtpTestResultListenerServerMetadata,
             temporaryFolderRule.newFolder("tmp2")))
             .isEqualTo(RunnerConfigProto.RunnerConfig.getDefaultInstance())
+        assertThat(capturedRunnerConfigs[1].shardConfig).isEqualTo(ShardConfig(2, 1))
 
         assertThat(result).isTrue()
     }
