@@ -620,7 +620,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
     // ---- implements SourceCodeScanner ----
 
-    override fun applicableAnnotations(): List<String>? {
+    override fun applicableAnnotations(): List<String> {
         return listOf(REQUIRES_API_ANNOTATION.oldName(), REQUIRES_API_ANNOTATION.newName())
     }
 
@@ -678,7 +678,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
             val field = usageInfo.referenced
             val issue = if (field is PsiField && isInlined(field, context.evaluator)) {
-                if (isBenignConstantUsage(context.evaluator, field, element, field.name, field.containingClass?.qualifiedName ?: "")) {
+                if (isBenignConstantUsage(
+                        context.evaluator,
+                        field,
+                        element,
+                        field.name,
+                        field.containingClass?.qualifiedName ?: ""
+                    )
+                ) {
                     return
                 }
                 INLINED
@@ -688,38 +695,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             ApiVisitor(context).report(issue, element, location, type, fqcn, api, minSdk, apiLevelFix(api))
         }
-    }
-
-    private fun getApiLevel(context: JavaContext, annotation: UAnnotation): Int {
-        var api = getLongAttribute(context, annotation, ATTR_VALUE, -1).toInt()
-        if (api <= 1) {
-            // @RequiresApi has two aliasing attributes: api and value
-            api = getLongAttribute(context, annotation, "api", -1).toInt()
-        } else if (api == SdkVersionInfo.CUR_DEVELOPMENT) {
-            val version = context.project.buildTarget?.version
-            if (version != null && version.isPreview) {
-                return version.featureLevel
-            }
-            // Special value defined in the Android framework to indicate current development
-            // version. This is different from the tools where we use current stable + 1 since
-            // that's the anticipated version.
-            api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
-                SdkVersionInfo.HIGHEST_KNOWN_API
-            } else {
-                SdkVersionInfo.HIGHEST_KNOWN_API + 1
-            }
-
-            // Try to match it up by codename
-            val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
-                ?: annotation.findDeclaredAttributeValue("api")
-            if (value is PsiReferenceExpression) {
-                val name = value.referenceName
-                if (name?.length == 1) {
-                    api = max(api, SdkVersionInfo.getApiByBuildCode(name, true))
-                }
-            }
-        }
-        return api
     }
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
@@ -2313,6 +2288,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
+        private const val ROBO_ELECTRIC_CONFIG_ANNOTATION = "org.robolectric.annotation.Config"
         private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
 
         private val JAVA_IMPLEMENTATION = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
@@ -2512,6 +2488,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 isRequiresApiAnnotation(fqcn) ||
                 fqcn == SDK_SUPPRESS_ANNOTATION ||
                 fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION ||
+                fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
                 fqcn == TARGET_API // with missing imports
         }
 
@@ -2917,6 +2894,39 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return -1
         }
 
+        @JvmStatic
+        fun getApiLevel(context: JavaContext, annotation: UAnnotation): Int {
+            var api = getLongAttribute(context, annotation, ATTR_VALUE, -1).toInt()
+            if (api <= 1) {
+                // @RequiresApi has two aliasing attributes: api and value
+                api = getLongAttribute(context, annotation, "api", -1).toInt()
+            } else if (api == SdkVersionInfo.CUR_DEVELOPMENT) {
+                val version = context.project.buildTarget?.version
+                if (version != null && version.isPreview) {
+                    return version.featureLevel
+                }
+                // Special value defined in the Android framework to indicate current development
+                // version. This is different from the tools where we use current stable + 1 since
+                // that's the anticipated version.
+                api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+                    SdkVersionInfo.HIGHEST_KNOWN_API
+                } else {
+                    SdkVersionInfo.HIGHEST_KNOWN_API + 1
+                }
+
+                // Try to match it up by codename
+                val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
+                    ?: annotation.findDeclaredAttributeValue("api")
+                if (value is PsiReferenceExpression) {
+                    val name = value.referenceName
+                    if (name?.length == 1) {
+                        api = max(api, SdkVersionInfo.getApiByBuildCode(name, true))
+                    }
+                }
+            }
+            return api
+        }
+
         /**
          * Returns the API level for the given AST node if specified
          * with an `@TargetApi` annotation.
@@ -2938,6 +2948,15 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (fqcn != null && isApiLevelAnnotation(fqcn)) {
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {
+                        if (fqcn == ROBO_ELECTRIC_CONFIG_ANNOTATION ||
+                            fqcn == SDK_SUPPRESS_ANNOTATION ||
+                            fqcn == ANDROIDX_SDK_SUPPRESS_ANNOTATION
+                        ) {
+                            val name = attribute.name
+                            if (name == null || !(name.startsWith("minSdk") || name == "codeName")) {
+                                continue
+                            }
+                        }
                         val expression = attribute.expression
                         if (expression is ULiteralExpression) {
                             val value = expression.value
@@ -2973,9 +2992,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         continue
                     }
                     val colon = text.indexOf(':') // skip over @file: etc
-                    val annotationString =
-                        text.substring(if (colon < start) colon + 1 else 0, start)
-                    if (start != -1 && isApiLevelAnnotation(annotationString)) {
+                    val annotationString = text.substring(if (colon < start) colon + 1 else 0, start)
+                    if (isApiLevelAnnotation(annotationString)) {
                         val end = text.indexOf(')', start + 1)
                         if (end != -1) {
                             var name = text.substring(start + 1, end)

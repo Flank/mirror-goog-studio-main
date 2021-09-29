@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 
@@ -775,6 +776,82 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                 ~~~~~~~~~~~~
             14 errors, 0 warnings
                 """
+        )
+    }
+
+    fun testValidateRequiresApi() {
+        lint().files(
+            manifest().minSdk(15),
+            java(
+                """
+                package test.pkg;
+                import android.os.Build;
+                import androidx.annotation.RequiresApi;
+
+                public class WrongUsages {
+                    @RequiresApi // ERROR 1: Misses API level
+                    public void testApi1() { }
+
+                    @RequiresApi(14) // ERROR 2: Already known to be at least 15 from minSdkVersion
+                    public void testApi2() { }
+
+                    @RequiresApi(15) // ERROR 3: Already known to be at least 15 from minSdkVersion
+                    public void testApi3() { }
+
+                    @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
+                    public void testApi4() { }
+
+                    @RequiresApi(20) // OK 1
+                    public class Test {
+                        @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
+                        public void testApi5() { }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).skipTestModes(TestMode.PARTIAL).run().expect(
+            """
+            src/test/pkg/WrongUsages.java:6: Error: Must specify an API level [SupportAnnotationUsage]
+                @RequiresApi // ERROR 1: Misses API level
+                ~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:9: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+                @RequiresApi(14) // ERROR 2: Already known to be at least 15 from minSdkVersion
+                ~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:12: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+                @RequiresApi(15) // ERROR 3: Already known to be at least 15 from minSdkVersion
+                ~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:15: Warning: The API level is already known to be at least 15 from the minSdkVersion [SupportAnnotationUsage]
+                @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/WrongUsages.java:20: Warning: The API level is already known to be at least 20 here from outer annotations [SupportAnnotationUsage]
+                    @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
+                    ~~~~~~~~~~~~~~~~
+            1 errors, 4 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/WrongUsages.java line 6: Specify API level:
+            @@ -6 +6
+            -     @RequiresApi // ERROR 1: Misses API level
+            +     @RequiresApi([TODO]|) // ERROR 1: Misses API level
+            Fix for src/test/pkg/WrongUsages.java line 9: Delete annotation:
+            @@ -9 +9
+            -     @RequiresApi(14) // ERROR 2: Already known to be at least 15 from minSdkVersion
+            +      // ERROR 2: Already known to be at least 15 from minSdkVersion
+            Fix for src/test/pkg/WrongUsages.java line 12: Delete annotation:
+            @@ -12 +12
+            -     @RequiresApi(15) // ERROR 3: Already known to be at least 15 from minSdkVersion
+            +      // ERROR 3: Already known to be at least 15 from minSdkVersion
+            Fix for src/test/pkg/WrongUsages.java line 15: Delete annotation:
+            @@ -15 +15
+            -     @RequiresApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH) // ERROR 3: Already known to be at least 15 from minSdkVersion
+            +      // ERROR 3: Already known to be at least 15 from minSdkVersion
+            Fix for src/test/pkg/WrongUsages.java line 20: Delete annotation:
+            @@ -20 +20
+            -         @RequiresApi(15) // ERROR 4: Already known to be at least 20 from outer annotation
+            +          // ERROR 4: Already known to be at least 20 from outer annotation
+            """
         )
     }
 
