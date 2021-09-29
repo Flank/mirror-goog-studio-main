@@ -432,6 +432,11 @@ class UtpConfigFactoryTest {
             shardConfig = ShardConfig(totalCount = 10, index = 2))
         assertRunnerConfigProto(
             runnerConfigProto,
+            // TODO(b/201577913): remove
+            instrumentationArgs = mapOf(
+                "numShards" to "10",
+                "shardIndex" to "2"
+            ),
             shardingConfig = """
                 shard_count: 10
                 shard_index: 2
@@ -456,6 +461,11 @@ class UtpConfigFactoryTest {
             shardConfig = ShardConfig(totalCount = 10, index = 2))
         assertRunnerConfigProto(
             runnerConfigProto,
+            // TODO(b/201577913): remove
+            instrumentationArgs = mapOf(
+                "numShards" to "10",
+                "shardIndex" to "2"
+            ),
             deviceId = ":app:deviceNameDebugAndroidTest",
             useGradleManagedDeviceProvider = true,
             shardingConfig = """

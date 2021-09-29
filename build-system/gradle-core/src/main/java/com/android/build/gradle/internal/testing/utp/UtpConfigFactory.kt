@@ -143,7 +143,8 @@ class UtpConfigFactory {
                     updatedAdditionalTestOutputDir,
                     additionalTestOutputOnDeviceDir,
                     device.name,
-                    coverageOutputDir
+                    coverageOutputDir,
+                    shardConfig
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber, shardConfig)
@@ -207,7 +208,7 @@ class UtpConfigFactory {
                     // TODO(b/182813105): Add support for additional test output in managed device.
                     additionalTestOutputDir = null,
                     additionalTestOutputOnDeviceDir = null,
-                    device.deviceName, coverageOutputDir
+                    device.deviceName, coverageOutputDir, shardConfig
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id, shardConfig)
@@ -317,6 +318,7 @@ class UtpConfigFactory {
         additionalTestOutputOnDeviceDir: String?,
         deviceName: String,
         coverageOutputDir: File,
+        shardConfig: ShardConfig?
     ): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
             testFixtureIdBuilder.apply {
@@ -339,7 +341,7 @@ class UtpConfigFactory {
                         .apply { put("debug", "true") })
                 testDriver = createTestDriver(
                     retentionTestData, utpDependencies, useOrchestrator,
-                    additionalTestOutputOnDeviceDir
+                    additionalTestOutputOnDeviceDir, shardConfig
                 )
                 addHostPlugin(
                     createIceboxPlugin(
@@ -355,7 +357,7 @@ class UtpConfigFactory {
                     )
                 }
                 testDriver = createTestDriver(testData, utpDependencies, useOrchestrator,
-                                              additionalTestOutputOnDeviceDir)
+                                              additionalTestOutputOnDeviceDir, shardConfig)
             }
             addHostPlugin(createAndroidTestPlugin(
                     testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
@@ -454,6 +456,8 @@ class UtpConfigFactory {
         utpDependencies: UtpDependencies,
         useOrchestrator: Boolean,
         additionalTestOutputOnDeviceDir: String?,
+        // TODO(b/201577913): remove
+        shardConfig: ShardConfig?
     ): ExtensionProto.Extension {
         return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(
             utpDependencies, AndroidInstrumentationDriver::newBuilder) {
@@ -483,6 +487,12 @@ class UtpConfigFactory {
 
                     if (additionalTestOutputOnDeviceDir != null) {
                         putArgsMap("additionalTestOutputDir", additionalTestOutputOnDeviceDir)
+                    }
+
+                    // TODO(b/201577913): remove
+                    if (shardConfig != null) {
+                        putArgsMap("numShards", shardConfig.totalCount.toString())
+                        putArgsMap("shardIndex", shardConfig.index.toString())
                     }
 
                     noWindowAnimation = testData.animationsDisabled
