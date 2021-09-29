@@ -252,6 +252,44 @@ class TestingElements(val language: ScriptingLanguage) {
             """
         }
 
+    fun getStringProducerTask(valueToProduce: String) =
+            when(language) {
+                ScriptingLanguage.Kotlin ->
+                    // language=kotlin
+                    """
+            abstract class StringProducerTask: DefaultTask() {
+
+                @get:OutputFile
+                abstract val outputFile: RegularFileProperty
+
+                @ExperimentalStdlibApi
+                @TaskAction
+                fun taskAction() {
+                    outputFile.get().asFile.writeText("$valueToProduce")
+                }
+            }
+            """
+                ScriptingLanguage.Groovy ->
+                    // language=groovy
+                    """
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.RegularFileProperty
+            import org.gradle.api.tasks.OutputFile
+            import org.gradle.api.tasks.TaskAction
+
+            abstract class StringProducerTask extends DefaultTask {
+
+                @OutputFile
+                abstract RegularFileProperty getOutputFile()
+
+                @TaskAction
+                void taskAction() {
+                    getOutputFile().get().asFile.write("$valueToProduce")
+                }
+            }
+            """
+            }
+
 fun getManifestProducerTask() =
         when(language) {
             ScriptingLanguage.Kotlin ->
