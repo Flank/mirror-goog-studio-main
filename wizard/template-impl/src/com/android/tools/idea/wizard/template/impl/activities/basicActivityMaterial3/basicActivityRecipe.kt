@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.basicActivity
+package com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.layout.fragmentFirstLayout
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.layout.fragmentSecondLayout
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.layout.fragmentSimpleXml
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.navigation.navGraphXml
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.basicActivityJava
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.basicActivityKt
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.firstFragmentJava
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.firstFragmentKt
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentJava
-import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.res.layout.fragmentFirstLayout
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.res.layout.fragmentSecondLayout
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.res.layout.fragmentSimpleXml
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.res.navigation.navGraphXml
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.src.basicActivityKt
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.src.firstFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.src.secondFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.common.addMaterialDependency
+import com.android.tools.idea.wizard.template.impl.activities.common.addMaterial3Dependency
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
@@ -54,11 +51,11 @@ fun RecipeExecutor.generateBasicActivity(
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   addAllKotlinDependencies(moduleData)
-  addMaterialDependency(useAndroidX)
+  addMaterial3Dependency()
   generateManifest(
-    moduleData, activityClass, packageName, isLauncher, true, generateActivityTitle = true)
+    moduleData, activityClass, packageName, isLauncher, false, generateActivityTitle = true)
   generateAppBar(
-    moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX, isMaterial3 = false
+    moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = true, isMaterial3 = true
   )
   addViewBindingSupport(moduleData.viewBindingSupport, true)
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
@@ -83,75 +80,38 @@ fun RecipeExecutor.generateBasicActivity(
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
   val generateKotlin = projectData.language == Language.Kotlin
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
-  val simpleActivity = when (projectData.language) {
-    Language.Java ->
-      basicActivityJava(
-        isNewProject = moduleData.isNewModule,
-        applicationPackage = projectData.applicationPackage,
-        packageName = packageName,
-        useAndroidX = useAndroidX,
-        activityClass = activityClass,
-        layoutName = layoutName,
-        menuName = menuName,
-        navHostFragmentId = navHostFragmentId,
-        isViewBindingSupported = isViewBindingSupported
-      )
-    Language.Kotlin ->
-      basicActivityKt(
-        isNewProject = moduleData.isNewModule,
-        applicationPackage = projectData.applicationPackage,
-        packageName = packageName,
-        useAndroidX = useAndroidX,
-        activityClass = activityClass,
-        layoutName = layoutName,
-        menuName = menuName,
-        navHostFragmentId = navHostFragmentId,
-        isViewBindingSupported = isViewBindingSupported
-      )
-  }
+  val simpleActivity = basicActivityKt(
+      isNewProject = moduleData.isNewModule,
+      applicationPackage = projectData.applicationPackage,
+      packageName = packageName,
+      useAndroidX = useAndroidX,
+      activityClass = activityClass,
+      layoutName = layoutName,
+      menuName = menuName,
+      navHostFragmentId = navHostFragmentId,
+      isViewBindingSupported = isViewBindingSupported
+  )
 
   save(simpleActivity, simpleActivityPath)
 
   val firstFragmentClass = layoutToFragment(firstFragmentLayoutName)
   val secondFragmentClass = layoutToFragment(secondFragmentLayoutName)
-  val firstFragmentClassContent = when (projectData.language) {
-    Language.Java -> firstFragmentJava(
-      packageName = packageName,
-      useAndroidX = useAndroidX,
-      firstFragmentClass = firstFragmentClass,
-      secondFragmentClass = secondFragmentClass,
-      firstFragmentLayoutName = firstFragmentLayoutName,
-      isViewBindingSupported = isViewBindingSupported
-    )
-    Language.Kotlin -> firstFragmentKt(
+  val firstFragmentClassContent = firstFragmentKt(
       packageName = packageName,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
       firstFragmentLayoutName = firstFragmentLayoutName,
-      useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
-    )
-  }
-  val secondFragmentClassContent = when (projectData.language) {
-    Language.Java -> secondFragmentJava(
+  )
+  val secondFragmentClassContent = secondFragmentKt(
       packageName = packageName,
-      useAndroidX = useAndroidX,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
       secondFragmentLayoutName = secondFragmentLayoutName,
       isViewBindingSupported = isViewBindingSupported
-    )
-    Language.Kotlin -> secondFragmentKt(
-      packageName = packageName,
-      useAndroidX = useAndroidX,
-      firstFragmentClass = firstFragmentClass,
-      secondFragmentClass = secondFragmentClass,
-      secondFragmentLayoutName = secondFragmentLayoutName,
-      isViewBindingSupported = isViewBindingSupported
-    )
-  }
-  val firstFragmentLayoutContent = fragmentFirstLayout(useAndroidX, firstFragmentClass)
-  val secondFragmentLayoutContent = fragmentSecondLayout(useAndroidX, secondFragmentClass)
+  )
+  val firstFragmentLayoutContent = fragmentFirstLayout(firstFragmentClass)
+  val secondFragmentLayoutContent = fragmentSecondLayout(secondFragmentClass)
   save(firstFragmentClassContent, srcOut.resolve("$firstFragmentClass.$ktOrJavaExt"))
   save(secondFragmentClassContent, srcOut.resolve("$secondFragmentClass.$ktOrJavaExt"))
   save(firstFragmentLayoutContent, resOut.resolve("layout/$firstFragmentLayoutName.xml"))
@@ -172,13 +132,8 @@ fun RecipeExecutor.generateBasicActivity(
     addDependency("android.arch.navigation:navigation-fragment-ktx:+")
     addDependency("android.arch.navigation:navigation-ui-ktx:+")
   }
-  else {
-    addDependency("android.arch.navigation:navigation-fragment:+")
-    addDependency("android.arch.navigation:navigation-ui:+")
-  }
-  if (generateKotlin) {
-    requireJavaVersion("1.8", true)
-  }
+
+  requireJavaVersion("1.8", true)
   open(simpleActivityPath)
 
   open(resOut.resolve("layout/$contentLayoutName"))

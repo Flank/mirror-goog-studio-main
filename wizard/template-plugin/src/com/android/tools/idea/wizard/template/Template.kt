@@ -34,6 +34,7 @@ enum class Category {
   Google,
   Compose,
   Other,
+  Material3, // Temporary for development
 }
 
 /**

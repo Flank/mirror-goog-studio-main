@@ -385,6 +385,7 @@ local_maven_repository(
         "com.google.android.material:material:1.1.0",
         "com.google.android.material:material:1.3.0",
         "com.google.android.material:material:1.4.0",
+        "com.google.android.material:material:1.5.0-alpha04",
         "com.google.android.support:wearable:2.8.1",
         "com.google.android.wearable:wearable:2.8.1",
         "com.google.auto.service:auto-service:1.0-rc2",

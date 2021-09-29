@@ -30,8 +30,13 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
 
 fun RecipeExecutor.addMaterialDependency(useAndroidX: Boolean) {
   if (useAndroidX) {
-    addDependency("com.google.android.material:material:+")
+    // Material 2 dependencies are now pinned to 1.4.0
+    addDependency("com.google.android.material:material:1.4.+")
   }
+}
+
+fun RecipeExecutor.addMaterial3Dependency() {
+    addDependency("com.google.android.material:material:1.5.0-alpha04")
 }
 
 fun RecipeExecutor.addSupportWearableDependency() {

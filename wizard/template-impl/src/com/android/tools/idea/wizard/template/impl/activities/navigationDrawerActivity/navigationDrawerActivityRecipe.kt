@@ -149,7 +149,8 @@ fun RecipeExecutor.generateNavigationDrawer(
     packageName,
     contentLayoutName,
     appBarLayoutName,
-    useAndroidX = useAndroidX
+    useAndroidX = useAndroidX,
+    isMaterial3 = false
   )
 
   save(drawer(), resOut.resolve("menu/${drawerMenu}.xml"))
