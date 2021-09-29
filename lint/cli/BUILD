@@ -78,3 +78,42 @@ filegroup(
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )
+
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.cli",
+    iml_files = ["android.sdktools.lint.cli.iml"],
+    test_srcs = ["src/main/java"],
+    # There are no tests here, this just just test-scope as it is not bundled in Studio
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    exports = ["//tools/base/lint/cli:lint-cli-psi-prebuilts"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:lint-cli-psi-prebuilts[test]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
+        "//tools/analytics-library/tracker:analytics-tracker[module, test]",
+        "//tools/adt/idea/.idea/libraries:studio-analytics-proto[test]",
+        "//tools/analytics-library/shared:analytics-shared[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
+        "//tools/base/sdklib:studio.android.sdktools.sdklib[module, test]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module, test]",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)
+
+# managed by go/iml_to_build
+java_import(
+    name = "lint-cli-psi-prebuilts",
+    # do not sort: must match IML order
+    jars = [
+        "//prebuilts/tools/common/lint-psi/intellij-core:lint-cli-psi-prebuilts_files",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler:lint-cli-psi-prebuilts_files",
+        "//prebuilts/tools/common/lint-psi/uast:lint-cli-psi-prebuilts_files",
+    ],
+    visibility = ["//visibility:public"],
+)

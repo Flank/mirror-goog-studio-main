@@ -17,22 +17,42 @@
 package com.android.tools.lint.checks.infrastructure
 
 import java.io.File
+import java.net.URI
+import java.util.jar.JarFile
 
 fun findKotlinStdlibPath(): List<String> {
     val classPath: String = System.getProperty("java.class.path")
     val paths = mutableListOf<String>()
     for (path in classPath.split(File.pathSeparatorChar)) {
         val file = File(path)
-        val name = file.name
-        if (name.startsWith("kotlin-stdlib") ||
-            name.startsWith("kotlin-reflect") ||
-            name.startsWith("kotlin-script-runtime")
-        ) {
+        if (isKotlinStdLib(file)) {
             paths.add(file.absolutePath)
+        }
+    }
+    // Handle running from the IDE in jar-manifest mode.
+    if (paths.isEmpty()) {
+        for (jar in classPath.split(File.pathSeparatorChar)) {
+            try {
+                JarFile(File(jar)).use {
+                    for (path in it.manifest.mainAttributes.getValue("Class-Path").split(" ")) {
+                        val file = File(URI(path).path)
+                        if (isKotlinStdLib(file)) {
+                            paths.add(file.absolutePath)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                System.err.println("Could not load jar $jar: $e")
+            }
         }
     }
     if (paths.isEmpty()) {
         error("Did not find kotlin-stdlib-jdk8 in classpath: $classPath")
     }
     return paths
+}
+
+private fun isKotlinStdLib(file: File) : Boolean {
+    val name = file.name
+    return name.startsWith("kotlin-stdlib") || name.startsWith("kotlin-reflect") || name.startsWith("kotlin-script-runtime")
 }

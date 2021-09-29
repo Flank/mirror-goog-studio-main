@@ -111,3 +111,53 @@ filegroup(
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )
+
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.testinfrastructure",
+    iml_files = ["android.sdktools.lint.testinfrastructure.iml"],
+    test_srcs = ["src/main/java"],
+    # There are no tests here, this just just test-scope as it is not bundled in Studio
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-model[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.tests",
+    iml_files = ["android.sdktools.lint.tests.iml"],
+    test_srcs = ["src/test/java"],
+    # The cannonical test target for this is :tests (//tools/base/lint/libs/lint-tests:tests)
+    # as that runs with the correct dependencies. This iml_module is only defined for development
+    test_tags = ["manual"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/tools/common/m2:groovy-3.0.8",
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
+        "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",
+        "//tools/base/apkparser/analyzer:studio.android.sdktools.analyzer[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/analytics-library/testing:android.sdktools.analytics-testing[module, test]",
+        "//tools/adt/idea/.idea/libraries:studio-analytics-proto[test]",
+        "//tools/analytics-library/tracker:analytics-tracker[module, test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/adt/idea/.idea/libraries:truth-java8-extension[test]",
+        "//tools/analytics-library/shared:analytics-shared[module, test]",
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
+        "//tools/base/common:studio.android.sdktools.common.testfixtures[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)

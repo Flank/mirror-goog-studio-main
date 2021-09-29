@@ -106,7 +106,7 @@ dependencies {
             .filterIsInstance<LintModelJavaLibrary>()
             .map { it.artifactAddress }
         Truth.assertThat(javaLibraries)
-            .containsAtLeast(
+            .containsAllOf(
                 "org.jetbrains.kotlin:kotlin-stdlib-jdk7:\$kotlin_version",
                 "org.jetbrains.kotlin:kotlin-stdlib:\$kotlin_version",
                 "org.jetbrains.kotlin:kotlin-stdlib-common:\$kotlin_version"
