@@ -38,6 +38,10 @@ internal class SdkUtilsKtTest {
         Truth.assertThat(parseTargetHash("android-R")).isEqualTo(
             CompileData(codeName = "R")
         )
+
+        Truth.assertThat(parseTargetHash("android-Rv2")).isEqualTo(
+            CompileData(codeName = "Rv2")
+        )
     }
 
     @Test

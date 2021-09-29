@@ -35,20 +35,20 @@ fun parseTargetHash(targetHash : String): CompileData  {
         val api = m.group(1)
 
         val apiLevel = api.toIntOrNull()
-        if (apiLevel != null) {
-            return CompileData(
+        return if (apiLevel != null) {
+            CompileData(
                 apiLevel = apiLevel,
                 sdkExtension = m.group(3)?.toIntOrNull()
             )
         } else {
-            return CompileData(
+            CompileData(
                 codeName = api
             )
         }
     } else {
         val m2 = ADDON_PATTERN.matcher(targetHash)
-        if (m2.matches()) {
-            return CompileData(
+        return if (m2.matches()) {
+            CompileData(
                 vendorName = m2.group(1),
                 addonName = m2.group(2),
                 apiLevel = m2.group(3).toInt()
@@ -69,5 +69,5 @@ fun parseTargetHash(targetHash : String): CompileData  {
 
 }
 
-private val API_PATTERN: Pattern = Pattern.compile("^android-([0-9A-Z]+)(-ext(\\d+))?$")
+private val API_PATTERN: Pattern = Pattern.compile("^android-([0-9A-Za-z]+)(-ext(\\d+))?$")
 private val ADDON_PATTERN: Pattern = Pattern.compile("^(.+):(.+):(\\d+)$")
