@@ -83,7 +83,6 @@ abstract class LintPlugin : Plugin<Project> {
     private lateinit var projectServices: ProjectServices
     private lateinit var dslServices: DslServicesImpl
     private var lintOptions: LintOptions? = null
-    private val dslOperationsRegistrar = DslLifecycleComponentsOperationsRegistrar<LintOptions>()
 
     @get:Inject
     abstract val listenerRegistry: BuildEventsListenerRegistry
@@ -99,17 +98,18 @@ abstract class LintPlugin : Plugin<Project> {
             project.providers.provider { null }
         )
 
-        createExtension(project, dslServices)
-        withJavaPlugin(project) { registerTasks(project) }
+        val dslOperationsRegistrar = createExtension(project, dslServices)
+        withJavaPlugin(project) { registerTasks(project, dslOperationsRegistrar) }
     }
-    private fun registerTasks(project: Project) {
+    private fun registerTasks(project: Project, dslOperationsRegistrar: DslLifecycleComponentsOperationsRegistrar<Lint>) {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         registerTasks(
             project,
             javaConvention,
-            customLintChecks
+            customLintChecks,
+            dslOperationsRegistrar,
         )
         ModelArtifactCompatibilityRule.setUp(project.dependencies.attributesSchema)
     }
@@ -117,7 +117,8 @@ abstract class LintPlugin : Plugin<Project> {
     private fun registerTasks(
         project: Project,
         javaConvention: JavaPluginConvention,
-        customLintChecks: FileCollection
+        customLintChecks: FileCollection,
+        dslOperationsRegistrar: DslLifecycleComponentsOperationsRegistrar<Lint>,
     ) {
         registerBuildServices(project)
         val artifacts = ArtifactsImpl(project, "global")
@@ -131,7 +132,7 @@ abstract class LintPlugin : Plugin<Project> {
 
         // Avoid reading the lintOptions DSL and build directory before the build author can customize them
         project.afterEvaluate {
-            dslOperationsRegistrar.executeDslFinalizationBlocks(lintOptions!!)
+            dslOperationsRegistrar.executeDslFinalizationBlocks()
 
             lintTask.configure { task ->
                 task.configureForStandalone(taskCreationServices, artifacts, lintOptions!!)
@@ -303,18 +304,23 @@ abstract class LintPlugin : Plugin<Project> {
         }
     }
 
-    private fun createExtension(project: Project, dslServices: DslServicesImpl) {
+    private fun createExtension(
+        project: Project,
+        dslServices: DslServicesImpl
+    ): DslLifecycleComponentsOperationsRegistrar<Lint> {
         val lintImplClass = androidPluginDslDecorator.decorate(LintImpl::class.java)
         val newLintExtension = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
         val decoratedLintOptionsClass =
             androidPluginDslDecorator.decorate(LintOptions::class.java)
         lintOptions =
             project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, newLintExtension)
+        val dslOperationsRegistrar= DslLifecycleComponentsOperationsRegistrar<Lint>(newLintExtension)
         project.extensions.create(
             "lintLifecycle",
             LintLifecycleExtensionImpl::class.java,
             dslOperationsRegistrar
         )
+        return dslOperationsRegistrar
     }
 
     private fun withJavaPlugin(project: Project, action: Action<Plugin<*>>) {

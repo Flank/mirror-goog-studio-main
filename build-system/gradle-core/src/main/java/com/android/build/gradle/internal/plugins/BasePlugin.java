@@ -192,11 +192,6 @@ public abstract class BasePlugin<
 
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
-    private final VariantApiOperationsRegistrar<
-            AndroidT,
-            VariantBuilderT,
-            VariantT> variantApiOperations = new VariantApiOperationsRegistrar<>();
-
     public BasePlugin(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull SoftwareComponentFactory componentFactory,
@@ -516,6 +511,8 @@ public abstract class BasePlugin<
                         dslServices, globalScope, variantInputModel, buildOutputs, extraModelInfo);
 
         globalScope.setExtension(extension);
+        VariantApiOperationsRegistrar<AndroidT, VariantBuilderT, VariantT> variantApiOperations =
+                new VariantApiOperationsRegistrar<>((AndroidT) extension);
 
         androidComponentsExtension = createComponentExtension(dslServices, variantApiOperations);
 
@@ -710,9 +707,7 @@ public abstract class BasePlugin<
         }
         hasCreatedTasks = true;
 
-        variantApiOperations.executeDslFinalizationBlocks(
-                (AndroidT) extension
-        );
+        variantManager.getVariantApiOperationsRegistrar().executeDslFinalizationBlocks();
 
         variantInputModel.lock();
         extension.disableWrite();
