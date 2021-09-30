@@ -57,7 +57,6 @@ ${importViewBindingClass(isViewBindingSupported, packageName, "item_transform", 
  */
 class $fragmentClassName : Fragment() {
 
-    private lateinit var ${navFragmentPrefix}ViewModel: $navViewModelClass
     private var _binding: ${bindingName}? = null
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -68,16 +67,16 @@ class $fragmentClassName : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        ${navFragmentPrefix}ViewModel = ViewModelProvider(this).get(${navViewModelClass}::class.java)
+        val ${navFragmentPrefix}ViewModel = ViewModelProvider(this).get(${navViewModelClass}::class.java)
         _binding = ${bindingName}.inflate(inflater, container, false)
         val root: View = binding.root
 
         val recyclerView = binding.recyclerviewTransform
         val adapter = TransformAdapter()
         recyclerView.adapter = adapter
-        ${navFragmentPrefix}ViewModel.texts.observe(viewLifecycleOwner, {
+        ${navFragmentPrefix}ViewModel.texts.observe(viewLifecycleOwner) {
             adapter.submitList(it)
-        })
+        }
         return root
     }
 

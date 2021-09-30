@@ -51,14 +51,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
-import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
-import ${escapeKotlinIdentifier(packageName)}.R
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
-class ${firstFragmentClass} : Fragment() {
+class $firstFragmentClass : Fragment() {
 
-  private lateinit var ${navFragmentPrefix}ViewModel: ${navViewModelClass}
 ${renderIf(isViewBindingSupported) {"""
   private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
   // This property is only valid between onCreateView and
@@ -70,19 +67,19 @@ ${renderIf(isViewBindingSupported) {"""
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? {
-    ${navFragmentPrefix}ViewModel =
+  ): View {
+    val ${navFragmentPrefix}ViewModel =
             $viewModelInitializationBlock
     $onCreateViewBlock
     val textView: TextView = ${findViewById(
-      language = Language.Kotlin, 
-      isViewBindingSupported = isViewBindingSupported, 
+      language = Language.Kotlin,
+      isViewBindingSupported = isViewBindingSupported,
       id = "text_${navFragmentPrefix}",
       className = "TextView",
       parentView = "root")}
-    ${navFragmentPrefix}ViewModel.text.observe(viewLifecycleOwner, Observer {
+    ${navFragmentPrefix}ViewModel.text.observe(viewLifecycleOwner) {
       textView.text = it
-    })
+    }
     return root
   }
 
