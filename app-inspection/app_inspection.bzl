@@ -95,6 +95,11 @@ def app_inspection_aar_import(name, aar, **kwargs):
 #
 # bundle_srcs represents dependencies that need to be bundled with the
 # inspector (via jarjar) because they are needed during runtime.
+#
+# nojarjar_deps contains dependencies that will be included without jarjaring.
+# These deps will be able to interact directly with the classes in the app or
+# library code (e.g. kotlin.*, kotlinx.coroutines.*) that are renamed in the
+# inspector by jarjar.
 def app_inspection_jar(
         name,
         proto,
@@ -103,6 +108,7 @@ def app_inspection_jar(
         bundle_srcs = [],
         out = "",
         d8_flags = [],
+        nojarjar_deps = [],
         **kwargs):
     kotlin_library(
         name = name + "-sources_undexed",
@@ -124,7 +130,7 @@ def app_inspection_jar(
             ":" + name + "-bundled",
             "//tools/base/bazel:studio-proto",
             proto,
-        ],
+        ] + nojarjar_deps,
     )
 
     native.java_library(
