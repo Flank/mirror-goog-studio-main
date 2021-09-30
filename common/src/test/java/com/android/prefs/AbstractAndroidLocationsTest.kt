@@ -98,6 +98,27 @@ class AbstractAndroidLocationsTest {
     }
 
     @Test
+    fun `XGD_CONFIG_HOME usage`() {
+        val testLocation = folder.newFolder()
+        val provider = FakeProvider(
+            sysProp = mapOf("XGD_CONFIG_HOME" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
+        val logger = RecordingLogger()
+
+        val locationProvider: AndroidLocationsProvider = AndroidLocations(provider, logger)
+        val result = locationProvider.prefsLocation
+
+        val expected = testLocation.toPath().resolve(".android")
+        Truth.assertWithMessage("Test Location")
+            .that(result)
+            .isEqualTo(expected)
+
+        Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).isEmpty()
+    }
+
+
+    @Test
     fun `ANDROID_PREFS_ROOT and ANDROID_SDK_HOME with different values`() {
         val androidSdkHomeLocation = folder.newFolder().absolutePath
         val androidPrefsRootLocation = folder.newFolder().absolutePath
@@ -390,6 +411,22 @@ class AbstractAndroidLocationsTest {
             sysProp = mapOf(),
             envVar = mapOf(
                 "HOME" to testLocation.absolutePath
+            )
+        )
+        val logger = RecordingLogger()
+
+        Truth.assertWithMessage("Test Location")
+            .that(AndroidLocations(provider, logger).userHomeLocation)
+            .isEqualTo(testLocation.toPath())
+    }
+
+    @Test
+    fun `userHomeLocation via XGD_CONFIG_HOME`() {
+        val testLocation = folder.newFolder()
+        val provider = FakeProvider(
+            sysProp = mapOf(),
+            envVar = mapOf(
+                "XGD_CONFIG_HOME" to testLocation.absolutePath
             )
         )
         val logger = RecordingLogger()
