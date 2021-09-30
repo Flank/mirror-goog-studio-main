@@ -172,8 +172,8 @@ known at configuration time.
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
                         mergedManifest.set(it.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                     }
-                    it.manifestPlaceholders.put("MyName", androidNameProvider.map { task ->
-                        task.outputFile.get().asFile.readText(Charsets.UTF_8)
+                    it.manifestPlaceholders.put("MyName", androidNameProvider.flatMap { task ->
+                        task.outputFile.map { "NameWithGit-" + it.asFile.readText(Charsets.UTF_8) }
                     })
                 }
             }""".trimIndent()
