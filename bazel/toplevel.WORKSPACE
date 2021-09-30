@@ -222,6 +222,7 @@ local_maven_repository(
         "org.eclipse.aether:aether-connector-basic:1.0.2.v20150114",
         "org.eclipse.aether:aether-transport-file:1.0.2.v20150114",
         "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
+        "com.github.gundy:semver4j:0.16.4",  # Workaround for b/201683107.
         "org.glassfish.jaxb:jaxb-runtime:2.3.2",
         "org.glassfish.jaxb:jaxb-xjc:2.3.2",
         "org.gradle:gradle-tooling-api:7.2",
