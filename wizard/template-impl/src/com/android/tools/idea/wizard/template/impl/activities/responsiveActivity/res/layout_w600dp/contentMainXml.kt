@@ -30,7 +30,7 @@ fun contentMainXml(
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/$appBarMainLayoutName">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/$navHostFragmentId"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="0dp"

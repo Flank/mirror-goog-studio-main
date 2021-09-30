@@ -64,6 +64,7 @@ fun appBarMainXml(
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
+            android:contentDescription="@string/fab_content_description"
             app:srcCompat="@android:drawable/ic_dialog_email" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

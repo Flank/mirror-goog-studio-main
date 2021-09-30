@@ -24,7 +24,6 @@ Wrap the DrawerLayout with FrameLayout to use the same View type for the same vi
 across the layout configurations
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -33,8 +32,7 @@ across the layout configurations
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        tools:openDrawer="start">
+        android:fitsSystemWindows="true" >
 
         <include
             android:id="@+id/${appBarMainName}"

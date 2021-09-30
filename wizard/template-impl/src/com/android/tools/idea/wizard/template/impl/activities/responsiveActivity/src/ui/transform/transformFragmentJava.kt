@@ -62,12 +62,11 @@ import java.util.List;
  */
 public class $fragmentClassName extends Fragment {
 
-    private $navViewModelClass ${navFragmentPrefix}ViewModel;
     private $bindingName binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        ${navFragmentPrefix}ViewModel =
+        $navViewModelClass ${navFragmentPrefix}ViewModel =
                 new ViewModelProvider(this).get(${navViewModelClass}.class);
 
         binding = ${bindingName}.inflate(inflater, container, false);
