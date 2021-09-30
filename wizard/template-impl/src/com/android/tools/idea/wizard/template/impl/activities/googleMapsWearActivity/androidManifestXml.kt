@@ -30,7 +30,8 @@ fun androidManifestXml(
 ): String {
   val labelBlock = if (isNewModule) "android:label=\"@string/app_name\""
   else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
-  val intentFilterBlock = commonActivityBody(isLauncher || isNewModule, isLibrary)
+  val launcher = isLauncher || isNewModule
+  val intentFilterBlock = commonActivityBody(launcher, isLibrary)
 
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -49,7 +50,7 @@ fun androidManifestXml(
         ${geoApiKeyMetadataEntry()}
 
         <activity android:name="${packageName}.${activityClass}"
-            android:exported="true"
+            android:exported="$launcher"
             $labelBlock>
             $intentFilterBlock
         </activity>

@@ -42,8 +42,9 @@ fun androidManifestXml(
   simpleName: String,
   isNewModule: Boolean
 ): String {
-  // TODO(qumeric): add activityLabel like in other activity templates
-  val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
+  // TODO: add activityLabel like in other activity templates
+  val launcher = isLauncher || isNewModule
+  val activityBody = commonActivityBody(launcher, isLibrary)
 
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -52,7 +53,7 @@ fun androidManifestXml(
         ${geoApiKeyMetadataEntry()}
 
         <activity android:name="${packageName}.${activityClass}"
-            android:exported="true"
+            android:exported="$launcher"
             android:label="@string/title_${simpleName}">
             $activityBody
         </activity>

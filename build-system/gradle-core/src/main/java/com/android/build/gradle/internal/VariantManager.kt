@@ -115,7 +115,7 @@ class VariantManager<
         private val projectOptions: ProjectOptions,
         private val dslExtension: CommonExtensionT,
         private val androidComponentsExtension: AndroidComponentsT,
-        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
+        val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
                 CommonExtension<*, *, *, *>,
                 VariantBuilder,
                 Variant,

@@ -29,7 +29,8 @@ fun androidManifestXml(
   val labelBlock = if (isNewModule) "android:label=\"@string/app_name\""
   else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
 
-  val intentFilterBlock = renderIf((isLauncher || isNewModule) && !isLibrary) {"""
+  val launcher = (isLauncher || isNewModule) && !isLibrary
+  val intentFilterBlock = renderIf(launcher) {"""
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -52,7 +53,7 @@ fun androidManifestXml(
         <meta-data android:name="com.google.android.wearable.standalone" android:value="true"/>
 
         <activity android:name="${packageName}.${activityClass}"
-            android:exported="true"
+            android:exported="$launcher"
             $labelBlock
             >
             $intentFilterBlock

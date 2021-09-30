@@ -56,7 +56,6 @@ class BooleanOptionTest {
             BooleanOption.ENABLE_SDK_DOWNLOAD,
             BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES,
             BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS,
-            BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE,
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
             BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
             BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS,

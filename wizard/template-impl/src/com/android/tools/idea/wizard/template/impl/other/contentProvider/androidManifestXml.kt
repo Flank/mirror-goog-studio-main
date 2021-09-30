@@ -27,9 +27,9 @@ fun androidManifestXml(
 
     <application>
         <provider android:name="${packageName}.${className}"
-            android:authorities="${authorities}"
-            android:exported="${isExported}"
-            android:enabled="${isEnabled}" >
+            android:authorities="$authorities"
+            android:exported="$isExported"
+            android:enabled="$isEnabled" >
         </provider>
     </application>
 
