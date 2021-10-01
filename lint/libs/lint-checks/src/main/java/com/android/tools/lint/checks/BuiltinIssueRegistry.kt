@@ -269,7 +269,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ManifestResourceDetector.ISSUE,
                 ManifestTypoDetector.ISSUE,
                 MediaBrowserServiceCompatVersionDetector.ISSUE,
-                MediaCapabilitiesDetector.ISSUE,
                 MergeMarkerDetector.ISSUE,
                 MergeRootFrameLayoutDetector.ISSUE,
                 MissingClassDetector.INNERCLASS,
@@ -503,6 +502,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
 
         // Noisy check which is misleading after recent backup changes
         "AllowBackup",
+
+        // No longer the recommendation -- b/201700393
+        "MediaCapabilities",
 
         // Deleted; no longer needed thanks to d8
         "Assert"
