@@ -237,4 +237,10 @@ interface VariantDimension {
      */
     @Incubating
     fun resValue(type: String, name: String, value: String)
+
+    @get:Incubating
+    val optimization: Optimization
+
+    @Incubating
+    fun optimization(action: Optimization.() -> Unit)
 }

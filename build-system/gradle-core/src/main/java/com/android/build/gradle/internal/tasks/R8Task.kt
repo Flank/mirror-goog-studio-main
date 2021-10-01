@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.transform.Format
-import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -30,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CL
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
@@ -464,7 +464,14 @@ abstract class R8Task @Inject constructor(
                 } else {
                     testedMappingFile.singleFile
                 },
-            proguardConfigurationFiles =  reconcileDefaultProguardFile(configurationFiles, extractedDefaultProguardFile),
+            proguardConfigurationFiles =  reconcileDefaultProguardFile(
+                    getFilteredConfigurationFiles(
+                            ignoredLibraryKeepRules.get(),
+                            ignoreAllLibraryKeepRules.get(),
+                            libraryKeepRules,
+                            configurationFiles,
+                            LoggerWrapper.getLogger(R8Task::class.java)),
+                    extractedDefaultProguardFile),
             proguardConfigurations = proguardConfigurations,
             variantType = variantType.orNull,
             messageReceiver = MessageReceiverImpl(errorFormatMode.get(), logger),

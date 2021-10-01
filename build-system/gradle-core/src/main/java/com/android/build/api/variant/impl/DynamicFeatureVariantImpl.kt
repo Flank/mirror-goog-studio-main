@@ -288,4 +288,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
+
+    override val ignoredLibraryKeepRules: Provider<Set<String>> =
+            baseModuleMetadata.map { it.ignoredLibraryKeepRules }
 }

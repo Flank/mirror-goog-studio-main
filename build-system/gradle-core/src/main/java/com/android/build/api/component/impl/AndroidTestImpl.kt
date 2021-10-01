@@ -60,6 +60,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -311,6 +312,15 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    override val ignoredLibraryKeepRules: SetProperty<String>
+        get() = internalServices.setPropertyOf(
+                String::class.java,
+                variantDslInfo.ignoredLibraryKeepRules
+        )
+
+    override val ignoreAllLibraryKeepRules: Boolean
+        get() = variantDslInfo.ignoreAllLibraryKeepRules
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

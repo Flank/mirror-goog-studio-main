@@ -39,9 +39,11 @@ import com.android.build.api.dsl.DexPackagingOptions
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.dsl.JavaCompileOptions
 import com.android.build.api.dsl.JniLibsPackagingOptions
+import com.android.build.api.dsl.KeepRules
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.NdkBuild
 import com.android.build.api.dsl.PackagingOptions
+import com.android.build.api.dsl.Optimization
 import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.Split
@@ -113,10 +115,12 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(ExternalNativeBuild::class.java, ExternalNativeBuildImpl::class.java),
     SupportedPropertyType.Block(JavaCompileOptions::class.java, JavaCompileOptionsImpl::class.java),
     SupportedPropertyType.Block(JniLibsPackagingOptions::class.java, JniLibsPackagingOptionsImpl::class.java),
+    SupportedPropertyType.Block(KeepRules::class.java, com.android.build.gradle.internal.dsl.KeepRulesImpl::class.java),
     SupportedPropertyType.Block(LibraryPublishing::class.java, LibraryPublishingImpl::class.java),
     SupportedPropertyType.Block(Lint::class.java, LintImpl::class.java),
     SupportedPropertyType.Block(NdkBuild::class.java, NdkBuildOptions::class.java),
     SupportedPropertyType.Block(PackagingOptions::class.java, com.android.build.gradle.internal.dsl.PackagingOptions::class.java),
+    SupportedPropertyType.Block(Optimization::class.java, com.android.build.gradle.internal.dsl.OptimizationImpl::class.java),
     SupportedPropertyType.Block(ResourcesPackagingOptions::class.java, ResourcesPackagingOptionsImpl::class.java),
     SupportedPropertyType.Block(SigningConfig::class.java, com.android.build.gradle.internal.dsl.SigningConfigImpl::class.java),
     SupportedPropertyType.Block(Split::class.java, SplitOptions::class.java),

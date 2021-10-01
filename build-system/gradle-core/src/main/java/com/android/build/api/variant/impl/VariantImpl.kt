@@ -53,6 +53,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantImpl(
@@ -250,4 +251,11 @@ abstract class VariantImpl(
                 null
             }
         )
+
+    override val ignoredLibraryKeepRules: Provider<Set<String>> =
+            internalServices.setPropertyOf(
+                    String::class.java,
+                    variantDslInfo.ignoredLibraryKeepRules)
+
+    override val ignoreAllLibraryKeepRules: Boolean = variantDslInfo.ignoreAllLibraryKeepRules
 }

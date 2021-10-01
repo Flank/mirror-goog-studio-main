@@ -24,6 +24,7 @@ import com.android.build.api.variant.ResValue
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Provider
 
 interface VariantCreationConfig: ComponentCreationConfig {
 
@@ -49,4 +50,15 @@ interface VariantCreationConfig: ComponentCreationConfig {
     val proguardFiles: ListProperty<RegularFile>
 
     val experimentalProperties: MapProperty<String, Any>
+
+    /**
+     * Returns the component ids of those library dependencies whose keep rules are ignored when
+     * building the project.
+     */
+    val ignoredLibraryKeepRules: Provider<Set<String>>
+
+    /**
+     * Returns whether to ignore all keep rules from external library dependencies.
+     */
+    val ignoreAllLibraryKeepRules: Boolean
 }

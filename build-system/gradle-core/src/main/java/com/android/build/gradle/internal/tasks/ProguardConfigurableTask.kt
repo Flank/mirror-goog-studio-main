@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantType
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -44,9 +45,11 @@ import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -98,6 +101,16 @@ abstract class ProguardConfigurableTask(
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val configurationFiles: ConfigurableFileCollection
+
+    @get:Internal
+    lateinit var libraryKeepRules: ArtifactCollection
+        private set
+
+    @get:Input
+    abstract val ignoredLibraryKeepRules: SetProperty<String>
+
+    @get:Input
+    abstract val ignoreAllLibraryKeepRules: Property<Boolean>
 
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
@@ -305,6 +318,15 @@ abstract class ProguardConfigurableTask(
             inputProguardMapping: FileCollection?,
             testedConfig: VariantCreationConfig?
         ) {
+            task.libraryKeepRules =
+                    creationConfig.variantDependencies.getArtifactCollection(
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            FILTERED_PROGUARD_RULES
+                    )
+            task.ignoredLibraryKeepRules.set(creationConfig.ignoredLibraryKeepRules)
+            task.ignoreAllLibraryKeepRules.set(creationConfig.ignoreAllLibraryKeepRules)
+
             when {
                 testedConfig != null -> {
                     // This is an androidTest variant inside an app/library.
@@ -313,11 +335,7 @@ abstract class ProguardConfigurableTask(
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
                         creationConfig.proguardFiles,
-                        creationConfig.variantDependencies.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH,
-                            ALL,
-                            FILTERED_PROGUARD_RULES
-                        )
+                        task.libraryKeepRules.artifactFiles
                     )
                     task.configurationFiles.from(configurationFiles)
                 }
@@ -328,11 +346,7 @@ abstract class ProguardConfigurableTask(
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
                         creationConfig.proguardFiles,
-                        creationConfig.variantDependencies.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH,
-                            ALL,
-                            FILTERED_PROGUARD_RULES
-                        )
+                        task.libraryKeepRules.artifactFiles
                     )
                     task.configurationFiles.from(configurationFiles)
                 }
@@ -381,16 +395,13 @@ abstract class ProguardConfigurableTask(
                 creationConfig.proguardFiles,
                 aaptProguardFile,
                 creationConfig.artifacts.get(GENERATED_PROGUARD_FILE),
-                creationConfig.variantDependencies.getArtifactFileCollection(
-                    RUNTIME_CLASSPATH,
-                    ALL,
-                    FILTERED_PROGUARD_RULES
-                )
+                task.libraryKeepRules.artifactFiles
             )
 
             if (task.includeFeaturesInScopes.get()) {
                 addFeatureProguardRules(creationConfig, configurationFiles)
             }
+
             task.configurationFiles.from(configurationFiles)
 
             if (creationConfig.variantType.isAar) {

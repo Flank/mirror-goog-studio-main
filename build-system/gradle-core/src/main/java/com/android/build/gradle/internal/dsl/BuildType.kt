@@ -247,6 +247,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
         // we don't want to dynamically link these values. We just want to copy the current value.
         isDefault = thatBuildType.isDefault
         aarMetadata.minCompileSdk = thatBuildType.aarMetadata.minCompileSdk
+        (optimization as OptimizationImpl).initWith(that.optimization as OptimizationImpl)
     }
 
     /** Override as DSL objects have no reason to be compared for equality.  */
