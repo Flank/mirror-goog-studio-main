@@ -1,0 +1,6 @@
+- BasicAndroidProject:
+   - productFlavors:
+      - one{REMOVED} = (null)
+   - variants:
+      - oneDebug{REMOVED}   = (null)
+      - oneRelease{REMOVED} = (null)

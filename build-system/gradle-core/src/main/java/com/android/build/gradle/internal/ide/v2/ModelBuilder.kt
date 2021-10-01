@@ -28,8 +28,11 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.variant.AndroidTest
+import com.android.build.api.variant.Component
 import com.android.build.api.variant.HasAndroidTest
 import com.android.build.api.variant.HasTestFixtures
+import com.android.build.api.variant.UnitTest
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
@@ -193,6 +196,30 @@ class ModelBuilder<
 
     private fun buildBuildMap(project: Project): BuildMap = BuildMapImpl(getBuildMap(project))
 
+    /**
+     * Indicates the dimensions used for a variant
+     */
+    private data class DimensionInformation(
+        val buildTypes: Set<String>,
+        val flavors: Set<Pair<String, String>>
+    ) {
+        fun isNotEmpty(): Boolean = buildTypes.isNotEmpty() || flavors.isNotEmpty()
+
+        companion object {
+            fun createFrom(components: Collection<Component>): DimensionInformation {
+                val buildTypes = mutableSetOf<String>()
+                val flavors = mutableSetOf<Pair<String, String>>()
+
+                for (component in components) {
+                    component.buildType?.let { buildTypes.add(it) }
+                    flavors.addAll(component.productFlavors)
+                }
+
+                return DimensionInformation(buildTypes, flavors)
+            }
+        }
+    }
+
     private fun buildBasicAndroidProjectModel(project: Project): BasicAndroidProject {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
@@ -216,61 +243,80 @@ class ModelBuilder<
 
         val variants = variantModel.variants
 
-        val testFixturesEnabledBuildTypes = mutableSetOf<String>()
-        val testFixturesEnabledProductFlavors = mutableSetOf<Pair<String, String>>()
-
-        for (variant in variants) {
-            // testFixtures is enabled for this variant
-            if (variant.testFixturesComponent != null) {
-                testFixturesEnabledBuildTypes.add(variant.buildType!!)
-                testFixturesEnabledProductFlavors.addAll(variant.productFlavors)
-            }
-        }
+        // compute for each main, androidTest, unitTest and testFixtures which buildType and flavors
+        // they applied to. This will allow excluding from the model sourcesets that are not
+        // used by any of them.
+        // Not doing this is confusing to users as they see folders marked as source that aren't
+        // used by anything.
+        val variantDimensionInfo = DimensionInformation.createFrom(variants)
+        val androidTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<AndroidTest>())
+        val unitTests = DimensionInformation.createFrom(variantModel.testComponents.filterIsInstance<UnitTest>())
+        val testFixtures = DimensionInformation.createFrom(variants.mapNotNull { it.testFixturesComponent })
 
         // for now grab the first buildFeatureValues as they cannot be different.
         val buildFeatures = variants.first().buildFeatures
 
         // gather the default config
         val defaultConfigData = variantInputs.defaultConfigData
-        val defaultConfig = SourceSetContainerImpl(
-            sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
-            androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-            unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-            testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet?.takeIf {
-                testFixturesEnabledBuildTypes.isNotEmpty()
-            }?.convert(buildFeatures)
-        )
+        val defaultConfig = if (variantDimensionInfo.isNotEmpty()) {
+            SourceSetContainerImpl(
+                sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
+                androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                    ?.takeIf { androidTests.isNotEmpty() }
+                    ?.convert(buildFeatures),
+                unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                    ?.takeIf { unitTests.isNotEmpty() }
+                    ?.convert(buildFeatures),
+                testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet
+                    ?.takeIf { testFixtures.isNotEmpty() }
+                    ?.convert(buildFeatures)
+            )
+        } else null
 
         // gather all the build types
         val buildTypes = mutableListOf<SourceSetContainer>()
         for (buildType in variantInputs.buildTypes.values) {
-            buildTypes.add(
-                SourceSetContainerImpl(
-                    sourceProvider = buildType.sourceSet.convert(buildFeatures),
-                    androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-                    testFixturesSourceProvider = buildType.testFixturesSourceSet?.takeIf {
-                        testFixturesEnabledBuildTypes.contains(buildType.buildType.name)
-                    }?.convert(buildFeatures)
+            val buildTypeName = buildType.buildType.name
+
+            if (variantDimensionInfo.buildTypes.contains(buildTypeName)) {
+                buildTypes.add(
+                    SourceSetContainerImpl(
+                        sourceProvider = buildType.sourceSet.convert(buildFeatures),
+                        androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                            ?.takeIf { androidTests.buildTypes.contains(buildTypeName) }
+                            ?.convert(buildFeatures),
+                        unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                            ?.takeIf { unitTests.buildTypes.contains(buildTypeName) }
+                            ?.convert(buildFeatures),
+                        testFixturesSourceProvider = buildType.testFixturesSourceSet
+                            ?.takeIf { testFixtures.buildTypes.contains(buildTypeName) }
+                            ?.convert(buildFeatures)
+                    )
                 )
-            )
+            }
         }
 
         // gather product flavors
         val productFlavors = mutableListOf<SourceSetContainer>()
         for (flavor in variantInputs.productFlavors.values) {
-            productFlavors.add(
-                SourceSetContainerImpl(
-                    sourceProvider = flavor.sourceSet.convert(buildFeatures),
-                    androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
-                    testFixturesSourceProvider = flavor.testFixturesSourceSet?.takeIf {
-                        testFixturesEnabledProductFlavors.contains(
-                            Pair(flavor.productFlavor.dimension, flavor.productFlavor.name)
-                        )
-                    }?.convert(buildFeatures)
+            val flavorDimensionName = flavor.productFlavor.dimension to flavor.productFlavor.name
+
+            if (variantDimensionInfo.flavors.contains(flavorDimensionName)) {
+                productFlavors.add(
+                    SourceSetContainerImpl(
+                        sourceProvider = flavor.sourceSet.convert(buildFeatures),
+                        androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)
+                            ?.takeIf { androidTests.flavors.contains(flavorDimensionName) }
+                            ?.convert(buildFeatures),
+                        unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)
+                            ?.takeIf { unitTests.flavors.contains(flavorDimensionName) }
+                            ?.convert(buildFeatures),
+                        testFixturesSourceProvider = flavor.testFixturesSourceSet
+                            ?.takeIf { testFixtures.flavors.contains(flavorDimensionName) }
+                            ?.convert(buildFeatures)
+                    )
                 )
-            )
+            }
         }
 
         // gather variants
@@ -672,7 +718,6 @@ class ModelBuilder<
 
     private fun createJavaArtifact(component: ComponentImpl): JavaArtifact {
         val variantData = component.variantData
-        val variantScope = component.variantScope
 
         // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer

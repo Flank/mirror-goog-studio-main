@@ -21,6 +21,8 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -529,7 +531,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             given,
             { testBuildType },
             { components },
-            { listOf<TestComponentImpl>() },
+            { listOf() },
             dslServices.issueReporter
         ).defaultVariant
     }

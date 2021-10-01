@@ -1,0 +1,4 @@
+- AndroidProject:
+   - variants:
+      - oneDebug{REMOVED}   = (null)
+      - oneRelease{REMOVED} = (null)

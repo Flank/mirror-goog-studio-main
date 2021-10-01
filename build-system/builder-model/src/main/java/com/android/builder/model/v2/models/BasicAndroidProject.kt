@@ -46,7 +46,7 @@ interface BasicAndroidProject: AndroidModel {
      */
     val projectType: ProjectType
 
-    val mainSourceSet: SourceSetContainer
+    val mainSourceSet: SourceSetContainer?
 
     val buildTypeSourceSets: Collection<SourceSetContainer>
 

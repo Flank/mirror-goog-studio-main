@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.utils;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.SourceProvider;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -33,7 +34,7 @@ public final class SourceProviderHelper {
     @NonNull
     private final String projectName;
     @NonNull private final String configName;
-    @NonNull private final SourceProvider sourceProvider;
+    @Nullable private final SourceProvider sourceProvider;
     @NonNull private final File projectDir;
     private String javaDir;
     private List<String> kotlinDirs;
@@ -45,8 +46,11 @@ public final class SourceProviderHelper {
     private String renderscriptDir;
     private String jniDir;
 
-    public SourceProviderHelper(@NonNull String projectName, @NonNull File projectDir,
-            @NonNull String configName, @NonNull SourceProvider sourceProvider) {
+    public SourceProviderHelper(
+            @NonNull String projectName,
+            @NonNull File projectDir,
+            @NonNull String configName,
+            @Nullable SourceProvider sourceProvider) {
         this.projectName = projectName;
         this.projectDir = projectDir;
         this.configName = configName;

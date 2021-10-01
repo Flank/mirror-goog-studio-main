@@ -31,7 +31,7 @@ data class BasicAndroidProjectImpl(
     override val path: String,
     override val buildName: String,
     override val projectType: ProjectType,
-    override val mainSourceSet: SourceSetContainer,
+    override val mainSourceSet: SourceSetContainer?,
     override val buildTypeSourceSets: Collection<SourceSetContainer>,
     override val productFlavorSourceSets: Collection<SourceSetContainer>,
     override val variants: Collection<BasicVariant>,

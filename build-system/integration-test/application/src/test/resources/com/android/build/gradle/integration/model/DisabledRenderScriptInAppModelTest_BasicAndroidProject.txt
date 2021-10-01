@@ -22,16 +22,12 @@
             - renderscriptDirectories:
                * {PROJECT}/src/testDebug/rs{!}{REMOVED}
       < debug
-      > release:
+      - release:
          - sourceProvider:
             - renderscriptDirectories:
                * {PROJECT}/src/release/rs{!}{REMOVED}
-         - androidTestSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/androidTestRelease/rs{!}{REMOVED}
          - unitTestSourceProvider:
             - renderscriptDirectories:
                * {PROJECT}/src/testRelease/rs{!}{REMOVED}
-      < release
    < buildTypes
 < BasicAndroidProject

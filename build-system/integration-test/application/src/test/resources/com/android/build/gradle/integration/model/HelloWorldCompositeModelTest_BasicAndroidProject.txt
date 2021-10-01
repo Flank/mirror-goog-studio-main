@@ -181,30 +181,7 @@
                * {INCLUDED_BUILD(other-build)}/lib/src/release/shaders{!}
             - mlModelsDirectories = (null)
          < sourceProvider
-         > androidTestSourceProvider:
-            - name                = "androidTestRelease"
-            - manifestFile        = {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/AndroidManifest.xml{!}
-            - javaDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/java{!}
-            - kotlinDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/java{!}
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/kotlin{!}
-            - resourcesDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/resources{!}
-            - aidlDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/aidl{!}
-            - renderscriptDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/rs{!}
-            - resDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/res{!}
-            - assetsDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/assets{!}
-            - jniLibsDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/jniLibs{!}
-            - shadersDirectories:
-               * {INCLUDED_BUILD(other-build)}/lib/src/androidTestRelease/shaders{!}
-            - mlModelsDirectories = (null)
-         < androidTestSourceProvider
+         - androidTestSourceProvider  = (null)
          > unitTestSourceProvider:
             - name                = "testRelease"
             - manifestFile        = {INCLUDED_BUILD(other-build)}/lib/src/testRelease/AndroidManifest.xml{!}

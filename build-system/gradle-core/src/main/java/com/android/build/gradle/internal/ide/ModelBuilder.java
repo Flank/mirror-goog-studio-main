@@ -33,7 +33,9 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.AndroidTest;
+import com.android.build.api.variant.Component;
 import com.android.build.api.variant.HasAndroidTest;
+import com.android.build.api.variant.UnitTest;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
@@ -292,6 +294,38 @@ public class ModelBuilder<Extension extends BaseExtension>
         return new DefaultProjectSyncIssues(allIssues.build());
     }
 
+    /** Indicates the dimensions used for a variant */
+    static class DimensionInformation {
+
+        Set<String> buildTypes;
+        Set<Pair<String, String>> flavors;
+
+        DimensionInformation(Set<String> buildTypes, Set<Pair<String, String>> flavors) {
+            this.buildTypes = buildTypes;
+            this.flavors = flavors;
+        }
+
+        Boolean isNotEmpty() {
+            return !buildTypes.isEmpty() || !flavors.isEmpty();
+        }
+
+        static DimensionInformation createFrom(Collection<? extends Component> components) {
+            Set<String> buildTypes = new HashSet<>();
+            Set<Pair<String, String>> flavors = new HashSet<>();
+
+            for (Component component : components) {
+                if (component.getBuildType() != null) {
+                    buildTypes.add(component.getBuildType());
+                }
+                flavors.addAll(
+                        component.getProductFlavors().stream()
+                                .map(pair -> Pair.of(pair.getFirst(), pair.getSecond()))
+                                .collect(Collectors.toList()));
+            }
+            return new DimensionInformation(buildTypes, flavors);
+        }
+    }
+
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
@@ -371,11 +405,34 @@ public class ModelBuilder<Extension extends BaseExtension>
                         com.android.build.gradle.internal.dsl.SigningConfig>
                 variantInputs = variantModel.getInputs();
 
+        // compute for each main, androidTest, unitTest and testFixtures which buildType and flavors
+        // they applied to. This will allow excluding from the model sourcesets that are not
+        // used by any of them.
+        // Not doing this is confusing to users as they see folders marked as source that aren't
+        // used by anything.
+        DimensionInformation variantDimensionInfo =
+                DimensionInformation.createFrom(variantModel.getVariants());
+        DimensionInformation androidTests =
+                DimensionInformation.createFrom(
+                        variantModel.getTestComponents().stream()
+                                .filter(it -> it instanceof AndroidTest)
+                                .map(it -> (AndroidTest) it)
+                                .collect(Collectors.toList()));
+        DimensionInformation unitTests =
+                DimensionInformation.createFrom(
+                        variantModel.getTestComponents().stream()
+                                .filter(it -> it instanceof UnitTest)
+                                .map(it -> (UnitTest) it)
+                                .collect(Collectors.toList()));
+
         DefaultConfigData<DefaultConfig> defaultConfigData = variantInputs.getDefaultConfigData();
         ProductFlavorContainer defaultConfig =
                 ProductFlavorContainerImpl.createProductFlavorContainer(
                         defaultConfigData,
                         defaultConfigData.getDefaultConfig(),
+                        variantDimensionInfo.isNotEmpty() /*includeProdSourceSet*/,
+                        androidTests.isNotEmpty() /*includeAndroidTest*/,
+                        unitTests.isNotEmpty() /*includeUnitTest*/,
                         extraModelInfo.getExtraFlavorSourceProviders(BuilderConstants.MAIN));
 
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
@@ -384,17 +441,29 @@ public class ModelBuilder<Extension extends BaseExtension>
         Collection<String> variantNames = Lists.newArrayList();
 
         for (BuildTypeData<BuildType> btData : variantInputs.getBuildTypes().values()) {
-            buildTypes.add(BuildTypeContainerImpl.create(
-                    btData,
-                    extraModelInfo.getExtraBuildTypeSourceProviders(btData.getBuildType().getName())));
+            String buildTypeName = btData.getBuildType().getName();
+            buildTypes.add(
+                    BuildTypeContainerImpl.create(
+                            btData,
+                            variantDimensionInfo.buildTypes.contains(
+                                    buildTypeName) /*includeProdSourceSet*/,
+                            androidTests.buildTypes.contains(buildTypeName) /*includeAndroidTest*/,
+                            unitTests.buildTypes.contains(buildTypeName) /*includeUnitTest*/,
+                            extraModelInfo.getExtraBuildTypeSourceProviders(buildTypeName)));
         }
         for (ProductFlavorData<ProductFlavor> pfData : variantInputs.getProductFlavors().values()) {
+            ProductFlavor productFlavor = pfData.getProductFlavor();
+            Pair<String, String> dimensionValue =
+                    Pair.of(productFlavor.getDimension(), productFlavor.getName());
             productFlavors.add(
                     ProductFlavorContainerImpl.createProductFlavorContainer(
                             pfData,
-                            pfData.getProductFlavor(),
-                            extraModelInfo.getExtraFlavorSourceProviders(
-                                    pfData.getProductFlavor().getName())));
+                            productFlavor,
+                            variantDimensionInfo.flavors.contains(
+                                    dimensionValue) /*includeProdSourceSet*/,
+                            androidTests.flavors.contains(dimensionValue) /*includeAndroidTest*/,
+                            unitTests.flavors.contains(dimensionValue) /*includeUnitTest*/,
+                            extraModelInfo.getExtraFlavorSourceProviders(productFlavor.getName())));
         }
 
         String defaultVariant = variantModel.getDefaultVariant();

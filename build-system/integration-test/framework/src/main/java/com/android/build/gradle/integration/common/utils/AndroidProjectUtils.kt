@@ -86,7 +86,21 @@ fun AndroidProject.findTestedBuildType(): String? {
             .orElse(null)
 }
 
-fun AndroidProject.testDefaultSourceSets(projectDir: File) {
+@JvmOverloads
+fun AndroidProject.testDefaultSourceSets(
+    projectDir: File,
+    /**
+     * Lambda returning the expected test source sets for a given build type name.
+     * Default implementation handles the default case for debug/release
+     */
+    buildTypeTestSourceSetProvider: (String) -> Collection<String> = {
+        when (it) {
+            "debug" -> listOf(AndroidProject.ARTIFACT_ANDROID_TEST, AndroidProject.ARTIFACT_UNIT_TEST)
+            "release" -> listOf(AndroidProject.ARTIFACT_UNIT_TEST)
+            else -> throw RuntimeException("unexpected build type")
+        }
+    }
+) {
 
     // test the main source provider
     SourceProviderHelper(name, projectDir,
@@ -124,7 +138,6 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
                 .toSet()
 
         TruthHelper.assertThat(extraSourceProviderNames)
-            .containsExactly(AndroidProject.ARTIFACT_ANDROID_TEST,
-                AndroidProject.ARTIFACT_UNIT_TEST)
+            .containsExactlyElementsIn(buildTypeTestSourceSetProvider(btContainer.buildType.name))
     }
 }

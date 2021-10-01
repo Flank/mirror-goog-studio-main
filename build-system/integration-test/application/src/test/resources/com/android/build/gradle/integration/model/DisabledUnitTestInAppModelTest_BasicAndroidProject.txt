@@ -1,0 +1,7 @@
+- BasicAndroidProject:
+   - buildTypes:
+      - debug:
+         - unitTestSourceProvider{REMOVED} = (null)
+   - variants:
+      - debug:
+         - unitTestArtifact{REMOVED} = (null)
