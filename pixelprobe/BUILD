@@ -1,4 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 # managed by go/iml_to_build
 iml_module(
@@ -22,15 +25,35 @@ iml_module(
     ],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
+maven_library(
+    name = "tools.pixelprobe",
     srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
+        "src/main/java/**/*.java",
+        "src/main/generated/**/*.java",
+    ]),
+    coordinates = "com.android.tools.pixelprobe:pixelprobe:" + BASE_VERSION,
+    description = "library to read pixel data and metadata from various image formats",
+    notice = "NOTICE",
+    pom_name = "Pixel Probe",
+    resource_strip_prefix = "tools/base/pixelprobe/src/main/resources",
+    resources = glob(["src/main/resources/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/chunkio:tools.chunkio",
     ],
-    visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+coverage_java_test(
+    name = "tools.pixelprobe.tests",
+    srcs = glob(["src/test/java/**"]),
+    jvm_flags = ["-Dtest.suite.jar=tools.pixelprobe.tests.jar"],
+    resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//tools/base/testutils:tools.testutils",
+    ],
+    deps = [
+        ":tools.pixelprobe",
+        "@maven//:junit.junit",
+    ],
 )

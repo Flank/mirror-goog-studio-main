@@ -362,6 +362,54 @@ class SuppressLintTest {
     }
 
     @Test
+    fun checkAllowBaselineSuppressViaFlag() {
+        // This test is identical to the one above (checkNeverSuppressible)
+        // except that it turns on the --XallowBaselineSuppress flag (via the
+        // clientFactory method below)
+        lint()
+            .allowCompilationErrors()
+            .files(
+                kotlin(
+                    """
+                    fun forbidden() {
+                        forbidden()
+                    }"""
+                ).indented()
+            )
+            .issues(MySecurityDetector.TEST_ISSUE_NEVER_SUPPRESSIBLE)
+            .baseline(
+                xml(
+                    "baseline.xml",
+                    """
+                    <issues format="5" by="lint 3.3.0">
+                        <issue
+                            id="_SecureIssue2"
+                            severity="Warning"
+                            message="Some error message here"
+                            category="Security"
+                            priority="10"
+                            summary="Some important security issue"
+                            explanation="Blahdiblah"
+                            errorLine1="    forbidden()"
+                            errorLine2="    ~~~~~~~~~~~">
+                            <location
+                                file="src/test.kt"
+                                line="2"
+                                column="5"/>
+                        </issue>
+                    </issues>
+                """
+                ).indented()
+            )
+            // Sets the --XallowBaselineSuppress flag:
+            .clientFactory { TestLintClient().apply { flags.allowBaselineSuppress = true } }
+            .skipTestModes(TestMode.PARTIAL)
+            .sdkHome(TestUtils.getSdk().toFile())
+            .run()
+            .expectClean()
+    }
+
+    @Test
     fun checkForbiddenSuppressWithLintOptions() {
         lint()
             .allowCompilationErrors()
@@ -406,7 +454,7 @@ class SuppressLintTest {
     class MySecurityDetector : Detector(), Detector.UastScanner {
         override fun getApplicableUastTypes() = listOf(UImportStatement::class.java)
 
-        override fun getApplicableMethodNames(): List<String>? {
+        override fun getApplicableMethodNames(): List<String> {
             return listOf("forbidden")
         }
 
@@ -456,7 +504,9 @@ class SuppressLintTest {
                 id = "_SecureIssue2",
                 briefDescription = "Some important security issue",
                 explanation = "Blahdiblah",
-                category = Category.SECURITY, priority = 10, severity = Severity.WARNING,
+                category = Category.SECURITY,
+                priority = 10,
+                severity = Severity.WARNING,
                 suppressAnnotations = emptyList(),
                 implementation = Implementation(
                     MySecurityDetector::class.java,

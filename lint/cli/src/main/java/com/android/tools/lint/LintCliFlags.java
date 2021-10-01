@@ -84,6 +84,7 @@ public class LintCliFlags {
     private boolean includeXmlFixes;
     private boolean allowSuppress;
     private boolean printInternalErrorStackTrace;
+    private boolean allowBaselineSuppress;
     private File cacheDir;
 
     public static final int ERRNO_SUCCESS = 0;
@@ -735,6 +736,20 @@ public class LintCliFlags {
      */
     public boolean getAllowSuppress() {
         return allowSuppress;
+    }
+
+    /**
+     * Allows overriding the {@link #getAllowSuppress()} flag specifically for baselines. This is
+     * only intended to be configurable by changing the invocation flags to lint -- not via DSL or
+     * lint.xml options etc as is the case for the other flags.
+     */
+    public void setAllowBaselineSuppress(boolean allowBaselineSuppress) {
+        this.allowBaselineSuppress = allowBaselineSuppress;
+    }
+
+    /** See {@link #setAllowBaselineSuppress}. */
+    public boolean getAllowBaselineSuppress() {
+        return allowBaselineSuppress;
     }
 
     /** Returns true if internal error stacktraces should be printed to stdout */

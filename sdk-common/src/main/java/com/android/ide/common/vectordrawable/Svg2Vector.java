@@ -16,7 +16,6 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.SvgTree.getStartLine;
-import static com.android.utils.XmlUtils.formatFloatValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -498,7 +497,7 @@ public class Svg2Vector {
                         svg.logError(msg, node);
                     }
                 }
-                String offset = formatFloatValue(greatestOffset);
+                String offset = svg.formatCoordinate(greatestOffset);
                 String vdColor = gradientNode.colorSvg2Vd(color, "#000000");
                 if (vdColor != null) {
                     color = vdColor;

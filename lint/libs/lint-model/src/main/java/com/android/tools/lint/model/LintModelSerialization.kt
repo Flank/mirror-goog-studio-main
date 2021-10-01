@@ -1938,7 +1938,7 @@ private class LintModelLibrariesReader(
                 folder = folder!!,
                 resFolder = resFolder!!,
                 assetsFolder = assetsFolder!!,
-                lintJar = lintJar!!,
+                lintJar = lintJar,
                 publicResources = publicResources!!,
                 symbolFile = symbolFile!!,
                 externalAnnotations = externalAnnotations!!,

@@ -8,6 +8,8 @@ maven_repository(
     artifacts = [
         "//tools/analytics-library/inspector",
         "//tools/analytics-library/publisher",
+        "//tools/base/chunkio:tools.chunkio",
+        "//tools/base/pixelprobe:tools.pixelprobe",
     ],
     include_transitive_deps = False,
 )

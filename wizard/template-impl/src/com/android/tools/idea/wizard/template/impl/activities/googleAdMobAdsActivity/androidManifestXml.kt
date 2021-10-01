@@ -29,7 +29,8 @@ fun androidManifestXml(
 ): String {
  val labelBlock = if (isNewModule) "android:label=\"@string/app_name\""
  else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
- val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
+ val launcher = isLauncher || isNewModule
+ val activityBody = commonActivityBody(launcher, isLibrary)
 
  return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -47,7 +48,7 @@ fun androidManifestXml(
             android:value="ca-app-pub-3940256099942544~3347511713"/>
 
         <activity android:name="${packageName}.${activityClass}"
-            android:exported="true"
+            android:exported="$launcher"
             $labelBlock>
             $activityBody
         </activity>

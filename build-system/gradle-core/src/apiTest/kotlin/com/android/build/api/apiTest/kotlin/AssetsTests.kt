@@ -111,7 +111,7 @@ The added field is used in the MainActivity.kt file.
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
         }
         val apkFolder = File(super.testProjectDir.root,
-            "libraryManifestTransformerTest/app/build/"
+            "addCustomAsset/app/build/"
                     + Artifact.Category.OUTPUTS.name.toLowerCase(Locale.US)
                     + "/"
                     + SingleArtifact.APK.getFolderName()

@@ -67,16 +67,17 @@ class ManagedDeviceTestRunner(
                     mkdirs()
                 }
             }
+            val shardedManagedDevice = if (numShards == null) {
+                managedDevice
+            } else {
+                managedDevice.forShard(currentShard)
+            }
             val runnerConfigProto: (
                 UtpTestResultListenerServerMetadata,
                 File
             ) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata, utpTmpDir ->
                     configFactory.createRunnerConfigProtoForManagedDevice(
-                        if (shardConfig == null) {
-                            managedDevice
-                        } else {
-                            managedDevice.forShard(currentShard)
-                        },
+                        shardedManagedDevice,
                         testData,
                         testedApks,
                         additionalInstallOptions,
@@ -93,11 +94,12 @@ class ManagedDeviceTestRunner(
                     )
                 }
             runnerConfigs.add(UtpRunnerConfig(
-                managedDevice.deviceName,
-                managedDevice.id,
+                shardedManagedDevice.deviceName,
+                shardedManagedDevice.id,
                 utpOutputDir,
                 runnerConfigProto,
-                configFactory.createServerConfigProto()
+                configFactory.createServerConfigProto(),
+                shardConfig
             ))
         }
 

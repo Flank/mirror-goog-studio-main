@@ -141,10 +141,12 @@ def _sources(ctx, srcs, source_jars, jar, java_toolchain, host_javabase):
         host_javabase = host_javabase,
     )
 
-# Creates actions to generate a resources_jar from the given resouces.
-def _resources(ctx, resources, resources_jar):
+# Creates actions to generate a resources_jar from the given resources.
+def _resources(ctx, resources, notice, resources_jar):
     prefix = ctx.attr.resource_strip_prefix
     rel_paths = []
+    if notice:
+        rel_paths.append((notice.basename, notice))
     for res in resources:
         short = res.short_path
         if short.startswith(prefix):
@@ -157,7 +159,7 @@ def _resources(ctx, resources, resources_jar):
     zipper_list = create_option_file(ctx, resources_jar.basename + ".res.lst", zipper_files)
     zipper_args += ["@" + zipper_list.path]
     ctx.actions.run(
-        inputs = resources + [zipper_list],
+        inputs = resources + ([notice] if notice else []) + [zipper_list],
         outputs = [resources_jar],
         executable = ctx.executable._zipper,
         arguments = zipper_args,
@@ -275,10 +277,9 @@ def _kotlin_library_impl(ctx):
         jars += [kotlin_jar]
 
     # Resources.
-    resources = ([ctx.file.notice] if ctx.file.notice else []) + ctx.files.resources
-    if resources:
+    if ctx.files.resources or ctx.files.notice:
         resources_jar = ctx.actions.declare_file(name + ".res.jar")
-        _resources(ctx, resources, resources_jar)
+        _resources(ctx, ctx.files.resources, ctx.file.notice, resources_jar)
         jars += [resources_jar]
 
     java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)

@@ -29,12 +29,13 @@ fun androidManifestXml(
   isNewModule: Boolean,
   themesData: ThemesData
 ): String {
-  val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
+  val launcher = isLauncher || isNewModule
+  val activityBody = commonActivityBody(launcher, isLibrary)
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity android:name="$activityPackage.$activityClass"
-            android:exported="true"
+            android:exported="$launcher"
             android:label="@string/title_$simpleName"
             android:theme="@style/${themesData.main.name}">
             $activityBody

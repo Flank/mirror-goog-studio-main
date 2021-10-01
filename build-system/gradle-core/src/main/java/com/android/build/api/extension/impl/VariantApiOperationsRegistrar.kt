@@ -23,8 +23,9 @@ import com.android.build.api.variant.VariantBuilder
 /**
  * Holder of various [OperationsRegistrar] for all the variant API related operations to a plugin.
  */
-class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant>
-    : DslLifecycleComponentsOperationsRegistrar<CommonExtensionT>() {
+class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant>(
+        extension: CommonExtensionT,
+) : DslLifecycleComponentsOperationsRegistrar<CommonExtensionT>(extension) {
 
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()

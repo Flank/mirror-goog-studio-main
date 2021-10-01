@@ -23,6 +23,9 @@ import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.support.AndroidxName
+import com.android.tools.lint.checks.ApiDetector.Companion.REQUIRES_API_ANNOTATION
+import com.android.tools.lint.checks.ApiDetector.Companion.getApiLevel
+import com.android.tools.lint.checks.ApiDetector.Companion.getTargetApi
 import com.android.tools.lint.checks.TypedefDetector.Companion.findIntDef
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
@@ -38,8 +41,10 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue.Companion.create
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION
@@ -103,6 +108,7 @@ import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.max
 
 /** Checks annotations to make sure they are valid */
 class AnnotationDetector : Detector(), SourceCodeScanner {
@@ -315,6 +321,32 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                 }
                 VISIBLE_FOR_TESTING_ANNOTATION.isEquals(type) -> {
                     checkConstructorParameter(annotation, type)
+                }
+                REQUIRES_API_ANNOTATION.isEquals(type) -> {
+                    checkRequiresApi(annotation)
+                }
+            }
+        }
+
+        private fun checkRequiresApi(annotation: UAnnotation) {
+            if (annotation.attributeValues.isEmpty()) {
+                val name = "Specify API level"
+                val fix = LintFix.create().name(name).replace().end().with("(TODO)").select("TODO").build()
+                val location = context.getLocation(annotation)
+                context.report(ANNOTATION_USAGE, annotation, location, "Must specify an API level", fix)
+            } else {
+                val apiLevel = getApiLevel(context, annotation)
+                val minSdk = context.project.minSdk
+                val targetApi = getTargetApi(annotation.uastParent?.uastParent)
+                val max = max(minSdk, targetApi)
+                if (apiLevel <= max) {
+                    val message = "The API level is already known to be at least $max ${
+                    if (targetApi > minSdk) "here from outer annotations" else "from the `minSdkVersion`"
+                    }"
+                    val fix = LintFix.create().name("Delete annotation").replace().all().with("").build()
+                    Incident(context, ANNOTATION_USAGE)
+                        .at(annotation).message(message).fix(fix).overrideSeverity(Severity.WARNING)
+                        .report()
                 }
             }
         }

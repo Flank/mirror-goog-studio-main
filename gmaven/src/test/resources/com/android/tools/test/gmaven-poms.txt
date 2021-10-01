@@ -501,7 +501,7 @@ com.android.tools.build:manifest-merger
     net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.chunkio:chunkio
-  pomName=com.android.tools.chunkio.chunkio
+  pomName=ChunkIO
   description=annotations for use with chunkio-processor, and runtime supporting APIs
 
 com.android.tools.ddms:ddmlib
@@ -514,15 +514,16 @@ com.android.tools.ddms:ddmlib
     net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.emulator:proto
-  pomName=com.android.tools.emulator.proto
+  pomName=Emulator protos for Android Tools
   description=A protobuf messages to control Android Emulator
   dependencies:
+    com.google.code.gson:gson (runtime)
+    com.google.guava:guava (runtime)
     io.grpc:grpc-core (runtime)
     io.grpc:grpc-netty (runtime)
     io.grpc:grpc-protobuf (runtime)
     io.grpc:grpc-stub (runtime)
-    com.google.code.gson:gson (runtime)
-    com.google.guava:guava (runtime)
+    javax.annotation:javax.annotation-api (runtime)
     com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools.external.com-intellij:intellij-core
@@ -672,7 +673,7 @@ com.android.tools.lint:lint-tests
     net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.pixelprobe:pixelprobe
-  pomName=com.android.tools.pixelprobe.pixelprobe
+  pomName=Pixel Probe
   description=library to read pixel data and metadata from various image formats
   dependencies:
     com.android.tools.chunkio:chunkio (runtime)
