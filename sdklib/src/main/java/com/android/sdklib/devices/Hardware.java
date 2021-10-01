@@ -252,9 +252,10 @@ public class Hardware {
      *
      * @return A copy of the object.
      */
+    @NonNull
     public Hardware deepCopy() {
         Hardware hw = new Hardware();
-        hw.mScreen = mScreen.deepCopy();
+        hw.mScreen = mScreen != null ? mScreen.deepCopy() : null;
         hw.mNetworking =  mNetworking.clone();
         hw.mSensors = mSensors.clone();
         // Get the constant boolean value
@@ -265,7 +266,7 @@ public class Hardware {
         }
         hw.mKeyboard = mKeyboard;
         hw.mNav = mNav;
-        hw.mRam = mRam.deepCopy();
+        hw.mRam = mRam != null ? mRam.deepCopy() : null;
         hw.mButtons = mButtons;
         hw.mInternalStorage = new ArrayList<Storage>();
         for (Storage s : mInternalStorage) {
