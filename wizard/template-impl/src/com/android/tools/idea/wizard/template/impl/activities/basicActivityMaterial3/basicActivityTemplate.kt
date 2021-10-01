@@ -48,10 +48,10 @@ val basicActivityMaterial3Template get() = template {
   minApi = MIN_API
   description = "Creates a new basic activity using Material 3 theming"
 
-  category = Category.Material3
+  category = Category.Activity
   formFactor = FormFactor.Mobile
   screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
-  constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Kotlin)
+  constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Kotlin, TemplateConstraint.Material3)
 
   lateinit var activityClass: StringParameter
   val layoutName: StringParameter = stringParameter {

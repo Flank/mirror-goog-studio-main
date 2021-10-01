@@ -34,7 +34,6 @@ enum class Category {
   Google,
   Compose,
   Other,
-  Material3, // Temporary for development
 }
 
 /**
@@ -54,7 +53,8 @@ enum class FormFactor(val displayName: String) {
 
 enum class TemplateConstraint {
   AndroidX,
-  Kotlin
+  Kotlin,
+  Material3
 }
 
 /**
