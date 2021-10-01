@@ -637,7 +637,7 @@ com.android.tools.lint:lint-gradle
     com.android.tools.lint:lint (runtime)
     com.android:zipflinger (runtime)
     com.android.tools:repository (runtime)
-    org.codehaus.groovy:groovy-all (runtime)
+    org.codehaus.groovy:groovy (runtime)
     org.jetbrains.kotlin:kotlin-reflect (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
@@ -668,7 +668,7 @@ com.android.tools.lint:lint-tests
     junit:junit (runtime)
     org.ow2.asm:asm (runtime)
     org.ow2.asm:asm-tree (runtime)
-    org.codehaus.groovy:groovy-all (runtime)
+    org.codehaus.groovy:groovy (runtime)
     org.mockito:mockito-core (runtime)
     net.sf.kxml:kxml2 (runtime)
 
