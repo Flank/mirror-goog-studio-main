@@ -173,7 +173,7 @@ known at configuration time.
                         mergedManifest.set(it.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                     }
                     it.manifestPlaceholders.put("MyName", androidNameProvider.flatMap { task ->
-                        task.outputFile.map { "NameWithGit-" + it.asFile.readText(Charsets.UTF_8) }
+                        task.outputFile.map { it.asFile.readText(Charsets.UTF_8) }
                     })
                 }
             }""".trimIndent()
