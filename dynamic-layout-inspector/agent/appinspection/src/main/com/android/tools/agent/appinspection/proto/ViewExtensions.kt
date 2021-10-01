@@ -19,6 +19,7 @@ package com.android.tools.agent.appinspection.proto
 import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.Point
+import android.util.AndroidRuntimeException
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -208,7 +209,14 @@ fun View.createPropertyGroup(stringTable: StringTable): PropertyGroup {
     // In general, run off the main thread so we don't block the app doing expensive work.
     ThreadUtils.assertOffMainThread()
     return if (this !is WebView) {
-        createPropertyGroupImpl(stringTable)
+        try {
+            createPropertyGroupImpl(stringTable)
+        }
+        catch (ex: AndroidRuntimeException) {
+            // Some properties require work performed on the UIThread before it is accessible.
+            // Example: View.resolvePadding() is called from View.getPaddingLeft()
+            ThreadUtils.runOnMainThread { createPropertyGroupImpl(stringTable) }.get()
+        }
     }
     else {
         // WebView uniquely throws exceptions if you try to read its properties off the main thread,
