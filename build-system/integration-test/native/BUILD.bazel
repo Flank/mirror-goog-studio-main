@@ -27,6 +27,10 @@ NDK = [
     "//prebuilts/studio/sdk:ndk",
 ]
 
+DOLPHIN = [
+    "//prebuilts/studio/buildbenchmarks/dolphin.3627ef8a:dolphin.3627ef8a",
+]
+
 ANDROID_23 = ["//prebuilts/studio/sdk:platforms/android-23_build_only"]
 
 #keep sorted
@@ -408,6 +412,16 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "DolphinProbe",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK + DOLPHIN + ["//tools/buildSrc/base:version.properties"],
+    maven_repos = MAVEN_REPOS,
+    shard_count = 2,
+    tags = ["no_test_windows"],
     deps = DEPS,
 )
 

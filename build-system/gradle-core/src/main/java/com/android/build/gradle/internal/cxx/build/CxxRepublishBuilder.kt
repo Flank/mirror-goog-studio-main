@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.cxx.build
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.lifecycleln
+import com.android.build.gradle.internal.cxx.model.toJsonString
 import org.gradle.process.ExecOperations
 import java.io.File
 
@@ -40,9 +43,22 @@ class CxxRepublishBuilder(val model: CxxConfigurationModel) : CxxBuilder {
         for (config in miniConfigs) {
             for (library in config.libraries.values) {
                 val baseOutputLibrary = library.output ?: continue
+                if (baseOutputLibrary.extension != "" && baseOutputLibrary.extension != "so") {
+                    infoln("Not republishing $baseOutputLibrary because it wasn't an executable type")
+                    continue
+                }
                 val abi = abis.single { it.abi.tag == library.abi }
-                val republishOutputLibrary = abi.soRepublishFolder.resolve(baseOutputLibrary.name)
-                republishOutputLibrary.parentFile.mkdirs()
+
+                if (!baseOutputLibrary.canonicalPath.startsWith(abi.soFolder.canonicalPath)) {
+                    infoln("Not republishing $baseOutputLibrary because it wasn't under ${abi.soFolder}")
+                    continue
+                }
+                // Determine the subfolder segment baseOutputLibrary with respect to the
+                // ABI's soFolder.
+                val subfolderSegment = baseOutputLibrary.relativeTo(abi.soFolder)
+                // The file will be republished with the same subfolder segment but now
+                // under soRepublishFolder.
+                val republishOutputLibrary = abi.soRepublishFolder.resolve(subfolderSegment).canonicalFile
 
                 synchronizeFile(
                     baseOutputLibrary,
