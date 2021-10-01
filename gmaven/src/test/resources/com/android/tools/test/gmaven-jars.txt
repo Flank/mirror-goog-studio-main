@@ -2149,6 +2149,7 @@ com/android/tools/lint/lint
   com/android/
   com/android/tools/
   com/android/tools/lint/
+  com/android/tools/lint/gradle/
 
 com/android/tools/lint/lint-api
   META-INF/
@@ -2197,7 +2198,6 @@ com/android/tools/lint/lint-gradle
   com/android/tools/
   com/android/tools/lint/
   com/android/tools/lint/annotations/
-  com/android/tools/lint/gradle/
 
 com/android/tools/lint/lint-model
   META-INF/

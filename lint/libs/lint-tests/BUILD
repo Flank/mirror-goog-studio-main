@@ -21,7 +21,6 @@ maven_library(
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-gradle",
         "//tools/base/lint/cli",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
@@ -41,7 +40,6 @@ kotlin_test(
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
-    lint_baseline = "lint_baseline.xml",
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -53,6 +51,7 @@ kotlin_test(
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
+    lint_baseline = "lint_baseline.xml",
     shard_count = 2,
     tags = [
         "no_test_windows",  # b/73306170

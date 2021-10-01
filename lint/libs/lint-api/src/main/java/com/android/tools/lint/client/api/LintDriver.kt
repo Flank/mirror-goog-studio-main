@@ -1500,8 +1500,12 @@ class LintDriver(
             }
             for (file in files) {
                 if (file.path.endsWith(DOT_GRADLE)) {
-                    client.runReadAction {
-                        val gradleVisitor = project.client.getGradleVisitor()
+                    val fileAnalyzed = client.runReadAction<Boolean> {
+                        val gradleVisitor = try {
+                            project.client.getGradleVisitor()
+                        } catch (e: NoClassDefFoundError) {
+                            return@runReadAction (false)
+                        }
                         val context = GradleContext(gradleVisitor, this, project, main, file)
                         fireEvent(EventType.SCANNING_FILE, context)
                         for (detector in detectors) {
@@ -1515,6 +1519,16 @@ class LintDriver(
                             detector.afterCheckFile(context)
                         }
                         fileCount++
+                        return@runReadAction (true)
+                    }
+                    if (!fileAnalyzed) {
+                        val message = "Lint CLI cannot analyze build.gradle files\n" +
+                                "To analyze a Gradle project, please use Gradle to run the project's 'lint' task.\n" +
+                                "See https://developer.android.com/studio/write/lint#commandline for more details.\n" +
+                                "If you are using lint in a custom context, such as in tests, add org.codehaus.groovy:groovy to the runtime classpath."
+                        val context = Context(this, project, main, file)
+                        context.report(Incident(IssueRegistry.LINT_WARNING, Location.Companion.create(context.file), message))
+                        break // Only report once.
                     }
                 }
             }

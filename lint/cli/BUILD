@@ -10,6 +10,9 @@ maven_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    bundled_deps = [
+        ":groovy_neverlink",
+    ],
     coordinates = "com.android.tools.lint:lint:" + BASE_VERSION,
     lint_baseline = "lint_baseline.xml",
     notice = "NOTICE",
@@ -43,6 +46,12 @@ maven_library(
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
+)
+
+java_library(
+    name = "groovy_neverlink",
+    neverlink = 1,
+    exports = ["@maven//:org.codehaus.groovy.groovy"],
 )
 
 sdk_java_binary(

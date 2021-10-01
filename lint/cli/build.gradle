@@ -14,6 +14,7 @@ compileKotlin {
 }
 
 dependencies {
+    compileOnly libs.groovy
     api project(':base:lint-api')
     api project(':base:lint-checks')
     implementation project(':base:uast')
@@ -27,7 +28,6 @@ dependencies {
     implementation libs.com.android.tools.analyticsLibrary.shared
     implementation libs.com.android.tools.analyticsLibrary.protos
     implementation libs.com.android.tools.analyticsLibrary.tracker
-
     implementation libs.guava
     implementation libs.kotlin_reflect
     implementation libs.kotlin_stdlib
