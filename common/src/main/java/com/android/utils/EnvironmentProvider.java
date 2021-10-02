@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Provides access to system properties and environment variables. Most of the time using {@link
@@ -60,7 +59,7 @@ public interface EnvironmentProvider {
          */
         @Nullable @VisibleForTesting public FileSystem fileSystemOverrideForTests = null;
 
-        @NotNull
+        @NonNull
         @Override
         public FileSystem getFileSystem() {
             return fileSystemOverrideForTests != null
