@@ -1,0 +1,800 @@
+{
+  "stringTable": {},
+  "buildFiles": [
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/LZO/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/enet/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/SFML/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/curl/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/imgui/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/cubeb/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/gtest/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/xxhash/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/libpng/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/Core/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/UnitTests/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/glslang/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/pugixml/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/minizip/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/mbedtls/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/curl/lib/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/Common/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/DiscIO/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/jni/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/soundtouch/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/UICommon/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/UnitTests/Core/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/cpp-optparse/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/libiconv-1.14/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/AudioCommon/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/InputCommon/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoCommon/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/UnitTests/Common/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/DolphinNoGUI/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Externals/mbedtls/library/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoBackends/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/UnitTests/VideoCommon/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoBackends/OGL/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoBackends/Null/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoBackends/Vulkan/CMakeLists.txt",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Core/VideoBackends/Software/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "NandPathsTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "NandPathsTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "NandPathsTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/NandPathsTest",
+      "runtimeFiles": []
+    },
+    "videosoftware-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "videosoftware"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "videosoftware",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/VideoBackends/Software/libvideosoftware.a"
+    },
+    "traversal_server-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "traversal_server"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "traversal_server",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/traversal_server",
+      "runtimeFiles": []
+    },
+    "speex-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "speex"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "speex"
+    },
+    "FixedSizeQueueTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "FixedSizeQueueTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "FixedSizeQueueTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/FixedSizeQueueTest",
+      "runtimeFiles": []
+    },
+    "videocommon-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "videocommon"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "videocommon",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/VideoCommon/libvideocommon.a"
+    },
+    "BusyLoopTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "BusyLoopTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "BusyLoopTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/BusyLoopTest",
+      "runtimeFiles": []
+    },
+    "SPSCQueueTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "SPSCQueueTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "SPSCQueueTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/SPSCQueueTest",
+      "runtimeFiles": []
+    },
+    "CoreTimingTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "CoreTimingTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "CoreTimingTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/CoreTimingTest",
+      "runtimeFiles": []
+    },
+    "SoundTouch-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "SoundTouch"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "SoundTouch",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/soundtouch/libSoundTouch.a"
+    },
+    "unittests_stubhost-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "unittests_stubhost"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "unittests_stubhost"
+    },
+    "BitFieldTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "BitFieldTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "BitFieldTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/BitFieldTest",
+      "runtimeFiles": []
+    },
+    "imgui-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "imgui"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "imgui",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/imgui/libimgui.a"
+    },
+    "enet-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "enet"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "enet",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/enet/libenet.a"
+    },
+    "png-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "png"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "png",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/libpng/libpng.a"
+    },
+    "gtest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "gtest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "gtest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/gtest/libgtest.a"
+    },
+    "MathUtilTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "MathUtilTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "MathUtilTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/MathUtilTest",
+      "runtimeFiles": []
+    },
+    "videonull-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "videonull"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "videonull",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/VideoBackends/Null/libvideonull.a"
+    },
+    "cpp-optparse-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "cpp-optparse"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "cpp-optparse",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/cpp-optparse/libcpp-optparse.a"
+    },
+    "DSPAcceleratorTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "DSPAcceleratorTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "DSPAcceleratorTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/DSPAcceleratorTest",
+      "runtimeFiles": []
+    },
+    "DSPAssemblyTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "DSPAssemblyTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "DSPAssemblyTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/DSPAssemblyTest",
+      "runtimeFiles": []
+    },
+    "audiocommon-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "audiocommon"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "audiocommon",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/AudioCommon/libaudiocommon.a"
+    },
+    "core-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "core"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "core",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/Core/libcore.a"
+    },
+    "sfml-network-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "sfml-network"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "sfml-network",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/SFML/libsfml-network.a"
+    },
+    "xxhash-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "xxhash"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "xxhash",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/xxhash/libxxhash.a"
+    },
+    "FlagTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "FlagTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "FlagTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/FlagTest",
+      "runtimeFiles": []
+    },
+    "curl-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "curl"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "curl",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/curl/lib/libcurl.a"
+    },
+    "PageFaultTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "PageFaultTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "PageFaultTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/PageFaultTest",
+      "runtimeFiles": []
+    },
+    "EventTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "EventTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "EventTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/EventTest",
+      "runtimeFiles": []
+    },
+    "videovulkan-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "videovulkan"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "videovulkan",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/VideoBackends/Vulkan/libvideovulkan.a"
+    },
+    "discio-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "discio"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "discio",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/DiscIO/libdiscio.a"
+    },
+    "BitUtilsTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "BitUtilsTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "BitUtilsTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/BitUtilsTest",
+      "runtimeFiles": []
+    },
+    "minizip-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "minizip"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "minizip",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/minizip/libminizip.a"
+    },
+    "common-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "common"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "common",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/Common/libcommon.a"
+    },
+    "MMIOTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "MMIOTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "MMIOTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/MMIOTest",
+      "runtimeFiles": []
+    },
+    "SwapTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "SwapTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "SwapTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/SwapTest",
+      "runtimeFiles": []
+    },
+    "sfml-system-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "sfml-system"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "sfml-system",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/SFML/libsfml-system.a"
+    },
+    "mbedcrypto-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "mbedcrypto"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "mbedcrypto",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/mbedtls/library/libmbedcrypto.a"
+    },
+    "uicommon-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "uicommon"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "uicommon",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/UICommon/libuicommon.a"
+    },
+    "BitSetTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "BitSetTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "BitSetTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/BitSetTest",
+      "runtimeFiles": []
+    },
+    "mbedx509-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "mbedx509"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "mbedx509",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/mbedtls/library/libmbedx509.a"
+    },
+    "gtest_main-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "gtest_main"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "gtest_main",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/gtest/libgtest_main.a"
+    },
+    "cubeb-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "cubeb"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "cubeb",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/cubeb/libcubeb.a"
+    },
+    "CommonFuncsTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "CommonFuncsTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "CommonFuncsTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/CommonFuncsTest",
+      "runtimeFiles": []
+    },
+    "main-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "main"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "main",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/build/intermediates/cxx/RelWithDebInfo/4z4p6154/obj/arm64-v8a/libmain.so",
+      "runtimeFiles": []
+    },
+    "inputcommon-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "inputcommon"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "inputcommon",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/InputCommon/libinputcommon.a"
+    },
+    "CryptoEcTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "CryptoEcTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "CryptoEcTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/CryptoEcTest",
+      "runtimeFiles": []
+    },
+    "FileSystemTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "FileSystemTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "FileSystemTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/FileSystemTest",
+      "runtimeFiles": []
+    },
+    "mbedtls-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "mbedtls"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "mbedtls",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/mbedtls/library/libmbedtls.a"
+    },
+    "videoogl-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "videoogl"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "videoogl",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Source/Core/VideoBackends/OGL/libvideoogl.a"
+    },
+    "glslang-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "glslang"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "glslang",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/glslang/libglslang.a"
+    },
+    "BlockingLoopTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "BlockingLoopTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "BlockingLoopTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/BlockingLoopTest",
+      "runtimeFiles": []
+    },
+    "pugixml-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "pugixml"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "pugixml",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/pugixml/libpugixml.a"
+    },
+    "iconv-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "iconv"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "iconv",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/libiconv-1.14/libiconv.a"
+    },
+    "lzo2-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "lzo2"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "lzo2",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Externals/LZO/liblzo2.a"
+    },
+    "ESFormatsTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "ESFormatsTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "ESFormatsTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/ESFormatsTest",
+      "runtimeFiles": []
+    },
+    "VertexLoaderTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "VertexLoaderTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "VertexLoaderTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/VertexLoaderTest",
+      "runtimeFiles": []
+    },
+    "FloatUtilsTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "FloatUtilsTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "FloatUtilsTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/FloatUtilsTest",
+      "runtimeFiles": []
+    },
+    "StringUtilTest-RelWithDebInfo-arm64-v8a": {
+      "buildCommandComponents": [
+        "/Users/jomof/projects/studio-main/prebuilts/studio/sdk/darwin/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a",
+        "StringUtilTest"
+      ],
+      "buildType": "debug",
+      "abi": "arm64-v8a",
+      "artifactName": "StringUtilTest",
+      "output": "/Users/jomof/projects/studio-main/out/build/base/build-system/integration-test/native/build/tmp/junit2760794059956044528/junit4505799956879287491/src/Source/Android/app/.cxx/RelWithDebInfo/4z4p6154/arm64-v8a/Binaries/Tests/StringUtilTest",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {},
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cc",
+    "cpp"
+  ]
+}

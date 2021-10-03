@@ -176,6 +176,14 @@ class RandomInstanceGenerator {
         private val POSIX_FILE_PATHS_DOMAIN = listOf(
             "", "/", "/usr", "/usr/"
         )
+        private val NINJA_DOMAIN = listOf(
+            "# comment", "include", "subninja", "build", "rule", "pool", "default",
+            "description", "comment", "generator", "restat", "deps", "depfile",
+            "CLEAN", "HELP", "ninja_required_version", "rules.ninja", "phony",
+            "libnative-lib.so", "native-lib", "\n  ", "prop = x", "\n  restat = 1",
+            "RULE input.txt\n", "build output.txt: ",
+            "|", "||", "=", ":", "\n  ", "\\", "/", "C${'$'}:/"
+        )
         private val COMMAND_LINE_DOMAIN =
             listOf("B", "D", "H", "G", "W", "help", "?")
                 .flatMap { expandCommandLine(it) }
@@ -184,7 +192,8 @@ class RandomInstanceGenerator {
                 HUMAN_READABLE_SEGMENT_DOMAIN +
                 COMMAND_LINE_DOMAIN +
                 VERSION_DOMAIN +
-                POSIX_FILE_PATHS_DOMAIN
+                POSIX_FILE_PATHS_DOMAIN +
+                NINJA_DOMAIN
         val LIST_SIZE_DOMAIN = listOf(0, 1, 2, 3, 10, 50)
         val BOOLEAN_DOMAIN = listOf(true, false)
         val UNSIGNED_INT_DOMAIN = listOf(0, 1, 32, 64, 256, Int.MAX_VALUE)
