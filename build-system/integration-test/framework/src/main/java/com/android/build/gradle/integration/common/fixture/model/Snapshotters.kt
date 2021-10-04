@@ -463,6 +463,7 @@ private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
     item("isSigned", AndroidArtifact::isSigned)
     item("signingConfigName", AndroidArtifact::signingConfigName)
     item("sourceGenTaskName", AndroidArtifact::sourceGenTaskName)
+    item("resGenTaskName", AndroidArtifact::resGenTaskName)
     valueList("generatedResourceFolders", AndroidArtifact::generatedResourceFolders) { it?.sorted() }
     list("abiFilters", AndroidArtifact::abiFilters)
     item("assembleTaskOutputListingFile", AndroidArtifact::assembleTaskOutputListingFile)

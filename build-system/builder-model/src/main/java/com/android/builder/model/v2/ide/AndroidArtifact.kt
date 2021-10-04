@@ -69,6 +69,14 @@ interface AndroidArtifact : AbstractArtifact, AndroidModel {
     val sourceGenTaskName: String
 
     /**
+     * The name of the task used to generate the resources. The actual value might
+     * depend on the build system front end.
+     *
+     * Maybe null if the artifact does not support Android resources
+     */
+    val resGenTaskName: String?
+
+    /**
      * Returns all the resource folders that are generated. This is typically the renderscript
      * output and the merged resources.
      *

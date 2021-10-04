@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-3d1b46c66b4b3b6b88f840fcf4bad82caede9e94856625c1ee236b75ea79ee41
+80914b6771e01da16f72c636ac88547e3f5c77bbbc17e776349f9fe81a8d1a39
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -583,6 +583,7 @@ com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.bu
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMaxSdkVersion: java.lang.Integer ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMinSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
+com.android.builder.model.v2.ide.AndroidArtifact.getResGenTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getTargetSdkVersionOverride: com.android.builder.model.v2.ide.ApiVersion ()

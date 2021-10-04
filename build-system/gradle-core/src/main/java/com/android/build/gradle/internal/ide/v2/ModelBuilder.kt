@@ -656,6 +656,7 @@ class ModelBuilder<
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,
             sourceGenTaskName = taskContainer.sourceGenTask.name,
+            resGenTaskName = if (component.buildFeatures.androidResources) taskContainer.resourceGenTask.name else null,
             ideSetupTaskNames = setOf(taskContainer.sourceGenTask.name),
 
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),

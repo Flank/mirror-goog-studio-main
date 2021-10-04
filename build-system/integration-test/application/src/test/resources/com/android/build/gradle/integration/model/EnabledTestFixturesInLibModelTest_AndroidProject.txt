@@ -19,6 +19,7 @@
             - isSigned                      = false
             - signingConfigName             = (null)
             - sourceGenTaskName             = "generateDebugTestFixturesSources"
+            - resGenTaskName                = "generateDebugTestFixturesResources"
             - generatedResourceFolders      = []
             - abiFilters                    = []
             - assembleTaskOutputListingFile = (null)
@@ -45,6 +46,7 @@
             - isSigned                      = false
             - signingConfigName             = (null)
             - sourceGenTaskName             = "generateReleaseTestFixturesSources"
+            - resGenTaskName                = "generateReleaseTestFixturesResources"
             - generatedResourceFolders      = []
             - abiFilters                    = []
             - assembleTaskOutputListingFile = (null)
