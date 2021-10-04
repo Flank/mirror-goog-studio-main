@@ -318,6 +318,35 @@ class MissingClassDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testManifestNoPackageMissing() {
+        lint().issues(MISSING).files(
+            manifest(
+                """
+                    <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:versionCode="1"
+                        android:versionName="1.0" >
+                        <uses-sdk android:minSdkVersion="10" />
+                        <application
+                            android:icon="@drawable/ic_launcher"
+                            android:label="@string/app_name" >
+                            <activity android:name=".TestProvider" />
+                            <service android:name="test.pkg.TestProvider2" />
+                            <provider android:name=".TestService" />
+                            <receiver android:name="OnClickActivity" />
+                            <service android:name="TestReceiver" />
+                        </application>
+                    </manifest>
+                    """
+            ).indented(),
+            classpath(),
+            testProvider,
+            testProvider2,
+            testService,
+            onClickActivity,
+            testReceiver
+        ).run().expectClean()
+    }
+
     fun testManifestPlaceholders() {
         lint().issues(MISSING).files(
             manifest(
