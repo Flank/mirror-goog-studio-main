@@ -187,6 +187,11 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     if (call is UCallExpression) {
                         val resolved = call.resolve()
                         if (resolved != null) {
+                            val methodName = resolved.name
+                            // kotlin.test/common/src/main/kotlin/kotlin/test/Assertions.kt
+                            if (methodName == "assertFails" || methodName == "assertFailsWith") {
+                                return true
+                            }
                             val parameter: PsiParameter? =
                                 context.evaluator.computeArgumentMapping(call, resolved)[lambda]
                             if (parameter != null && isThrowingRunnable(parameter.type.canonicalText)) {

@@ -1651,4 +1651,46 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testKotlinTest() {
+        lint().files(
+            kotlin(
+                "src/test/java/test/pkg/misc.kt",
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+                import java.io.File
+                import java.io.FileNotFoundException
+                import kotlin.reflect.KClass
+                class ExampleUnitTest {
+                    @CheckResult
+                    private fun createFile(): File {
+                        throw FileNotFoundException()
+                    }
+
+                    fun test() {
+                        assertFailsWith<FileNotFoundException> {
+                            createFile() // OK 1
+                        }
+                        assertFails("blahblah") {
+                            createFile() // OK 2
+                        }
+                        assertFailsWith(FileNotFoundException::class) {
+                            createFile() // OK 3
+                        }
+                    }
+                }
+
+                // Stubs
+                inline fun <T : Throwable> assertFailsWith(exceptionClass: KClass<T>, block: () -> Unit): T = TODO()
+                inline fun <reified T : Throwable> assertFailsWith(message: String? = null, block: () -> Unit): T = TODO()
+                @JvmName("assertFailsInline")
+                inline fun assertFails(message: String?, block: () -> Unit): Throwable = TODO()
+                """
+            ).indented(),
+            gradle("android { }"),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
