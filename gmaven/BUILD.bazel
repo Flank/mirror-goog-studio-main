@@ -5,10 +5,12 @@ load("//tools/base/bazel:utils.bzl", "merged_zip")
 # Gmaven artifacts that are not used by the gradle builds
 maven_repository(
     name = "other_gmaven_artifacts",
+    #keep sorted
     artifacts = [
         "//tools/analytics-library/inspector",
         "//tools/analytics-library/publisher",
         "//tools/base/chunkio:tools.chunkio",
+        "//tools/base/draw9patch:tools.draw9patch",
         "//tools/base/pixelprobe:tools.pixelprobe",
     ],
     include_transitive_deps = False,

@@ -164,7 +164,7 @@ com.android.tools:common
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools:draw9patch
-  pomName=com.android.tools.draw9patch
+  pomName=Draw 9-patch tool
   description=WYSIWYG editor for automatically resizing images
 
 com.android.tools:dvlib
