@@ -174,7 +174,7 @@ com.android.tools:dvlib
     com.android.tools:common (runtime)
 
 com.android.tools:ninepatch
-  pomName=com.android.tools.ninepatch
+  pomName=NinePatch
   description=draws a bitmap in nine or more sections
   dependencies:
     com.google.guava:guava (runtime)

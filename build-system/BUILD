@@ -270,7 +270,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/lint/cli:agp_gradle_build_files",
     "//tools/base/lint/libs/lint-tests:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
-    "//tools/base/ninepatch:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/profgen/profgen:agp_gradle_build_files",
     "//tools/base/repository:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",
