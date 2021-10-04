@@ -643,21 +643,25 @@ class LintUtilsTest : TestCase() {
     }
 
     fun testResolvePlaceholders() {
-        assertEquals("test", resolvePlaceHolders(null, "test", null))
-        assertEquals("", resolvePlaceHolders(null, "\${test}", null))
-        assertEquals("Test", resolvePlaceHolders(null, "\${test}", mapOf("test" to "Test")))
+        assertEquals("test", resolvePlaceHolders(null, "test"))
+        assertEquals("test", resolvePlaceHolders(null, "test"))
+        assertEquals("", resolvePlaceHolders(null, "\${test}", null, ""))
+        assertNull(resolvePlaceHolders(null, "\${test}"))
+        assertEquals("Test", resolvePlaceHolders(null, "\${test}", mapOf("test" to "Test"), null))
         assertEquals(
             "FirstSecond",
             resolvePlaceHolders(
                 null, "\${abc}\${def}",
-                mapOf("abc" to "First", "def" to "Second")
+                mapOf("abc" to "First", "def" to "Second"),
+                ""
             )
         )
         assertEquals(
             " First Second ",
             resolvePlaceHolders(
                 null, " \${abc} \${def} ",
-                mapOf("abc" to "First", "def" to "Second")
+                mapOf("abc" to "First", "def" to "Second"),
+                ""
             )
         )
     }

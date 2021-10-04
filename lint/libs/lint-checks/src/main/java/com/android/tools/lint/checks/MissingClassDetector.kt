@@ -118,7 +118,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                     val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
                     val pkg = context.document.documentElement.getAttributeNode(ATTR_PACKAGE)?.value
                         ?: context.project.getPackage()
-                    val className = resolvePlaceHolders(context.project, attr.value, null)
+                    val className = resolvePlaceHolders(context.project, attr.value) ?: return
                     if (className.isEmpty()) return
                     checkClassReference(
                         context,

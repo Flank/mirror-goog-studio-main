@@ -318,16 +318,13 @@ class AppLinksValidDetector : Detector(), XmlScanner {
                 hasMimeType = true
                 if (context != null) {
                     val mimeTypeValue = mimeType.value
-                    val resolved = resolvePlaceHolders(context.project, mimeTypeValue, null)
+                    val resolved = resolvePlaceHolders(context.project, mimeTypeValue, null, "")
                     if (CharSequences.containsUpperCase(resolved)) {
                         var message = (
                             "Mime-type matching is case sensitive and should only " +
                                 "use lower-case characters"
                             )
-                        if (!CharSequences.containsUpperCase(
-                                resolvePlaceHolders(null, mimeTypeValue, null)
-                            )
-                        ) {
+                        if (!CharSequences.containsUpperCase(resolvePlaceHolders(null, mimeTypeValue, null, ""))) {
                             // The upper case character is only present in the substituted
                             // manifest place holders, so include them in the message
                             message += " (without placeholders, value is `$resolved`)"
