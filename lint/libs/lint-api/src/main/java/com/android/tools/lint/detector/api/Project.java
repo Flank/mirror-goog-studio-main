@@ -983,7 +983,10 @@ public class Project {
             // if we read multiple manifests for a project, only look at the first one.
             // (This helps when there are feature modules inlined into the main project
             // with their own packages.)
-            pkg = root.getAttribute(ATTR_PACKAGE);
+            String packageAttribute = root.getAttribute(ATTR_PACKAGE);
+            if (!"".equals(packageAttribute)) {
+                pkg = packageAttribute;
+            }
         }
 
         // Initialize minSdk and targetSdk
