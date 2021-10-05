@@ -262,7 +262,7 @@ class AndroidEval implements Eval {
         String ownerClass = description.getOwnerInternalName().replace('/', '.');
         String name = description.getName();
         try {
-            Field field = Class.forName(ownerClass).getDeclaredField(name);
+            Field field = forName(ownerClass).getDeclaredField(name);
             field.setAccessible(true);
             field.set(owner.obj(), value.obj());
             return;
