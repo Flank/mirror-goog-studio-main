@@ -16,13 +16,20 @@
 
 package com.android.build.gradle.internal.cxx
 
+
+import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
+import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Comparison.SAME_CONTENT
+import com.android.build.gradle.internal.cxx.io.compareFileContents
 import com.android.testutils.TestResources
+import com.android.testutils.TestUtils
+import com.android.utils.cxx.COMPILE_COMMANDS_CODEC_VERSION
 import com.android.utils.cxx.CompileCommandsEncoder
 import com.android.utils.cxx.compileCommandsFileIsCurrentVersion
 import com.android.utils.cxx.extractFlagArgument
-import com.android.utils.cxx.streamCompileCommandsV2
+import com.android.utils.cxx.readCompileCommandsVersionNumber
 import com.android.utils.cxx.streamCompileCommands
+import com.android.utils.cxx.streamCompileCommandsV2
 import com.android.utils.cxx.stripArgsForIde
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -36,10 +43,88 @@ class CompileCommandsCodecTest {
     val tempFolder = TemporaryFolder()
 
     private fun testFile(testFileName: String): File {
-        val resourceFolder = "/com/android/build/gradle/external/compile_commands/"
-        return TestResources.getFile(
-            CompileCommandsCodecTest::class.java, resourceFolder + testFileName
-        )
+        if (TestUtils.runningFromBazel()) {
+            val resourceFolder = "/com/android/build/gradle/external/compile_commands/"
+            return TestResources.getFile(
+                CompileCommandsCodecTest::class.java, "$resourceFolder$testFileName"
+            )
+        }
+        val workspaceSubfolder = "tools/base/build-system/gradle-core/src/test/resources/com/android/build/gradle/external/compile_commands/"
+        val path = TestUtils.getWorkspaceRoot().resolve("$workspaceSubfolder$testFileName")
+        return path.toFile()
+    }
+
+    /**
+     * The purpose of this test is to detect incompatible changes that don't have a corresponding
+     * change to [COMPILE_COMMANDS_CODEC_VERSION].
+     *
+     * - If you get a failure like "Expected path/to/version_$XYZ_compile_commands.json.bin to
+     *   exist. Did you forget to check it in?" then it means that you increased
+     *   [COMPILE_COMMANDS_CODEC_VERSION] in this CL. The expected file has been created and should
+     *   be added to the CL. The test will pass when you run it again.
+     *
+     * - If one of the asserts inside the "Make sure we can stream all 2+ versions" block of code
+     *   fires, then there is a behavior change. If it's expected (for example, a bug fix) then the
+     *   test should be modified to check the version number and assert based on specific version.
+     *
+     * - If you get an error like "Content of path/to/version_$XYZ_compile_commands.json.bin is not
+     *   the same when recreated" then something changed in the binary output even though it seems
+     *   compatible according to the current decoding logic. The safest course is to increase
+     *   [COMPILE_COMMANDS_CODEC_VERSION]. This check is not done one Windows because the binary
+     *   can be different due to path handling.
+     */
+    @Test
+    fun `confirm current version binary compatibility`() {
+        fun versionFile(version : Int) = testFile(
+            "version_${version}_compile_commands.json.bin")
+        fun createJsonBinForCurrentVersion() = convertCMakeToCompileCommandsBin(
+                testFile("dolphin_compile_commands.json"),
+                versionFile(COMPILE_COMMANDS_CODEC_VERSION))
+
+        val versionRecord = versionFile(COMPILE_COMMANDS_CODEC_VERSION)
+        if (!versionRecord.exists()) {
+            createJsonBinForCurrentVersion()
+            error("Expected $versionRecord to exist. Did you forget to check it in?")
+        }
+
+        // Make sure we can stream all 2+ versions
+        for (version in 2 .. COMPILE_COMMANDS_CODEC_VERSION) {
+            val versionRecord = versionFile(version)
+            val readVersion = readCompileCommandsVersionNumber(versionRecord)
+            assertThat(readVersion).isEqualTo(version)
+            val distinctSourceFiles = mutableSetOf<String>()
+            val distinctCompilers= mutableSetOf<String>()
+            val distinctFlags = mutableSetOf<List<String>>()
+            val distinctOutputFiles = mutableSetOf<String>()
+            val distinctTargets = mutableSetOf<String>()
+            // TODO(201754404) - streamCompileCommandsV2 should be renamed to streamCompileCommandsV2Plus
+            streamCompileCommandsV2(versionRecord) {
+                distinctSourceFiles += sourceFile.path
+                distinctCompilers += compiler.path
+                distinctFlags += flags
+                distinctOutputFiles += outputFile.path
+                distinctTargets += target
+            }
+            assertThat(distinctSourceFiles.size).isEqualTo(832)
+            assertThat(distinctCompilers.size).isEqualTo(2)
+            assertThat(distinctFlags.size).isEqualTo(31)
+            assertThat(distinctTargets.size).isEqualTo(59)
+            assertThat(distinctOutputFiles.size).isEqualTo(832)
+        }
+
+        // Recreate the file in the expected location. It will be the same as before unless a
+        // code change has triggered a binary difference.
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) return
+        val recreationOfVersionRecord =
+            tempFolder.newFolder().resolve("recreation_compile_commands.json.bin")
+        recreationOfVersionRecord.parentFile.mkdirs()
+        convertCMakeToCompileCommandsBin(
+            testFile("dolphin_compile_commands.json"),
+            recreationOfVersionRecord)
+        val comparison = compareFileContents(versionRecord, recreationOfVersionRecord)
+        assertThat(comparison)
+            .named("Content of $versionRecord is not the same when recreated")
+            .isEqualTo(SAME_CONTENT)
     }
 
     @Test
