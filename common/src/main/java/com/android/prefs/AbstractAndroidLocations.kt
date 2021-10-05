@@ -127,6 +127,7 @@ This is the path of preference folder expected by the Android tools."""
             val pathLocator = PathLocator(environmentProvider)
             return pathLocator.firstPathOf(
                 Global.TEST_TMPDIR,
+                Global.XGD_CONFIG_HOME,
                 Global.USER_HOME,
                 Global.HOME
             )?.also { internalUserHomeLocation = it } ?:
@@ -149,7 +150,7 @@ This is the path of preference folder expected by the Android tools."""
                 locator.singlePathOf(
                     Global.ANDROID_USER_HOME,
                     Global.ANDROID_PREFS_ROOT,
-                    Global.ANDROID_SDK_HOME
+                    Global.ANDROID_SDK_HOME,
                 )
 
         if (folder != null) {
@@ -183,6 +184,7 @@ This is the path of preference folder expected by the Android tools."""
         val pathLocator = PathLocator(environmentProvider)
         return pathLocator.firstPathOf(
             Global.TEST_TMPDIR,
+            Global.XGD_CONFIG_HOME,
             Global.USER_HOME,
             Global.HOME
         )?.resolve(FOLDER_DOT_ANDROID)
@@ -508,5 +510,10 @@ private enum class Global(
         propName = "HOME",
         isSysProp = false,
         isEnvVar = true
-    );
+    ),
+    XGD_CONFIG_HOME(
+        propName = "XGD_CONFIG_HOME",
+        isSysProp = true,
+        isEnvVar = true
+    )
 }

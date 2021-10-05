@@ -58,7 +58,7 @@ fun RecipeExecutor.generateBasicActivity(
   generateManifest(
     moduleData, activityClass, packageName, isLauncher, true, generateActivityTitle = true)
   generateAppBar(
-    moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX
+    moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX, isMaterial3 = false
   )
   addViewBindingSupport(moduleData.viewBindingSupport, true)
   addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")

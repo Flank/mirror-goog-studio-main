@@ -15,12 +15,9 @@
  */
 package com.android.tools.deploy.liveedit;
 
-import com.android.tools.idea.util.StudioPathManager;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import static com.android.tools.deploy.liveedit.Utils.buildClass;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.function.Supplier;
 import org.junit.Assert;
 
@@ -412,46 +409,6 @@ public class MethodBodyEvaluatorTest {
         StaticGetterFactoryKt.setStatic(StaticGetterFactoryKt.getStatic() + 1);
         // Check that indeed the previous instruction did not affect support classes
         Assert.assertNotEquals(sLiveEdit.get(), sVM.get());
-    }
-
-    private static byte[] buildClass(String binaryClassName)
-            throws IOException, ClassNotFoundException {
-        Class klass = Class.forName(binaryClassName);
-        return buildClass(klass);
-    }
-    /**
-     * Extract the bytecode data from a class file from its name. If this is run from intellij, it
-     * searches for .class file in the idea out director. If this is run from a jar file, it
-     * extracts the class file from the jar.
-     */
-    private static byte[] buildClass(Class clazz) throws IOException {
-        InputStream in = null;
-        String pathToSearch = "/" + clazz.getName().replaceAll("\\.", "/") + ".class";
-        if (StudioPathManager.isRunningFromSources()) {
-            String loc =
-                    StudioPathManager.getSourcesRoot()
-                            + "/tools/adt/idea/out/test/android.sdktools.deployer.deployer-runtime-support"
-                            + pathToSearch;
-            File file = new File(loc);
-            if (file.exists()) {
-                in = new FileInputStream(file);
-            } else {
-                in = clazz.getResourceAsStream(pathToSearch);
-            }
-        } else {
-            in = clazz.getResourceAsStream(pathToSearch);
-        }
-
-        if (in == null) {
-            throw new IllegalStateException(
-                    "Unable to load '" + clazz + "' from classLoader " + clazz.getClassLoader());
-        }
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        byte[] buffer = new byte[0xFFFF];
-        for (int len = in.read(buffer); len != -1; len = in.read(buffer)) {
-            os.write(buffer, 0, len);
-        }
-        return os.toByteArray();
     }
 
     @org.junit.Test

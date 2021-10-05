@@ -19,32 +19,16 @@ import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.ProjectType
-import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import java.io.File
 
 /**
- * Entry point for the model of the Android Projects. This models a single module, whether the
- * module is an app project, a library project, a Instant App feature project, an instantApp bundle
- * project, or a dynamic feature split project.
+ * Extended information for Android modules.
+ *
+ * See [BasicAndroidProject]
  */
 interface AndroidProject: AndroidModel {
-
-    /**
-     * The path of the module.
-     */
-    val path: String
-
-    /**
-     * Then name of the build this project belongs to
-     */
-    val buildName: String
-
-    /**
-     * The type of project: Android application, library, feature, instantApp.
-     */
-    val projectType: ProjectType
 
     /**
      * The namespace of the main artifact.
@@ -74,12 +58,6 @@ interface AndroidProject: AndroidModel {
      */
     val testFixturesNamespace: String?
 
-    val mainSourceSet: SourceSetContainer
-
-    val buildTypeSourceSets: Collection<SourceSetContainer>
-
-    val productFlavorSourceSets: Collection<SourceSetContainer>
-
     /**
      * Returns a list of all the variants.
      *
@@ -91,22 +69,9 @@ interface AndroidProject: AndroidModel {
     val variants: Collection<Variant>
 
     /**
-     * Returns the boot classpath matching the compile target. This is typically android.jar plus
-     * other optional libraries.
-     *
-     * @return a list of jar files.
-     */
-    val bootClasspath: Collection<File>
-
-    /**
      * Returns the compile options for Java code.
      */
     val javaCompileOptions: JavaCompileOptions
-
-    /**
-     * Returns the build folder of this project.
-     */
-    val buildFolder: File
 
     /**
      * Returns the resource prefix to use, if any. This is an optional prefix which can

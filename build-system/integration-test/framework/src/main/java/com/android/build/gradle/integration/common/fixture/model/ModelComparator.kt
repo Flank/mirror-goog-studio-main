@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
+import com.android.builder.model.v2.AndroidModel
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
@@ -52,152 +53,167 @@ class Comparator(
 ) {
 
     fun compareVersions(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
-        val content = snapshotModel(
+        compareModel(
+            projectAction = projectAction,
             modelName = "Versions",
-            modelAction = { modelAction(this).versions ?: throw RuntimeException("No androidProject model") },
-            project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotVersions()
-        }.also {
-            generateStdoutHeader()
-            println(it)
-        }
+            modelAction = { versions },
+            snapshotAction = { snapshotVersions() },
+            goldenFile = goldenFile
+        )
+    }
 
-        runComparison("ModelVersions", content, goldenFile)
+    fun compareBasicAndroidProject(
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        goldenFile: String
+    ) {
+        compareModel(
+            projectAction = projectAction,
+            modelName = "BasicAndroidProject",
+            modelAction = { basicAndroidProject },
+            snapshotAction = { snapshotBasicAndroidProject() },
+            goldenFile = goldenFile
+        )
+    }
+
+    fun ensureBasicAndroidProjectIsEmpty(
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+    ) {
+        ensureModelIsEmpty(
+            projectAction = projectAction,
+            modelName = "BasicAndroidProject",
+            modelAction = { basicAndroidProject },
+            snapshotAction = { snapshotBasicAndroidProject() }
+        )
     }
 
     fun compareAndroidProject(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
-        val content = snapshotModel(
+        compareModel(
+            projectAction = projectAction,
             modelName = "AndroidProject",
-            modelAction = { modelAction(this).androidProject ?: throw RuntimeException("No androidProject model") },
-            project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotAndroidProject()
-        }.also {
-            generateStdoutHeader()
-            println(it)
-        }
-
-        runComparison("AndroidProject", content, goldenFile)
+            modelAction = { androidProject },
+            snapshotAction = { snapshotAndroidProject() },
+            goldenFile = goldenFile
+        )
     }
 
     fun ensureAndroidProjectIsEmpty(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
-        checkEmptyDelta(
+        ensureModelIsEmpty(
+            projectAction = projectAction,
             modelName = "AndroidProject",
-            modelAction = { modelAction(this).androidProject ?: throw RuntimeException("No androidProject model") },
-            project = result,
-            referenceProject = referenceResult!!,
-            action = { snapshotAndroidProject() },
-            failureAction =  {
-                generateStdoutHeader()
-                println(SnapshotItemWriter().write(it))
-
-                fail("Expected no different between model. See stdout for details")
-            }
+            modelAction = { androidProject },
+            snapshotAction = { snapshotAndroidProject() }
         )
     }
 
     fun compareAndroidDsl(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
-        val content = snapshotModel(
+        compareModel(
+            projectAction = projectAction,
             modelName = "AndroidDsl",
-            modelAction = { modelAction(this).androidDsl ?: throw RuntimeException("No androidDsl model") },
-            project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotAndroidDsl()
-        }.also {
-            generateStdoutHeader()
-            println(it)
-        }
-
-        runComparison("AndroidDsl", content, goldenFile)
+            modelAction = { androidDsl },
+            snapshotAction = { snapshotAndroidDsl() },
+            goldenFile = goldenFile
+        )
     }
 
     fun ensureAndroidDslIsEmpty(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
-        checkEmptyDelta(
+        ensureModelIsEmpty(
+            projectAction = projectAction,
             modelName = "AndroidDsl",
-            modelAction = { modelAction(this).androidDsl ?: throw RuntimeException("No androidDsl model") },
-            project = result,
-            referenceProject = referenceResult!!,
-            action = { snapshotAndroidDsl() },
-            failureAction =  {
-                generateStdoutHeader()
-                println(SnapshotItemWriter().write(it))
-
-                fail("Expected no different between model. See stdout for details")
-            }
+            modelAction = { androidDsl },
+            snapshotAction = { snapshotAndroidDsl() }
         )
     }
 
     fun compareVariantDependencies(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
         goldenFile: String
     ) {
-        val content = snapshotModel(
+        compareModel(
+            projectAction = projectAction,
             modelName = "VariantDependencies",
-            modelAction = { modelAction(this).variantDependencies ?: throw RuntimeException("No variantDependencies model") },
-            project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotVariantDependencies()
-        }
-
-        generateStdoutHeader()
-        println(content)
-
-        runComparison("VariantDependencies", content, goldenFile)
+            modelAction = { variantDependencies },
+            snapshotAction = { snapshotVariantDependencies() },
+            goldenFile = goldenFile
+        )
     }
 
     fun ensureVariantDependenciesIsEmpty(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
     ) {
-        checkEmptyDelta(
+        ensureModelIsEmpty(
+            projectAction = projectAction,
             modelName = "VariantDependencies",
-            modelAction = { modelAction(this).variantDependencies ?: throw RuntimeException("No variantDependencies model") },
-            project = result,
-            referenceProject = referenceResult!!,
-            action = { snapshotVariantDependencies() },
-            failureAction =  {
-                generateStdoutHeader()
-                println(SnapshotItemWriter().write(it))
-
-                fail("Expected no different between model. See stdout for details")
-            }
+            modelAction = { variantDependencies },
+            snapshotAction = { snapshotVariantDependencies() }
         )
     }
 
     fun compareNativeModule(
-        modelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        goldenFile: String
+    ) {
+        compareModel(
+            projectAction = projectAction,
+            modelName = "NativeModule",
+            modelAction = { nativeModule },
+            snapshotAction = { snapshotNativeModule() },
+            goldenFile = goldenFile
+        )
+    }
+
+    private fun <ModelT: AndroidModel> compareModel(
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo,
+        modelName: String,
+        modelAction: ModelContainerV2.ModelInfo.() -> ModelT?,
+        snapshotAction: ModelSnapshotter<ModelT>.() -> Unit,
         goldenFile: String
     ) {
         val content = snapshotModel(
-            modelName = "NativeModule",
-            modelAction = { modelAction(this).nativeModule ?: throw RuntimeException("No nativeModule model") },
+            modelName = modelName,
+            modelAction = { modelAction(projectAction(this)) ?: throw RuntimeException("No $modelName model") },
             project = result,
-            referenceProject = referenceResult
-        ) {
-            snapshotNativeModule()
-        }.also {
+            referenceProject = referenceResult,
+            action = snapshotAction
+        ).also {
             generateStdoutHeader()
             println(it)
         }
 
-        runComparison("NativeModule", content, goldenFile)
+        runComparison(modelName, content, goldenFile)
+    }
+
+    private fun <ModelT: AndroidModel> ensureModelIsEmpty(
+        projectAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo = { getProject() },
+        modelName: String,
+        modelAction: ModelContainerV2.ModelInfo.() -> ModelT?,
+        snapshotAction: ModelSnapshotter<ModelT>.() -> Unit,
+    ) {
+        checkEmptyDelta(
+            modelName = modelName,
+            modelAction = { modelAction(projectAction(this)) ?: throw RuntimeException("No $modelName model") },
+            project = result,
+            referenceProject = referenceResult!!,
+            action = snapshotAction,
+            failureAction =  {
+                generateStdoutHeader()
+                println(SnapshotItemWriter().write(it))
+
+                fail("Expected no differences between $modelAction models. See stdout for details")
+            }
+        )
     }
 
     /**

@@ -47,6 +47,7 @@ class HelloWorldAppModelTest: ModelComparator() {
             .fetchModels(variantName = "debug")
 
         with(result).compareVersions(goldenFile = "Versions")
+        with(result).compareBasicAndroidProject(goldenFile = "BasicAndroidProject")
         with(result).compareAndroidProject(goldenFile = "AndroidProject")
         with(result).compareAndroidDsl(goldenFile = "AndroidDsl")
         with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
@@ -106,6 +107,12 @@ class DisabledAidlInAppModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
@@ -139,6 +146,12 @@ class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
@@ -205,9 +218,15 @@ class DisabledShadersInAppModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        ensureAndroidProjectDeltaIsEmpty()
     }
 
     @Test
@@ -271,6 +290,11 @@ class EnabledMlModelBindingInAppModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")

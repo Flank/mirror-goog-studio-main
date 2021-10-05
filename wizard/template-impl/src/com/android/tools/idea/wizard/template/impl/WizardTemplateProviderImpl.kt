@@ -20,9 +20,11 @@ import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
 import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidTVActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.basicActivityMaterial3.basicActivityMaterial3Template
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.blankWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.composeActivity.composeActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.composeActivityMaterial3Template
 import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.cppEmptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
@@ -72,9 +74,11 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
     androidTVActivityTemplate,
     basicActivityTemplate,
+    basicActivityMaterial3Template,
     blankWearActivityTemplate,
     bottomNavigationActivityTemplate,
     composeActivityTemplate,
+    composeActivityMaterial3Template,
     emptyActivityTemplate,
     fullscreenActivityTemplate,
     googleAdMobAdsActivityTemplate,

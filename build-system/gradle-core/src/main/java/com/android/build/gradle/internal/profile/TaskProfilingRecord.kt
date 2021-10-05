@@ -148,7 +148,7 @@ open class TaskProfilingRecord
 
     fun minimumWaitTime(): Duration = workerRecordList.values.asSequence()
         .map { it.waitTime() }
-        .min() ?: Duration.ZERO
+        .minOrNull() ?: Duration.ZERO
 
     /**
      * Calculate the task duration time.

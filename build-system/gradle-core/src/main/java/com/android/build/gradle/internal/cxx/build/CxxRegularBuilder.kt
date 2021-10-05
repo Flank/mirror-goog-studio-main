@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.build
 
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
+import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.ifLogNativeBuildToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
-import com.android.build.gradle.internal.cxx.model.objFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
@@ -46,8 +45,6 @@ import com.google.common.collect.Sets
 import org.gradle.api.GradleException
 import org.gradle.process.ExecOperations
 import java.io.File
-import java.io.IOException
-import java.nio.file.Files
 import java.time.Clock
 import kotlin.streams.toList
 
@@ -179,19 +176,22 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
                 abi.soFolder,
                 output.name
             )
+
             if (!FileUtils.isSameFile(output, expectedOutputFile)) {
                 infoln("external build set its own library output location for " +
                         "'${output.name}', hard link or copy to expected location")
-
-                if (expectedOutputFile.parentFile.mkdirs()) {
-                    infoln("created folder ${expectedOutputFile.parentFile}")
-                }
-                hardLinkOrCopy(output, expectedOutputFile)
+                // Use synchronizeFile so that libs removed from the build will
+                // also be deleted.
+                synchronizeFile(
+                    output,
+                    expectedOutputFile)
             }
 
             for (runtimeFile in library.runtimeFiles) {
                 val dest = FileUtils.join(abi.soFolder, runtimeFile.name)
-                hardLinkOrCopy(runtimeFile, dest)
+                synchronizeFile(
+                    runtimeFile,
+                    dest)
             }
         }
 
@@ -202,7 +202,9 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
         } else {
             if (abi.stlLibraryFile != null && abi.stlLibraryFile.isFile) {
                 val objAbi = abi.soFolder.resolve(abi.stlLibraryFile.name)
-                hardLinkOrCopy(abi.stlLibraryFile, objAbi)
+                synchronizeFile(
+                    abi.stlLibraryFile,
+                    objAbi)
             }
         }
 
@@ -423,36 +425,3 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
     }
 }
 
-/**
- * Hard link [source] to [destination].
- */
-internal fun hardLinkOrCopy(source: File, destination: File) {
-    // Dependencies within the same project will also show up as runtimeFiles, and
-    // will have the same source and destination. Can skip those.
-    if (FileUtils.isSameFile(source, destination)) {
-        // This happens if source and destination are lexically the same
-        // --or-- if one is a hard link to the other.
-        // Either way, no work to do.
-        return
-    }
-
-    Files.deleteIfExists(destination.toPath())
-
-    // CMake can report runtime files that it doesn't later produce.
-    // Don't try to copy these. Also, don't warn because hard-link/copy
-    // is not the correct location to diagnose why the *original*
-    // runtime file was not created.
-    if (!source.exists()) {
-        return
-    }
-
-    try {
-        Files.createLink(destination.toPath(), source.toPath().toRealPath())
-        infoln("linked $source to $destination")
-    } catch (e: IOException) {
-        // This can happen when hard linking from one drive to another on Windows
-        // In this case, copy the file instead.
-        com.google.common.io.Files.copy(source, destination)
-        infoln("copied $source to $destination")
-    }
-}

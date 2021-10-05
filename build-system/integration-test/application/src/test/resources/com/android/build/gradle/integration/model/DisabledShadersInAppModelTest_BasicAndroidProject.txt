@@ -1,4 +1,4 @@
-> AndroidProject:
+> BasicAndroidProject:
    > defaultConfig:
       - sourceProvider:
          - shadersDirectories:
@@ -34,4 +34,4 @@
                * {PROJECT}/src/testRelease/shaders{!}{REMOVED}
       < release
    < buildTypes
-< AndroidProject
+< BasicAndroidProject

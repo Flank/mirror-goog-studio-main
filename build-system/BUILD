@@ -208,8 +208,9 @@ maven_repository(
 maven_repository(
     name = "performance_test_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS + [
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
+        # TODO(b/201790375): Update Kotlin deps.
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.4.32",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.4.32",
         "@maven//:androidx.activity.activity-compose_1.3.0-alpha02",
         "@maven//:androidx.compose.compiler.compiler_1.0.0-beta07",
         "@maven//:androidx.compose.material.material_1.0.0-beta07",

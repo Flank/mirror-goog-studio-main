@@ -160,7 +160,8 @@ fun RecipeExecutor.generateAppBar(
   resDir: File = moduleData.resDir,
   baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
   themesData: ThemesData = moduleData.themesData,
-  useAndroidX: Boolean
+  useAndroidX: Boolean,
+  isMaterial3: Boolean
 ) {
   val coordinatorLayout = getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)
   val layoutTag = getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)
@@ -173,38 +174,47 @@ fun RecipeExecutor.generateAppBar(
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        ${renderIf(isMaterial3) { "android:fitsSystemWindows=\"true\"" }}
         tools:context="$packageName.$activityClass">
 
         <$layoutTag
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:theme="@style/${themesData.appBarOverlay.name}">
+            ${renderIf(isMaterial3) { "android:fitsSystemWindows=\"true\"" }}
+            ${renderIf(!isMaterial3) { "android:theme=\"@style/${themesData.appBarOverlay.name}\"" }}>
 
-            <${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)}
+            <${if (!isMaterial3)
+                getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)
+               else
+                "com.google.android.material.appbar.MaterialToolbar"}
                 android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/${themesData.popupOverlay.name}" />
+                android:layout_width = "match_parent"
+                ${renderIf(!isMaterial3) {"""
+                  android:background="?attr/colorPrimary"
+                  app:popupTheme="@style/${themesData.popupOverlay.name}"
+                """ }}
+                android:layout_height = "?attr/actionBarSize" />
 
-        </$layoutTag>
+      </$layoutTag>
 
-        <include layout="@layout/$simpleLayoutName"/>
+      <include layout="@layout/$simpleLayoutName"/>
 
-        <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="@dimen/fab_margin"
-            android:layout_marginBottom="16dp"
-            app:srcCompat="@android:drawable/ic_dialog_email" />
+      <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
+      android:id="@+id/fab"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="bottom|end"
+      android:layout_marginEnd="@dimen/fab_margin"
+      android:layout_marginBottom="16dp"
+      app:srcCompat="@android:drawable/ic_dialog_email" />
 
-    </$coordinatorLayout>
-  """.trimIndent()
+      </$coordinatorLayout>
+      """.trimIndent()
 
-  addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
-  addDependency("com.android.support:design:$appCompatVersion.+")
+  if (!isMaterial3) {
+      addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
+      addDependency("com.android.support:design:$appCompatVersion.+")
+  }
 
   save(appBarLayout, resDir.resolve("layout/$appBarLayoutName.xml"))
 
@@ -213,13 +223,13 @@ fun RecipeExecutor.generateAppBar(
   mergeXml(appBarDimens(48), resDir.resolve("values-w600dp/dimens.xml"))
   mergeXml(appBarDimens(200), resDir.resolve("values-w1240dp/dimens.xml"))
 
-  generateNoActionBarStyles(baseFeatureResOut, resDir, themesData)
+  if (!isMaterial3) generateNoActionBarStyles(baseFeatureResOut, resDir, themesData)
 }
 
 private fun appBarDimens(fabMargin: Int) =
 """<resources>
-        <dimen name="fab_margin">${fabMargin}dp</dimen>
-    </resources>
+      <dimen name="fab_margin">${fabMargin}dp</dimen>
+   </resources>
 """
 
 fun RecipeExecutor.addLifecycleDependencies(useAndroidX: Boolean) {

@@ -80,7 +80,7 @@ enum class IntegerOption(
     /**
      * The number of shards ran on Managed Devices during testing.
      */
-    MANAGED_DEVICE_SHARD_POOL_SIZE("android.experimental.androidTesting.numManagedDeviceShards", ApiStage.Experimental),
+    MANAGED_DEVICE_SHARD_POOL_SIZE("android.experimental.androidTest.numManagedDeviceShards", ApiStage.Experimental),
 
     /* ------------
      * REMOVED APIS

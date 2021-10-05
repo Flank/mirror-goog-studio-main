@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -33,8 +32,8 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -66,13 +65,11 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    private var libraryDependencies: FileCollection? = null
+    abstract val libraryDependencies: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    private var sharedLibraryDependencies: FileCollection? = null
+    abstract val sharedLibraryDependencies: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -99,8 +96,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
         if (!mergeOnly.get()) {
-            imports.addAll(libraryDependencies!!.files)
-            imports.addAll(sharedLibraryDependencies!!.files)
+            imports.addAll(libraryDependencies)
+            imports.addAll(sharedLibraryDependencies)
         }
 
         val request = AaptPackageConfig(
@@ -161,16 +158,16 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 creationConfig.artifacts.getAll(
                     InternalMultipleArtifactType.RES_COMPILED_FLAT_FILES))
             if (!creationConfig.debuggable) {
-                task.libraryDependencies =
+                task.libraryDependencies.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-                task.sharedLibraryDependencies =
+                                AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY))
+                task.sharedLibraryDependencies.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
+                                AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY))
             }
 
             task.mergeOnly.setDisallowChanges(creationConfig.debuggable)

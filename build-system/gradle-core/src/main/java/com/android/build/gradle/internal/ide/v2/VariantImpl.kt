@@ -32,8 +32,6 @@ data class VariantImpl(
     override val androidTestArtifact: AndroidArtifact?,
     override val unitTestArtifact: JavaArtifact?,
     override val testFixturesArtifact: AndroidArtifact?,
-    override val buildType: String?,
-    override val productFlavors: List<String>,
     override val testedTargetVariant: TestedTargetVariant?,
     override val isInstantAppCompatible: Boolean,
     override val desugaredMethods: List<String>

@@ -116,6 +116,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
+import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
@@ -1987,16 +1988,30 @@ fun resolveManifestName(element: Element): String {
     return className
 }
 
+@Deprecated(
+    "Supply defaultValue for missing variables",
+    ReplaceWith("resolvePlaceHolders(project, value, substitutions, \"\"")
+)
+fun resolvePlaceHolders(
+    project: Project?,
+    value: String,
+    substitutions: Map<String, String>?
+): String {
+    return resolvePlaceHolders(project, value, substitutions, "")!!
+}
+
 /**
  * Finds the place holder values for the current string and replaces
  * them with the current variant version, or values from the default map
  * if supplied.
  */
+@Contract("_, !null, _, !null -> !null")
 fun resolvePlaceHolders(
     project: Project?,
     value: String,
-    fallbacks: Map<String, String>? = null
-): String {
+    substitutions: Map<String, String>? = null,
+    defaultValue: String? = null
+): String? {
     var s = value
     while (true) {
         val start = s.indexOf(MANIFEST_PLACEHOLDER_PREFIX)
@@ -2011,7 +2026,7 @@ fun resolvePlaceHolders(
             start + MANIFEST_PLACEHOLDER_PREFIX.length,
             end
         )
-        val replacement = resolvePlaceHolder(project, name) ?: fallbacks?.get(name) ?: ""
+        val replacement = resolvePlaceHolder(project, name) ?: substitutions?.get(name) ?: defaultValue ?: return null
         s = s.substring(0, start) + replacement +
             s.substring(end + MANIFEST_PLACEHOLDER_SUFFIX.length)
     }

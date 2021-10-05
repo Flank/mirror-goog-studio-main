@@ -327,7 +327,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                         android:versionCode="1"
                         android:versionName="1.0" >
                         <uses-sdk android:minSdkVersion="10" />
-                        <application
+                        <application android:name="foo.bar.baz.＄{applicationClassName}"> <!-- OK, can't resolve -->
                             android:icon="@drawable/ic_launcher"
                             android:label="@string/app_name" >
                             <activity android:name="＄{activityName}" /> <!-- OK, can't resolve place holder -->

@@ -26,7 +26,7 @@ import java.io.File
  *
  * @since 4.2
  */
-interface JavaArtifact : BaseArtifact, AndroidModel {
+interface JavaArtifact : AbstractArtifact, AndroidModel {
     /** Path to the mockable platform jar generated for this [JavaArtifact], if present.  */
     val mockablePlatformJar: File?
 

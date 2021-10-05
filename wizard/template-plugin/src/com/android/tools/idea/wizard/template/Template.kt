@@ -53,7 +53,8 @@ enum class FormFactor(val displayName: String) {
 
 enum class TemplateConstraint {
   AndroidX,
-  Kotlin
+  Kotlin,
+  Material3
 }
 
 /**

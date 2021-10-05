@@ -3017,7 +3017,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     val suffix = version.toString()
                     val jre: (GradleVersion) -> Boolean = { v -> v.toString().endsWith("-jre") }
                     val android: (GradleVersion) -> Boolean = { v -> !v.toString().endsWith("-jre") }
-                    return versions.filter(if (suffix.endsWith("-jre")) jre else android).max()
+                    return versions.filter(if (suffix.endsWith("-jre")) jre else android).maxOrNull()
                 }
             } else if (artifactId == "kotlinx-coroutines-core") {
                 val version = dependency.version
@@ -3040,14 +3040,14 @@ open class GradleDetector : Detector(), GradleScanner {
                                 { (allowPreview || !it.isPreview) && !it.toString().contains("-native-mt") }
                             }
                         }
-                    ).max()
+                    ).maxOrNull()
                 }
             }
 
             return versions
                 .filter { filter == null || filter.test(it) }
                 .filter { allowPreview || !it.isPreview }
-                .max()
+                .maxOrNull()
         }
 
         // Convert a long-hand dependency, like

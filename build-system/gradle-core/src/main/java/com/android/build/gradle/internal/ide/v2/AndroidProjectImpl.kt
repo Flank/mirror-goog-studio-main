@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.android.builder.model.v2.ide.JavaCompileOptions
-import com.android.builder.model.v2.ide.ProjectType
-import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidProject
@@ -30,19 +28,11 @@ import java.io.Serializable
  * Implementation of [AndroidProject] for serialization via the Tooling API.
  */
 data class AndroidProjectImpl(
-    override val path: String,
-    override val buildName: String,
-    override val projectType: ProjectType,
     override val namespace: String,
     override val androidTestNamespace: String?,
     override val testFixturesNamespace: String?,
-    override val mainSourceSet: SourceSetContainer,
-    override val buildTypeSourceSets: Collection<SourceSetContainer>,
-    override val productFlavorSourceSets: Collection<SourceSetContainer>,
     override val variants: Collection<Variant>,
-    override val bootClasspath: Collection<File>,
     override val javaCompileOptions: JavaCompileOptions,
-    override val buildFolder: File,
     override val resourcePrefix: String?,
     override val dynamicFeatures: Collection<String>?,
     override val viewBindingOptions: ViewBindingOptions?,

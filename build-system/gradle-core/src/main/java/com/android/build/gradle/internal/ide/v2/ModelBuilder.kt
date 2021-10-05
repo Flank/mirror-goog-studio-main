@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInp
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.LibraryService
 import com.android.build.gradle.internal.ide.dependencies.LibraryServiceImpl
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
@@ -77,13 +76,13 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
-import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
+import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
@@ -93,6 +92,7 @@ import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BasicAndroidProject
 import com.android.builder.model.v2.models.BuildMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
@@ -139,6 +139,7 @@ class ModelBuilder<
     override fun canBuild(className: String): Boolean {
         return className == Versions::class.java.name
                 || className == BuildMap::class.java.name
+                || className == BasicAndroidProject::class.java.name
                 || className == AndroidProject::class.java.name
                 || className == AndroidDsl::class.java.name
                 || className == VariantDependencies::class.java.name
@@ -151,6 +152,7 @@ class ModelBuilder<
     override fun buildAll(className: String, project: Project): Any = when (className) {
         Versions::class.java.name -> buildModelVersions()
         BuildMap::class.java.name -> buildBuildMap(project)
+        BasicAndroidProject::class.java.name -> buildBasicAndroidProjectModel(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
         AndroidDsl::class.java.name -> buildAndroidDslModel(project)
         ProjectSyncIssues::class.java.name -> buildProjectSyncIssueModel(project)
@@ -181,6 +183,7 @@ class ModelBuilder<
 
     private fun buildModelVersions(): Versions {
         return VersionsImpl(
+            basicAndroidProject = VersionImpl(0, 1),
             androidProject = VersionImpl(0, 1),
             androidDsl = VersionImpl(0, 1),
             variantDependencies = VersionImpl(0, 1),
@@ -191,7 +194,7 @@ class ModelBuilder<
 
     private fun buildBuildMap(project: Project): BuildMap = BuildMapImpl(getBuildMap(project))
 
-    private fun buildAndroidProjectModel(project: Project): AndroidProject {
+    private fun buildBasicAndroidProjectModel(project: Project): BasicAndroidProject {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
         val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
@@ -271,6 +274,31 @@ class ModelBuilder<
             )
         }
 
+        // gather variants
+        val variantList = variants.map {
+            createBasicVariant(it, buildFeatures)
+        }
+
+        return BasicAndroidProjectImpl(
+            path = project.path,
+            buildName = getBuildName(project),
+            buildFolder = project.layout.buildDirectory.get().asFile,
+
+            projectType = projectType,
+
+            mainSourceSet = defaultConfig,
+            buildTypeSourceSets = buildTypes,
+            productFlavorSourceSets = productFlavors,
+
+            variants = variantList,
+
+            bootClasspath = bootClasspath,
+        )
+    }
+
+    private fun buildAndroidProjectModel(project: Project): AndroidProject {
+        val variants = variantModel.variants
+
         // Keep track of the result of parsing each manifest for instant app value.
         // This prevents having to reparse the
         val instantAppResultMap = mutableMapOf<File, Boolean>()
@@ -292,27 +320,15 @@ class ModelBuilder<
                 testFixturesNamespace = it.testFixtures?.namespace?.get()
             }
 
-            createVariant(it, buildFeatures, instantAppResultMap)
+            createVariant(it, instantAppResultMap)
         }
 
         return AndroidProjectImpl(
-            path = project.path,
-            buildName = getBuildName(project),
-            buildFolder = project.layout.buildDirectory.get().asFile,
-
-            projectType = projectType,
-
             namespace = namespace ?: "",
             androidTestNamespace = androidTestNamespace,
             testFixturesNamespace = testFixturesNamespace,
 
-            mainSourceSet = defaultConfig,
-            buildTypeSourceSets = buildTypes,
-            productFlavorSourceSets = productFlavors,
-
             variants = variantList,
-
-            bootClasspath = bootClasspath,
 
             javaCompileOptions = extension.compileOptions.convert(),
             resourcePrefix = extension.resourcePrefix,
@@ -325,7 +341,6 @@ class ModelBuilder<
             lintChecksJars = getLocalCustomLintChecksForModel(project, syncIssueReporter),
         )
     }
-
     /**
      * Returns the current build name
      */
@@ -492,38 +507,66 @@ class ModelBuilder<
         )
     }
 
+    private fun createBasicVariant(
+        variant: VariantImpl,
+        features: BuildFeatureValues
+    ): BasicVariantImpl {
+        return BasicVariantImpl(
+            name = variant.name,
+            mainArtifact = createBasicArtifact(variant, features),
+            androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
+                createBasicArtifact(it, features)
+            },
+            unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
+                createBasicArtifact(it, features)
+            },
+            testFixturesArtifact = variant.testFixturesComponent?.let {
+                createBasicArtifact(it, features)
+            },
+            buildType = variant.buildType,
+            productFlavors = variant.productFlavors.map { it.second },
+        )
+    }
+
+    private fun createBasicArtifact(
+        component: ComponentImpl,
+        features: BuildFeatureValues
+    ): BasicArtifact {
+        val sourceProviders = component.variantSources
+
+        return BasicArtifactImpl(
+            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
+            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
+                features
+            ),
+        )
+    }
+
     private fun createVariant(
         variant: VariantImpl,
-        features: BuildFeatureValues,
         instantAppResultMap: MutableMap<File, Boolean>
     ): com.android.build.gradle.internal.ide.v2.VariantImpl {
         return VariantImpl(
             name = variant.name,
             displayName = variant.baseName,
-            mainArtifact = createAndroidArtifact(variant, features),
+            mainArtifact = createAndroidArtifact(variant),
             androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
-                createAndroidArtifact(it, features)
+                createAndroidArtifact(it)
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
-                createJavaArtifact(it, features)
+                createJavaArtifact(it)
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
-                createAndroidArtifact(it, features)
+                createAndroidArtifact(it)
             },
-            buildType = variant.buildType,
-            productFlavors = variant.productFlavors.map { it.second },
             testedTargetVariant = getTestTargetVariant(variant),
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
             desugaredMethods = listOf()
         )
     }
 
-    private fun createAndroidArtifact(
-        component: ComponentImpl,
-        features: BuildFeatureValues
-    ): AndroidArtifactImpl {
+    private fun createAndroidArtifact(component: ComponentImpl): AndroidArtifactImpl {
         val variantData = component.variantData
-        val sourceProviders = component.variantSources
         val variantDslInfo = component.variantDslInfo
         // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
@@ -600,11 +643,6 @@ class ModelBuilder<
             targetSdkVersionOverride = targetSdkVersionOverride,
             maxSdkVersion = maxSdkVersion,
 
-            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
-            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
-                features
-            ),
-
             signingConfigName = signingConfig?.name,
             isSigned = signingConfig != null,
 
@@ -632,12 +670,8 @@ class ModelBuilder<
         )
     }
 
-    private fun createJavaArtifact(
-        component: ComponentImpl,
-        features: BuildFeatureValues
-    ): JavaArtifact {
+    private fun createJavaArtifact(component: ComponentImpl): JavaArtifact {
         val variantData = component.variantData
-        val sourceProviders = component.variantSources
         val variantScope = component.variantScope
 
         // FIXME need to find a better way for this.
@@ -661,9 +695,6 @@ class ModelBuilder<
         }
 
         return JavaArtifactImpl(
-            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
-            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(features),
-
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,
             ideSetupTaskNames = setOf(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),

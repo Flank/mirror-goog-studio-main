@@ -19,8 +19,6 @@ import com.android.builder.model.v2.AndroidModel
 
 /**
  * A build Variant.
- *
- * @since 4.2
  */
 interface Variant: AndroidModel {
     /**
@@ -52,19 +50,6 @@ interface Variant: AndroidModel {
      * The TestFixtures artifact for this variant, if applicable.
      */
     val testFixturesArtifact: AndroidArtifact?
-
-    /**
-     * The build type name.
-     *
-     * If null, no build type is associated with the variant (this generally means that no build
-     * types exist, which can only happen for libraries)
-     */
-    val buildType: String?
-
-    /**
-     * The flavors for this variants. This can be empty if no flavors are configured.
-     */
-    val productFlavors: List<String>
 
     /**
      * For standalone test plugins: information about the tested project.

@@ -58,9 +58,17 @@ class HelloWorldCompositeModelTest: ModelComparator() {
     }
 
     @Test
+    fun `test includedBuild BasicAndroidProject`() {
+        with(result).compareBasicAndroidProject(
+            projectAction = { getProject(":lib", "other-build") },
+            goldenFile = "BasicAndroidProject"
+        )
+    }
+
+    @Test
     fun `test includedBuild AndroidProject`() {
         with(result).compareAndroidProject(
-            modelAction = { getProject(":lib", "other-build") },
+            projectAction = { getProject(":lib", "other-build") },
             goldenFile = "AndroidProject"
         )
     }
@@ -68,7 +76,7 @@ class HelloWorldCompositeModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }

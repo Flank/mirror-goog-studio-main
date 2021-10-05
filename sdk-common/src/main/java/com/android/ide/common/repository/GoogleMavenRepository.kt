@@ -103,7 +103,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                         }
                         .filter { allowPreview || !it.isPreview }
                         .filter { snapshotFilter(it) }
-                        .max()
+                        .maxOrNull()
                         ?.let { return it }
                 }
             }
@@ -204,7 +204,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 getGradleVersions()
                     .filter { filter == null || filter(it) }
                     .filter { allowPreview || !it.isPreview }
-                    .max()
+                    .maxOrNull()
 
         fun findCompileDependencies(
             version: GradleVersion,

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -124,7 +125,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
                 val libDir = libsDir.resolve("android.${abiData.abi.tag}")
                 val dest = libDir.resolve(srcLibrary.name)
                 infoln("Installing $srcLibrary to $dest")
-                srcLibrary.copyTo(dest)
+                synchronizeFile(srcLibrary, dest)
             }
         }
     }

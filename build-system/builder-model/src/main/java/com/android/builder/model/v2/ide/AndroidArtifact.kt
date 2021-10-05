@@ -15,7 +15,6 @@
  */
 package com.android.builder.model.v2.ide
 
-import com.android.builder.model.v2.ModelSyncFile
 import com.android.builder.model.v2.AndroidModel
 import java.io.File
 
@@ -25,10 +24,8 @@ import java.io.File
  * This is the entry point for the output of a [Variant]. This can be more than one
  * output in the case of multi-apk where more than one APKs are generated from the same set
  * of sources.
- *
- * @since 4.2
  */
-interface AndroidArtifact : BaseArtifact, AndroidModel {
+interface AndroidArtifact : AbstractArtifact, AndroidModel {
 
     /**
      * The min SDK version of this artifact

@@ -1,0 +1,83 @@
+> BasicAndroidProject:
+   - projectType    = TEST
+   - path           = ":test"
+   - buildName      = ":"
+   - buildFolder    = {PROJECT}/test/build{!}
+   - bootClasspath:
+      * {ANDROID_SDK}/platforms/android-30/android.jar{F}
+   > defaultConfig:
+      > sourceProvider:
+         - name                = "main"
+         - manifestFile        = {PROJECT}/test/src/main/AndroidManifest.xml{F}
+         - javaDirectories:
+            * {PROJECT}/test/src/main/java{!}
+         - kotlinDirectories:
+            * {PROJECT}/test/src/main/java{!}
+            * {PROJECT}/test/src/main/kotlin{!}
+         - resourcesDirectories:
+            * {PROJECT}/test/src/main/resources{!}
+         - aidlDirectories:
+            * {PROJECT}/test/src/main/aidl{!}
+         - renderscriptDirectories:
+            * {PROJECT}/test/src/main/rs{!}
+         - resDirectories:
+            * {PROJECT}/test/src/main/res{!}
+         - assetsDirectories:
+            * {PROJECT}/test/src/main/assets{!}
+         - jniLibsDirectories:
+            * {PROJECT}/test/src/main/jniLibs{!}
+         - shadersDirectories:
+            * {PROJECT}/test/src/main/shaders{!}
+         - mlModelsDirectories = (null)
+      < sourceProvider
+      - androidTestSourceProvider  = (null)
+      - unitTestSourceProvider     = (null)
+      - testFixturesSourceProvider = (null)
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         > sourceProvider:
+            - name                = "debug"
+            - manifestFile        = {PROJECT}/test/src/debug/AndroidManifest.xml{!}
+            - javaDirectories:
+               * {PROJECT}/test/src/debug/java{!}
+            - kotlinDirectories:
+               * {PROJECT}/test/src/debug/java{!}
+               * {PROJECT}/test/src/debug/kotlin{!}
+            - resourcesDirectories:
+               * {PROJECT}/test/src/debug/resources{!}
+            - aidlDirectories:
+               * {PROJECT}/test/src/debug/aidl{!}
+            - renderscriptDirectories:
+               * {PROJECT}/test/src/debug/rs{!}
+            - resDirectories:
+               * {PROJECT}/test/src/debug/res{!}
+            - assetsDirectories:
+               * {PROJECT}/test/src/debug/assets{!}
+            - jniLibsDirectories:
+               * {PROJECT}/test/src/debug/jniLibs{!}
+            - shadersDirectories:
+               * {PROJECT}/test/src/debug/shaders{!}
+            - mlModelsDirectories = (null)
+         < sourceProvider
+         - androidTestSourceProvider  = (null)
+         - unitTestSourceProvider     = (null)
+         - testFixturesSourceProvider = (null)
+      < debug
+   < buildTypes
+   - productFlavors = []
+   > variants:
+      > debug:
+         - name                 = "debug"
+         - displayName          = "debug"
+         - buildType            = "debug"
+         - productFlavors       = []
+         - mainArtifact:
+            - variantSourceProvider     = (null)
+            - multiFlavorSourceProvider = (null)
+         - androidTestArtifact  = (null)
+         - unitTestArtifact     = (null)
+         - testFixturesArtifact = (null)
+      < debug
+   < variants
+< BasicAndroidProject

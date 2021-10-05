@@ -406,6 +406,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/cxx/gradle/
   com/android/build/gradle/internal/cxx/gradle/generator/
   com/android/build/gradle/internal/cxx/hashing/
+  com/android/build/gradle/internal/cxx/io/
   com/android/build/gradle/internal/cxx/json/
   com/android/build/gradle/internal/cxx/logging/
   com/android/build/gradle/internal/cxx/model/
@@ -497,6 +498,7 @@ com/android/tools/build/gradle
   com/android/tools/profgen/
   cxx_attribution.proto
   cxx_caching.proto
+  cxx_io.proto
   cxx_logging.proto
   cxx_process.proto
 

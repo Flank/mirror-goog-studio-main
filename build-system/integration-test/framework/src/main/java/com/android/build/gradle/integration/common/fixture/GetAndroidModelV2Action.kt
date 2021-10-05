@@ -19,6 +19,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainerV2.Buil
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
+import com.android.builder.model.v2.models.BasicAndroidProject
 import com.android.builder.model.v2.models.BuildMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
@@ -119,6 +120,7 @@ class GetAndroidModelV2Action(
                 if (buildMap == null) {
                     buildMap = buildController.findModel(project, BuildMap::class.java)
                 }
+                val basicAndroidProject = buildController.findModel(project, BasicAndroidProject::class.java)
                 val androidProject = buildController.findModel(project, AndroidProject::class.java)
                 val androidDsl = buildController.findModel(project, AndroidDsl::class.java)
 
@@ -150,6 +152,7 @@ class GetAndroidModelV2Action(
                     ModelInfo(
                         project.projectDirectory,
                         modelVersions,
+                        basicAndroidProject,
                         androidProject,
                         androidDsl,
                         variantDependencies,
@@ -162,6 +165,7 @@ class GetAndroidModelV2Action(
                     ModelInfo(
                         project.projectDirectory,
                         versions = null,
+                        basicAndroidProject = null,
                         androidProject = null,
                         androidDsl = null,
                         variantDependencies = null,

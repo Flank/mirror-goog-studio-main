@@ -60,7 +60,7 @@ class HelloWorldAppAndLibModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -100,7 +100,7 @@ class AppAndLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -135,7 +135,7 @@ class AppAndJavaLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -184,7 +184,7 @@ class AppAndExternalJavaLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }
@@ -245,7 +245,7 @@ class AppAndExternalAarLibTestFixturesModelTest: ModelComparator() {
     @Test
     fun `test VariantDependencies`() {
         with(result).compareVariantDependencies(
-            modelAction = { getProject(":app") },
+            projectAction = { getProject(":app") },
             goldenFile = "VariantDependencies"
         )
     }

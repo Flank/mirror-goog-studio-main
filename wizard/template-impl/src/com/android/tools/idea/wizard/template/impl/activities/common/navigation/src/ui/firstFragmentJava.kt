@@ -16,7 +16,6 @@
 package com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui
 
 import com.android.tools.idea.wizard.template.Language
-import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.findViewById
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
@@ -50,23 +49,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
-import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
-import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
-import ${packageName}.R;
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
-public class ${firstFragmentClass} extends Fragment {
+public class $firstFragmentClass extends Fragment {
 
-    private ${navViewModelClass} ${navFragmentPrefix}ViewModel;
 ${renderIf(isViewBindingSupported) {"""
     private ${layoutToViewBindingClass(layoutName)} binding;
 """}}
 
     public View onCreateView(@NonNull LayoutInflater inflater,
             ViewGroup container, Bundle savedInstanceState) {
-        ${navFragmentPrefix}ViewModel =
+        $navViewModelClass ${navFragmentPrefix}ViewModel =
                 $viewModelInitializationBlock
         $onCreateViewBlock
         final TextView textView = ${findViewById(
@@ -74,12 +69,7 @@ ${renderIf(isViewBindingSupported) {"""
           isViewBindingSupported = isViewBindingSupported,
           id = "text_${navFragmentPrefix}",
           parentView = "root")};
-        ${navFragmentPrefix}ViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
-            }
-        });
+        ${navFragmentPrefix}ViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

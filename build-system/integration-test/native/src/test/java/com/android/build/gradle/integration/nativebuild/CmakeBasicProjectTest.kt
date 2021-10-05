@@ -45,6 +45,9 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.io.SynchronizeFile
+import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
+import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
@@ -713,6 +716,27 @@ apply plugin: 'com.android.application'
         assertThat(events).hasSize(2) // One for .o and one for .so
         assertThat(events["hello-jni.c.o"]).isEqualTo(2) // One each for two ABIs
         assertThat(events["libhello-jni.so"]).isEqualTo(2) // One each for two ABIs
+    }
+
+    @Test
+    fun `ensure that file synchronizations are hard links`() {
+        enableCxxStructuredLogging(project)
+        project.executor().run("assembleDebug")
+        val fileSyncs = project.readStructuredLogs(::decodeSynchronizeFile)
+        val syncs = fileSyncs
+            .groupBy {
+                val destination = File(it.destinationFile)
+                destination.relativeTo(destination.parentFile.parentFile).path
+            }
+            .map { group -> group.key.replace("\\", "/") to group.value.map { it.outcome }.distinct() }
+            .toMap()
+        println(syncs)
+        assertThat(syncs["armeabi-v7a/libhello-jni.so"]).containsExactly(
+            CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
+        )
+        assertThat(syncs["x86_64/libhello-jni.so"]).containsExactly(
+            CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
+        )
     }
 
     @Test
