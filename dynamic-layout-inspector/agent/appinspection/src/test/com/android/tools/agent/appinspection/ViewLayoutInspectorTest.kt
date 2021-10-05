@@ -33,7 +33,6 @@ import android.webkit.WebView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatButton
 import checkNextEventMatching
-import checkNonProgressEvent
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
@@ -57,9 +56,12 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
@@ -75,6 +77,27 @@ class ViewLayoutInspectorTest {
 
     @get:Rule
     val frameworkStateRule = FrameworkStateRule()
+
+    private val threadExceptions = mutableListOf<Throwable>()
+
+    @Before
+    fun trackThread() {
+        ThreadUtils.registerThread = {
+            it.uncaughtExceptionHandler =
+                Thread.UncaughtExceptionHandler { _, ex -> threadExceptions.add(ex) }
+        }
+    }
+
+    @After
+    fun reportThreadDeaths() {
+        ThreadUtils.registerThread = {}
+        try {
+            threadExceptions.forEach { throw it }
+        }
+        finally {
+            threadExceptions.clear()
+        }
+    }
 
     @Test
     fun canStartAndStopInspector() = createViewInspector { viewInspector ->
@@ -1430,6 +1453,71 @@ class ViewLayoutInspectorTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun treeWithEmptyRoots() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(5)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val mainScreen = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 400
+            height = 800
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(mainScreen))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        // Remove the root views simulating the app going into the background
+        WindowManagerGlobal.getInstance().rootViews.clear()
+
+        mainScreen.viewRootImpl = ViewRootImpl()
+        mainScreen.viewRootImpl.mSurface = Surface()
+        mainScreen.viewRootImpl.mSurface.bitmapBytes = byteArrayOf(1, 2, 3)
+        mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+    }
+
+    private fun checkNonProgressEvent(
+        eventQueue: BlockingQueue<ByteArray>, block: (Event) -> Unit
+    ) {
+        val startTime = System.currentTimeMillis()
+        var found = false
+        while (startTime + TimeUnit.SECONDS.toMillis(10) > System.currentTimeMillis()) {
+            val bytes = eventQueue.take()
+            val event = Event.parseFrom(bytes)
+            if (event.specializedCase == Event.SpecializedCase.PROGRESS_EVENT) {
+                // skip progress events for this test
+                continue
+            }
+            block(event)
+            found = true
+            break
+        }
+        assertThat(found).isTrue()
     }
 
         // TODO: Add test for filtering system views and properties

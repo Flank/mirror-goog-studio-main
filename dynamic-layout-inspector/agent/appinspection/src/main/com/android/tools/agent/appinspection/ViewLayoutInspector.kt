@@ -513,13 +513,18 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         state.snapshotRequests.remove(root.uniqueDrawingId)
                     }
 
+                    // This root is no longer visible. Ignore this update.
+                    if (!rootsDetector.lastRootIds.contains(root.uniqueDrawingId)) {
+                        return@run
+                    }
+
                     val screenshot = when(screenshotSettings.type) {
                         Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
                         Screenshot.Type.BITMAP -> {
                             // If this is the lowest z-index window (the normal case) we can be more
                             // efficient because we don't need alpha information.
                             val bitmapType =
-                                if (root.uniqueDrawingId == rootsDetector.lastRootIds.first())
+                                if (root.uniqueDrawingId == rootsDetector.lastRootIds.firstOrNull())
                                     BitmapType.RGB_565 else BitmapType.ABGR_8888
                             root.takeScreenshot(screenshotSettings.scale, bitmapType)
                                 ?.toByteArray()
