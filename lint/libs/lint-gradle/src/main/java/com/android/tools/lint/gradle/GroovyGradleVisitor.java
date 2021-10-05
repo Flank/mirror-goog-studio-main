@@ -136,7 +136,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                             && expressions.get(0) instanceof ClosureExpression) {
                                         // a pure block has its effect recorded in mMethodCallStack
                                         // but may need to be inspected for deprecations
-                                        checkMethodCall(
+                                        maybeCheckMethodCall(
                                                 parent,
                                                 parentParent,
                                                 parent3,
@@ -144,7 +144,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                                 namedArguments,
                                                 call);
                                     } else {
-                                        checkMethodCall(
+                                        maybeCheckMethodCall(
                                                 parent,
                                                 parentParent,
                                                 parent3,
@@ -160,7 +160,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                                 call);
                                     }
                                 } else {
-                                    checkMethodCall(
+                                    maybeCheckMethodCall(
                                             parent,
                                             parentParent,
                                             parent3,
@@ -200,7 +200,6 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         }
                     }
 
-                    @NonNull
                     private String getParent() {
                         return getParentN(1);
                     }
@@ -296,33 +295,35 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         return result;
                     }
 
-                    private void checkMethodCall(
-                            @NonNull String methodName,
+                    private void maybeCheckMethodCall(
+                            @Nullable String methodName,
                             @Nullable String parent,
                             @Nullable String parentParent,
                             List<String> unnamedArguments,
                             Map<String, String> namedArguments,
                             MethodCallExpression call) {
-                        for (GradleScanner scanner : detectors) {
-                            scanner.checkMethodCall(
-                                    context,
-                                    methodName,
-                                    parent,
-                                    parentParent,
-                                    namedArguments,
-                                    unnamedArguments,
-                                    call);
+                        if (methodName != null) {
+                            for (GradleScanner scanner : detectors) {
+                                scanner.checkMethodCall(
+                                        context,
+                                        methodName,
+                                        parent,
+                                        parentParent,
+                                        namedArguments,
+                                        unnamedArguments,
+                                        call);
+                            }
                         }
                     }
 
                     private void maybeCheckDslProperty(
-                            @NonNull String property,
+                            @Nullable String property,
                             @Nullable String parent,
                             @Nullable String parentParent,
                             List<String> unnamedArguments,
                             Map<String, String> namedArguments,
                             MethodCallExpression c) {
-                        if (parent != null) {
+                        if (property != null && parent != null) {
                             String value = null;
                             if (unnamedArguments.size() == 1 && namedArguments.size() == 0) {
                                 value = unnamedArguments.get(0);
