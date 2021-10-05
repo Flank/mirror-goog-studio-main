@@ -353,3 +353,38 @@ filegroup(
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.studio-checks",
+    iml_files = ["studio-checks/android.sdktools.lint.studio-checks.iml"],
+    test_srcs = ["studio-checks/src/main/java"],
+    test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin[test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.studio-checks.tests",
+    iml_files = ["studio-checks/android.sdktools.lint.studio-checks.tests.iml"],
+    test_srcs = ["studio-checks/src/test/java"],
+    test_tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint.studio-checks[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)
