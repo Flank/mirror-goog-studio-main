@@ -19,7 +19,7 @@ package com.android.tools.deploy.instrument;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-final class ReflectionHelpers {
+public final class ReflectionHelpers {
 
     public static Object getDeclaredField(Object object, String name) throws Exception {
         Class<?> clazz = object.getClass();

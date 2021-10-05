@@ -53,15 +53,24 @@ kotlin_library(
 )
 
 coverage_java_library(
-    name = "runtime_java",
+    name = "instrument_java",
     srcs = [
         "//tools/base/deploy/sites:Sites.java",
     ] + glob([
         "src/main/java/com/android/tools/deploy/instrument/**/*.java",
-        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+    ],
+)
+
+coverage_java_library(
+    name = "liveedit_java",
+    srcs = glob([
+        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
+    ]),
+    deps = [
+        ":instrument_java",
         "//tools/base/annotations",
 
         # For prototyping LE, we will check in our own version of the
@@ -90,9 +99,12 @@ coverage_java_test(
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
+        ":asm4",
         ":eval4j",
+        ":instrument_java",
+        ":interpreter_common",
         ":kotlin-stdlib",
-        ":runtime_java",
+        ":liveedit_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
@@ -105,7 +117,8 @@ dex_library(
     dexer = "D8",
     flags = ["--min-api 26"],
     jars = [
-        ":runtime_java",
+        ":instrument_java",
+        ":liveedit_java",
         ":eval4j",
         ":interpreter_common",
         ":asm4",

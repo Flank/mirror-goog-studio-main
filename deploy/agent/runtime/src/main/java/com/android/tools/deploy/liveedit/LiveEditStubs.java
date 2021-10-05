@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.deploy.instrument;
+package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
-import com.android.tools.deploy.liveedit.MethodBodyEvaluator;
 import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
