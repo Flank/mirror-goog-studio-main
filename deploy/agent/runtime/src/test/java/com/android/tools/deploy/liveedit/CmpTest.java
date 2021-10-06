@@ -150,6 +150,14 @@ public class CmpTest {
 
         result = ev.evalStatic(new Object[] {null, null});
         Assert.assertEquals("icmpLe", CmpTarget.testIcmpLe(null, null), result);
+
+        // Use a value to remain outside of Integer cache [-128, 127], otherwise we
+        // get the same object.
+        Integer i1 = 1000;
+        Integer i2 = 1000;
+
+        result = ev.evalStatic(new Object[]{i1, i2});
+        Assert.assertEquals("icmpLe", CmpTarget.testIcmpLe(i1, i2), result);
     }
 
     @org.junit.Test
@@ -174,8 +182,10 @@ public class CmpTest {
         result = ev.evalStatic(new Object[] {null, null});
         Assert.assertEquals("icmpNe", CmpTarget.testIcmpNe(null, null), result);
 
-        Integer i1 = 1;
-        Integer i2 = 1;
+        // Use a value to remain outside of Integer cache [-128, 127], otherwise we
+        // get the same object.
+        Integer i1 = 1000;
+        Integer i2 = 1000;;
         result = ev.evalStatic(new Object[] {i1, i2});
         Assert.assertEquals("icmpNe", CmpTarget.testIcmpNe(i1, i2), result);
     }

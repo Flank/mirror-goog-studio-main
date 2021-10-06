@@ -770,9 +770,9 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IF_ICMPGE:
                 return value1.getInt() >= value2.getInt();
             case IF_ACMPEQ:
-                return Objects.equals(value1.obj(), value2.obj());
+                return value1.obj() == value2.obj();
             case IF_ACMPNE:
-                return !Objects.equals(value1.obj(), value2.obj());
+                return value1.obj() != value2.obj();
             default:
                 throw new UnsupportedByteCodeException("Unknown opcode: " + opcode);
         }
