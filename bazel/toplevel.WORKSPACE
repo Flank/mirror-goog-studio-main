@@ -458,6 +458,7 @@ local_maven_repository(
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:" + KOTLIN_IDE_VERSION,
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.31",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21",
+        "org.jetbrains.kotlin:kotlin-test-junit:1.5.31",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.6",
