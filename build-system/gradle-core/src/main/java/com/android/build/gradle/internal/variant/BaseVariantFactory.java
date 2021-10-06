@@ -45,10 +45,10 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BaseServices;
-import com.android.build.gradle.internal.services.BaseServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.IssueReporter;
@@ -65,13 +65,16 @@ public abstract class BaseVariantFactory<
 
     @NonNull protected final ProjectServices projectServices;
     @NonNull protected final GlobalScope globalScope;
-    @Deprecated @NonNull private final BaseServices servicesForOldVariantObjectsOnly;
+
+    @Deprecated @NonNull
+    private final VariantPropertiesApiServices servicesForOldVariantObjectsOnly;
 
     public BaseVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
         this.projectServices = projectServices;
         this.globalScope = globalScope;
-        servicesForOldVariantObjectsOnly = new BaseServicesImpl(projectServices);
+        servicesForOldVariantObjectsOnly =
+                new VariantPropertiesApiServicesImpl(projectServices, false);
     }
 
     @NonNull

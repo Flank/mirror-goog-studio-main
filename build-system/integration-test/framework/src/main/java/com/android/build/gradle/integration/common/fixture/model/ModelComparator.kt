@@ -269,6 +269,7 @@ class Comparator(
         } else {
             "${testClass.javaClass.simpleName}.txt"
         }
+        println("Golden file loaded from $resourceName")
         return Resources.toString(
             Resources.getResource(testClass.javaClass, resourceName
             ), Charsets.UTF_8

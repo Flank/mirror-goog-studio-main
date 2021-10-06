@@ -20,6 +20,7 @@ import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -144,6 +145,9 @@ interface VariantPropertiesApiServices : BaseServices {
      * During configuration the property will be marked as [Property.disallowUnsafeRead] if
      * [disallowUnsafeRead] is set to true. If false, the property value access will be allowed.
      *
+     * [value] will be used to initialize the property value and further changes will be disallowed
+     * unless [disallowChanges] is set to true.
+     *
      * The [ListProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      *
@@ -153,7 +157,7 @@ interface VariantPropertiesApiServices : BaseServices {
     fun <T> listPropertyOf(
         type: Class<T>,
         value: Collection<T>,
-        disallowUnsafeRead: Boolean = true
+        disallowUnsafeRead: Boolean = true,
     ): ListProperty<T>
 
     /**
@@ -286,6 +290,19 @@ interface VariantPropertiesApiServices : BaseServices {
     fun <T> newProviderBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String = ""): Provider<T>
 
     /**
+     * Creates a new [ListProperty] of [T] that is backing an old API returning T.
+     *
+     * By default, this property is memoized with [Property.finalizeValueOnRead] but access
+     * to the old API getter will require disabling memoization
+     *
+     * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
+     * unsafe reads (which will also finalize the value on read).
+     *
+     * The property will be locked with [Property.disallowChanges] unless [disallowChanges] is true
+     */
+    fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>, disallowChanges: Boolean = true, id: String = ""): ListProperty<T>
+
+    /**
      * Creates a memoized Provider around the given provider
      *
      * During configuration the property will be marked as [Property.disallowUnsafeRead] to disallow
@@ -335,8 +352,10 @@ interface VariantPropertiesApiServices : BaseServices {
 
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
-    fun fileTree(): ConfigurableFileTree
     fun fileTree(dir: Any): ConfigurableFileTree
+
+    fun directoryProperty(): DirectoryProperty
+    fun fileTree(): ConfigurableFileTree
 
     fun lockProperties()
 }

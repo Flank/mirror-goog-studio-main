@@ -43,7 +43,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
 import org.gradle.process.CommandLineArgumentProvider
-import java.util.concurrent.Callable
 
 /**
  * [TaskCreationAction] for the [JavaCompile] task.
@@ -251,8 +250,8 @@ private fun JavaCompile.recordAnnotationProcessors(
 }
 
 fun computeJavaSource(creationConfig: ComponentCreationConfig, project: Project): FileTree {
-    // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-    val sourcesToCompile = Callable { listOf(creationConfig.javaSources) }
+    // do not resolve the provider before execution phase, b/117161463.
+    val sourcesToCompile = creationConfig.sources.java.getAsFileTrees()
     // Include only java sources, otherwise we hit b/144249620.
     val javaSourcesFilter = PatternSet().include("**/*.java")
     return project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)

@@ -75,15 +75,6 @@ class LibraryVariantData(
 
     // Overridden to add source folders to a generateAnnotationsTask, if it exists.
     override fun registerJavaGeneratingTask(
-        task: Task,
-        generatedSourceFolders: Collection<File>
-    ) {
-        super.registerJavaGeneratingTask(task, generatedSourceFolders)
-        addSourcesToGenerateAnnotationsTask(generatedSourceFolders)
-    }
-
-    // Overridden to add source folders to a generateAnnotationsTask, if it exists.
-    override fun registerJavaGeneratingTask(
         taskProvider: TaskProvider<out Task>,
         generatedSourceFolders: Collection<File>
     ) {
@@ -91,6 +82,7 @@ class LibraryVariantData(
         addSourcesToGenerateAnnotationsTask(generatedSourceFolders)
     }
 
+    // TODO: remove and use a normal dependency on the final list of source files.
     private fun addSourcesToGenerateAnnotationsTask(sourceFolders: Collection<File>) {
         taskContainer.generateAnnotationsTask?.let { taskProvider ->
             taskProvider.configure { task ->

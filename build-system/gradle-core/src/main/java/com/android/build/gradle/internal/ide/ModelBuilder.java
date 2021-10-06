@@ -1128,12 +1128,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                 component.getVariantSources().getMultiFlavorSourceProvider();
 
         return new SourceProviders(
-                variantSourceProvider != null ?
-                        new SourceProviderImpl(variantSourceProvider) :
-                        null,
-                multiFlavorSourceProvider != null ?
-                        new SourceProviderImpl(multiFlavorSourceProvider) :
-                        null);
+                variantSourceProvider != null
+                        ? new SourceProviderImpl(variantSourceProvider, component.getSources())
+                        : null,
+                multiFlavorSourceProvider != null
+                        ? new SourceProviderImpl(multiFlavorSourceProvider)
+                        : null);
     }
 
     @NonNull
@@ -1154,7 +1154,15 @@ public class ModelBuilder<Extension extends BaseExtension>
     private static FileCollection getGeneratedSourceFoldersFileCollectionForUnitTests(
             @NonNull ComponentImpl component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
-        fileCollection.from(component.getVariantData().getExtraGeneratedSourceFolders());
+        fileCollection.from(
+                component
+                        .getSources()
+                        .getJava()
+                        .variantSourcesForModel$gradle_core(
+                                directoryEntry ->
+                                        directoryEntry.isGenerated()
+                                                && directoryEntry.getShouldBeAddedToIdeModel()));
+        fileCollection.from(component.getVariantData().getExtraGeneratedSourceFoldersOnlyInModel());
         fileCollection.from(
                 component.getArtifacts().get(InternalArtifactType.AP_GENERATED_SOURCES.INSTANCE));
         fileCollection.disallowChanges();

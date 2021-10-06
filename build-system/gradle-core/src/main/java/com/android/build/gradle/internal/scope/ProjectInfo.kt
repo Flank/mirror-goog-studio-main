@@ -27,7 +27,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.resources.TextResource
-import org.gradle.api.services.BuildServiceRegistry
 import java.io.File
 
 /**

@@ -64,28 +64,44 @@ internal class VariantPathHelperTest {
 
     @Test
     fun testCustomAbiBuildLocation() {
-        val variantPathHelper = VariantPathHelper(buildDirectory, variantDslInfo, dslServices)
+        val variantPathHelper = VariantPathHelper(
+            buildDirectory,
+            variantDslInfo,
+            dslServices
+        )
         doReturn("x86").`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
         Truth.assertThat(variantPathHelper.apkLocation.absolutePath).contains("intermediates")
     }
 
     @Test
     fun testCustomDensityBuildLocation() {
-        val variantPathHelper = VariantPathHelper(buildDirectory, variantDslInfo, dslServices)
+        val variantPathHelper = VariantPathHelper(
+            buildDirectory,
+            variantDslInfo,
+            dslServices
+        )
         doReturn("xxdpi").`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_DENSITY)
         Truth.assertThat(variantPathHelper.apkLocation.absolutePath).contains("intermediates")
     }
 
     @Test
     fun testCustomAPIBuildLocation() {
-        val variantPathHelper = VariantPathHelper(buildDirectory, variantDslInfo, dslServices)
+        val variantPathHelper = VariantPathHelper(
+            buildDirectory,
+            variantDslInfo,
+            dslServices
+        )
         doReturn(21).`when`(projectOptions).get(IntegerOption.IDE_TARGET_DEVICE_API)
         Truth.assertThat(variantPathHelper.apkLocation.absolutePath).contains("intermediates")
     }
 
     @Test
     fun testIdeBuildLocation() {
-        val variantPathHelper = VariantPathHelper(buildDirectory, variantDslInfo, dslServices)
+        val variantPathHelper = VariantPathHelper(
+            buildDirectory,
+            variantDslInfo,
+            dslServices
+        )
         // necessary, otherwise mockito will return 0.
         doReturn(null).`when`(projectOptions).get(IntegerOption.IDE_TARGET_DEVICE_API)
         doReturn(true).`when`(projectOptions).get(BooleanOption.IDE_INVOKED_FROM_IDE)
@@ -94,7 +110,11 @@ internal class VariantPathHelperTest {
 
     @Test
     fun testNormalBuildLocation() {
-        val variantPathHelper = VariantPathHelper(buildDirectory, variantDslInfo, dslServices)
+        val variantPathHelper = VariantPathHelper(
+            buildDirectory,
+            variantDslInfo,
+            dslServices
+        )
         // necessary, otherwise mockito will return 0.
         doReturn(null).`when`(projectOptions).get(IntegerOption.IDE_TARGET_DEVICE_API)
         Truth.assertThat(variantPathHelper.apkLocation.absolutePath).contains("outputs")

@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
 import com.android.build.gradle.internal.utils.GradleEnvironmentProviderImpl
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.services.BuildServiceRegistry
 
 /**

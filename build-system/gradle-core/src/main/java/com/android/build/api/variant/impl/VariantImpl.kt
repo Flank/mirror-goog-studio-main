@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -215,14 +214,18 @@ abstract class VariantImpl(
      * adds renderscript sources if present.
      */
     override fun addRenderscriptSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+            sourceSets: ImmutableList.Builder<DirectoryEntry>,
     ) {
         renderscript?.let {
             if (!it.ndkModeEnabled.get()
                 && taskContainer.renderscriptCompileTask != null
             ) {
-                val rsFC = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
-                sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
+                sourceSets.add(
+                    TaskProviderBasedDirectoryEntryImpl(
+                        name = "generated_renderscript",
+                        directoryProvider = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR),
+                    )
+                )
             }
         }
     }

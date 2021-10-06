@@ -19,10 +19,8 @@ package com.android.build.gradle.internal.services
 import com.android.build.gradle.internal.lint.LintFromMaven
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 class TaskCreationServicesImpl(projectServices: ProjectServices) : BaseServicesImpl(projectServices), TaskCreationServices {

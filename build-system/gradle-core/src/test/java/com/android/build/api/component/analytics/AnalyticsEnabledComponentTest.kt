@@ -22,6 +22,7 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -193,5 +194,22 @@ class AnalyticsEnabledComponentTest {
         ).isEqualTo(VariantPropertiesMethodType.JAVA_COMPILATION_OPTIONS_VALUE)
         Mockito.verify(delegate, times(1))
             .javaCompilation
+    }
+
+    @Test
+    fun getSources() {
+        val sources = Mockito.mock(Sources::class.java)
+        Mockito.`when`(delegate.sources).thenReturn(sources)
+
+        val sourcesProxy = proxy.sources
+        Truth.assertThat(sources.javaClass).`is`(AnalyticsEnabledSources::class.java)
+        Truth.assertThat((sourcesProxy as AnalyticsEnabledSources).delegate)
+            .isEqualTo(sources)
+
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.COMPONENT_SOURCES_ACCESS_VALUE)
+        Mockito.verify(delegate, times(1))
+            .sources
     }
 }

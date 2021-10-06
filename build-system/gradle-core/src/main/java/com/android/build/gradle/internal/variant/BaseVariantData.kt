@@ -31,11 +31,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.google.common.base.MoreObjects
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.resources.TextResource
@@ -60,9 +58,7 @@ abstract class BaseVariantData(
 ) {
 
     // Storage for Old Public API
-    val extraGeneratedSourceFolders: MutableList<File> = mutableListOf()
-    internal var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
-    internal var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
+    val extraGeneratedSourceFoldersOnlyInModel: MutableList<File> = mutableListOf()
     val extraGeneratedResFolders: ConfigurableFileCollection = services.fileCollection()
     private var preJavacGeneratedBytecodeMap: MutableMap<Any, FileCollection>? = null
     private var preJavacGeneratedBytecodeLatest: FileCollection = services.fileCollection()
@@ -112,61 +108,22 @@ abstract class BaseVariantData(
     }
 
     fun addJavaSourceFoldersToModel(generatedSourceFolder: File) {
-        extraGeneratedSourceFolders.add(generatedSourceFolder)
+        extraGeneratedSourceFoldersOnlyInModel.add(generatedSourceFolder)
     }
 
     fun addJavaSourceFoldersToModel(vararg generatedSourceFolders: File) {
         Collections
-            .addAll(extraGeneratedSourceFolders, *generatedSourceFolders)
+            .addAll(extraGeneratedSourceFoldersOnlyInModel, *generatedSourceFolders)
     }
 
     fun addJavaSourceFoldersToModel(generatedSourceFolders: Collection<File>) {
-        extraGeneratedSourceFolders.addAll(generatedSourceFolders)
-    }
-
-    open fun registerJavaGeneratingTask(
-        task: Task,
-        generatedSourceFolders: Collection<File>
-    ) {
-        @Suppress("DEPRECATION")
-        taskContainer.sourceGenTask.dependsOn(task)
-
-        val fileTrees = extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-            extraGeneratedSourceFileTrees = it
-        }
-
-        for (f in generatedSourceFolders) {
-            val fileTree = services.fileTree(f).builtBy(task)
-            fileTrees.add(fileTree)
-        }
-        addJavaSourceFoldersToModel(generatedSourceFolders)
+        extraGeneratedSourceFoldersOnlyInModel.addAll(generatedSourceFolders)
     }
 
     open fun registerJavaGeneratingTask(
         taskProvider: TaskProvider<out Task>,
         generatedSourceFolders: Collection<File>
     ) {
-        taskContainer.sourceGenTask.dependsOn(taskProvider)
-
-        val fileTrees =
-            extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-                extraGeneratedSourceFileTrees = it
-            }
-
-        for (f in generatedSourceFolders) {
-            val fileTree = services.fileTree(f).builtBy(taskProvider)
-            fileTrees.add(fileTree)
-        }
-        addJavaSourceFoldersToModel(generatedSourceFolders)
-    }
-
-    fun registerExternalAptJavaOutput(folder: ConfigurableFileTree) {
-        val fileTrees = externalAptJavaOutputFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
-            externalAptJavaOutputFileTrees = it
-        }
-
-        fileTrees.add(folder)
-        addJavaSourceFoldersToModel(folder.dir)
     }
 
     fun registerGeneratedResFolders(folders: FileCollection) {

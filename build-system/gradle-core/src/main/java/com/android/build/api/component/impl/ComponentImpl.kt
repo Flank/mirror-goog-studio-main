@@ -30,6 +30,11 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
+import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.api.variant.impl.SourceType
+import com.android.build.api.variant.impl.SourcesImpl
+import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -79,9 +84,7 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -141,7 +144,17 @@ abstract class ComponentImpl(
             buildFeatures.dataBinding,
             internalServices)
 
-    // ---------------------------------------------------------------------------------------------
+    override val sources: SourcesImpl by lazy {
+        SourcesImpl(
+            ::defaultSources,
+            internalServices.projectInfo.projectDirectory,
+            internalServices,
+            variantSources.variantSourceProvider,
+        )
+    }
+
+
+// ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
@@ -501,63 +514,55 @@ abstract class ComponentImpl(
     }
 
     /**
-     * Computes the Java sources to use for compilation.
-     *
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     * Computes the default sources for a particular [SourceType].
      */
-    override val javaSources: List<ConfigurableFileTree>
-        get() {
-            // Shortcut for the common cases, otherwise we build the full list below.
-            if (variantData.extraGeneratedSourceFileTrees == null
-                && variantData.externalAptJavaOutputFileTrees == null
-            ) {
-                return defaultJavaSources
-            }
-
-            // Build the list of source folders.
-            val sourceSets = ImmutableList.builder<ConfigurableFileTree>()
-
-            // First the default source folders.
-            sourceSets.addAll(defaultJavaSources)
-
-            // then the third party ones
-            variantData.extraGeneratedSourceFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-            variantData.externalAptJavaOutputFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-
-            return sourceSets.build()
+    private fun defaultSources(type: SourceType): List<DirectoryEntry> {
+        return when(type) {
+            SourceType.JAVA -> defaultJavaSources()
         }
+    }
 
     /**
      * Computes the default java sources: source sets and generated sources.
-     *
+     * For access to the final list of java sources, use [sources]
      *
      * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    private val defaultJavaSources: List<ConfigurableFileTree> by lazy {
+    private fun defaultJavaSources(): List<DirectoryEntry> {
         // Build the list of source folders.
-        val sourceSets = ImmutableList.builder<ConfigurableFileTree>()
+        val sourceSets = ImmutableList.builder<DirectoryEntry>()
 
         // First the actual source folders.
         val providers = variantSources.sortedSourceProviders
-        for (provider in providers) {
-            sourceSets.addAll((provider as AndroidSourceSet).java.getSourceDirectoryTrees())
+        for (provider  in providers) {
+            val sourceSet = provider as AndroidSourceSet
+            for (srcDir in sourceSet.java.srcDirs) {
+                sourceSets.add(
+                    FileBasedDirectoryEntryImpl(
+                        name = sourceSet.name,
+                        directory = srcDir,
+                        filter = (provider as AndroidSourceSet).java.filter,
+                    )
+                )
+            }
         }
 
         // for the other, there's no duplicate so no issue.
         if (getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
-            val generatedBuildConfig =
-                artifacts.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
-            sourceSets.add(internalServices.fileTree(generatedBuildConfig)
-                .builtBy(generatedBuildConfig))
+            sourceSets.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    "generated_build_config",
+                    artifacts.get(GENERATED_BUILD_CONFIG_JAVA),
+                )
+            )
         }
         if (taskContainer.aidlCompileTask != null) {
-            val aidlFC = artifacts.get(AIDL_SOURCE_OUTPUT_DIR)
-            sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
+            sourceSets.add(
+                TaskProviderBasedDirectoryEntryImpl(
+                    "generated_aidl",
+                    artifacts.get(AIDL_SOURCE_OUTPUT_DIR),
+                )
+            )
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
             // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
@@ -570,27 +575,34 @@ abstract class ComponentImpl(
                 if (!artifacts.getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
-                    sourceSets.add(internalServices.fileTree(artifacts.get(DATA_BINDING_TRIGGER)))
+                    sourceSets.add(
+                        TaskProviderBasedDirectoryEntryImpl(
+                            name = "databinding_generated",
+                            directoryProvider = artifacts.get(DATA_BINDING_TRIGGER),
+                        )
+                    )
                 }
             }
             addDataBindingSources(sourceSets)
         }
         addRenderscriptSources(sourceSets)
         if (buildFeatures.mlModelBinding) {
-            val mlModelClassSourceOut: Provider<Directory> =
-                artifacts.get(ML_SOURCE_OUT)
             sourceSets.add(
-                internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
+                TaskProviderBasedDirectoryEntryImpl(
+                    name = "mlModel_generated",
+                    directoryProvider = artifacts.get(ML_SOURCE_OUT),
+                    shouldBeAddedToIdeModel = false,
+                )
             )
         }
-        sourceSets.build()
+        return sourceSets.build()
     }
 
     /**
      * adds renderscript sources if present.
      */
     open fun addRenderscriptSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+        sourceSets: ImmutableList.Builder<DirectoryEntry>,
     ) {
         // not active by default, only sub types will have renderscript enabled.
     }
@@ -599,10 +611,14 @@ abstract class ComponentImpl(
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+        sourceSets: ImmutableList.Builder<DirectoryEntry>
     ) {
-        val baseClassSource = artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
-        sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
+        sourceSets.add(
+            TaskProviderBasedDirectoryEntryImpl(
+                "databinding_generated",
+                artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT),
+            )
+        )
     }
 
     /**

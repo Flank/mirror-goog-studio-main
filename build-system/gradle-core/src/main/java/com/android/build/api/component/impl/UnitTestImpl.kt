@@ -27,6 +27,7 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -44,7 +45,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -122,7 +122,7 @@ open class UnitTestImpl @Inject constructor(
                 || variantDslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
+        sourceSets: ImmutableList.Builder<DirectoryEntry>) {}
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

@@ -24,6 +24,7 @@ import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -36,12 +37,12 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
@@ -108,6 +109,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val variantSources: VariantSources
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
+    val sources: SourcesImpl
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper
@@ -152,11 +154,6 @@ interface ComponentCreationConfig : ComponentIdentity {
         classesType: AndroidArtifacts.ArtifactType,
         generatedBytecodeKey: Any? = null
     ): FileCollection
-
-    /**
-     * Get the list of folders containing compilable source files.
-     */
-    val javaSources: List<ConfigurableFileTree>
 
     val needsMainDexListForBundle: Boolean
         get() = false

@@ -376,7 +376,11 @@ class VariantManager<
 
         // Done. Create the (too) many variant objects
         val pathHelper =
-            VariantPathHelper(project.layout.buildDirectory, variantDslInfo, dslServices)
+            VariantPathHelper(
+                project.layout.buildDirectory,
+                variantDslInfo,
+                dslServices
+            )
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
@@ -559,7 +563,11 @@ class VariantManager<
             .overrideVariantNameAttribute(mainComponentInfo.variant.name)
             .build()
         val pathHelper =
-            VariantPathHelper(project.layout.buildDirectory, variantDslInfo, dslServices)
+            VariantPathHelper(
+                project.layout.buildDirectory,
+                variantDslInfo,
+                dslServices
+            )
         val componentIdentity = variantDslInfo.componentIdentity
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
@@ -746,7 +754,11 @@ class VariantManager<
                .setTestFixturesEnabled(testFixturesEnabled)
         val variantDependencies = builder.build()
         val pathHelper =
-            VariantPathHelper(project.layout.buildDirectory, variantDslInfo, dslServices)
+            VariantPathHelper(
+                project.layout.buildDirectory,
+                variantDslInfo,
+                dslServices
+            )
         val componentIdentity = variantDslInfo.componentIdentity
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()

@@ -22,7 +22,7 @@ import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
@@ -39,7 +39,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
 
     protected AndroidArtifactVariantImpl(
             @NonNull ComponentImpl component,
-            @NonNull BaseServices services,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         super(component, services, immutableObjectProvider, outputs);

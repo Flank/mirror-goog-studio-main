@@ -21,6 +21,7 @@ import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.HasConfigurableValue
 import org.gradle.api.provider.ListProperty
@@ -125,15 +126,15 @@ class VariantPropertiesApiServicesImpl(
     override fun <T> listPropertyOf(
         type: Class<T>,
         value: Collection<T>,
-        disallowUnsafeRead: Boolean
+        disallowUnsafeRead: Boolean,
     ): ListProperty<T> {
         return projectServices.objectFactory.listProperty(type).also {
             it.set(value)
             it.finalizeValueOnRead()
+            delayedLock(it)
             if (disallowUnsafeRead && !forUnitTesting) {
                 it.disallowUnsafeRead()
             }
-            delayedLock(it)
         }
     }
 
@@ -244,6 +245,21 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> newListPropertyBackingDeprecatedApi(type: Class<T>, values: Collection<T>, disallowChanges: Boolean, id: String): ListProperty<T> {
+        return initializeListProperty(type, id).also {
+            it.addAll(values)
+            if (disallowChanges) {
+                it.disallowChanges()
+            }
+            if (!compatibilityMode) {
+                it.finalizeValueOnRead()
+                if (!forUnitTesting) {
+                    it.disallowUnsafeRead()
+                }
+            }
+        }
+    }
+
     override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String
     ): Property<T?> {
         return initializeNullableProperty(type, id).also {
@@ -307,6 +323,14 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun directoryProperty(): DirectoryProperty =
+        projectServices.objectFactory.directoryProperty().also {
+            properties.add(it)
+        }
+
+    override fun fileTree(): ConfigurableFileTree =
+        projectServices.objectFactory.fileTree()
+
     override fun <T> provider(callable: Callable<T>): Provider<T> {
         return projectServices.providerFactory.provider(callable)
     }
@@ -325,8 +349,6 @@ class VariantPropertiesApiServicesImpl(
 
     override fun fileCollection(vararg files: Any): ConfigurableFileCollection =
         projectServices.objectFactory.fileCollection().from(*files)
-
-    override fun fileTree(): ConfigurableFileTree = projectServices.objectFactory.fileTree()
 
     override fun fileTree(dir: Any): ConfigurableFileTree {
         val result = projectServices.objectFactory.fileTree().setDir(dir)
@@ -381,4 +403,7 @@ class VariantPropertiesApiServicesImpl(
             projectServices.objectFactory.property(type)
         }
     }
+
+    private fun <T> initializeListProperty(type: Class<T>, id: String): ListProperty<T> =
+        projectServices.objectFactory.listProperty(type)
 }

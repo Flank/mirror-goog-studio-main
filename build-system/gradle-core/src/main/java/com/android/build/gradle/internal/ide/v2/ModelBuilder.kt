@@ -580,7 +580,7 @@ class ModelBuilder<
         val sourceProviders = component.variantSources
 
         return BasicArtifactImpl(
-            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
+            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features, component.sources),
             multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
                 features
             ),

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.api.variant.impl.SourcesImpl;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.MoreObjects;
 import java.io.File;
@@ -61,6 +62,31 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.name = sourceProvider.getName();
         this.manifestFile = sourceProvider.getManifestFile();
         this.javaDirs = sourceProvider.getJavaDirectories();
+        this.kotlinDirs = sourceProvider.getKotlinDirectories();
+        this.resourcesDirs = sourceProvider.getResourcesDirectories();
+        this.aidlDirs = sourceProvider.getAidlDirectories();
+        this.rsDirs = sourceProvider.getRenderscriptDirectories();
+        this.resDirs = sourceProvider.getResDirectories();
+        this.assetsDirs = sourceProvider.getAssetsDirectories();
+        this.libsDirs = sourceProvider.getJniLibsDirectories();
+        this.shaderDirs = sourceProvider.getShadersDirectories();
+        this.mlModelsDirs = sourceProvider.getMlModelsDirectories();
+    }
+
+    /**
+     * @param sourceProvider SourceProvider for DSL specified source folders.
+     * @param variantSources Variant's {@link com.android.build.api.variant.Sources} if available or
+     *     null if there is no variant attached to this instance.
+     */
+    public SourceProviderImpl(
+            @NonNull SourceProvider sourceProvider, @NonNull SourcesImpl variantSources) {
+        this.name = sourceProvider.getName();
+        this.manifestFile = sourceProvider.getManifestFile();
+        this.javaDirs =
+                variantSources
+                        .getJava()
+                        .variantSourcesForModel$gradle_core(
+                                directoryEntry -> directoryEntry.isUserAdded());
         this.kotlinDirs = sourceProvider.getKotlinDirectories();
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();

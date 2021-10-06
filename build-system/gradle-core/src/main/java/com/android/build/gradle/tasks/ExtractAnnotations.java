@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -367,7 +366,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getStrictTypedefRetention(), strictTypedefRetention);
 
-            task.source(creationConfig.getJavaSources());
+            task.source(creationConfig.getSources().getJava().getAll());
             task.setEncoding(
                     creationConfig
                             .getGlobalScope()
@@ -393,7 +392,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             task.getLintTool().initialize(creationConfig.getServices());
             task.sourcesFileTree =
                     task.getProject()
-                            .files((Callable<List<Object>>) () -> task.sources)
+                            .files(creationConfig.getSources().getJava().getAll())
                             .getAsFileTree();
 
             HasConfigurableValuesKt.setDisallowChanges(

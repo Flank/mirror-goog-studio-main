@@ -23,7 +23,7 @@ import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -50,7 +50,7 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
             @NonNull ComponentImpl component,
-            @NonNull BaseServices services,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         super(component, services, readOnlyObjectProvider, outputs);

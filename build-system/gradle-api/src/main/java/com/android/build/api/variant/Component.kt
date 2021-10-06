@@ -31,6 +31,12 @@ interface Component: ComponentIdentity {
     val artifacts: Artifacts
 
     /**
+     * Access to variant's source files.
+     */
+    @get:Incubating
+    val sources: Sources
+
+    /**
      * Access to the variant's java compilation options.
      */
     @get:Incubating
