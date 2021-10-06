@@ -28,6 +28,8 @@ import com.google.testing.platform.proto.api.core.TestCaseProto.TestCase
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import com.google.testing.platform.runtime.android.controller.ext.deviceShell
+import com.google.testing.platform.runtime.android.controller.ext.isTestServiceInstalled
+import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -51,6 +53,10 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
         // matchResult.groups["link"]?.value.
         const private val BENCHMARK_LINK_REGEX_GROUP_INDEX = 3
         const private val BENCHMARK_TRACE_FILE_PREFIX = "file://"
+
+        // AndroidX Test Storage service's output directory on device.
+        // This constant value is a copy from TestStorageConstants.ON_DEVICE_PATH_TEST_OUTPUT.
+        const val TEST_STORAGE_SERVICE_OUTPUT_DIR = "/sdcard/googletest/test_outputfiles"
     }
 
     lateinit var config: AndroidAdditionalTestOutputConfig
@@ -63,6 +69,17 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     override fun beforeAll(deviceController: DeviceController) {
         createEmptyDirectoryOnHost()
         createEmptyDirectoryOnDevice(deviceController)
+
+        if (deviceController.isTestServiceInstalled()) {
+            val apiLevel = (deviceController.getDevice().properties as? AndroidDeviceProperties)
+                ?.deviceApiLevel?.toIntOrNull() ?: 0
+            if (apiLevel >= 30) {
+                // Grant MANAGE_EXTERNAL_STORAGE permission to androidx.test.services so that it
+                // can write test artifacts in external storage.
+                deviceController.deviceShellAndCheckSuccess(
+                    "appops set androidx.test.services MANAGE_EXTERNAL_STORAGE allow")
+            }
+        }
     }
 
     /**
@@ -85,6 +102,13 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
         val dir = config.additionalOutputDirectoryOnDevice
         deviceController.deviceShellAndCheckSuccess("rm -rf \"${dir}\"")
         deviceController.deviceShellAndCheckSuccess("mkdir -p \"${dir}\"")
+
+        if (deviceController.isTestServiceInstalled()) {
+            deviceController.deviceShellAndCheckSuccess(
+                "rm -rf \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}\"")
+            deviceController.deviceShellAndCheckSuccess(
+                "mkdir -p \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}\"")
+        }
     }
 
     override fun beforeEach(testCase: TestCase?, deviceController: DeviceController) {
@@ -199,14 +223,23 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
         testSuiteResult: TestSuiteResult,
         deviceController: DeviceController
     ): TestSuiteResult {
+        // TODO: Currently, this plugin copies additional test outputs after all test cases.
+        //       It can be moved to afterEach method and include them in the TestResult so that
+        //       Android Studio can display them in TestMatrix streamingly.
         try {
-            // TODO: Currently, this plugin copies additional test outputs after all test cases.
-            //       It can be moved to afterEach method and include them in the TestResult so that
-            //       Android Studio can display them in TestMatrix streamingly.
             copyAdditionalTestOutputsFromDeviceToHost(deviceController)
         } catch (e: Exception) {
             logger.log(Level.WARNING, e) {
                 "Failed to retrieve additional test outputs from device."
+            }
+        }
+        try {
+            if (deviceController.isTestServiceInstalled()) {
+                copyTestStorageServiceOutputFilesFromDeviceToHost(deviceController)
+            }
+        } catch (e: Exception) {
+            logger.log(Level.WARNING, e) {
+                "Failed to retrieve test storage service outputs from device."
             }
         }
         return testSuiteResult
@@ -215,14 +248,39 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     private fun copyAdditionalTestOutputsFromDeviceToHost(deviceController: DeviceController) {
         val deviceDir = config.additionalOutputDirectoryOnDevice
         val hostDir = File(config.additionalOutputDirectoryOnHost).absolutePath
-        deviceController.deviceShellAndCheckSuccess("ls \"${deviceDir}\"")
+        copyFilesFromDeviceToHost(deviceController, deviceDir, hostDir)
+    }
+
+    private fun copyTestStorageServiceOutputFilesFromDeviceToHost(deviceController: DeviceController) {
+        val deviceDir = TEST_STORAGE_SERVICE_OUTPUT_DIR
+        val hostDir = File(config.additionalOutputDirectoryOnHost).absolutePath
+        copyFilesFromDeviceToHost(deviceController, deviceDir, hostDir)
+    }
+
+    private fun copyFilesFromDeviceToHost(
+        deviceController: DeviceController,
+        deviceDir: String,
+        hostDir: String) {
+        // Note: "ls -1" doesn't work on API level 21.
+        deviceController.deviceShellAndCheckSuccess("ls \"${deviceDir}\" | cat")
             .output
             .filter(String::isNotBlank)
             .forEach {
-                deviceController.pull(TestArtifactProto.Artifact.newBuilder().apply {
-                    destinationPathBuilder.path = "${deviceDir}/${it}"
-                    sourcePathBuilder.path = "${hostDir}${File.separator}${it}"
-                }.build())
+                val deviceFilePath = "${deviceDir}/${it}"
+                val hostFilePath = "${hostDir}${File.separator}${it}"
+                if (deviceController.isDirectory(deviceFilePath)) {
+                    File(hostFilePath).let {
+                        if (!it.exists()) {
+                            it.mkdirs()
+                        }
+                    }
+                    copyFilesFromDeviceToHost(deviceController, deviceFilePath, hostFilePath)
+                } else {
+                    deviceController.pull(TestArtifactProto.Artifact.newBuilder().apply {
+                        destinationPathBuilder.path = deviceFilePath
+                        sourcePathBuilder.path = hostFilePath
+                    }.build())
+                }
             }
     }
 
@@ -240,5 +298,10 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
             }
         }
         return result
+    }
+
+    private fun DeviceController.isDirectory(deviceFilePath: String): Boolean {
+        val result = deviceShell(listOf("[[ -d \"${deviceFilePath}\" ]]"))
+        return result.statusCode == 0
     }
 }

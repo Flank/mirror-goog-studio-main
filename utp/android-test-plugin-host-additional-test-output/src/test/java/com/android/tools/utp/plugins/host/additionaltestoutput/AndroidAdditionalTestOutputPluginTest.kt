@@ -18,16 +18,19 @@ package com.android.tools.utp.plugins.host.additionaltestoutput
 
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
+import com.android.testutils.MockitoKt.mock
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.config.ProtoConfig
 import com.google.testing.platform.api.device.CommandResult
+import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.core.TestResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -72,6 +75,17 @@ class AndroidAdditionalTestOutputPluginTest {
         }
     }
 
+    private fun installTestStorageService() {
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "pm", "list", "packages", "androidx.test.services")),
+            nullable(Long::class.java))
+        ).thenReturn(CommandResult(0, listOf("package:androidx.test.services")))
+
+        val mockDevice = mock<Device>()
+        `when`(mockDevice.properties).thenReturn(AndroidDeviceProperties(deviceApiLevel = "30"))
+        `when`(mockDeviceController.getDevice()).thenReturn(mockDevice)
+    }
+
     private fun createTestArtifact(
         filePathOnDevice: String, filePathOnHost: String): TestArtifactProto.Artifact {
         return TestArtifactProto.Artifact.newBuilder().apply {
@@ -114,9 +128,29 @@ class AndroidAdditionalTestOutputPluginTest {
         val deviceDir = "/onDevice/outputDir/"
 
         `when`(mockDeviceController.execute(
-            eq(listOf("shell", "ls \"${deviceDir}\"")),
+            eq(listOf("shell", "ls \"${deviceDir}\" | cat")),
             nullable(Long::class.java)
-        )).thenReturn(CommandResult(0, listOf("output1.txt", "output2.txt")))
+        )).thenReturn(CommandResult(0, listOf("output1.txt", "output2.txt", "subdir")))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/output1.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/output2.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "ls \"${deviceDir}/subdir\" | cat")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(0, listOf("output3.txt")))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/subdir/output3.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
 
         runPlugin {
             additionalOutputDirectoryOnHost = hostDir
@@ -126,14 +160,16 @@ class AndroidAdditionalTestOutputPluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf("shell", "rm -rf \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
-            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\" | cat"))
             verify(mockDeviceController).pull(createTestArtifact(
                 "${deviceDir}/output1.txt",
                 "${hostDir}${File.separator}output1.txt"))
             verify(mockDeviceController).pull(createTestArtifact(
                 "${deviceDir}/output2.txt",
                 "${hostDir}${File.separator}output2.txt"))
-            verifyNoMoreInteractions()
+            verify(mockDeviceController).pull(createTestArtifact(
+                "${deviceDir}/subdir/output3.txt",
+                "${hostDir}${File.separator}subdir${File.separator}output3.txt"))
         }
 
         verifyNoMoreInteractions(mockLogger)
@@ -146,7 +182,7 @@ class AndroidAdditionalTestOutputPluginTest {
         val deviceDir = "/onDevice/outputDir/"
 
         `when`(mockDeviceController.execute(
-            eq(listOf("shell", "ls \"${deviceDir}\"")),
+            eq(listOf("shell", "ls \"${deviceDir}\" | cat")),
             nullable(Long::class.java)
         )).thenReturn(CommandResult(0, listOf("output1.txt")))
 
@@ -154,6 +190,11 @@ class AndroidAdditionalTestOutputPluginTest {
             "${deviceDir}/output1.txt",
             "${hostDir}${File.separator}output1.txt"))))
             .thenThrow(exception)
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/output1.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
 
         runPlugin {
             additionalOutputDirectoryOnHost = hostDir
@@ -163,12 +204,11 @@ class AndroidAdditionalTestOutputPluginTest {
         inOrder(mockDeviceController, mockLogger).apply {
             verify(mockDeviceController).execute(listOf("shell", "rm -rf \"${deviceDir}\""))
             verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
-            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\" | cat"))
             verify(mockDeviceController).pull(createTestArtifact(
                 "${deviceDir}/output1.txt",
                 "${hostDir}${File.separator}output1.txt"))
             verify(mockLogger).log(eq(Level.WARNING), eq(exception), any())
-            verifyNoMoreInteractions()
         }
     }
 
@@ -235,5 +275,51 @@ class AndroidAdditionalTestOutputPluginTest {
             .isEqualTo("additionaltestoutput.benchmark.trace")
         assertThat(testResultAfterEach.getOutputArtifact(2).sourcePath.path)
             .isEqualTo("${hostDir}${File.separator}FrameTimingBenchmark_start_iter001_2021-07-15-21-33-09.trace")
+    }
+
+    @Test
+    fun runPluginWithTestStorageService() {
+        installTestStorageService()
+
+        val hostDir = tempDirs.newFolder().absolutePath
+        val deviceDir = AndroidAdditionalTestOutputPlugin.TEST_STORAGE_SERVICE_OUTPUT_DIR
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "ls \"${deviceDir}\" | cat")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(0, listOf("output1.txt", "output2.txt")))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/output1.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
+
+        `when`(mockDeviceController.execute(
+            eq(listOf("shell", "[[ -d \"${deviceDir}/output2.txt\" ]]")),
+            nullable(Long::class.java)
+        )).thenReturn(CommandResult(1, listOf()))
+
+        runPlugin {
+            additionalOutputDirectoryOnHost = hostDir
+            additionalOutputDirectoryOnDevice = deviceDir
+        }
+
+        inOrder(mockDeviceController).apply {
+            verify(mockDeviceController).execute(listOf("shell", "rm -rf \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf("shell", "mkdir -p \"${deviceDir}\""))
+            verify(mockDeviceController).execute(listOf(
+                "shell",
+                "appops set androidx.test.services MANAGE_EXTERNAL_STORAGE allow"
+            ))
+            verify(mockDeviceController).execute(listOf("shell", "ls \"${deviceDir}\" | cat"))
+            verify(mockDeviceController).pull(createTestArtifact(
+                "${deviceDir}/output1.txt",
+                "${hostDir}${File.separator}output1.txt"))
+            verify(mockDeviceController).pull(createTestArtifact(
+                "${deviceDir}/output2.txt",
+                "${hostDir}${File.separator}output2.txt"))
+        }
+
+        verifyNoMoreInteractions(mockLogger)
     }
 }
