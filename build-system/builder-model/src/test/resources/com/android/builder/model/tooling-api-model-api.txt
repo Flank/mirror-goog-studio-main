@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-80914b6771e01da16f72c636ac88547e3f5c77bbbc17e776349f9fe81a8d1a39
+5e13d03a57a95f80f60da8f03e7f7be5b36ddcff5a7e910a2a430b027ec85ba4
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -591,10 +591,10 @@ com.android.builder.model.v2.ide.AndroidArtifact.getTestInfo: com.android.builde
 com.android.builder.model.v2.ide.AndroidArtifact.isSigned: boolean ()
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag extends java.lang.Enum
-com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.getLegacyDefault: boolean ()
+com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.getValue: boolean (com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags)
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.valueOf: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag (java.lang.String)
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag.values: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag[] ()
-com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.getBooleanFlagMap: java.util.Map<com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags$BooleanFlag, java.lang.Boolean> ()
+com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.getFlagValue: java.lang.Boolean (java.lang.String)
 com.android.builder.model.v2.ide.AndroidLibraryData
 com.android.builder.model.v2.ide.AndroidLibraryData.getAidlFolder: java.io.File ()
 com.android.builder.model.v2.ide.AndroidLibraryData.getAssetsFolder: java.io.File ()

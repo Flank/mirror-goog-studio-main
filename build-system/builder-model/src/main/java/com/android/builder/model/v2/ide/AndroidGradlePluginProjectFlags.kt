@@ -33,7 +33,21 @@ interface AndroidGradlePluginProjectFlags {
      * current version of studio fetches models from a project that has a legacy flag set. They can
      * be marked as `@Deprecated` and the getter removed from `IdeAndroidGradlePluginProjectFlags`
      */
-    enum class BooleanFlag(val legacyDefault: Boolean) {
+    enum class BooleanFlag(
+        /**
+         * The apparent value of this flag from Studio if it is not explicitly set in the AGP model.
+         *
+         * As Studio can open projects from older Android Gradle Plugins this is used
+         * to supply a value if it was not supplied by the build system.
+         *
+         * This could be used because:
+         *
+         *  1. The AGP version used does not support this model at all.
+         *  2. The AGP version used supports this model but predates the introduction of this flag.
+         *  3. The AGP version used supports this model and this flag but did not explicitly set a
+         *     value for it.
+         */
+        private val legacyDefault: Boolean) {
         /**
          * Whether the R class in applications and dynamic features has constant IDs.
          *
@@ -68,22 +82,25 @@ interface AndroidGradlePluginProjectFlags {
         /** Whether the Android Test Platform is enabled for this project.  */
         UNIFIED_TEST_PLATFORM(false),
 
+        ;
+
         /**
-         * The apparent value of this flag from Studio if it is not explicitly set in the AGP model.
+         * Returns the value of this flag for the given gradle project flags.
          *
-         * As Studio can open projects from older Android Gradle Plugins this is used in `IdeAndroidGradlePluginProjectFlags` to supply a value if it was not supplied by the build
-         * system.
-         *
-         * This could be used because:
-         *
-         *  1. The AGP version used does not support this model at all.
-         *  1. The AGP version used supports this model but predates the introduction of this
-         * flag.
-         *  1. The AGP version used supports this model and this flag but did not explicitly set a
-         * value for it.
-         *
+         * If the value is not supplied by the build system, returns the legacyDefault.
          */
+        fun getValue(flags: AndroidGradlePluginProjectFlags): Boolean {
+            return flags.getFlagValue(name) ?: legacyDefault
+        }
+
     }
 
-    val booleanFlagMap: Map<BooleanFlag, Boolean>?
+    /**
+     * Do not directly call this method, use by BooleanFlag.FLAG_OF_INTEREST.getValue(flags)
+     *
+     * Uses the string of the enum constant rather than the enum itself to avoid the Gradel tooling
+     * api proxy throwing if the enum constant is not present on the AGP side.
+     * Returns null if the flag is unknown, or if the value is not set.
+     */
+    fun getFlagValue(flagName: String): Boolean?
 }

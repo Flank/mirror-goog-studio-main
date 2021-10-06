@@ -31,6 +31,7 @@ import com.android.builder.model.v2.ide.AndroidLibraryData
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.AbstractArtifact
+import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
 import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BasicVariant
 import com.android.builder.model.v2.ide.BundleInfo
@@ -164,7 +165,7 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     }
     valueList(
         name = "flags",
-        propertyAction = { flags.booleanFlagMap?.entries },
+        propertyAction = { AndroidGradlePluginProjectFlags.BooleanFlag.values().associateWith { it.getValue(flags) }.entries },
         formatAction = { "${key.name} -> $value" }
     ) { collection ->
         collection?.sortedBy { it.key.name }
