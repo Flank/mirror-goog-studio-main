@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
@@ -45,6 +46,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.ProjectInfo;
@@ -132,6 +134,12 @@ public class ModelBuilderTest {
                         extension::getTestBuildType,
                         () -> variantList,
                         () -> testComponentList,
+                        () ->
+                                new BuildFeatureValuesImpl(
+                                        dslServices.newInstance(ApplicationBuildFeaturesImpl.class),
+                                        dslServices.getProjectOptions(),
+                                        null,
+                                        null),
                         syncIssueReporter);
 
         modelBuilder =

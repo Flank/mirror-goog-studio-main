@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.ApplicationBuildFeaturesImpl
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
@@ -189,25 +191,25 @@ class ModelBuilderTest {
     private val variantList: MutableList<VariantImpl> = mutableListOf()
     private val testComponentList: MutableList<TestComponentImpl> = mutableListOf()
 
-    private fun createApplicationModelBuilder(
-    ): ModelBuilder<
-            ApplicationBuildFeatures,
-            ApplicationBuildType,
-            ApplicationDefaultConfig,
-            ApplicationProductFlavor,
-            SigningConfig,
-            ApplicationExtension> {
+    private val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
+    private val sdkComponentProvider = FakeGradleProvider(sdkComponents)
+    private val dslServices = createDslServices(
+        projectServices = projectServices,
+        sdkComponents = sdkComponentProvider
+    )
+
+    private fun createApplicationModelBuilder() :
+            ModelBuilder<
+                    ApplicationBuildFeatures,
+                    ApplicationBuildType,
+                    ApplicationDefaultConfig,
+                    ApplicationProductFlavor,
+                    SigningConfig,
+                    ApplicationExtension> {
 
         // for now create an app extension
-        val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
-        val sdkComponentProvider = FakeGradleProvider(sdkComponents)
-        val dslServices = createDslServices(
-            projectServices = projectServices,
-            sdkComponents = sdkComponentProvider
-        )
 
         AndroidLocationsBuildService.RegistrationAction(project).execute()
-
 
         val avdComponents = Mockito.mock(AvdComponentsBuildService::class.java)
         val avdComponentsProvider = FakeGradleProvider(avdComponents)
@@ -235,7 +237,6 @@ class ModelBuilderTest {
         ).execute()
 
         return ModelBuilder(
-            project,
             GlobalScope(
                 project,
                 "",
@@ -258,6 +259,12 @@ class ModelBuilderTest {
         { "debug" },
         { variantList },
         { testComponentList },
+        {
+            BuildFeatureValuesImpl(
+                dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java),
+                dslServices.projectOptions
+            )
+        },
         projectServices.issueReporter
     )
 

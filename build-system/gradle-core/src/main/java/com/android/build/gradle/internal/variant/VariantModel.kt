@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 
 /**
  * Model for the variants and their inputs.
@@ -44,4 +45,6 @@ interface VariantModel {
     val testComponents: List<TestComponentImpl>
 
     val defaultVariant: String?
+
+    val buildFeatures: BuildFeatureValues
 }

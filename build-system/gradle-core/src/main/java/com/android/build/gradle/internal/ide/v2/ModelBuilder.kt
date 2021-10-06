@@ -125,7 +125,6 @@ class ModelBuilder<
                 BuildTypeT,
                 DefaultConfigT,
                 ProductFlavorT>>(
-    private val project: Project,
     private val globalScope: GlobalScope,
     private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
@@ -254,7 +253,7 @@ class ModelBuilder<
         val testFixtures = DimensionInformation.createFrom(variants.mapNotNull { it.testFixturesComponent })
 
         // for now grab the first buildFeatureValues as they cannot be different.
-        val buildFeatures = variants.first().buildFeatures
+        val buildFeatures = variantModel.buildFeatures
 
         // gather the default config
         val defaultConfigData = variantInputs.defaultConfigData
@@ -435,7 +434,7 @@ class ModelBuilder<
         val variants = variantModel.variants
 
         // for now grab the first buildFeatureValues as they cannot be different.
-        val buildFeatures = variants.first().buildFeatures
+        val buildFeatures = variantModel.buildFeatures
 
         // gather the default config
         val defaultConfig = variantInputs.defaultConfigData.defaultConfig.convert(buildFeatures)

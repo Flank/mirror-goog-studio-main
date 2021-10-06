@@ -1,0 +1,23 @@
+> AndroidProject:
+   - namespace             = ""
+   - androidTestNamespace  = (null)
+   - testFixturesNamespace = (null)
+   - resourcePrefix        = (null)
+   - dynamicFeatures       = []
+   - variants              = []
+   - javaCompileOptions:
+      - encoding                       = "UTF-8"
+      - sourceCompatibility            = "1.8"
+      - targetCompatibility            = "1.8"
+      - isCoreLibraryDesugaringEnabled = false
+   - viewBindingOptions:
+      - isEnabled = false
+   - flags:
+      * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
+      * "JETPACK_COMPOSE -> false"
+      * "ML_MODEL_BINDING -> false"
+      * "TEST_R_CLASS_CONSTANT_IDS -> true"
+      * "TRANSITIVE_R_CLASS -> true"
+      * "UNIFIED_TEST_PLATFORM -> true"
+   - lintChecksJars        = []
+< AndroidProject

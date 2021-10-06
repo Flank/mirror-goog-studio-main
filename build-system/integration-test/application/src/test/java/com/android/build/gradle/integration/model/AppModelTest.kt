@@ -861,3 +861,30 @@ class RelocatedArtifactTest: ModelComparator() {
         with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
     }
 }
+
+class NoVariantModelTest: ModelComparator() {
+
+    @get:Rule
+    val project = createGradleProject {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+            }
+            androidComponents {
+                disableVariant("debug")
+                disableVariant("release")
+            }
+        }
+    }
+
+    @Test
+    fun `test models`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels()
+
+        with(result).compareBasicAndroidProject(goldenFile = "BasicAndroidProject")
+        with(result).compareAndroidProject(goldenFile = "AndroidProject")
+        with(result).compareAndroidDsl(goldenFile = "AndroidDsl")
+    }
+}

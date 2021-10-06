@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.manifest.LazyManifestParser
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
@@ -164,19 +163,23 @@ class VariantManager<
      */
     val testFixturesComponents: MutableList<TestFixturesImpl> = Lists.newArrayList()
 
+    val buildFeatureValues: BuildFeatureValues
+        get() = _buildFeatureValues
+
+    private lateinit var _buildFeatureValues: BuildFeatureValues
+
     /**
      * Creates the variants.
      *
      * @param buildFeatureValues the build feature value instance
-     * @param dslNamespace the namespace from the android extension DSL
-     * @param dslTestNamespace the testNamespace from the android extension DSL
      */
     fun createVariants(
         buildFeatureValues: BuildFeatureValues,
     ) {
+        _buildFeatureValues = buildFeatureValues
         variantFactory.validateModel(variantInputModel)
         variantFactory.preVariantWork(project)
-        computeVariants(buildFeatureValues)
+        computeVariants()
     }
 
     @Deprecated("Do not use. Use dslExtension instead")
@@ -201,12 +204,8 @@ class VariantManager<
 
     /**
      * Create all variants.
-     *
-     * @param buildFeatureValues the build feature value instance
      */
-    private fun computeVariants(
-        buildFeatureValues: BuildFeatureValues,
-    ) {
+    private fun computeVariants() {
         val flavorDimensionList: List<String> = dslExtension.flavorDimensions
         val computer = DimensionCombinator(
                 variantInputModel,
@@ -227,7 +226,6 @@ class VariantManager<
             createVariantsFromCombination(
                     variant,
                     testBuildTypeData,
-                    buildFeatureValues,
                     inconsistentTestAppId
             )
         }
@@ -266,7 +264,6 @@ class VariantManager<
             buildTypeData: BuildTypeData<BuildType>,
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
             variantType: VariantType,
-            buildFeatureValues: BuildFeatureValues,
     ): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
@@ -590,14 +587,14 @@ class VariantManager<
             globalScope,
             taskContainer
         )
-        val buildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
+        val testFixturesBuildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             extension.buildFeatures,
             projectOptions
         )
 
         val testFixturesComponent = variantFactory.createTestFixtures(
             variantDslInfo.componentIdentity,
-            buildFeatureValues,
+            testFixturesBuildFeatureValues,
             variantDslInfo,
             variantDependencies,
             variantSources,
@@ -776,15 +773,14 @@ class VariantManager<
                 variantPropertiesApiServices,
                 globalScope,
                 taskContainer)
-        val testComponent: TestComponentImpl
-        val buildFeatureValues = variantFactory.createTestBuildFeatureValues(
+        val testBuildFeatureValues = variantFactory.createTestBuildFeatureValues(
                 extension.buildFeatures, extension.dataBinding, projectOptions)
 
         // this is ANDROID_TEST
-        testComponent = if (variantType.isApk) {
+        val testComponent = if (variantType.isApk) {
             val androidTest = variantFactory.createAndroidTest(
                     variantDslInfo.componentIdentity,
-                    buildFeatureValues,
+                    testBuildFeatureValues,
                     variantDslInfo,
                     variantDependencies,
                     variantSources,
@@ -802,7 +798,7 @@ class VariantManager<
             // this is UNIT_TEST
             val unitTest = variantFactory.createUnitTest(
                     variantDslInfo.componentIdentity,
-                    buildFeatureValues,
+                    testBuildFeatureValues,
                     variantDslInfo,
                     variantDependencies,
                     variantSources,
@@ -834,7 +830,6 @@ class VariantManager<
     private fun createVariantsFromCombination(
         dimensionCombination: DimensionCombination,
         testBuildTypeData: BuildTypeData<BuildType>?,
-        buildFeatureValues: BuildFeatureValues,
         inconsistentTestAppId: Boolean,
     ) {
         val variantType = variantFactory.variantType
@@ -870,7 +865,6 @@ class VariantManager<
                     buildTypeData,
                     productFlavorDataList,
                     variantType,
-                    buildFeatureValues
             )?.let { variantInfo ->
                 addVariant(variantInfo)
                 val variant = variantInfo.variant

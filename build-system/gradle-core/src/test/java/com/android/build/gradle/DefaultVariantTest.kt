@@ -532,6 +532,12 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             { testBuildType },
             { components },
             { listOf() },
+            {
+                BuildFeatureValuesImpl(
+                    dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java),
+                    dslServices.projectOptions
+                )
+            },
             dslServices.issueReporter
         ).defaultVariant
     }

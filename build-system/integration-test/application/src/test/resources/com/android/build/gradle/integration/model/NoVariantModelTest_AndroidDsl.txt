@@ -1,0 +1,147 @@
+> AndroidDsl:
+   - groupId           = ""
+   - compileTarget     = "android-30"
+   - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
+   > defaultConfig:
+      - name                               = "main"
+      - applicationIdSuffix                = (null)
+      - versionNameSuffix                  = (null)
+      - buildConfigFields                  = []
+      - resValues                          = []
+      - proguardFiles                      = []
+      - consumerProguardFiles              = []
+      - testProguardFiles                  = []
+      - manifestPlaceholders               = []
+      - multiDexEnabled                    = (null)
+      - multiDexKeepFile                   = (null)
+      - multiDexKeepProguard               = (null)
+      - isDefault                          = (null)
+      - dimension                          = (null)
+      - applicationId                      = (null)
+      - versionCode                        = (null)
+      - versionName                        = (null)
+      - minSdkVersion:
+         - apiLevel = 14
+         - codename = (null)
+      - targetSdkVersion                   = (null)
+      - maxSdkVersion                      = (null)
+      - renderscriptTargetApi              = (null)
+      - renderscriptSupportModeEnabled     = (null)
+      - renderscriptSupportModeBlasEnabled = (null)
+      - renderscriptNdkModeEnabled         = (null)
+      - testApplicationId                  = (null)
+      - testInstrumentationRunner          = (null)
+      - testInstrumentationRunnerArguments = []
+      - testHandleProfiling                = (null)
+      - testFunctionalTest                 = (null)
+      - resourceConfigurations             = []
+      - signingConfig                      = (null)
+      - wearAppUnbundled                   = (null)
+      - vectorDrawables:
+         - generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
+         - useSupportLibrary  = false
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         - name                     = "debug"
+         - applicationIdSuffix      = (null)
+         - versionNameSuffix        = (null)
+         - buildConfigFields        = []
+         - resValues                = []
+         - proguardFiles            = []
+         - consumerProguardFiles    = []
+         - testProguardFiles        = []
+         - manifestPlaceholders     = []
+         - multiDexEnabled          = (null)
+         - multiDexKeepFile         = (null)
+         - multiDexKeepProguard     = (null)
+         - isDefault                = false
+         - isDebuggable             = true
+         - isTestCoverageEnabled    = false
+         - isPseudoLocalesEnabled   = false
+         - isJniDebuggable          = false
+         - isRenderscriptDebuggable = false
+         - renderscriptOptimLevel   = 3
+         - isMinifyEnabled          = false
+         - isZipAlignEnabled        = true
+         - isEmbedMicroApp          = false
+         - signingConfig            = "debug"
+      < debug
+      > release:
+         - name                     = "release"
+         - applicationIdSuffix      = (null)
+         - versionNameSuffix        = (null)
+         - buildConfigFields        = []
+         - resValues                = []
+         - proguardFiles            = []
+         - consumerProguardFiles    = []
+         - testProguardFiles        = []
+         - manifestPlaceholders     = []
+         - multiDexEnabled          = (null)
+         - multiDexKeepFile         = (null)
+         - multiDexKeepProguard     = (null)
+         - isDefault                = false
+         - isDebuggable             = false
+         - isTestCoverageEnabled    = false
+         - isPseudoLocalesEnabled   = false
+         - isJniDebuggable          = false
+         - isRenderscriptDebuggable = false
+         - renderscriptOptimLevel   = 3
+         - isMinifyEnabled          = false
+         - isZipAlignEnabled        = true
+         - isEmbedMicroApp          = true
+         - signingConfig            = (null)
+      < release
+   < buildTypes
+   - flavorDimensions  = []
+   - productFlavors    = []
+   > signingConfigs:
+      > debug:
+         - name            = "debug"
+         - storeFile       = {ANDROID_PREFS}/.android/debug.keystore{!}
+         - storePassword   = "android"
+         - keyAlias        = "AndroidDebugKey"
+         - keyPassword     = "android"
+         - enableV1Signing = (null)
+         - enableV2Signing = (null)
+         - enableV3Signing = (null)
+         - enableV4Signing = (null)
+         - isSigningReady  = true
+      < debug
+   < signingConfigs
+   - aaptOptions:
+      - namespacing = DISABLED
+   > lintOptions:
+      - disable                 = []
+      - enable                  = []
+      - check                   = []
+      - isAbortOnError          = true
+      - isAbsolutePaths         = true
+      - isNoLines               = false
+      - isQuiet                 = false
+      - isCheckAllWarnings      = false
+      - isIgnoreWarnings        = false
+      - isWarningsAsErrors      = false
+      - isCheckTestSources      = false
+      - isIgnoreTestSources     = false
+      - isCheckGeneratedSources = false
+      - isExplainIssues         = true
+      - isShowAll               = false
+      - lintConfig              = (null)
+      - textReport              = false
+      - textOutput              = (null)
+      - htmlReport              = true
+      - htmlOutput              = (null)
+      - xmlReport               = true
+      - xmlOutput               = (null)
+      - sarifReport             = false
+      - sarifOutput             = (null)
+      - isCheckReleaseBuilds    = true
+      - isCheckDependencies     = false
+      - baselineFile            = (null)
+      - severityOverrides       = (null)
+   < lintOptions
+   - dependenciesInfo:
+      - includeInApk    = true
+      - includeInBundle = true
+< AndroidDsl
