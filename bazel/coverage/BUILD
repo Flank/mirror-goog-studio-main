@@ -786,6 +786,7 @@ coverage_report(
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
+        "//tools/adt/idea/android-lint:intellij.android.lint.tests_tests",
         "//tools/adt/idea/android-npw:intellij.android.newProjectWizard.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
