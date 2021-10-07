@@ -18,5 +18,6 @@ package com.android.tools.deployer.model.component;
 public enum ComponentType {
     ACTIVITY,
     WATCH_FACE,
-    TILE
+    TILE,
+    COMPLICATION // https://developer.android.com/training/wearables/watch-faces/complications
 }

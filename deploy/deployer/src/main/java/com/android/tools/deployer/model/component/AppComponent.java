@@ -24,7 +24,6 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.manifest.parser.components.ManifestAppComponentInfo;
-
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +40,9 @@ public abstract class AppComponent {
 
     private final TimeUnit SHELL_TIMEUNIT = TimeUnit.SECONDS;
 
+    protected String getFQEscapedName() {
+        return getFQEscapedName(appId, info.getQualifiedName());
+    }
 
     protected AppComponent(IDevice device, String appId, ManifestAppComponentInfo info) {
         this.device = device;
@@ -65,9 +67,10 @@ public abstract class AppComponent {
         }
     }
 
-    protected String getFQEscapedName() {
+    @NonNull
+    static String getFQEscapedName(@NonNull String appId, @NonNull String componentFqName) {
         // Escape name declared as inner class name (resulting in foo.bar.Activity$SubActivity).
-        return appId + "/" + info.getQualifiedName().replace("$", "\\$");
+        return appId + "/" + componentFqName.replace("$", "\\$");
     }
 
     public enum Mode {
