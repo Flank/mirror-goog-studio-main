@@ -38,7 +38,7 @@ import com.google.testing.platform.runtime.android.device.AndroidDevice
 import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
 import kotlin.math.pow
 
-private const val MAX_ADB_ATTEMPTS = 4
+private const val MAX_ADB_ATTEMPTS = 6
 private const val MS_PER_SECOND = 1000
 private const val ADB_RETRY_DELAY_SECONDS = 2.0
 const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
