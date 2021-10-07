@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.testprojects
 
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.TestProject
@@ -149,6 +150,8 @@ interface AndroidProjectBuilder {
     fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit)
 
     fun addFile(relativePath: String, content: String)
+
+    fun androidResources(action: AndroidResources.() -> Unit)
 }
 
 interface Config {
