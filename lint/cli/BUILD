@@ -14,7 +14,9 @@ maven_library(
         ":groovy_neverlink",
     ],
     coordinates = "com.android.tools.lint:lint:" + BASE_VERSION,
+    description = "Lint tools. Both a Command line tool and a library to add lint features to other tools",
     lint_baseline = "lint_baseline.xml",
+    module_name = "lint-cli",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/cli",
     resources = glob(
@@ -64,19 +66,6 @@ sdk_java_binary(
     main_class = "com.android.tools.lint.Main",
     visibility = ["//visibility:public"],
     runtime_deps = [":cli"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
 
 load("//tools/base/bazel:bazel.bzl", "iml_module")

@@ -126,7 +126,7 @@ dependencies {
     implementation project(':base:build-system:aaptcompiler')
     implementation libs.com.android.tools.analyticsLibrary.crash
     implementation libs.com.android.tools.analyticsLibrary.shared
-    implementation project(':base:lint-model')
+    implementation libs.com.android.tools.lint.lintModel
     api project(':base:gradle-api')
     implementation project(':dataBinding:compilerCommon')
     implementation project(':dataBinding:baseLibrary')

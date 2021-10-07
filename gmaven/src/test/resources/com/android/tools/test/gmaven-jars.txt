@@ -776,11 +776,6 @@ com/android/tools/external/com-intellij/intellij-core
   NOTICE
   __packageIndex__
   com/
-  com/android/
-  com/android/tools/
-  com/android/tools/external/
-  com/android/tools/external/intellij/
-  com/android/tools/external/intellij/core/
   com/google/
   com/google/common/
   com/google/gwt/
@@ -2081,13 +2076,6 @@ com/android/tools/external/org-jetbrains/uast
   META-INF/kotlin.uast.uast-kotlin-base.kotlin_module
   META-INF/kotlin.uast.uast-kotlin.kotlin_module
   NOTICE
-  com/
-  com/android/
-  com/android/tools/
-  com/android/tools/external/
-  com/android/tools/external/org/
-  com/android/tools/external/org/jetbrains/
-  com/android/tools/external/org/jetbrains/uast/
   org/
   org/jetbrains/
   org/jetbrains/uast/

@@ -90,6 +90,14 @@ maven_repository(
         "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
         "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
         "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/lint:tools.lint-model",
+        "//tools/base/lint/cli",  # TODO(b/143864616): Only used for lint-gradle
+        "//tools/base/lint:tools.lint-api",  # TODO(b/143864616): Only used for lint-gradle
+        "//tools/base/lint:tools.lint-checks",  # TODO(b/143864616): Only used for lint-gradle
+        "//prebuilts/tools/common/lint-psi/intellij-core",  # TODO(b/143864616): Only used for lint-gradle
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",  # TODO(b/143864616): Only used for lint-gradle
+        "//prebuilts/tools/common/lint-psi/uast",  # TODO(b/143864616): Only used for lint-gradle
+        "//tools/base/lint/libs/lint-tests",  # TODO(b/143864616): Only used for tests
     ],
     include_transitive_deps = False,
     visibility = [

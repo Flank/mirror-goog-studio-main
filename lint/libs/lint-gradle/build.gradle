@@ -14,19 +14,16 @@ compileKotlin {
 }
 
 dependencies {
-    // NOTE NOTE NOTE - before changing this, note that lint dependencies
-    // must also be reflected in [LintClassLoaderProvider#computeUrls] as well
-    // so update both in sync
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
     implementation libs.com.android.tools.common
     implementation project(':base:builder')
     implementation project(':base:builder-model')
-    implementation project(':base:intellij-core')
-    implementation project(':base:kotlin-compiler')
-    implementation project(':base:uast')
+    implementation libs.com.android.tools.external.orgJetbrains.uast
+    implementation libs.com.android.tools.external.comIntellij.kotlinCompiler
+    implementation libs.com.android.tools.external.comIntellij.intellijCore
     implementation project(':base:manifest-merger')
-    implementation project(':base:lint-cli')
+    implementation libs.com.android.tools.lint.lint
     implementation project(':base:zipflinger')
     implementation project(':base:repository')
 
@@ -38,7 +35,7 @@ dependencies {
     testImplementation libs.truth
     testImplementation libs.mockito_core
     testImplementation project(':base:testutils')
-    testImplementation project(':base:lint-tests')
+    testImplementation libs.com.android.tools.lint.lintTests
 }
 
 sourceSets {

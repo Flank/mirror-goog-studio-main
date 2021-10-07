@@ -9,6 +9,8 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-tests:" + BASE_VERSION,
+    description = "API to build lint check tests",
+    module_name = "lint-tests",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
@@ -97,19 +99,6 @@ kotlin_test(
         "@maven//:org.mockito.mockito-all",
         "@maven//:org.ow2.asm.asm-tree",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
 
 load("//tools/base/bazel:bazel.bzl", "iml_module")
