@@ -132,7 +132,7 @@ dependencies {
     implementation project(':dataBinding:baseLibrary')
     implementation project(':dataBinding:baseLibrarySupport')
     implementation project(':base:builder-test-api')
-    implementation project(':base:layoutlib-api')
+    implementation libs.com.android.tools.layoutlib.layoutlibApi
     implementation project(':base:utp:android-device-provider-ddmlib-proto')
     implementation project(':base:utp:android-device-provider-gradle-proto')
     implementation project(':base:utp:android-test-plugin-host-additional-test-output-proto')

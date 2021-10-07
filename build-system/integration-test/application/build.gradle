@@ -21,7 +21,7 @@ dependencies {
     testImplementation project(':base:testutils')
     testImplementation project(':base:zipflinger')
     testCompileOnly(project(':base:profile'))
-    testImplementation project(':base:layoutlib-api')
+    testImplementation libs.com.android.tools.layoutlib.layoutlibApi
     testImplementation project(':base:profgen')
 
     testImplementation libs.kotlin_stdlib

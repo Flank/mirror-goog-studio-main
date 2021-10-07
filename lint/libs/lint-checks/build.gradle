@@ -18,7 +18,7 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
     implementation libs.com.android.tools.common
-    implementation project(':base:layoutlib-api')
+    implementation libs.com.android.tools.layoutlib.layoutlibApi
     implementation libs.guava
     implementation libs.gson
     implementation project(':base:intellij-core')

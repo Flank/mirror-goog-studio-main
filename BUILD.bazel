@@ -89,6 +89,7 @@ maven_repository(
         "//tools/base/apkparser/analyzer:tools.analyzer.maven",  # TODO(b/143864616): Only required for tests
         "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
         "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
     ],
     include_transitive_deps = False,
     visibility = [

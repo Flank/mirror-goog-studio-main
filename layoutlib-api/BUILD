@@ -30,7 +30,9 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.layoutlib:layoutlib-api:" + BASE_VERSION,
+    description = "Library to use the rendering library for Android layouts: layoutlib",
     notice = "NOTICE",
+    pom_name = "Android Tools layoutlib-api",
     resource_strip_prefix = "tools/base/layoutlib-api",
     visibility = ["//visibility:public"],
     deps = [
@@ -53,17 +55,4 @@ coverage_java_test(
         "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

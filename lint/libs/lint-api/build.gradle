@@ -24,7 +24,7 @@ dependencies {
     api project(':base:kotlin-compiler')
     api project(':base:uast')
     api project(':base:manifest-merger')
-    api project(':base:layoutlib-api')
+    api libs.com.android.tools.layoutlib.layoutlibApi
 
     api libs.apache_commons_io
     api libs.asm
