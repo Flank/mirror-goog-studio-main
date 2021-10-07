@@ -33,7 +33,7 @@ public class DisconnectCommand implements ICommand {
      * @param argsString device id and process id to disconnect. Eg ("emulator:1234")
      */
     @Override
-    public void run(String argsString) {
+    public CommandResult run(String argsString) {
         try {
             if (argsString == null) {
                 throw new IllegalArgumentException("Expected arguments got null.");
@@ -47,13 +47,15 @@ public class DisconnectCommand implements ICommand {
             for (IDevice device : myMonitor.getDevices()) {
                 if (device.getSerialNumber().equals(deviceId)) {
                     myMonitor.disconnectClient(device, pid);
-                    return;
+                    return new CommandResult();
                 }
             }
             Log.w("DisconnectCommand", "No client found for given args (" + argsString + ")");
+            return new CommandResult("No client found for " + argsString);
         } catch (Exception ex) {
             // Failed to disconnect the client.
             Log.e("DisconnectCommand", ex);
+            return new CommandResult("Unknown error: " + ex.getMessage());
         }
     }
 }

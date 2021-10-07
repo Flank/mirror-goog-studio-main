@@ -16,15 +16,17 @@
 package com.android.ddmlib.internal;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.ddmlib.AdbHelper;
-import com.android.ddmlib.internal.commands.ICommand;
+import com.android.ddmlib.internal.commands.CommandResult;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import kotlin.text.Charsets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,14 +68,13 @@ public class CommandServiceTest {
         CountDownLatch commandLatch = new CountDownLatch(1);
         service.addCommand(
                 "test",
-                new ICommand() {
-                    @Override
-                    public void run(String argsString) {
-                        commandLatch.countDown();
-                    }
+                argsString -> {
+                    commandLatch.countDown();
+                    return new CommandResult();
                 });
         channel.write(createCommandString("test", null));
         assertThat(commandLatch.await(TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        validateResponse(channel, true, "");
     }
 
     @Test
@@ -83,16 +84,41 @@ public class CommandServiceTest {
         CountDownLatch commandLatch = new CountDownLatch(1);
         service.addCommand(
                 "test",
-                new ICommand() {
-                    @Override
-                    public void run(String argsString) {
-                        actualArgs[0] = argsString;
-                        commandLatch.countDown();
-                    }
+                argsString -> {
+                    actualArgs[0] = argsString;
+                    commandLatch.countDown();
+                    return new CommandResult();
                 });
         channel.write(createCommandString("test", ExpectedArgs));
         assertThat(commandLatch.await(TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(actualArgs[0]).isEqualTo(ExpectedArgs);
+        validateResponse(channel, true, "");
+    }
+
+    @Test
+    public void commandResultFailHandled() throws Exception {
+        CountDownLatch commandLatch = new CountDownLatch(1);
+        service.addCommand(
+                "test",
+                argsString -> {
+                    commandLatch.countDown();
+                    return new CommandResult("InvalidTest");
+                });
+        channel.write(createCommandString("test", null));
+        assertThat(commandLatch.await(TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        validateResponse(channel, false, "InvalidTest");
+    }
+
+    private void validateResponse(SocketChannel channel, boolean result, String message)
+            throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(128);
+        channel.read(buffer);
+        String data = new String(buffer.array(), UTF_8);
+        if (result) {
+            assertThat(data).contains("OKAY");
+        } else {
+            assertThat(data).containsMatch(String.format("FAIL%04x%s", message.length(), message));
+        }
     }
 
     private ByteBuffer createCommandString(String command, String args) {

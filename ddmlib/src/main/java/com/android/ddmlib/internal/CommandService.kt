@@ -16,6 +16,7 @@
 package com.android.ddmlib.internal
 
 import com.android.ddmlib.Log
+import com.android.ddmlib.internal.commands.CommandResult
 import com.android.ddmlib.internal.commands.ICommand
 import java.io.EOFException
 import java.io.IOException
@@ -25,7 +26,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
-import java.nio.charset.StandardCharsets
+import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Timer
 import java.util.TimerTask
 
@@ -105,14 +106,14 @@ internal class CommandService(private val mListenPort: Int) : Runnable {
 
     fun processOneCommand(client: SocketChannel) {
         var buffer = readExactly(client, 4)
-        val cmdSize = Integer.parseInt(StandardCharsets.UTF_8.decode(buffer).toString(),16)
+        val cmdSize = Integer.parseInt(UTF_8.decode(buffer).toString(),16)
         buffer = readExactly(client, cmdSize)
-        val data = StandardCharsets.UTF_8.decode(buffer).toString()
+        val data = UTF_8.decode(buffer).toString()
         // Check if this command has any arguments, if not run command if
         // one matches.
         val commandTerminator = data.indexOf(":")
         if (commandTerminator == -1 && commandMap.containsKey(data)) {
-            commandMap[data]!!.run(null)
+            write(commandMap[data]!!.run(null),client)
         } else if (commandTerminator != -1) {
             val command = data.substring(0, commandTerminator)
             val argsString = data.substring(commandTerminator + 1)
@@ -121,7 +122,7 @@ internal class CommandService(private val mListenPort: Int) : Runnable {
                 return
             }
             try {
-                commandMap[command]!!.run(argsString)
+                write(commandMap[command]!!.run(argsString), client)
             } catch (t: Throwable) {
                 Log.w("CommandService", t)
             }
@@ -141,6 +142,18 @@ internal class CommandService(private val mListenPort: Int) : Runnable {
         buffer.position(0)
         return buffer
     }
+
+    fun write(result: CommandResult, client: SocketChannel) {
+        if (result.success) {
+            client.write(wrapString("OKAY"))
+        } else {
+            client.write(wrapString(String.format("FAIL%04x%s",
+                                                  result.message.length,
+                                                  result.message)))
+        }
+    }
+
+   private fun wrapString(str: String): ByteBuffer = ByteBuffer.wrap(str.toByteArray(UTF_8))
 
     internal inner class ServerHostTimer : TimerTask() {
         override fun run() {

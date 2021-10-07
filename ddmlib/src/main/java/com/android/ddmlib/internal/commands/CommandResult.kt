@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ddmlib.internal.commands;
+package com.android.ddmlib.internal.commands
 
-/**
- * The command interface specifies a string that is the command, as well as a handler for
- * the action of the command.
- */
-public interface ICommand {
-
-    /**
-     * Action to perform when running the command.
-     *
-     * @return Error string if one occurred, otherwise null or empty.
-     * @param argsString optional arguments passed to command.
-     */
-    CommandResult run(String argsString);
+data class CommandResult(val success:Boolean, val message:String) {
+    constructor() : this(true, "")
+    constructor(message: String) : this(false, message)
 }
