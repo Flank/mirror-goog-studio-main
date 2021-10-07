@@ -278,6 +278,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 MissingIdDetector.ISSUE,
                 MissingPrefixDetector.MISSING_NAMESPACE,
                 MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE,
+                MotionLayoutIdDetector.MISSING_ID,
                 MotionSceneDetector.MOTION_SCENE_FILE_VALIDATION_ERROR,
                 NamespaceDetector.CUSTOM_VIEW,
                 NamespaceDetector.REDUNDANT,
@@ -517,7 +518,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
         } else {
             var initialSize = 12
             when {
-                scope.contains(Scope.RESOURCE_FILE) -> initialSize += 115
+                scope.contains(Scope.RESOURCE_FILE) -> initialSize += 116
                 scope.contains(Scope.ALL_RESOURCE_FILES) -> initialSize += 12
             }
             when {
