@@ -20,6 +20,7 @@ import com.android.deploy.asm.Type;
 import com.android.deploy.asm.tree.MethodNode;
 import com.android.deploy.asm.tree.analysis.Frame;
 import com.android.tools.deploy.interpreter.ByteCodeInterpreter;
+import com.android.tools.deploy.interpreter.Eval;
 import com.android.tools.deploy.interpreter.InterpretationEventHandler;
 import com.android.tools.deploy.interpreter.InterpreterResult;
 import com.android.tools.deploy.interpreter.ObjectValue;
@@ -27,39 +28,31 @@ import com.android.tools.deploy.interpreter.Value;
 import com.android.tools.deploy.interpreter.ValueReturned;
 
 public class MethodBodyEvaluator {
+    private static final boolean DEBUG_EVAL = true;
 
+    private final LiveEditContext context;
     private final MethodNode target;
-    private final ClassLoader classLoader;
 
     // TODO: We should always use the app's classloader. This method is here for
     // our unit tests. We should consider removing this after we refactor the tests.
     public MethodBodyEvaluator(byte[] classData, String targetMethod) {
-        this(classData, targetMethod, new byte[0][], MethodBodyEvaluator.class.getClassLoader());
+        this(
+                new LiveEditContext(MethodBodyEvaluator.class.getClassLoader()),
+                classData,
+                targetMethod);
     }
 
-    public MethodBodyEvaluator(
-            byte[] classData, String targetMethod, ClassLoader parentClassLoader) {
-        this(classData, targetMethod, new byte[0][], parentClassLoader);
-    }
-
-    public MethodBodyEvaluator(
-            byte[] classData,
-            String targetMethod,
-            byte[][] supportClasses,
-            ClassLoader parentClassLoader) {
+    public MethodBodyEvaluator(LiveEditContext context, byte[] classData, String targetMethod) {
         MethodNodeFinder finder = new MethodNodeFinder(classData, targetMethod);
+        this.context = context;
         this.target = finder.getTarget();
+
         if (target == null) {
             String msg = String.format("Cannot find target '%s' in:\n", targetMethod);
             for (String method : finder.getVisited()) {
                 msg += "  -> " + method + "\n";
             }
             throw new IllegalStateException(msg);
-        }
-        if (supportClasses.length == 0) {
-            this.classLoader = parentClassLoader;
-        } else {
-            this.classLoader = new LiveEditClassLoader(supportClasses, parentClassLoader);
         }
     }
 
@@ -81,7 +74,11 @@ public class MethodBodyEvaluator {
             init.setLocal(localIndex++, AndroidEval.makeValue(arguments[i], argTypes[i]));
         }
 
-        AndroidEval evaluator = new AndroidEval(classLoader);
+        Eval evaluator = new ProxyClassEval(context);
+        if (DEBUG_EVAL) {
+            evaluator = new LoggingEval(evaluator);
+        }
+
         InterpreterResult result =
                 ByteCodeInterpreter.interpreterLoop(
                         target, init, evaluator, InterpretationEventHandler.NONE);

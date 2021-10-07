@@ -66,4 +66,8 @@ public class FieldDescription {
     public boolean isStatic() {
         return isStatic;
     }
+
+    public String toString() {
+        return ownerInternalName + "." + name + " (" + desc + ")";
+    }
 }

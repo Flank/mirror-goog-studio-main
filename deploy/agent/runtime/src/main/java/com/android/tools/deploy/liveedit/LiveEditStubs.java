@@ -18,50 +18,65 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
-import java.util.concurrent.ConcurrentHashMap;
+import com.android.deploy.asm.ClassReader;
+import java.util.HashSet;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class LiveEditStubs {
     private static final String TAG = "studio.deploy";
 
-    // TODO: This state + methods for manipulating it should probably live in their own class, along with any other LiveEdit state.
-    private static final ConcurrentHashMap<String, byte[]> methodCache =
-            new ConcurrentHashMap<>();
+    // Currently set to true as a workaround to handle the changes the Compose compiler makes to the
+    // signatures of functions that accept or return @Composable lambdas.
+    private static final boolean INTERPRET_ALL = true;
 
-    // className should be the fully qualified class name: com.example.MyClass
-    // methodName should just be the method name: myMethod
-    // methodSignature should be the JNI-style method signature: (Ljava.lang.String;II)V
-    public static void addToCache(
-            String className, String methodName, String methodSignature, byte[] data) {
-        String key = className + "->" + methodName + methodSignature;
-        methodCache.put(key, data);
+    // Context object that holds all of LiveEdit's global state. Initialized by the first LiveEdit.
+    private static LiveEditContext context = null;
+
+    // Set of method keys used to determine if a given method should redirect to the interpreter.
+    // TODO: This should live in LiveEditClass.
+    private static final HashSet<String> interpretedMethods = new HashSet<>();
+
+    // TODO: Figure out if we need to support multiple class loaders.
+    public static void init(ClassLoader loader) {
+        if (context == null) {
+            context = new LiveEditContext(loader);
+            Log.setLogger(new AndroidLogger());
+        }
     }
 
-    public static void addToCache(String key, byte[] data) {
-        methodCache.put(key, data);
+    public static void addToCache(String key, byte[] bytecode) {
+        String className = key.substring(0, key.indexOf("->"));
+        context.addClass(className, bytecode);
+        interpretedMethods.add(key);
+    }
+
+    public static void addProxiedClass(byte[] bytecode) {
+        // TODO: This should be done on the host and needs to include the constructor descriptor.
+        ClassReader reader = new ClassReader(bytecode);
+        String className = reader.getClassName();
+        String[] interfaces = reader.getInterfaces();
+        context.addProxyClass(className, bytecode, interfaces);
     }
 
     // Everything in the following section is called from the dex prologue created by StubTransform.
     // None of this code is or should be called from any other context.
 
-    // The key format is based on what slicer passes as the first parameter to an EntryHook callback.
+    // The key format is based on what slicer passes as the first parameter to an EntryHook
+    // callback.
     // The format can be found in tools/slicer/instrumentation.cc in the MethodLabel method.
-    // TODO: We do have the ability to change this, if we want; we don't need a full signature, for example; return type suffices.
-    public static boolean hasMethodBytecode(String key) {
-        boolean result = methodCache.containsKey(key);
-
-        // TODO: This is a super helpful message as it tells us rather or not
-        // we actually trampoline to AndroidEval. Remove this later once when
-        // we are more confident that this always WAI.
-
-        // TODO: This occasionally crashes with class not found. Not sure why yet.
-        // Log.v("LiveEditStubs", "hasMethodBytecode(" + key + ") returns " + result);
-        return result;
+    // TODO: We need to centralize which LiveEdit component "owns" this key format.
+    public static boolean shouldInterpretMethod(String key) {
+        String internalKey = key.replace('.', '/');
+        LiveEditClass clazz = context.getClass(internalKey.substring(0, internalKey.indexOf("->")));
+        return INTERPRET_ALL
+                || (clazz != null && clazz.isProxyClass())
+                || interpretedMethods.contains(internalKey);
     }
 
+    // TODO: We don't need to pass the class here; remove once the prologue is updated.
     public static Object stubL(Class<?> clazz, Object[] parameters) {
         // First parameter is the class + method name + signature
-        String methodKey = parameters[0].toString();
+        String methodKey = parameters[0].toString().replace('.', '/');
         int idx = methodKey.indexOf("->");
         String methodClassName = methodKey.substring(0, idx);
         String methodName = methodKey.substring(idx + 2);
@@ -75,10 +90,7 @@ public final class LiveEditStubs {
             System.arraycopy(parameters, 2, arguments, 0, arguments.length);
         }
 
-        byte[] dex = methodCache.get(methodKey);
-        MethodBodyEvaluator evaluator =
-                new MethodBodyEvaluator(dex, methodName, clazz.getClassLoader());
-        return evaluator.eval(thisObject, methodClassName, arguments);
+        return context.getClass(methodClassName).invokeMethod(methodName, thisObject, arguments);
     }
 
     public static byte stubB(Class<?> clazz, Object[] parameters) {
@@ -123,5 +135,11 @@ public final class LiveEditStubs {
 
     public static void stubV(Class<?> clazz, Object[] parameters) {
         stubL(clazz, parameters);
+    }
+
+    private static class AndroidLogger implements Log.Logger {
+        public void v(String tag, String message) {
+            android.util.Log.v(tag, message);
+        }
     }
 }

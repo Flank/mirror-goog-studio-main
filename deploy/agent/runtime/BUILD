@@ -54,6 +54,7 @@ coverage_java_library(
         ":asm4",
         ":instrument_java",
         ":interpreter_common",
+        "//prebuilts/studio/sdk:platforms/latest_jar",
         "//tools/base/annotations",
     ],
 )

@@ -30,6 +30,23 @@
 std::unordered_set<std::string> primed_classes;
 
 namespace deploy {
+
+namespace {
+// The format expected for class_name is com/example/ClassName$InnerClass.
+void PrimeClass(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& class_name) {
+  if (primed_classes.find(class_name) == primed_classes.end()) {
+    TransformCache cache = DisabledTransformCache();
+    Instrumenter instrumenter(jvmti, jni, cache, false);
+
+    const StubTransform stub(class_name);
+    instrumenter.Instrument(stub);
+    primed_classes.insert(class_name);
+
+    Log::V("Live Edit primed %s", class_name.c_str());
+  }
+}
+}  // namespace
+
 proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
                                  const proto::LiveEditRequest& req) {
   proto::LiveEditResponse resp;
@@ -40,31 +57,33 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     return resp;
   }
 
-  // class_name is in the format of "com.example.Target"
-  if (primed_classes.find(req.class_name()) == primed_classes.end()) {
-    TransformCache cache = DisabledTransformCache();
-    Instrumenter instrumenter(jvmti, jni, cache, false);
-    std::string name = req.class_name();
+  const auto& target_class = req.target_class();
+  PrimeClass(jvmti, jni, target_class.class_name());
 
-    // Transform expect class name to be in the format of "com/example/Target"
-    std::replace(name.begin(), name.end(), '.', '/');
-    const StubTransform stub(name);
-    instrumenter.Instrument(stub);
-    primed_classes.insert(req.class_name());
-    Log::E("Live Edit priming %s", name.c_str());
-  }
-
-  const std::string code = req.class_data();
-  jbyteArray arr = jni->NewByteArray(code.length());
-  jni->SetByteArrayRegion(arr, 0, req.class_data().size(),
-                          (jbyte*)req.class_data().data());
+  const auto& target_code = target_class.class_data();
+  jbyteArray arr = jni->NewByteArray(target_code.size());
+  jni->SetByteArrayRegion(arr, 0, target_code.size(),
+                          (jbyte*)target_code.data());
 
   JniClass stub(jni, "com/android/tools/deploy/liveedit/LiveEditStubs");
 
-  const std::string key = req.class_name() + "->" + req.method_signature();
-  Log::E("Live Edit key %s", key.c_str());
+  auto app_loader = ClassFinder(jvmti, jni).GetApplicationClassLoader();
+  stub.CallStaticVoidMethod("init", "(Ljava/lang/ClassLoader;)V", app_loader);
+
+  const std::string key =
+      target_class.class_name() + "->" + target_class.method_signature();
+  Log::V("Live Edit key %s", key.c_str());
   stub.CallStaticVoidMethod("addToCache", "(Ljava/lang/String;[B)V",
                             jni->NewStringUTF(key.c_str()), arr);
+
+  for (auto support_class : req.support_classes()) {
+    const auto& support_code = support_class.class_data();
+    jbyteArray arr = jni->NewByteArray(support_code.size());
+    jni->SetByteArrayRegion(arr, 0, support_code.size(),
+                            (jbyte*)support_code.data());
+    stub.CallStaticVoidMethod("addProxiedClass", "([B)V", arr);
+    PrimeClass(jvmti, jni, support_class.class_name());
+  }
 
   Recompose recompose(jvmti, jni);
   jobject reloader = recompose.GetComposeHotReload();
@@ -76,4 +95,5 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   resp.set_status(proto::LiveEditResponse::OK);
   return resp;
 }
+
 }  // namespace deploy

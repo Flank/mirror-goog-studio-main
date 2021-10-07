@@ -79,7 +79,7 @@ void HookToStub::BuildCacheCheck(lir::CodeIr* code_ir,
   auto param_types =
       builder.GetTypeList({builder.GetType("Ljava/lang/String;")});
   auto method_decl = builder.GetMethodDecl(
-      builder.GetAsciiString("hasMethodBytecode"),
+      builder.GetAsciiString("shouldInterpretMethod"),
       builder.GetProto(return_type, param_types), builder.GetType(stub_class_));
   auto method =
       code_ir->Alloc<lir::Method>(method_decl, method_decl->orig_index);

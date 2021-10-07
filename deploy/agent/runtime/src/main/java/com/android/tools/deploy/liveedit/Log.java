@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.tools.deploy.liveedit;
 
-public class LiveEditClassLoader extends ClassLoader {
-    public LiveEditClassLoader(byte[][] classes, ClassLoader parent) {
-        super(parent);
-        for (byte[] klass : classes) {
-            ClassNameFinder nameFinder = new ClassNameFinder(klass);
-            String internalName = nameFinder.getInternalName();
-            String binaryName = internalToBinaryName(internalName);
-            defineClass(binaryName, klass, 0, klass.length);
-        }
+public final class Log {
+    public interface Logger {
+        void v(String tag, String message);
     }
 
-    private static String internalToBinaryName(String internalName) {
-        return internalName.replace('/', '.');
+    private static Logger logger = null;
+
+    public static void setLogger(Logger logger) {
+        Log.logger = logger;
+    }
+
+    public static void v(String tag, String message) {
+        if (logger != null) {
+            logger.v(tag, message);
+        }
     }
 }

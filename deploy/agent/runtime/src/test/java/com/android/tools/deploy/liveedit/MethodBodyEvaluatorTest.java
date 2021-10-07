@@ -379,39 +379,6 @@ public class MethodBodyEvaluatorTest {
     }
 
     @org.junit.Test
-    public void testLambda() throws IOException, ClassNotFoundException {
-        String pkg = "com.android.tools.deploy.liveedit.";
-        String lambdaSimpleName = "StaticGetterFactoryKt$create$1";
-        String lambdaBinaryName = pkg + lambdaSimpleName;
-        String targetSimpleName = "StaticGetterFactoryKt";
-        String targetBinaryName = pkg + targetSimpleName;
-
-        byte[] interpretedClass =
-                buildClass(
-                        StaticGetterFactoryKt.class.getClassLoader().loadClass(targetBinaryName));
-        byte[][] supportClasses = new byte[2][];
-        supportClasses[0] = buildClass(lambdaBinaryName);
-        supportClasses[1] = interpretedClass;
-        MethodBodyEvaluator evaluator =
-                new MethodBodyEvaluator(
-                        interpretedClass,
-                        "create()Ljava/util/function/Supplier;",
-                        supportClasses,
-                        this.getClass().getClassLoader());
-
-        // Make sure the lambda class is not loaded
-        Supplier<Integer> sLiveEdit = (Supplier<Integer>) evaluator.evalStatic(new Object[] {});
-        Supplier<Integer> sVM = StaticGetterFactoryKt.create();
-        Assert.assertNotEquals(
-                sLiveEdit.getClass().getClassLoader(), sVM.getClass().getClassLoader());
-
-        // Increase the VM static value, this should leave the one in LiveEdit unchanged.
-        StaticGetterFactoryKt.setStatic(StaticGetterFactoryKt.getStatic() + 1);
-        // Check that indeed the previous instruction did not affect support classes
-        Assert.assertNotEquals(sLiveEdit.get(), sVM.get());
-    }
-
-    @org.junit.Test
     public void testReturnVoid() throws Exception {
         byte[] classInput = buildClass(TestTarget.class);
         TestTarget owner = new TestTarget();
