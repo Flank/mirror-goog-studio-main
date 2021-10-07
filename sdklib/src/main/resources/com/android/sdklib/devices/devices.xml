@@ -10,12 +10,12 @@
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
-                <d:diagonal-length>7.3</d:diagonal-length>
+                <d:diagonal-length>6.0</d:diagonal-length>
                 <d:pixel-density>420dpi</d:pixel-density>
                 <d:screen-ratio>notlong</d:screen-ratio>
                 <d:dimensions>
-                    <d:x-dimension>1768</d:x-dimension>
-                    <d:y-dimension>2208</d:y-dimension>
+                    <d:x-dimension>1080</d:x-dimension>
+                    <d:y-dimension>2340</d:y-dimension>
                 </d:dimensions>
                 <d:xdpi>420</d:xdpi>
                 <d:ydpi>420</d:ydpi>
