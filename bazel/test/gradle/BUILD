@@ -29,6 +29,7 @@ maven_repository(
     name = "test_deps",
     # keep sorted: for buildifier
     artifacts = [
+        "//tools/base/lint:tools.lint-gradle",
         "@maven//:com.android.support.appcompat-v7_28.0.0",
         "@maven//:com.android.support.test.runner_1.0.2",
         "@maven//:junit.junit_4.12",
