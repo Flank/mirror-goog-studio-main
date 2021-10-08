@@ -80,12 +80,6 @@ public class ByteCodeInterpreter {
 
     @NonNull
     public static InterpreterResult interpreterLoop(
-            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
-        return interpreterLoop(m, initialState, eval, InterpretationEventHandler.NONE);
-    }
-
-    @NonNull
-    public static InterpreterResult interpreterLoop(
             @NonNull MethodNode m,
             @NonNull Frame<Value> initialState,
             @NonNull Eval eval,

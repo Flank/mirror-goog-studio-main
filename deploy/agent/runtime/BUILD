@@ -33,25 +33,6 @@ java_import(
     ],
 )
 
-java_import(
-    name = "kotlin-stdlib",
-    jars = [
-        "lib/kotlin-stdlib.jar",
-    ],
-)
-
-kotlin_library(
-    name = "eval4j",
-    srcs = glob([
-        "src/main/kotlin/**/*.kt",
-    ]),
-    visibility = ["//visibility:private"],
-    deps = [
-        ":asm4",
-        ":interpreter_common",
-    ],
-)
-
 coverage_java_library(
     name = "instrument_java",
     srcs = [
@@ -70,14 +51,10 @@ coverage_java_library(
         "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
     ]),
     deps = [
-        ":instrument_java",
-        "//tools/base/annotations",
-
-        # For prototyping LE, we will check in our own version of the
-        # eval4j dependencies.
         ":asm4",
-        ":eval4j",
+        ":instrument_java",
         ":interpreter_common",
+        "//tools/base/annotations",
     ],
 )
 
@@ -104,10 +81,8 @@ coverage_java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":asm4",
-        ":eval4j",
         ":instrument_java",
         ":interpreter_common",
-        ":kotlin-stdlib",
         ":liveedit_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
@@ -123,10 +98,8 @@ dex_library(
     jars = [
         ":instrument_java",
         ":liveedit_java",
-        ":eval4j",
         ":interpreter_common",
         ":asm4",
-        # ":kotlin-stdlib",
     ],
     visibility = ["//visibility:public"],
 )
