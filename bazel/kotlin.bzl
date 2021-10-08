@@ -319,7 +319,8 @@ def _kotlin_library_impl(ctx):
         java_toolchain = java_toolchain,
     )
 
-    _sources(ctx, java_srcs + kotlin_srcs, source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
+    bundled_source_jars = [jar for dep in ctx.attr.bundled_deps for jar in dep[JavaInfo].source_jars]
+    _sources(ctx, java_srcs + kotlin_srcs, source_jars + bundled_source_jars, ctx.outputs.source_jar, java_toolchain, host_javabase)
 
     java_info = JavaInfo(
         output_jar = ctx.outputs.jar,
