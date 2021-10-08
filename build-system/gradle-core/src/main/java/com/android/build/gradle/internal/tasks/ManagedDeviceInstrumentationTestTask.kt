@@ -54,6 +54,7 @@ import com.android.builder.model.TestOptions
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
+import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -71,10 +72,9 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.options.Option
 import org.gradle.internal.logging.ConsoleRenderer
-import java.io.File
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
 
@@ -199,6 +199,13 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
     @OutputDirectory
     abstract fun getCoverageDirectory(): DirectoryProperty
 
+    @Input
+    abstract fun getAdditionalTestOutputEnabled(): Property<Boolean>
+
+    @Optional
+    @OutputDirectory
+    abstract fun getAdditionalTestOutputDir(): DirectoryProperty
+
     override fun doTaskAction() {
         val emulatorProvider = avdComponents.get().emulatorDirectory
         Preconditions.checkArgument(
@@ -225,6 +232,14 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         val codeCoverageOutDir = getCoverageDirectory().get().asFile
         FileUtils.cleanOutputDir(codeCoverageOutDir)
 
+        val additionalTestOutputDir = if (getAdditionalTestOutputEnabled().get()) {
+            getAdditionalTestOutputDir().get().getAsFile().also {
+                FileUtils.cleanOutputDir(it)
+            }
+        } else {
+            null
+        }
+
         val success = if (!testsFound()) {
             logger.info("No tests found, nothing to do.")
             true
@@ -235,6 +250,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                         managedDevice,
                         resultsOutDir,
                         codeCoverageOutDir,
+                        additionalTestOutputDir,
                         projectPath.get(),
                         testData.get().flavorName.get(),
                         testData.get().getAsStaticData(),
@@ -304,6 +320,19 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                     ManagedDeviceInstrumentationTestTask::getCoverageDirectory)
                 .withName(BuilderConstants.MANAGED_DEVICE)
                 .on(InternalArtifactType.MANAGED_DEVICE_CODE_COVERAGE)
+
+            val isAdditionalAndroidTestOutputEnabled = creationConfig
+                .services
+                .projectOptions[BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT]
+            if (isAdditionalAndroidTestOutputEnabled) {
+                creationConfig
+                    .artifacts
+                    .setInitialProvider(
+                        taskProvider,
+                        ManagedDeviceInstrumentationTestTask::getAdditionalTestOutputDir)
+                    .withName(BuilderConstants.MANAGED_DEVICE)
+                    .on(InternalArtifactType.MANAGED_DEVICE_ANDROID_TEST_ADDITIONAL_OUTPUT)
+            }
         }
 
         override fun configure(task: ManagedDeviceInstrumentationTestTask) {
@@ -381,6 +410,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.EXTERNAL,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR)
+
+            task.getAdditionalTestOutputEnabled()
+                .set(projectOptions[BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT])
 
             val flavor: String? = testData.flavorName.get()
             val flavorFolder = if (flavor.isNullOrEmpty()) "" else "$FD_FLAVORS/$flavor"

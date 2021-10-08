@@ -41,10 +41,15 @@ class ManagedDeviceTestRunner(
             null, utpDependencies)
     }
 ) {
+
+    /**
+     * @param additionalTestOutputDir output directory for additional test output, or null if disabled
+     */
     fun runTests(
         managedDevice: UtpManagedDevice,
         outputDirectory: File,
         coverageOutputDirectory: File,
+        additionalTestOutputDir: File?,
         projectPath: String,
         variantName: String,
         testData: StaticTestData,
@@ -88,6 +93,7 @@ class ManagedDeviceTestRunner(
                         utpTmpDir,
                         retentionConfig,
                         coverageOutputDirectory,
+                        additionalTestOutputDir,
                         useOrchestrator,
                         resultListenerServerMetadata,
                         shardConfig

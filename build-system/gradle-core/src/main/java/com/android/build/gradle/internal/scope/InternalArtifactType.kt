@@ -148,6 +148,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // Additional test output data from the device provider tasks.
     object DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
+    // Additional test output data from the Gradle managed device tasks.
+    object MANAGED_DEVICE_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // A folder with project classes instrumented with ASM visitors registered via
     // variantProperties.transformClassesWith. Internal folder file structure reflects the hierarchy
     // of namespaces

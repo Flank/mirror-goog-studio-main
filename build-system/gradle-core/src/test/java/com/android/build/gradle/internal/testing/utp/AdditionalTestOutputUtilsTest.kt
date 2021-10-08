@@ -18,20 +18,16 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
-import com.android.ddmlib.IShellOutputReceiver
 import com.android.ddmlib.MultiLineReceiver
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.eq
 import com.google.common.truth.Truth.assertThat
-import java.lang.IllegalStateException
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
-import org.mockito.quality.Strictness
-import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.mockito.Mockito.anyLong
 
@@ -49,6 +45,7 @@ class AdditionalTestOutputUtilsTest {
     }
 
     @Mock private lateinit var device: DeviceConnector
+    @Mock private lateinit var managedDevice: UtpManagedDevice
     @Mock private lateinit var testData: StaticTestData
 
     @Before
@@ -96,6 +93,34 @@ class AdditionalTestOutputUtilsTest {
         `when`(device.apiLevel).thenReturn(29)
 
         val dir = findAdditionalTestOutputDirectoryOnDevice(device, testData)
+
+        assertThat(dir).isEqualTo(
+            "/sdcard/Android/media/testedApplicationId/additional_test_output")
+    }
+
+    @Test
+    fun findAdditionalTestOutputDirectoryOnManagedDeviceWithApi15() {
+        `when`(managedDevice.api).thenReturn(15)
+
+        val dir = findAdditionalTestOutputDirectoryOnManagedDevice(managedDevice, testData)
+
+        assertThat(dir).isNull()
+    }
+
+    @Test
+    fun findAdditionalTestOutputDirectoryOnManagedDeviceWithApi16() {
+        `when`(managedDevice.api).thenReturn(16)
+
+        val dir = findAdditionalTestOutputDirectoryOnManagedDevice(managedDevice, testData)
+
+        assertThat(dir).isNull()
+    }
+
+    @Test
+    fun findAdditionalTestOutputDirectoryOnManagedDeviceWithApi29() {
+        `when`(managedDevice.api).thenReturn(29)
+
+        val dir = findAdditionalTestOutputDirectoryOnManagedDevice(managedDevice, testData)
 
         assertThat(dir).isEqualTo(
             "/sdcard/Android/media/testedApplicationId/additional_test_output")

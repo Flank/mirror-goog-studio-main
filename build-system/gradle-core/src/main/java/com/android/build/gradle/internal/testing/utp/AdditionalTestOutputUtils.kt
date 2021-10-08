@@ -66,6 +66,34 @@ fun findAdditionalTestOutputDirectoryOnDevice(
     return "${additionalTestOutputLocation}/data/${testData.instrumentationTargetPackageId}/files/test_data"
 }
 
+/**
+ * Finds a directory for storing additional test output on a Gradle managed device.
+ */
+fun findAdditionalTestOutputDirectoryOnManagedDevice(
+    device: UtpManagedDevice,
+    testData: StaticTestData
+): String? {
+    if (device.api < ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL) {
+        logger.warn("additionalTestOutput is not supported on devices running API level < 16")
+        return null
+    }
+
+    val userSpecifiedDir = testData.instrumentationRunnerArguments.get("additionalTestOutputDir")
+    if (userSpecifiedDir != null) {
+        return userSpecifiedDir
+    }
+
+    if (device.api < 29) {
+        logger.warn("additionalTestOutput is not supported on Gradle managed devices running API level < 29")
+        return null
+    }
+    // sdcard/Android/media/<package_name> is the only special-cased storage dir, which
+    // allows separate shell processes and instrumented tests to both have read/write access
+    // without needing to apply external legacy storage flags (which were removed in API 30)
+    // or --no-isolated-storage.
+    return "/sdcard/Android/media/${testData.instrumentationTargetPackageId}/additional_test_output"
+}
+
 private fun queryAdditionalTestOutputLocation(
     device: DeviceConnector,
     testData: StaticTestData
