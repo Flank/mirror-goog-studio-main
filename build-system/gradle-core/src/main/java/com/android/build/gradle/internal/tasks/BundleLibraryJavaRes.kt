@@ -154,10 +154,9 @@ abstract class BundleLibraryJavaResRunnable : ProfileAwareWorkAction<BundleLibra
             parentFile.mkdirs()
         }
 
-        val predicate = Predicate<String> { entry -> !entry.endsWith(SdkConstants.DOT_CLASS) }
         JarCreatorFactory.make(
             parameters.output.asFile.get().toPath(),
-            predicate,
+            MergeJavaResourceTask.predicate,
             parameters.jarCreatorType.get()
         ).use { jarCreator ->
             parameters.compressionLevel.orNull?.let { jarCreator.setCompressionLevel(it) }
