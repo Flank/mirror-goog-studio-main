@@ -301,7 +301,6 @@ class AndroidAdditionalTestOutputPluginTest {
 
         runPlugin {
             additionalOutputDirectoryOnHost = hostDir
-            additionalOutputDirectoryOnDevice = deviceDir
         }
 
         inOrder(mockDeviceController).apply {

@@ -100,8 +100,10 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
      */
     private fun createEmptyDirectoryOnDevice(deviceController: DeviceController) {
         val dir = config.additionalOutputDirectoryOnDevice
-        deviceController.deviceShellAndCheckSuccess("rm -rf \"${dir}\"")
-        deviceController.deviceShellAndCheckSuccess("mkdir -p \"${dir}\"")
+        if (dir.isNotBlank()) {
+            deviceController.deviceShellAndCheckSuccess("rm -rf \"${dir}\"")
+            deviceController.deviceShellAndCheckSuccess("mkdir -p \"${dir}\"")
+        }
 
         if (deviceController.isTestServiceInstalled()) {
             deviceController.deviceShellAndCheckSuccess(
@@ -247,6 +249,10 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
 
     private fun copyAdditionalTestOutputsFromDeviceToHost(deviceController: DeviceController) {
         val deviceDir = config.additionalOutputDirectoryOnDevice
+        if (deviceDir.isBlank()) {
+            return
+        }
+
         val hostDir = File(config.additionalOutputDirectoryOnHost).absolutePath
         copyFilesFromDeviceToHost(deviceController, deviceDir, hostDir)
     }
