@@ -261,6 +261,9 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
         deviceController: DeviceController,
         deviceDir: String,
         hostDir: String) {
+        if (!deviceController.isDirectory(deviceDir)) {
+            return
+        }
         // Note: "ls -1" doesn't work on API level 21.
         deviceController.deviceShellAndCheckSuccess("ls \"${deviceDir}\" | cat")
             .output
