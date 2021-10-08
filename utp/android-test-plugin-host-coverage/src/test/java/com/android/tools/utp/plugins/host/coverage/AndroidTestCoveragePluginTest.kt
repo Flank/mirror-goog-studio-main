@@ -220,7 +220,7 @@ class AndroidTestCoveragePluginTest {
         `when`(mockDeviceController.execute(
             eq(listOf(
                 "shell",
-                "run-as", TESTED_APP, "ls \"${coverageDir}\"")),
+                "run-as", TESTED_APP, "ls \"${coverageDir}\" | cat")),
             nullable(Long::class.java)
         )).thenReturn(CommandResult(0, listOf("coverage1.ec", "coverage2.ec", "non_cov_file")))
 
@@ -243,7 +243,7 @@ class AndroidTestCoveragePluginTest {
             ))
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "run-as", TESTED_APP, "ls \"${coverageDir}\""))
+                "run-as", TESTED_APP, "ls \"${coverageDir}\" | cat"))
             for (i in 1..2) {
                 verify(mockDeviceController).execute(
                     listOf(
@@ -280,7 +280,7 @@ class AndroidTestCoveragePluginTest {
         `when`(mockDeviceController.execute(
             eq(listOf(
                 "shell",
-                "ls \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${coverageDir}\"")),
+                "ls \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${coverageDir}\" | cat")),
             nullable(Long::class.java)
         )).thenReturn(CommandResult(0, listOf("coverage1.ec", "coverage2.ec", "non_cov_file")))
 
@@ -308,7 +308,7 @@ class AndroidTestCoveragePluginTest {
             ))
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "ls \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${coverageDir}\""))
+                "ls \"${TEST_STORAGE_SERVICE_OUTPUT_DIR}/${coverageDir}\" | cat"))
             for (i in 1..2) {
                 verify(mockDeviceController).execute(
                     listOf(

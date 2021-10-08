@@ -194,8 +194,9 @@ class AndroidTestCoveragePlugin(
         } else {
             testCoverageConfig.multipleCoverageFilesInDirectory
         }
+        // Note: "ls -1" doesn't work on API level 21.
         val covFileNames =
-            deviceController.deviceShellWithRunAs("ls \"${coverageDir}\"").output.filter {
+            deviceController.deviceShellWithRunAs("ls \"${coverageDir}\" | cat").output.filter {
                 it.endsWith(".ec")
             }.toList()
         covFileNames.forEach { covFileName ->
