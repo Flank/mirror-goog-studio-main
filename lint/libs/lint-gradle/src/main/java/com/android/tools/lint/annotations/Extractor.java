@@ -42,11 +42,11 @@ import static com.android.tools.lint.detector.api.Lint.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.packaging.TypedefRemover;
 import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.typedefs.TypedefRemover;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;

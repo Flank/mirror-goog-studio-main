@@ -127,6 +127,7 @@ dependencies {
     implementation libs.com.android.tools.analyticsLibrary.crash
     implementation libs.com.android.tools.analyticsLibrary.shared
     implementation libs.com.android.tools.lint.lintModel
+    implementation libs.com.android.tools.lint.lintTypedefRemover
     api project(':base:gradle-api')
     implementation project(':dataBinding:compilerCommon')
     implementation project(':dataBinding:baseLibrary')

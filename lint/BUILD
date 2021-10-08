@@ -199,9 +199,6 @@ maven_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        # NOTE NOTE NOTE - before changing this, note that lint dependencies
-        # must also be reflected in [ReflectiveLintRunner#computeUrls] as well
-        # so update both in sync
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
@@ -210,6 +207,7 @@ maven_library(
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/lint/cli",
+        "//tools/base/lint/libs/lint-typedef-remover",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

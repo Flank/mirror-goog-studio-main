@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.packaging;
+package com.android.tools.lint.typedefs;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.truth.Truth.assertThat;

@@ -2214,6 +2214,16 @@ com/android/tools/lint/lint-tests
   com/android/tools/lint/checks/
   com/android/tools/lint/checks/infrastructure/
 
+com/android/tools/lint/lint-typedef-remover
+  META-INF/
+  META-INF/MANIFEST.MF
+  NOTICE
+  com/
+  com/android/
+  com/android/tools/
+  com/android/tools/lint/
+  com/android/tools/lint/typedefs/
+
 com/android/tools/ninepatch
   META-INF/
   META-INF/MANIFEST.MF

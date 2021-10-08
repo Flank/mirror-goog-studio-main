@@ -1,0 +1,75 @@
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/common:version.bzl", "BASE_VERSION")
+
+maven_library(
+    name = "lint-typedef-remover",
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
+    coordinates = "com.android.tools.lint:lint-typedef-remover:" + BASE_VERSION,
+    description = "Utility to remove typedef annotations from classes",
+    module_name = "lint-typedef-remover",
+    notice = "NOTICE",
+    resource_strip_prefix = "tools/base/lint/libs/lint-typdef-remover",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "@maven//:com.google.guava.guava",
+        "@maven//:org.ow2.asm.asm",
+    ],
+)
+
+kotlin_test(
+    name = "tests",
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//tools/base/testutils:tools.testutils",
+    ],
+    deps = [
+        ":lint-typedef-remover",
+        "//tools/base/annotations",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+    ],
+)
+
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.typedef-remover",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.lint.typedef-remover.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/adt/idea/.idea/libraries:asm-tools",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.typedef-remover.test",
+    iml_files = ["android.sdktools.lint.typedef-remover.test.iml"],
+    test_srcs = ["src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/adt/idea/.idea/libraries:asm-tools[test]",
+        "//tools/base/lint/libs/lint-typedef-remover:studio.android.sdktools.lint.typedef-remover[module, test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.packaging;
-
-import static com.android.SdkConstants.DOT_CLASS;
+package com.android.tools.lint.typedefs;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -43,7 +41,9 @@ import org.objectweb.asm.Opcodes;
  * <p>(Based on the similar class in {@code development/tools/rmtypedefs/})
  */
 @SuppressWarnings("SpellCheckingInspection")
-public class TypedefRemover implements JarMerger.Transformer {
+public class TypedefRemover {
+    private static final String DOT_CLASS = ".class";
+
     private final boolean mQuiet;
     private final boolean mVerbose;
     private final boolean mDryRun;
@@ -122,7 +122,6 @@ public class TypedefRemover implements JarMerger.Transformer {
      *     package the file), or the original input stream if the file should be packaged as is, or
      *     possibly a different input stream with the file rewritten
      */
-    @Override
     @Nullable
     public InputStream filter(@NonNull String path, @NonNull InputStream input) {
         if (mAnnotationClassFiles.contains(path)) {

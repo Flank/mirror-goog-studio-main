@@ -22,6 +22,7 @@ dependencies {
     implementation libs.com.android.tools.external.orgJetbrains.uast
     implementation libs.com.android.tools.external.comIntellij.kotlinCompiler
     implementation libs.com.android.tools.external.comIntellij.intellijCore
+    implementation libs.com.android.tools.lint.lintTypedefRemover
     implementation project(':base:manifest-merger')
     implementation libs.com.android.tools.lint.lint
     implementation project(':base:zipflinger')

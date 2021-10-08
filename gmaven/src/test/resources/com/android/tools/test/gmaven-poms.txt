@@ -444,6 +444,7 @@ com.android.tools.build:gradle
     com.android.tools.analytics-library:crash (runtime)
     com.android.tools.analytics-library:shared (runtime)
     com.android.tools.lint:lint-model (runtime)
+    com.android.tools.lint:lint-typedef-remover (runtime)
     androidx.databinding:databinding-compiler-common (runtime)
     androidx.databinding:databinding-common (runtime)
     com.android.databinding:baseLibrary (runtime)
@@ -636,6 +637,7 @@ com.android.tools.lint:lint-gradle
     com.android.tools.external.org-jetbrains:uast (runtime)
     com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.com-intellij:intellij-core (runtime)
+    com.android.tools.lint:lint-typedef-remover (runtime)
     com.android.tools.build:manifest-merger (runtime)
     com.android.tools.lint:lint (runtime)
     com.android:zipflinger (runtime)
@@ -673,6 +675,14 @@ com.android.tools.lint:lint-tests
     org.mockito:mockito-core (runtime)
     org.ow2.asm:asm (runtime)
     org.ow2.asm:asm-tree (runtime)
+
+com.android.tools.lint:lint-typedef-remover
+  pomName=com.android.tools.lint.lint-typedef-remover
+  description=Utility to remove typedef annotations from classes
+  dependencies:
+    com.android.tools:annotations (runtime)
+    com.google.guava:guava (runtime)
+    org.ow2.asm:asm (runtime)
 
 com.android.tools.pixelprobe:pixelprobe
   pomName=Pixel Probe
