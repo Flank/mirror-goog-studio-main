@@ -180,41 +180,24 @@ maven_library(
 
 maven_library(
     name = "tools.lint-gradle",
-    # TODO: move resources out of java?
     srcs = glob([
         "libs/lint-gradle/src/main/java/**/*.kt",
         "libs/lint-gradle/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-gradle:" + BASE_VERSION,
+    description = "Gradle integration for Android Lint",
     lint_baseline = "libs/lint-gradle/lint_baseline.xml",
     module_name = "lint-gradle",
     notice = "libs/lint-gradle/NOTICE",
-    resource_strip_prefix = "tools/base/lint/libs/lint-gradle",
-    resources = glob(
-        include = ["libs/lint-gradle/src/main/java/**"],
-        exclude = [
-            "libs/lint-gradle/src/main/java/**/*.java",
-            "libs/lint-gradle/src/main/java/**/*.kt",
-        ],
-    ),
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
-        "//tools/base/build-system:tools.manifest-merger",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/lint/cli",
         "//tools/base/lint/libs/lint-typedef-remover",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/zipflinger",
         "@maven//:org.codehaus.groovy.groovy",
-        "@maven//:org.jetbrains.kotlin.kotlin-reflect",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -320,19 +303,6 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "libs/lint-gradle/src/main/**/*.java",
-        "libs/lint-gradle/src/main/**/*.kt",
-        "libs/lint-gradle/src/main/resources/**",
-    ]) + [
-        "libs/lint-gradle/build.gradle",
-        "libs/lint-gradle/NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint.studio-checks",
@@ -364,5 +334,47 @@ iml_module(
         "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",
         "//tools/base/lint:studio.android.sdktools.lint.studio-checks[module, test]",
         "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.gradle",
+    srcs = ["libs/lint-gradle/src/main/java"],
+    iml_files = ["libs/lint-gradle/android.sdktools.lint.gradle.iml"],
+    test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//tools/base/lint/libs/lint-typedef-remover:studio.android.sdktools.lint.typedef-remover[module]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.gradle.test",
+    iml_files = ["libs/lint-gradle/android.sdktools.lint.gradle.test.iml"],
+    test_data = [
+        "//prebuilts/studio/sdk:platform-tools",
+        "//prebuilts/studio/sdk:platforms/latest",
+        "//tools/adt/idea/android/annotations",
+    ],
+    test_srcs = ["libs/lint-gradle/src/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint.gradle[module, test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
     ],
 )

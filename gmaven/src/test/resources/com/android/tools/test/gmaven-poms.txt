@@ -629,22 +629,13 @@ com.android.tools.lint:lint-gradle
   pomName=com.android.tools.lint.lint-gradle
   description=Gradle integration for Android Lint
   dependencies:
-    com.android.tools:sdk-common (runtime)
-    com.android.tools:sdklib (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools.build:builder (runtime)
-    com.android.tools.build:builder-model (runtime)
-    com.android.tools.external.org-jetbrains:uast (runtime)
-    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.com-intellij:intellij-core (runtime)
-    com.android.tools.lint:lint-typedef-remover (runtime)
-    com.android.tools.build:manifest-merger (runtime)
+    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
+    com.android.tools.external.org-jetbrains:uast (runtime)
+    com.android.tools:common (runtime)
     com.android.tools.lint:lint (runtime)
-    com.android:zipflinger (runtime)
-    com.android.tools:repository (runtime)
+    com.android.tools.lint:lint-typedef-remover (runtime)
     org.codehaus.groovy:groovy (runtime)
-    org.jetbrains.kotlin:kotlin-reflect (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.lint:lint-model
   pomName=com.android.tools.lint.lint-model
