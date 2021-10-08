@@ -90,6 +90,22 @@ const ModifyParameterTransform kApplicationLoadersTransform(
     /* parameter index to modify */ 3,
     /* parameter transform function */ "modifyNativeSearchPath");
 
+// Instrumentation for IWI swap w/ resources.
+const HookTransform kResourcesManagerPreAPI31(
+    /* target class */ "android/app/ResourcesManager",
+    /* target method */ "applyNewResourceDirsLocked",
+    /* target signature */
+    "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
+    "addResourceOverlays", MethodHooks::kNoHook);
+
+// Instrumentation for IWI swap w/ resources.
+const HookTransform kResourcesManagerPostAPI31(
+    /* target class */ "android/app/ResourcesManager",
+    /* target method */ "applyNewResourceDirsLocked",
+    /* target signature */
+    "([Ljava/lang/String;Landroid/content/pm/ApplicationInfo;)V",
+    "addResourceOverlays", MethodHooks::kNoHook);
+
 // Instrumentation for IWI w/ resources.
 const HookTransform kLoadedApkTransform(
     /* target class */ "android/app/LoadedApk",
@@ -383,10 +399,20 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
 
   bool success = false;
   if (overlay_swap) {
-    auto res_manager = GetResourceManagerTransform(jni);
+    JniClass version(jni, "android/os/Build$VERSION");
+    jint sdk = version.GetStaticIntField("SDK_INT", "I");
+
+    // TODO: Basically need this sort of switch for all transforms, so we don't
+    // have to hack this in every time as APIs change.
+    const HookTransform* res_manager;
+    if (sdk < 31) {
+      res_manager = &kResourcesManagerPreAPI31;
+    } else {
+      res_manager = &kResourcesManagerPostAPI31;
+    }
     success = instrumenter.Instrument(
         {&kApplicationLoadersTransform, &kThreadTransform,
-         &kDexPathListTransform, &kLoadedApkTransform, &res_manager});
+         &kDexPathListTransform, &kLoadedApkTransform, res_manager});
   } else {
     // Disable caching for non-overlay swap, as the cache directory gets cleared
     // on installation.
