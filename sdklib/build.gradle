@@ -10,7 +10,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     implementation libs.com.android.tools.layoutlib.layoutlibApi
-    implementation project(':base:dvlib')
+    implementation libs.com.android.tools.dvlib
     api libs.com.android.tools.repository
     implementation libs.com.android.tools.common
 

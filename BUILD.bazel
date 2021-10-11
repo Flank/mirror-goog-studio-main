@@ -84,6 +84,7 @@ AGP_ARTIFACTS = [
     "//tools/base/annotations:annotations",
     "//tools/base/common:tools.common",
     "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/device_validator:tools.dvlib",
     "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
     "//tools/base/layoutlib-api:tools.layoutlib-api",
     "//tools/base/lint:tools.lint-model",

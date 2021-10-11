@@ -1,5 +1,4 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
@@ -19,38 +18,18 @@ iml_module(
     ],
 )
 
-fileset(
-    name = "tools.resources",
-    srcs = glob(["dvlib/src/main/resources/**"]),
-    mappings = {
-        "dvlib/src/main/resources/": "dvlib/",
-    },
-)
-
 maven_library(
     name = "tools.dvlib",
     srcs = glob([
         "dvlib/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:dvlib:" + BASE_VERSION,
+    description = "A Library to manage the Android device database XML files.",
     notice = "dvlib/NOTICE",
-    resource_strip_prefix = "tools/base/device_validator/dvlib",
-    resources = [":tools.resources"],
+    resource_strip_prefix = "tools/base/device_validator/dvlib/src/main/resources",
+    resources = glob(["dvlib/src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/common:tools.common",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "dvlib/src/main/**/*.java",
-        "dvlib/src/main/**/*.kt",
-        "dvlib/src/main/resources/**",
-    ]) + [
-        "dvlib/build.gradle",
-        "dvlib/NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
