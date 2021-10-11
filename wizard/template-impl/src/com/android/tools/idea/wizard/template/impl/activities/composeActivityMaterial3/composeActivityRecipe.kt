@@ -23,7 +23,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateMan
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.res.values.themesXml
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.colorKt
-import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.shapeKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.themeKt
 import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.src.app_package.ui.typeKt
 
@@ -52,7 +51,7 @@ fun RecipeExecutor.composeActivityRecipe(
   setExtVar(composeVersionVarName, "1.1.0-SNAPSHOT")
 
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
-  addDependency(mavenCoordinate = "androidx.compose.material3:material3:\${$composeVersionVarName}")
+  addDependency(mavenCoordinate = "androidx.compose.material3:material3:1.0.0-SNAPSHOT")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}",
                 configuration = "debugImplementation")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
@@ -80,7 +79,6 @@ fun RecipeExecutor.composeActivityRecipe(
   save(mainActivityKt(activityClass, defaultPreview, greeting, packageName, themeName), srcOut.resolve("${activityClass}.kt"))
   val uiThemeFolder = "ui/theme"
   save(colorKt(packageName), srcOut.resolve("$uiThemeFolder/Color.kt"))
-  save(shapeKt(packageName), srcOut.resolve("$uiThemeFolder/Shape.kt"))
   save(themeKt(packageName, themeName), srcOut.resolve("$uiThemeFolder/Theme.kt"))
   save(typeKt(packageName), srcOut.resolve("$uiThemeFolder/Type.kt"))
 
