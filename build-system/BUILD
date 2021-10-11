@@ -265,7 +265,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/fakeadbserver:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/mlkit-common:agp_gradle_build_files",
     "//tools/base/profgen/profgen:agp_gradle_build_files",
-    "//tools/base/repository:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",
     "//tools/base/sdk-common/aia-manifest-jar-generator:agp_gradle_build_files",
     "//tools/base/sdklib:agp_gradle_build_files",

@@ -120,7 +120,7 @@ dependencies {
     api project(':base:builder-model')
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
-    implementation project(':base:repository')
+    implementation libs.com.android.tools.repository
     implementation libs.com.android.tools.ddms.ddmlib
     implementation project(':base:build-system:aapt2-proto')
     implementation project(':base:build-system:aaptcompiler')

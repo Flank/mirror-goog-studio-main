@@ -186,12 +186,12 @@ com.android.tools:repository
   pomName=com.android.tools.repository
   description=A library for downloading and managing package repositories
   dependencies:
-    com.android.tools:common (runtime)
     com.android.tools.analytics-library:shared (runtime)
+    com.android.tools:common (runtime)
+    com.google.jimfs:jimfs (runtime)
     com.sun.activation:javax.activation (runtime)
     org.apache.commons:commons-compress (runtime)
     org.glassfish.jaxb:jaxb-runtime (runtime)
-    com.google.jimfs:jimfs (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools:sdk-common

@@ -54,6 +54,8 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:repository:" + BASE_VERSION,
+    description = "A library for downloading and managing package repositories",
+    module_name = "repository",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/repository",
     resources = [":tools.resources"],
@@ -166,17 +168,4 @@ genrule(
     local = 1,
     tags = ["manual"],
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )
