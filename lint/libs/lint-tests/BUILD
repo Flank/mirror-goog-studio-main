@@ -106,18 +106,16 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint.testinfrastructure",
+    srcs = ["src/main/java"],
     iml_files = ["android.sdktools.lint.testinfrastructure.iml"],
-    test_srcs = ["src/main/java"],
-    # There are no tests here, this just just test-scope as it is not bundled in Studio
-    test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
-        "//tools/base/lint:studio.android.sdktools.lint-model[module, test]",
-        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
-        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
-        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-model[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
     ],
 )
 

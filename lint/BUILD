@@ -338,17 +338,16 @@ filegroup(
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.lint.studio-checks",
+    srcs = ["studio-checks/src/main/java"],
     iml_files = ["studio-checks/android.sdktools.lint.studio-checks.iml"],
-    test_srcs = ["studio-checks/src/main/java"],
-    test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
-        "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
-        "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
-        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin[test]",
-        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
     ],
 )
 
