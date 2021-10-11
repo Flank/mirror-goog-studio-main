@@ -70,3 +70,10 @@ fun loadTransformFunction(
             "Transform jar ${jarFile.absolutePath} must provide a BiConsumer<InputStream, OutputStream>"
     )
 }
+
+fun getJavaMajorVersionOfCompiledClass(byteCode: ByteArray): Int {
+    // first 4 bytes -> java magic value, next two bytes for the minor version and the next two
+    // bytes for the major version
+    val offset = 6
+    return ((byteCode[offset].toInt() shl 8) or (byteCode[offset + 1].toInt()))
+}
