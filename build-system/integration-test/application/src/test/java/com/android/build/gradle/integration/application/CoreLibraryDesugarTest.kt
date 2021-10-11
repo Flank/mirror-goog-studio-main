@@ -251,16 +251,16 @@ class CoreLibraryDesugarTest {
     fun testKeepRulesGenerationFromAppProject() {
         executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
-                "    java.lang.Object get();$lineSeparator" +
-                "}$lineSeparator" +
-                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+        val expectedKeepRules = "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
                 "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
                 "}$lineSeparator" +
                 "-keep class j\$.util.stream.Stream {$lineSeparator" +
                 "    j\$.util.Optional findFirst();$lineSeparator" +
                 "}$lineSeparator"
-        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
+        Truth.assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
     }
 
     @Test
@@ -393,16 +393,16 @@ class CoreLibraryDesugarTest {
 
         val keepRulesOutputDir =
             InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
-                "    java.lang.Object get();$lineSeparator" +
-                "}$lineSeparator" +
-                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+        val expectedKeepRules = "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
                 "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
                 "}$lineSeparator" +
                 "-keep class j\$.util.stream.Stream {$lineSeparator" +
                 "    j\$.util.Optional findFirst();$lineSeparator" +
                 "}$lineSeparator"
-        assertTrue { collectKeepRulesUnderDirectory(keepRulesOutputDir) == expectedKeepRules }
+        Truth.assertThat(collectKeepRulesUnderDirectory(keepRulesOutputDir)).isEqualTo(expectedKeepRules)
 
         val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
