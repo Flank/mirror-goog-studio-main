@@ -49,8 +49,11 @@ androidx.databinding:databinding-ktx
   description=
   dependencies:
     org.jetbrains.kotlinx:kotlinx-coroutines-android (compile)
-    androidx.lifecycle:lifecycle-extensions (compile)
     androidx.lifecycle:lifecycle-runtime-ktx (compile)
+    androidx.lifecycle:lifecycle-livedata (compile)
+    androidx.lifecycle:lifecycle-process (compile)
+    androidx.lifecycle:lifecycle-service (compile)
+    androidx.lifecycle:lifecycle-viewmodel (compile)
     androidx.databinding:databinding-runtime (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
