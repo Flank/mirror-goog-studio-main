@@ -288,6 +288,7 @@ local_maven_repository(
         "androidx.compose.compiler:compiler:1.0.0-beta07",
         "androidx.compose.material:material:1.0.0-beta07",
         "androidx.compose.ui:ui-test-junit4:1.0.3",
+        "androidx.compose.ui:ui-test-manifest:1.0.3",
         "androidx.compose.ui:ui-tooling:1.0.3",
         "androidx.constraintlayout:constraintlayout:1.1.3",
         "androidx.constraintlayout:constraintlayout:2.0.4",
