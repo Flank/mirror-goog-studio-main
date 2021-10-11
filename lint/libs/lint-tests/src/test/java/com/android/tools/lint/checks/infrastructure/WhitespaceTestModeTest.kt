@@ -155,4 +155,38 @@ class WhitespaceTestModeTest {
         val modified = addSpacesJava(java)
         assertEquals(expected, modified)
     }
+
+    @Test
+    fun testLabels() {
+        // 202187519: TestMode.WHITESPACE should not add spaces to label references in kotlin
+
+        @Language("kotlin")
+        val kotlin = """
+            @file:Suppress("ALL")
+            fun test() = run {
+                label@ for (i in 0 until 10) {
+                    if (i < 5) {
+                        continue@label
+                    }
+                }
+                this@run
+            }
+        """.trimIndent().trim()
+
+        @Suppress("MayBeConstant")
+        @Language("kotlin")
+        val expected = "" +
+            " @file:Suppress(\"ALL\") \n" +
+            " fun   test ( )   =   run   { \n" +
+            "     label@   for   ( i   in   0   until   10 )   { \n" +
+            "         if   ( i   <   5 )   { \n" +
+            "             continue@label \n" +
+            "         } \n" +
+            "     } \n" +
+            "     this@run \n" +
+            " } "
+
+        val modified = addSpacesKotlin(kotlin)
+        assertEquals(expected, modified)
+    }
 }
