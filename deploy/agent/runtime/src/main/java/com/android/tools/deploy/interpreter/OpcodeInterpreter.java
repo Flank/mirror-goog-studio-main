@@ -443,7 +443,7 @@ class OpcodeInterpreter extends Interpreter<Value> {
                 throw new UnsupportedByteCodeException("Monitor are not supported");
 
             default:
-                throw new UnsupportedByteCodeException(insn.toString());
+                throw new UnsupportedByteCodeException(Integer.toString(insn.getOpcode()));
         }
     }
 
