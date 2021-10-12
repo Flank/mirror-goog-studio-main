@@ -435,6 +435,16 @@ class AndroidEval implements Eval {
         throw new IllegalStateException();
     }
 
+    @Override
+    public void monitorEnter(@NonNull Value value) {
+        JNI.enterMonitor(value.obj());
+    }
+
+    @Override
+    public void monitorExit(@NonNull Value value) {
+        JNI.exitMonitor(value.obj());
+    }
+
     public static Value makeValue(Object v, Type type) {
         switch (type.getSort()) {
             case Type.INT:

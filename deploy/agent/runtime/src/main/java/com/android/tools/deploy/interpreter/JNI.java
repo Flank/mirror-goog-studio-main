@@ -88,4 +88,8 @@ public class JNI {
 
     public static native double invokespecialD(
             Object obj, Class cls, String name, String desc, Object[] args, int[] unbox);
+
+    public static native void enterMonitor(Object obj);
+
+    public static native void exitMonitor(Object obj);
 }

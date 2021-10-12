@@ -342,4 +342,23 @@ Java_com_android_tools_deploy_interpreter_JNI_invokespecialC(
   return env->CallNonvirtualCharMethodA(obj, cls, info.methodID(),
                                         info.values());
 }
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_deploy_interpreter_JNI_enterMonitor(JNIEnv* env, jclass,
+                                                           jobject obj) {
+  if (obj == nullptr) {
+    ThrowIllegalStateException(env, "Cannot enter monitor with null object");
+  }
+  env->MonitorEnter(obj);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_deploy_interpreter_JNI_exitMonitor(JNIEnv* env, jclass,
+                                                          jobject obj) {
+  if (obj == nullptr) {
+    ThrowIllegalStateException(env, "Cannot exit monitor with null object");
+  }
+  env->MonitorExit(obj);
+}
+
 }  // extern "C"

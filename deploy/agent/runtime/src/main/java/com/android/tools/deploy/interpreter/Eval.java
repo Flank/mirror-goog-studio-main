@@ -73,4 +73,8 @@ public interface Eval {
             @NonNull Value target,
             MethodDescription methodDesc,
             @NonNull List<? extends Value> args);
+
+    void monitorEnter(@NonNull Value value);
+
+    void monitorExit(@NonNull Value value);
 }

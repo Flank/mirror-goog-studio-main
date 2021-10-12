@@ -437,11 +437,12 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     return IntValue.fromBool(eval.isInstanceOf(value, targetType));
                 }
 
-                // TODO: Implement with JNI
             case MONITORENTER:
+                eval.monitorEnter(value);
+                return null;
             case MONITOREXIT:
-                throw new UnsupportedByteCodeException("Monitor are not supported");
-
+                eval.monitorExit(value);
+                return null;
             default:
                 throw new UnsupportedByteCodeException(Integer.toString(insn.getOpcode()));
         }
