@@ -552,9 +552,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                             @Suppress("ControlFlowWithEmptyBody")
                             if (isJava(issue?.sourcePsi) &&
                                 evaluator.inheritsFrom(
-                                    issue?.getContainingUClass(),
-                                    CLASS_DETECTOR
-                                )
+                                        issue?.getContainingUClass(),
+                                        CLASS_DETECTOR
+                                    )
                             ) {
                                 // Don't need to do anything; we'll see this registration
                                 // as part of our regular detector visit

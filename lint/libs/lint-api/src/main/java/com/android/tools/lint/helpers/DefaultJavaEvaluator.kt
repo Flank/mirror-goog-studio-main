@@ -324,33 +324,33 @@ open class DefaultJavaEvaluator(
 
     override fun computeArgumentMapping(call: UCallExpression, method: PsiMethod):
         Map<UExpression, PsiParameter> {
-            val parameterList = method.parameterList
-            if (parameterList.parametersCount == 0) {
-                return emptyMap()
-            }
+        val parameterList = method.parameterList
+        if (parameterList.parametersCount == 0) {
+            return emptyMap()
+        }
 
-            // Call into lint-kotlin to look up the argument mapping if this call is a Kotlin method.
-            val kotlinMap = computeKotlinArgumentMapping(call, method)
-            if (kotlinMap != null) {
-                return kotlinMap
-            }
+        // Call into lint-kotlin to look up the argument mapping if this call is a Kotlin method.
+        val kotlinMap = computeKotlinArgumentMapping(call, method)
+        if (kotlinMap != null) {
+            return kotlinMap
+        }
 
-            val arguments = call.valueArguments
-            val parameters = parameterList.parameters
+        val arguments = call.valueArguments
+        val parameters = parameterList.parameters
 
-            var j = 0
-            val first = parameters.firstOrNull()?.name
-            // check if "$self" for UltraLightParameter
-            if ((first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) &&
-                isKotlin(call.sourcePsi)
-            ) {
-                // Kotlin extension method.
-                j++
-            }
+        var j = 0
+        val first = parameters.firstOrNull()?.name
+        // check if "$self" for UltraLightParameter
+        if ((first?.startsWith("\$this") == true || first?.startsWith("\$self") == true) &&
+            isKotlin(call.sourcePsi)
+        ) {
+            // Kotlin extension method.
+            j++
+        }
 
-            var i = 0
-            val n = Math.min(parameters.size, arguments.size)
-            val map = HashMap<UExpression, PsiParameter>(2 * n)
+        var i = 0
+        val n = Math.min(parameters.size, arguments.size)
+        val map = HashMap<UExpression, PsiParameter>(2 * n)
 
         /* Here is a UAST supported way to compute this, but it doesn't handle
            varargs well (some unit tests fail showing the particular scenarios)
@@ -365,25 +365,25 @@ open class DefaultJavaEvaluator(
         }
          */
 
-            while (j < n) {
+        while (j < n) {
+            val argument = arguments[i]
+            val parameter = parameters[j]
+            map[argument] = parameter
+            i++
+            j++
+        }
+
+        if (i < arguments.size && j > 0) {
+            // last parameter is varargs (same parameter annotations)
+            j--
+            while (i < arguments.size) {
                 val argument = arguments[i]
                 val parameter = parameters[j]
                 map[argument] = parameter
                 i++
-                j++
             }
-
-            if (i < arguments.size && j > 0) {
-                // last parameter is varargs (same parameter annotations)
-                j--
-                while (i < arguments.size) {
-                    val argument = arguments[i]
-                    val parameter = parameters[j]
-                    map[argument] = parameter
-                    i++
-                }
-            }
-
-            return map
         }
+
+        return map
+    }
 }

@@ -52,7 +52,7 @@ fun findKotlinStdlibPath(): List<String> {
     return paths
 }
 
-private fun isKotlinStdLib(file: File) : Boolean {
+private fun isKotlinStdLib(file: File): Boolean {
     val name = file.name
     return name.startsWith("kotlin-stdlib") || name.startsWith("kotlin-reflect") || name.startsWith("kotlin-script-runtime")
 }

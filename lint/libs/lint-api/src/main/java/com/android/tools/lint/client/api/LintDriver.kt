@@ -1523,9 +1523,9 @@ class LintDriver(
                     }
                     if (!fileAnalyzed) {
                         val message = "Lint CLI cannot analyze build.gradle files\n" +
-                                "To analyze a Gradle project, please use Gradle to run the project's 'lint' task.\n" +
-                                "See https://developer.android.com/studio/write/lint#commandline for more details.\n" +
-                                "If you are using lint in a custom context, such as in tests, add org.codehaus.groovy:groovy to the runtime classpath."
+                            "To analyze a Gradle project, please use Gradle to run the project's 'lint' task.\n" +
+                            "See https://developer.android.com/studio/write/lint#commandline for more details.\n" +
+                            "If you are using lint in a custom context, such as in tests, add org.codehaus.groovy:groovy to the runtime classpath."
                         val context = Context(this, project, main, file)
                         context.report(Incident(IssueRegistry.LINT_WARNING, Location.Companion.create(context.file), message))
                         break // Only report once.

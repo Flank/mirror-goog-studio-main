@@ -64,8 +64,8 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.utils.FileUtils
 import junit.framework.TestCase
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import java.io.File
 import java.io.IOException
 import java.util.Calendar

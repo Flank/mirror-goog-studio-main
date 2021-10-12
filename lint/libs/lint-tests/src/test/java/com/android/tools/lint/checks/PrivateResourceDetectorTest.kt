@@ -405,7 +405,7 @@ class PrivateResourceDetectorTest {
 
     private fun createLibrary(artifact: String, all: List<String>, public: List<String> = emptyList()):
         Triple<String, List<String>, List<String>> =
-            Triple(artifact, all, public)
+        Triple(artifact, all, public)
 
     private fun createLibraryMocker(
         vararg libraries: Triple<String, List<String>, List<String>>

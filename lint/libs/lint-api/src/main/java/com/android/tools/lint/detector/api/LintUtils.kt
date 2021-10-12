@@ -116,8 +116,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -161,6 +159,8 @@ import java.util.ArrayDeque
 import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 fun getInternalName(psiClass: PsiClass): String? {
     if (psiClass is PsiAnonymousClass) {
@@ -2275,7 +2275,7 @@ fun isNumberString(s: String?): Boolean {
 @OptIn(ExperimentalContracts::class)
 fun isPolyadicFromStringTemplate(element: UElement?): Boolean {
     contract {
-       returns(true) implies (element is UPolyadicExpression)
+        returns(true) implies (element is UPolyadicExpression)
     }
     return element is UPolyadicExpression && element.sourcePsi is KtStringTemplateExpression
 }
@@ -2287,77 +2287,77 @@ fun isPolyadicFromStringTemplate(element: UElement?): Boolean {
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     Map<UExpression, PsiParameter>? {
-        if (call is UImplicitCallExpression) {
-            return call.getArgumentMapping()
-        }
+    if (call is UImplicitCallExpression) {
+        return call.getArgumentMapping()
+    }
 
-        if (method.parameterList.parametersCount <= 1) {
-            // When there is at most one parameter the mapping is easy to figure out!
-            return null
-        }
+    if (method.parameterList.parametersCount <= 1) {
+        // When there is at most one parameter the mapping is easy to figure out!
+        return null
+    }
 
-        // Kotlin? If not, mapping is trivial
-        val receiver = call.psi as? KtElement ?: return null
+    // Kotlin? If not, mapping is trivial
+    val receiver = call.psi as? KtElement ?: return null
 
-        val service = ServiceManager.getService(
-            receiver.project,
-            KotlinUastResolveProviderService::class.java
-        ) ?: return null
-        val bindingContext = service.getBindingContext(receiver)
-        val parameters = method.parameterList.parameters
-        val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
-        val valueArguments = resolvedCall.valueArguments
-        val elementMap = mutableMapOf<PsiElement, UExpression>()
-        for (parameter in call.valueArguments) {
-            elementMap[parameter.psi ?: continue] = parameter
-        }
-        if (parameters.isNotEmpty()) {
-            val mapping = mutableMapOf<UExpression, PsiParameter>()
+    val service = ServiceManager.getService(
+        receiver.project,
+        KotlinUastResolveProviderService::class.java
+    ) ?: return null
+    val bindingContext = service.getBindingContext(receiver)
+    val parameters = method.parameterList.parameters
+    val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
+    val valueArguments = resolvedCall.valueArguments
+    val elementMap = mutableMapOf<PsiElement, UExpression>()
+    for (parameter in call.valueArguments) {
+        elementMap[parameter.psi ?: continue] = parameter
+    }
+    if (parameters.isNotEmpty()) {
+        val mapping = mutableMapOf<UExpression, PsiParameter>()
 
-            var firstParameterIndex = 0
+        var firstParameterIndex = 0
 
-            // Kotlin extension method? Not included in valueArguments indices.
-            // check if "$self" for UltraLightParameter
-            val firstParameter = parameters.first()
-            if (firstParameter.isReceiver()) {
-                val callReceiver = call.receiver
-                if (callReceiver != null) {
-                    mapping[callReceiver] = firstParameter
-                }
-                firstParameterIndex++
+        // Kotlin extension method? Not included in valueArguments indices.
+        // check if "$self" for UltraLightParameter
+        val firstParameter = parameters.first()
+        if (firstParameter.isReceiver()) {
+            val callReceiver = call.receiver
+            if (callReceiver != null) {
+                mapping[callReceiver] = firstParameter
             }
+            firstParameterIndex++
+        }
 
-            for ((parameterDescriptor, valueArgument) in valueArguments) {
-                for (argument in valueArgument.arguments) {
-                    val expression = argument.getArgumentExpression() ?: continue
-                    // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
-                    @Suppress("USELESS_CAST")
-                    val arg = elementMap[expression as PsiElement]
-                    val index = firstParameterIndex + parameterDescriptor.index
-                    if (index < parameters.size) {
-                        if (arg != null) {
-                            mapping[arg] = parameters[index]
-                        } else {
-                            // Somehow the argument we received as the argument child isn't present;
-                            // try to find it in some other way
-                            for ((a, b) in elementMap) {
-                                if (mapping[b] == null && a.parent === expression) {
-                                    mapping[b] = parameters[index]
-                                    break
-                                }
+        for ((parameterDescriptor, valueArgument) in valueArguments) {
+            for (argument in valueArgument.arguments) {
+                val expression = argument.getArgumentExpression() ?: continue
+                // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
+                @Suppress("USELESS_CAST")
+                val arg = elementMap[expression as PsiElement]
+                val index = firstParameterIndex + parameterDescriptor.index
+                if (index < parameters.size) {
+                    if (arg != null) {
+                        mapping[arg] = parameters[index]
+                    } else {
+                        // Somehow the argument we received as the argument child isn't present;
+                        // try to find it in some other way
+                        for ((a, b) in elementMap) {
+                            if (mapping[b] == null && a.parent === expression) {
+                                mapping[b] = parameters[index]
+                                break
                             }
                         }
                     }
                 }
             }
-
-            if (mapping.isNotEmpty()) {
-                return mapping
-            }
         }
 
-        return null
+        if (mapping.isNotEmpty()) {
+            return mapping
+        }
     }
+
+    return null
+}
 
 fun PsiMethod.getUMethod(): UMethod? {
     return UastFacade.convertElementWithParent(this, UMethod::class.java) as? UMethod

@@ -7,7 +7,12 @@ configurations {
 }
 
 dependencies {
-    ktlint "com.pinterest:ktlint:0.40.0"
+    ktlint("com.pinterest:ktlint:0.42.1") {
+        // See https://github.com/pinterest/ktlint/issues/1114
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
 }
 
 task formatJava(type: Exec) {
