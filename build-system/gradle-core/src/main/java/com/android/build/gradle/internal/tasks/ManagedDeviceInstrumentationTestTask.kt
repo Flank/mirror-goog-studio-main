@@ -55,11 +55,13 @@ import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import java.io.File
+import java.util.logging.Level
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -110,6 +112,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         @get: Nested
         abstract val utpDependencies: UtpDependencies
 
+        @get: Internal
+        abstract val utpLoggingLevel: Property<Level>
+
         fun createTestRunner(workerExecutor: WorkerExecutor): ManagedDeviceTestRunner {
 
             Preconditions.checkArgument(
@@ -128,7 +133,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
                 retentionConfig.get(),
                 useOrchestrator,
-                testShardsSize.getOrNull()
+                testShardsSize.getOrNull(),
+                utpLoggingLevel.get()
             )
         }
     }
@@ -395,6 +401,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 task.testRunnerFactory.utpDependencies
                         .resolveDependencies(task.project.configurations)
             }
+
+            val infoLoggingEnabled =
+                Logging.getLogger(ManagedDeviceInstrumentationTestTask::class.java).isInfoEnabled()
+            task.testRunnerFactory.utpLoggingLevel.set(
+                if (infoLoggingEnabled) Level.INFO else Level.WARNING
+            )
 
             task.testRunnerFactory
                 .retentionConfig

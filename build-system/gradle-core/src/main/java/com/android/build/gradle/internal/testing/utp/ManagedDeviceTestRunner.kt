@@ -23,6 +23,7 @@ import com.android.builder.testing.api.TestException
 import com.android.utils.ILogger
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
+import java.util.logging.Level
 import org.gradle.workers.WorkerExecutor
 
 class ManagedDeviceTestRunner(
@@ -32,6 +33,7 @@ class ManagedDeviceTestRunner(
     private val retentionConfig: RetentionConfig,
     private val useOrchestrator: Boolean,
     private val numShards: Int?,
+    private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
         List<UtpRunnerConfig>, String, String, File, ILogger
@@ -105,7 +107,8 @@ class ManagedDeviceTestRunner(
                 utpOutputDir,
                 runnerConfigProto,
                 configFactory.createServerConfigProto(),
-                shardConfig
+                shardConfig,
+                utpLoggingLevel
             ))
         }
 

@@ -25,6 +25,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
 import java.io.File
+import java.util.logging.Level
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
@@ -121,6 +122,7 @@ class ManagedDeviceTestRunnerTest {
             mockRetentionConfig,
             useOrchestrator = false,
             numShards,
+            Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
             capturedRunnerConfigs = runnerConfigs
             runnerConfigs.map { result }.toList()

@@ -33,6 +33,7 @@ import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Level
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
@@ -57,6 +58,7 @@ data class UtpRunnerConfig(
     ) -> RunnerConfigProto.RunnerConfig,
     val serverConfig: ServerConfigProto.ServerConfig,
     val shardConfig: ShardConfig? = null,
+    val utpLoggingLevel: Level = Level.WARNING,
 )
 
 /**
@@ -184,9 +186,9 @@ private fun runUtpTestSuite(
     }
     val loggingPropertiesFile = createUtpTempFile("logging", "properties").also { file ->
         Files.asCharSink(file, Charsets.UTF_8).write("""
-                .level=WARNING
+                .level=${config.utpLoggingLevel.getName()}
                 .handlers=java.util.logging.ConsoleHandler
-                java.util.logging.ConsoleHandler.level=WARNING
+                java.util.logging.ConsoleHandler.level=${config.utpLoggingLevel.getName()}
             """.trimIndent())
     }
     workQueue.submit(RunUtpWorkAction::class.java) { params ->

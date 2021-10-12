@@ -26,6 +26,7 @@ import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
+import java.util.logging.Level
 import org.gradle.workers.WorkerExecutor
 
 /**
@@ -42,6 +43,7 @@ class UtpTestRunner @JvmOverloads constructor(
         private val useOrchestrator: Boolean,
         private val uninstallIncompatibleApks: Boolean,
         private val utpTestResultListener: UtpTestResultListener?,
+        private val utpLoggingLevel: Level,
         private val configFactory: UtpConfigFactory = UtpConfigFactory(),
         private val runUtpTestSuiteAndWaitFunc: (
             List<UtpRunnerConfig>, String, String, File, ILogger
@@ -106,7 +108,8 @@ class UtpTestRunner @JvmOverloads constructor(
                 deviceConnector.serialNumber,
                 utpOutputDir,
                 runnerConfig,
-                configFactory.createServerConfigProto())
+                configFactory.createServerConfigProto(),
+                utpLoggingLevel = utpLoggingLevel)
         }.toList()
 
         val testSuiteResults = runUtpTestSuiteAndWaitFunc(
