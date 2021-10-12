@@ -130,7 +130,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//prebuilts/tools/common/m2:groovy-3.0.8",
+        "//prebuilts/tools/common/m2:groovy-3.0.9",
         "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module, test]",
         "//tools/base/lint:studio.android.sdktools.lint-api[module, test]",
         "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",

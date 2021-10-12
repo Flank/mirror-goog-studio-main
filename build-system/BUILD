@@ -88,7 +88,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.2"
+GRADLE_VERSION = "7.3-rc-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -184,6 +184,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/build-system/gradle-core:gradle-core",
     "//tools/base/lint:tools.lint-gradle",
     "@maven//:com.github.javaparser.javaparser-core",
+    "@maven//:org.junit.junit-bom",  # Added because of http://b/202838125
 ]
 
 maven_repository(
