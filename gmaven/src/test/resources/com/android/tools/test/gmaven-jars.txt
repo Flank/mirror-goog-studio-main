@@ -2118,6 +2118,7 @@ com/android/tools/fakeadbserver/fakeadbserver
   com/android/fakeadbserver/devicecommandhandlers/ddmsHandlers/
   com/android/fakeadbserver/hostcommandhandlers/
   com/android/fakeadbserver/shellcommandhandlers/
+  com/android/fakeadbserver/shellv2commandhandlers/
   com/android/fakeadbserver/statechangehubs/
 
 com/android/tools/layoutlib/layoutlib-api
