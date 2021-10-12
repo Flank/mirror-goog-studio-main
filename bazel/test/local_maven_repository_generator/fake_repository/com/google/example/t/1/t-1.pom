@@ -3,24 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.example</groupId>
-  <artifactId>c</artifactId>
+  <artifactId>t</artifactId>
   <version>1</version>
   <packaging>jar</packaging>
-  <name>C library</name>
+  <name>T library</name>
   <description>
     ignore me
   </description>
-  <dependencies>
-    <dependency>
-      <groupId>com.google.example</groupId>
-      <artifactId>d</artifactId>
-      <version>1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.example</groupId>
-      <artifactId>r</artifactId>
-      <version>1</version>
-      <scope>runtime</scope>
-    </dependency>
-  </dependencies>
 </project>
