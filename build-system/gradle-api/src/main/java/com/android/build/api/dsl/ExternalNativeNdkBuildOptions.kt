@@ -51,7 +51,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     val arguments: MutableList<String>
 
@@ -80,7 +80,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun arguments(vararg arguments: String)
 
@@ -106,7 +106,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     val cFlags: MutableList<String>
 
@@ -132,7 +132,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun cFlags(vararg cFlags: String)
 
@@ -158,7 +158,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     val cppFlags: MutableList<String>
 
@@ -184,7 +184,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun cppFlags(vararg cppFlags: String)
 
@@ -206,7 +206,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     val abiFilters: MutableSet<String>
 
@@ -228,7 +228,7 @@ interface ExternalNativeNdkBuildOptions {
      *
      * By default, this property is `null`.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun abiFilters(vararg abiFilters: String)
 
@@ -268,7 +268,7 @@ interface ExternalNativeNdkBuildOptions {
      * libraries that you define in your ndk-build project. However, by default, Gradle packages
      * only the shared libraries in your APK.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     val targets: MutableSet<String>
 
@@ -308,7 +308,7 @@ interface ExternalNativeNdkBuildOptions {
      * libraries that you define in your ndk-build project. However, by default, Gradle packages
      * only the shared libraries in your APK.
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     fun targets(vararg targets: String)
 }

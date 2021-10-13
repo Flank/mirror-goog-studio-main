@@ -343,3 +343,25 @@ gradle_test(
     test_output_dir = "build/base/gradle-api/build/test-results/test",
     visibility = ["//visibility:public"],
 )
+
+gradle_build(
+    name = "android_gradle_plugin_dackka_docs",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    data = [
+        "//prebuilts/studio/jdk",
+        "//prebuilts/tools/common/dackka",
+    ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    output_file = "documentation.zip",
+    output_file_source = "dist/documentation.zip",
+    repos = [
+        "//tools/base:agp_dependencies",
+        "//tools/base:agp_artifacts",
+    ],
+    tags = ["no_windows"],  # TODO(b/202837927) Investigate getting Dackka to run on windows
+    tasks = [":base:gradle-api:dackkaZip"],
+    visibility = ["//visibility:public"],
+)

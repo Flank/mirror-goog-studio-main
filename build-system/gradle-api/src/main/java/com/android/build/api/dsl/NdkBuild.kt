@@ -52,7 +52,7 @@ interface NdkBuild {
      * }
      * ```
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     @get:Incubating
     @set:Incubating
@@ -78,7 +78,7 @@ interface NdkBuild {
      * }
      * ```
      *
-     * @since 4.0.0
+     * since 4.0.0
      */
     @Incubating
     fun path(any: Any)
@@ -110,7 +110,7 @@ interface NdkBuild {
      * So, you should either keep using the default `<project_dir>/.cxx/`
      * directory or specify a path outside the temporary build directory.
      *
-     * @since 3.0.0
+     * since 3.0.0
      */
     @get:Incubating
     @set:Incubating
@@ -143,7 +143,7 @@ interface NdkBuild {
      * So, you should either keep using the default `<project_dir>/.cxx/`
      * directory or specify a path outside the temporary build directory.
      *
-     * @since 4.0.0
+     * since 4.0.0
      */
     @Incubating
     fun buildStagingDirectory(any: Any)

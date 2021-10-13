@@ -53,7 +53,7 @@ interface Cmake {
      * }
      * ```
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     @get:Incubating
     @set:Incubating
@@ -81,7 +81,7 @@ interface Cmake {
      * }
      * ```
      *
-     * @since 2.2.0
+     * since 2.2.0
      */
     @Incubating
     fun path(path: Any?)
@@ -117,7 +117,7 @@ interface Cmake {
      * `<project_dir>/<module>/.cxx/` directory or specify a path outside the
      * temporary build directory.
      *
-     * @since 3.0.0
+     * since 3.0.0
      */
     @get:Incubating
     @set:Incubating
@@ -154,7 +154,7 @@ interface Cmake {
      * `<project_dir>/<module>/.cxx/` directory or specify a path outside the
      * temporary build directory.
      *
-     * @since 3.0.0
+     * since 3.0.0
      */
     @Incubating
     fun buildStagingDirectory(buildStagingDirectory: Any?)
@@ -195,7 +195,7 @@ interface Cmake {
      * cmake.dir="<path-to-cmake>"
      * ```
      *
-     * @since 3.0.0
+     * since 3.0.0
      */
     @get:Incubating
     @set:Incubating
