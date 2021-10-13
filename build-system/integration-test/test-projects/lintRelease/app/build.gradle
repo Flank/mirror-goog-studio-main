@@ -1,0 +1,44 @@
+apply plugin: 'com.android.application'
+
+apply from: "../../commonLocalRepo.gradle"
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.android.test.project"
+        minSdkVersion 21
+        //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
+        targetSdkVersion rootProject.latestCompileSdk
+        signingConfig signingConfigs.debug
+    }
+
+    lintOptions {
+        xmlReport true
+        xmlOutput file("lint-report.xml")
+        textReport true
+        textOutput file("$reportsDir/lint-results.txt")
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            shrinkResources false
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(path: ':appLib_Library03')
+    implementation project(path: ':appLib_Library02')
+}
