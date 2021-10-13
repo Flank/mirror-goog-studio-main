@@ -57,6 +57,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
 import org.junit.After
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -74,9 +75,6 @@ class ViewLayoutInspectorTest {
 
     @get:Rule
     val frameworkRule = FrameworkStateRule()
-
-    @get:Rule
-    val frameworkStateRule = FrameworkStateRule()
 
     private val threadExceptions = mutableListOf<Throwable>()
 

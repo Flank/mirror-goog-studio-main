@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/proto" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/src/test/com/android/tools/agent/appinspection/nojarjar" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -20,29 +20,47 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import androidx.window.layout.FoldingFeature
-import androidx.window.layout.WindowInfoRepository
-import androidx.window.layout.WindowInfoRepositoryImpl
 import androidx.window.layout.WindowLayoutInfo
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.nojarjar.FoldObserverImpl
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldOrientation
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
+import org.junit.Assume
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.CyclicBarrier
 
+// This needs to be run via bazel so the classpath can be set up correctly, for both the
+// androidx.window beta02 and beta03 versions.
 class FoldObserverImplTest {
     @get:Rule
     val mainLooperRule = MainLooperRule()
 
+    val repoCompanionClass = try {
+        Class.forName("androidx.window.layout.WindowInfoRepository\$Companion")
+    }
+    catch (exception: ClassNotFoundException) {
+        Class.forName("androidx.window.layout.WindowInfoTracker\$Companion")
+    }
+
+    val repoImplClass = try {
+        Class.forName("androidx.window.layout.WindowInfoRepositoryImpl")
+    }
+    catch (exception: ClassNotFoundException) {
+        Class.forName("androidx.window.layout.WindowInfoTrackerImpl")
+    }
+
     @Test
     fun testObserver() {
         val channel = Channel<WindowLayoutInfo>()
-        WindowInfoRepository.instance = WindowInfoRepositoryImpl(channel.consumeAsFlow())
+        val repoImpl = repoImplClass.getDeclaredConstructor(Flow::class.java).newInstance(channel.consumeAsFlow())
+        repoCompanionClass.getDeclaredField("instance").set(null, repoImpl)
         val latch = CyclicBarrier(2)
         val observer = FoldObserverImpl { latch.await() }
         val activity = Activity()
