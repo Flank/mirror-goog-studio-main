@@ -314,7 +314,15 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
             // can have false positives. This can happen when you extend Kotlin classes in
             // a different module with a source dependency (e.g. in Gradle with checkDependencies
             // true) since those source files aren't fed to the top down analyzer. See b/158128960.
-            var curr = cls.superClass ?: return
+            val superClass = cls.superClass ?: return
+            val superTypes = cls.superTypes ?: return
+            if (superTypes.isNotEmpty()) {
+                val name = superTypes[0].className
+                if (name != null && name != superClass.name) {
+                    return
+                }
+            }
+            var curr = superClass
             while (true) {
                 val qualifiedName = curr.qualifiedName
                 if (qualifiedName == expectedParent) {
