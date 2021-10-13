@@ -41,7 +41,7 @@ class PerfettoManager {
   // regular intervals. This config does not specify a maximum recording size or
   // length. The |app_pkg_name| is used to tell atrace to capture
   // tracing_mark_write events from the specified app. The
-  // |acquired_buffer_size_size_kb| is to specify the
+  // |acquired_buffer_size_kb| is to specify the buffer size for ftrace events.
   static perfetto::protos::TraceConfig BuildFtraceConfig(
       std::string app_pkg_name, int acquired_buffer_size_kb);
 

@@ -231,9 +231,13 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   data_config = source->mutable_config();
   data_config->set_name("linux.system_info");
 
-  // Add data source to get Android frame lifecycle data.
+  // These data sources will be ignored on unsupported Android version.
+  // Add data source to get Android frame lifecycle data (R+).
   config.add_data_sources()->mutable_config()->set_name(
       "android.surfaceflinger.frame");
+  // Add data source to get Android frame timeline data (S+).
+  config.add_data_sources()->mutable_config()->set_name(
+      "android.surfaceflinger.frametimeline");
 
   return config;
 }
