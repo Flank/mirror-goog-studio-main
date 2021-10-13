@@ -116,7 +116,6 @@ public enum ResourceType {
          * information in the resources system.
          */
         SYNTHETIC,
-        ;
     }
 
     @NonNull private final String mName;
@@ -247,6 +246,9 @@ public enum ResourceType {
             return OVERLAYABLE;
         }
 
+        if (xmlValue.equals(MACRO.mName)) {
+            return MACRO;
+        }
         return CLASS_NAMES.get(xmlValue);
     }
 
@@ -300,7 +302,7 @@ public enum ResourceType {
      * syntax: {@code @typeName/resourceName}.
      */
     public boolean getCanBeReferenced() {
-        return mKind == Kind.REAL && this != ATTR;
+        return (mKind == Kind.REAL && this != ATTR) || this == MACRO;
     }
 
     /**
