@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.other.files.appActionsResourceFile
+package com.android.tools.idea.wizard.template.impl.other.files.shortcutResourceFile
 
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
@@ -24,37 +24,38 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
-import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
 
-val appActionsResourceFileTemplate
+val shortcutsResourceFileTemplate
   get() = template {
-    name = "App Actions XML File (deprecated)"
-    description = "Creates an App Actions XML file. Note: Do not create more than one per app"
-    minApi = MIN_API
+    name = "Shortcuts XML File"
+    description = "Creates an Shortcuts XML file"
+    minApi = 25
     category = Category.XML
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.MenuEntry)
 
     val fileName = stringParameter {
-      name = "Actions File Name"
-      default = "actions"
-      help = "Name of the App Actions XML file"
+      name = "Shortcuts File Name"
+      default = "shortcuts"
+      help = "Name of the Shortcuts XML file"
       constraints = listOf(UNIQUE, NONEMPTY)
     }
 
     thumb {
-      // TODO(b/147126989)
       File("no_activity.png")
     }
 
     widgets(
-      TextFieldWidget(fileName)
+      TextFieldWidget(fileName),
     )
 
     recipe = { data: TemplateData ->
-      appActionsResourceFileRecipe(data as ModuleTemplateData, fileName.value)
+      shortcutsResourceFileRecipe(
+        data as ModuleTemplateData,
+        fileName.value,
+      )
     }
   }

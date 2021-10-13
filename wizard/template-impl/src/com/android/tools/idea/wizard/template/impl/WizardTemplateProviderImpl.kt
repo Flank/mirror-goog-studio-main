@@ -60,6 +60,7 @@ import com.android.tools.idea.wizard.template.impl.other.customView.customViewTe
 import com.android.tools.idea.wizard.template.impl.other.files.aidlFile.aidlFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.files.appActionsResourceFile.appActionsResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.files.layoutResourceFile.layoutResourceFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.shortcutResourceFile.shortcutsResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.files.valueResourceFile.valueResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
@@ -123,6 +124,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     aidlFileTemplate,
     appActionsResourceFileTemplate,
     layoutResourceFileTemplate,
+    shortcutsResourceFileTemplate,
     valueResourceFileTemplate
   )
 }
