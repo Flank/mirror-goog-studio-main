@@ -7,6 +7,7 @@
 #include "slicer/instrumentation.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
+#include "stdlib.h"
 
 // TODO(b/182023904): it is against best practices to use the same namespace as
 // a dependency (profilerlib)
@@ -40,10 +41,26 @@ using namespace profiler;
 
 // TODO(b/182023904): remove all calls to LOG:D
 
+struct SemanticVersion {
+  uint32_t major;
+  uint32_t minor;
+  uint32_t patch;
+};
+
 const std::string debug_debugProbesKt =
     "Lkotlinx/coroutines/debug/internal/DebugProbesKt;";
 const std::string stdlib_debugProbesKt =
     "Lkotlin/coroutines/jvm/internal/DebugProbesKt;";
+
+// TODO(b/182023904) constants should start with a k with next character
+// capitalized.
+// TODO(b/182023904) replace version number with 1.6.0,
+// once the new version is released sometimes in October
+const SemanticVersion coroutines_min_supported_version = {
+    .major = 1, .minor = 5, .patch = 2};
+
+const std::string meta_inf_version_path =
+    "META-INF/kotlinx_coroutines_core.version";
 
 class JvmtiAllocator : public dex::Writer::Allocator {
  public:
@@ -349,6 +366,256 @@ bool setAgentPremainInstalledStatically(JNIEnv* jni) {
   return true;
 }
 
+// Returns a java.net.URL for the requested resource, or nullptr if something
+// goes wrong
+// Callers of this function are responsible for handling exceptions.
+jobject classloader_get_resource(JNIEnv* jni, jobject class_loader_object,
+                                 jstring resource_path) {
+  jclass klass_class_loader = jni->FindClass("java/lang/ClassLoader");
+  if (klass_class_loader == nullptr) {
+    return nullptr;
+  }
+
+  jmethodID class_loader_getResource = jni->GetMethodID(
+      klass_class_loader, "getResource", "(Ljava/lang/String;)Ljava/net/URL;");
+  if (class_loader_getResource == nullptr) {
+    return nullptr;
+  }
+
+  return jni->CallObjectMethod(class_loader_object, class_loader_getResource,
+                               resource_path);
+}
+
+// Extracts the major, minor and patch components from
+// the semantic version string passed as input and adds them
+// to the SemanticVersion pointer passed as input.
+// returns true in case of success, false otherwise.
+// the semantic version is parsed following these grammar rules:
+// https://semver.org/#backusnaur-form-grammar-for-valid-semver-versions
+// Callers of this function are responsible for handling exceptions.
+bool extractTokensFromSemanticVersion(const std::string& semantic_version,
+                                      SemanticVersion* lib_semantic_version) {
+  int separator_size = 3;
+  int versionSeparatorIndices[separator_size];
+  int index = 0;
+  for (int i = 0; i < semantic_version.size() && index < separator_size; i++) {
+    char c = semantic_version[i];
+    if (c == '.' || c == '-' || c == '+') {
+      versionSeparatorIndices[index] = i;
+      index++;
+    }
+  }
+
+  // semantic version string not well formed
+  // if string is well formed index should be 2 or 3.
+  // eg "1.2.3" -> 2 "1.2.3-beta" -> 3
+  if (index < 2) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Version of kotlinx-coroutines-core \"%s\" not well formed "
+           "according to semantic versioning.",
+           semantic_version.c_str());
+    return false;
+  }
+
+  // there was no "pre-release" or "build" component in the semantic version
+  // so match last index to end of string
+  if (index == 2) {
+    versionSeparatorIndices[2] = semantic_version.size();
+  }
+
+  int major_start = 0;
+  int minor_start = versionSeparatorIndices[0] + 1;
+  int patch_start = versionSeparatorIndices[1] + 1;
+
+  int major_len = versionSeparatorIndices[0];
+  int minor_len = versionSeparatorIndices[1] - (minor_start);
+  int patch_len = versionSeparatorIndices[2] - (patch_start);
+
+  std::string string_major = semantic_version.substr(major_start, major_len);
+  std::string string_minor = semantic_version.substr(minor_start, minor_len);
+  std::string string_patch = semantic_version.substr(patch_start, patch_len);
+
+  char* end;
+  const char* c_major = string_major.c_str();
+  int major = strtol(c_major, &end, 10);
+  if (end == c_major) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Version of kotlinx-coroutines-core \"%s\" not well formed "
+           "according to semantic versioning.",
+           semantic_version.c_str());
+    return false;
+  }
+
+  const char* c_minor = string_minor.c_str();
+  int minor = strtol(c_minor, &end, 10);
+  if (end == c_minor) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Version of kotlinx-coroutines-core \"%s\" not well formed "
+           "according to semantic versioning.",
+           semantic_version.c_str());
+    return false;
+  }
+
+  const char* c_patch = string_patch.c_str();
+  int patch = strtol(c_patch, &end, 10);
+  if (end == c_patch) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Version of kotlinx-coroutines-core \"%s\" not well formed "
+           "according to semantic versioning.",
+           semantic_version.c_str());
+    return false;
+  }
+
+  lib_semantic_version->major = major;
+  lib_semantic_version->minor = minor;
+  lib_semantic_version->patch = patch;
+
+  return true;
+}
+
+// Takes a string representing the semantic version of a library eg.
+// 1.5.0, 1.6.1-SNAPSHOT and returns true or false if the version if bigger or
+// equal to the min supported coroutines version
+// Callers of this function are responsible for handling exceptions.
+bool is_supported(std::string semantic_version) {
+  SemanticVersion lib_semantic_version = SemanticVersion();
+  if (!extractTokensFromSemanticVersion(semantic_version,
+                                        &lib_semantic_version)) {
+    return false;
+  }
+
+  if (lib_semantic_version.major == coroutines_min_supported_version.major) {
+    if (lib_semantic_version.minor == coroutines_min_supported_version.minor) {
+      return lib_semantic_version.patch >=
+             coroutines_min_supported_version.patch;
+    } else {
+      return lib_semantic_version.minor >
+             coroutines_min_supported_version.minor;
+    }
+  } else {
+    return lib_semantic_version.major > coroutines_min_supported_version.major;
+  }
+}
+
+// Callers of this function are responsible for handling exceptions.
+bool close_input_stream(JNIEnv* jni, jobject input_stream_obj,
+                        jmethodID input_stream_close) {
+  if (jni->ExceptionCheck()) {
+    return false;
+  }
+
+  jni->CallVoidMethod(input_stream_obj, input_stream_close);
+  if (jni->ExceptionCheck()) {
+    return false;
+  }
+
+  return true;
+}
+
+// This function:
+//   1. gets "META-INF/kotlinx_coroutines_core.version" from the classloader
+//   resources.
+//   2. Opens a Java InputStream to read it.
+//   3. Closes it.
+//   4. Checks if the version of the library (read from the file) is 1.6.0+
+//   5. Returns true if 1.6.0+, false otherwise.
+// Callers of this function are responsible for handling exceptions.
+bool isUsingSupportedCoroutinesVersion(JNIEnv* jni,
+                                       jobject class_loader_object) {
+  // create jstring containing META-INF/*.version path
+  jstring meta_inf_version_path_jstring =
+      jni->NewStringUTF(meta_inf_version_path.c_str());
+  if (meta_inf_version_path_jstring == nullptr) {
+    return false;
+  }
+
+  // get java.net.URL for version file resource.
+  jobject version_file_url = classloader_get_resource(
+      jni, class_loader_object, meta_inf_version_path_jstring);
+  if (version_file_url == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found",
+           meta_inf_version_path.c_str());
+    return false;
+  }
+
+  // get required java classes and methods
+  jclass klass_url = jni->FindClass("java/net/URL");
+  if (klass_url == nullptr) {
+    return false;
+  }
+
+  jclass klass_input_stream = jni->FindClass("java/io/InputStream");
+  if (klass_input_stream == nullptr) {
+    return false;
+  }
+
+  jclass klass_scanner = jni->FindClass("java/util/Scanner");
+  if (klass_scanner == nullptr) {
+    return false;
+  }
+
+  jmethodID url_openStream =
+      jni->GetMethodID(klass_url, "openStream", "()Ljava/io/InputStream;");
+  if (url_openStream == nullptr) {
+    return false;
+  }
+
+  jmethodID input_stream_close =
+      jni->GetMethodID(klass_input_stream, "close", "()V");
+  if (input_stream_close == nullptr) {
+    return false;
+  }
+
+  jmethodID scanner_nextLine =
+      jni->GetMethodID(klass_scanner, "nextLine", "()Ljava/lang/String;");
+  if (scanner_nextLine == nullptr) {
+    return false;
+  }
+
+  jmethodID scanner_constructor =
+      jni->GetMethodID(klass_scanner, "<init>", "(Ljava/io/InputStream;)V");
+  if (scanner_constructor == nullptr) {
+    return false;
+  }
+
+  // open the input stream for version_file_url
+  jobject input_stream_obj =
+      jni->CallObjectMethod(version_file_url, url_openStream);
+  if (input_stream_obj == nullptr) {
+    return false;
+  }
+
+  // create the java.util.Scanner passing the input stream to the constructor
+  jobject scanner_obj =
+      jni->NewObject(klass_scanner, scanner_constructor, input_stream_obj);
+  if (scanner_obj == nullptr) {
+    close_input_stream(jni, input_stream_obj, input_stream_close);
+    return false;
+  }
+
+  // read next line from the scanner
+  jstring lib_version_jstring =
+      (jstring)jni->CallObjectMethod(scanner_obj, scanner_nextLine);
+  if (lib_version_jstring == nullptr) {
+    close_input_stream(jni, input_stream_obj, input_stream_close);
+    return false;
+  }
+
+  if (!close_input_stream(jni, input_stream_obj, input_stream_close)) {
+    return false;
+  }
+
+  // convert jstring to char*
+  const char* version_str =
+      jni->GetStringUTFChars(lib_version_jstring, JNI_FALSE);
+  if (jni->ExceptionCheck()) {
+    return false;
+  }
+
+  // check that the version is higher or equal to 1.6.0
+  return is_supported(version_str);
+}
+
 static void JNICALL
 ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
                   jobject loader, const char* name, jobject protection_domain,
@@ -357,6 +624,20 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
   // transform DebugProbesKt
   std::string class_name(name);
   if (class_name != "kotlin/coroutines/jvm/internal/DebugProbesKt") {
+    return;
+  }
+
+  // check if coroutines version is supported
+  if (!isUsingSupportedCoroutinesVersion(jni, loader)) {
+    if (jni->ExceptionCheck()) {
+      // TODO (b/182023904) consider printing stack trace for better error
+      // visibility, here and elsewhere
+      jni->ExceptionClear();
+    }
+    SetEventNotification(jvmti, JVMTI_DISABLE,
+                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "The version of coroutines used by the app is not supported.");
     return;
   }
 

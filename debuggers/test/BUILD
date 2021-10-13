@@ -3,12 +3,11 @@ load(":coroutines_app_dex.bzl", "coroutines_app_dex")
 
 package(default_testonly = True)
 
-# TODO will enable in following CL
-#agent_test(
-#    name = "CoroutineDebuggerAgentTest_1.5.2",
-#    srcs = ["tests/com/android/tools/debuggers/CoroutineDebuggerAgentOldLibraryTest.java"],
-#    app_dex = ":app_dex_1.5.2",
-#)
+agent_test(
+    name = "CoroutineDebuggerAgentTest_1.5.2",
+    srcs = ["tests/com/android/tools/debuggers/CoroutineDebuggerAgentOldLibraryTest.java"],
+    app_dex = ":app_dex_1.5.2",
+)
 
 agent_test(
     name = "CoroutineDebuggerAgentTest_1.6.0_SNAPSHOT",
