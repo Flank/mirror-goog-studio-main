@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class DuplicateResourceDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -325,15 +324,30 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testMacro() {
+        lint().files(
+                        xml(
+                                "res/values/values.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "    <color name=\"purple\">@macro/purple</color>\n"
+                                        + "    <macro name=\"purple\">@color/purple_200</macro>\n"
+                                        + "    <color name=\"purple_200\">#FFBB86FC</color>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testDuplicates() {
         lint().files(
                         xml(
-                                        "res/values/resources.xml",
-                                        ""
-                                                + "<resources>\n"
-                                                + "    <style name=\"Settings\">\n"
-                                                + "        <item name=\"android:clipToPadding\">false</item>\n"
-                                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                "res/values/resources.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name=\"Settings\">\n"
+                                        + "        <item name=\"android:clipToPadding\">false</item>\n"
+                                        + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
                                                 + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
                                                 + "    </style>\n"
                                                 + "</resources>")
