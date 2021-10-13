@@ -2,10 +2,10 @@ package android.com.java.profilertester.fragment;
 
 import android.com.java.profilertester.R;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * An empty activity whose purpose is to own and navigate between multiple fragments, for testing

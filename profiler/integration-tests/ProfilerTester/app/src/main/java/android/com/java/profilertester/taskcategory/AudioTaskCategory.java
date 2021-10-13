@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.com.java.profilertester.R;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
