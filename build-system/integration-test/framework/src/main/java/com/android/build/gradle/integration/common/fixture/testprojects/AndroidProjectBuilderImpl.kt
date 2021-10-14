@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.testprojects
 
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 
@@ -39,6 +40,8 @@ internal class AndroidProjectBuilderImpl(
     private val buildTypes = BuildTypeContainerBuilderImpl()
     private val flavors = ProductFlavorContainerBuilderImpl()
 
+    private var androidResources: AndroidResourcesImpl? = null
+
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
         action(buildFeatures)
     }
@@ -57,6 +60,12 @@ internal class AndroidProjectBuilderImpl(
 
     override fun addFile(relativePath: String, content: String) {
         subProject.addFile(relativePath, content)
+    }
+
+    override fun androidResources(action: AndroidResources.() -> Unit) {
+        val res = androidResources ?: AndroidResourcesImpl().also { androidResources = it }
+
+        action(res)
     }
 
     internal fun prepareForWriting() {
@@ -109,6 +118,14 @@ internal class AndroidProjectBuilderImpl(
             sb.append("  testFixtures {\n")
             testFixtures.enable?.let { sb.append("    enable = $it\n") }
             sb.append("  }\n")
+        }
+
+        androidResources?.let { res ->
+            sb.append("  androidResources {\n")
+            if (res.namespaced) {
+                sb.append("    namespaced = true\n")
+            }
+            sb.append("  }\n") // ANDROID-RESOURCES
         }
 
         if (buildTypes.items.isNotEmpty()) {
@@ -220,4 +237,32 @@ internal class BuildTypeBuilderImpl(override val name: String): BuildTypeBuilder
 internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {
     override var isDefault: Boolean? = null
     override var dimension: String? = null
+}
+
+internal class AndroidResourcesImpl : AndroidResources {
+
+    override var ignoreAssetsPattern: String? = null
+    override val noCompress: MutableCollection<String> = mutableListOf()
+
+    override fun noCompress(noCompress: String) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override fun noCompress(vararg noCompress: String) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override var failOnMissingConfigEntry: Boolean = false
+
+    override val additionalParameters: MutableList<String> = mutableListOf()
+
+    override fun additionalParameters(params: String) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override fun additionalParameters(vararg params: String) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override var namespaced: Boolean = false
 }

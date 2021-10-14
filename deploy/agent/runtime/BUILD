@@ -33,42 +33,28 @@ java_import(
     ],
 )
 
-java_import(
-    name = "kotlin-stdlib",
-    jars = [
-        "lib/kotlin-stdlib.jar",
-    ],
-)
-
-kotlin_library(
-    name = "eval4j",
-    srcs = glob([
-        "src/main/kotlin/**/*.kt",
-    ]),
-    visibility = ["//visibility:private"],
-    deps = [
-        ":asm4",
-        ":interpreter_common",
-    ],
-)
-
 coverage_java_library(
-    name = "runtime_java",
+    name = "instrument_java",
     srcs = [
         "//tools/base/deploy/sites:Sites.java",
     ] + glob([
         "src/main/java/com/android/tools/deploy/instrument/**/*.java",
-        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
-        "//tools/base/annotations",
+    ],
+)
 
-        # For prototyping LE, we will check in our own version of the
-        # eval4j dependencies.
+coverage_java_library(
+    name = "liveedit_java",
+    srcs = glob([
+        "src/main/java/com/android/tools/deploy/liveedit/**/*.java",
+    ]),
+    deps = [
         ":asm4",
-        ":eval4j",
+        ":instrument_java",
         ":interpreter_common",
+        "//tools/base/annotations",
     ],
 )
 
@@ -84,15 +70,20 @@ coverage_java_test(
     name = "runtime_java_test",
     size = "small",
     srcs = glob(["src/test/java/**/*.java"]),
+    data = [
+        "//tools/base/deploy/agent/native/jni_dispatch:jni_dispatch_dso",
+    ],
     jvm_flags = [
         "-Dtest.suite.jar=runtime_java_test.jar",
         "-Ddashboards.enabled=true",
+        "-Djava.library.path=tools/base/deploy/agent/native/jni_dispatch",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        ":eval4j",
-        ":kotlin-stdlib",
-        ":runtime_java",
+        ":asm4",
+        ":instrument_java",
+        ":interpreter_common",
+        ":liveedit_java",
         ":runtime_kotlin_test",
         "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
@@ -105,11 +96,10 @@ dex_library(
     dexer = "D8",
     flags = ["--min-api 26"],
     jars = [
-        ":runtime_java",
-        ":eval4j",
+        ":instrument_java",
+        ":liveedit_java",
         ":interpreter_common",
         ":asm4",
-        # ":kotlin-stdlib",
     ],
     visibility = ["//visibility:public"],
 )

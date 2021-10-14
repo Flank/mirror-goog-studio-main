@@ -41,6 +41,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiTypeParameter
+import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -92,7 +93,6 @@ import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UWhileExpression
 import org.jetbrains.uast.UYieldExpression
-import org.jetbrains.uast.kotlin.KotlinUImportStatement
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isMethodCall
@@ -1028,7 +1028,7 @@ internal class UElementVisitor constructor(
         private var aliasedImports = false
 
         override fun visitImportStatement(node: UImportStatement): Boolean {
-            (node as? KotlinUImportStatement)?.sourcePsi?.alias?.name?.let {
+            (node.sourcePsi as? KtImportDirective)?.alias?.name?.let {
                 aliasedImports = true
             }
             return super.visitImportStatement(node)
@@ -1084,8 +1084,8 @@ internal class UElementVisitor constructor(
                     // Resolving a reference failed, but we're in a compilation unit that has
                     // aliased imports; as a workaround check the import statements
                     for (import in mContext.uastFile?.imports ?: emptyList()) {
-                        if (import is KotlinUImportStatement) {
-                            val ktImport = import.sourcePsi
+                        if (import.sourcePsi is KtImportDirective) {
+                            val ktImport = import.sourcePsi as KtImportDirective
                             if (identifier == ktImport.alias?.name) {
                                 val resource = ktImport.importedReference
                                     ?.let { it.toUElement() }

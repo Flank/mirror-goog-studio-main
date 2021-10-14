@@ -16,23 +16,29 @@
 
 package com.android.tools.lint
 
+import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.Anonymizer
 import com.android.tools.analytics.CommonMetricsData
 import com.android.tools.analytics.UsageTracker
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.getSeverity
 import com.android.utils.NullLogger
+import com.android.utils.StdLogger
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent.EventKind.LINT_SESSION
 import com.google.wireless.android.sdk.stats.LintIssueId
 import com.google.wireless.android.sdk.stats.LintPerformance
 import com.google.wireless.android.sdk.stats.LintSession
+import com.intellij.concurrency.JobScheduler
+import com.intellij.openapi.application.ApplicationManager
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * Helper for submitting analytics for batch usage of lint (for users
@@ -46,6 +52,41 @@ class LintBatchAnalytics {
         projects: Collection<Project>,
         incidents: List<Incident>
     ) {
+        val client = driver.client
+        if (LintClient.isUnitTest) {
+            return
+        }
+
+        try {
+            if (!AnalyticsSettings.initialized) {
+                AnalyticsSettings.initialize(StdLogger(StdLogger.Level.WARNING))
+            }
+        } catch (failure: Throwable) {
+            client.log(failure, "Could not initialize analytics")
+            return
+        }
+
+        if (!AnalyticsSettings.optedIn) {
+            return
+        }
+
+        var initializedUsageTracker = false
+        if (!UsageTracker.initialized) {
+            initializedUsageTracker = true
+            val scheduler = JobScheduler.getScheduler()
+            UsageTracker.initialize(scheduler)
+            UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES)
+            UsageTracker.maxJournalSize = 1000
+            val clientName = client.getClientDisplayName()
+            val clientVersion = client.getClientDisplayRevision() ?: "unknown"
+            UsageTracker.version = "$clientName $clientVersion"
+            if (java.lang.Boolean.getBoolean("idea.is.internal") ||
+                ApplicationManager.getApplication().isInternal
+            ) {
+                UsageTracker.ideaIsInternal = true
+            }
+        }
+
         assert(!projects.isEmpty())
 
         val session = LintSession.newBuilder().apply {
@@ -72,10 +113,14 @@ class LintBatchAnalytics {
 
             // We may not have raw project id's, for example when analyzing
             // non-Android projects
-            computeApplicationId(projects)?.let { setRawProjectId(it) }
+            computeApplicationId(projects)?.let { rawProjectId = it }
         }
 
         UsageTracker.log(event)
+
+        if (initializedUsageTracker) {
+            UsageTracker.deinitialize()
+        }
     }
 
     private fun computeApplicationId(projects: Collection<Project>): String? {

@@ -23,10 +23,10 @@ import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
+import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UImportStatement
-import org.jetbrains.uast.kotlin.KotlinUImportStatement
 import org.jetbrains.uast.textRange
 import java.util.Locale
 import kotlin.math.min
@@ -79,8 +79,9 @@ class ImportAliasTestMode : SourceTransformationTestMode(
 
         root.accept(object : FullyQualifyNamesTestMode.TypeVisitor(context, source) {
             override fun visitImportStatement(node: UImportStatement): Boolean {
-                if (node is KotlinUImportStatement && !node.isOnDemand &&
-                    node.sourcePsi.aliasName == null
+                val ktImportDirective = node.sourcePsi as? KtImportDirective
+                if (ktImportDirective != null && !node.isOnDemand &&
+                    ktImportDirective.aliasName == null
                 ) {
                     val resolved = node.resolve()
                     val reference = node.importReference

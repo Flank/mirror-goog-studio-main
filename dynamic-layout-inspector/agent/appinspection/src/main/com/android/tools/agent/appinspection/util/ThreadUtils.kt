@@ -18,19 +18,22 @@ package com.android.tools.agent.appinspection.util
 
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 
 object ThreadUtils {
+    @VisibleForTesting
+    var registerThread: (Thread) -> Unit = {}
 
     /**
      * Create a new thread with a special name that is allowed by ThreadWatcher.
      */
     fun newThread(runnable: Runnable): Thread {
         // ThreadWatcher accepts threads starting with "Studio:"
-        return Thread(runnable, "Studio:LayInsp")
+        return Thread(runnable, "Studio:LayInsp").apply { registerThread(this) }
     }
 
     fun assertOnMainThread() {

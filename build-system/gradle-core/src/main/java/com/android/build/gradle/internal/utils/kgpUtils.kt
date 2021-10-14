@@ -60,6 +60,52 @@ fun isKotlinPluginApplied(project: Project): Boolean {
     }
 }
 
+/**
+ * returns the kotlin plugin version, or null if plugin is not applied to this project or if plugin
+ * is applied but version can't be determined.
+ */
+fun getProjectKotlinPluginKotlinVersion(project: Project): KotlinVersion? {
+    val currVersion = getKotlinPluginVersion(project)
+    if (currVersion == null || currVersion == "unknown")
+        return null
+    return parseKotlinVersion(currVersion)
+}
+
+fun parseKotlinVersion(currVersion: String): KotlinVersion? {
+    return try {
+        val parts = currVersion.split(".")
+        val major = parts[0]
+        val minor = parts[1]
+        // We ignore the extensions, eg. "-RC".
+        val patch = parts[2].substringBefore('-')
+        return KotlinVersion(
+                major.toInt(),
+                minor.toInt(),
+                patch.toInt()
+        )
+    } catch (e: Throwable) {
+        null
+    }
+}
+
+/**
+ * returns the kotlin plugin version as string, or null if plugin is not applied to this project, or
+ * "unknown" if plugin is applied but version can't be determined.
+ */
+fun getKotlinPluginVersion(project: Project): String? {
+    val plugin = project.plugins.findPlugin("kotlin-android") ?: return null
+    return try {
+        // No null checks below because we're catching all exceptions.
+        val method = plugin.javaClass.getMethod("getKotlinPluginVersion")
+        method.isAccessible = true
+        method.invoke(plugin).toString()
+    } catch (e: Throwable) {
+        // Defensively catch all exceptions because we don't want it to crash
+        // if kotlin plugin code changes unexpectedly.
+        "unknown"
+    }
+}
+
 fun isKotlinAndroidPluginApplied(project: Project) =
         project.pluginManager.hasPlugin(KOTLIN_ANDROID_PLUGIN_ID)
 

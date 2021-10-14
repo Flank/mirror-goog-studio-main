@@ -29,6 +29,7 @@ maven_library(
         "libs/lint-model/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-model:" + BASE_VERSION,
+    description = "Lint build system model",
     module_name = "lint-model",
     notice = "libs/lint-model/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-model",
@@ -88,6 +89,7 @@ maven_library(
         "libs/lint-api/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-api:" + BASE_VERSION,
+    description = "API to build lint checks",
     module_name = "lint-api",
     notice = "libs/lint-api/NOTICE",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
@@ -146,6 +148,7 @@ maven_library(
         "libs/lint-checks/src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.lint:lint-checks:" + BASE_VERSION,
+    description = "Checks for Android Lint",
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
     module_name = "lint-checks",
     notice = "libs/lint-checks/src/main/resources/NOTICE",
@@ -322,34 +325,46 @@ exports_files(
 filegroup(
     name = "agp_gradle_build_files",
     srcs = glob([
-        "libs/intellij-core/src/main/java/**/*.java",
-        "libs/lint-model/src/main/**/*.java",
-        "libs/lint-model/src/main/**/*.kt",
-        "libs/lint-model/src/main/resources/**",
-        "libs/lint-api/src/main/**/*.java",
-        "libs/lint-api/src/main/**/*.kt",
-        "libs/lint-api/src/main/resources/**",
         "libs/lint-gradle/src/main/**/*.java",
         "libs/lint-gradle/src/main/**/*.kt",
         "libs/lint-gradle/src/main/resources/**",
-        "libs/lint-checks/src/main/**/*.java",
-        "libs/lint-checks/src/main/**/*.kt",
-        "libs/lint-checks/src/main/resources/**",
-        "libs/uast/src/main/java/**/*.java",
     ]) + [
-        "libs/lint-model/build.gradle",
-        "libs/lint-model/NOTICE",
-        "libs/lint-api/build.gradle",
-        "libs/lint-api/NOTICE",
         "libs/lint-gradle/build.gradle",
         "libs/lint-gradle/NOTICE",
-        "libs/lint-checks/build.gradle",
-        "libs/intellij-core/build.gradle",
-        "libs/intellij-core/NOTICE",
-        "libs/kotlin-compiler/build.gradle",
-        "libs/kotlin-compiler/NOTICE",
-        "libs/uast/build.gradle",
-        "libs/uast/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.studio-checks",
+    srcs = ["studio-checks/src/main/java"],
+    iml_files = ["studio-checks/android.sdktools.lint.studio-checks.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.lint.studio-checks.tests",
+    iml_files = ["studio-checks/android.sdktools.lint.studio-checks.tests.iml"],
+    test_srcs = ["studio-checks/src/test/java"],
+    test_tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint/cli:studio.android.sdktools.lint.cli[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
+        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
+        "//tools/base/lint/libs/lint-tests:studio.android.sdktools.lint.testinfrastructure[module, test]",
+        "//tools/base/lint:studio.android.sdktools.lint.studio-checks[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
 )

@@ -59,7 +59,7 @@ proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   jni->SetByteArrayRegion(arr, 0, req.class_data().size(),
                           (jbyte*)req.class_data().data());
 
-  JniClass stub(jni, "com/android/tools/deploy/instrument/LiveEditStubs");
+  JniClass stub(jni, "com/android/tools/deploy/liveedit/LiveEditStubs");
 
   const std::string key = req.class_name() + "->" + req.method_signature();
   Log::E("Live Edit key %s", key.c_str());

@@ -237,6 +237,7 @@ class ResourceReference(
             val resourceName = variable.name
             val node: UExpression = when (element) {
                 is UExpression -> element
+                // TODO(java-uast-cleanup): use plugin API instead
                 is UVariable -> JavaUDeclarationsExpression(null, listOf(element))
                 else -> throw IllegalArgumentException("element must be an expression or a UVariable")
             }

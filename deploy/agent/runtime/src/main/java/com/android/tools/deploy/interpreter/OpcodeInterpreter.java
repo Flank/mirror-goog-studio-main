@@ -337,8 +337,13 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IFLE:
             case IFNULL:
             case IFNONNULL:
-                // Handled by interpreter loop, see checkUnaryCondition()
+                {
+                    if (checkUnaryCondition(value, insn.getOpcode())) {
+                        JumpInsnNode jmp = (JumpInsnNode) insn;
+                        looper.goTo(jmp.label);
+                    }
                 return null;
+                }
 
             case TABLESWITCH:
                 TableSwitchInsnNode ts = (TableSwitchInsnNode) insn;
@@ -432,13 +437,14 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     return IntValue.fromBool(eval.isInstanceOf(value, targetType));
                 }
 
-                // TODO: Implement with JNI
             case MONITORENTER:
+                eval.monitorEnter(value);
+                return null;
             case MONITOREXIT:
-                throw new UnsupportedByteCodeException("Monitor are not supported");
-
+                eval.monitorExit(value);
+                return null;
             default:
-                throw new UnsupportedByteCodeException(insn.toString());
+                throw new UnsupportedByteCodeException(Integer.toString(insn.getOpcode()));
         }
     }
 
@@ -634,7 +640,9 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IF_ICMPLE:
             case IF_ACMPEQ:
             case IF_ACMPNE:
-                // Handled by interpreter loop, see checkBinaryCondition()
+                if (checkBinaryCondition(value1, value2, insn.getOpcode())) {
+                    looper.goTo(((JumpInsnNode) insn).label);
+                }
                 return null;
             case PUTFIELD:
                 {
@@ -678,8 +686,12 @@ class OpcodeInterpreter extends Interpreter<Value> {
                     return eval.newMultiDimensionalArray(Type.getType(node.desc), args);
                 }
 
-            case INVOKEVIRTUAL:
             case INVOKESPECIAL:
+                return eval.invokeSpecial(
+                        values.get(0),
+                        new MethodDescription((MethodInsnNode) insn),
+                        values.subList(1, values.size()));
+            case INVOKEVIRTUAL:
             case INVOKEINTERFACE:
                 {
                     return eval.invokeMethod(
@@ -763,9 +775,9 @@ class OpcodeInterpreter extends Interpreter<Value> {
             case IF_ICMPGE:
                 return value1.getInt() >= value2.getInt();
             case IF_ACMPEQ:
-                return Objects.equals(value1.obj(), value2.obj());
+                return value1.obj() == value2.obj();
             case IF_ACMPNE:
-                return !Objects.equals(value1.obj(), value2.obj());
+                return value1.obj() != value2.obj();
             default:
                 throw new UnsupportedByteCodeException("Unknown opcode: " + opcode);
         }

@@ -1,0 +1,27 @@
+> AndroidProject:
+   > variants:
+      > debug:
+         - mainArtifact:
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_r_class_jar/debug/R.jar{!}{ADDED}
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}{REMOVED}
+            - bundleInfo{REMOVED} = (null)
+         - androidTestArtifact:
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_r_class_jar/debugAndroidTest/R.jar{!}{ADDED}
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}{REMOVED}
+         - unitTestArtifact:
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}{REMOVED}
+      < debug
+      - release:
+         - mainArtifact:
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_r_class_jar/release/R.jar{!}{ADDED}
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}{REMOVED}
+            - bundleInfo{REMOVED} = (null)
+         - unitTestArtifact:
+            - additionalClassesFolders:
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}{REMOVED}
+   < variants
+< AndroidProject

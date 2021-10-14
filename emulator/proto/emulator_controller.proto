@@ -222,6 +222,23 @@ service EmulatorController {
           returns (google.protobuf.Empty) {}
   // Set foldable posture
   rpc setPosture(Posture) returns (google.protobuf.Empty) {}
+
+  // Get the backlight brightness.
+  // The following gRPC error codes can be returned:
+  // -  FAILED_PRECONDITION (code 9) if the AVD does not support hw-control.
+  rpc getBrightness(BrightnessValue) returns (BrightnessValue) {}
+
+  // Set the backlight brightness.
+  // The following gRPC error codes can be returned:
+  // -  FAILED_PRECONDITION (code 9) if the AVD does not support hw-control.
+  // -  INVALID_ARGUMENT (code 3) The brightness exceeds the valid range.
+  rpc setBrightness(BrightnessValue) returns (google.protobuf.Empty) {}
+
+  // Sets the size of the primary display of a resizable AVD. Fails if the AVD is
+  // not resizable.
+  // The following gRPC error codes can be returned:
+  // -  FAILED_PRECONDITION (code 9) if the AVD is not resizable.
+  rpc setDisplayMode(DisplayMode) returns (google.protobuf.Empty) {}
 }
 
 // A Run State that describes the state of the Virtual Machine.
@@ -306,6 +323,17 @@ message PhysicalModelValue {
     ROLLABLE0 = 13;
     ROLLABLE1 = 14;
     ROLLABLE2 = 15;
+
+    // Describing the device posture; the value should be an enum defined
+    // in Posture::PostureValue.
+    POSTURE = 16;
+
+    // Heart rate in bpm
+    HEART_RATE = 17;
+
+    // Ambient RGBC light intensity. Values are in order (Red, Green, Blue,
+    // Clear).
+    RGBC_LIGHT = 18;
   }
   PhysicalType target = 1;
 
@@ -355,6 +383,16 @@ message SensorValue {
     HUMIDITY = 8;
     MAGNETIC_FIELD_UNCALIBRATED = 9;
     GYROSCOPE_UNCALIBRATED = 10;
+
+    // HINGE_ANGLE0 (11), HINGE_ANGLE1 (12), HINGE_ANGLE2 (13) are
+    // skipped; clients should use get/setPhysicalModel() instead for these
+    // "sensors".
+
+    // Measures the heart rate in bpm.
+    HEART_RATE = 14;
+    // Measures the ambient RGBC light intensity.
+    // Values are in order (Red, Green, Blue, Clear).
+    RGBC_LIGHT = 15;
   }
 
   // Type of sensor
@@ -365,6 +403,34 @@ message SensorValue {
 
   // Value interpretation depends on sensor enum.
   ParameterValue value = 3;
+}
+
+// A single backlight brightness value.
+message BrightnessValue {
+    enum LightType {
+        // Display backlight. This will affect all displays.
+        LCD = 0;
+        KEYBOARD = 1;
+        BUTTON = 2;
+    }
+
+    // Type of light
+    LightType target = 1;
+
+    // Light intensity, ranges from 0-255.
+    uint32 value = 2;
+}
+
+message DisplayMode{
+    // in line with android/emulation/resizable_display_config.h
+    enum DisplayModeValue {
+        PHONE = 0;
+        FOLDABLE = 1;
+        TABLET = 2;
+        DESKTOP = 3;
+    }
+
+    DisplayModeValue value = 1;
 }
 
 message LogMessage {

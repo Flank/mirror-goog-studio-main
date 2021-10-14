@@ -67,4 +67,14 @@ public interface Eval {
             @NonNull MethodDescription methodDesc,
             @NonNull List<? extends Value> arguments,
             boolean invokeSpecial);
+
+    @NonNull
+    Value invokeSpecial(
+            @NonNull Value target,
+            MethodDescription methodDesc,
+            @NonNull List<? extends Value> args);
+
+    void monitorEnter(@NonNull Value value);
+
+    void monitorExit(@NonNull Value value);
 }

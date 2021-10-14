@@ -39,6 +39,10 @@ class MacroTagTest {
 
                     <macro name="str_const">FOO BAR</macro>
                     <string name="macro_ref_str_raw">@macro/str_const</string>
+
+                    <attr name="colorError"/>
+                    <color name="gm_sys_color_dark_error_state_layer">?attr/colorError</color>
+                    <macro name="gm_sys_color_dark_error_state_layer">?attr/colorError</macro>
                </resources>""".trimIndent()
             )
 

@@ -53,7 +53,6 @@ import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -1583,14 +1582,16 @@ public class AvdManager {
             properties = new HashMap<>();
         }
 
-        if (!properties.containsKey(AVD_INI_ANDROID_API) &&
-            !properties.containsKey(AVD_INI_ANDROID_CODENAME)) {
+        if (!properties.containsKey(AVD_INI_ANDROID_API)
+                && !properties.containsKey(AVD_INI_ANDROID_CODENAME)) {
             String targetHash = map.get(AVD_INFO_TARGET);
-            AndroidVersion version = AndroidTargetHash.getVersionFromHash(targetHash);
-            if (version != null) {
-                properties.put(AVD_INI_ANDROID_API, Integer.toString(version.getApiLevel()));
-                if (version.getCodename() != null) {
-                    properties.put(AVD_INI_ANDROID_CODENAME, version.getCodename());
+            if (targetHash != null) {
+                AndroidVersion version = AndroidTargetHash.getVersionFromHash(targetHash);
+                if (version != null) {
+                    properties.put(AVD_INI_ANDROID_API, Integer.toString(version.getApiLevel()));
+                    if (version.getCodename() != null) {
+                        properties.put(AVD_INI_ANDROID_CODENAME, version.getCodename());
+                    }
                 }
             }
         }

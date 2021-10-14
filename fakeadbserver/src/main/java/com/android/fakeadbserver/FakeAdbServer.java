@@ -19,7 +19,7 @@ package com.android.fakeadbserver;
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ExecCommandHandler;
-import com.android.fakeadbserver.devicecommandhandlers.SyncCommandHandler;
+import com.android.fakeadbserver.devicecommandhandlers.FakeSyncCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.TrackJdwpCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.AbbCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.FeaturesCommandHandler;
@@ -35,6 +35,7 @@ import com.android.fakeadbserver.hostcommandhandlers.ListDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.VersionCommandHandler;
+import com.android.fakeadbserver.shellcommandhandlers.CatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.CmdCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.DumpsysCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
@@ -387,7 +388,7 @@ public final class FakeAdbServer implements AutoCloseable {
 
             addDeviceHandler(new TrackJdwpCommandHandler());
             addDeviceHandler(new ExecCommandHandler());
-            addDeviceHandler(new SyncCommandHandler());
+            addDeviceHandler(new FakeSyncCommandHandler());
 
             addDeviceHandler(new LogcatCommandHandler());
             addDeviceHandler(new GetPropCommandHandler());
@@ -397,6 +398,7 @@ public final class FakeAdbServer implements AutoCloseable {
             addDeviceHandler(new WindowManagerCommandHandler());
             addDeviceHandler(new CmdCommandHandler());
             addDeviceHandler(new DumpsysCommandHandler());
+            addDeviceHandler(new CatCommandHandler());
 
             return this;
         }

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class DeviceState {
 
     private final ClientStateChangeHub mClientStateChangeHub = new ClientStateChangeHub();
-    private final Map<String, byte[]> mPathsToFiles = new HashMap<>();
+    private final Map<String, DeviceFileState> mFiles = new HashMap<>();
     private final List<String> mLogcatMessages = new ArrayList<>();
     private final Map<Integer, ClientState> mClients = new HashMap<>();
     private final Map<Integer, PortForwarder> mPortForwarders = new HashMap<>();
@@ -137,15 +137,16 @@ public class DeviceState {
         }
     }
 
-    public void createFile(@NonNull String filepath, @NonNull byte[] data) {
-        synchronized (mPathsToFiles) {
-            mPathsToFiles.put(filepath, data);
+    public void createFile(@NonNull DeviceFileState file) {
+        synchronized (mFiles) {
+            mFiles.put(file.getPath(), file);
         }
     }
 
-    public byte[] getFile(@NonNull String filepath) {
-        synchronized (mPathsToFiles) {
-            return mPathsToFiles.get(filepath);
+    @Nullable
+    public DeviceFileState getFile(@NonNull String filepath) {
+        synchronized (mFiles) {
+            return mFiles.get(filepath);
         }
     }
 

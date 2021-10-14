@@ -17,11 +17,15 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.detector.api.JavaContext
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiAssertStatement
 import com.intellij.psi.PsiVariable
 import com.intellij.psi.impl.source.tree.TreeElement
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtConstructorDelegationCall
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtSafeQualifiedExpression
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
@@ -39,12 +43,6 @@ import org.jetbrains.uast.USuperExpression
 import org.jetbrains.uast.USwitchClauseExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UastPrefixOperator
-import org.jetbrains.uast.java.JavaUAssertExpression
-import org.jetbrains.uast.java.JavaUTernaryIfExpression
-import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression
-import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
-import org.jetbrains.uast.kotlin.KotlinStringULiteralExpression
-import org.jetbrains.uast.kotlin.KotlinUSafeQualifiedExpression
 import org.jetbrains.uast.util.isArrayInitializer
 
 /**
@@ -113,7 +111,7 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : Source
                     // Super calls shouldn't be parenthesized
                     return
                 }
-                if (node is JavaUAssertExpression || node is JavaUAnnotationCallExpression) {
+                if (node.sourcePsi is PsiAssertStatement || node.sourcePsi is PsiAnnotation) {
                     return
                 }
                 if (node.isArrayInitializer()) {
@@ -123,7 +121,7 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : Source
                 if (receiver != null) {
                     if (receiver is UCallExpression ||
                         receiver is UParenthesizedExpression ||
-                        receiver is KotlinUSafeQualifiedExpression ||
+                        receiver.sourcePsi is KtSafeQualifiedExpression ||
                         includeUnlikely && (receiver is UThisExpression || receiver is USuperExpression) ||
                         receiver is UQualifiedReferenceExpression && receiver.selector !is USimpleNameReferenceExpression ||
                         receiver is USimpleNameReferenceExpression && receiver.resolve() is PsiVariable
@@ -143,19 +141,20 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : Source
             }
 
             override fun visitIfExpression(node: UIfExpression): Boolean {
-                if (node is JavaUTernaryIfExpression) {
+                if (node.isTernary) {
                     parenthesize(node.condition)
-                    parenthesize(node.thenExpression)
-                    parenthesize(node.elseExpression)
+                    node.thenExpression?.let { parenthesize(it) }
+                    node.elseExpression?.let { parenthesize(it) }
                 }
                 return super.visitIfExpression(node)
             }
 
             override fun visitLiteralExpression(node: ULiteralExpression): Boolean {
                 if (includeUnlikely) {
-                    if (node is KotlinStringULiteralExpression &&
-                        node.sourcePsi is KtLiteralStringTemplateEntry &&
-                        (node.sourcePsi.nextSibling as? TreeElement)?.elementType != KtTokens.CLOSING_QUOTE
+                    val sourcePsi = node.sourcePsi
+                    if (node.isString &&
+                        sourcePsi is KtLiteralStringTemplateEntry &&
+                        (sourcePsi.nextSibling as? TreeElement)?.elementType != KtTokens.CLOSING_QUOTE
                     ) {
                         // Offsets in template strings aren't quite right, so skip these
                         return super.visitLiteralExpression(node)
@@ -172,7 +171,7 @@ class ParenthesisTestMode(private val includeUnlikely: Boolean = false) : Source
             }
 
             override fun visitPolyadicExpression(node: UPolyadicExpression): Boolean {
-                if (node is KotlinStringTemplateUPolyadicExpression) {
+                if (node.sourcePsi is KtStringTemplateExpression) {
                     // Offsets are all wrong here so don't attempt to insert parentheses
                     return super.visitPolyadicExpression(node)
                 }

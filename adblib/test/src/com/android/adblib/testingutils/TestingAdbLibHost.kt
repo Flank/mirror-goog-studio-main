@@ -21,7 +21,7 @@ import com.android.adblib.utils.TimeoutTracker
 import java.util.concurrent.TimeUnit
 
 class TestingAdbLibHost : AdbLibHost() {
-    override val logger: AdbLogger by lazy {
+    override val logger: TestingAdbLogger by lazy {
         TestingAdbLogger()
     }
 

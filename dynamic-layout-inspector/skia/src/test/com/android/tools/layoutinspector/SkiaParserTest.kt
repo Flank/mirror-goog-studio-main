@@ -147,7 +147,7 @@ class SkiaParserTest {
         val versionMap = LayoutInspectorUtils.loadSkiaParserVersionMap(
             TestUtils.getWorkspaceRoot().resolve("$COMPONENT_PATH/files/version-map.xml"))
         assertThat(LayoutInspectorUtils.getSkpVersion(skp))
-            .isEqualTo(versionMap.servers.mapNotNull { it.skpEnd }.max())
+            .isEqualTo(versionMap.servers.mapNotNull { it.skpEnd }.maxOrNull())
     }
 
     private fun assertImagesSimilar(root: SkiaViewNode, id: Long, instance: Int, fileName: String) {

@@ -1,0 +1,3 @@
+- AndroidDsl:
+   - aaptOptions:
+      - namespacing = REQUIRED

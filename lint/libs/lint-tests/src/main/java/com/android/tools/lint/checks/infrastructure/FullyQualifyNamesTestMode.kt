@@ -23,6 +23,7 @@ import com.intellij.psi.PsiDisjunctionType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
+import org.jetbrains.kotlin.psi.KtCallElement
 import org.jetbrains.kotlin.psi.KtClassLiteralExpression
 import org.jetbrains.kotlin.psi.KtConstructorCalleeExpression
 import org.jetbrains.kotlin.psi.KtConstructorDelegationCall
@@ -46,7 +47,6 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.kotlin.KotlinClassViaConstructorUSimpleReferenceExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isConstructorCall
@@ -359,9 +359,10 @@ class FullyQualifyNamesTestMode : SourceTransformationTestMode(
 
             // We sometimes get qualified expressions that are not
             // provided as a UQualifiedReferenceExpression
-            if (reference is KotlinClassViaConstructorUSimpleReferenceExpression) {
+            if (reference.sourcePsi is KtCallElement) {
+                val ktCallElement = reference.sourcePsi as KtCallElement
                 val typeReference =
-                    (reference.sourcePsi.calleeExpression as? KtConstructorCalleeExpression)?.typeReference?.toUElement()
+                    (ktCallElement.calleeExpression as? KtConstructorCalleeExpression)?.typeReference?.toUElement()
                 if (typeReference != null) {
                     replaceClassReference(cls, typeReference, node.getExpressionType())
                     return

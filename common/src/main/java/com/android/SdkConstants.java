@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -731,9 +731,16 @@ public final class SdkConstants {
     public static final String CLASS_WATCHFACE_WSL
             = "android.support.wearable.watchface.WatchFaceService";
 
-    public static final String CLASS_WATCHFACE_ANDROIDX = "androidx.wear.watchface.WatchFaceService";
+    public static final String CLASS_WATCHFACE_ANDROIDX =
+            "androidx.wear.watchface.WatchFaceService";
 
     public static final String CLASS_TILE_SERVICE = "androidx.wear.tiles.TileService";
+
+    public static final String CLASS_COMPLICATION_SERVICE_ANDROIDX =
+            "androidx.wear.watchface.complications.datasource.ComplicationDataSourceService";
+
+    public static final String CLASS_COMPLICATION_SERVICE_WSL =
+            "android.support.wearable.complications.ComplicationProviderService";
 
     public static final String CLASS_APPLICATION = "android.app.Application";
 

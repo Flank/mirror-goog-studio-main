@@ -244,14 +244,16 @@ class AvdManagerCli extends CommandLineParser {
 
             @Override
             public void verbose(@NonNull String msgFormat, Object... args) {
-                System.out.printf(msgFormat, args);
+                if (cli.get().isVerbose()) {
+                    System.out.printf(msgFormat, args);
+                }
             }
 
             /**
-             * Used by UpdaterData.acceptLicense() to prompt for license acceptance
-             * when updating the SDK from the command-line.
-             * <p/>
-             * {@inheritDoc}
+             * Used by UpdaterData.acceptLicense() to prompt for license acceptance when updating
+             * the SDK from the command-line.
+             *
+             * <p>{@inheritDoc}
              */
             @Override
             public int readLine(@NonNull byte[] inputBuffer) throws IOException {

@@ -28,7 +28,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
-import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 
 class AnnotationLookup {
     private val resolvedKotlinClassCache = mutableMapOf<PsiClass, UClass>()
@@ -102,7 +102,7 @@ class AnnotationLookup {
             }
         }
 
-        return JavaUAnnotation.wrap(annotation)
+        return annotation.toUElement(UAnnotation::class.java)!!
     }
 
     private fun findClass(file: UFile?, target: String): UClass? {

@@ -31,11 +31,12 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParameter
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
-import org.jetbrains.uast.java.JavaUParameter
+import org.jetbrains.uast.toUElement
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -273,13 +274,13 @@ fun buildParamContextsFromCall(
         null, "phony", TypeInfo.createConstructorType(), false, false
     )
     val implicitThisParamPsi = PsiParameterImpl(implicitThisParamPsiStub)
-    val implicitThisParam = JavaUParameter(implicitThisParamPsi, null)
+    val implicitThisParam = implicitThisParamPsi.toUElement(UParameter::class.java)
     val explicitParams = when (callee) {
         is Method -> callee.element.uastParameters
         is Lambda -> callee.element.valueParameters
         is DefaultCtor -> emptyList()
     }
-    val params = listOf(implicitThisParam) + explicitParams
+    val params = listOfNotNull(implicitThisParam) + explicitParams
 
     val explicitArgReceivers = call.valueArguments.map { receiverEval[it].toList() }
     val argReceivers = listOf(implicitThisDispatchReceivers.toList()) + explicitArgReceivers

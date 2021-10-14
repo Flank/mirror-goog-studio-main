@@ -153,6 +153,7 @@ public class BazelLintWrapper {
                                 "--baseline", newBaseline.toString(),
                                 "--config", lintConfig.toString(),
                                 "--update-baseline",
+                                "--client-id", "test"
                             });
             switch (status) {
                 case 0:

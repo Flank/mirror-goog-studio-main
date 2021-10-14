@@ -21,11 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +53,9 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     private final File mMultiDexKeepFile;
     @Nullable
     private final File mMultiDexKeepProguard;
+    @NonNull private final List<File> mProguardFiles;
+    @NonNull private final List<File> mConsumerProguardFiles;
+    @NonNull private final List<File> mTestProguardFiles;
 
     protected BaseConfigImpl(@NonNull BaseConfig baseConfig) {
         mApplicationIdSuffix = baseConfig.getApplicationIdSuffix();
@@ -63,6 +66,9 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
         mMultiDexEnabled = baseConfig.getMultiDexEnabled();
         mMultiDexKeepFile = baseConfig.getMultiDexKeepFile();
         mMultiDexKeepProguard = baseConfig.getMultiDexKeepProguard();
+        mProguardFiles = ImmutableList.copyOf(baseConfig.getProguardFiles());
+        mConsumerProguardFiles = ImmutableList.copyOf(baseConfig.getConsumerProguardFiles());
+        mTestProguardFiles = ImmutableList.copyOf(baseConfig.getTestProguardFiles());
     }
 
     @Nullable
@@ -92,19 +98,19 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     @NonNull
     @Override
     public List<File> getProguardFiles() {
-        return Collections.emptyList();
+        return mProguardFiles;
     }
 
     @NonNull
     @Override
     public List<File> getConsumerProguardFiles() {
-        return Collections.emptyList();
+        return mConsumerProguardFiles;
     }
 
     @NonNull
     @Override
     public Collection<File> getTestProguardFiles() {
-        return Collections.emptyList();
+        return mTestProguardFiles;
     }
 
     @Override
@@ -148,6 +154,12 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 + mResValues
                 + ", mMultiDexEnabled="
                 + mMultiDexEnabled
+                + ", mProguardFiles="
+                + mProguardFiles
+                + ", mConsumerProguardFiles="
+                + mConsumerProguardFiles
+                + ", mTestProguardFiles="
+                + mTestProguardFiles
                 + '}';
     }
 
@@ -167,7 +179,10 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 && Objects.equals(mResValues, that.mResValues)
                 && Objects.equals(mMultiDexEnabled, that.mMultiDexEnabled)
                 && Objects.equals(mMultiDexKeepFile, that.mMultiDexKeepFile)
-                && Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard);
+                && Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard)
+                && Objects.equals(mProguardFiles, that.mProguardFiles)
+                && Objects.equals(mConsumerProguardFiles, that.mConsumerProguardFiles)
+                && Objects.equals(mTestProguardFiles, that.mTestProguardFiles);
     }
 
     @Override
@@ -180,6 +195,9 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 mResValues,
                 mMultiDexEnabled,
                 mMultiDexKeepFile,
-                mMultiDexKeepProguard);
+                mMultiDexKeepProguard,
+                mProguardFiles,
+                mConsumerProguardFiles,
+                mTestProguardFiles);
     }
 }

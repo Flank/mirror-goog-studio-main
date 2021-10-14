@@ -26,13 +26,13 @@ import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UVariable;
-import org.jetbrains.uast.kotlin.KotlinUQualifiedReferenceExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
@@ -118,7 +118,7 @@ public class TypeEvaluator {
 
         UElement resolved = node;
         if (resolved instanceof UReferenceExpression
-                && !(resolved instanceof KotlinUQualifiedReferenceExpression)) {
+                && !(resolved.getSourcePsi() instanceof KtDotQualifiedExpression)) {
             resolved = UastLintUtils.tryResolveUDeclaration(resolved);
         }
 

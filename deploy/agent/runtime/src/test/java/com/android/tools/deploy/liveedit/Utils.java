@@ -73,4 +73,8 @@ public class Utils {
         }
         return os.toByteArray();
     }
+
+    static String classToType(Class clazz) {
+        return clazz.getTypeName().replace('.', '/');
+    }
 }

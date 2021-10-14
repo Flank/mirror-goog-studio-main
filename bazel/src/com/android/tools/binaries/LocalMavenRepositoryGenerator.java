@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -233,6 +234,12 @@ public class LocalMavenRepositoryGenerator {
 
         result.sortByCoord();
 
+        if (fetch) {
+            for (DependencyNode node : unresolvedNodes) {
+                copyNotice(node.getArtifact());
+            }
+        }
+
         if (verbose) {
             JsonFileWriter.write("output.json", result);
             JsonFileWriter.print(result);
@@ -396,6 +403,39 @@ public class LocalMavenRepositoryGenerator {
         return (DependencyNode) node.getData().get(ConflictResolver.NODE_DATA_WINNER);
     }
 
+    /**
+     * Searches the artifact's parent directories for a license file and, if such a
+     * license file is found, copies it into the artifact's directory.
+     * @param artifact the artifact for which a license file will be added
+     */
+    @SuppressWarnings("FileComparisons")
+    private void copyNotice(Artifact artifact) {
+        File artifactDir = artifact.getFile().getParentFile();
+        String[] possibleNames = {"LICENSE", "LICENSE.txt", "NOTICE", "NOTICE.txt"};
+        try {
+            File currentDir = artifactDir.getCanonicalFile();
+            while (!currentDir.equals(repoPath.toFile().getCanonicalFile())) {
+                for (String name : possibleNames) {
+                    File possibleLicense = new File(currentDir, name);
+                    if (possibleLicense.exists()) {
+                        Files.copy(
+                                possibleLicense.toPath(),
+                                (new File(artifactDir, "NOTICE")).toPath());
+                        return;
+                    }
+                }
+                currentDir = currentDir.getParentFile();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // No NOTICE found for this artifact. It must be added manually if it will
+        // ever be used by the commandlinetools SDK component. That component can
+        // detect if the NOTICE file is missing, and issue and error, so we do not
+        // need to issue a warning here.
+    }
+
     public static void main(String[] args) throws Exception {
         List<String> noresolveCoords = new ArrayList<>();
         List<String> coords = new ArrayList<>();
@@ -544,7 +584,6 @@ public class LocalMavenRepositoryGenerator {
                                             .setRepositories(repositories));
 
             DependencyResult result = system.resolveDependencies(session, request);
-
             return result.getRoot();
         }
 

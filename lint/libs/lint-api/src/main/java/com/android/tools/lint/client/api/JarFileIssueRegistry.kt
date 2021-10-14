@@ -157,43 +157,42 @@ private constructor(
             jarFile: File,
             currentProject: Project?,
             driver: LintDriver?
-        ):
-            JarFileIssueRegistry? {
-                if (cache == null) {
-                    cache = HashMap()
-                } else {
-                    val reference = cache!![jarFile]
-                    if (reference != null) {
-                        val registry = reference.get()
-                        if (registry != null && registry.isUpToDate) {
-                            return registry
-                        }
+        ): JarFileIssueRegistry? {
+            if (cache == null) {
+                cache = HashMap()
+            } else {
+                val reference = cache!![jarFile]
+                if (reference != null) {
+                    val registry = reference.get()
+                    if (registry != null && registry.isUpToDate) {
+                        return registry
                     }
-                }
-
-                // Ensure that the scope-to-detector map doesn't return stale results
-                reset()
-
-                val userRegistry = loadIssueRegistry(client, jarFile, registryClassName, currentProject, driver)
-                return if (userRegistry != null) {
-                    val vendor = getVendor(client, userRegistry, jarFile)
-                    val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
-                    for (issue in userRegistry.issues) {
-                        issue.registry = jarIssueRegistry
-                        if (issue.defaultSeverity === Severity.IGNORE) {
-                            client.log(
-                                Severity.ERROR, null,
-                                "Issue ${issue.id} has defaultSeverity=IGNORE; that's " +
-                                    "not valid. Use enabledByDefault=false instead."
-                            )
-                        }
-                    }
-                    cache!![jarFile] = SoftReference(jarIssueRegistry)
-                    jarIssueRegistry
-                } else {
-                    null
                 }
             }
+
+            // Ensure that the scope-to-detector map doesn't return stale results
+            reset()
+
+            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName, currentProject, driver)
+            return if (userRegistry != null) {
+                val vendor = getVendor(client, userRegistry, jarFile)
+                val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
+                for (issue in userRegistry.issues) {
+                    issue.registry = jarIssueRegistry
+                    if (issue.defaultSeverity === Severity.IGNORE) {
+                        client.log(
+                            Severity.ERROR, null,
+                            "Issue ${issue.id} has defaultSeverity=IGNORE; that's " +
+                                "not valid. Use enabledByDefault=false instead."
+                        )
+                    }
+                }
+                cache!![jarFile] = SoftReference(jarIssueRegistry)
+                jarIssueRegistry
+            } else {
+                null
+            }
+        }
 
         /** Clear out any cached jar files. */
         fun clearCache() {

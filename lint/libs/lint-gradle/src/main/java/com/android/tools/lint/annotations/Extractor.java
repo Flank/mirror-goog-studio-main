@@ -120,11 +120,10 @@ import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParameter;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastContextKt;
 import org.jetbrains.uast.UastEmptyExpression;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastVisibility;
-import org.jetbrains.uast.java.JavaUAnnotation;
-import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
@@ -572,8 +571,8 @@ public class Extractor {
         PsiModifierList modifierList = cls.getModifierList();
         if (modifierList != null) {
             for (PsiAnnotation psiAnnotation : modifierList.getAnnotations()) {
-                UAnnotation annotation = JavaUAnnotation.wrap(psiAnnotation);
-                if (hasSourceRetention(annotation)) {
+                UAnnotation annotation = UastContextKt.toUElement(psiAnnotation, UAnnotation.class);
+                if (annotation != null && hasSourceRetention(annotation)) {
                     return true;
                 }
             }
@@ -1821,19 +1820,24 @@ public class Extractor {
                         // but we'll counteract that on the read-annotations side.
                         UAnnotation annotation = (UAnnotation) expression;
                         attributes = annotation.getAttributeValues();
-                    } else if (expression instanceof JavaUAnnotationCallExpression) {
-                        JavaUAnnotationCallExpression callExpression =
-                                (JavaUAnnotationCallExpression) expression;
-                        UAnnotation annotation = callExpression.getUAnnotation();
-                        attributes = annotation.getAttributeValues();
+                    } else if (expression instanceof UCallExpression
+                            && expression.getSourcePsi() instanceof PsiAnnotation) {
+                        PsiAnnotation nestedPsi = (PsiAnnotation) expression.getSourcePsi();
+                        UAnnotation annotation =
+                                UastContextKt.toUElement(nestedPsi, UAnnotation.class);
+                        if (annotation != null) {
+                            attributes = annotation.getAttributeValues();
+                        }
                     } else if (expression instanceof UastEmptyExpression
                             && attributes.get(0).getPsi() instanceof PsiNameValuePair) {
                         PsiAnnotationMemberValue memberValue =
                                 ((PsiNameValuePair) attributes.get(0).getPsi()).getValue();
                         if (memberValue instanceof PsiAnnotation) {
                             UAnnotation annotation =
-                                    JavaUAnnotation.wrap((PsiAnnotation) memberValue);
-                            attributes = annotation.getAttributeValues();
+                                    UastContextKt.toUElement(memberValue, UAnnotation.class);
+                            if (annotation != null) {
+                                attributes = annotation.getAttributeValues();
+                            }
                         }
                     }
                 }

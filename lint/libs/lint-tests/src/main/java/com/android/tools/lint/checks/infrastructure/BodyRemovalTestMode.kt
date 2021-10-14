@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.JavaTokenType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaToken
@@ -28,8 +29,6 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReturnExpression
-import org.jetbrains.uast.java.JavaUTernaryIfExpression
-import org.jetbrains.uast.kotlin.KotlinUReturnExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.textRange
@@ -74,7 +73,7 @@ class BodyRemovalTestMode : SourceTransformationTestMode(
         val seen = mutableSetOf<PsiElement>()
         root.accept(object : EditVisitor() {
             override fun visitIfExpression(node: UIfExpression): Boolean {
-                if (node !is JavaUTernaryIfExpression) {
+                if (!node.isTernary) {
                     toggleBraces(node.thenExpression)
                     val elseExpression = node.elseExpression?.skipParenthesizedExprDown()
                     if (elseExpression != null && elseExpression !is UIfExpression) {
@@ -122,7 +121,7 @@ class BodyRemovalTestMode : SourceTransformationTestMode(
                     return
                 }
                 val parent = skipParenthesizedExprUp(node.uastParent)
-                if (parent is UBlockExpression && node is KotlinUReturnExpression) {
+                if (parent is UBlockExpression && isKotlin(node.sourcePsi)) {
                     val count = parent.expressions.size
                     if (count != 1) return
                     val method = skipParenthesizedExprUp(parent.uastParent) as? UMethod ?: return

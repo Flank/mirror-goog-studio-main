@@ -43,10 +43,9 @@ import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastContextKt;
 import org.jetbrains.uast.UastLiteralUtils;
 import org.jetbrains.uast.UastUtils;
-import org.jetbrains.uast.java.JavaUAnnotation;
-import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /** Utility for locating permissions required by an intent or content resolver */
@@ -192,7 +191,11 @@ public class PermissionFinder {
 
                     if (annotation != null) {
                         // return getPermissionRequirement(field, annotation);
-                        return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
+                        UAnnotation uAnnotation =
+                                UastContextKt.toUElement(annotation, UAnnotation.class);
+                        if (uAnnotation != null) {
+                            return getPermissionRequirement(field, uAnnotation);
+                        }
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
                     AndroidxName fqn =
@@ -208,25 +211,33 @@ public class PermissionFinder {
                         annotation = evaluator.findAnnotation(field, s);
                     }
                     if (annotation != null) {
-                        UAnnotation uAnnotation = JavaUAnnotation.wrap(annotation);
-                        List<UNamedExpression> values = uAnnotation.getAttributeValues();
-                        UExpression o = values.size() == 1 ? values.get(0).getExpression() : null;
-                        if (o instanceof JavaUAnnotationCallExpression) {
-                            JavaUAnnotation nested =
-                                    ((JavaUAnnotationCallExpression) o).getUAnnotation();
-                            String qualifiedName = nested.getQualifiedName();
-                            if (PERMISSION_ANNOTATION.isEquals(qualifiedName)
-                                    || AOSP_PERMISSION_ANNOTATION.equals(qualifiedName)) {
-                                return getPermissionRequirement(field, nested);
+                        UAnnotation uAnnotation =
+                                UastContextKt.toUElement(annotation, UAnnotation.class);
+                        if (uAnnotation != null) {
+                            List<UNamedExpression> values = uAnnotation.getAttributeValues();
+                            UExpression o =
+                                    values.size() == 1 ? values.get(0).getExpression() : null;
+                            if (o instanceof UCallExpression
+                                    && o.getSourcePsi() instanceof PsiAnnotation) {
+                                PsiAnnotation nestedPsi = (PsiAnnotation) o.getSourcePsi();
+                                UAnnotation nested =
+                                        UastContextKt.toUElement(nestedPsi, UAnnotation.class);
+                                if (nested != null) {
+                                    String qualifiedName = nested.getQualifiedName();
+                                    if (PERMISSION_ANNOTATION.isEquals(qualifiedName)
+                                            || AOSP_PERMISSION_ANNOTATION.equals(qualifiedName)) {
+                                        return getPermissionRequirement(field, nested);
+                                    }
+                                }
+                            } else {
+                                // The complex annotations used for read/write cannot be
+                                // expressed in the external annotations format, so they're inlined.
+                                // (See Extractor.AnnotationData#write).
+                                //
+                                // Instead we've inlined the fields of the annotation on the
+                                // outer one:
+                                return getPermissionRequirement(field, uAnnotation);
                             }
-                        } else {
-                            // The complex annotations used for read/write cannot be
-                            // expressed in the external annotations format, so they're inlined.
-                            // (See Extractor.AnnotationData#write).
-                            //
-                            // Instead we've inlined the fields of the annotation on the
-                            // outer one:
-                            return getPermissionRequirement(field, uAnnotation);
                         }
                     }
                 } else {

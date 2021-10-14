@@ -16,6 +16,7 @@
 package com.android.testutils
 
 import org.junit.rules.ExternalResource
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.MockedStatic
 import org.mockito.Mockito
@@ -81,6 +82,24 @@ object MockitoKt {
    * @see Mockito.refEq
    */
   fun <T> refEq(arg: T): T = ArgumentMatchers.refEq(arg)
+
+  /**
+   * Wrapper around [ArgumentCaptor.capture] that doesn't return null.
+   * If used with Kotlin functions that do not accept nullable types it causes a "must not be null" exception.
+   *
+   * Using the not-null assertion operator (!!) doesn't work because the result of the method call is recorded internally by Mockito.
+   * @see ArgumentCaptor.capture
+   */
+   fun <T> capture(argumentCaptor: ArgumentCaptor<T>): T = argumentCaptor.capture()
+
+  /**
+   * Wrapper around [Mockito.same] that doesn't return null.
+   * If used with Kotlin functions that do not accept nullable types it causes a "must not be null" exception.
+   *
+   * Using the not-null assertion operator (!!) doesn't work because the result of the method call is recorded internally by Mockito.
+   * @see Mockito.same
+   */
+   fun <T> same(value: T): T = Mockito.same(value)
 }
 
 /**

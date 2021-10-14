@@ -717,8 +717,8 @@ class VersionChecks(
                     name.startsWith("isAtLeastQ") -> return atMost(29)
                     // Try to guess future API levels before they're announced
                     name.startsWith("isAtLeast") &&
-                        name.length == 10 && Character.isUpperCase(name[9])
-                        && name[9] > 'Q' ->
+                        name.length == 10 && Character.isUpperCase(name[9]) &&
+                        name[9] > 'Q' ->
                         return atMost(SdkVersionInfo.HIGHEST_KNOWN_API + 1)
                 }
             }

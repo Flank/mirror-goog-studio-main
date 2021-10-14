@@ -16,5 +16,11 @@
       <artifactId>d</artifactId>
       <version>1</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.example</groupId>
+      <artifactId>r</artifactId>
+      <version>1</version>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 </project>

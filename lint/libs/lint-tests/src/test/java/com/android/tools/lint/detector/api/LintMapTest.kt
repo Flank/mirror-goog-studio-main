@@ -40,7 +40,7 @@ class LintMapTest {
         assertThat(map.getInt("key")).isEqualTo(0)
         map.remove("key")
         assertThat(map.getInt("key")).isNull()
-        assertThat(map.put("key", 42)).isSameInstanceAs(map)
+        assertThat(map.put("key", 42)).isSameAs(map)
 
         assertThat(map.getInt("key2")).isEqualTo(84)
         assertThat(map.getString("key2")).isNull()
@@ -110,7 +110,7 @@ class LintMapTest {
         parent.put("map1", map)
         assertThat(parent.getMap("map1")!!.getApi("key")).isEqualTo(9)
         assertThat(parent.getMap("map1")!!.getApi("api")).isEqualTo(11)
-        assertThat(map.getMap("map")).isSameInstanceAs(map2)
+        assertThat(map.getMap("map")).isSameAs(map2)
     }
 
     @Test
@@ -119,7 +119,7 @@ class LintMapTest {
         val location = Location.create(File("path"), "test", 0, 0)
         assertThat(map.getLocation("key")).isNull()
         map.put("key", location)
-        assertThat(map.getLocation("key")).isSameInstanceAs(location)
+        assertThat(map.getLocation("key")).isSameAs(location)
         assertThat(map.getString("key")).isNull()
         assertThat(map.getInt("key")).isNull()
     }
@@ -131,7 +131,7 @@ class LintMapTest {
         val incident = Incident(IssueRegistry.LINT_WARNING, "test", location)
         assertThat(map.getIncident("key")).isNull()
         map.put("key", incident)
-        assertThat(map.getIncident("key")).isSameInstanceAs(incident)
+        assertThat(map.getIncident("key")).isSameAs(incident)
         assertThat(map.getLocation("key")).isNull()
         assertThat(map.getString("key")).isNull()
         assertThat(map.getInt("key")).isNull()

@@ -22,15 +22,16 @@ import junit.framework.TestCase;
  */
 public class ResourceTypeTest extends TestCase {
 
-  public void testName() {
-    assertEquals("array", ResourceType.ARRAY.getName());
-    assertEquals("mipmap", ResourceType.MIPMAP.getName());
-  }
+    public void testName() {
+        assertEquals("array", ResourceType.ARRAY.getName());
+        assertEquals("mipmap", ResourceType.MIPMAP.getName());
+    }
 
-  public void testGetDisplayName() {
-    assertEquals("Array", ResourceType.ARRAY.getDisplayName());
-    assertEquals("Mip Map", ResourceType.MIPMAP.getDisplayName());
-  }
+    public void testGetDisplayName() {
+        assertEquals("Array", ResourceType.ARRAY.getDisplayName());
+        assertEquals("Mip Map", ResourceType.MIPMAP.getDisplayName());
+        assertEquals("Macro resource replacement", ResourceType.MACRO.getDisplayName());
+    }
 
     public void testFromXmlTag() {
         assertEquals(ResourceType.ANIM, ResourceType.fromXmlTagName("anim"));
@@ -40,6 +41,7 @@ public class ResourceTypeTest extends TestCase {
         assertEquals(ResourceType.STRING, ResourceType.fromXmlTagName("string"));
         assertEquals(ResourceType.STYLE, ResourceType.fromXmlTagName("style"));
         assertEquals(ResourceType.XML, ResourceType.fromXmlTagName("xml"));
+        assertEquals(ResourceType.MACRO, ResourceType.fromXmlTagName("macro"));
 
         // In XML, "declare-styleable" has to be used.
         assertEquals(ResourceType.STYLEABLE, ResourceType.fromXmlTagName("declare-styleable"));
@@ -94,6 +96,9 @@ public class ResourceTypeTest extends TestCase {
         assertNull(ResourceType.fromClassName("declare"));
         assertNull(ResourceType.fromClassName("pluralz"));
         assertNull(ResourceType.fromClassName("strin"));
+
+        // There's no macro class.
+        assertNull(ResourceType.fromClassName("macro"));
     }
 
     public void testFromXmlValue() {
@@ -104,6 +109,7 @@ public class ResourceTypeTest extends TestCase {
         assertEquals(ResourceType.STRING, ResourceType.fromXmlValue("string"));
         assertEquals(ResourceType.STYLE, ResourceType.fromXmlValue("style"));
         assertEquals(ResourceType.XML, ResourceType.fromXmlValue("xml"));
+        assertEquals(ResourceType.MACRO, ResourceType.fromXmlValue("macro"));
 
         // Styleable doesn't work at all.
         assertNull(ResourceType.fromXmlValue("declare-styleable"));
@@ -129,10 +135,10 @@ public class ResourceTypeTest extends TestCase {
 
         // Required by Layoutlib for dealing with appt attributes
         assertEquals(ResourceType.AAPT, ResourceType.fromXmlValue("_aapt"));
-  }
+    }
 
-  public void testSynthetic() {
-      assertTrue(ResourceType.AAPT.isSynthetic());
-      assertFalse(ResourceType.STRING.isSynthetic());
-  }
+    public void testSynthetic() {
+        assertTrue(ResourceType.AAPT.isSynthetic());
+        assertFalse(ResourceType.STRING.isSynthetic());
+    }
 }

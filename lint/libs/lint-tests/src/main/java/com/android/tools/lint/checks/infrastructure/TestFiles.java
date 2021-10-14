@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -39,6 +40,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.intellij.lang.annotations.Language;
@@ -435,10 +438,31 @@ public class TestFiles {
         return new TestFile.ImageTestFile(to, width, height);
     }
 
-    public static TestFile[] getLintClassPath() {
+    public static TestFile[] getLintClassPath() throws IOException {
         String classPath = System.getProperty("java.class.path");
         List<TestFile> paths = new ArrayList<>();
-        for (String path : classPath.split(":")) { // ; on Windows?
+        String[] split = classPath.split(":");
+        if (split.length == 1) {
+            // Classpath jar?
+            try (JarFile jarFile = new JarFile(new File(split[0]))) {
+                Attributes attributes = jarFile.getManifest().getMainAttributes();
+                String value = attributes.getValue("Class-Path");
+                if (value != null) {
+                    List<String> list = new ArrayList<>();
+                    for (String s : value.split(" ")) {
+                        if (s.startsWith("file:")) {
+                            list.add(SdkUtils.urlToFile(s).getPath());
+                        } else {
+                            list.add(s);
+                        }
+                    }
+                    if (!list.isEmpty()) {
+                        split = list.toArray(new String[0]);
+                    }
+                }
+            }
+        }
+        for (String path : split) { // ; on Windows?
             File file = new File(path);
             String name = file.getName();
             if (name.startsWith("lint-")
@@ -446,7 +470,8 @@ public class TestFiles {
                     || name.startsWith("uast-")
                     || name.startsWith("intellij-core")
                     || name.endsWith("uast.jar") // bazel
-                    || name.endsWith(".lint-api-base") // IJ
+                    || name.startsWith("android.sdktools.lint") // IJ ADT
+                    || name.endsWith(".lint-api-base") // IJ BASE
                     || name.endsWith("lint-api.jar") // bazel
                     || name.endsWith(".lint.checks-base") // IJ
                     || name.endsWith("lint-checks.jar") // bazel

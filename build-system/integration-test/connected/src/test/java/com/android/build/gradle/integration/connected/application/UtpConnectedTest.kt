@@ -24,11 +24,12 @@ import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import java.io.IOException
+import java.nio.file.Files
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
-import java.io.IOException
 
 /**
  * Connected tests using UTP test executor.
@@ -45,6 +46,7 @@ class UtpConnectedTest {
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
         const val TEST_COV_XML = "build/reports/coverage/androidTest/debug/report.xml"
         const val ENABLE_UTP_TEST_REPORT_PROPERTY = "com.android.tools.utp.GradleAndroidProjectResolverExtension.enable"
+        const val TEST_ADDITIONAL_OUTPUT = "build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/emulator-5554 - 10"
     }
 
     @get:Rule
@@ -73,12 +75,11 @@ class UtpConnectedTest {
             // to 3 minutes.
             android.adbOptions.timeOutInMs=180000
 
+            android.defaultConfig.testInstrumentationRunnerArguments useTestStorageService: 'true'
             android.defaultConfig.testInstrumentationRunnerArguments clearPackageData: 'true'
 
             dependencies {
               androidTestUtil 'androidx.test:orchestrator:1.4.0-alpha06'
-
-              // UTP enables useTestStorageService when test-service is available on device.
               androidTestUtil 'androidx.test.services:test-services:1.4.0-alpha06'
             }
             """.trimIndent())
@@ -91,6 +92,17 @@ class UtpConnectedTest {
             """
             android.buildTypes.debug.testCoverageEnabled true
             android.defaultConfig.testInstrumentationRunnerArguments useTestStorageService: 'true'
+            """.trimIndent())
+    }
+
+    private fun enableTestStorageService(subProjectName: String) {
+        val subProject = project.getSubproject(subProjectName)
+        TestFileUtils.appendToFile(
+            subProject.buildFile,
+            """
+            dependencies {
+              androidTestUtil 'androidx.test.services:test-services:1.4.0-alpha06'
+            }
             """.trimIndent())
     }
 
@@ -287,5 +299,61 @@ class UtpConnectedTest {
 
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithAdditionalTestOutputUsingTestStorageService() {
+        enableTestStorageService("app")
+        val testTaskName = ":app:connectedCheck"
+
+        val testSrc = """
+            package com.example.helloworld
+
+            import androidx.test.ext.junit.runners.AndroidJUnit4
+            import androidx.test.services.storage.TestStorage
+            import org.junit.Test
+            import org.junit.runner.RunWith
+
+            @RunWith(AndroidJUnit4::class)
+            class TestStorageServiceExampleTest {
+                @Test
+                fun writeFileUsingTestStorageService() {
+                    TestStorage().openOutputFile("myTestStorageOutputFile1").use {
+                        it.write("output message1".toByteArray())
+                    }
+                    TestStorage().openOutputFile("myTestStorageOutputFile2.txt").use {
+                        it.write("output message2".toByteArray())
+                    }
+                    TestStorage().openOutputFile("subdir/myTestStorageOutputFile3").use {
+                        it.write("output message3".toByteArray())
+                    }
+                    TestStorage().openOutputFile("subdir/nested/myTestStorageOutputFile4").use {
+                        it.write("output message4".toByteArray())
+                    }
+                    TestStorage().openOutputFile("subdir/white space/myTestStorageOutputFile5").use {
+                        it.write("output message5".toByteArray())
+                    }
+                }
+            }
+        """.trimIndent()
+        val testStorageServiceExampleTest = project.projectDir
+            .toPath()
+            .resolve("app/src/androidTest/java/com/example/helloworld/TestStorageServiceExampleTest.kt")
+        Files.createDirectories(testStorageServiceExampleTest.getParent())
+        Files.write(testStorageServiceExampleTest, testSrc.toByteArray())
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file("app/${TEST_ADDITIONAL_OUTPUT}/myTestStorageOutputFile1"))
+            .contains("output message1")
+        assertThat(project.file("app/${TEST_ADDITIONAL_OUTPUT}/myTestStorageOutputFile2.txt"))
+            .contains("output message2")
+        assertThat(project.file("app/${TEST_ADDITIONAL_OUTPUT}/subdir/myTestStorageOutputFile3"))
+            .contains("output message3")
+        assertThat(project.file("app/${TEST_ADDITIONAL_OUTPUT}/subdir/nested/myTestStorageOutputFile4"))
+            .contains("output message4")
+        assertThat(project.file("app/${TEST_ADDITIONAL_OUTPUT}/subdir/white space/myTestStorageOutputFile5"))
+            .contains("output message5")
     }
 }

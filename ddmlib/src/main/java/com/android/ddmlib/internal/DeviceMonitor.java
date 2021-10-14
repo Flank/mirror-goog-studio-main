@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AvdData;
+import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientTracker;
 import com.android.ddmlib.CommandFailedException;
 import com.android.ddmlib.DdmPreferences;
@@ -28,6 +29,7 @@ import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.internal.commands.DisconnectCommand;
 import com.android.ddmlib.internal.jdwp.JdwpProxyServer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +42,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The {@link DeviceMonitor} monitors devices attached to adb.
@@ -57,8 +60,9 @@ import java.util.Set;
 public final class DeviceMonitor implements ClientTracker {
     private final AndroidDebugBridge mServer;
     private DeviceListMonitorTask mDeviceListMonitorTask;
-    @Nullable
-    private DeviceClientMonitorTask myDeviceClientMonitorTask;
+    @Nullable private Thread mDeviceListMonitorThread;
+    @Nullable private DeviceClientMonitorTask myDeviceClientMonitorTask;
+    @Nullable private Thread mDeviceClientMonitorThread;
     private JdwpProxyServer mJdwpProxy;
     private CommandService mDdmlibCommandService;
     private final Object mDevicesGuard = new Object();
@@ -87,15 +91,21 @@ public final class DeviceMonitor implements ClientTracker {
             }
             if (DdmPreferences.isDdmlibCommandServiceEnabled()) {
                 mDdmlibCommandService = new CommandService(DdmPreferences.getDdmCommandPort());
+                mDdmlibCommandService.addCommand(
+                        DisconnectCommand.COMMAND, new DisconnectCommand(this));
+                mDdmlibCommandService.start();
             }
 
             // To terminate thread call stop on each respective task.
             mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());
             if (AndroidDebugBridge.getClientSupport()) {
                 myDeviceClientMonitorTask = new DeviceClientMonitorTask();
-                new Thread(myDeviceClientMonitorTask, "Device Client Monitor").start();
+                mDeviceClientMonitorThread =
+                        new Thread(myDeviceClientMonitorTask, "Device Client Monitor");
+                mDeviceClientMonitorThread.start();
             }
-            new Thread(mDeviceListMonitorTask, "Device List Monitor").start(); //$NON-NLS-1$
+            mDeviceListMonitorThread = new Thread(mDeviceListMonitorTask, "Device List Monitor");
+            mDeviceListMonitorThread.start();
         }
         catch (IOException ex) {
             // Not expected.
@@ -113,6 +123,8 @@ public final class DeviceMonitor implements ClientTracker {
         }
     }
 
+    private static final long STOP_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
+
     /**
      * Stops the monitoring.
      */
@@ -123,10 +135,30 @@ public final class DeviceMonitor implements ClientTracker {
 
         if (mDeviceListMonitorTask != null) {
             mDeviceListMonitorTask.stop();
+            try {
+                if (mDeviceListMonitorThread != null) {
+                    mDeviceListMonitorThread.join(STOP_TIMEOUT_MILLIS);
+                    mDeviceListMonitorThread = null;
+                }
+            } catch (InterruptedException ex) {
+                Log.e("DeviceMonitor.stop", ex);
+            }
         }
 
         if (myDeviceClientMonitorTask != null) {
             myDeviceClientMonitorTask.stop();
+            try {
+                if (mDeviceClientMonitorThread != null) {
+                    mDeviceClientMonitorThread.join(STOP_TIMEOUT_MILLIS);
+                    mDeviceClientMonitorThread = null;
+                }
+            } catch (InterruptedException ex) {
+                Log.e("DeviceMonitor.stop", ex);
+            }
+        }
+
+        if (mDdmlibCommandService != null) {
+            mDdmlibCommandService.stop();
         }
     }
 
@@ -158,6 +190,20 @@ public final class DeviceMonitor implements ClientTracker {
         }
         //noinspection ToArrayCallWithZeroLengthArrayArgument
         return devices.toArray(new IDevice[0]);
+    }
+
+    public void disconnectClient(IDevice device, int pid) {
+        if (isMonitoring()) {
+            for (Client client : device.getClients()) {
+                if (client.getClientData().getPid() == pid) {
+                    assert myDeviceClientMonitorTask != null;
+                    myDeviceClientMonitorTask.disconnectClient((ClientImpl) client);
+                    return;
+                }
+            }
+        } else {
+            Log.w("ddms", "Client disconnect ignored, not currently monitoring");
+        }
     }
 
     @NonNull

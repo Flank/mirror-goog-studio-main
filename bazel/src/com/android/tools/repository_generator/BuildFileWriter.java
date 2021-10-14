@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.SystemUtils;
 
 /** Utility for generating a BUILD file from a {@link ResolutionResult} object. */
@@ -66,10 +68,10 @@ public class BuildFileWriter {
                 "load(\"@//tools/base/bazel:maven.bzl\", \"maven_artifact\", \"maven_import\")\n\n");
         fileWriter.append("# Bazel rules auto-generated from maven repo.");
         for (ResolutionResult.Dependency dep : result.dependencies) {
-            write(dep, false);
+            write(result, dep, false);
         }
         for (ResolutionResult.Dependency dep : result.unresolvedDependencies) {
-            write(dep, true);
+            write(result, dep, true);
         }
         for (ResolutionResult.Parent parent : result.parents) {
             write(parent);
@@ -77,7 +79,7 @@ public class BuildFileWriter {
         fileWriter.close();
     }
 
-    private void write(ResolutionResult.Dependency dep, boolean isConflictLoser)
+    private void write(ResolutionResult result, ResolutionResult.Dependency dep, boolean isConflictLoser)
             throws IOException {
         if (dep.file == null) return;
 
@@ -91,7 +93,6 @@ public class BuildFileWriter {
 
         // Deduce the repo path of the artifact from the file.
         Path artifactRepoPath = Paths.get(dep.file).getParent();
-
 
         // All deps, conflict loser or winner, must have a maven_artifact() rule that includes the artifact
         // version in the rule's name.
@@ -107,11 +108,41 @@ public class BuildFileWriter {
                 String parentRuleName = getMavenArtifactRuleName(dep.parentCoord);
                 fileWriter.append(String.format("    parent = \"%s\",\n", parentRuleName));
             }
-            String[] originalDepRuleNames =
+            Stream<String> originalDepRuleNamesStream =
                     Arrays.stream(dep.originalDependencies)
-                            .map(BuildFileWriter::getMavenArtifactRuleName)
-                            .distinct()
-                            .toArray(String[]::new);
+                            .map(BuildFileWriter::getMavenArtifactRuleName);
+
+            if (!isConflictLoser) {
+                // b/201683107: There can be some conflict losers that map to the same
+                // mavenArtifactRuleName as this conflict winner, but with a different
+                // set of dependencies because they have a different 'exclusions' section
+                // in their incoming dependency edge.
+                // We define the 'deps' of the generated maven_artifact rule to be the
+                // union of the dependencies of all such nodes, so here we merge all of those
+                // dependencies.
+                // Example:
+                //   kotlin-gradle-plugin:1.4.32 (conflict loser)
+                //      -> semver4j (conflict loser)
+                //          -> antlr4-runtime:4.5.2-1
+                //   kotlin-gradle-plugin:1.5.31 (conflict winner)
+                //      -> semver4j:nodeps (conflict winner)
+                //          -> no deps, because kotlin-gradle-pluin:1.5.31 has exclusions=*:*
+                //             in its semver4j:nodeps dependency declaration.
+                // The dependency graph ends up having two nodes for "semver4j":
+                //   semver4j        (conflict loser), deps = ["antlr4-runtime:4.5.2-1"]
+                //   semver4j:nodeps (conflict winner), deps = []
+                // And we merge the deps section to make sure the "antlr4-runtime:4.5.2-1"
+                // is included in the deps list.
+                for (ResolutionResult.Dependency unresolvedDep : result.unresolvedDependencies) {
+                    if (mavenArtifactRuleName.equals(getMavenArtifactRuleName(unresolvedDep.coord))) {
+                        originalDepRuleNamesStream = Stream.concat(
+                                originalDepRuleNamesStream,
+                                Arrays.stream(unresolvedDep.originalDependencies)
+                                    .map(BuildFileWriter::getMavenArtifactRuleName));
+                    }
+                }
+            }
+            String[] originalDepRuleNames = originalDepRuleNamesStream.distinct().toArray(String[]::new);
 
             if (originalDepRuleNames.length != 0) {
                 fileWriter.append("    deps = [\n");

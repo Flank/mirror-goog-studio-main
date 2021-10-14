@@ -81,14 +81,14 @@ class AnalyticsConfigurationCachingTest {
         var uniqueSpanIds = allSpansWithId.map { it.id }.distinct()
         Truth.assertThat(allSpansWithId.size).isEqualTo(uniqueSpanIds.size)
         // ensure id is allocated from a fixed number
-        Truth.assertThat(uniqueSpanIds.min()).isEqualTo(2)
+        Truth.assertThat(uniqueSpanIds.minOrNull()).isEqualTo(2)
         val configCachedRun = capturer.capture { project.execute("assembleDebug") }.single()
         // ensure uniqueness of allocated ids
         allSpansWithId = configCachedRun.spanList.filter { it.hasId() }
         uniqueSpanIds = configCachedRun.spanList.map { it.id }.distinct()
         Truth.assertThat(allSpansWithId.size).isEqualTo(uniqueSpanIds.size)
         // ensure id is allocated from a fixed number
-        Truth.assertThat(uniqueSpanIds.min()).isEqualTo(2)
+        Truth.assertThat(uniqueSpanIds.minOrNull()).isEqualTo(2)
     }
 
     @Test

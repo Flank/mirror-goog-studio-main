@@ -33,6 +33,7 @@
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugSources"
+            - resGenTaskName                = "generateDebugResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/debug{!}
                * {PROJECT}/build/generated/res/rs/debug{!}
@@ -69,6 +70,7 @@
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugAndroidTestSources"
+            - resGenTaskName                = "generateDebugAndroidTestResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}
                * {PROJECT}/build/generated/res/rs/androidTest/debug{!}
@@ -126,6 +128,7 @@
             - isSigned                      = false
             - signingConfigName             = (null)
             - sourceGenTaskName             = "generateReleaseSources"
+            - resGenTaskName                = "generateReleaseResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/release{!}
                * {PROJECT}/build/generated/res/rs/release{!}

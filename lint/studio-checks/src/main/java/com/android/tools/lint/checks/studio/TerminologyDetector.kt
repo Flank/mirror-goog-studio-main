@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.OtherFileScanner
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.isPolyadicFromStringTemplate
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
@@ -35,7 +36,6 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
 import java.util.EnumSet
 
 /**
@@ -253,7 +253,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                     index = alt
                 }
             }
-            if (argument is KotlinStringTemplateUPolyadicExpression &&
+            if (isPolyadicFromStringTemplate(argument) &&
                 argument.operands.size == 1 &&
                 location.source === argument.operands[0]
             ) {

@@ -57,6 +57,11 @@ public class View {
         }
     }
 
+    public interface OnCreateContextMenuListener {
+        void onCreateContextMenu(
+                ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo);
+    }
+
     private final Context mContext;
     private final int mId;
 

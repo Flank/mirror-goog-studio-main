@@ -42,8 +42,7 @@ void StubTransform::Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
     // Replace the fake hook with an interpreter stub, using the return value
     // of the stub as the return value of the original method.
     mi.AddTransformation<HookToStub>(
-        kFakeHook, "Lcom/android/tools/deploy/instrument/LiveEditStubs;",
-        "stub");
+        kFakeHook, "Lcom/android/tools/deploy/liveedit/LiveEditStubs;", "stub");
 
     mi.InstrumentMethod(method.get());
   }

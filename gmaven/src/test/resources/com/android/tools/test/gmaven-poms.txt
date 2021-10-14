@@ -49,8 +49,11 @@ androidx.databinding:databinding-ktx
   description=
   dependencies:
     org.jetbrains.kotlinx:kotlinx-coroutines-android (compile)
-    androidx.lifecycle:lifecycle-extensions (compile)
     androidx.lifecycle:lifecycle-runtime-ktx (compile)
+    androidx.lifecycle:lifecycle-livedata (compile)
+    androidx.lifecycle:lifecycle-process (compile)
+    androidx.lifecycle:lifecycle-service (compile)
+    androidx.lifecycle:lifecycle-viewmodel (compile)
     androidx.databinding:databinding-runtime (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
@@ -164,7 +167,7 @@ com.android.tools:common
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools:draw9patch
-  pomName=com.android.tools.draw9patch
+  pomName=Draw 9-patch tool
   description=WYSIWYG editor for automatically resizing images
 
 com.android.tools:dvlib
@@ -174,7 +177,7 @@ com.android.tools:dvlib
     com.android.tools:common (runtime)
 
 com.android.tools:ninepatch
-  pomName=com.android.tools.ninepatch
+  pomName=NinePatch
   description=draws a bitmap in nine or more sections
   dependencies:
     com.google.guava:guava (runtime)
@@ -550,12 +553,12 @@ com.android.tools.fakeadbserver:fakeadbserver
     org.jetbrains.kotlin:kotlin-reflect (runtime)
 
 com.android.tools.layoutlib:layoutlib-api
-  pomName=com.android.tools.layoutlib.layoutlib-api
+  pomName=Android Tools layoutlib-api
   description=Library to use the rendering library for Android layouts: layoutlib
   dependencies:
+    com.android.tools:annotations (runtime)
     com.android.tools:common (runtime)
     net.sf.kxml:kxml2 (runtime)
-    com.android.tools:annotations (runtime)
     org.jetbrains:annotations (runtime)
 
 com.android.tools.lint:lint
@@ -564,41 +567,41 @@ com.android.tools.lint:lint
   dependencies:
     com.android.tools.lint:lint-api (compile)
     com.android.tools.lint:lint-checks (compile)
+    com.android.tools.external.com-intellij:intellij-core (runtime)
+    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.org-jetbrains:uast (runtime)
+    com.android.tools.analytics-library:protos (runtime)
+    com.android.tools.analytics-library:shared (runtime)
+    com.android.tools.analytics-library:tracker (runtime)
+    com.android.tools.build:manifest-merger (runtime)
+    com.android.tools:common (runtime)
+    com.android.tools.layoutlib:layoutlib-api (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
-    com.android.tools.external.com-intellij:intellij-core (runtime)
-    com.android.tools.build:manifest-merger (runtime)
-    com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools.analytics-library:shared (runtime)
-    com.android.tools.analytics-library:protos (runtime)
-    com.android.tools.analytics-library:tracker (runtime)
     com.google.guava:guava (runtime)
+    net.sf.kxml:kxml2 (runtime)
     org.jetbrains.kotlin:kotlin-reflect (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
-    net.sf.kxml:kxml2 (runtime)
 
 com.android.tools.lint:lint-api
   pomName=com.android.tools.lint.lint-api
   description=API to build lint checks
   dependencies:
-    com.android.tools:sdk-common (compile)
-    com.android.tools:sdklib (compile)
-    com.android.tools:common (compile)
     com.android.tools.lint:lint-model (compile)
     com.android.tools.external.com-intellij:intellij-core (compile)
     com.android.tools.external.com-intellij:kotlin-compiler (compile)
     com.android.tools.external.org-jetbrains:uast (compile)
     com.android.tools.build:manifest-merger (compile)
+    com.android.tools:common (compile)
     com.android.tools.layoutlib:layoutlib-api (compile)
+    com.android.tools:sdk-common (compile)
+    com.android.tools:sdklib (compile)
     commons-io:commons-io (compile)
-    org.ow2.asm:asm (compile)
-    org.ow2.asm:asm-tree (compile)
     net.sf.kxml:kxml2 (compile)
     org.jetbrains.kotlin:kotlin-reflect (compile)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
+    org.ow2.asm:asm (compile)
+    org.ow2.asm:asm-tree (compile)
     com.android.tools.build:builder-model (runtime)
     com.google.guava:guava (runtime)
 
@@ -608,18 +611,18 @@ com.android.tools.lint:lint-checks
   dependencies:
     com.android.tools.lint:lint-api (compile)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
-    com.android.tools:sdk-common (runtime)
-    com.android.tools:sdklib (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.google.guava:guava (runtime)
-    com.google.code.gson:gson (runtime)
     com.android.tools.external.com-intellij:intellij-core (runtime)
     com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.org-jetbrains:uast (runtime)
-    org.ow2.asm:asm-analysis (runtime)
+    com.android.tools:common (runtime)
+    com.android.tools.layoutlib:layoutlib-api (runtime)
+    com.android.tools:sdk-common (runtime)
+    com.android.tools:sdklib (runtime)
+    com.google.code.gson:gson (runtime)
+    com.google.guava:guava (runtime)
     net.sf.kxml:kxml2 (runtime)
     org.jetbrains.intellij.deps:trove4j (runtime)
+    org.ow2.asm:asm-analysis (runtime)
 
 com.android.tools.lint:lint-gradle
   pomName=com.android.tools.lint.lint-gradle
@@ -630,9 +633,9 @@ com.android.tools.lint:lint-gradle
     com.android.tools:common (runtime)
     com.android.tools.build:builder (runtime)
     com.android.tools.build:builder-model (runtime)
-    com.android.tools.external.com-intellij:intellij-core (runtime)
-    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.org-jetbrains:uast (runtime)
+    com.android.tools.external.com-intellij:kotlin-compiler (runtime)
+    com.android.tools.external.com-intellij:intellij-core (runtime)
     com.android.tools.build:manifest-merger (runtime)
     com.android.tools.lint:lint (runtime)
     com.android:zipflinger (runtime)
@@ -645,32 +648,31 @@ com.android.tools.lint:lint-model
   pomName=com.android.tools.lint.lint-model
   description=Lint build system model
   dependencies:
+    com.android.tools.build:builder-model (runtime)
     com.android.tools:common (runtime)
     com.android.tools:sdk-common (runtime)
-    com.android.tools.build:builder-model (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     net.sf.kxml:kxml2 (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.lint:lint-tests
   pomName=com.android.tools.lint.lint-tests
   description=API to build lint check tests
   dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
-    com.android.tools.lint:lint (runtime)
-    com.android.tools.lint:lint-gradle (runtime)
     com.android.tools.external.com-intellij:intellij-core (runtime)
     com.android.tools.external.com-intellij:kotlin-compiler (runtime)
     com.android.tools.external.org-jetbrains:uast (runtime)
-    com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools:sdk-common (runtime)
     com.android.tools:common (runtime)
+    com.android.tools.layoutlib:layoutlib-api (runtime)
+    com.android.tools.lint:lint (runtime)
+    com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     junit:junit (runtime)
-    org.ow2.asm:asm (runtime)
-    org.ow2.asm:asm-tree (runtime)
+    net.sf.kxml:kxml2 (runtime)
     org.codehaus.groovy:groovy (runtime)
     org.mockito:mockito-core (runtime)
-    net.sf.kxml:kxml2 (runtime)
+    org.ow2.asm:asm (runtime)
+    org.ow2.asm:asm-tree (runtime)
 
 com.android.tools.pixelprobe:pixelprobe
   pomName=Pixel Probe

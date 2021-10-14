@@ -21,7 +21,7 @@ import com.android.tools.lint.client.api.JavaEvaluator
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
-import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 
 abstract class RangeConstraint {
     /**
@@ -54,10 +54,9 @@ abstract class RangeConstraint {
 
         fun create(owner: PsiModifierListOwner, evaluator: JavaEvaluator): RangeConstraint? {
             for (annotation in evaluator.getAllAnnotations(owner, false)) {
-                val constraint = create(JavaUAnnotation.wrap(annotation))
-                // Pick first; they're mutually exclusive
-                if (constraint != null) {
-                    return constraint
+                annotation.toUElement(UAnnotation::class.java)?.let { uAnnotation ->
+                    // Pick first; they're mutually exclusive
+                    create(uAnnotation)?.let { return it }
                 }
             }
             return null

@@ -51,9 +51,9 @@ class DefaultLintModelJavaArtifact(
     classFolders: List<File>,
     dependencies: LintModelDependencies
 ) : DefaultLintModelArtifact(
-        dependencies = dependencies,
-        classOutputs = classFolders
-    ),
+    dependencies = dependencies,
+    classOutputs = classFolders
+),
     LintModelJavaArtifact
 
 class DefaultLintModelAndroidArtifact(
@@ -63,7 +63,7 @@ class DefaultLintModelAndroidArtifact(
     classOutputs: List<File>,
     dependencies: LintModelDependencies
 ) : DefaultLintModelArtifact(
-        dependencies = dependencies,
-        classOutputs = classOutputs
-    ),
+    dependencies = dependencies,
+    classOutputs = classOutputs
+),
     LintModelAndroidArtifact

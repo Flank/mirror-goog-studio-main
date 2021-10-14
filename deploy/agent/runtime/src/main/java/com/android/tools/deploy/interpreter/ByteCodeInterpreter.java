@@ -20,24 +20,7 @@ import static com.android.deploy.asm.Opcodes.ATHROW;
 import static com.android.deploy.asm.Opcodes.DRETURN;
 import static com.android.deploy.asm.Opcodes.FRETURN;
 import static com.android.deploy.asm.Opcodes.GOTO;
-import static com.android.deploy.asm.Opcodes.IFEQ;
-import static com.android.deploy.asm.Opcodes.IFGE;
-import static com.android.deploy.asm.Opcodes.IFGT;
-import static com.android.deploy.asm.Opcodes.IFLE;
-import static com.android.deploy.asm.Opcodes.IFLT;
-import static com.android.deploy.asm.Opcodes.IFNE;
-import static com.android.deploy.asm.Opcodes.IFNONNULL;
-import static com.android.deploy.asm.Opcodes.IFNULL;
-import static com.android.deploy.asm.Opcodes.IF_ACMPEQ;
-import static com.android.deploy.asm.Opcodes.IF_ACMPNE;
-import static com.android.deploy.asm.Opcodes.IF_ICMPEQ;
-import static com.android.deploy.asm.Opcodes.IF_ICMPGE;
-import static com.android.deploy.asm.Opcodes.IF_ICMPGT;
-import static com.android.deploy.asm.Opcodes.IF_ICMPLE;
-import static com.android.deploy.asm.Opcodes.IF_ICMPLT;
-import static com.android.deploy.asm.Opcodes.IF_ICMPNE;
 import static com.android.deploy.asm.Opcodes.IRETURN;
-import static com.android.deploy.asm.Opcodes.LOOKUPSWITCH;
 import static com.android.deploy.asm.Opcodes.LRETURN;
 import static com.android.deploy.asm.Opcodes.RET;
 import static com.android.deploy.asm.Opcodes.RETURN;
@@ -97,12 +80,6 @@ public class ByteCodeInterpreter {
 
     @NonNull
     public static InterpreterResult interpreterLoop(
-            @NonNull MethodNode m, @NonNull Frame<Value> initialState, @NonNull Eval eval) {
-        return interpreterLoop(m, initialState, eval, InterpretationEventHandler.NONE);
-    }
-
-    @NonNull
-    public static InterpreterResult interpreterLoop(
             @NonNull MethodNode m,
             @NonNull Frame<Value> initialState,
             @NonNull Eval eval,
@@ -149,36 +126,6 @@ public class ByteCodeInterpreter {
                         return computeReturn(insnOpcode);
                     case RETURN:
                         return new ValueReturned(Value.VOID_VALUE);
-                    case IFEQ:
-                    case IFNE:
-                    case IFLT:
-                    case IFGE:
-                    case IFGT:
-                    case IFLE:
-                    case IFNULL:
-                    case IFNONNULL:
-                        if (interpreter.checkUnaryCondition(getStackTop(frame), insnOpcode)) {
-                            frame.execute(currentInsn, interpreter);
-                            goTo(((JumpInsnNode) currentInsn).label);
-                            continue loop;
-                        }
-                        break;
-                    case IF_ICMPEQ:
-                    case IF_ICMPNE:
-                    case IF_ICMPLT:
-                    case IF_ICMPGE:
-                    case IF_ICMPGT:
-                    case IF_ICMPLE:
-                    case IF_ACMPEQ:
-                    case IF_ACMPNE:
-                        if (interpreter.checkBinaryCondition(
-                                getStackTop(frame, 1), getStackTop(frame, 0), insnOpcode)) {
-                            frame.execute(currentInsn, interpreter);
-                            goTo(((JumpInsnNode) currentInsn).label);
-                            continue loop;
-                        }
-                        break;
-
                     case ATHROW:
                         ObjectValue exceptionValue = (ObjectValue) getStackTop(frame);
                         InterpreterResult handled =

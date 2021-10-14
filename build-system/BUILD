@@ -247,9 +247,6 @@ filegroup(
 ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     ":agp_gradle_build_files",
     "//prebuilts/tools/common/aapt/protos:agp_gradle_build_files",
-    "//prebuilts/tools/common/lint-psi/intellij-core:agp_gradle_build_files",
-    "//prebuilts/tools/common/lint-psi/kotlin-compiler:agp_gradle_build_files",
-    "//prebuilts/tools/common/lint-psi/uast:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
     "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
@@ -264,14 +261,9 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/build-system/gradle-core:agp_gradle_build_files",
     "//tools/base/build-system/profile:agp_gradle_build_files",
     "//tools/base/device_validator:agp_gradle_build_files",
-    "//tools/base/draw9patch:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/fakeadbserver:agp_gradle_build_files",  # Only published, not a dependency of AGP
-    "//tools/base/layoutlib-api:agp_gradle_build_files",
     "//tools/base/lint:agp_gradle_build_files",
-    "//tools/base/lint/cli:agp_gradle_build_files",
-    "//tools/base/lint/libs/lint-tests:agp_gradle_build_files",
     "//tools/base/mlkit-common:agp_gradle_build_files",
-    "//tools/base/ninepatch:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/profgen/profgen:agp_gradle_build_files",
     "//tools/base/repository:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",

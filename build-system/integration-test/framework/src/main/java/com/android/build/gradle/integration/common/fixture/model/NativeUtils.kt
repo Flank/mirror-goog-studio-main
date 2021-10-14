@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.SdkConstants
+import com.android.build.gradle.integration.BazelIntegrationTestsSuite
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.io.hardLinkOrCopyFile
 import com.android.build.gradle.internal.cxx.logging.getCxxStructuredLogFolder
 import com.android.build.gradle.internal.cxx.logging.readStructuredLogs
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
@@ -35,6 +38,19 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 import com.android.build.gradle.internal.cxx.string.StringDecoder
+import com.android.testutils.TestUtils
+import com.android.testutils.diff.UnifiedDiff
+import com.android.utils.SdkUtils
+import com.google.common.base.Splitter
+import org.gradle.tooling.GradleConnector
+import java.io.BufferedInputStream
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.zip.ZipInputStream
+import com.android.SdkConstants.GRADLE_LATEST_VERSION
+import com.android.utils.SdkUtils.escapePropertyValue
 
 data class CompileCommandsJsonBinEntry(
         val sourceFile: String,
@@ -395,6 +411,241 @@ inline fun <reified Encoded, Decoded> GradleTestProject.readStructuredLogs(
     return readStructuredLogs(logFolder, decode)
 }
 
+/**
+ * Unzip [zip] to the folder [out] including subdirectories.
+ */
+fun unzip(zip: File, out: File) {
+    val buffer = ByteArray(1024)
+    FileInputStream(zip).use { fis ->
+        BufferedInputStream(fis).use { bis ->
+            ZipInputStream(bis).use { zis ->
+                var zipEntry = zis.nextEntry
+                while (zipEntry != null) {
+                    val fileName = zipEntry.name
+                    val newFile = File(out, fileName)
+                    if (!fileName.endsWith("/")) {
+                        if (newFile.exists()) {
+                            newFile.delete()
+                        }
+                        newFile.parentFile.mkdirs()
+                        FileOutputStream(newFile).use { fos ->
+                            var len: Int
+                            while (zis.read(buffer).also { len = it } > 0) {
+                                fos.write(buffer, 0, len)
+                            }
+                        }
+                    }
+                    zipEntry = zis.nextEntry
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Hardlink all files in one folder to another including subdirectories.
+ */
+fun hardLinkOrCopyDirectory(source : File, out : File) {
+    source.walkTopDown().forEach { file ->
+        val relative = file.relativeTo(source)
+        val destination = out.resolve(relative)
+        if (file.isDirectory) {
+            file.mkdirs()
+        } else {
+            hardLinkOrCopyFile(file, destination)
+        }
+    }
+}
 
 
+/**
+ * Wraps a perfgate build benchmark project with convenience functions for
+ * setup and execution. It has setup specific to native projects and isn't
+ * necessarily suitable for non-native projects.
+ */
+class NativeBuildBenchmarkProject(
+    relativeBuildRoot: String,
+    workingFolder: File,
+    buildbenchmark: String,
+    setupDiff: String = "setup.diff") {
+
+    private val arguments = mutableListOf<String>()
+    private val testRootFolder = File(System.getenv("TEST_TMPDIR")).absoluteFile
+    private val outDir = workingFolder.resolve("out")
+    private val initScript = outDir.resolve("init.script").absoluteFile
+    private val defaultGradleUserHome = outDir.resolve("_home").absoluteFile
+    private val buildDir = outDir.resolve("_build").absoluteFile
+    private val localMavenRepo= outDir.resolve("_tmp_local_maven").absoluteFile
+    private val repoDir = outDir.resolve("_repo").absoluteFile
+    private val androidDir = outDir.resolve("_android").absoluteFile
+    private val distribution = locate("tools/external/gradle/gradle-$GRADLE_LATEST_VERSION-bin.zip")
+    private val prebuilts = locate("prebuilts/studio/buildbenchmarks/$buildbenchmark")
+    private val src = workingFolder.resolve("src")
+    val buildRoot = src.resolve(relativeBuildRoot)
+    private val localPropertiesFile : File = buildRoot.resolve(SdkConstants.FN_LOCAL_PROPERTIES)
+
+    /**
+     * Add a repo called [repo] to this project.
+     * If [repo] is a zip, then it is unzipped into the project's
+     * 'repo' directory.
+     * If [repo] is a directory, then it is symlinked into the
+     * project's 'repo' directory.
+     */
+    private fun addRepo(repo: File) {
+        if (repo.name.endsWith(".zip")) {
+            unzip(repo, repoDir)
+        } else if (repo.isDirectory) {
+            hardLinkOrCopyDirectory(repo, repoDir)
+        } else {
+            throw IllegalArgumentException("Unknown repo type ${repo.name}")
+        }
+    }
+
+    /**
+     * Add an argument to the gradle invocation.
+     */
+    fun addArgument(argument: String) {
+        arguments.add(argument)
+    }
+
+    /**
+     * Apply a diff from the prebuilts folder to the local project.
+     */
+    fun applyDiff(diff: String) {
+        UnifiedDiff(prebuilts.resolve(diff))
+            .apply(src, 3)
+    }
+
+    /**
+     * Enabled C/C++ structured logging. If there was a previous structured
+     * log folder then it is deleted.
+     */
+    fun enableCxxStructuredLogging() {
+        val structuredLogFolder = getCxxStructuredLogFolder(buildRoot)
+        if (structuredLogFolder.isDirectory) {
+            structuredLogFolder.deleteRecursively()
+        }
+        structuredLogFolder.mkdirs()
+    }
+
+    /**
+     * Read structured log records that match the types in [decode].
+     * Other records are ignored.
+     */
+    inline fun <reified Encoded, Decoded> readStructuredLogs(
+        crossinline decode: (Encoded, StringDecoder) -> Decoded) : List<Decoded> {
+        val structuredLogFolder = getCxxStructuredLogFolder(buildRoot)
+        return readStructuredLogs(structuredLogFolder, decode)
+    }
+
+    /**
+     * Run one ore more gradle tasks.
+     */
+    fun run(vararg tasks: String) {
+        val env = mutableMapOf<String, String>()
+        env["ANDROID_SDK_ROOT"] = TestUtils.getSdk().toFile().absolutePath
+        env["BUILD_DIR"] = buildDir.absolutePath
+        env["ANDROID_PREFS_ROOT"] = androidDir.absolutePath
+        env["ANDROID_HOME"] = File(TestUtils.getRelativeSdk()).absolutePath
+        env["ANDROID_SDK_HOME"] = androidDir.absolutePath
+        System.getenv("SystemRoot")?.let { env["SystemRoot"] = it }
+        System.getenv("TEMP")?.let { env["TEMP"] = it }
+        System.getenv("TMP")?.let { env["TMP"] = it }
+
+        val arguments = mutableListOf<String>(
+            "--offline",
+            "--init-script",
+            initScript.absolutePath,
+            "-PinjectedMavenRepo=" + repoDir.absolutePath,
+            "-Dmaven.repo.local=" + localMavenRepo.absolutePath,
+            "-Dcom.android.gradle.version=" + getLocalGradleVersion()
+        )
+        arguments.addAll(this.arguments)
+
+        // Workaround for issue https://github.com/gradle/gradle/issues/5188
+        System.setProperty("gradle.user.home", "")
+
+        GradleConnector.newConnector()
+            .useDistribution(distribution.toURI())
+            .useGradleUserHomeDir(defaultGradleUserHome)
+            .forProjectDirectory(buildRoot)
+            .connect().use { connection ->
+                connection
+                    .newBuild()
+                    .setEnvironmentVariables(env)
+                    .withArguments(arguments)
+                    .forTasks(*tasks)
+                    .setStandardOutput(System.out)
+                    .setStandardError(System.err)
+                    .run()
+            }
+    }
+
+    private fun createInitScript(initScript: File, repoDir: File) {
+        initScript.writeText("""allprojects {
+                              buildscript {
+                                repositories {
+                                   maven { url '${repoDir.toURI()}'}
+                                }
+                              }
+                              repositories {
+                                maven {
+                                  url '${repoDir.toURI()}'
+                                  metadataSources {
+                                    mavenPom()
+                                    artifact()
+                                  }
+                                }
+                              }
+                            }
+                            """.trimIndent())
+    }
+
+    private fun locate(path : String) : File {
+        var current = File(".").absoluteFile
+        lateinit var folder : File
+        do {
+            folder = current.resolve(path)
+            if (folder.exists()) return folder
+            current = current.parentFile
+                ?: error("Could not locate $path")
+        } while(true)
+    }
+
+    private fun getLocalGradleVersion(): String {
+        val file = locate("tools/buildSrc/base/version.properties")
+        FileInputStream(file).use { fis ->
+            val properties = Properties()
+            properties.load(fis)
+            return properties.getProperty("buildVersion")!!
+        }
+    }
+
+    private fun getLocalRepositories() : List<Path> {
+        return when {
+            TestUtils.runningFromBazel() -> BazelIntegrationTestsSuite.MAVEN_REPOS
+            System.getenv("CUSTOM_REPO") != null -> {
+                val customRepo = System.getenv("CUSTOM_REPO")
+                Splitter.on(File.pathSeparatorChar)
+                    .split(customRepo).map { Paths.get(it) }
+            }
+            else -> throw IllegalStateException("Tests must be run from the build system")
+        }
+    }
+
+    init {
+        unzip(prebuilts.resolve("src.zip"), src)
+        applyDiff(setupDiff)
+        addRepo(prebuilts.resolve("repo.zip"))
+        getLocalRepositories().forEach {
+            addRepo(it.toFile())
+        }
+        buildDir.mkdirs()
+        androidDir.mkdirs()
+        createInitScript(initScript, repoDir)
+        localPropertiesFile.writeText("""
+            ndk.symlinkdir=${escapePropertyValue(testRootFolder.absolutePath)}
+        """.trimIndent())
+    }
+}
 

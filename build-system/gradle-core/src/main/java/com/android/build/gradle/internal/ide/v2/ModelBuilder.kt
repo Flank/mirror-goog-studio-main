@@ -59,7 +59,6 @@ import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecksForModel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -656,6 +655,7 @@ class ModelBuilder<
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,
             sourceGenTaskName = taskContainer.sourceGenTask.name,
+            resGenTaskName = if (component.buildFeatures.androidResources) taskContainer.resourceGenTask.name else null,
             ideSetupTaskNames = setOf(taskContainer.sourceGenTask.name),
 
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
@@ -685,8 +685,12 @@ class ModelBuilder<
         val classesFolders = setOf(component.artifacts.get(JAVAC).get().asFile)
 
         val additionalClassesFolders = mutableSetOf<File>()
-        component.getCompiledRClassArtifact()?.get()?.asFile?.let {
-            additionalClassesFolders.add(it)
+
+        // TODO(b/111168382): When namespaced resources is on, then the provider returns null, so let's skip for now and revisit later
+        if (!extension.androidResources.namespaced) {
+            component.getCompiledRClassArtifact()?.get()?.asFile?.let {
+                additionalClassesFolders.add(it)
+            }
         }
         additionalClassesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
         additionalClassesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
@@ -762,6 +766,11 @@ class ModelBuilder<
         component: ComponentImpl
     ): BundleInfo? {
         if (!component.variantType.isBaseModule) {
+            return null
+        }
+
+        // TODO(b/111168382): Remove when bundle can build apps with namespaced turned on.
+        if (extension.androidResources.namespaced) {
             return null
         }
 

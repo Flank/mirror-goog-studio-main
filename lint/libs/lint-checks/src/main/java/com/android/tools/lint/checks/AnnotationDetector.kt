@@ -79,7 +79,9 @@ import org.jetbrains.kotlin.asJava.elements.KtLightField
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclarationsExpression
@@ -99,8 +101,6 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.java.JavaUTypeCastExpression
-import org.jetbrains.uast.kotlin.KotlinUSwitchExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.toUElement
@@ -608,7 +608,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                         return result
                     }
                 }
-            } else if (expression is JavaUTypeCastExpression) {
+            } else if (expression is UBinaryExpressionWithType) {
                 return findIntDefAnnotation(expression.operand)
             } else if (expression is UParenthesizedExpression) {
                 return findIntDefAnnotation(
@@ -936,8 +936,10 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
                     val identifier = switchExpression.switchIdentifier
                     var location = context.getLocation(identifier)
                     // Workaround Kotlin UAST passing <error> instead of PsiKeyword as in Java
-                    if (switchExpression is KotlinUSwitchExpression && "when" != identifier.name) {
-                        val sourcePsi = switchExpression.sourcePsi
+                    if (switchExpression.sourcePsi is KtWhenExpression &&
+                        "when" != identifier.name
+                    ) {
+                        val sourcePsi = switchExpression.sourcePsi as KtWhenExpression
                         val keyword = sourcePsi.firstChild
                         if (keyword != null) {
                             location = context.getLocation(keyword)

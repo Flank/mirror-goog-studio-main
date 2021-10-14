@@ -18,7 +18,7 @@ dependencies {
     implementation project(':base:builder-test-api')
     implementation project(':base:builder-model')
     implementation libs.com.android.tools.ddms.ddmlib
-    implementation project(':base:layoutlib-api')
+    implementation libs.com.android.tools.layoutlib.layoutlibApi
     implementation libs.com.android.tools.common
     implementation libs.com.android.tools.analyticsLibrary.shared
     implementation libs.bouncycastle_pkix

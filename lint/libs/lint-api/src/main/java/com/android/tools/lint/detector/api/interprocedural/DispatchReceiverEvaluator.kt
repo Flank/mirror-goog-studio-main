@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.detector.api.interprocedural
 
+import com.android.tools.lint.detector.api.isKotlin
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
@@ -40,7 +41,6 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.getContainingUMethod
-import org.jetbrains.uast.kotlin.KotlinUFunctionCallExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.tryResolve
@@ -351,7 +351,7 @@ fun UCallExpression.getDispatchReceivers(
     // we resolve to the variable declaration before consulting the dispatch receiver evaluator.
     // TODO(kotlin-uast-cleanup): For now we use heuristics to decide whether this is an
     //  invoke on a local lambda variable; it's not obvious that there's a better way.
-    if (this is KotlinUFunctionCallExpression && methodName == "invoke") {
+    if (isKotlin(this.sourcePsi) && methodName == "invoke") {
         val decl = receiver?.tryResolve().toUElement() ?: return emptyList()
         return receiverEval[decl]
     }

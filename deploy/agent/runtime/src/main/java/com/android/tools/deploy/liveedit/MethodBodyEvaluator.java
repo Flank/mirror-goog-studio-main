@@ -25,14 +25,11 @@ import com.android.tools.deploy.interpreter.InterpreterResult;
 import com.android.tools.deploy.interpreter.ObjectValue;
 import com.android.tools.deploy.interpreter.Value;
 import com.android.tools.deploy.interpreter.ValueReturned;
-import org.jetbrains.eval4j.InterpreterLoopKt;
 
-/** Evaluate a method body with Eval4j for the Android environment. */
 public class MethodBodyEvaluator {
 
     private final MethodNode target;
     private final ClassLoader classLoader;
-    private static final boolean USE_JFLINGER = true;
 
     // TODO: We should always use the app's classloader. This method is here for
     // our unit tests. We should consider removing this after we refactor the tests.
@@ -85,16 +82,9 @@ public class MethodBodyEvaluator {
         }
 
         AndroidEval evaluator = new AndroidEval(classLoader);
-        InterpreterResult result;
-        if (USE_JFLINGER) {
-            result =
-                    ByteCodeInterpreter.interpreterLoop(
-                            target, init, evaluator, InterpretationEventHandler.NONE);
-        } else {
-            result =
-                    InterpreterLoopKt.interpreterLoop(
-                            target, init, evaluator, InterpretationEventHandler.NONE);
-        }
+        InterpreterResult result =
+                ByteCodeInterpreter.interpreterLoop(
+                        target, init, evaluator, InterpretationEventHandler.NONE);
         if (result instanceof ValueReturned) {
             Value value = ((ValueReturned) result).getResult();
             return value.obj();

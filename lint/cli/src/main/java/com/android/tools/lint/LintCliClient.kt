@@ -70,6 +70,7 @@ import com.android.tools.lint.detector.api.getEncodedString
 import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import com.android.tools.lint.detector.api.isJdkFolder
+import com.android.tools.lint.gradle.GroovyGradleVisitor
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.CharSequences
@@ -927,15 +928,7 @@ open class LintCliClient : LintClient {
     override fun getUastParser(project: Project?): UastParser = LintCliUastParser(project)
 
     override fun getGradleVisitor(): GradleVisitor {
-        // The cli client cannot currently have a direct dependency on the GroovyGradleVisitor
-        // Load it if it is present in the classpath.
-        return try {
-            GradleVisitor::class.java.classLoader
-                .loadClass("com.android.tools.lint.gradle.GroovyGradleVisitor")
-                .newInstance() as GradleVisitor
-        } catch (e: ClassNotFoundException) {
-            GradleVisitor()
-        }
+        return GroovyGradleVisitor()
     }
 
     override fun report(

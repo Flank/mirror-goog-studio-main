@@ -30,5 +30,5 @@ class ToolsRevisionUtilsTest {
     private fun getMaxKnownVersion() = AndroidVersion.VersionCodes::class.java.fields.asSequence()
         .filter { Modifier.isStatic(it.modifiers) && it.type == Int::class.java }
         .map { it.getInt(null) }
-        .max() ?: throw AssertionError()
+        .maxOrNull() ?: throw AssertionError()
 }
