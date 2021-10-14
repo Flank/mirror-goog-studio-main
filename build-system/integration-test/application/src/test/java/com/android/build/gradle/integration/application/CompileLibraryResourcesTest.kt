@@ -296,6 +296,27 @@ class CompileLibraryResourcesTest {
         }
     }
 
+
+    @Test
+    fun testPackageResourcesNotExecutedForNewEmptyDirectoriesIncrementally() {
+        val project = project.getSubproject(":app")
+        val executor = project.executor()
+
+        val firstExec = executor.run("clean", "assembleDebug")
+        assertThat(firstExec.didWorkTasks).contains(":library:packageDebugResources")
+        val secondExec = executor.run("assembleDebug")
+        assertThat(secondExec.upToDateTasks).contains(":library:packageDebugResources")
+
+        // Add an empty resource directory\
+        val library = project.getSubproject(":library")
+        val emptyResDir = File(library.mainResDir, "drawable-v99/")
+        emptyResDir.mkdir()
+        val thirdExec = project.executor().run("assembleDebug")
+
+
+        assertThat(thirdExec.upToDateTasks).contains(":library:packageDebugResources")
+    }
+
     private fun checkCompiledLibraryResourcesDir(expected: Set<String>) {
         val compiledLibraryResourcesDir = FileUtils.join(
             project.getSubproject(":library").intermediatesDir,

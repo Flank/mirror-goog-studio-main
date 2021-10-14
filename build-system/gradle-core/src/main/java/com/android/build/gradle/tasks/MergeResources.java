@@ -101,6 +101,8 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.IgnoreEmptyDirectories;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -197,13 +199,14 @@ public abstract class MergeResources extends NewIncrementalTask {
     // resource in the proto (.flat) file, so we need to mark those inputs with absolute
     // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
     // sensitivity is enough (e.g. merges in libraries).
+    @Classpath
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
     @Incremental
     public abstract ConfigurableFileCollection getRawLocalResourcesNoProcessRes();
 
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
+    @IgnoreEmptyDirectories
     @Incremental
     public abstract ConfigurableFileCollection getRawLocalResourcesProcessRes();
 
