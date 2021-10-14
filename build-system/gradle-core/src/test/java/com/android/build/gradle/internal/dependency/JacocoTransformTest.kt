@@ -273,8 +273,9 @@ class JacocoTransformTest {
                     get() = FakeGradleProperty(JacocoOptions.DEFAULT_VERSION)
                 override val jacocoConfiguration: ConfigurableFileCollection
                     get() {
+                        val jacocoVersion = JacocoOptions.DEFAULT_VERSION
                         val jacocoJars = listOf(
-                            "org/jacoco/org.jacoco.core/0.8.3/org.jacoco.core-0.8.3.jar",
+                            "org/jacoco/org.jacoco.core/$jacocoVersion/org.jacoco.core-$jacocoVersion.jar",
                             "org/ow2/asm/asm/9.1/asm-9.1.jar",
                             "org/ow2/asm/asm-commons/9.1/asm-commons-9.1.jar",
                             "org/ow2/asm/asm-tree/9.1/asm-tree-9.1.jar"
