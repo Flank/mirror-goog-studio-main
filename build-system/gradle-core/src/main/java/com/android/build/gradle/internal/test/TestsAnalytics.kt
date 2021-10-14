@@ -52,7 +52,8 @@ fun recordOkUnitTestRun(
     dependencies: ArtifactCollection,
     coverageEnabled: Boolean,
     testCount: Int,
-    analyticsService: AnalyticsService
+    analyticsService: AnalyticsService,
+    isIdeInvocation: Boolean
 ) {
     recordTestRun(
         dependencies = dependencies,
@@ -61,7 +62,10 @@ fun recordOkUnitTestRun(
         testCount = testCount,
         TestRun.TestKind.UNIT_TEST,
         infrastructureCrashed = false,
-        analyticsService = analyticsService
+        analyticsService = analyticsService,
+        invocationType =
+        if (isIdeInvocation) TestRun.TestInvocationType.ANDROID_STUDIO_THROUGH_GRADLE_TEST
+        else TestRun.TestInvocationType.GRADLE_TEST
     )
 }
 
@@ -85,7 +89,8 @@ fun recordCrashedInstrumentedTestRun(
 fun recordCrashedUnitTestRun(
     dependencies: ArtifactCollection,
     coverageEnabled: Boolean,
-    analyticsService: AnalyticsService
+    analyticsService: AnalyticsService,
+    isIdeInvocation: Boolean
 ) {
     recordTestRun(
         dependencies = dependencies,
@@ -94,7 +99,10 @@ fun recordCrashedUnitTestRun(
         testCount = 0,
         TestRun.TestKind.UNIT_TEST,
         infrastructureCrashed = true,
-        analyticsService = analyticsService
+        analyticsService = analyticsService,
+        invocationType =
+        if (isIdeInvocation) TestRun.TestInvocationType.ANDROID_STUDIO_THROUGH_GRADLE_TEST
+        else TestRun.TestInvocationType.GRADLE_TEST
     )
 }
 
@@ -105,10 +113,11 @@ private fun recordTestRun(
     testCount: Int,
     testType: TestRun.TestKind,
     infrastructureCrashed: Boolean,
-    analyticsService: AnalyticsService
+    analyticsService: AnalyticsService,
+    invocationType: TestRun.TestInvocationType = TestRun.TestInvocationType.GRADLE_TEST
 ) {
     val run = TestRun.newBuilder().apply {
-        testInvocationType = TestRun.TestInvocationType.GRADLE_TEST
+        testInvocationType = invocationType
         numberOfTestsExecuted = testCount
         testKind = testType
         crashed = infrastructureCrashed

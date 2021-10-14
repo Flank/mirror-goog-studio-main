@@ -43,6 +43,7 @@ import android.view.MenuItem
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -66,7 +67,10 @@ class $activityClass : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
 
-        val navController = findNavController(R.id.$navHostFragmentId)
+        val navHostFragment =
+            (supportFragmentManager.findFragmentById(R.id.$navHostFragmentId) as NavHostFragment?)!!
+        val navController = navHostFragment.navController
+
         binding.navView?.let {
             appBarConfiguration = AppBarConfiguration(setOf(
                 R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings),

@@ -45,11 +45,12 @@ fun contentMainXml(
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="16dp"
+        android:contentDescription="@string/fab_content_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/$navHostFragmentId"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="0dp"

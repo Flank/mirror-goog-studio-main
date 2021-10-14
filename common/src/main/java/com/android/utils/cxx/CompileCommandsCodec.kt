@@ -42,7 +42,7 @@ import java.nio.channels.FileChannel
  * -----------
  * header:
  * - magic: C/C++ Build Metadata{EOF} [MAGIC]
- * - version: int32 [VERSION]
+ * - version: int32 [COMPILE_COMMANDS_CODEC_VERSION]
  * - num-sections: int32
  *
  * section-index (one per num-sections):
@@ -76,12 +76,13 @@ import java.nio.channels.FileChannel
  *     - output-file-path: int32 (index into string-table-section)
  *
  *  Version history:
+ *  - V3 Just bumped version number to address b/201754404
  *  - V2 added num-file-messages
  *  - V2 added file-message/output-file-path
  *  - V2 added file-context-message/target
  */
 private const val MAGIC = "C/C++ Build Metadata\u001a"
-private const val VERSION = 2
+const val COMPILE_COMMANDS_CODEC_VERSION = 3
 private const val COMPILE_COMMAND_CONTEXT_MESSAGE : Byte = 0x00
 private const val COMPILE_COMMAND_FILE_MESSAGE : Byte = 0x01
 
@@ -142,7 +143,7 @@ class CompileCommandsEncoder(
          *
          */
         encodeMagic()
-        encodeInt(VERSION)
+        encodeInt(COMPILE_COMMANDS_CODEC_VERSION)
         encodeInt(3) // Number of sections
         compileCommandsIndexEntry = writeSectionIndexEntry(CompileCommands)
         stringTableIndexEntry = writeSectionIndexEntry(StringTable)
@@ -349,7 +350,7 @@ class CompileCommandsEncoder(
 }
 
 /**
- * Read [MAGIC] and [VERSION] and return the position immediately after.
+ * Read [MAGIC] and [COMPILE_COMMANDS_CODEC_VERSION] and return the position immediately after.
  * Returns Pair(0, 0) if this isn't a compile_commands.json.bin file.
  */
 private fun ByteBuffer.positionAfterMagicAndVersion() : Pair<Int, Int> {
@@ -537,7 +538,7 @@ private fun streamCompileCommandsImpl(file: File, action : (CompileCommand) -> U
  * version supported by the code in this class.
  */
 fun compileCommandsFileIsCurrentVersion(file: File) : Boolean {
-    return readCompileCommandsVersionNumber(file) == VERSION
+    return readCompileCommandsVersionNumber(file) == COMPILE_COMMANDS_CODEC_VERSION
 }
 
 /**

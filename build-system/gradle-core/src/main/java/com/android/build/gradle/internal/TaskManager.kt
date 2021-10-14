@@ -150,6 +150,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseCla
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
+import com.android.build.gradle.internal.tasks.databinding.KAPT_FIX_KOTLIN_VERSION
 import com.android.build.gradle.internal.tasks.databinding.MergeRFilesForDataBindingTask
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
@@ -169,6 +170,7 @@ import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTa
 import com.android.build.gradle.internal.utils.KOTLIN_KAPT_PLUGIN_ID
 import com.android.build.gradle.internal.utils.addComposeArgsToKotlinCompile
 import com.android.build.gradle.internal.utils.getKotlinCompile
+import com.android.build.gradle.internal.utils.getProjectKotlinPluginKotlinVersion
 import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
 import com.android.build.gradle.internal.utils.isKotlinPluginApplied
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
@@ -2289,8 +2291,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         if (dataBindingEnabled) {
             if (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
                     && isKotlinKaptPluginApplied(project)) {
-                // TODO(183423660): Undo this workaround for KAPT resolving files at compile time
-                taskFactory.register(MergeRFilesForDataBindingTask.CreationAction(creationConfig))
+                val kotlinVersion = getProjectKotlinPluginKotlinVersion(project)
+                if (kotlinVersion != null && kotlinVersion < KAPT_FIX_KOTLIN_VERSION) {
+                    // Before Kotlin version 1.5.20 there was an issue with KAPT resolving files
+                    // at configuration time. We only need this task as a workaround for it, if the
+                    // version is newer than 1.5.20 or KAPT isn't applied, we can skip it.
+                    taskFactory.register(
+                            MergeRFilesForDataBindingTask.CreationAction(creationConfig))
+                }
             }
             taskFactory.register(DataBindingTriggerTask.CreationAction(creationConfig))
             setDataBindingAnnotationProcessorParams(creationConfig)
@@ -2305,7 +2313,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 creationConfig,
                 logger.isDebugEnabled,
                 DataBindingBuilder.getPrintMachineReadableOutput(),
-                isKotlinKaptPluginApplied(project))
+                isKotlinKaptPluginApplied(project),
+                getProjectKotlinPluginKotlinVersion(project))
         // Even though at this point, the old variantDsl related objects are dead, the KAPT plugin
         // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
         // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
