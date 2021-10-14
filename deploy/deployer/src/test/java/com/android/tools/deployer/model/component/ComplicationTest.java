@@ -49,7 +49,7 @@ public class ComplicationTest {
                     }
                 };
         Complication complication =
-                new Complication(device, "com.example.myApp", info, new TestLogger());
+                new Complication(info, "com.example.myApp", device, new TestLogger());
         complication.activate(
                 "debug.app.watchface com.example.WatchFaces$InnerWatchFace 1 LONG_TEXT",
                 AppComponent.Mode.RUN,
@@ -80,7 +80,7 @@ public class ComplicationTest {
                     }
                 };
         Complication complication =
-                new Complication(device, "com.example.myApp", info, new TestLogger());
+                new Complication(info, "com.example.myApp", device, new TestLogger());
         complication.activate(
                 "debug.app.watchface com.example.WatchFaces$InnerWatchFace 1 LONG_TEXT",
                 AppComponent.Mode.DEBUG,

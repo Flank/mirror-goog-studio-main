@@ -34,7 +34,10 @@ public class Complication extends AppComponent {
     @NonNull private final ILogger logger;
 
     public Complication(
-            IDevice device, String appId, ManifestAppComponentInfo info, @NonNull ILogger logger) {
+            @NonNull ManifestAppComponentInfo info,
+            @NonNull String appId,
+            @NonNull IDevice device,
+            @NonNull ILogger logger) {
         super(device, appId, info);
         this.logger = logger;
     }

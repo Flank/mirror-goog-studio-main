@@ -22,13 +22,13 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.deployer.model.component.Activity;
 import com.android.tools.deployer.model.component.AppComponent;
+import com.android.tools.deployer.model.component.Complication;
 import com.android.tools.deployer.model.component.ComponentType;
 import com.android.tools.deployer.model.component.Tile;
 import com.android.tools.deployer.model.component.WatchFace;
 import com.android.tools.manifest.parser.components.ManifestActivityInfo;
 import com.android.tools.manifest.parser.components.ManifestServiceInfo;
 import com.android.utils.ILogger;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -79,7 +79,7 @@ public class App {
         activateComponent(type, componentName, NO_FLAGS, mode, receiver);
     }
 
-    private void activateComponent(
+    public void activateComponent(
             @NonNull ComponentType type,
             @NonNull String componentName,
             @NonNull String extraFlags,
@@ -114,6 +114,12 @@ public class App {
                 optionalService = getService(qualifiedName);
                 if (optionalService.isPresent()) {
                     component = new Tile(optionalService.get(), appId, device, logger);
+                }
+                break;
+            case COMPLICATION:
+                optionalService = getService(qualifiedName);
+                if (optionalService.isPresent()) {
+                    component = new Complication(optionalService.get(), appId, device, logger);
                 }
                 break;
             default:
