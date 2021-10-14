@@ -80,6 +80,7 @@ import java.io.PrintStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -146,10 +147,19 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          */
         val handle: AutoCloseable,
         /**
+         * Executor used during capture
+         */
+        val executorService: ExecutorService,
+        /**
          * When true, indicates we should stop capturing after the next one
          */
-        var isLastCapture: Boolean = false
-    )
+        var isLastCapture: Boolean = false,
+    ) {
+        fun shutdown() {
+            handle.close()
+            executorService.shutdown()
+        }
+    }
 
     private data class ScreenshotSettings(
         val type: Screenshot.Type,
@@ -232,6 +242,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         @Synchronized
         fun checkRoots() {
             val currRoots = getRootViewsOnMainThread()
+            if (quit.get()) {
+                // We're quitting and cancelled the roots request.
+                return
+            }
             currRoots.values.firstOrNull()?.context?.let { initializeSensors(it) }
 
             val currRootIds = currRoots.keys
@@ -252,7 +266,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
                 synchronized(stateLock) {
                     for (toRemove in removed) {
-                        state.contextMap.remove(toRemove)?.handle?.close()
+                        state.contextMap.remove(toRemove)?.shutdown()
                     }
                     if (state.fetchContinuously) {
                         if (added.isNotEmpty()) {
@@ -434,7 +448,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         rootsDetector.stop()
         synchronized(stateLock) {
             for (context in state.contextMap.values) {
-                context.handle.close()
+                context.shutdown()
             }
             state.contextMap.clear()
         }
@@ -537,7 +551,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     os.reset() // Clear stream, ready for next frame
                     checkpoint = ProgressCheckpoint.SCREENSHOT_CAPTURED
                     if (context.isLastCapture) {
-                        context.handle.close()
+                        context.shutdown()
                     }
 
                     val stringTable = StringTable()
@@ -619,7 +633,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     shouldSerialize = { state.snapshotRequests.isNotEmpty() ||
                             state.screenshotSettings.type == Screenshot.Type.SKP })
             state.contextMap[root.uniqueDrawingId] =
-                CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
+                CaptureContext(handle, sequentialExecutor, isLastCapture = (!state.fetchContinuously))
         }
         checkpoint = ProgressCheckpoint.STARTED
         root.invalidate() // Force a re-render so we send the current screen

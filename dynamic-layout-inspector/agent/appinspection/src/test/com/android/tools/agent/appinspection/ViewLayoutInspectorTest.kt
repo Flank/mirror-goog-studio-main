@@ -63,6 +63,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
@@ -547,6 +548,86 @@ class ViewLayoutInspectorTest {
             assertThat(event.rootsEvent.idsList).containsExactly(
                 tree1.uniqueDrawingId,
                 tree3.uniqueDrawingId
+            )
+        }
+    }
+
+
+    @Test
+    fun noEmptyRootsEventOnStopContinuousCapturing() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val tree1 = View(context).apply { setAttachInfo(View.AttachInfo()) }
+        WindowManagerGlobal.getInstance().rootViews.add(tree1)
+
+        viewInspector.onReceiveCommand(
+            Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    continuous = true
+                }
+            }.build().toByteArray(),
+            inspectorRule.commandCallback
+        )
+        // Don't need to get into the screenshot processing stuff
+        viewInspector.onReceiveCommand(
+            Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.NONE
+                }
+            }.build().toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        // At this point, a check roots thread is running continuously...
+
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+            )
+        }
+
+        val inRootsDetectorLatch = CountDownLatch(1)
+        val tree2 = object: View(context) {
+            // getVisibility is called in getRootViews, so we introduce a delay to make that request
+            // timeout.
+            override fun getVisibility(): Int {
+                inRootsDetectorLatch.countDown()
+                // wait for request in rootsDetector to time out
+                Thread.sleep(500)
+                // Remove this tree--we don't need to sleep and countDown again.
+                WindowManagerGlobal.getInstance().rootViews.remove(this)
+                return super.getVisibility()
+            }
+        }
+        WindowManagerGlobal.getInstance().rootViews.add(tree2)
+        // Wait until we're in the middle of getting the roots
+        inRootsDetectorLatch.await()
+
+        // Switch to non-continuous. This should make the roots detector quit without fetching the
+        // roots.
+        viewInspector.onReceiveCommand(
+            Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    continuous = false
+                }
+            }.build().toByteArray(),
+            inspectorRule.commandCallback
+        )
+        // normally start would trigger a capture, but we have to do that manually here
+        tree1.forcePictureCapture(Picture(byteArrayOf(2)))
+
+        // the roots event received should have the right roots in it
+        checkNonProgressEvent(eventQueue) { event ->
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
             )
         }
     }
