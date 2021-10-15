@@ -396,7 +396,6 @@ local_maven_repository(
         "com.google.android.gms:play-services-maps:17.0.1",
         "com.google.android.gms:play-services-wallet:18.1.3",
         "com.google.android.gms:play-services-wearable:17.1.0",
-        "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:1.3.0",
         "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.0",
         "com.google.android.material:material:1.1.0",
         "com.google.android.material:material:1.3.0",
