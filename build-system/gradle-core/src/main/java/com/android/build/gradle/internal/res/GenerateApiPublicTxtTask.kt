@@ -28,13 +28,13 @@ import com.android.ide.common.symbols.SymbolIo
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -44,8 +44,13 @@ import java.nio.file.Path
  * The artifact in the AAR has the challenging-for-consumers attribute (They can;t ) of sometimes not existing,
  * so this tasks
  *
- * Task to take the (possibly not existing) internal public API file and generate one that exists unconditionally */
-@CacheableTask
+ * Task to take the (possibly not existing) internal public API file and generate one that exists unconditionally
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ *  simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
 
     @get:InputFiles // Use InputFiles rather than InputFile to allow the file not to exist
