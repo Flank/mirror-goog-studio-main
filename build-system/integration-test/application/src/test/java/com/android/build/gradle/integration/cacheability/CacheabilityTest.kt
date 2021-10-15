@@ -58,7 +58,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "BuildConfig", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "generate", "JacocoPropertiesFile", listOf("Debug")),
             TaskInfo(FROM_CACHE, "generate", "ResValues", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "Config", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "jacoco", "", listOf("Debug")),
@@ -92,6 +91,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "create", "ApkListingFileRedirect", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
+            /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
+            TaskInfo(DID_WORK, "generate", "JacocoPropertiesFile", listOf("Debug")),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Intentionally not cacheable. */
             TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
