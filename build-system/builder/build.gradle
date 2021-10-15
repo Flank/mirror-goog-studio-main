@@ -18,7 +18,7 @@ dependencies {
     implementation libs.com.android.tools.analyticsLibrary.protos
     implementation libs.com.android.tools.analyticsLibrary.tracker
     implementation libs.com.android.tools.layoutlib.layoutlibApi
-    api project(':apksig')
+    api libs.com.android.tools.build.apksig
     api project(':apkzlib')
 
     implementation libs.kotlin_stdlib

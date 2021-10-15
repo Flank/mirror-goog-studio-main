@@ -10,7 +10,7 @@ repositories {
 dependencies {
     testImplementation project(':base:build-system:integration-test:framework')
     testImplementation libs.com.android.tools.analyticsLibrary.protos
-    testImplementation project(':apksig')
+    testImplementation libs.com.android.tools.build.apksig
     testImplementation project(':base:builder')
     testImplementation project(':base:gradle-api')
     testImplementation project(':base:builder-model')

@@ -84,6 +84,8 @@ maven_library(
         "//tools/apksig:apksig-all",
     ],
     coordinates = "com.android.tools.build:apksig:" + BUILD_VERSION,
+    description = "Library for signing APKs and for checking that APK signatures verify on Android",
+    notice = "//tools/apksig:LICENSE",
     visibility = ["//visibility:public"],
 )
 
@@ -249,7 +251,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     ":agp_gradle_build_files",
     "//prebuilts/tools/common/aapt/protos:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
-    "//tools/apksig:agp_gradle_build_files",
     "//tools/apkzlib:agp_gradle_build_files",
     "//tools/base:agp_artifacts.zip",
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
