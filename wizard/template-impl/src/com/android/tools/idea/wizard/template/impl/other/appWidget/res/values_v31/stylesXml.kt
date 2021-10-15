@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.ge
 fun stylesXml(themesData: ThemesData) =
   """<resources>
     <style name="${getAppWidgetContainerStyleName(themesData.appName)}" parent="android:Widget">
+        <item name="android:id">@android:id/background</item>
         <item name="android:padding">?attr/appWidgetPadding</item>
         <item name="android:background">@drawable/app_widget_background</item>
         <item name="android:clipToOutline">true</item>
@@ -30,6 +31,7 @@ fun stylesXml(themesData: ThemesData) =
     <style name="${getAppWidgetInnerViewStyleName(themesData.appName)}" parent="android:Widget">
         <item name="android:padding">?attr/appWidgetPadding</item>
         <item name="android:background">@drawable/app_widget_inner_view_background</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
         <item name="android:clipToOutline">true</item>
     </style>
 </resources>
