@@ -374,11 +374,11 @@ com.android.tools.build:apkzlib
   pomName=com.android.tools.build.apkzlib
   description=Library used to incrementally build and sign APKs
   dependencies:
+    com.android.tools.build:apksig (runtime)
     com.google.code.findbugs:jsr305 (runtime)
     com.google.guava:guava (runtime)
     org.bouncycastle:bcpkix-jdk15on (runtime)
     org.bouncycastle:bcprov-jdk15on (runtime)
-    com.android.tools.build:apksig (runtime)
 
 com.android.tools.build:builder
   pomName=com.android.tools.build.builder

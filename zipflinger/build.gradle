@@ -21,7 +21,7 @@ dependencies {
     implementation libs.com.android.tools.annotations
 
     testImplementation 'junit:junit:4.12'
-    testImplementation project(':apkzlib')
+    testImplementation libs.com.android.tools.build.apkzlib
     testImplementation project(':base:testutils')
     testImplementation project(':base:build-system:gradle-core')
 }

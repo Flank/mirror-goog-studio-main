@@ -81,6 +81,7 @@ AGP_ARTIFACTS = [
     "//tools/analytics-library/protos/src/main/proto:proto",
     "//tools/analytics-library/shared:tools.analytics-shared",
     "//tools/analytics-library/tracker:tools.analytics-tracker",
+    "//tools/apkzlib",
     "//tools/base/annotations:annotations",
     "//tools/base/build-system:tools.apksig",
     "//tools/base/common:tools.common",

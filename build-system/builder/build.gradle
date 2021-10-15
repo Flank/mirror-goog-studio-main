@@ -19,7 +19,7 @@ dependencies {
     implementation libs.com.android.tools.analyticsLibrary.tracker
     implementation libs.com.android.tools.layoutlib.layoutlibApi
     api libs.com.android.tools.build.apksig
-    api project(':apkzlib')
+    api libs.com.android.tools.build.apkzlib
 
     implementation libs.kotlin_stdlib
     api libs.javawriter
