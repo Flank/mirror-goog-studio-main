@@ -178,6 +178,44 @@ class AppBundleLocaleChangesDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testSuppress() {
+        // 203115468: SuppressLint not working for AppBundleLocaleChanges
+        lint().files(
+            kotlin(
+                """
+                import android.content.res.Configuration
+                import android.os.LocaleList
+
+                @Suppress("AppBundleLocaleChanges")
+                fun example(configuration: Configuration, locales: LocaleList) {
+                    configuration.setLocales(locales) // OK
+                }
+                """
+            ).indented()
+        )
+            .run()
+            .expectClean()
+    }
+
+    fun testSuppressWithComment() {
+        // 203115468: SuppressLint not working for AppBundleLocaleChanges
+        lint().files(
+            kotlin(
+                """
+                import android.content.res.Configuration
+                import android.os.LocaleList
+
+                fun example(configuration: Configuration, locales: LocaleList) {
+                    //noinspection AppBundleLocaleChanges
+                    configuration.setLocales(locales) // OK
+                }
+                """
+            ).indented()
+        )
+            .run()
+            .expectClean()
+    }
+
     fun testJavaPlayCoreUsage() {
         lint().files(
             PLAYCORE_FILE2,

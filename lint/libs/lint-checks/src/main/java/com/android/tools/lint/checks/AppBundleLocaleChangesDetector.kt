@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.psi.KtValueArgumentName
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
@@ -60,7 +61,8 @@ class AppBundleLocaleChangesDetector : Detector(), SourceCodeScanner, GradleScan
         when (method.name) {
             REF_SETLOCALE, REF_SETLOCALES -> {
                 if (localeChangeLocation == null &&
-                    context.evaluator.isMemberInClass(method, CLASS_CONFIGURATION)
+                    context.evaluator.isMemberInClass(method, CLASS_CONFIGURATION) &&
+                    (!isLocationSuppressed(context, node))
                 ) {
                     localeChangeLocation = context.getLocation(node)
                 }
@@ -106,11 +108,28 @@ class AppBundleLocaleChangesDetector : Detector(), SourceCodeScanner, GradleScan
             // Check if we're assigning to the `locale` field
             val binaryExpr = reference.getParentOfType(UBinaryExpression::class.java)
             if (binaryExpr != null && binaryExpr.operator == UastBinaryOperator.ASSIGN &&
-                binaryExpr.leftOperand.tryResolve() == referenced
+                binaryExpr.leftOperand.tryResolve() == referenced &&
+                (!isLocationSuppressed(context, reference))
             ) {
                 localeChangeLocation = context.getLocation(reference)
             }
         }
+    }
+
+    /**
+     * Checks whether [ISSUE] is suppressed at the given location.
+     */
+    private fun isLocationSuppressed(context: JavaContext, expression: UExpression): Boolean {
+        if (context.isSuppressedWithComment(expression, ISSUE)) {
+            return true
+        }
+        if (context.isGlobalAnalysis()) {
+            // We'll check for this when reporting the incident later. For partial
+            // analysis, we need to check now since we won't have access to the sources
+            // during reporting.
+            return false
+        }
+        return context.driver.isSuppressed(context, ISSUE, expression)
     }
 
     override fun checkDslPropertyAssignment(
