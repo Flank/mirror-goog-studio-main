@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.SystemUtils;
 
 /** Utility for generating a BUILD file from a {@link ResolutionResult} object. */
@@ -180,17 +179,25 @@ public class BuildFileWriter {
                     switch (scope) {
                         case "compile":
                             fileWriter.append("    exports = [\n");
+                            for (String d : deps) {
+                                fileWriter.append(String.format("        \"%s\",\n", getMavenImportRuleName(d)));
+                            }
+                            fileWriter.append("    ],\n");
                             break;
                         case "runtime":
                             fileWriter.append("    deps = [\n");
+                            for (String d : deps) {
+                                fileWriter.append(String.format("        \"%s\",\n", getMavenImportRuleName(d)));
+                            }
+                            fileWriter.append("    ],\n");
+                            break;
+                        case "import":
+                            // Ignore dependencies of scope=import. They are not required by the maven_import rules,
+                            // and are only used when generating maven_artifact rules.
                             break;
                         default:
                             throw new IllegalStateException("Scope " + scope + " is not supported");
                     }
-                    for (String d : deps) {
-                        fileWriter.append(String.format("        \"%s\",\n", getMavenImportRuleName(d)));
-                    }
-                    fileWriter.append("    ],\n");
                 }
             }
             // Original dependencies use version numbers in their rule names.

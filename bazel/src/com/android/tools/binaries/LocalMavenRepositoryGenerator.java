@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -59,6 +60,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
@@ -85,6 +87,7 @@ import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver;
 import org.eclipse.aether.util.graph.transformer.JavaScopeSelector;
 import org.eclipse.aether.util.graph.transformer.NoopDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector;
+import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -584,11 +587,22 @@ public class LocalMavenRepositoryGenerator {
                                             .setRepositories(repositories));
 
             DependencyResult result = system.resolveDependencies(session, request);
+
+            addImportDependencies(result);
+
             return result.getRoot();
         }
 
-        /** Returns the maven model for the given artifact. */
-        public Model getMavenModel(Artifact artifact) {
+        /**
+         * Add the scope=import dependencies into the dependency graph. These dependencies are
+         * removed from the Maven models when the effective Maven model is constructed from the raw
+         * Maven model.
+         */
+        private void addImportDependencies(DependencyResult result) {
+            result.getRoot().accept(new ImportDependencyVisitor(result.getRoot(),this));
+        }
+
+        private ModelBuildingResult getModelBuildingResult(Artifact artifact) {
             try {
                 File pomFile = getPomFile(artifact);
                 ModelBuildingRequest buildingRequest = new DefaultModelBuildingRequest();
@@ -601,13 +615,22 @@ public class LocalMavenRepositoryGenerator {
                 ModelResolver modelResolver = newDefaultModelResolver();
                 buildingRequest.setModelResolver(modelResolver);
 
-                ModelBuildingResult result = modelBuilder.build(buildingRequest);
-                return result.getEffectiveModel();
+                return modelBuilder.build(buildingRequest);
             } catch (Exception e) {
                 // Rethrow as runtime exception to simplify call site. We have no intention to catch
                 // these errors and handle them gracefully.
                 throw new RuntimeException(e);
             }
+        }
+        /** Returns the maven model for the given artifact. */
+        public Model getMavenModel(Artifact artifact) {
+            ModelBuildingResult result = getModelBuildingResult(artifact);
+            return result.getEffectiveModel();
+        }
+
+        public Model getRawMavenModel(Artifact artifact) {
+            ModelBuildingResult result = getModelBuildingResult(artifact);
+            return result.getRawModel();
         }
 
         /** Returns the pom file for the given artifact. */
@@ -694,7 +717,6 @@ public class LocalMavenRepositoryGenerator {
             return session;
         }
     }
-
 
     /**
      * Resolves maven version ranges (e.g., [15.0, 19.0)) into actual versions (e.g., listOf(15.0,
@@ -786,6 +808,105 @@ public class LocalMavenRepositoryGenerator {
 
             // If we are fetching, then we can use the default version range resolver.
             return super.resolveVersionRange(session, request);
+        }
+    }
+
+    /**
+     * A dependency visitor that visits all nodes in the dependency graph and
+     * adds new dependency nodes and edges that represent dependencies that
+     * have "scope=import".
+     *
+     * This ignores any possible dependency version conflicts over the
+     * scope=import edges.
+     */
+    private static class ImportDependencyVisitor implements DependencyVisitor{
+
+        private final CustomMavenRepository repository;
+
+        // Contains all nodes in the dependency graph.
+        // Key: The associated Artifact's toString() representation.
+        private final Map<String, DependencyNode> allNodes = new HashMap<>();
+
+        public ImportDependencyVisitor(DependencyNode root, CustomMavenRepository repository) {
+            // Gather all nodes in the dependency graph.
+            PreorderNodeListGenerator generator = new PreorderNodeListGenerator();
+            root.accept(generator);
+            for (DependencyNode node : generator.getNodes()) {
+                allNodes.put(node.getArtifact().toString(), node);
+            }
+
+            this.repository = repository;
+        }
+
+        @Override
+        public boolean visitEnter(DependencyNode node) {
+            if (node.getArtifact() == null) return true;
+            // Get the raw Pom model for the artifact. Note that the effective model
+            // inlines the "scope=import" dependencies (which is also why the original
+            // dependency graph does not have associated nodes and edges), so we must
+            // use the raw model.
+            Model rawPomModel =
+                    repository.getRawMavenModel(
+                            new DefaultArtifact(
+                                    node.getArtifact().getGroupId(),
+                                    node.getArtifact().getArtifactId(),
+                                    "pom",
+                                    node.getArtifact().getVersion()));
+            if (rawPomModel.getDependencyManagement() == null) return true;
+
+            // Create new dependency nodes for the import dependencies.
+            List<DependencyNode> importDependencyNodes =
+                    rawPomModel.getDependencyManagement().getDependencies()
+                        .stream()
+                        .filter(d -> d.getType().equals("pom") && d.getScope().equals("import"))
+                        .map(d -> {
+                            try {
+                                File pomFile = repository.getPomFile(new DefaultArtifact(
+                                        d.getGroupId(),
+                                        d.getArtifactId(),
+                                        "pom",
+                                        d.getVersion()
+                                ));
+                                return new DefaultArtifact(
+                                        d.getGroupId(),
+                                        d.getArtifactId(),
+                                        Strings.emptyToNull(d.getClassifier()),
+                                        "pom",
+                                        d.getVersion(),
+                                        Collections.emptyMap(),
+                                        pomFile);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .map(a -> {
+                            // If there already is a node that represents this import dependency,
+                            // then we don't want to re-create the same dependency node.
+                            // If there already is a node that represents the target artifact, but
+                            // with a different scope (e.g., scope=compile|runtime), then we prefer
+                            // to use that node (i.e., perform scope resolution).
+                            String key = a.toString();
+                            if (!allNodes.containsKey(key)) {
+                                allNodes.put(
+                                        key,
+                                        new DefaultDependencyNode(new Dependency(a, "import")));
+                            }
+                            return allNodes.get(key);
+                        })
+                    .collect(Collectors.toList());
+            if (!importDependencyNodes.isEmpty()) {
+                // The original children list is read-only, so we create a
+                // new list that contains items from both lists.
+                List<DependencyNode> children = new ArrayList<>(node.getChildren());
+                children.addAll(importDependencyNodes);
+                node.setChildren(children);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean visitLeave(DependencyNode node) {
+            return true;
         }
     }
 }
