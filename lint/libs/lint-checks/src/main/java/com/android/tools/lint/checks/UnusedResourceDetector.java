@@ -91,11 +91,14 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.kotlin.psi.KtProperty;
+import org.jetbrains.kotlin.psi.KtTypeReference;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UCallableReferenceExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UField;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.UTypeReferenceExpression;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -797,11 +800,39 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     PsiClassType classType = (PsiClassType) node.getType();
                     PsiClass psiClass = classType.resolve();
                     if (psiClass != null) {
-                        String resourceName = bindingClasses.get(classType.getClassName());
+                        String className = classType.getClassName();
+                        String resourceName = bindingClasses.get(className);
                         if (resourceName != null
                                 && isBindingClass(context.getEvaluator(), psiClass)) {
                             ResourceUsageModel.markReachable(
                                     model.getResource(ResourceType.LAYOUT, resourceName));
+                        } else if (resourceName == null) {
+                            // When using property delegation, the field type will not
+                            // be the binding class. However, try to infer the intended
+                            // delegation target from the declaration. (See issue 191196334.)
+                            UTypeReferenceExpression reference = node.getTypeReference();
+                            if (reference != null) {
+                                PsiElement psi = reference.getSourcePsi();
+                                if (psi instanceof KtTypeReference
+                                        && node.getSourcePsi() instanceof KtProperty
+                                        && ((KtProperty) node.getSourcePsi())
+                                                        .getDelegateExpression()
+                                                != null) {
+                                    String typeName = psi.getText();
+                                    if (typeName != null && !typeName.equals(className)) {
+                                        resourceName = bindingClasses.get(typeName);
+                                        // Here we can't check to see if the class is a binding
+                                        // class, but given that it's a Kotlin delegate expression
+                                        // which specifies a typethat matches a known binding
+                                        // class name, it's very likely.
+                                        if (resourceName != null) {
+                                            ResourceUsageModel.markReachable(
+                                                    model.getResource(
+                                                            ResourceType.LAYOUT, resourceName));
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
