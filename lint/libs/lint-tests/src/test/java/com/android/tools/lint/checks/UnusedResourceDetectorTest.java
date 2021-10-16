@@ -20,10 +20,10 @@ import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Ty
 import static com.android.tools.lint.checks.infrastructure.TestFiles.rClass;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
-import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
@@ -1615,7 +1615,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
 
                         // Here we provide code that would have been generated for view binding /
-                        // provided by the view binding lirary
+                        // provided by the view binding library
                         java(
                                 ""
                                         + "package my.pkg.databinding;\n"
@@ -1762,7 +1762,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
 
                         // Here we provide code that would have been generated for view binding /
-                        // provided by the view binding lirary
+                        // provided by the view binding library
                         java(
                                 ""
                                         + "package my.pkg.databinding;\n"
@@ -1813,6 +1813,109 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "public interface ViewBinding {\n"
                                         + "}"))
                 .clientFactory(gradleClientFactory)
+                .run()
+                .expectClean();
+    }
+
+    public void testViewBindingPropertyDelegation() {
+        // Regression test in 203123034: Lint UnusedResources incorrectly fails when using
+        // ViewBinding via property delegation
+        lint().files(
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "  dependencies {\n"
+                                        + "    classpath \"com.android.tools.build:gradle:7.0.3\"\n"
+                                        + "  }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    buildFeatures {\n"
+                                        + "        viewBinding true\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        xml(
+                                "src/main/res/layout/hello_world.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.util.AttributeSet\n"
+                                        + "import android.widget.FrameLayout\n"
+                                        + "import test.pkg.HelloWorldBinding\n"
+                                        + "\n"
+                                        + "class HelloWorldView @JvmOverloads constructor(\n"
+                                        + "    context: Context,\n"
+                                        + "    attrs: AttributeSet? = null,\n"
+                                        + "    defStyleAttr: Int = 0\n"
+                                        + ") : FrameLayout(context, attrs, defStyleAttr) {\n"
+                                        + "    private val binding: HelloWorldBinding by viewBinding()\n"
+                                        + "\n"
+                                        + "    init {\n"
+                                        + "        binding.text.setText(R.string.app_name)\n"
+                                        + "    }\n"
+                                        + "}"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import android.view.ViewGroup\n"
+                                        + "import androidx.viewbinding.ViewBinding\n"
+                                        + "import kotlin.properties.ReadOnlyProperty\n"
+                                        + "import kotlin.reflect.KProperty\n"
+                                        + "\n"
+                                        + "class ViewBindingDelegate<T : ViewBinding>(\n"
+                                        + "    bindingClass: Class<T>,\n"
+                                        + "    view: ViewGroup\n"
+                                        + ") : ReadOnlyProperty<ViewGroup, T> {\n"
+                                        + "    private val layoutInflater = LayoutInflater.from(view.context).cloneInContext(view.context)\n"
+                                        + "    private val binding: T = try {\n"
+                                        + "        val inflateMethod = bindingClass.getMethod(\"inflate\", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.javaPrimitiveType)\n"
+                                        + "        inflateMethod.invoke(null, layoutInflater, view, true)!! as T\n"
+                                        + "    } catch (e: NoSuchMethodException) {\n"
+                                        + "        val inflateMethod = bindingClass.getMethod(\"inflate\", LayoutInflater::class.java, ViewGroup::class.java)\n"
+                                        + "        inflateMethod.invoke(null, layoutInflater, view)!! as T\n"
+                                        + "    }\n"
+                                        + "    override fun getValue(thisRef: ViewGroup, property: KProperty<*>): T = binding\n"
+                                        + "}\n"
+                                        + "inline fun <reified T : ViewBinding> ViewGroup.viewBinding() = ViewBindingDelegate(T::class.java, this)"),
+
+                        // Here we provide code that would have been generated for view binding /
+                        // provided by the view binding library
+                        java(
+                                ""
+                                        + "// Generated by view binder compiler. Do not edit!\n"
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "import android.view.View;\n"
+                                        + "import android.view.ViewGroup;\n"
+                                        + "import android.widget.TextView;\n"
+                                        + "import androidx.viewbinding.ViewBinding;\n"
+                                        + "\n"
+                                        + "public final class HelloWorldBinding implements ViewBinding {\n"
+                                        + "  public static HelloWorldBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return null;\n"
+                                        + "  }\n"
+                                        + "  public static HelloWorldBinding inflate(@NonNull LayoutInflater inflater,\n"
+                                        + "      ViewGroup parent, boolean attachToParent) {\n"
+                                        + "    return null;\n"
+                                        + "  }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package androidx.viewbinding;\n"
+                                        + "public interface ViewBinding {\n"
+                                        + "}"))
+                .clientFactory(gradleClientFactory)
+                .skipTestModes(TestMode.TYPE_ALIAS)
                 .run()
                 .expectClean();
     }
@@ -2371,12 +2474,5 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                             + "\n");
 
     private static final TestLintTask.ClientFactory gradleClientFactory =
-            new TestLintTask.ClientFactory() {
-                @NonNull
-                @Override
-                public com.android.tools.lint.checks.infrastructure.TestLintClient create() {
-                    return new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                            CLIENT_GRADLE);
-                }
-            };
+            () -> new com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_GRADLE);
 }
