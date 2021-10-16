@@ -29,16 +29,22 @@ import com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginV
 import com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.File
 
-/** A task that writes the AAR metadata file  */
-@CacheableTask
+/**
+ * A task that writes the AAR metadata file
+ *
+ * Caching disabled by default for this task because the task does very little work.
+ * Calculating cache hit/miss and fetching results is likely more expensive than
+ *  simply executing the task.
+ */
+@DisableCachingByDefault
 abstract class AarMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile
