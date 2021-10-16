@@ -24,10 +24,10 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 
 /**
  *  Task to create an empty R.txt and an empty res/ directory.
@@ -40,8 +40,12 @@ import org.gradle.api.tasks.TaskProvider
  *  to generate them. We can however skip generating the public.txt, since it's not required
  *  (missing public.txt means all resources in the R.txt in that AAR are public, but since the R.txt
  *  is empty, we can safely skip the public.txt file).
+ *
+ *  Caching disabled by default for this task because the task does very little work.
+ *  Calculating cache hit/miss and fetching results is likely more expensive than
+ *    simply executing the task.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
 
     @get:OutputFile
