@@ -203,7 +203,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                                     // colors and mipmaps can apparently be used as drawables
                                     !(type == ResourceType.DRAWABLE
                                             && (url.type == ResourceType.COLOR
-                                            || url.type == ResourceType.MIPMAP))
+                                                    || url.type == ResourceType.MIPMAP))
                                     // Macro resources can reference any other resource type
                                     && type != ResourceType.MACRO
                                     // Any resource can reference a macro

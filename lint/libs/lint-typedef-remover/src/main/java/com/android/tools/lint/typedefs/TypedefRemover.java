@@ -49,32 +49,27 @@ public class TypedefRemover {
     private final boolean mDryRun;
 
     /**
-     * Set of typedef classes to be removed. The names are in internal
-     * format (e.g. using / to separate packages and $ to separate inner classes).
+     * Set of typedef classes to be removed. The names are in internal format (e.g. using / to
+     * separate packages and $ to separate inner classes).
      */
     private Set<String> mAnnotationNames = Sets.newHashSet();
 
     /**
-     * List of relative paths to the typedef classes to be removed, using
-     * / (not File.separator) as the path separator, to match the .zip file paths.
-     * This is identical to {@link #mAnnotationNames}, except the file extensions
-     * are .class.
+     * List of relative paths to the typedef classes to be removed, using / (not File.separator) as
+     * the path separator, to match the .zip file paths. This is identical to {@link
+     * #mAnnotationNames}, except the file extensions are .class.
      */
     private Set<String> mAnnotationClassFiles = Sets.newHashSet();
 
     /**
-     * List of classes <b>containing</b> removed typedefs. These need to be
-     * rewritten to remove .class file references to the inner classes that are being
-     * deleted.
-     * <p>
-     * These are relative paths using / rather than File.separator as the file separator.
+     * List of classes <b>containing</b> removed typedefs. These need to be rewritten to remove
+     * .class file references to the inner classes that are being deleted.
+     *
+     * <p>These are relative paths using / rather than File.separator as the file separator.
      */
     private Set<String> mAnnotationOuterClassFiles = Sets.newHashSet();
 
-    public TypedefRemover(
-            boolean quiet,
-            boolean verbose,
-            boolean dryRun) {
+    public TypedefRemover(boolean quiet, boolean verbose, boolean dryRun) {
         mQuiet = quiet;
         mVerbose = verbose;
         mDryRun = dryRun;
@@ -172,7 +167,7 @@ public class TypedefRemover {
     /**
      * Records the given class name (internal name) and class file path as corresponding to a
      * typedef annotation
-     * */
+     */
     private void addTypeDef(String owner) {
         mAnnotationClassFiles.add(owner + DOT_CLASS);
         mAnnotationNames.add(owner);
@@ -187,8 +182,8 @@ public class TypedefRemover {
     }
 
     /**
-     * Rewrites the outer classes containing the typedefs such that they no longer refer to
-     * the (now removed) typedef annotation inner classes
+     * Rewrites the outer classes containing the typedefs such that they no longer refer to the (now
+     * removed) typedef annotation inner classes
      */
     private void rewriteOuterClasses(@NonNull Collection<File> classDirs) {
         for (String relative : mAnnotationOuterClassFiles) {
@@ -241,8 +236,7 @@ public class TypedefRemover {
     }
 
     /**
-     * Performs the actual deletion (or display, if in dry-run mode) of the typedef annotation
-     * files
+     * Performs the actual deletion (or display, if in dry-run mode) of the typedef annotation files
      */
     private void deleteAnnotationClasses(@NonNull Collection<File> classDirs) {
         for (String relative : mAnnotationClassFiles) {

@@ -342,12 +342,12 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
     public void testDuplicates() {
         lint().files(
                         xml(
-                                "res/values/resources.xml",
-                                ""
-                                        + "<resources>\n"
-                                        + "    <style name=\"Settings\">\n"
-                                        + "        <item name=\"android:clipToPadding\">false</item>\n"
-                                        + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
+                                        "res/values/resources.xml",
+                                        ""
+                                                + "<resources>\n"
+                                                + "    <style name=\"Settings\">\n"
+                                                + "        <item name=\"android:clipToPadding\">false</item>\n"
+                                                + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
                                                 + "        <item name=\"android:navigationBarColor\">@android:color/transparent</item>\n"
                                                 + "    </style>\n"
                                                 + "</resources>")

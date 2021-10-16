@@ -33,41 +33,46 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class TypedefRemoverTest {
-    @Rule
-    public TemporaryFolder testFolder = new TemporaryFolder();
+    @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
     /* Compiled version of pp/build/intermediates/classes/debug/test/pkg/OuterClass.class from
-        package test.pkg;
+       package test.pkg;
 
-        import android.support.annotation.IntDef;
+       import android.support.annotation.IntDef;
 
-        public class OuterClass {
-            public static final int CONSTANT = 1;
+       public class OuterClass {
+           public static final int CONSTANT = 1;
 
-            @IntDef(CONSTANT)
-            public @interface InnerClass {
-            }
-        }
-     */
-    public static final byte[] OUTER_CLASS = Base64.getDecoder().decode(""
-            + "yv66vgAAADMAGAoAAwAUBwAVBwAWBwAXAQAKSW5uZXJDbGFzcwEADElubmVy"
-            + "Q2xhc3NlcwEACENPTlNUQU5UAQABSQEADUNvbnN0YW50VmFsdWUDAAAAAQEA"
-            + "Bjxpbml0PgEAAygpVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBABJMb2Nh"
-            + "bFZhcmlhYmxlVGFibGUBAAR0aGlzAQAVTHRlc3QvcGtnL091dGVyQ2xhc3M7"
-            + "AQAKU291cmNlRmlsZQEAD091dGVyQ2xhc3MuamF2YQwACwAMAQATdGVzdC9w"
-            + "a2cvT3V0ZXJDbGFzcwEAEGphdmEvbGFuZy9PYmplY3QBAB50ZXN0L3BrZy9P"
-            + "dXRlckNsYXNzJElubmVyQ2xhc3MAIQACAAMAAAABABkABwAIAAEACQAAAAIA"
-            + "CgABAAEACwAMAAEADQAAAC8AAQABAAAABSq3AAGxAAAAAgAOAAAABgABAAAA"
-            + "BQAPAAAADAABAAAABQAQABEAAAACABIAAAACABMABgAAAAoAAQAEAAIABSYJ");
+           @IntDef(CONSTANT)
+           public @interface InnerClass {
+           }
+       }
+    */
+    public static final byte[] OUTER_CLASS =
+            Base64.getDecoder()
+                    .decode(
+                            ""
+                                    + "yv66vgAAADMAGAoAAwAUBwAVBwAWBwAXAQAKSW5uZXJDbGFzcwEADElubmVy"
+                                    + "Q2xhc3NlcwEACENPTlNUQU5UAQABSQEADUNvbnN0YW50VmFsdWUDAAAAAQEA"
+                                    + "Bjxpbml0PgEAAygpVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBABJMb2Nh"
+                                    + "bFZhcmlhYmxlVGFibGUBAAR0aGlzAQAVTHRlc3QvcGtnL091dGVyQ2xhc3M7"
+                                    + "AQAKU291cmNlRmlsZQEAD091dGVyQ2xhc3MuamF2YQwACwAMAQATdGVzdC9w"
+                                    + "a2cvT3V0ZXJDbGFzcwEAEGphdmEvbGFuZy9PYmplY3QBAB50ZXN0L3BrZy9P"
+                                    + "dXRlckNsYXNzJElubmVyQ2xhc3MAIQACAAMAAAABABkABwAIAAEACQAAAAIA"
+                                    + "CgABAAEACwAMAAEADQAAAC8AAQABAAAABSq3AAGxAAAAAgAOAAAABgABAAAA"
+                                    + "BQAPAAAADAABAAAABQAQABEAAAACABIAAAACABMABgAAAAoAAQAEAAIABSYJ");
 
     /** Compiled version of inner class listed as part of {@link #OUTER_CLASS} */
-    public static final byte[] INNER_CLASS = Base64.getDecoder().decode(""
-            + "yv66vgAAADMADQcABwcACgcACwEAClNvdXJjZUZpbGUBAA9PdXRlckNsYXNz"
-            + "LmphdmEHAAwBAB50ZXN0L3BrZy9PdXRlckNsYXNzJElubmVyQ2xhc3MBAApJ"
-            + "bm5lckNsYXNzAQAMSW5uZXJDbGFzc2VzAQAQamF2YS9sYW5nL09iamVjdAEA"
-            + "H2phdmEvbGFuZy9hbm5vdGF0aW9uL0Fubm90YXRpb24BABN0ZXN0L3BrZy9P"
-            + "dXRlckNsYXNzJgEAAQACAAEAAwAAAAAAAgAEAAAAAgAFAAkAAAAKAAEAAQAG"
-            + "AAgmCQ==");
+    public static final byte[] INNER_CLASS =
+            Base64.getDecoder()
+                    .decode(
+                            ""
+                                    + "yv66vgAAADMADQcABwcACgcACwEAClNvdXJjZUZpbGUBAA9PdXRlckNsYXNz"
+                                    + "LmphdmEHAAwBAB50ZXN0L3BrZy9PdXRlckNsYXNzJElubmVyQ2xhc3MBAApJ"
+                                    + "bm5lckNsYXNzAQAMSW5uZXJDbGFzc2VzAQAQamF2YS9sYW5nL09iamVjdAEA"
+                                    + "H2phdmEvbGFuZy9hbm5vdGF0aW9uL0Fubm90YXRpb24BABN0ZXN0L3BrZy9P"
+                                    + "dXRlckNsYXNzJgEAAQACAAEAAwAAAAAAAgAEAAAAAgAFAAkAAAAKAAEAAQAG"
+                                    + "AAgmCQ==");
 
     /**
      * The expected binary version of the outer class when the references to inner class have been
@@ -90,12 +95,14 @@ public class TypedefRemoverTest {
     public void testRecipeFile() throws IOException {
         TypedefRemover remover = new TypedefRemover();
         File typedefFile = testFolder.newFile("typedefs.txt");
-        Files.asCharSink(typedefFile, UTF_8).write(""
-                + "D test/pkg/IntDefTest$DialogFlags\n"
-                + "D test/pkg/IntDefTest$DialogStyle\n"
-                + "D test/pkg/OuterClass$InnerClass\n");
+        Files.asCharSink(typedefFile, UTF_8)
+                .write(
+                        ""
+                                + "D test/pkg/IntDefTest$DialogFlags\n"
+                                + "D test/pkg/IntDefTest$DialogStyle\n"
+                                + "D test/pkg/OuterClass$InnerClass\n");
 
-        InputStream input = new ByteArrayInputStream(new byte[] { 1, 2, 3, 4, 5});
+        InputStream input = new ByteArrayInputStream(new byte[] {1, 2, 3, 4, 5});
         remover.setTypedefFile(typedefFile);
 
         InputStream filtered;
@@ -116,8 +123,8 @@ public class TypedefRemoverTest {
 
         byte[] outerClass = OUTER_CLASS;
 
-        filtered = remover.filter("test/pkg/OuterClass.class",
-                new ByteArrayInputStream(outerClass));
+        filtered =
+                remover.filter("test/pkg/OuterClass.class", new ByteArrayInputStream(outerClass));
 
         assertThat(filtered).isNotNull();
         assertThat(filtered).isNotSameAs(input);
@@ -142,7 +149,8 @@ public class TypedefRemoverTest {
 
         // Put a random temp file in there to make sure finding class file among multiple
         // folders work
-        remover.remove(Arrays.asList(Files.createTempDir(), testFolder.getRoot()),
+        remover.remove(
+                Arrays.asList(Files.createTempDir(), testFolder.getRoot()),
                 Collections.singletonList("test/pkg/OuterClass$InnerClass"));
 
         assertThat(unrelated.isFile()).isTrue();
