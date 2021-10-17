@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_ABI
 import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_DEBUG
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildSystemNameForTasks
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 
@@ -80,10 +81,7 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     private val buildSystem = abis.first().variant.module.buildSystem
 
     // Build system type name for naming tasks.
-    private val buildSystemName = when(buildSystem) {
-        CMAKE -> "CMake"
-        NDK_BUILD -> "NdkBuild"
-    }
+    private val buildSystemName = abis.first().variant.module.buildSystemNameForTasks
 
     /**
      * Configuration task name to ABI.
@@ -215,6 +213,7 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
                 val arguments = commands.toNdkBuildArguments()
                 arguments.getNdkBuildProperty(APP_ABI) ?: ""
             }
+            else -> error("$buildSystem")
         }
     }
 
@@ -233,6 +232,7 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
                     if(it == "1") "Debug" else "Release"
                 } ?: ""
             }
+            else -> error("$buildSystem")
         }
     }
 

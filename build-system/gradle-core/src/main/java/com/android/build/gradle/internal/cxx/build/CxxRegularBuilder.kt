@@ -27,13 +27,13 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.ifLogNativeBuildToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.cxx.CxxDiagnosticCode
@@ -367,7 +367,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
             // that the log file is written.
             //
             // There's no existing way to track C++ build time for ndk-build.
-            abi.ifCMake {
+            if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 // Lazy because we only need to generate if the user has requested
                 // chrome tracing or structured logging.
                 val attributions by lazy {

@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
-import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -34,6 +33,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
@@ -110,7 +110,11 @@ class NativeModelBuilder(
         ).use {
             val cxxModuleModel = configurationModel.variant.module
 
-            val buildSystem = cxxModuleModel.ifCMake { CMAKE } ?: NDK_BUILD
+            val buildSystem = when(cxxModuleModel.buildSystem) {
+                NativeBuildSystem.CMAKE -> CMAKE
+                NativeBuildSystem.NDK_BUILD -> NDK_BUILD
+                else -> error("${cxxModuleModel.buildSystem}")
+            }
 
             val variants: List<NativeVariant> = configurationModels
                 .flatMap { (variantName, model) -> model.activeAbis.map { variantName to it } }

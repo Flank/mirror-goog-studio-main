@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.caching
 
-import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.ifCMake
-import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
 import com.android.build.gradle.internal.cxx.ninja.NinjaDepsInfo
 
 /**
@@ -50,16 +47,6 @@ interface ObjectFileDependencyProvider {
      */
     fun dependencies(objectFile: String) : List<String>?
 }
-
-/**
- * Create an [ObjectFileDependencyProvider] for this [CxxAbiModel].
- * TODO(182809209) similar implementation for ndk-build.
- */
-fun CxxAbiModel.createObjectFileDependencyProvider() = ifCMake {
-        if (ninjaDepsFile.isFile) {
-            NinjaDepsObjectFileDependencyProvider(NinjaDepsInfo.readFile(ninjaDepsFile))
-        } else null
-    } ?: NOP_SOURCE_FILE_DEPENDENCY_PROVIDER
 
 /**
  * A dependency provider that always returns null. This is for the case

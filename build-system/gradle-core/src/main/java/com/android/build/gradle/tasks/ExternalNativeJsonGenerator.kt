@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
+import com.android.build.gradle.internal.cxx.model.buildSystemTag
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
@@ -117,7 +118,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             errorln(
                     METADATA_GENERATION_FAILURE,
                     "error when building with %s using %s: %s",
-                    abi.variant.module.buildSystem.tag,
+                    abi.variant.module.buildSystemTag,
                     abi.variant.module.makeFile,
                     e.message!!
             )
@@ -219,9 +220,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             infoln("created folder '%s'", abi.cxxBuildFolder)
                         }
 
-                        infoln("executing %s %s", abi.variant.module.buildSystem.tag, processBuilder)
+                        infoln("executing %s %s", abi.variant.module.buildSystemTag, processBuilder)
                         time("execute-generate-process") { executeProcess(ops, abi) }
-                        infoln("done executing %s", abi.variant.module.buildSystem.tag)
+                        infoln("done executing %s", abi.variant.module.buildSystemTag)
 
                         if (!abi.jsonFile.exists()) {
                             throw GradleException(

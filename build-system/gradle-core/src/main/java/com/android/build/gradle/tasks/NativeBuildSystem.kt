@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_CMAKE
-import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_GRADLE
-import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_NDK_BUILD
-import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_UNKNOWN
-
 /**
  * Enumeration and descriptive metadata for the different external native build system types.
- * The variable "name" is already taken in kotlin enums
  */
-enum class NativeBuildSystem(val tag : String) {
-    CMAKE(BUILD_SYSTEM_CMAKE),
-    NDK_BUILD(BUILD_SYSTEM_NDK_BUILD);
+enum class NativeBuildSystem {
+    CMAKE,
+    CUSTOM,
+    NDK_BUILD;
 }

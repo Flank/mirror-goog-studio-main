@@ -368,7 +368,7 @@ fun createCxxMetadataGenerator(
         variant.module.gradleModulePathName, variant.variantName)
 
     return when (variant.module.buildSystem) {
-        NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
+        NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             abi,
             variantBuilder
         )
@@ -400,6 +400,7 @@ fun createCxxMetadataGenerator(
             }
             return CmakeQueryMetadataGenerator(abi, variantBuilder)
         }
+        else -> error("${variant.module.buildSystem}")
     }
 }
 
