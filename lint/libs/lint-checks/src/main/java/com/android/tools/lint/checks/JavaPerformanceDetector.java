@@ -55,6 +55,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import org.jetbrains.kotlin.asJava.classes.KtLightClassImpl;
+import org.jetbrains.kotlin.name.Name;
+import org.jetbrains.kotlin.psi.KtAnnotationEntry;
+import org.jetbrains.kotlin.psi.KtClassOrObject;
+import org.jetbrains.kotlin.psi.KtModifierList;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UCallableReferenceExpression;
@@ -278,12 +283,42 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                 // mInDraw as true, in case we've left it and we're in a static
                 // block or something:
                 UMethod method = UastUtils.getParentOfType(node, UMethod.class);
+
                 if (method != null
                         && isBlockedAllocationMethod(method)
+                        && !isCallingInlineClass(node)
                         && !isLazilyInitialized(node)) {
                     reportAllocation(node);
                 }
             }
+        }
+
+        private boolean isCallingInlineClass(UCallExpression node) {
+            PsiMethod called = node.resolve();
+            if (called != null) {
+                PsiClass containingClass = called.getContainingClass();
+                if (containingClass != null) {
+                    // Workaround: in some cases, the light class does not report any annotations
+                    // even though they're there in the PSI.
+                    if (containingClass instanceof KtLightClassImpl) {
+                        KtClassOrObject cls =
+                                ((KtLightClassImpl) containingClass).getKotlinOrigin();
+                        KtModifierList modifierList = cls.getModifierList();
+                        if (modifierList != null) {
+                            for (KtAnnotationEntry entry : modifierList.getAnnotationEntries()) {
+                                Name shortName = entry.getShortName();
+                                if (shortName != null && shortName.asString().equals("JvmInline")) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+
+                    return containingClass.getAnnotation("kotlin.jvm.JvmInline") != null;
+                }
+            }
+
+            return false;
         }
 
         private void reportAllocation(UCallExpression node) {
