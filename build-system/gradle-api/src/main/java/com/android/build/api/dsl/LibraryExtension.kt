@@ -50,7 +50,6 @@ interface LibraryExtension :
      *
      * For more information about the properties you can configure in this block, see [LibraryPublishing]
      */
-    @get:Incubating
     val publishing: LibraryPublishing
 
     /**
@@ -58,6 +57,5 @@ interface LibraryExtension :
      *
      * For more information about the properties you can configure in this block, see [LibraryPublishing]
      */
-    @Incubating
     fun publishing(action: LibraryPublishing.() -> Unit)
 }
