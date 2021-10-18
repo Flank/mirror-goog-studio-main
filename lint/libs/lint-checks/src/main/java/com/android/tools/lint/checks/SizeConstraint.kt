@@ -21,6 +21,8 @@ import com.google.common.annotations.VisibleForTesting
 import com.intellij.psi.CommonClassNames
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UExpression
+import kotlin.math.max
+import kotlin.math.min
 
 internal class SizeConstraint private constructor(
     val exact: Long,
@@ -28,6 +30,8 @@ internal class SizeConstraint private constructor(
     val max: Long,
     val multiple: Long
 ) : RangeConstraint() {
+    constructor(range: IntRangeConstraint) : this(if (range.from == range.to) range.from else -1L, range.from, range.to, 1)
+
     override fun toString(): String {
         return describe(null, null, null)
     }
@@ -51,7 +55,8 @@ internal class SizeConstraint private constructor(
     fun describe(
         argument: UExpression? = null,
         unit: String? = null,
-        actualValue: Long? = null
+        actualValue: Long? = null,
+        skipPrefix: Boolean = false
     ): String {
         val actualUnit = unit ?: if (argument?.getExpressionType() != null &&
             argument.getExpressionType()?.canonicalText == CommonClassNames.JAVA_LANG_STRING
@@ -85,39 +90,115 @@ internal class SizeConstraint private constructor(
             }
         }
         val sb = StringBuilder(20)
-        sb.append(actualUnit)
-        sb.append(" must be")
+        if (!skipPrefix) {
+            sb.append(actualUnit)
+            sb.append(" must be ")
+        }
         if (exact != -1L) {
-            sb.append(" exactly ")
+            sb.append("exactly ")
             sb.append(exact.toString())
             return sb.toString()
         }
         var continued = true
         if (min != Long.MIN_VALUE && max != Long.MAX_VALUE) {
-            sb.append(" at least ")
+            sb.append("at least ")
             sb.append(min.toString())
             sb.append(" and at most ")
             sb.append(max.toString())
         } else if (min != Long.MIN_VALUE) {
-            sb.append(" at least ")
+            sb.append("at least ")
             sb.append(min.toString())
         } else if (max != Long.MAX_VALUE) {
-            sb.append(" at most ")
+            sb.append("at most ")
             sb.append(max.toString())
         } else {
             continued = false
         }
         if (multiple != 1L) {
             if (continued) {
-                sb.append(" and")
+                sb.append(" and ")
             }
-            sb.append(" a multiple of ")
+            sb.append("a multiple of ")
             sb.append(multiple.toString())
         }
         if (actualValue != null) {
             sb.append(" (was ").append(actualValue).append(')')
         }
         return sb.toString()
+    }
+
+    override fun describeDelta(actual: RangeConstraint, actualLabel: String, allowedLabel: String): String {
+        if (actual !is SizeConstraint) {
+            return describe()
+        } else if (actual.exact != -1L) {
+            return describe(actual.exact)
+        }
+
+        if (multiple != 1L) {
+            val other = actual.multiple
+            if (other % multiple != 0L) {
+                val sb = StringBuilder(describe()).append(", but ")
+                if (actualLabel.isNotEmpty()) {
+                    sb.append(actualLabel).append(" ")
+                }
+                if (actual.multiple == 1L) {
+                    sb.append("is not a multiple of $multiple")
+                } else {
+                    sb.append("can be a multiple of ${actual.multiple}")
+                }
+                return sb.toString()
+            }
+        }
+
+        val sb = StringBuilder()
+        sb.append(describe(null))
+
+        sb.append(", but ")
+        if (actualLabel.isNotEmpty()) {
+            sb.append(actualLabel).append(" ")
+        }
+        sb.append("can be ")
+
+        // No overlap? If so just display both ranges
+        if (this.max < actual.min && actual.max != Long.MAX_VALUE || this.min > actual.max && actual.min != Long.MIN_VALUE) {
+            sb.append(actual.describe(null, null, null, true))
+            return sb.toString()
+        }
+
+        if (actual.min < this.min) {
+            if (actual.min == Long.MIN_VALUE) {
+                sb.append("less than ${this.min}")
+            } else {
+                // works even for range, e.g. "x must be >= 0, but can be -5" can represent -4, -3, etc instead of
+                // "x must be >= 0, but can be -5..0" isn't a lot more readable
+                sb.append("${actual.min}")
+            }
+        } else if (actual.max > this.max) {
+            if (actual.max == Long.MAX_VALUE) {
+                sb.append("greater than ${this.max}")
+            } else {
+                sb.append("${actual.max}")
+            }
+        } else {
+            error("There's no delta")
+        }
+
+        return sb.toString()
+    }
+
+    override fun and(other: RangeConstraint?): RangeConstraint {
+        other ?: return this
+
+        val range = when (other) {
+            is SizeConstraint -> other
+            is IntRangeConstraint -> SizeConstraint(other)
+            is FloatRangeConstraint -> SizeConstraint(IntRangeConstraint(other))
+            else -> error(other.javaClass.name)
+        }
+
+        val start = max(if (exact != -1L) exact else min, if (range.exact != -1L) range.exact else range.min)
+        val end = min(if (exact != -1L) exact else max, if (range.exact != -1L) range.exact else range.max)
+        return SizeConstraint(if (start == end) start else -1L, start, end, multiple)
     }
 
     override fun contains(other: RangeConstraint): Boolean? {

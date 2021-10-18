@@ -114,4 +114,54 @@ public class FloatRangeConstraintTest {
         assertThat(IntRangeConstraint.atMost(4).contains(atMost(3.9999))).isTrue();
         assertThat(IntRangeConstraint.atMost(4).contains(lessThan(4))).isFalse();
     }
+
+    @Test
+    public void testDescribeDelta() {
+        assertThat(range(1, 5).describeDelta(range(2, 6), "`var`", "Argument"))
+                .isEqualTo("Argument must be ≥ 1.0 and ≤ 5.0 but `var` can be 6.0");
+        assertThat(range(1, 5).describeDelta(range(2, 10), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be 10.0");
+        assertThat(range(1, 5).describeDelta(range(0, 5), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be 0.0");
+        assertThat(range(1, 5).describeDelta(range(5, 10), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be ≥ 5.0 and ≤ 10.0");
+        assertThat(range(1, 5).describeDelta(range(-4, 1), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be ≥ -4.0 and ≤ 1.0");
+        assertThat(range(1, 5).describeDelta(range(-4, 7), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be -4.0");
+        assertThat(range(1, 5).describeDelta(atLeast(1), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be > 5.0");
+        assertThat(range(1, 5).describeDelta(atLeast(-5), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be -5.0");
+        assertThat(range(1, 5).describeDelta(atMost(5), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be < 1.0");
+        assertThat(range(1, 5).describeDelta(atMost(1), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be < 1.0");
+        assertThat(range(1, 5).describeDelta(atLeast(5), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be > 5.0");
+        assertThat(greaterThan(5).describeDelta(atLeast(5), "", ""))
+                .isEqualTo("Value must be > 5.0 but can be 5.0");
+        assertThat(lessThan(5).describeDelta(atMost(5), "", ""))
+                .isEqualTo("Value must be < 5.0 but can be 5.0");
+        assertThat(range(1, 5).describeDelta(IntRangeConstraint.range(2, 6), "", ""))
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0 but can be 6.0");
+    }
+
+    @Test
+    public void testConversion() {
+        assertThat(new FloatRangeConstraint(IntRangeConstraint.range(1, 5)).describe())
+                .isEqualTo("Value must be ≥ 1.0 and ≤ 5.0");
+    }
+
+    @Test
+    public void testIntersection() {
+        assertThat(atLeast(2).and(atLeast(3)).toString()).isEqualTo("Value must be ≥ 3.0");
+        assertThat(range(1, 5).and(atLeast(3)).toString())
+                .isEqualTo("Value must be ≥ 3.0 and ≤ 5.0");
+        assertThat(range(1, 5).and(range(4, 10)).toString())
+                .isEqualTo("Value must be ≥ 4.0 and ≤ 5.0");
+        assertThat(atLeast(2).and(atMost(2)).toString()).isEqualTo("Value must be 2.0");
+        assertThat(atLeast(2).and(atMost(-1)).toString())
+                .isEqualTo("Value must be ≥ 2.0 and ≤ -1.0 (not possible)");
+    }
 }
