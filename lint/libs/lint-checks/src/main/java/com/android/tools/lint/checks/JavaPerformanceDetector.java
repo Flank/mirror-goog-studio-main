@@ -278,12 +278,26 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                 // mInDraw as true, in case we've left it and we're in a static
                 // block or something:
                 UMethod method = UastUtils.getParentOfType(node, UMethod.class);
+
                 if (method != null
                         && isBlockedAllocationMethod(method)
+                        && !isCallingInlineClass(node)
                         && !isLazilyInitialized(node)) {
                     reportAllocation(node);
                 }
             }
+        }
+
+        private boolean isCallingInlineClass(UCallExpression node) {
+            PsiMethod called = node.resolve();
+            if (called != null) {
+                PsiClass containingClass = called.getContainingClass();
+                if (containingClass != null) {
+                    return containingClass.getAnnotation("kotlin.jvm.JvmInline") != null;
+                }
+            }
+
+            return false;
         }
 
         private void reportAllocation(UCallExpression node) {
