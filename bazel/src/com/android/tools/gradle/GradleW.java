@@ -3,10 +3,15 @@ package com.android.tools.gradle;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class GradleW {
 
@@ -27,13 +33,14 @@ class GradleW {
     }
 
     private int run(List<String> args) throws Exception {
-        Path logFile = null;
+        Path logFile = Files.createTempFile("gradle", ".log");
         File gradleFile = null;
         File distribution = null;
         LinkedList<File> repos = new LinkedList<>();
         LinkedList<String> tasks = new LinkedList<>();
         LinkedList<OutputFileEntry> outputFiles = new LinkedList<>();
         List<String> gradleArgs = new ArrayList<>();
+        String testOutputDir = null;
 
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
@@ -55,6 +62,8 @@ class GradleW {
                 tasks.add(it.next());
             } else if (arg.equals("--log_file") && it.hasNext()) {
                 logFile = Paths.get(it.next());
+            } else if (arg.equals("--test_output_dir") && it.hasNext()) {
+                testOutputDir = it.next();
             } else if (arg.equals("--max_workers") && it.hasNext()) {
                 gradleArgs.add("--max-workers");
                 gradleArgs.add(it.next());
@@ -76,13 +85,64 @@ class GradleW {
             gradleArgs.forEach(gradle::addArgument);
             OutputStream out = new TeeOutputStream(System.out, log);
             OutputStream err = new TeeOutputStream(System.err, log);
-            gradle.run(tasks, out, err);
 
-            for (OutputFileEntry outputFile : outputFiles) {
-                outputFile.collect(gradle.getBuildDir().toPath(), gradle.getLocalMavenRepo());
+            try {
+                gradle.run(tasks, out, err);
+                for (OutputFileEntry outputFile : outputFiles) {
+                    outputFile.collect(gradle.getBuildDir().toPath(), gradle.getLocalMavenRepo());
+                }
+            } finally {
+                if (testOutputDir != null) {
+                    String xml = System.getenv("XML_OUTPUT_FILE");
+                    if (xml == null) {
+                        throw new IllegalStateException(
+                                "XML_OUTPUT_FILE is not declared and test results were expected");
+                    }
+                    aggregateTestResults(
+                            new File(gradle.getBuildDir(), testOutputDir).toPath(), Paths.get(xml));
+                }
             }
         }
         return 0;
+    }
+
+    /** A simple heuristic to convert gradle testsuite xmls, into a bazel testsuite one. */
+    private void aggregateTestResults(Path testResultsDir, Path output) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(output.toFile())) {
+            fos.write(
+                    "<?xml version='1.0' encoding='UTF-8'?>\n<testsuites>\n"
+                            .getBytes(StandardCharsets.UTF_8));
+            List<Path> files = Files.list(testResultsDir).collect(Collectors.toList());
+            for (Path file : files) {
+                if (!file.toString().endsWith(".xml")) {
+                    continue;
+                }
+                try (BufferedInputStream is =
+                        new BufferedInputStream(new FileInputStream(file.toFile()))) {
+                    // Find the <testsuite> tag
+                    String tag = "testsuite ";
+                    byte[] buf = new byte[tag.getBytes(StandardCharsets.UTF_8).length];
+                    boolean found = false;
+                    int c;
+                    while ((c = is.read()) != -1) {
+                        if (c == '<') {
+                            is.mark(1024);
+                            ByteStreams.readFully(is, buf);
+                            is.reset();
+                            if (tag.equals(new String(buf, StandardCharsets.UTF_8))) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
+                        fos.write('<');
+                        ByteStreams.copy(is, fos);
+                    }
+                }
+            }
+            fos.write("</testsuites>\n".getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     private static class OutputFileEntry {

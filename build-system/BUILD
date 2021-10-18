@@ -1,6 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:gradle.bzl", "gradle_build")
+load("//tools/base/bazel:gradle.bzl", "gradle_build", "gradle_test")
 load("//tools/base/common:version.bzl", "BASE_VERSION", "BUILD_VERSION")
 load("//tools/base/bazel:maven.bzl", "maven_library", "maven_repository")
 
@@ -304,5 +304,44 @@ gradle_build(
         "//tools/base:agp_artifacts",
     ],
     tasks = [":zipPlugin"],
+    visibility = ["//visibility:public"],
+)
+
+#  org.jetbrains.kotlin:kotlin-test-junit:1.5.3
+maven_repository(
+    name = "android_gradle_plugin_gradle_api_test_repository",
+    artifacts = [
+        "@maven//:org.jetbrains.kotlin.kotlin-test-junit_1.5.31",
+    ],
+)
+
+gradle_test(
+    name = "android_gradle_plugin_gradle_api_test",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    # keep sorted
+    data = [
+        ":agp_gradle_build_files",
+        "//prebuilts/studio/jdk",
+        "//tools:agp_gradle_build_files",
+        "//tools/base/build-system/builder-model:agp_gradle_build_files",
+        "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_build_files",
+        "//tools/base/build-system/gradle-api:agp_gradle_test_files",
+        "//tools/base/testutils:agp_gradle_build_files",
+        "//tools/buildSrc:agp_gradle_build_files",
+        "//tools/buildSrc/base:agp_gradle_build_files",
+    ],
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    # keep sorted
+    repos = [
+        ":android_gradle_plugin_gradle_api_test_repository",
+        "//tools/base:agp_artifacts",
+        "//tools/base:agp_dependencies",
+    ],
+    tasks = [":base:gradle-api:test"],
+    test_output_dir = "build/base/gradle-api/build/test-results/test",
     visibility = ["//visibility:public"],
 )

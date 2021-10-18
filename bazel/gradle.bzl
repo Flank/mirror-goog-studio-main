@@ -36,7 +36,7 @@ def _gradle_build_impl(ctx):
 
 # This rule is wrapped to allow the output Label to location map to be expressed as a map in the
 # build files.
-_gradle_build_rule = rule(
+_gradle_build = rule(
     attrs = {
         "data": attr.label_list(allow_files = True),
         "output_file_sources": attr.string_list(),
@@ -99,7 +99,7 @@ def gradle_build(
 
     distribution = "//tools/base/build-system:gradle-distrib" + ("-" + gradle_version if (gradle_version) else "")
 
-    _gradle_build_rule(
+    _gradle_build(
         name = name,
         build_file = build_file,
         data = data,
@@ -113,5 +113,89 @@ def gradle_build(
         tags = tags,
         tasks = tasks,
         max_workers = max_workers,
+        **kwargs
+    )
+
+def _gradle_test_impl(ctx):
+    args = ["--singlejar"]
+    args += ["--gradle_file", ctx.file.build_file.path]
+    distribution = ctx.attr.distribution.files.to_list()[0]
+    args += ["--distribution", distribution.path]
+    for task in ctx.attr.tasks:
+        args += ["--task", task]
+    if ctx.attr.max_workers > 0:
+        args += ["--max_workers", str(ctx.attr.max_workers)]
+    args += ["-P" + key + "=" + value for key, value in ctx.attr.gradle_properties.items()]
+    if ctx.attr.test_output_dir:
+        args += ["--test_output_dir", ctx.attr.test_output_dir]
+
+    manifest_inputs = []
+    for repo in ctx.attr.repos:
+        args += ["--repo", repo[MavenRepoInfo].manifest.short_path]
+        manifest_inputs += repo[MavenRepoInfo].artifacts + [repo[MavenRepoInfo].manifest]
+    for repo_zip in ctx.files.repo_zips:
+        args += ["--repo", repo_zip.path]
+
+    executable = ctx.actions.declare_file(ctx.label.name + ".bat")
+    inputs = ctx.files.data + ctx.files.repo_zips + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution, ctx.executable._gradlew]
+    runfiles = ctx.runfiles(files = inputs).merge(ctx.attr._gradlew[DefaultInfo].default_runfiles)
+
+    short_path = ctx.executable._gradlew.short_path
+    short_path = short_path.replace("/", "\\") if ctx.attr.is_windows else short_path
+    ctx.actions.write(output = executable, content = short_path + " " + " ".join(args), is_executable = True)
+    return DefaultInfo(executable = executable, runfiles = runfiles)
+
+_gradle_test = rule(
+    attrs = {
+        "data": attr.label_list(allow_files = True),
+        "output_file_sources": attr.string_list(),
+        "tasks": attr.string_list(),
+        "test_output_dir": attr.string(),
+        "build_file": attr.label(
+            allow_single_file = True,
+        ),
+        "repos": attr.label_list(providers = [MavenRepoInfo]),
+        "repo_zips": attr.label_list(allow_files = [".zip"]),
+        "distribution": attr.label(allow_files = True),
+        "max_workers": attr.int(default = 0, doc = "Max number of workers, 0 or negative means unset (Gradle will use the default: number of CPU cores)."),
+        "gradle_properties": attr.string_dict(),
+        "is_windows": attr.bool(),
+        "_gradlew": attr.label(
+            executable = True,
+            cfg = "host",
+            default = Label("//tools/base/bazel:gradlew"),
+            allow_files = True,
+        ),
+        "_gradlew_deploy": attr.label(
+            cfg = "host",
+            default = Label("//tools/base/bazel:gradlew_deploy.jar"),
+            allow_single_file = True,
+        ),
+    },
+    test = True,
+    implementation = _gradle_test_impl,
+)
+
+def gradle_test(
+        name = None,
+        build_file = None,
+        gradle_version = None,
+        repos = [],
+        repo_zips = [],
+        test_output_dir = None,
+        max_workers = 0,
+        gradle_properties = {},
+        **kwargs):
+    distribution = "//tools/base/build-system:gradle-distrib" + ("-" + gradle_version if (gradle_version) else "")
+    _gradle_test(
+        name = name,
+        build_file = build_file,
+        distribution = distribution,
+        test_output_dir = test_output_dir,
+        gradle_properties = gradle_properties,
+        repos = repos,
+        repo_zips = repo_zips,
+        max_workers = max_workers,
+        is_windows = select({"//tools/base/bazel:windows": True, "//conditions:default": False}),
         **kwargs
     )

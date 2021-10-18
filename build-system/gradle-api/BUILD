@@ -79,3 +79,13 @@ filegroup(
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )
+
+filegroup(
+    name = "agp_gradle_test_files",
+    srcs = glob([
+        "src/test/**/*.java",
+        "src/test/**/*.kt",
+        "src/test/resources/**",
+    ]),
+    visibility = ["//tools/base/build-system:__pkg__"],
+)
