@@ -92,6 +92,7 @@ AGP_ARTIFACTS = [
     "//tools/base/lint:tools.lint-model",
     "//tools/base/lint/libs/lint-typedef-remover",
     "//tools/base/repository:tools.repository",
+    "//tools/base/sdklib:tools.sdklib",
 ]
 
 maven_repository(

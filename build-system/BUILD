@@ -266,7 +266,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     "//tools/base/profgen/profgen:agp_gradle_build_files",
     "//tools/base/sdk-common:agp_gradle_build_files",
     "//tools/base/sdk-common/aia-manifest-jar-generator:agp_gradle_build_files",
-    "//tools/base/sdklib:agp_gradle_build_files",
     "//tools/base/signflinger:agp_gradle_build_files",
     "//tools/base/testutils:agp_gradle_build_files",  # Only published, not a dependency of AGP
     "//tools/base/utp/android-device-provider-ddmlib:agp_gradle_build_files",

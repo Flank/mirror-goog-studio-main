@@ -9,7 +9,7 @@ dependencies {
     implementation project(':base:bazel:avd')
     implementation libs.junit
     implementation project(':base:testutils')
-    implementation project(':base:sdklib')
+    implementation libs.com.android.tools.sdklib
 
 
     testImplementation project(':base:build-system:integration-test:framework')

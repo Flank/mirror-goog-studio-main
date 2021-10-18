@@ -1,7 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_library")
-load("//tools/base/bazel:utils.bzl", "fileset")
 load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 load("//tools/base/repository:xjc.bzl", "xsd_to_java")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
@@ -38,26 +37,38 @@ iml_module(
     ],
 )
 
-fileset(
-    name = "tools.resources",
-    srcs = glob([
-        "src/main/resources/**",
-    ]),
-    mappings = {
-        "src/main/resources/": "",
-    },
-)
-
-maven_library(
-    name = "tools.sdklib",
+java_library(
+    name = "tools.sdklib.core",
     srcs = glob(
         ["src/main/java/**/*.java"],
         exclude = ["src/main/java/**/tool/**/*.java"],
     ),
+    resource_strip_prefix = "tools/base/sdklib/src/main/resources",
+    resources = glob(["src/main/resources/**"]),
+    deps = [
+        "//tools/base/common:tools.common",
+        "//tools/base/device_validator:tools.dvlib",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:org.apache.commons.commons-compress",
+        "@maven//:org.apache.httpcomponents.httpcore",
+        "@maven//:org.apache.httpcomponents.httpmime",
+        "@maven//:org.glassfish.jaxb.jaxb-runtime",
+    ],
+)
+
+maven_library(
+    name = "tools.sdklib",
+    srcs = [],
+    bundled_deps = [
+        ":avdmanager_lib",
+        ":sdkmanager_lib",
+        ":tools.sdklib.core",
+    ],
     coordinates = "com.android.tools:sdklib:" + BASE_VERSION,
+    description = "A library to parse and download the Android SDK.",
     notice = "NOTICE",
-    resource_strip_prefix = "tools/base/sdklib",
-    resources = ["tools.resources"],
     visibility = ["//visibility:public"],
     exports = [
         "//tools/base/repository:tools.repository",
@@ -88,7 +99,7 @@ kotlin_test(
     deps = [
         ":avdmanager_lib",
         ":sdkmanager_lib",
-        ":tools.sdklib",
+        ":tools.sdklib.core",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/device_validator:tools.dvlib",
@@ -108,7 +119,7 @@ java_library(
     name = "avdmanager_lib",
     srcs = glob(["src/main/java/**/tool/AvdManagerCli.java"]),
     deps = [
-        ":tools.sdklib",
+        ":tools.sdklib.core",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -121,7 +132,7 @@ java_library(
     name = "sdkmanager_lib",
     srcs = glob(["src/main/java/**/tool/sdkmanager/*.java"]),
     deps = [
-        ":tools.sdklib",
+        ":tools.sdklib.core",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/repository:tools.repository",
@@ -331,17 +342,4 @@ xsd_to_java(
         ":tools.sdklib",
         "//tools/base/repository:tools.repository",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

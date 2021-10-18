@@ -14,7 +14,7 @@ licenseReport {
 }
 
 dependencies {
-    implementation project(':base:sdklib')
+    implementation libs.com.android.tools.sdklib
     implementation project(':base:builder-test-api')
     implementation project(':base:builder-model')
     implementation libs.com.android.tools.ddms.ddmlib

@@ -224,14 +224,14 @@ com.android.tools:sdklib
   description=A library to parse and download the Android SDK.
   dependencies:
     com.android.tools:repository (compile)
-    com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools:dvlib (runtime)
     com.android.tools:common (runtime)
+    com.android.tools:dvlib (runtime)
+    com.android.tools.layoutlib:layoutlib-api (runtime)
     com.google.code.gson:gson (runtime)
-    org.glassfish.jaxb:jaxb-runtime (runtime)
     org.apache.commons:commons-compress (runtime)
-    org.apache.httpcomponents:httpmime (runtime)
     org.apache.httpcomponents:httpcore (runtime)
+    org.apache.httpcomponents:httpmime (runtime)
+    org.glassfish.jaxb:jaxb-runtime (runtime)
 
 com.android.tools:testutils
   pomName=com.android.tools.testutils
