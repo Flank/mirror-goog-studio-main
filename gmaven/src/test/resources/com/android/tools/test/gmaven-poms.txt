@@ -550,8 +550,8 @@ com.android.tools.fakeadbserver:fakeadbserver
   dependencies:
     com.android.tools:common (runtime)
     net.sf.kxml:kxml2 (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     org.jetbrains.kotlin:kotlin-reflect (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.layoutlib:layoutlib-api
   pomName=Android Tools layoutlib-api

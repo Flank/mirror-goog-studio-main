@@ -118,6 +118,7 @@ AGP_TEST_ARTIFACTS = [
     "//prebuilts/tools/common/lint-psi/kotlin-compiler",  # TODO(b/143864616): Only used for tests
     "//prebuilts/tools/common/lint-psi/uast",  # TODO(b/143864616): Only used for tests
     "//tools/base/lint/libs/lint-tests",  # TODO(b/143864616): Only used for tests
+    "//tools/base/fakeadbserver:tools.fakeadbserver",  # TODO(b/143864616): Only used for tests
 ]
 
 # Test only dependencies that are not published to gmaven,

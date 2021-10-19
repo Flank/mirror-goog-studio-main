@@ -17,6 +17,7 @@ maven_repository(
         "//tools/base/apkparser/analyzer:tools.analyzer.maven",
         "//tools/base/chunkio:tools.chunkio",
         "//tools/base/draw9patch:tools.draw9patch",
+        "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint:tools.lint-gradle",
