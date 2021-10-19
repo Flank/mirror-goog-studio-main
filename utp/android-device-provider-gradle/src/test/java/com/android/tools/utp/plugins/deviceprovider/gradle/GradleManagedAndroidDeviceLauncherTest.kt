@@ -260,7 +260,7 @@ class GradleManagedAndroidDeviceLauncherTest {
     }
 
     @Test
-    fun provideDevice_failToFindIdThrowsProviderException() {
+    fun provideDevice_failToFindIdThrowsTimeoutException() {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
         `when`(adbManager.getId("emulator-5554")).thenReturn("some-other-id")
 
@@ -271,14 +271,14 @@ class GradleManagedAndroidDeviceLauncherTest {
                 )
         )
 
-        assertThrows(DeviceProviderException::class.java) {
+        assertThrows(GradleManagedAndroidDeviceLauncher.EmulatorTimeoutException::class.java) {
             managedDeviceLauncher.provideDevice()
         }
         verify(emulatorHandle).closeInstance()
     }
 
     @Test
-    fun provideDevice_failToBootThrowsProviderException() {
+    fun provideDevice_failToBootThrowsTimeoutException() {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
         `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(false)
@@ -290,7 +290,7 @@ class GradleManagedAndroidDeviceLauncherTest {
                 )
         )
 
-        assertThrows(DeviceProviderException::class.java) {
+        assertThrows(GradleManagedAndroidDeviceLauncher.EmulatorTimeoutException::class.java) {
             managedDeviceLauncher.provideDevice()
         }
         verify(emulatorHandle).closeInstance()

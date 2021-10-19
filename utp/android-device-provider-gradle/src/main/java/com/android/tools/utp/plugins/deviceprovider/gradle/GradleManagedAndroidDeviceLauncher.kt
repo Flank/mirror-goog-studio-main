@@ -96,6 +96,10 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
             val delegateConfigBase: ConfigBase
     ) : ConfigBase by delegateConfigBase
 
+    class EmulatorTimeoutException(
+            message: String
+    ) : Exception(message)
+
     override fun configure(config: Config) {
         config as DataBoundArgs
         environment = config.delegateConfigBase.environment
@@ -125,15 +129,23 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         if (targetSerial == null) {
             // Need to close the emulator if we can't connect.
             releaseDevice()
-            throw DeviceProviderException(
-                    "Emulator failed to attach to ADB server. Check logs for details."
+            throw EmulatorTimeoutException(
+                    """
+                        Gradle was unable to attach one or more devices to the adb server.
+                        Please ensure that you have sufficient resources to run the requested
+                        number of devices or request fewer devices.
+                    """.trimIndent()
             )
         }
 
         if (!establishBootCheck(targetSerial)) {
             releaseDevice()
-            throw DeviceProviderException(
-                    "Emulator failed to boot. Check logs for details."
+            throw EmulatorTimeoutException(
+                    """
+                        Gradle was unable to boot one or more devices. If this issue persists,
+                        delete existing devices using the "cleanManagedDevices" task and rerun
+                        the test.
+                    """.trimIndent()
             )
         }
 

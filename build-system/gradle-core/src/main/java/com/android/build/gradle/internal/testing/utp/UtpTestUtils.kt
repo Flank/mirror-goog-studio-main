@@ -27,6 +27,7 @@ import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidT
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.core.ErrorDetailProto
 import com.google.testing.platform.proto.api.core.TestStatusProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
@@ -34,6 +35,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
+import kotlin.math.min
 import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
@@ -138,7 +140,8 @@ fun runUtpTestSuiteAndWait(
                                 "From File from the menu bar and importing test-result.pb."
                     )
                     if (resultsProto.hasPlatformError()) {
-                        logger.error(null, "Platform error occurred when running the UTP test suite")
+                        logger.error(
+                            null, getPlatformErrorMessage(resultsProto.platformError.errorDetail))
                     }
                     val testFailed = resultsProto.hasPlatformError() ||
                             resultsProto.testResultList.any { testCaseResult ->
@@ -260,3 +263,39 @@ fun shouldEnableUtp(
     return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
             || (testOptions != null && testOptions.emulatorSnapshots.enableForTestFailures))
 }
+
+/**
+ * Finds the root cause of the Platform Error if it came form the Managed Device
+ * Android Provider.
+ *
+ * @param error the top level error detail to be analyzed.
+ * @return if [error] is from the managed device plugin, the message of the error is returned. Will
+ * otherwise check the cause of the error detail. If no cause is from the managed device plugin a
+ * default error message is returned.
+ */
+private fun getPlatformErrorMessage(error : ErrorDetailProto.ErrorDetail) : String =
+    when {
+        getExceptionFromStackTrace(error.summary.stackTrace).contains("EmulatorTimeoutException") ->
+            """
+                PLATFORM ERROR:
+                ${error.summary.errorMessage}
+            """.trimIndent()
+        error.hasCause() ->
+            getPlatformErrorMessage(error.cause)
+        else -> """
+            Unknown platform error occurred when running the UTP test suite. Please check logs for details.
+        """.trimIndent()
+    }
+
+/**
+ * Attempts to get a simple string by which the exception can be easily parsed.
+ *
+ * Due to the nature of UTP error details, the exception may be in a serialized string format, or
+ * in a simple toString() format. This method is meant to separate the parent exception from the
+ * stacktrace (which may include more exceptions)
+ *
+ * @param stackTrace the stackTrace of the exception in either serialized or toString() format
+ * @return A simple string, that the only exception that is contained is the top-level exception.
+ */
+private fun getExceptionFromStackTrace(stackTrace: String): String =
+    stackTrace.substring(0..min(stackTrace.indexOf(':'), stackTrace.indexOf('\n')))
