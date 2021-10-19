@@ -621,7 +621,7 @@ abstract class LintClient {
 
     /**
      * Returns the most recent platform (e.g. something like the target
-     * for $ANDROID_HOME/platforms/android-30)
+     * for $ANDROID_HOME/platforms/android-31)
      */
     open fun getLatestSdkTarget(minApi: Int = 1, includePreviews: Boolean = true): IAndroidTarget? {
         return getPlatformLookup()?.getLatestSdkTarget(minApi, includePreviews)

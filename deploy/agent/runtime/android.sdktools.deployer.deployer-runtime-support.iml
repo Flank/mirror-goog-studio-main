@@ -39,8 +39,8 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/darwin/platforms/android-30/android.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/linux/platforms/android-30/android.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/darwin/platforms/android-31/android.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/linux/platforms/android-31/android.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

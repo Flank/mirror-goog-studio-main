@@ -47,7 +47,7 @@ apply plugin: 'com.android.application'
 
 android {
     defaultConfig.minSdkVersion 14
-    compileSdkVersion 30
+    compileSdkVersion 31
     lintOptions.checkReleaseBuilds = false
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk

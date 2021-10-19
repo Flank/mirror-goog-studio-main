@@ -3,7 +3,7 @@
     package="com.example.bk">
 
     <application android:label="Butterknife test">
-        <activity android:name=".Activ" >
+        <activity android:name=".Activ" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

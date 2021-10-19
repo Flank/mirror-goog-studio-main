@@ -32,6 +32,7 @@ import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Objects;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -230,6 +231,7 @@ public class ManifestMergingTest {
      * Check that navigation files added to the app's source sets override each other as expected
      * and generate the expected <intent-filter> elements in the app's merged manifest
      */
+    @Ignore("b/203802678")
     @Test
     public void checkManifestMergingWithNavigationFiles() throws Exception {
         navigation.executor().run("clean", ":app:assembleF1Debug");
@@ -279,6 +281,7 @@ public class ManifestMergingTest {
      * Deep links from nav xml included in the library manifest are resolved into intent filters at
      * the application level
      */
+    @Ignore("b/203802678")
     @Test
     public void checkManifestMergingAddsDeepLinks_ifLibraryIncludesNavGraphs() throws Exception {
         File libManifest =
@@ -334,6 +337,7 @@ public class ManifestMergingTest {
      * Check that a navigation file added to a library's source set generates the expected
      * <intent-filter> element in the merged manifest for the library's androidTest APK
      */
+    @Ignore("b/203802678")
     @Test
     public void checkManifestMergingForLibraryAndroidTestWithNavigationFiles() throws Exception {
         TestFileUtils.searchAndReplace(
@@ -351,6 +355,7 @@ public class ManifestMergingTest {
         assertThat(manifestFile).contains("/library/nav1");
     }
 
+    @Ignore("b/203802678")
     @Test
     public void checkManifestFile_doesNotRebuildWhenNonNavigationResourceAreChanged()
             throws Exception {
@@ -384,6 +389,7 @@ public class ManifestMergingTest {
         Truth.assertThat(timestampAfterFirstBuild).isEqualTo(manifestFile.lastModified());
     }
 
+    @Ignore("b/203802678")
     @Test
     public void checkManifestFile_rebuildsWhenNavigationResourceAreChanged() throws Exception {
         navigation.executor().run("clean", ":app:assembleDebug");

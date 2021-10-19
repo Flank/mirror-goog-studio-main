@@ -405,7 +405,7 @@ public class TestUtils {
 
     @NonNull
     public static String getLatestAndroidPlatform() {
-        return "android-30";
+        return "android-31";
     }
 
     /**

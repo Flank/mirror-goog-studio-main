@@ -1,6 +1,6 @@
 > AndroidDsl:
    - groupId           = ""
-   - compileTarget     = "android-30"
+   - compileTarget     = "android-31"
    - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
    > defaultConfig:
       - name                               = "main"

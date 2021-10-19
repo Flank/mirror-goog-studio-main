@@ -109,7 +109,7 @@ tasks.withType(JavaCompile) {
 
 android {
     defaultConfig.minSdkVersion 14
-    compileSdkVersion 30
+    compileSdkVersion 31
     lintOptions.checkReleaseBuilds = false
     defaultConfig {
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'

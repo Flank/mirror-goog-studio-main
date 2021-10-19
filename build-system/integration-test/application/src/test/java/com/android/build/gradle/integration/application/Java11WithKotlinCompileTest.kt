@@ -47,7 +47,7 @@ class Java11WithKotlinCompileTest {
             """
 
                 android {
-                    compileSdkVersion 30
+                    compileSdkVersion 31
 
                     compileOptions {
                         sourceCompatibility JavaVersion.VERSION_11

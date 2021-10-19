@@ -3003,10 +3003,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to 31:
                     @@ -5 +5
                     -         targetSdkVersion 17
-                    +         targetSdkVersion 30
+                    +         targetSdkVersion 31
                     """
                 )
         } finally {
@@ -3047,10 +3047,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 )
                 .expectFixDiffs(
                     """
-                    Fix for build.gradle line 5: Update targetSdkVersion to 30:
+                    Fix for build.gradle line 5: Update targetSdkVersion to 31:
                     @@ -5 +5
                     -         targetSdkVersion 'O'
-                    +         targetSdkVersion 30
+                    +         targetSdkVersion 31
                     """
                 )
         } finally {
