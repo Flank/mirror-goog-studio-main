@@ -213,8 +213,15 @@ class AsmInstrumentationManager(
                         nextVisitor = MaxsInvalidatingClassVisitor(apiVersion, classWriter)
                     }
 
+                    val originalVisitor = nextVisitor
+
                     filteredVisitors.forEach { entry ->
                         nextVisitor = entry.createClassVisitor(classContext, nextVisitor)
+                    }
+
+                    // No external visitor will instrument this class
+                    if (nextVisitor == originalVisitor) {
+                        return@use byteCode
                     }
 
                     classReader.accept(nextVisitor, getClassReaderFlags(javaVersion))
