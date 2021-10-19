@@ -25,7 +25,7 @@ data class ClassDataImpl(
     override val superClasses: List<String>
 ) : ClassData
 
-data class ClassDataLazyImpl(
+class ClassDataLazyImpl(
     override val className: String,
     private val classAnnotationsSupplier: () -> List<String>,
     private val interfacesSupplier: () -> List<String>,
