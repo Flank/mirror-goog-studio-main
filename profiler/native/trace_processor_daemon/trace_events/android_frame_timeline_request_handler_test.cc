@@ -38,6 +38,7 @@ const std::string TESTDATA_PATH(
     "tools/base/profiler/native/trace_processor_daemon/testdata/"
     "frame-timeline.trace");
 const long IOSCHED_PROCESS_PID = 19645;
+const long SURFACEFLINGER_PROCESS_PID = 678;
 
 std::unique_ptr<TraceProcessor> LoadTrace(std::string trace_path) {
   Config config;
@@ -77,6 +78,38 @@ TEST(AndroidFrameTimelineRequestHandlerTest, PopulateFrameTimeline) {
   EXPECT_EQ(actual_slice.layer_name(),
             "TX - com.google.samples.apps.iosched/"
             "com.google.samples.apps.iosched.ui.MainActivity#0");
+  EXPECT_EQ(actual_slice.present_type(), "On-time Present");
+  EXPECT_EQ(actual_slice.jank_type(), "None");
+  EXPECT_EQ(actual_slice.on_time_finish(), true);
+  EXPECT_EQ(actual_slice.gpu_composition(), false);
+}
+
+TEST(AndroidFrameTimelineRequestHandlerTest,
+     PopulateFrameTimelineForSurfaceFlinger) {
+  auto tp = LoadTrace(TESTDATA_PATH);
+  auto handler = AndroidFrameTimelineRequestHandler(tp.get());
+
+  AndroidFrameTimelineParameters params_proto;
+  params_proto.set_process_id(SURFACEFLINGER_PROCESS_PID);
+
+  AndroidFrameTimelineResult result;
+  handler.PopulateFrameTimeline(params_proto, &result);
+  EXPECT_EQ(result.expected_slice_size(), 913);
+  EXPECT_EQ(result.actual_slice_size(), 913);
+
+  auto expected_slice = result.expected_slice(0);
+  EXPECT_EQ(expected_slice.timestamp_nanoseconds(), 3624916605556L);
+  EXPECT_EQ(expected_slice.duration_nanoseconds(), 10500051L);
+  EXPECT_EQ(expected_slice.display_frame_token(), 274349L);
+  EXPECT_EQ(expected_slice.surface_frame_token(), 0L);
+  EXPECT_EQ(expected_slice.layer_name(), "");
+
+  auto actual_slice = result.actual_slice(0);
+  EXPECT_EQ(actual_slice.timestamp_nanoseconds(), 3624918340169L);
+  EXPECT_EQ(actual_slice.duration_nanoseconds(), 8737031L);
+  EXPECT_EQ(actual_slice.display_frame_token(), 274349L);
+  EXPECT_EQ(actual_slice.surface_frame_token(), 0L);
+  EXPECT_EQ(actual_slice.layer_name(), "");
   EXPECT_EQ(actual_slice.present_type(), "On-time Present");
   EXPECT_EQ(actual_slice.jank_type(), "None");
   EXPECT_EQ(actual_slice.on_time_finish(), true);
