@@ -29,7 +29,7 @@ import java.io.Serializable
  * given config when registering the visitor, and injected to the factory on instantiation.
  *
  * The parameters will be used as Gradle inputs. Make sure to declare the inputs by annotating them
- * using Gradle's input annotations so it's compatible with Gradle's up-to-date checks.
+ * using Gradle's input annotations so that it's compatible with Gradle's up-to-date checks.
  *
  * Example:
  * ```
@@ -41,14 +41,16 @@ import java.io.Serializable
  *    val listOfStrings: ListProperty<String>
  *  }
  *
- *  androidComponentsExtension.onVariants(selector().all(), {
- *      transformClassesWith(AsmClassVisitorFactoryImpl.class,
- *                           InstrumentationScope.Project) { params ->
- *          // parameters configuration
- *          params.intValue.set(1)
- *          params.listOfStrings.set(listOf("a", "b"))
- *      }
- *  })
+ *  androidComponents {
+ *      onVariants(selector().all(), {
+ *          instrumentation.transformClassesWith(AsmClassVisitorFactoryImpl.class,
+ *                                               InstrumentationScope.Project) { params ->
+ *               // parameters configuration
+ *               params.intValue.set(1)
+ *               params.listOfStrings.set(listOf("a", "b"))
+ *          }
+ *      })
+ *  }
  * ```
  */
 interface InstrumentationParameters : Serializable

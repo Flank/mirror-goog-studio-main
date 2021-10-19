@@ -786,6 +786,7 @@ com.android.build.api.variant.BundleConfig
 com.android.build.api.variant.BundleConfig.getCodeTransparency: com.android.build.api.variant.CodeTransparency ()
 com.android.build.api.variant.CodeTransparency
 com.android.build.api.variant.CodeTransparency.setSigningConfig: void (com.android.build.api.dsl.SigningConfig)
+com.android.build.api.variant.Component.getInstrumentation: com.android.build.api.variant.Instrumentation ()
 com.android.build.api.variant.Component.getJavaCompilation: com.android.build.api.variant.JavaCompilation ()
 com.android.build.api.variant.Component.getSources: com.android.build.api.variant.Sources ()
 com.android.build.api.variant.DslExtension
@@ -808,6 +809,10 @@ com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build
 com.android.build.api.variant.HasTestFixturesBuilder
 com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
 com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)
+com.android.build.api.variant.Instrumentation
+com.android.build.api.variant.Instrumentation.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.Instrumentation.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Instrumentation.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.JavaCompilation
 com.android.build.api.variant.JavaCompilation.getAnnotationProcessor: com.android.build.api.variant.AnnotationProcessor ()
 com.android.build.api.variant.LintLifecycleExtension implements com.android.build.api.variant.DslLifecycle
