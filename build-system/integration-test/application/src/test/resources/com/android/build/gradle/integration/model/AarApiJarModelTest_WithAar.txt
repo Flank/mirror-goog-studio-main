@@ -19,7 +19,7 @@
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
+         - :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - dependencies:
                - com.example|myaar|1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:myaar:1{ADDED}:
                   - requestedCoordinates = (null)
@@ -33,9 +33,11 @@
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "myaar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "myaar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -66,9 +68,11 @@
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/myaar/1/myaar-1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "myaar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "myaar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"

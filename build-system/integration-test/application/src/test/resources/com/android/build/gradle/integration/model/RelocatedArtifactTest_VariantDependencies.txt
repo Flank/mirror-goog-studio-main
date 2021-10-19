@@ -85,7 +85,7 @@
    < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
-         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+         - :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
          > org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:
@@ -132,7 +132,7 @@
    < androidTestArtifact
    > unitTestArtifact:
       > compileDependencies:
-         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+         - :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
          > org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:
@@ -175,7 +175,7 @@
          < org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2
       < compileDependencies
       > runtimeDependencies:
-         > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
+         > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
             - requestedCoordinates = (null)
             > dependencies:
                > org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:
@@ -217,7 +217,7 @@
                   < dependencies
                < org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2
             < dependencies
-         < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
+         < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
          - org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:
             - dependencies = "*visited*"
       < runtimeDependencies
@@ -225,15 +225,16 @@
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
-      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
+      > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":"
+            - buildId        = ":"
+            - projectPath    = ":"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
@@ -243,16 +244,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified
-      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
+      < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:project:unspecified
+      > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":"
+            - buildId        = ":"
+            - projectPath    = ":"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
@@ -261,15 +263,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
+      < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:project:unspecified
       > org.jetbrains.kotlinx|kotlinx-coroutines-android|1.5.2|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>6, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api, org.jetbrains.kotlin.localToProject>public, org.jetbrains.kotlin.platform.type>jvm|org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:
          - type               = JAVA_LIBRARY
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.5.2/kotlinx-coroutines-android-1.5.2.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-android"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-android"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
@@ -290,9 +294,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.5.2/kotlinx-coroutines-android-1.5.2.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-android"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-android"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
@@ -313,9 +319,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.2/kotlinx-coroutines-core-jvm-1.5.2.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-core-jvm"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-core-jvm"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.status -> release"
@@ -332,9 +340,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.2/kotlinx-coroutines-core-jvm-1.5.2.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-core-jvm"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-core-jvm"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.status -> release"
@@ -351,9 +361,11 @@
          - artifact           = (null)
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-core"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-core"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.status -> release"
@@ -370,9 +382,11 @@
          - artifact           = (null)
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlinx"
-            - name    = "kotlinx-coroutines-core"
-            - version = "1.5.2"
+            - group          = "org.jetbrains.kotlinx"
+            - name           = "kotlinx-coroutines-core"
+            - version        = "1.5.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.status -> release"
@@ -389,9 +403,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-common/1.5.30/kotlin-stdlib-common-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-common"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-common"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -408,9 +424,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-common/1.5.30/kotlin-stdlib-common-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-common"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-common"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -427,9 +445,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.5.30/kotlin-stdlib-jdk7-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-jdk7"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-jdk7"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -446,9 +466,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.5.30/kotlin-stdlib-jdk7-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-jdk7"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-jdk7"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -465,9 +487,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.5.30/kotlin-stdlib-jdk8-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-jdk8"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-jdk8"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -484,9 +508,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.5.30/kotlin-stdlib-jdk8-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib-jdk8"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib-jdk8"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -503,9 +529,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib/1.5.30/kotlin-stdlib-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -522,9 +550,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/kotlin/kotlin-stdlib/1.5.30/kotlin-stdlib-1.5.30.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains.kotlin"
-            - name    = "kotlin-stdlib"
-            - version = "1.5.30"
+            - group          = "org.jetbrains.kotlin"
+            - name           = "kotlin-stdlib"
+            - version        = "1.5.30"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -541,9 +571,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/annotations/13.0/annotations-13.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains"
-            - name    = "annotations"
-            - version = "13.0"
+            - group          = "org.jetbrains"
+            - name           = "annotations"
+            - version        = "13.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -560,9 +592,11 @@
          - artifact           = {LOCAL_REPO}/org/jetbrains/annotations/13.0/annotations-13.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jetbrains"
-            - name    = "annotations"
-            - version = "13.0"
+            - group          = "org.jetbrains"
+            - name           = "annotations"
+            - version        = "13.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"

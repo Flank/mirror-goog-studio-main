@@ -26,11 +26,13 @@
          - artifact           = {PROJECT}/libs/foo.jar{F}
          - projectInfo        = (null)
          - libraryInfo:
-            - group        = "__local_aars__"
-            - name         = {PROJECT}/libs/foo.jar{F}
-            - version      = "unspecified"
-            - attributes   = []
-            - capabilities = []
+            - group          = "__local_aars__"
+            - name           = {PROJECT}/libs/foo.jar{F}
+            - version        = "unspecified"
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes     = []
+            - capabilities   = []
          - lintJar            = (null)
          - androidLibraryData = (null)
       < __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}

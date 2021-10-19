@@ -561,6 +561,14 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
         dataObject("projectInfo", Library::projectInfo) {
             item("buildId", ProjectInfo::buildId)
             item("projectPath", ProjectInfo::projectPath)
+            item("buildType", ComponentInfo::buildType)
+            valueList(
+                name = "productFlavors",
+                propertyAction = { productFlavors.entries },
+                formatAction = { "$key -> $value" }
+            ) { collection ->
+                collection?.sortedBy { it.key }
+            }
             valueList(
                 name = "attributes",
                 propertyAction = { attributes.entries },
@@ -579,6 +587,14 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
             item("group", LibraryInfo::group)
             pathAsAString(name = "name", onlyIfPresent = true, propertyAction = LibraryInfo::name)
             item("version", LibraryInfo::version)
+            item("buildType", ComponentInfo::buildType)
+            valueList(
+                name = "productFlavors",
+                propertyAction = { productFlavors.entries },
+                formatAction = { "$key -> $value" }
+            ) { collection ->
+                collection?.sortedBy { it.key }
+            }
             valueList(
                 name = "attributes",
                 propertyAction = { attributes.entries },

@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.SdkConstants
+import com.android.build.api.attributes.BuildTypeAttr
+import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.v2.LibraryImpl
 import com.android.build.gradle.internal.ide.v2.LibraryInfoImpl
 import com.android.build.gradle.internal.ide.v2.ProjectInfoImpl
@@ -122,6 +125,8 @@ class LibraryServiceImpl(
                 val component = it.owner as ProjectComponentIdentifier
 
                 ProjectInfoImpl(
+                    getBuildType(it),
+                    getProductFlavors(it),
                     getAttributeMap(it),
                     getCapabilityList(it),
                     stringCache.cacheString(component.build.name),
@@ -145,6 +150,8 @@ class LibraryServiceImpl(
                     // simply query for the variant.
                     libraryInfoCache.computeIfAbsent(artifact.variant) {
                         LibraryInfoImpl(
+                            getBuildType(it),
+                            getProductFlavors(it),
                             getAttributeMap(it),
                             getCapabilityList(it),
                             stringCache.cacheString(component.group),
@@ -156,6 +163,8 @@ class LibraryServiceImpl(
                 is OpaqueComponentArtifactIdentifier -> {
                     libraryInfoForLocalJarsCache.computeIfAbsent(artifact.artifactFile!!) {
                         LibraryInfoImpl(
+                            buildType = null,
+                            productFlavors = mapOf(),
                             attributes = mapOf(),
                             capabilities = listOf(),
                             group = stringCache.cacheString(LOCAL_AAR_GROUPID),
@@ -171,6 +180,8 @@ class LibraryServiceImpl(
                     synchronized(libraryInfoCache) {
                         libraryInfoCache.computeIfAbsent(artifact.variant) {
                             LibraryInfoImpl(
+                                buildType = getBuildType(it),
+                                productFlavors = getProductFlavors(it),
                                 attributes = getAttributeMap(it),
                                 capabilities = getCapabilityList(it),
                                 group = WRAPPED_AAR_GROUPID,
@@ -257,13 +268,32 @@ class LibraryServiceImpl(
         }
     }
 
+    private fun getBuildType(variant: ResolvedVariantResult): String? =
+        variant.attributes.keySet().firstOrNull { it.name == BuildTypeAttr.ATTRIBUTE.name }?.let { buildType ->
+            variant.attributes.getAttribute(buildType)?.toString()?.let { stringCache.cacheString(it) }
+        }
+
+    private fun getProductFlavors(variant: ResolvedVariantResult): Map<String, String> =
+        variant.attributes.keySet()
+            .filter { it.name.startsWith(productFlavorAttrPrefix) }
+            .associateBy(
+                {stringCache.cacheString(it.name.substring(productFlavorAttrPrefix.length))},
+                {stringCache.cacheString(variant.attributes.getAttribute(it).toString())})
+
     private fun getAttributeMap(variant: ResolvedVariantResult): Map<String, String> =
-            variant.attributes.keySet().mapNotNull { key ->
+            variant.attributes.keySet()
+                .asSequence()
+                .filter {
+                    // Build types and product flavors are handled explicitly,
+                    // So filter them out from the generic attribute map
+                    it.name != BuildTypeAttr.ATTRIBUTE.name &&
+                            !it.name.startsWith(productFlavorAttrPrefix)
+                }.mapNotNull { key ->
                 val attr = variant.attributes.getAttribute(key)
-                attr?.let { stringCache.cacheString(key.name) to stringCache.cacheString(it.toString()) }
-            }
-                // this is a residual information from the way we combine the dependency graph and
-                // the artifacts queried via ArtifactCollection, and the later always include the
+                    attr?.let { stringCache.cacheString(key.name) to stringCache.cacheString(it.toString()) }
+                }
+                // this is residual information from the way we combine the dependency graph and
+                // the artifacts queried via ArtifactCollection, and later always include the
                 // type of the artifact that are queried. But we really don't want/need these, as
                 // we are just looking at representing the dependency node itself, not one of its
                 // artifacts.
@@ -273,3 +303,5 @@ class LibraryServiceImpl(
     private fun getCapabilityList(variant: ResolvedVariantResult): List<String> =
             variant.capabilities.map { stringCache.cacheString("${it.group}:${it.name}:${it.version}") }
 }
+
+private val productFlavorAttrPrefix: String = ProductFlavorAttr.of("").name

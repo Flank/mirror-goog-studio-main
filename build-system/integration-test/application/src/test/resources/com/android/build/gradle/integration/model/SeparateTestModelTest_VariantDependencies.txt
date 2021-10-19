@@ -2,7 +2,7 @@
    - name                 = "debug"
    - mainArtifact:
       - compileDependencies:
-         - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies    = []
@@ -11,15 +11,16 @@
    - unitTestArtifact     = (null)
    - testFixturesArtifact = (null)
    > libraries:
-      > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+      > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":app"
+            - buildId        = ":"
+            - projectPath    = ":app"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
@@ -29,6 +30,6 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
+      < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
    < libraries
 < VariantDependencies

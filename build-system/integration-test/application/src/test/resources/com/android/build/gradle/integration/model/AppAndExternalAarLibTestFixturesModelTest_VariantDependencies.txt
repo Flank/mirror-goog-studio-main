@@ -19,7 +19,7 @@
                - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
                   - requestedCoordinates = (null)
                   - dependencies         = []
-         - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
          - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
@@ -36,14 +36,14 @@
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
-         - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
          - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar:1:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+         - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
                - com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-runtime|com.example:aar:1:
@@ -55,15 +55,16 @@
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
-      > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
+      > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":app"
+            - buildId        = ":"
+            - projectPath    = ":app"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
@@ -73,16 +74,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
-      > :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
+      < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified
+      > :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":app"
+            - buildId        = ":"
+            - projectPath    = ":app"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
@@ -91,15 +93,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:app|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+      < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
       > com.example|aar|1|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.libraryelements>aar, org.gradle.status>release, org.gradle.usage>java-api|com.example:aar-test-fixtures:1:
          - type        = ANDROID_LIBRARY
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1-test-fixtures.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "aar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "aar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
@@ -131,9 +135,11 @@
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "aar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "aar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
@@ -165,9 +171,11 @@
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1-test-fixtures.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "aar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "aar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
@@ -199,9 +207,11 @@
          - artifact    = {ADDITIONAL_MAVEN_REPO}/com/example/aar/1/aar-1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.example"
-            - name    = "aar"
-            - version = "1"
+            - group          = "com.example"
+            - name           = "aar"
+            - version        = "1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"

@@ -523,7 +523,7 @@
                         - dependencies = "*visited*"
             < dependencies
          < com.google.android.gms|play-services-base|15.0.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.google.android.gms:play-services-base:15.0.1
-         > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
+         > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
             - requestedCoordinates = (null)
             > dependencies:
                - com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0:
@@ -536,7 +536,7 @@
                      - com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0:
                         - dependencies = "*visited*"
             < dependencies
-         < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified
+         < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified
          - com.android.support|support-v13|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v13:28.0.0:
             - dependencies = "*visited*"
       < compileDependencies
@@ -807,7 +807,7 @@
             - dependencies:
                - com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0:
                   - dependencies = "*visited*"
-         - :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
+         - :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
                - com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|com.android.support:support-v4:28.0.0:
@@ -824,7 +824,7 @@
                   - dependencies         = []
       < compileDependencies
       > runtimeDependencies:
-         > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified:
+         > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified:
             - requestedCoordinates = (null)
             > dependencies:
                > com.android.support|support-v4|28.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|com.android.support:support-v4:28.0.0:
@@ -858,7 +858,7 @@
                   - requestedCoordinates = (null)
                   - dependencies         = []
             < dependencies
-         < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified
+         < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified
          - junit|junit|4.12|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|junit:junit:4.12:
             - requestedCoordinates = (null)
             - dependencies:
@@ -878,15 +878,16 @@
    < unitTestArtifact
    - testFixturesArtifact = (null)
    > libraries:
-      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
+      > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":"
+            - buildId        = ":"
+            - projectPath    = ":"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
@@ -896,16 +897,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified
-      > :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified:
+      < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|:basic:unspecified
+      > :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified:
          - type               = PROJECT
          - artifact           = (null)
          > projectInfo:
-            - buildId     = ":"
-            - projectPath = ":"
+            - buildId        = ":"
+            - projectPath    = ":"
+            - buildType      = "debug"
+            - productFlavors = []
             - attributes:
                * "com.android.build.api.attributes.AgpVersionAttr -> {AGP_Version}"
-               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
                * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
@@ -914,15 +916,17 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified
+      < :|:|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|:basic:unspecified
       > android.arch.core|common|1.1.1|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|android.arch.core:common:1.1.1:
          - type               = JAVA_LIBRARY
          - artifact           = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "android.arch.core"
-            - name    = "common"
-            - version = "1.1.1"
+            - group          = "android.arch.core"
+            - name           = "common"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -939,9 +943,11 @@
          - artifact           = {LOCAL_REPO}/android/arch/core/common/1.1.1/common-1.1.1.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "android.arch.core"
-            - name    = "common"
-            - version = "1.1.1"
+            - group          = "android.arch.core"
+            - name           = "common"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -957,14 +963,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/android/arch/core/runtime/1.1.1/runtime-1.1.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "android.arch.core"
-            - name    = "runtime"
-            - version = "1.1.1"
+         > libraryInfo:
+            - group          = "android.arch.core"
+            - name           = "runtime"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.core:runtime:1.1.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
@@ -987,9 +996,11 @@
          - artifact           = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "common"
-            - version = "1.1.1"
+            - group          = "android.arch.lifecycle"
+            - name           = "common"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1006,9 +1017,11 @@
          - artifact           = {LOCAL_REPO}/android/arch/lifecycle/common/1.1.1/common-1.1.1.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "common"
-            - version = "1.1.1"
+            - group          = "android.arch.lifecycle"
+            - name           = "common"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1024,14 +1037,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/android/arch/lifecycle/livedata-core/1.1.1/livedata-core-1.1.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "livedata-core"
-            - version = "1.1.1"
+         > libraryInfo:
+            - group          = "android.arch.lifecycle"
+            - name           = "livedata-core"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:livedata-core:1.1.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
@@ -1053,14 +1069,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/android/arch/lifecycle/livedata/1.1.1/livedata-1.1.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "livedata"
-            - version = "1.1.1"
+         > libraryInfo:
+            - group          = "android.arch.lifecycle"
+            - name           = "livedata"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:livedata:1.1.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
@@ -1082,14 +1101,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/android/arch/lifecycle/runtime/1.1.1/runtime-1.1.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "runtime"
-            - version = "1.1.1"
+         > libraryInfo:
+            - group          = "android.arch.lifecycle"
+            - name           = "runtime"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:runtime:1.1.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
@@ -1111,14 +1133,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/android/arch/lifecycle/viewmodel/1.1.1/viewmodel-1.1.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "android.arch.lifecycle"
-            - name    = "viewmodel"
-            - version = "1.1.1"
+         > libraryInfo:
+            - group          = "android.arch.lifecycle"
+            - name           = "viewmodel"
+            - version        = "1.1.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "android.arch.lifecycle:viewmodel:1.1.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
@@ -1141,9 +1166,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "monitor"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "monitor"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1174,9 +1201,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/monitor/1.0.2/monitor-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "monitor"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "monitor"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1207,9 +1236,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "rules"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "rules"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1240,9 +1271,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/rules/1.0.2/rules-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "rules"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "rules"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1273,9 +1306,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "runner"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "runner"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1306,9 +1341,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/test/runner/1.0.2/runner-1.0.2.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support.test"
-            - name    = "runner"
-            - version = "1.0.2"
+            - group          = "com.android.support.test"
+            - name           = "runner"
+            - version        = "1.0.2"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1338,14 +1375,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/asynclayoutinflater/28.0.0/asynclayoutinflater-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "asynclayoutinflater"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "asynclayoutinflater"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:asynclayoutinflater:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
@@ -1368,9 +1408,11 @@
          - artifact           = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "collections"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "collections"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1387,9 +1429,11 @@
          - artifact           = {LOCAL_REPO}/com/android/support/collections/28.0.0/collections-28.0.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "collections"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "collections"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1405,14 +1449,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/coordinatorlayout/28.0.0/coordinatorlayout-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "coordinatorlayout"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "coordinatorlayout"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:coordinatorlayout:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
@@ -1434,14 +1481,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/cursoradapter/28.0.0/cursoradapter-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "cursoradapter"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "cursoradapter"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:cursoradapter:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
@@ -1463,14 +1513,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/customview/28.0.0/customview-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "customview"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "customview"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:customview:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
@@ -1492,14 +1545,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/documentfile/28.0.0/documentfile-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "documentfile"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "documentfile"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:documentfile:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
@@ -1521,14 +1577,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/drawerlayout/28.0.0/drawerlayout-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "drawerlayout"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "drawerlayout"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:drawerlayout:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
@@ -1550,14 +1609,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/interpolator/28.0.0/interpolator-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "interpolator"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "interpolator"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:interpolator:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
@@ -1579,14 +1641,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/loader/28.0.0/loader-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "loader"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "loader"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:loader:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
@@ -1608,14 +1673,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/localbroadcastmanager/28.0.0/localbroadcastmanager-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "localbroadcastmanager"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "localbroadcastmanager"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:localbroadcastmanager:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
@@ -1637,14 +1705,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/print/28.0.0/print-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "print"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "print"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:print:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
@@ -1666,14 +1737,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/slidingpanelayout/28.0.0/slidingpanelayout-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "slidingpanelayout"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "slidingpanelayout"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:slidingpanelayout:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
@@ -1696,9 +1770,11 @@
          - artifact           = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-annotations"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-annotations"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1715,9 +1791,11 @@
          - artifact           = {LOCAL_REPO}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-annotations"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-annotations"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1733,14 +1811,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/support-compat/28.0.0/support-compat-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-compat"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "support-compat"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-compat:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
@@ -1762,14 +1843,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/support-core-ui/28.0.0/support-core-ui-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-core-ui"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "support-core-ui"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-core-ui:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
@@ -1791,14 +1875,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/support-core-utils/28.0.0/support-core-utils-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-core-utils"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "support-core-utils"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-core-utils:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
@@ -1820,14 +1907,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/support-fragment/28.0.0/support-fragment-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-fragment"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "support-fragment"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-fragment:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
@@ -1849,14 +1939,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/support-media-compat/28.0.0/support-media-compat-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-media-compat"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "support-media-compat"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:support-media-compat:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
@@ -1879,9 +1972,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-v13"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-v13"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1912,9 +2007,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/support-v13/28.0.0/support-v13-28.0.0.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-v13"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-v13"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1945,9 +2042,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-v4"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-v4"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -1978,9 +2077,11 @@
          - artifact    = {LOCAL_REPO}/com/android/support/support-v4/28.0.0/support-v4-28.0.0.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.android.support"
-            - name    = "support-v4"
-            - version = "28.0.0"
+            - group          = "com.android.support"
+            - name           = "support-v4"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2010,14 +2111,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/swiperefreshlayout/28.0.0/swiperefreshlayout-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "swiperefreshlayout"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "swiperefreshlayout"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:swiperefreshlayout:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
@@ -2039,14 +2143,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/versionedparcelable/28.0.0/versionedparcelable-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "versionedparcelable"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "versionedparcelable"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:versionedparcelable:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
@@ -2068,14 +2175,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/android/support/viewpager/28.0.0/viewpager-28.0.0.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.android.support"
-            - name    = "viewpager"
-            - version = "28.0.0"
+         > libraryInfo:
+            - group          = "com.android.support"
+            - name           = "viewpager"
+            - version        = "28.0.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.android.support:viewpager:28.0.0"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
@@ -2097,14 +2207,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-basement/15.0.1/play-services-basement-15.0.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.google.android.gms"
-            - name    = "play-services-basement"
-            - version = "15.0.1"
+         > libraryInfo:
+            - group          = "com.google.android.gms"
+            - name           = "play-services-basement"
+            - version        = "15.0.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.google.android.gms:play-services-basement:15.0.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
@@ -2127,9 +2240,11 @@
          - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.google.android.gms"
-            - name    = "play-services-base"
-            - version = "15.0.1"
+            - group          = "com.google.android.gms"
+            - name           = "play-services-base"
+            - version        = "15.0.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2160,9 +2275,11 @@
          - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-base/15.0.1/play-services-base-15.0.1.aar{F}
          - projectInfo = (null)
          > libraryInfo:
-            - group   = "com.google.android.gms"
-            - name    = "play-services-base"
-            - version = "15.0.1"
+            - group          = "com.google.android.gms"
+            - name           = "play-services-base"
+            - version        = "15.0.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2192,14 +2309,17 @@
          - type        = ANDROID_LIBRARY
          - artifact    = {LOCAL_REPO}/com/google/android/gms/play-services-tasks/15.0.1/play-services-tasks-15.0.1.aar{F}
          - projectInfo = (null)
-         - libraryInfo:
-            - group   = "com.google.android.gms"
-            - name    = "play-services-tasks"
-            - version = "15.0.1"
+         > libraryInfo:
+            - group          = "com.google.android.gms"
+            - name           = "play-services-tasks"
+            - version        = "15.0.1"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.status -> release"
             - capabilities:
                * "com.google.android.gms:play-services-tasks:15.0.1"
+         < libraryInfo
          - lintJar     = (null)
          > androidLibraryData:
             - compileJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
@@ -2222,9 +2342,11 @@
          - artifact           = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "junit"
-            - name    = "junit"
-            - version = "4.12"
+            - group          = "junit"
+            - name           = "junit"
+            - version        = "4.12"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2241,9 +2363,11 @@
          - artifact           = {LOCAL_REPO}/junit/junit/4.12/junit-4.12.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "junit"
-            - name    = "junit"
-            - version = "4.12"
+            - group          = "junit"
+            - name           = "junit"
+            - version        = "4.12"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2260,9 +2384,11 @@
          - artifact           = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "net.sf.kxml"
-            - name    = "kxml2"
-            - version = "2.3.0"
+            - group          = "net.sf.kxml"
+            - name           = "kxml2"
+            - version        = "2.3.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2279,9 +2405,11 @@
          - artifact           = {LOCAL_REPO}/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "net.sf.kxml"
-            - name    = "kxml2"
-            - version = "2.3.0"
+            - group          = "net.sf.kxml"
+            - name           = "kxml2"
+            - version        = "2.3.0"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2298,9 +2426,11 @@
          - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.hamcrest"
-            - name    = "hamcrest-core"
-            - version = "1.3"
+            - group          = "org.hamcrest"
+            - name           = "hamcrest-core"
+            - version        = "1.3"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2317,9 +2447,11 @@
          - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.hamcrest"
-            - name    = "hamcrest-core"
-            - version = "1.3"
+            - group          = "org.hamcrest"
+            - name           = "hamcrest-core"
+            - version        = "1.3"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2336,9 +2468,11 @@
          - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.hamcrest"
-            - name    = "hamcrest-library"
-            - version = "1.3"
+            - group          = "org.hamcrest"
+            - name           = "hamcrest-library"
+            - version        = "1.3"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2355,9 +2489,11 @@
          - artifact           = {LOCAL_REPO}/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.hamcrest"
-            - name    = "hamcrest-library"
-            - version = "1.3"
+            - group          = "org.hamcrest"
+            - name           = "hamcrest-library"
+            - version        = "1.3"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.libraryelements -> jar"
@@ -2374,9 +2510,11 @@
          - artifact           = {LOCAL_REPO}/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7-runtime.jar{F}
          - projectInfo        = (null)
          > libraryInfo:
-            - group   = "org.jacoco"
-            - name    = "org.jacoco.agent"
-            - version = "0.8.7"
+            - group          = "org.jacoco"
+            - name           = "org.jacoco.agent"
+            - version        = "0.8.7"
+            - buildType      = (null)
+            - productFlavors = []
             - attributes:
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.status -> release"

@@ -63,14 +63,14 @@ internal class FullDependencyGraphBuilderTest {
                 setupDefaultCapability()
                 attribute(
                     BuildTypeAttr.ATTRIBUTE,
-                    objectFactory.named(BuildTypeAttr::class.java, "debug ")
+                    objectFactory.named(BuildTypeAttr::class.java, "debug")
                 )
             }
         }
 
         Truth
             .assertThat(graphs.compileDependencies.map { it.key })
-            .containsExactly("foo|bar|1.0|com.android.build.api.attributes.BuildTypeAttr>debug |foo:bar:1.0")
+            .containsExactly("foo|bar|1.0|debug||foo:bar:1.0")
         val item = graphs.compileDependencies.first()
         Truth.assertThat(item.dependencies).isEmpty()
     }
