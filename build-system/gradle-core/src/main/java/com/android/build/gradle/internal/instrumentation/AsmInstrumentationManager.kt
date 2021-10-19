@@ -181,11 +181,11 @@ class AsmInstrumentationManager(
         val classFullName = "$packageName.$className"
         val classInternalName = classFullName.replace('.', '/')
 
-        val classData = ClassDataImpl(
+        val classData = ClassDataLazyImpl(
             classFullName,
-            classesHierarchyResolver.getAnnotations(classInternalName),
-            classesHierarchyResolver.getAllInterfaces(classInternalName),
-            classesHierarchyResolver.getAllSuperClasses(classInternalName)
+            { classesHierarchyResolver.getAnnotations(classInternalName) },
+            { classesHierarchyResolver.getAllInterfaces(classInternalName) },
+            { classesHierarchyResolver.getAllSuperClasses(classInternalName) }
         )
 
         // Reversing the visitors as they will be chained from the end, and so the visiting
