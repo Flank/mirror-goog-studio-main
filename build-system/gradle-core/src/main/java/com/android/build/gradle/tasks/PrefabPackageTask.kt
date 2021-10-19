@@ -34,9 +34,11 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -54,7 +56,7 @@ import javax.inject.Inject
  * into a prefab-defined folder structure. This can be consumed either
  * by tasks that produce AAR or by other modules in this project.
  *
- * The exported artifacts are named [PREFAB_PACKAGE]
+ * The exported artifacts are named [InternalArtifactType.PREFAB_PACKAGE]
  */
 @DisableCachingByDefault
 abstract class PrefabPackageTask : NonIncrementalTask() {
@@ -88,6 +90,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
 
     @get:Input
     val ndkAbiFilters get() = configurationModel.variant.validAbiList
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val prefabJson: RegularFileProperty
 
     override fun doTaskAction() {
         val installDir = outputDirectory.get().asFile
@@ -167,6 +173,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
             task.configurationModel = config
             task.sdkComponents.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
+            )
+
+            task.prefabJson.setDisallowChanges(
+                creationConfig.artifacts.get(InternalArtifactType.PREFAB_PACKAGE_CONFIGURATION)
             )
         }
     }

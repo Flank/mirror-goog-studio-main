@@ -214,6 +214,19 @@ class PrefabPublishingTest(
         }
     }
 
+    // Before the fix for b/203448887, this test failed because BundleAar did not declare a
+    // dependency on PREFAB_PACKAGE_CONFIGURATION
+    @Test
+    fun `Bundle AAR has no dependency warnings `() {
+        project.execute("bundle${variant}Aar", "prefab${variant}ConfigurePackage")
+    }
+
+    // See b/203448887
+    @Test
+    fun `Bundle local lint AAR has no dependency warnings `() {
+        project.execute("bundle${variant}LocalLintAar", "prefab${variant}ConfigurePackage")
+    }
+
     @Test
     fun `adding a new header causes a rebuild`() {
         project.execute("assemble${variant.toLowerCase()}")
