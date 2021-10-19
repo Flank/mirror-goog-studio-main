@@ -321,6 +321,9 @@ public class AvdManager {
     public static final String AVD_INI_HINGE_ANGLES_POSTURE_DEFINITIONS =
             "hw.sensor.hinge_angles_posture_definitions";
 
+    /** AVD/config.ini key name representing the resizable settings */
+    public static final String AVD_INI_RESIZABLE_CONFIG = "hw.resizable.configs";
+
     /** AVD/config.ini key name representing the rollable settings */
     public static final String AVD_INI_ROLL = "hw.sensor.roll";
 
