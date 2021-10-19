@@ -30,44 +30,45 @@ data class CompileData(
 }
 
 fun parseTargetHash(targetHash : String): CompileData  {
-    val m = API_PATTERN.matcher(targetHash)
-    if (m.matches()) {
-        val api = m.group(1)
-
-        val apiLevel = api.toIntOrNull()
-        return if (apiLevel != null) {
-            CompileData(
-                apiLevel = apiLevel,
-                sdkExtension = m.group(3)?.toIntOrNull()
-            )
-        } else {
-            CompileData(
-                codeName = api
-            )
-        }
-    } else {
-        val m2 = ADDON_PATTERN.matcher(targetHash)
-        return if (m2.matches()) {
-            CompileData(
-                vendorName = m2.group(1),
-                addonName = m2.group(2),
-                apiLevel = m2.group(3).toInt()
-            )
-        } else {
-            throw RuntimeException(
-                """
-                            Unsupported value: $targetHash. Format must be one of:
-                            - android-31
-                            - android-31-ext2
-                            - android-T
-                            - vendorName:addonName:31
-                            """.trimIndent()
-            )
-
-        }
+    val apiMatcher = API_PATTERN.matcher(targetHash)
+    if (apiMatcher.matches()) {
+        return CompileData(
+            apiLevel = apiMatcher.group(1).toInt(),
+            sdkExtension = apiMatcher.group(3)?.toIntOrNull()
+        )
     }
 
+    val previewMatcher = FULL_PREVIEW_PATTERN.matcher(targetHash)
+    if (previewMatcher.matches()) {
+        return CompileData(codeName = previewMatcher.group(1))
+    }
+
+    val addonMatcher = ADDON_PATTERN.matcher(targetHash)
+    if (addonMatcher.matches()) {
+        return CompileData(
+            vendorName = addonMatcher.group(1),
+            addonName = addonMatcher.group(2),
+            apiLevel = addonMatcher.group(3).toInt()
+        )
+    }
+
+    throw RuntimeException(
+        """
+                    Unsupported value: $targetHash. Format must be one of:
+                    - android-31
+                    - android-31-ext2
+                    - android-T
+                    - vendorName:addonName:31
+                    """.trimIndent()
+    )
 }
 
-private val API_PATTERN: Pattern = Pattern.compile("^android-([0-9A-Za-z]+)(-ext(\\d+))?$")
+fun validatePreviewTargetValue(value: String): String? =
+    if (PREVIEW_PATTERN.matcher(value).matches()) {
+        value
+    } else null
+
+private val API_PATTERN: Pattern = Pattern.compile("^android-([0-9]+)(-ext(\\d+))?$")
+private val FULL_PREVIEW_PATTERN: Pattern = Pattern.compile("^android-([A-Z][0-9A-Za-z]*)$")
+private val PREVIEW_PATTERN: Pattern = Pattern.compile("^[A-Z][0-9A-Za-z]*$")
 private val ADDON_PATTERN: Pattern = Pattern.compile("^(.+):(.+):(\\d+)$")

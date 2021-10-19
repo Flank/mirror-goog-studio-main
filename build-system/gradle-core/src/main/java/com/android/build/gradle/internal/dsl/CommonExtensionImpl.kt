@@ -28,6 +28,7 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.utils.validatePreviewTargetValue
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
@@ -37,7 +38,6 @@ import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import java.io.File
-import java.util.regex.Pattern
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
@@ -193,21 +193,31 @@ abstract class CommonExtensionImpl<
     override var compileSdkPreview: String?
         get() = _compileSdkPreview
         set(value) {
-            val preview = value?.removePrefix("android-")
-            _compileSdkPreview = preview?.let {
-                if (it.matches(Regex("[A-Z]+"))) {
-                    it
-                } else {
-                    dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, RuntimeException("Invalid Preview value '$preview'."))
-                    // has to set the value to something in case of sync
-                    "INVALID"
+            if (value == null) {
+                if (_compileSdkPreview != null) {
+                    // if current compile sdk value is preview, then null it out.
+                    _compileSdkPreview = null
+                    _compileSdkVersion = null
                 }
+                return
             }
 
-            _compileSdkVersion = "android-$preview"
+            // then set the values
             _compileSdk = null
-            _compileSdkExtension = null
+            _compileSdkPreview = null
             _compileSdkAddon = null
+            _compileSdkVersion = null
+
+            val previewValue = validatePreviewTargetValue(value)
+            if (previewValue != null) {
+                _compileSdkPreview = previewValue
+                _compileSdkVersion = "android-$previewValue"
+            } else {
+                dslServices.issueReporter.reportError(
+                    IssueReporter.Type.GENERIC,
+                    RuntimeException("Invalid Preview value '$value'. Format is just the platform code name (e.g. 'S')")
+                )
+            }
         }
 
     private var _compileSdkAddon: String? = null

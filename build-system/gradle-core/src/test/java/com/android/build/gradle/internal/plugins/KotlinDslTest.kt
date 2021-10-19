@@ -84,12 +84,12 @@ class KotlinDslTest {
         assertThat(android.compileSdkPreview).isNull()
 
         assertThat(attempt { android.compileSdkPreview = "29" })
-            .isEqualTo("Invalid Preview value '29'.")
+            .isEqualTo("Invalid Preview value '29'. Format is just the platform code name (e.g. 'S')")
 
         android.compileSdkPreview = "S"
         assertThat(android.compileSdkPreview).isEqualTo("S")
 
-        android.compileSdkPreview = "android-S"
+        android.compileSdkPreview = "S"
         assertThat(android.compileSdkPreview).isEqualTo("S")
 
         android.compileSdkAddon(
