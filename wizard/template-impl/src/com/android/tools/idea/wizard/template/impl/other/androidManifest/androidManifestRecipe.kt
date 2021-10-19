@@ -29,9 +29,9 @@ fun RecipeExecutor.androidManifestRecipe(
 ) {
   if (remapFolder) {
     val newLocation = moduleData.rootDir.resolve(relativeNewLocation)
-    mergeXml(androidManifestXml(moduleData.packageName), newLocation)
+    mergeXml(androidManifestXml(), newLocation)
     addSourceSet(SourceSetType.MANIFEST, sourceProviderNameSupplier(), File(relativeNewLocation))
   } else {
-    mergeXml(androidManifestXml(moduleData.packageName), moduleData.manifestDir.resolve("AndroidManifest.xml"))
+    mergeXml(androidManifestXml(), moduleData.manifestDir.resolve("AndroidManifest.xml"))
   }
 }
