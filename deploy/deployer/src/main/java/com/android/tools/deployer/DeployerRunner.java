@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
@@ -95,13 +96,17 @@ public class DeployerRunner {
     public int run(String[] args, ILogger logger) {
         if (args.length < 3) {
             logger.info(
-                    "Usage: %s {install | codeswap | fullswap} [--device=<name>] packageName baseApk [splitApk1, splitApk2, ...]");
+                    "Usage: {install | codeswap | fullswap} [--device=<serial>] [--adb=<path>] packageName baseApk [splitApk1, splitApk2, ...]");
             return ERR_BAD_ARGS;
         }
 
         try {
             DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
-            Map<String, IDevice> devices = waitForDevices(parameters.getTargetDevices(), logger);
+            Map<String, IDevice> devices =
+                    waitForDevices(
+                            parameters.getAdbExecutablePath(),
+                            parameters.getTargetDevices(),
+                            logger);
 
             if (devices.isEmpty()) {
                 logger.error(null, "No device connected to ddmlib");
@@ -222,20 +227,21 @@ public class DeployerRunner {
         return metrics.getDeployMetrics();
     }
 
-    private Map<String, IDevice> waitForDevices(List<String> targetDevices, ILogger logger) {
+    private Map<String, IDevice> waitForDevices(
+            String adbExecutablePath, List<String> deviceSerials, ILogger logger) {
         try (Trace unused = Trace.begin("waitForDevices()")) {
-            int expectedDevices = targetDevices.isEmpty() ? 1 : targetDevices.size();
+            int expectedDevices = deviceSerials.isEmpty() ? 1 : deviceSerials.size();
             CountDownLatch latch = new CountDownLatch(expectedDevices);
             ConcurrentHashMap<String, IDevice> devices = new ConcurrentHashMap<>();
 
             AndroidDebugBridge.IDeviceChangeListener listener =
                     new AndroidDebugBridge.IDeviceChangeListener() {
                         @Override
-                        public void deviceConnected(IDevice device) {
-                            if (targetDevices.isEmpty()
-                                    || targetDevices.contains(device.getName())) {
-                                logger.info("FOUND DEVICE: " + device.getName());
-                                devices.put(device.getName(), device);
+                        public void deviceConnected(@NonNull IDevice device) {
+                            final String serial = device.getSerialNumber();
+                            logger.info("Found device with serial: " + serial);
+                            if (deviceSerials.isEmpty() || deviceSerials.contains(serial)) {
+                                devices.put(serial, device);
                                 latch.countDown();
                             }
                         }
@@ -251,7 +257,17 @@ public class DeployerRunner {
             AndroidDebugBridge.addDeviceChangeListener(listener);
 
             // This needs to be done *after* we add the listener, or else we risk missing devices.
-            if (AndroidDebugBridge.createBridge(5, TimeUnit.SECONDS) == null) {
+            AndroidDebugBridge bridge;
+            if (adbExecutablePath == null) {
+                bridge = AndroidDebugBridge.createBridge(5, TimeUnit.SECONDS);
+            } else {
+                // The value of forceNewBridge doesn't really matter here, since the bridge is only
+                // going to exist for a single deployment.
+                bridge =
+                        AndroidDebugBridge.createBridge(
+                                adbExecutablePath, true, 5, TimeUnit.SECONDS);
+            }
+            if (bridge == null) {
                 logger.error(null, "Could not create debug bridge");
                 return Collections.emptyMap();
             }

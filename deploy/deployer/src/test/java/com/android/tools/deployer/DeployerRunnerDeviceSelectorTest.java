@@ -112,7 +112,7 @@ public class DeployerRunnerDeviceSelectorTest {
             file.toString(),
             "--force-full-install",
             "--installers-path=" + installersPath,
-            "--device=google-pixel-2"
+            "--device=2"
         };
         assertEquals(0, runner.run(args, logger));
         assertTrue(device0.getApps().isEmpty());
@@ -139,9 +139,9 @@ public class DeployerRunnerDeviceSelectorTest {
             file.toString(),
             "--force-full-install",
             "--installers-path=" + installersPath,
-            "--device=google-pixel-0",
-            "--device=google-pixel-1",
-            "--device=google-pixel-2"
+            "--device=0",
+            "--device=1",
+            "--device=2"
         };
         assertEquals(1003, runner.run(args, logger));
         assertTrue(device0.getApps().isEmpty());
@@ -168,8 +168,8 @@ public class DeployerRunnerDeviceSelectorTest {
             file.toString(),
             "--force-full-install",
             "--installers-path=" + installersPath,
-            "--device=google-pixel-2",
-            "--device=google-pixel-0"
+            "--device=2",
+            "--device=0"
         };
         assertEquals(0, runner.run(args, logger));
         assertEquals(1, device0.getApps().size());
@@ -190,7 +190,7 @@ public class DeployerRunnerDeviceSelectorTest {
             file.toString(),
             "--force-full-install",
             "--installers-path=" + installersPath,
-            "--device=google-pixel-2"
+            "--device=2"
         };
         assertEquals(1003, runner.run(args, logger));
 
