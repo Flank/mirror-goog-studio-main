@@ -19,14 +19,11 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.DependenciesImpl
-import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
-import com.android.builder.core.VariantType
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Dependencies
 import com.google.common.collect.Lists
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.artifacts.result.ResolvedVariantResult
 
 fun clone(dependencies: Dependencies, modelLevel: Int): Dependencies {
     if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
@@ -48,30 +45,5 @@ fun clone(dependencies: Dependencies, modelLevel: Int): Dependencies {
 }
 
 fun ResolvedArtifactResult.getVariantName(): String? {
-    return variant.getVariantName()
-}
-
-/**
- * See [DefaultDependencyHandler.testFixtures](https://github.com/gradle/gradle/blob/master/subprojects/dependency-management/src/main/java/org/gradle/api/internal/artifacts/dsl/dependencies/DefaultDependencyHandler.java)
- * to know how testFixtures capability is created.
- */
-fun ResolvedVariantResult.isTestFixturesVariant(): Boolean =
-    capabilities.any { capability ->
-        capability.name.endsWith("-$testFixturesClassifier")
-    }
-
-fun ResolvedVariantResult.getVariantName(): String? {
-    // For testFixtures artifacts, the variantAttr is set to the main variant instead of the
-    // testFixtures variant because when querying for the artifact from a module that has a
-    // dependency on the testFixtures component of another module (or from tests in the same module),
-    // the artifact of the main component and the testFixtures component should both be returned,
-    // and to do that Gradle requires them to have all the attributes that are not specified in the
-    // query to be matching.
-    // Here we modify the variantAttr to set it back to the testFixtures variant.
-    if (isTestFixturesVariant()) {
-        return attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name?.let {
-            it + VariantType.TEST_FIXTURES_SUFFIX
-        }
-    }
-    return attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
+    return variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
 }
