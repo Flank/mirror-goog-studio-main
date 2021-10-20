@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit
 class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) : EmulatorHandle {
     private companion object {
         private const val EMULATOR_NO_WINDOW = "-no-window"
+        private const val EMULATOR_GPU = "-gpu"
+        private const val EMULATOR_GPU_AUTO_NO_WINDOW = "auto-no-window"
         private const val EMULATOR_NO_AUDIO = "-no-audio"
         private const val EMULATOR_NO_BOOT_ANIM = "-no-boot-anim"
         private const val EMULATOR_READ_ONLY = "-read-only"
@@ -60,6 +62,8 @@ class EmulatorHandleImpl(private val subprocessComponent: SubprocessComponent) :
             args.add(EMULATOR_NO_WINDOW)
             args.add(EMULATOR_NO_AUDIO)
         }
+        args.add(EMULATOR_GPU)
+        args.add(EMULATOR_GPU_AUTO_NO_WINDOW)
         args.add(EMULATOR_READ_ONLY)
         args.add(EMULATOR_NO_BOOT_ANIM)
         args.add("-id")
