@@ -17,22 +17,28 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is a placeholder view which contains two Spinners to decide the scenario
@@ -57,6 +63,13 @@ public class MainActivityFragment extends Fragment {
      */
     private final List<PendingPermissionTask> mPendingPermissionTasks = new ArrayList<>();
 
+    private static final int PERF_MODE_RUNS_PER_TASK = 5;
+    private boolean mIsInPerfMode = false;
+    private LinearLayout mPerfModeGroup;
+    private TextView mPerfLogView;
+    private Button mClearLogButton;
+    private Button mExportLogButton;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,10 +85,11 @@ public class MainActivityFragment extends Fragment {
 
         mCategorySpinner = (Spinner) mFragmentView.findViewById(R.id.category_spinner);
         final Activity host = getActivity();
+        final SleepControl sleepControl = new SleepControl();
         mTaskCategories =
                 new TaskCategory[] {
-                    new CpuTaskCategory(host.getFilesDir()),
-                    new MemoryTaskCategory(),
+                    new CpuTaskCategory(host.getFilesDir(), sleepControl),
+                    new MemoryTaskCategory(sleepControl),
                     new NetworkTaskCategory(host),
                     new EventTaskCategory(
                             new Callable<Activity>() {
@@ -142,6 +156,32 @@ public class MainActivityFragment extends Fragment {
                 Log.i(TAG, "mTaskSpinner: nothing selected");
             }
         });
+
+        mPerfModeGroup = (LinearLayout) mFragmentView.findViewById(R.id.perf_mode_group);
+        mPerfLogView = (TextView) mFragmentView.findViewById(R.id.perf_log_text);
+        mPerfLogView.setMovementMethod(new ScrollingMovementMethod());
+        mClearLogButton = (Button) mFragmentView.findViewById(R.id.clear_log);
+        mClearLogButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mPerfLogView.getText().length() > 0) {
+                            mPerfLogView.setText("");
+                        }
+                    }
+                });
+        mExportLogButton = (Button) mFragmentView.findViewById(R.id.export_log);
+        mExportLogButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mPerfLogView.getText().length() > 0) {
+                            Log.i(
+                                    "ProfilerTester",
+                                    "Task execution log:\n" + mPerfLogView.getText().toString());
+                        }
+                    }
+                });
 
         return mFragmentView;
     }
@@ -224,15 +264,33 @@ public class MainActivityFragment extends Fragment {
                 new Runnable() {
                     @Override
                     public void run() {
+                        long[] startTimeMs = new long[1];
+                        startTimeMs[0] = System.currentTimeMillis();
+                        int[] runCount = new int[1];
+                        runCount[0] = mIsInPerfMode ? PERF_MODE_RUNS_PER_TASK : 1;
                         taskCategory.executeTask(
                                 task,
                                 new TaskCategory.PostExecuteRunner() {
                                     @Override
                                     public void accept(@Nullable String s) {
+                                        long endTimeMs = System.currentTimeMillis();
+                                        logTaskRun(taskCategory, task, startTimeMs[0], endTimeMs);
                                         View view = getView();
                                         if (view != null && s != null) {
                                             Toast.makeText(getActivity(), s, Toast.LENGTH_LONG)
                                                     .show();
+                                        }
+                                        runCount[0]--;
+                                        if (runCount[0] > 0) {
+                                            // Sleep for a second to let CPU cool down for
+                                            // more repeatable timing numbers.
+                                            try {
+                                                TimeUnit.SECONDS.sleep(1);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                            startTimeMs[0] = System.currentTimeMillis();
+                                            taskCategory.executeTask(task, this);
                                         }
                                     }
                                 });
@@ -299,6 +357,48 @@ public class MainActivityFragment extends Fragment {
                     getActivity(), permissions, codePermissions.getRequestCode().ordinal());
         }
         return hasAllPermissions;
+    }
+
+    public void togglePerfMode() {
+        if (mIsInPerfMode) {
+            mIsInPerfMode = false;
+            mPerfModeGroup.setVisibility(View.INVISIBLE);
+            mPerfLogView.setText("");
+        } else {
+            mIsInPerfMode = true;
+            mPerfModeGroup.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void logTaskRun(
+            TaskCategory category, TaskCategory.Task task, long startTimeMs, long endTimeMs) {
+        if (!mIsInPerfMode) {
+            return;
+        }
+
+        long durationMs = endTimeMs - startTimeMs;
+        StringBuilder logBuilder =
+                new StringBuilder()
+                        .append(DateFormat.getTimeInstance(DateFormat.MEDIUM).format(startTimeMs))
+                        .append(", ")
+                        .append(category)
+                        .append(", ")
+                        .append(task)
+                        .append(", duration ")
+                        .append(durationMs)
+                        .append(" ms");
+        if (mPerfLogView.getText().length() > 0) {
+            mPerfLogView.append("\n");
+        }
+        mPerfLogView.append(logBuilder.toString());
+    }
+
+    public final class SleepControl {
+        public void sleepIfAllowed(TimeUnit timeUnit, long timeout) throws InterruptedException {
+            if (!mIsInPerfMode) {
+                timeUnit.sleep(timeout);
+            }
+        }
     }
 
     private static final class PendingPermissionTask {

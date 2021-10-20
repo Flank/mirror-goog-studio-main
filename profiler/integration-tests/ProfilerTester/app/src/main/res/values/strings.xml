@@ -1,7 +1,14 @@
 <resources>
     <string name="app_name">ProfilerTester</string>
     <string name="action_settings">Settings</string>
+    <string name="action_perf_mode">Toggle Performance Mode</string>
     <string name="follow_instructions">Please Follow the Instructions</string>
+    <string name="perf_mode">Performance Mode</string>
+    <string name="perf_mode_info">⚠️ Performance Mode is NOT for verifying Android
+        Studio\'s correctness. It bypasses programmed pauses in CPU and Memory tasks,
+        repeats each task 5 times, and times each execution.</string>
+    <string name="clear_log">Clear</string>
+    <string name="export_log">Export to Logcat</string>
 
     <string name="fragment_a_title">Fragment A</string>
     <string name="nav_to_b">Go to Fragment B</string>

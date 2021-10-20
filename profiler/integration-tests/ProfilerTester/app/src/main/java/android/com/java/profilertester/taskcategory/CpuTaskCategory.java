@@ -1,5 +1,6 @@
 package android.com.java.profilertester.taskcategory;
 
+import android.com.java.profilertester.MainActivityFragment.SleepControl;
 import android.com.java.profilertester.util.Lookup3;
 import android.os.AsyncTask;
 import android.os.Debug;
@@ -32,11 +33,11 @@ public class CpuTaskCategory extends TaskCategory {
 
     public native void fpuCalc(int runAtLeastMs);
 
-    public CpuTaskCategory(@NonNull File filesDir) {
+    public CpuTaskCategory(@NonNull File filesDir, @NonNull SleepControl sleepControl) {
         mTasks =
                 Arrays.asList(
-                        new PeriodicRunningTask(),
-                        new FileWritingTask(filesDir),
+                        new PeriodicRunningTask(sleepControl),
+                        new FileWritingTask(filesDir, sleepControl),
                         new MaximumPowerTask(new SingleThreadIntegerComputation(RUNNING_TIME_S)),
                         new MaximumPowerTask(new SingleThreadFpuComputation(RUNNING_TIME_S)),
                         new MaximumPowerTask(new SingleThreadMemoryComputation(RUNNING_TIME_S)),
@@ -77,9 +78,11 @@ public class CpuTaskCategory extends TaskCategory {
         private static String FILE_NAME = "test_file";
         static final int THREAD_COUNT = 4;
         private File mFilesDir;
+        private SleepControl mSleepControl;
 
-        private FileWritingTask(@NonNull File filesDir) {
+        private FileWritingTask(@NonNull File filesDir, SleepControl sleepControl) {
             mFilesDir = filesDir;
+            mSleepControl = sleepControl;
         }
 
         @Nullable
@@ -112,7 +115,7 @@ public class CpuTaskCategory extends TaskCategory {
 
             // wait for another 2 seconds
             try {
-                TimeUnit.SECONDS.sleep(2);
+                mSleepControl.sleepIfAllowed(TimeUnit.SECONDS, 2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();
@@ -208,6 +211,11 @@ public class CpuTaskCategory extends TaskCategory {
     public static class PeriodicRunningTask extends Task {
         private static int ITERATION_COUNT = 5;
         private static int PERIOD_TIME_S = 2;
+        private final SleepControl mSleepControl;
+
+        PeriodicRunningTask(SleepControl sleepControl) {
+            mSleepControl = sleepControl;
+        }
 
         @Nullable
         public String execute() {
@@ -222,15 +230,16 @@ public class CpuTaskCategory extends TaskCategory {
                         threadPoolExecutor.execute(new SingleThreadFpuComputation(PERIOD_TIME_S));
                     }
 
-                    TimeUnit.SECONDS.sleep(PERIOD_TIME_S);
+                    mSleepControl.sleepIfAllowed(TimeUnit.SECONDS, PERIOD_TIME_S);
+
                     if (lastThreadPoolExecutor != null) {
                         lastThreadPoolExecutor.shutdown();
                     }
                     lastThreadPoolExecutor = threadPoolExecutor;
-                    TimeUnit.SECONDS.sleep(PERIOD_TIME_S);
+                    mSleepControl.sleepIfAllowed(TimeUnit.SECONDS, PERIOD_TIME_S);
                 }
 
-                TimeUnit.SECONDS.sleep(2);
+                mSleepControl.sleepIfAllowed(TimeUnit.SECONDS, 2);
                 if (lastThreadPoolExecutor != null) {
                     lastThreadPoolExecutor.shutdown();
                 }

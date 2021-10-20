@@ -1,10 +1,10 @@
 package android.com.java.profilertester.taskcategory;
 
+import android.com.java.profilertester.MainActivityFragment.SleepControl;
 import androidx.annotation.NonNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 
 public class MemoryTaskCategory extends TaskCategory {
     private final int PERIOD_TIME = 2;
@@ -16,17 +16,21 @@ public class MemoryTaskCategory extends TaskCategory {
     private final int TEST_OBJECT_COUNT_MANY = 100000;
     private final int TEST_OBJECT_COUNT_FEW = 1000;
 
-    private final List<? extends Task> mTasks =
-            Arrays.asList(
-                    new AllocateJavaMemoryTask(),
-                    new AllocateNativeMemoryTask(),
-                    new AllocateObjectsTask(),
-                    new JniRefsTask(),
-                    new AllocateManyObjectsTask(),
-                    new AllocateFewObjectsTask());
+    private final List<? extends Task> mTasks;
 
     static {
         System.loadLibrary("native_memory");
+    }
+
+    public MemoryTaskCategory(SleepControl sleepControl) {
+        mTasks =
+                Arrays.asList(
+                        new AllocateJavaMemoryTask(sleepControl),
+                        new AllocateNativeMemoryTask(),
+                        new AllocateObjectsTask(sleepControl),
+                        new JniRefsTask(sleepControl),
+                        new AllocateManyObjectsTask(sleepControl),
+                        new AllocateFewObjectsTask(sleepControl));
     }
 
     public native void allocateNativeMemory();
@@ -35,11 +39,13 @@ public class MemoryTaskCategory extends TaskCategory {
 
     public native void freeJniRef(long refValue);
 
-    public int getValue() {
-        return ITERATION_COUNT;
-    }
-
     private class AllocateJavaMemoryTask extends MemoryTask {
+        private SleepControl mySleepControl;
+
+        AllocateJavaMemoryTask(SleepControl sleepControl) {
+            mySleepControl = sleepControl;
+        }
+
         @Override
         protected String memoryExecute() throws Exception {
             char[][] table = new char[ITERATION_COUNT][];
@@ -47,7 +53,9 @@ public class MemoryTaskCategory extends TaskCategory {
                 long start = System.currentTimeMillis();
                 table[i] = new char[DELTA_SIZE];
                 Arrays.fill(table[i], 'x');
-                TimeUnit.MILLISECONDS.sleep(PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
+                mySleepControl.sleepIfAllowed(
+                        TimeUnit.MILLISECONDS,
+                        PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
             }
             return null;
         }
@@ -88,14 +96,16 @@ public class MemoryTaskCategory extends TaskCategory {
     private class AllocateObjectsTask extends MemoryTask {
         private int myObjectCount;
         private int myObjectSize;
+        private SleepControl mySleepControl;
 
-        AllocateObjectsTask() {
-            this(DELTA_OBJECT_COUNT, 1);
+        AllocateObjectsTask(SleepControl sleepControl) {
+            this(DELTA_OBJECT_COUNT, 1, sleepControl);
         }
 
-        AllocateObjectsTask(int objectCount, int objectSize) {
+        AllocateObjectsTask(int objectCount, int objectSize, SleepControl sleepControl) {
             myObjectCount = objectCount;
             myObjectSize = objectSize;
+            mySleepControl = sleepControl;
         }
 
         @Override
@@ -111,7 +121,9 @@ public class MemoryTaskCategory extends TaskCategory {
                 long end = System.currentTimeMillis();
                 totalAllocationTiming += (end - start);
 
-                TimeUnit.MILLISECONDS.sleep(PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
+                mySleepControl.sleepIfAllowed(
+                        TimeUnit.MILLISECONDS,
+                        PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
             }
 
             return String.format(
@@ -127,8 +139,8 @@ public class MemoryTaskCategory extends TaskCategory {
     }
 
     private class AllocateManyObjectsTask extends AllocateObjectsTask {
-        AllocateManyObjectsTask() {
-            super(TEST_OBJECT_COUNT_MANY, TEST_OBJECT_SIZE_SMALL);
+        AllocateManyObjectsTask(SleepControl sleepControl) {
+            super(TEST_OBJECT_COUNT_MANY, TEST_OBJECT_SIZE_SMALL, sleepControl);
         }
 
         @NonNull
@@ -139,8 +151,8 @@ public class MemoryTaskCategory extends TaskCategory {
     }
 
     private class AllocateFewObjectsTask extends AllocateObjectsTask {
-        AllocateFewObjectsTask() {
-            super(TEST_OBJECT_COUNT_FEW, TEST_OBJECT_SIZE_LARGE);
+        AllocateFewObjectsTask(SleepControl sleepControl) {
+            super(TEST_OBJECT_COUNT_FEW, TEST_OBJECT_SIZE_LARGE, sleepControl);
         }
 
         @NonNull
@@ -151,6 +163,12 @@ public class MemoryTaskCategory extends TaskCategory {
     }
 
     private class JniRefsTask extends MemoryTask {
+        private SleepControl mySleepControl;
+
+        JniRefsTask(SleepControl sleepControl) {
+            mySleepControl = sleepControl;
+        }
+
         @Override
         protected String memoryExecute() throws Exception {
             long[] refs = new long[DELTA_OBJECT_COUNT / 10];
@@ -163,7 +181,8 @@ public class MemoryTaskCategory extends TaskCategory {
                 for (long ref : refs) {
                     freeJniRef(ref);
                 }
-                TimeUnit.MILLISECONDS.sleep(
+                mySleepControl.sleepIfAllowed(
+                        TimeUnit.MILLISECONDS,
                         PERIOD_TIME * 1000 - (int) (System.currentTimeMillis() - start));
             }
 

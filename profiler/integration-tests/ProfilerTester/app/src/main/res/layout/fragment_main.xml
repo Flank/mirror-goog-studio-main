@@ -46,12 +46,84 @@
         app:layout_constraintLeft_toRightOf="parent"
         app:layout_constraintRight_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/instruction_text" tools:layout_constraintLeft_creator="1"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:textSize="22sp"
         android:inputType="textMultiLine"
         />
+
+    <LinearLayout
+            android:id="@+id/perf_mode_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="invisible"
+            app:layout_constraintLeft_toRightOf="parent"
+            app:layout_constraintRight_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/section_editor" >
+
+        <TextView
+                android:id="@+id/perf_mode_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:textSize="16sp"
+                android:text="@string/perf_mode_info"
+                app:layout_constraintLeft_toRightOf="parent"
+                app:layout_constraintRight_toLeftOf="parent"/>
+
+        <TextView
+                android:id="@+id/perf_log_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="10dp"
+                android:height="120sp"
+                android:background="#eeeeee"
+                android:fadeScrollbars="false"
+                android:gravity="bottom"
+                android:scrollbars="vertical"
+                android:textSize="18sp"
+                app:layout_constraintLeft_toRightOf="parent"
+                app:layout_constraintRight_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/perf_mode_description" />
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                app:layout_constraintLeft_toRightOf="parent"
+                app:layout_constraintRight_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/perf_log_text" >
+
+            <Button
+                    android:id="@+id/clear_log"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/clear_log"
+                    android:textColor="#D81B60" />
+
+            <Button
+                    android:id="@+id/export_log"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/export_log"
+                    android:textColor="#D81B60" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 
     <SurfaceView
         android:id="@+id/preview_surface"

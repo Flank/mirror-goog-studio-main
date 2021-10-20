@@ -54,6 +54,8 @@
             </intent-filter>
         </activity>
 
+        <profileable android:shell="true" />
+
         <receiver android:name=".taskcategory.BackgroundTaskCategory$AlarmReceiver" />
 
         <service
