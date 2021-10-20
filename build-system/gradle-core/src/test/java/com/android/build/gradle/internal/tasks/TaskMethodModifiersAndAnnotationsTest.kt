@@ -239,6 +239,7 @@ class TaskMethodModifiersAndAnnotationsTest {
             "getJniFolders  @org.gradle.api.tasks.Classpath()",
             "getManifests  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
             "getMergedArtProfile  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getMergedArtProfileMetadata  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
             "getResourceFiles  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)"
         )
     }

@@ -135,7 +135,6 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -181,6 +180,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public abstract RegularFileProperty getMergedArtProfile();
+
+    @InputFiles
+    @Incremental
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    public abstract RegularFileProperty getMergedArtProfileMetadata();
 
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
@@ -513,6 +518,20 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .getMergedArtProfile()
                         .set(new SerializableInputChanges(ImmutableList.of(), ImmutableList.of()));
             }
+
+            if (getMergedArtProfileMetadata().isPresent()
+                    && getMergedArtProfileMetadata().get().getAsFile().exists()) {
+                parameter
+                        .getMergedArtProfileMetadata()
+                        .set(
+                                IncrementalChangesUtils.getChangesInSerializableForm(
+                                        changes, getMergedArtProfileMetadata()));
+            } else {
+                parameter
+                        .getMergedArtProfileMetadata()
+                        .set(new SerializableInputChanges(ImmutableList.of(), ImmutableList.of()));
+            }
+
             parameter.getManifestType().set(manifestType);
             parameter.getSigningConfigData().set(signingConfigData.convertToParams());
             parameter
@@ -700,6 +719,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @Optional
         public abstract Property<SerializableInputChanges> getMergedArtProfile();
+
+        @Optional
+        public abstract Property<SerializableInputChanges> getMergedArtProfileMetadata();
     }
 
     /**
@@ -765,6 +787,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
             @NonNull Collection<SerializableChange> changedAppMetadata,
             @NonNull Collection<SerializableChange> artProfile,
+            @NonNull Collection<SerializableChange> artProfileMetadata,
             @NonNull SplitterParams params)
             throws IOException {
 
@@ -870,6 +893,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withChangedNativeLibs(changedNLibs)
                         .withChangedAppMetadata(changedAppMetadata)
                         .withChangedArtProfile(artProfile)
+                        .withChangedArtProfileMetadata(artProfileMetadata)
                         .build()) {
             packager.updateFiles();
         }
@@ -1047,6 +1071,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         changedJniLibs,
                         params.getAppMetadataFiles().get().getChanges(),
                         params.getMergedArtProfile().get().getChanges(),
+                        params.getMergedArtProfileMetadata().get().getChanges(),
                         params);
 
                 /*
@@ -1227,6 +1252,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         packageAndroidArtifact
                                 .getAllInputFilesWithRelativePathSensitivity()
                                 .from(packageAndroidArtifact.getMergedArtProfile());
+                    }
+
+                    creationConfig
+                            .getArtifacts()
+                            .setTaskInputToFinalProduct(
+                                    InternalArtifactType.BINARY_ART_PROFILE_METADATA.INSTANCE,
+                                    packageAndroidArtifact.getMergedArtProfileMetadata());
+                    if (isDeterministic(creationConfig)) {
+                        packageAndroidArtifact
+                                .getAllInputFilesWithRelativePathSensitivity()
+                                .from(packageAndroidArtifact.getMergedArtProfileMetadata());
                     }
                 }
             }

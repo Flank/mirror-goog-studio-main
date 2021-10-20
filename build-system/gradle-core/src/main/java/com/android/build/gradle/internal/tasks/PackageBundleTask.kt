@@ -151,6 +151,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:Optional
     abstract val binaryArtProfile: RegularFileProperty
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val binaryArtProfileMetadata: RegularFileProperty
+
     companion object {
         const val MIN_SDK_FOR_SPLITS = 21
     }
@@ -180,6 +185,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             it.appMetadata.set(appMetadata)
             it.abiFilters.set(abiFilters)
             it.binaryArtProfiler.set(binaryArtProfile)
+            it.binaryArtProfilerMetadata.set(binaryArtProfileMetadata)
         }
     }
 
@@ -202,6 +208,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         abstract val appMetadata: RegularFileProperty
         abstract val abiFilters: SetProperty<String>
         abstract val binaryArtProfiler: RegularFileProperty
+        abstract val binaryArtProfilerMetadata: RegularFileProperty
     }
 
     abstract class BundleToolWorkAction : ProfileAwareWorkAction<Params>() {
@@ -322,6 +329,15 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                         SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.'),
                         SdkConstants.FN_BINARY_ART_PROFILE,
                         parameters.binaryArtProfiler.get().asFile.toPath(),
+                )
+            }
+
+            if (parameters.binaryArtProfilerMetadata.isPresent
+                && parameters.binaryArtProfilerMetadata.get().asFile.exists()) {
+                command.addMetadataFile(
+                    SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.'),
+                    SdkConstants.FN_BINARY_ART_PROFILE_METADATA,
+                    parameters.binaryArtProfilerMetadata.get().asFile.toPath(),
                 )
             }
 
@@ -576,8 +592,14 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     InternalArtifactType.BINARY_ART_PROFILE,
                     task.binaryArtProfile
                 )
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.BINARY_ART_PROFILE_METADATA,
+                    task.binaryArtProfileMetadata
+                )
+
             }
             task.binaryArtProfile.disallowChanges()
+            task.binaryArtProfileMetadata.disallowChanges()
         }
     }
 }

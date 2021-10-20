@@ -48,7 +48,9 @@ public class PackagingUtils {
                     ".awb", ".wma", ".wmv", ".webm", ".mkv", ".webp");
 
     public static final ImmutableList<String> DEFAULT_NO_COMPRESS_FILE_NAMES =
-            ImmutableList.of(SdkConstants.FN_BINARY_ART_PROFILE);
+            ImmutableList.of(
+                    SdkConstants.FN_BINARY_ART_PROFILE,
+                    SdkConstants.FN_BINARY_ART_PROFILE_METADATA);
 
     /** Set of characters that need to be escaped when creating an ECMAScript regular expression. */
     public static final ImmutableSet<Character> ECMA_SCRIPT_ESCAPABLE_CHARACTERS =
