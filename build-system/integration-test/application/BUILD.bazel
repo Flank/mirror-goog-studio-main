@@ -258,6 +258,7 @@ single_gradle_integration_test_per_source(
             "src/test/java/com/android/build/gradle/integration/resources/**",
             "src/test/java/com/android/build/gradle/integration/dependencies/**",
             "src/test/java/com/android/build/gradle/integration/application/Java11CompileTest.kt",
+            "src/test/java/com/android/build/gradle/integration/application/AgpVersionConsistencyTest.kt",
         ],
     ),
     data = TEST_DATA + OLD_SDKS,
@@ -295,6 +296,22 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "agp-version-consistency-tests",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/application/AgpVersionConsistencyTest.kt",
+        ],
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/build-system/previous-versions:7.1.0-beta01",
+    ],
     deps = TEST_DEPS,
 )
 

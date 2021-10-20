@@ -2,6 +2,17 @@ load("//tools/base/bazel:maven.bzl", "maven_repository")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
 
 #keep sorted
+
+AGP_7_1_0_beta01_ARTIFACTS = [
+    "@maven//:com.android.tools.build.gradle_7.1.0-beta01",
+]
+
+maven_repository(
+    name = "7.1.0-beta01",
+    artifacts = AGP_7_1_0_beta01_ARTIFACTS,
+    visibility = ["//visibility:public"],
+)
+
 AGP_7_0_0_ARTIFACTS = [
     "@maven//:com.android.tools.build.gradle_7.0.0",
 ]
