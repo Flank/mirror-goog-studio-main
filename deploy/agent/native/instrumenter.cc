@@ -244,6 +244,7 @@ bool Instrumenter::Instrument(const Transform& transform) const {
 bool Instrumenter::Instrument(
     const std::vector<const Transform*>& transforms) const {
   jvmtiEventCallbacks callbacks;
+  memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
 
   bool success =

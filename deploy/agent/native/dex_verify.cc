@@ -129,6 +129,7 @@ void CheckForClassErrors(
   }
 
   jvmtiEventCallbacks callbacks;
+  memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = Agent_VerifyClassFileLoadHook;
 
   CheckJvmti(jvmti->SetEventCallbacks(&callbacks, sizeof(jvmtiEventCallbacks)),

@@ -470,6 +470,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   // set JVMTI callbacks
   jvmtiEventCallbacks callbacks;
+  memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = &ClassFileLoadHook;
 
   hasError = CheckJvmtiError(
