@@ -217,7 +217,12 @@ java_import(
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
     name = "platforms/android-31",
-    visibility = ["//visibility:private"],
+    visibility = [
+        # Temporarily added to support 1.1.0-beta01. Remove as part of b/203422822
+        "//tools/adt/idea/android-templates:__pkg__",
+        "//tools/adt/idea/compose-designer:__pkg__",
+        "//tools/adt/idea/designer-perf-tests:__pkg__",
+    ],
 )
 
 platform_filegroup(
