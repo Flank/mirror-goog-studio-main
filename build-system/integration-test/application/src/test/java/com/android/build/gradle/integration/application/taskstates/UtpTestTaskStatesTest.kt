@@ -85,17 +85,17 @@ class UtpTestTaskStatesTest {
     }
 
     @Test
-    fun checkUtpFlagAddsCleanAndAllDevicesTask() {
+    fun checkUtpFlagAloneDoesNotAddCleanAndAllDevicesTask() {
         project.gradlePropertiesFile.appendText(
             "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
 
-        assertTaskExists(project, "app:cleanManagedDevices")
-        assertTaskExists(project, "app:allDevicesDebugAndroidTest")
-        assertTaskExists(project, "app:allDevicesCheck")
+        assertTaskDoesNotExist(project, "app:cleanManagedDevices")
+        assertTaskDoesNotExist(project, "app:allDevicesDebugAndroidTest")
+        assertTaskDoesNotExist(project, "app:allDevicesCheck")
     }
 
     @Test
-    fun checkDslAddsSetupAndTestTasksWithFlag() {
+    fun checkDslAddsSetupTestAndCleanTasksWithFlag() {
         project.gradlePropertiesFile.appendText(
             "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
         appProject.buildFile.appendText("""
