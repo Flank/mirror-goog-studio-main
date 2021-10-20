@@ -170,8 +170,6 @@ enum class BooleanOption(
     ENABLE_BUILD_CONFIG_AS_BYTECODE("android.enableBuildConfigAsBytecode", false, FeatureStage.Experimental),
     ENABLE_SOURCE_SET_PATHS_MAP("android.experimental.enableSourceSetPathsMap", false, FeatureStage.Experimental),
     RELATIVE_COMPILE_LIB_RESOURCES("android.experimental.cacheCompileLibResources", false, FeatureStage.Experimental),
-    ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION("android.experimental.enableJacocoTransformInstrumentation", false, FeatureStage.Experimental),
-
     /** Whether lint should be run in process; the default is true. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", true, FeatureStage.Experimental),
 
@@ -201,7 +199,7 @@ enum class BooleanOption(
 
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
-    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
+    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
@@ -217,6 +215,12 @@ enum class BooleanOption(
         FeatureStage.SoftlyEnforced(
             DeprecationReporter.DeprecationTarget.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE
         )
+    ),
+
+    ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION(
+        "android.enableJacocoTransformInstrumentation",
+        true,
+        FeatureStage.SoftlyEnforced(VERSION_8_0)
     ),
 
     /* -------------------
