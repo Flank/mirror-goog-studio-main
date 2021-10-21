@@ -37,7 +37,7 @@ class ManagedDeviceTestRunner(
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
         List<UtpRunnerConfig>, String, String, File, ILogger
-    ) -> List<Boolean> = { runnerConfigs, projectPath, variantName, resultsDir, logger ->
+    ) -> List<UtpTestRunResult> = { runnerConfigs, projectPath, variantName, resultsDir, logger ->
         runUtpTestSuiteAndWait(
             runnerConfigs, workerExecutor, projectPath, variantName, resultsDir, logger,
             null, utpDependencies)
@@ -120,7 +120,19 @@ class ManagedDeviceTestRunner(
             logger
         )
 
-        return results.all { it }
+        if (numShards != null) {
+            val resultProtos = results
+                .map(UtpTestRunResult::resultsProto)
+                .filterNotNull()
+            if (resultProtos.isNotEmpty()) {
+                val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
+                val resultsMerger = UtpTestSuiteResultMerger()
+                resultProtos.forEach(resultsMerger::merge)
+                resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+            }
+        }
+
+        return results.all(UtpTestRunResult::testPassed)
     }
 
     companion object {

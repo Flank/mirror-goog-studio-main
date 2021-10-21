@@ -40,6 +40,8 @@ import org.gradle.api.logging.Logging
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 
+const val TEST_RESULT_PB_FILE_NAME = "test-result.pb"
+
 /**
  * Encapsulates necessary information to run tests using Unified Test Platform.
  *
@@ -64,6 +66,18 @@ data class UtpRunnerConfig(
 )
 
 /**
+ * Encapsulates result of a UTP test run.
+ *
+ * @property testPassed true when all test cases in the test suite is passed.
+ * @property resultsProto test suite result protobuf message. This can be null if
+ *     UTP exits unexpectedly.
+ */
+data class UtpTestRunResult(
+    val testPassed: Boolean,
+    val resultsProto: TestSuiteResultProto.TestSuiteResult?,
+)
+
+/**
  * Runs the given runner configs using Unified Test Platform. Test results are reported
  * though [utpTestResultListener] streamingly.
  */
@@ -79,7 +93,7 @@ fun runUtpTestSuiteAndWait(
     utpTestResultListenerServerRunner: (UtpTestResultListener?) -> UtpTestResultListenerServerRunner = {
         UtpTestResultListenerServerRunner(it)
     }
-): List<Boolean> {
+): List<UtpTestRunResult> {
     val workQueue = workerExecutor.noIsolation()
 
     val testResultReporters: ConcurrentHashMap<String, UtpTestResultListener> = ConcurrentHashMap()
@@ -127,12 +141,12 @@ fun runUtpTestSuiteAndWait(
                 utpDependencies,
                 workQueue)
 
-            val postProcessFunc: () -> Boolean = {
+            val postProcessFunc: () -> UtpTestRunResult = {
                 testResultReporters.remove(config.deviceId)
 
                 val resultsProto = resultsProto
                 val testPassed = if (resultsProto != null) {
-                    val testResultPbFile = File(config.utpOutputDir, "test-result.pb")
+                    val testResultPbFile = File(config.utpOutputDir, TEST_RESULT_PB_FILE_NAME)
                     resultsProto.writeTo(testResultPbFile.outputStream())
                     logger.quiet(
                         "\nTest results saved as ${testResultPbFile.toURI()}. " +
@@ -154,7 +168,7 @@ fun runUtpTestSuiteAndWait(
                     false
                 }
 
-                testPassed
+                UtpTestRunResult(testPassed, resultsProto)
             }
             postProcessFunc
         }
