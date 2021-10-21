@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.SOURCE_PUBLICATION;
+import static java.util.Objects.requireNonNull;
 import static org.gradle.api.attributes.Bundling.BUNDLING_ATTRIBUTE;
 import static org.gradle.api.attributes.Bundling.EXTERNAL;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
@@ -436,14 +437,13 @@ public class VariantDependenciesBuilder {
                                 Maps.newHashMap();
                         if (component.getAttributesConfig() != null) {
                             buildTypeAttribute = component.getAttributesConfig().getBuildType();
-                            for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry :
-                                    publicationFlavorMap.entrySet()) {
-                                if (component
-                                        .getAttributesConfig()
-                                        .getFlavorDimensions()
-                                        .contains(entry.getKey().getName())) {
-                                    flavorAttributes.put(entry.getKey(), entry.getValue());
-                                }
+                            for (String dimensionName :
+                                    component.getAttributesConfig().getFlavorDimensions()) {
+                                Attribute<ProductFlavorAttr> attribute =
+                                        ProductFlavorAttr.of(dimensionName);
+                                flavorAttributes.put(
+                                        attribute,
+                                        requireNonNull(publicationFlavorMap.get(attribute)));
                             }
                         }
 
@@ -802,7 +802,7 @@ public class VariantDependenciesBuilder {
             assert f.getDimension() != null;
 
             map.put(
-                    Attribute.of(f.getDimension(), ProductFlavorAttr.class),
+                    ProductFlavorAttr.of(f.getDimension()),
                     objectFactory.named(ProductFlavorAttr.class, f.getName()));
         }
 
