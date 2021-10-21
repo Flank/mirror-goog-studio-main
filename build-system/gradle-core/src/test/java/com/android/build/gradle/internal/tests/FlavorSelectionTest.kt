@@ -113,7 +113,7 @@ class FlavorSelectionTest {
 
     private fun checkAttribute(dimension: String, value: String) {
         // check the key is present.
-        val key = Attribute.of(dimension, ProductFlavorAttr::class.java)
+        val key = ProductFlavorAttr.of(dimension)
         Truth.assertThat(attributeKeys).contains(key as Attribute<*>)
 
         // check the value is correct

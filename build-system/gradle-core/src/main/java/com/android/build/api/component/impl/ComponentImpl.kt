@@ -744,11 +744,7 @@ abstract class ComponentImpl(
         // First, setup the requested value, which isn't the actual requested value, but
         // the variant name, modified
         val requestedValue = VariantManager.getModifiedName(name)
-        val attributeKey =
-            Attribute.of(
-                dimension,
-                ProductFlavorAttr::class.java
-            )
+        val attributeKey = ProductFlavorAttr.of(dimension)
         val attributeValue: ProductFlavorAttr = internalServices.named(
             ProductFlavorAttr::class.java, requestedValue
         )
