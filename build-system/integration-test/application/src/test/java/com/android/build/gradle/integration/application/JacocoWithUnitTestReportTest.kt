@@ -93,6 +93,15 @@ class JacocoWithUnitTestReportTest(
         assertThat(reportTitle!!.groups[1]!!.value).isEqualTo("debug")
         // Checks if the total line coverage on unit tests exceeds 0% i.e
         assertThat(totalUnitTestCoveragePercentage.trimEnd('%').toInt() > 0).isTrue()
+
+        // Verify that only the debug reports have been created.
+        val testReports = FileUtils.join(
+            testProject.buildDir,
+            "reports",
+            "tests"
+        )
+        assertThat(testReports.listFiles().map(File::getName))
+            .containsExactly("testDebugUnitTest")
     }
 
     // Regression test for b/188953818.
