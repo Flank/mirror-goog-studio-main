@@ -289,6 +289,7 @@ local_maven_repository(
         "androidx.compose.compiler:compiler:1.1.0-beta01",
         "androidx.compose.material:material:1.0.0-beta07",
         "androidx.compose.material:material:1.1.0-beta01",
+        "androidx.compose.material3:material3:1.0.0-alpha01",
         "androidx.compose.ui:ui-test-junit4:1.0.3",
         "androidx.compose.ui:ui-test-junit4:1.1.0-beta01",
         "androidx.compose.ui:ui-test-manifest:1.0.3",
