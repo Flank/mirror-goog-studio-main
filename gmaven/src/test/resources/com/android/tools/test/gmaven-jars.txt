@@ -11,6 +11,7 @@ androidx/databinding/databinding-compiler
   META-INF/databinding-compiler.kotlin_module
   META-INF/gradle/
   META-INF/gradle/incremental.annotation.processors
+  META-INF/services/
   META-INF/services/javax.annotation.processing.Processor
   NOTICE.txt
   android/

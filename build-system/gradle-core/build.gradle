@@ -114,6 +114,7 @@ gradlePlugin {
     }
 }
 
+
 dependencies {
     api project(':base:builder')
     api project(':base:builder-model')
@@ -128,9 +129,9 @@ dependencies {
     implementation libs.com.android.tools.lint.lintModel
     implementation libs.com.android.tools.lint.lintTypedefRemover
     api project(':base:gradle-api')
-    implementation libs.androidx.databinding.databinding.compiler.common
-    implementation libs.androidx.databinding.databinding.common
-    implementation libs.com.android.databinding.baseLibrary
+    implementation project(':dataBinding:compilerCommon')
+    implementation project(':dataBinding:baseLibrary')
+    implementation project(':dataBinding:baseLibrarySupport')
     implementation project(':base:builder-test-api')
     implementation libs.com.android.tools.layoutlib.layoutlibApi
     implementation project(':base:utp:android-device-provider-ddmlib-proto')
