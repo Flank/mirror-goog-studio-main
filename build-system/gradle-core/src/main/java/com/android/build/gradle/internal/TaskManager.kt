@@ -2299,9 +2299,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Instrumented refers to ASM and not Jacoco in this case.
         if (creationConfig.projectClassesAreInstrumented) {
-            taskFactory.register(JacocoTask.CreationActionWithTransformSupport(creationConfig))
+            taskFactory.register(JacocoTask.CreationActionWithTransformAsmClasses(creationConfig))
         } else {
-            taskFactory.register(JacocoTask.CreationAction(creationConfig))
+            taskFactory.register(JacocoTask.CreationActionWithNoTransformAsmClasses(creationConfig))
         }
 
         val instrumentedClasses: FileCollection =
