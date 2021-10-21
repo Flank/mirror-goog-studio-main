@@ -19,6 +19,7 @@ package com.android.tools.idea.wizard.template.impl.other.files.appActionsResour
 fun actionsXml() = """
 <?xml version ="1.0" encoding ="utf-8"?><!--  Learn More about how to use App Actions: https://developer.android.com/guide/actions/index.html -->
 <actions>
+<!-- App Actions are deprecated. Use shortcuts instead https://developers.google.com/assistant/app/action-schema -->
 <!--    Example Action -->
 <!--    <action intentName="Intent name (actions.intent.*)"> -->
 <!--        <action-display -->

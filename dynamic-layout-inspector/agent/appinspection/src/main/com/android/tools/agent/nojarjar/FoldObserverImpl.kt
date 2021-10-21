@@ -50,9 +50,21 @@ class FoldObserverImpl(private val sendFoldStateEvent: Any) : FoldObserver {
 
     private val foldingFeatureClass = Class.forName("androidx.window.layout.FoldingFeature")
     private val windowLayoutInfoClass = Class.forName("androidx.window.layout.WindowLayoutInfo")
-    private val windowRepositoryCompanionClass =
+    // The relevant class name was changed between beta02 and beta03.
+    private val windowRepositoryCompanionClass = try {
+        Class.forName("androidx.window.layout.WindowInfoTracker\$Companion")
+    }
+    catch (e: ClassNotFoundException) {
+        // Try the older name
         Class.forName("androidx.window.layout.WindowInfoRepository\$Companion")
-    private val windowRepositoryClass = Class.forName("androidx.window.layout.WindowInfoRepository")
+    }
+    private val windowRepositoryClass = try {
+        Class.forName("androidx.window.layout.WindowInfoTracker")
+    }
+    catch (e: ClassNotFoundException) {
+        // Try the older name
+        Class.forName("androidx.window.layout.WindowInfoRepository")
+    }
     private val windowRepositoryGetter = windowRepositoryCompanionClass.getDeclaredMethod(
         "getOrCreate", Activity::class.java
     )

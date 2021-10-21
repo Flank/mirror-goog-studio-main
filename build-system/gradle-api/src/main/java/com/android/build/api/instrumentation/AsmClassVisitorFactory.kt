@@ -49,7 +49,9 @@ interface AsmClassVisitorFactory<ParametersT : InstrumentationParameters> : Seri
 
     /**
      * Creates a class visitor object that will visit a class with the given [classContext]. The
-     * returned class visitor must delegate its calls to [nextClassVisitor].
+     * returned class visitor must delegate its calls to [nextClassVisitor]. If at this point the
+     * factory is not interested in instrumenting the class with given [classContext], then return
+     * [nextClassVisitor].
      *
      * The given [classContext] contains static information about the classes before starting the
      * instrumentation process. Any changes in interfaces or superclasses for the class with the

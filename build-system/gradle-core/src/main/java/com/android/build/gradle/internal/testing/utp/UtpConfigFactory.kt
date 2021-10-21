@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
-import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto
 import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
 import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAdditionalTestOutputConfigProto.AndroidAdditionalTestOutputConfig
@@ -117,12 +116,6 @@ class UtpConfigFactory {
         trustCertCollection: File,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
-        val updatedAdditionalTestOutputDir = if (device.apiLevel >= ADDITIONAL_TEST_OUTPUT_MIN_API_LEVEL) additionalTestOutputDir else null
-        val additionalTestOutputOnDeviceDir = if (updatedAdditionalTestOutputDir != null) {
-            findAdditionalTestOutputDirectoryOnDevice(device, testData)
-        } else {
-            null
-        }
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
             addDevice(createLocalDevice(device, uninstallIncompatibleApks, utpDependencies))
@@ -140,8 +133,10 @@ class UtpConfigFactory {
                     tmpDir,
                     retentionConfig,
                     useOrchestrator,
-                    updatedAdditionalTestOutputDir,
-                    additionalTestOutputOnDeviceDir,
+                    additionalTestOutputDir,
+                    additionalTestOutputDir?.let {
+                        findAdditionalTestOutputDirectoryOnDevice(device, testData)
+                    },
                     device.name,
                     coverageOutputDir,
                     shardConfig
@@ -181,6 +176,8 @@ class UtpConfigFactory {
      * test executor.
      *
      * This is for devices managed by the Gradle Plugin for Android as defined in the dsl.
+     *
+     * @param additionalTestOutputDir output directory for additional test output, or null if disabled
      */
     fun createRunnerConfigProtoForManagedDevice(
         device: UtpManagedDevice,
@@ -194,6 +191,7 @@ class UtpConfigFactory {
         tmpDir: File,
         retentionConfig: RetentionConfig,
         coverageOutputDir: File,
+        additionalTestOutputDir: File?,
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
         shardConfig: ShardConfig? = null
@@ -205,9 +203,10 @@ class UtpConfigFactory {
                     null, null, appApks, additionalInstallOptions, helperApks, testData,
                     utpDependencies, versionedSdkLoader,
                     outputDir, tmpDir, retentionConfig, useOrchestrator,
-                    // TODO(b/182813105): Add support for additional test output in managed device.
-                    additionalTestOutputDir = null,
-                    additionalTestOutputOnDeviceDir = null,
+                    additionalTestOutputDir,
+                    additionalTestOutputDir?.let {
+                        findAdditionalTestOutputDirectoryOnManagedDevice(device, testData)
+                    },
                     device.deviceName, coverageOutputDir, shardConfig
                 )
             )
@@ -368,7 +367,7 @@ class UtpConfigFactory {
                     deviceName, coverageOutputDir, useOrchestrator, testData, utpDependencies
                 ))
             }
-            if (additionalTestOutputDir != null && additionalTestOutputOnDeviceDir != null) {
+            if (additionalTestOutputDir != null) {
                 addHostPlugin(
                     createAdditionalTestOutputPlugin(
                         deviceName,
@@ -608,13 +607,15 @@ class UtpConfigFactory {
     private fun createAdditionalTestOutputPlugin(
         deviceName: String,
         additionalTestOutputDir: File,
-        additionalTestOutputOnDeviceDir: String,
+        additionalTestOutputOnDeviceDir: String?,
         utpDependencies:UtpDependencies): ExtensionProto.Extension {
         return ANDROID_TEST_ADDITIONAL_TEST_OUTPUT_PLUGIN.toExtensionProto(
             utpDependencies, AndroidAdditionalTestOutputConfig::newBuilder) {
             additionalOutputDirectoryOnHost =
                 additionalTestOutputDir.absolutePath + File.separator + deviceName + File.separator
-            additionalOutputDirectoryOnDevice = additionalTestOutputOnDeviceDir
+            additionalTestOutputOnDeviceDir?.let {
+                additionalOutputDirectoryOnDevice = it
+            }
         }
     }
 

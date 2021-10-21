@@ -42,6 +42,10 @@ internal class SdkUtilsKtTest {
         Truth.assertThat(parseTargetHash("android-Rv2")).isEqualTo(
             CompileData(codeName = "Rv2")
         )
+
+        Truth.assertThat(validatePreviewTargetValue("android-Rv2")).isNull()
+
+        Truth.assertThat(validatePreviewTargetValue("Rv2")).isEqualTo("Rv2")
     }
 
     @Test
@@ -49,6 +53,19 @@ internal class SdkUtilsKtTest {
         Truth.assertThat(parseTargetHash("android-23-ext12")).isEqualTo(
             CompileData(apiLevel = 23, sdkExtension = 12)
         )
+    }
+
+    @Test
+    fun `preview with extension`() {
+        exceptionRule.expectMessage(
+            """
+                Unsupported value: android-S-ext12. Format must be one of:
+                - android-31
+                - android-31-ext2
+                - android-T
+                - vendorName:addonName:31
+                """.trimIndent())
+        parseTargetHash("android-S-ext12")
     }
 
     @Test

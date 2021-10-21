@@ -172,7 +172,7 @@ class AvdSnapshotHandler(
                 logger.verbose("Snapshot creation timed out. Closing emulator.")
                 closeEmulatorWithId(adbExecutable, process, deviceId, logger)
                 process.waitFor()
-                error("Failed to generate snapshot for device: $avdName")
+                error("Failed to generate snapshot for device due to timeout: $avdName")
             } else {
                 logger.verbose("Successfully created snapshot for: $avdName")
             }

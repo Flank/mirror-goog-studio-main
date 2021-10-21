@@ -25,6 +25,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
 import java.io.File
+import java.util.logging.Level
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
@@ -58,6 +59,7 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
     @Mock lateinit var mockCoverageOutputDir: File
+    @Mock lateinit var mockAdditionalTestOutputDir: File
     @Mock lateinit var mockManagedDevice: UtpManagedDevice
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     lateinit var mockManagedDeviceShard0: UtpManagedDevice
@@ -75,6 +77,7 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
+                any(),
                 any(),
                 any(),
                 any(),
@@ -119,6 +122,7 @@ class ManagedDeviceTestRunnerTest {
             mockRetentionConfig,
             useOrchestrator = false,
             numShards,
+            Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
             capturedRunnerConfigs = runnerConfigs
             runnerConfigs.map { result }.toList()
@@ -128,6 +132,7 @@ class ManagedDeviceTestRunnerTest {
             mockManagedDevice,
             temporaryFolderRule.newFolder("results"),
             mockCoverageOutputDir,
+            mockAdditionalTestOutputDir,
             "projectPath",
             "variantName",
             mockTestData,

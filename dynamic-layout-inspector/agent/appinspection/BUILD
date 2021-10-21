@@ -62,14 +62,16 @@ app_inspection_jar(
 )
 
 kotlin_test(
-    name = "agent_tests_without_androidx.window",
-    srcs = ["src/test/com/android/tools/agent/appinspection/ViewLayoutInspectorWithoutAndroidxWindowTest.kt"] + glob([
-        "src/main/com/android/tools/agent/appinspection/**/*.kt",
-        "src/main/com/android/tools/agent/appinspection/**/*.java",
-        "src/test/com/android/tools/agent/appinspection/testutils/**",
-    ]),
+    name = "agent_tests",
+    srcs = glob(
+        [
+            "src/test/com/android/tools/agent/appinspection/**/*.kt",
+            "src/test/com/android/tools/agent/appinspection/**/*.java",
+        ],
+        exclude = glob(["src/test/com/android/tools/agent/appinspection/nojarjar/**"]),
+    ),
     jvm_flags = [
-        "-Dtest.suite.jar=agent_tests_without_androidx.window.jar",
+        "-Dtest.suite.jar=agent_tests.jar",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
@@ -77,7 +79,8 @@ kotlin_test(
     ],
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
-        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android_without_androidx.window",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android",
+        ":agent-sources_undexed",
         ":nojarjar",
         ":nojarjar-shared",
         "//prebuilts/studio/sdk:platforms/latest_jar",
@@ -95,16 +98,12 @@ kotlin_test(
 )
 
 kotlin_test(
-    name = "agent_tests",
-    srcs = glob(
-        [
-            "src/test/com/android/tools/agent/appinspection/**/*.kt",
-            "src/test/com/android/tools/agent/appinspection/**/*.java",
-        ],
-        exclude = ["src/test/com/android/tools/agent/appinspection/ViewLayoutInspectorWithoutAndroidxWindowTest.kt"],
-    ),
+    name = "fold_observer_with_beta02_tests",
+    srcs = ["src/test/com/android/tools/agent/appinspection/nojarjar/FoldObserverImplTest.kt"] + glob([
+        "src/test/com/android/tools/agent/appinspection/testutils/**",
+    ]),
     jvm_flags = [
-        "-Dtest.suite.jar=agent_tests.jar",
+        "-Dtest.suite.jar=fold_observer_with_beta02_tests.jar",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
@@ -113,6 +112,33 @@ kotlin_test(
     deps = [
         ":agent-sources_undexed",
         ":nojarjar",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:androidx.window-beta02",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android",
+        "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
+    ],
+)
+
+kotlin_test(
+    name = "fold_observer_with_beta03_tests",
+    srcs = ["src/test/com/android/tools/agent/appinspection/nojarjar/FoldObserverImplTest.kt"] + glob([
+        "src/test/com/android/tools/agent/appinspection/testutils/**",
+    ]),
+    jvm_flags = [
+        "-Dtest.suite.jar=fold_observer_with_beta03_tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
+    ],
+    deps = [
+        ":agent-sources_undexed",
+        ":nojarjar",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:androidx.window-beta03",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android",
         "//tools/base/testutils:tools.testutils",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.truth.truth",

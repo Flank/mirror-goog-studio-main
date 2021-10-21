@@ -75,30 +75,29 @@ maven_repository(
     ],
 )
 
+# keep sorted
+AGP_ARTIFACTS = [
+    "//tools/analytics-library/crash:tools.analytics-crash",
+    "//tools/analytics-library/protos/src/main/proto:proto",
+    "//tools/analytics-library/shared:tools.analytics-shared",
+    "//tools/analytics-library/tracker:tools.analytics-tracker",
+    "//tools/apkzlib",
+    "//tools/base/annotations:annotations",
+    "//tools/base/build-system:tools.apksig",
+    "//tools/base/common:tools.common",
+    "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/device_validator:tools.dvlib",
+    "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
+    "//tools/base/layoutlib-api:tools.layoutlib-api",
+    "//tools/base/lint:tools.lint-model",
+    "//tools/base/lint/libs/lint-typedef-remover",
+    "//tools/base/repository:tools.repository",
+    "//tools/base/sdklib:tools.sdklib",
+]
+
 maven_repository(
     name = "agp_artifacts",
-    artifacts = [
-        "//tools/base/annotations:annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/analytics-library/protos/src/main/proto:proto",
-        "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/analytics-library/tracker:tools.analytics-tracker",
-        "//tools/analytics-library/crash:tools.analytics-crash",
-        "//tools/analytics-library/testing:tools.analytics-testing",  # TODO: Only required for AGP tests
-        "//tools/base/apkparser/analyzer:tools.analyzer.maven",  # TODO(b/143864616): Only required for tests
-        "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
-        "//tools/base/emulator/proto",  # TODO(b/143864616): Only used for utp
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/lint:tools.lint-model",
-        "//tools/base/lint/cli",  # TODO(b/143864616): Only used for lint-gradle
-        "//tools/base/lint:tools.lint-api",  # TODO(b/143864616): Only used for lint-gradle
-        "//tools/base/lint:tools.lint-checks",  # TODO(b/143864616): Only used for lint-gradle
-        "//prebuilts/tools/common/lint-psi/intellij-core",  # TODO(b/143864616): Only used for lint-gradle
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",  # TODO(b/143864616): Only used for lint-gradle
-        "//prebuilts/tools/common/lint-psi/uast",  # TODO(b/143864616): Only used for lint-gradle
-        "//tools/base/lint/libs/lint-tests",  # TODO(b/143864616): Only used for tests
-    ],
+    artifacts = AGP_ARTIFACTS,
     include_transitive_deps = False,
     visibility = [
         "//tools/base/bazel/test/gradle:__pkg__",
@@ -107,21 +106,41 @@ maven_repository(
     ],
 )
 
+AGP_TEST_ARTIFACTS = [
+    "//tools/analytics-library/testing:tools.analytics-testing",  # TODO: Only required for AGP tests
+    "//tools/base/apkparser/analyzer:tools.analyzer.maven",  # TODO(b/143864616): Only required for tests
+    "//tools/base/apkparser:tools.binary-resources",  # TODO(b/143864616): Only required for tests
+    "//tools/base/lint:tools.lint-gradle",  # TODO(b/143864616): Only used for tests
+    "//tools/base/lint/cli",  # TODO(b/143864616): Only used for tests
+    "//tools/base/lint:tools.lint-api",  # TODO(b/143864616): Only used for tests
+    "//tools/base/lint:tools.lint-checks",  # TODO(b/143864616): Only used for tests
+    "//prebuilts/tools/common/lint-psi/intellij-core",  # TODO(b/143864616): Only used for tests
+    "//prebuilts/tools/common/lint-psi/kotlin-compiler",  # TODO(b/143864616): Only used for tests
+    "//prebuilts/tools/common/lint-psi/uast",  # TODO(b/143864616): Only used for tests
+    "//tools/base/lint/libs/lint-tests",  # TODO(b/143864616): Only used for tests
+]
+
 # Test only dependencies that are not published to gmaven,
 # and are now just directly consumed as jars
-AGP_TEST_ONLY_DEPENDENCIES = [
+AGP_TEST_DEPENDENCIES = [
     "//tools/base/common:libtools.fixtures.jar",
     "//tools/base/repository:libtools.testlib.jar",
     "//tools/base/apkparser/cli:libtools.analyzer-cli.jar",
 ]
 
+maven_repository(
+    name = "agp_test_artifacts",
+    artifacts = AGP_ARTIFACTS + AGP_TEST_ARTIFACTS,
+    include_transitive_deps = False,
+)
+
 # The Android Gradle Plugin gradle build invokes this to
-# prepare the repository of artifacts to compile against
+# prepare the repository of artifacts to compile (and run) against
 java_binary(
     name = "agp_artifacts_dir",
-    data = [":agp_artifacts"] + AGP_TEST_ONLY_DEPENDENCIES,
+    data = [":agp_test_artifacts"] + AGP_TEST_DEPENDENCIES,
     jvm_flags = [
-        "-Dartifacts_manifest_file=tools/base/agp_artifacts.manifest",
+        "-Dartifacts_manifest_file=tools/base/agp_test_artifacts.manifest",
     ],
     main_class = "com.android.testutils.RepoLinker",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],

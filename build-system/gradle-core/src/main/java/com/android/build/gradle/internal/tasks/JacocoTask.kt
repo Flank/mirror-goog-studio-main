@@ -20,13 +20,13 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.scope.getDirectories
+import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
+import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableChange
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
@@ -36,9 +36,9 @@ import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -59,9 +59,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.UncheckedIOException
-import java.util.ArrayList
 import java.util.EnumMap
-import java.util.HashSet
 import java.util.Objects
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
@@ -147,7 +145,6 @@ abstract class JacocoTask : NewIncrementalTask() {
                     throw UncheckedIOException(ex)
                 }
                 val workQueue = workQueue
-                val outputJarsFolder = outputForJars.asFile.get()
                 workQueue.submit(
                     InstrumentJarAction::class.java
                 ) { params: InstrumentJarAction.Parameters ->
@@ -178,7 +175,7 @@ abstract class JacocoTask : NewIncrementalTask() {
     }
 
     private val workQueue: WorkQueue
-        private get() = if (forceOutOfProcess.get()) {
+        get() = if (forceOutOfProcess.get()) {
             workerExecutor
                 .processIsolation { spec: ProcessWorkerSpec ->
                     spec.classpath.from(
@@ -327,7 +324,7 @@ abstract class JacocoTask : NewIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: ComponentCreationConfig) :
+    abstract class AbstractCreationAction(creationConfig: ComponentCreationConfig) :
         VariantTaskCreationAction<JacocoTask, ComponentCreationConfig>(creationConfig) {
         override val name: String
             get() = computeTaskName("jacoco")
@@ -347,6 +344,10 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .withName("out")
                 .on(InternalArtifactType.JACOCO_INSTRUMENTED_JARS)
         }
+        }
+
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        AbstractCreationAction(creationConfig) {
 
         override fun configure(task: JacocoTask) {
             super.configure(task)
@@ -378,6 +379,87 @@ abstract class JacocoTask : NewIncrementalTask() {
         }
     }
 
+    class CreationActionWithTransformSupport(creationConfig: ComponentCreationConfig) :
+        AbstractCreationAction(creationConfig) {
+
+        override fun configure(task: JacocoTask) {
+            super.configure(task)
+            task.jarsWithIdentity.inputJars.from(
+                creationConfig.services.fileCollection(
+                    creationConfig.artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
+                ).asFileTree
+            )
+
+            task.classesDir.from(
+                creationConfig.services.fileCollection(
+                    creationConfig.artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES)
+                ).asFileTree
+            )
+            task.jacocoAntTaskConfiguration
+                .from(
+                    JacocoConfigurations.getJacocoAntTaskConfiguration(
+                        task.project, getJacocoVersion(creationConfig)
+                    )
+                )
+            task.forceOutOfProcess
+                .set(
+                    creationConfig
+                        .services
+                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
+                )
+        }
+    }
+
+    class CreationActionLegacyTransform(
+        creationConfig: ComponentCreationConfig, private val transformClasses: FileCollection
+    ) :
+        VariantTaskCreationAction<JacocoTask, ComponentCreationConfig>(creationConfig) {
+
+        override val name: String
+            get() = computeTaskName("jacoco")
+        override val type: Class<JacocoTask>
+            get() = JacocoTask::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<JacocoTask>) {
+            super.handleProvider(taskProvider)
+            creationConfig
+                .artifacts
+                .setInitialProvider(taskProvider) { obj: JacocoTask -> obj.outputForDirs }
+                .withName("out")
+                .on(InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES)
+            creationConfig
+                .artifacts
+                .setInitialProvider(taskProvider) { obj: JacocoTask -> obj.outputForJars }
+                .on(InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS)
+        }
+
+        override fun configure(task: JacocoTask) {
+            super.configure(task)
+            val classesFromLegacyTransforms = transformClasses
+
+            task.jarsWithIdentity
+                .inputJars
+                .from(
+                    classesFromLegacyTransforms.getRegularFiles(
+                        creationConfig.services.projectInfo.getProject().layout.projectDirectory)
+                )
+            task.classesDir.from(classesFromLegacyTransforms.getDirectories(
+                creationConfig.services.projectInfo.getProject().layout.projectDirectory
+            ))
+            task.jacocoAntTaskConfiguration
+                .from(
+                    JacocoConfigurations.getJacocoAntTaskConfiguration(
+                        task.project, getJacocoVersion(creationConfig)
+                    )
+                )
+            task.forceOutOfProcess
+                .set(
+                    creationConfig
+                        .services
+                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
+                )
+        }
+    }
     companion object {
         /** Returns which Jacoco version to use.  */
         fun getJacocoVersion(creationConfig: ComponentCreationConfig): String {

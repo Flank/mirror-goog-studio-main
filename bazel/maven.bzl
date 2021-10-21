@@ -361,6 +361,7 @@ def maven_import(
 
 MavenRepoInfo = provider(fields = {
     "artifacts": "The list of files in the repo",
+    "manifest": "The repo's manifest file with short paths for test rules",
     "build_manifest": "The repo's manifest file with full paths for build rules",
 })
 
@@ -413,6 +414,7 @@ def _maven_repository_impl(ctx):
         ),
         MavenRepoInfo(
             artifacts = files,
+            manifest = ctx.outputs.manifest,
             build_manifest = build_manifest,
         ),
     ]

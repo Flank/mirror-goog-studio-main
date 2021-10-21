@@ -75,7 +75,7 @@ class EmulatorHandleTest {
         )
         assertThat(emulatorHandle.isAlive()).isTrue()
         verifyCommand(
-                "/path/to/emulator @dev29_aosp_x86_Pixel_2 -no-window -no-audio -read-only "
+                "/path/to/emulator @dev29_aosp_x86_Pixel_2 -no-window -no-audio -gpu auto-no-window -read-only "
                         + "-no-boot-anim -id someUniqueIdHere"
         )
 
@@ -94,7 +94,7 @@ class EmulatorHandleTest {
         )
         assertThat(emulatorHandle.isAlive()).isTrue()
         verifyCommand(
-                "/path/to/emulator @dev29_aosp_x86_Pixel_2 -read-only -no-boot-anim -id someUniqueIdHere"
+                "/path/to/emulator @dev29_aosp_x86_Pixel_2 -gpu auto-no-window -read-only -no-boot-anim -id someUniqueIdHere"
         )
 
         emulatorHandle.closeInstance()

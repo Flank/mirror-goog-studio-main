@@ -44,6 +44,9 @@ import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandl
 import com.android.fakeadbserver.shellcommandhandlers.SetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WindowManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
+import com.android.fakeadbserver.shellv2commandhandlers.CatV2CommandHandler;
+import com.android.fakeadbserver.shellv2commandhandlers.GetPropV2CommandHandler;
+import com.android.fakeadbserver.shellv2commandhandlers.ShellProtocolEchoV2CommandHandler;
 import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -392,6 +395,7 @@ public final class FakeAdbServer implements AutoCloseable {
 
             addDeviceHandler(new LogcatCommandHandler());
             addDeviceHandler(new GetPropCommandHandler());
+            addDeviceHandler(new GetPropV2CommandHandler());
             addDeviceHandler(new SetPropCommandHandler());
             addDeviceHandler(new WriteNoStopCommandHandler());
             addDeviceHandler(new PackageManagerCommandHandler());
@@ -399,6 +403,8 @@ public final class FakeAdbServer implements AutoCloseable {
             addDeviceHandler(new CmdCommandHandler());
             addDeviceHandler(new DumpsysCommandHandler());
             addDeviceHandler(new CatCommandHandler());
+            addDeviceHandler(new CatV2CommandHandler());
+            addDeviceHandler(new ShellProtocolEchoV2CommandHandler());
 
             return this;
         }

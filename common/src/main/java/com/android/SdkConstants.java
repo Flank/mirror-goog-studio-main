@@ -901,6 +901,8 @@ public final class SdkConstants {
     public static final String CLASS_CHIP_GROUP = "com.google.android.material.chip.ChipGroup";
     public static final String CLASS_MATERIAL_BUTTON =
             "com.google.android.material.button.MaterialButton";
+    public static final String CLASS_MATERIAL_TOOLBAR =
+            "com.google.android.material.appbar.MaterialToolbar";
 
     /* Android ConstraintLayout Constants */
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT =
@@ -1317,6 +1319,7 @@ public final class SdkConstants {
     public static final AndroidxName TEXT_INPUT_LAYOUT = CLASS_TEXT_INPUT_LAYOUT;
     public static final AndroidxName TEXT_INPUT_EDIT_TEXT = CLASS_TEXT_INPUT_EDIT_TEXT;
     public static final String BOTTOM_APP_BAR = CLASS_BOTTOM_APP_BAR;
+    public static final String MATERIAL_TOOLBAR = CLASS_MATERIAL_TOOLBAR;
     public static final String MATERIAL_BUTTON = CLASS_MATERIAL_BUTTON;
     public static final AndroidxName NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
     public static final AndroidxName DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
@@ -2858,7 +2861,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.2";
+    public static final String GRADLE_LATEST_VERSION = "7.3-rc-1";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

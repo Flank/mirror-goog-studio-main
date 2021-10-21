@@ -27,6 +27,7 @@ import com.android.testutils.ignore.OnWindows;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.gradle.tooling.BuildException;
+import org.gradle.tooling.GradleConnectionException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -114,7 +115,7 @@ public class GradleTestProjectTest {
                         project.model().fetchAndroidProjects();
                     });
             fail("Expected model get to fail");
-        } catch (BuildException e) {
+        } catch (GradleConnectionException e) {
             assertThat(capture.toString())
                     .contains("Plugin with id 'com.android.application_typo' not found");
         } finally {

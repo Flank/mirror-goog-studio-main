@@ -447,8 +447,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-            creationConfig: ComponentCreationConfig,
-            val isTestCoverageEnabled: Boolean
+        creationConfig: ComponentCreationConfig, val isTestCoverageEnabled: Boolean
     ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
             creationConfig
     ) {
@@ -480,26 +479,13 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
             task.asmApiVersion.setDisallowChanges(creationConfig.asmApiVersion)
 
-            if (isTestCoverageEnabled &&
-                !creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
-                task.inputClassesDir.from(
-                        creationConfig.artifacts.get(
-                                InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
-                        )
-                )
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS,
-                        task.inputJarsDir
-                )
-            } else {
-                task.inputClassesDir.from(
-                    creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS)
-                )
+            task.inputClassesDir.from(
+                creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS)
+            )
 
-                task.inputJarsWithIdentity.inputJars.from(
-                    creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS)
-                )
-            }
+            task.inputJarsWithIdentity.inputJars.from(
+                creationConfig.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS)
+            )
 
             task.bootClasspath.from(creationConfig.sdkComponents.bootClasspath)
 

@@ -1,99 +1,135 @@
 package com.android.adblib
 
+/**
+ * A general purpose "Logger" abstraction used throughout adblib.
+ */
 abstract class AdbLogger {
+
+    /**
+     * The current minimum logging [Level]. This [AdbLogger] instance logs messages
+     * only if they are of greater or equal severity than [minLevel].
+     *
+     * For example, if [minLevel] is [Level.WARN], only [Level.WARN] and [Level.ERROR] messages
+     * will be logged, while [Level.INFO], [Level.VERBOSE] and [Level.DEBUG] will be skipped.
+     */
+    abstract val minLevel: Level
 
     abstract fun log(level: Level, message: String)
     abstract fun log(level: Level, exception: Throwable, message: String)
 
-    fun log(level: Level, format: String, vararg args: Any?) {
-        log(level, String.format(format, *args))
+    inline fun logIf(level: Level, message: () -> String) {
+        if (minLevel <= level) {
+            log(level, message())
+        }
     }
 
-    fun log(level: Level, exception: Throwable, format: String, vararg args: Any?) {
-        log(level, exception, String.format(format, *args))
+    inline fun logIf(level: Level, exception: Throwable, message: () -> String) {
+        if (minLevel <= level) {
+            log(level, exception, message())
+        }
     }
 
-    fun verbose(message: String) {
-        log(Level.VERBOSE, message)
+    inline fun verbose(message: () -> String) {
+        logIf(Level.VERBOSE, message)
     }
 
-    fun verbose(format: String, vararg args: Any?) {
-        log(Level.VERBOSE, format, *args)
+    inline fun verbose(exception: Throwable, message: () -> String) {
+        logIf(Level.VERBOSE, exception, message)
     }
 
-    fun verbose(exception: Throwable, message: String) {
-        log(Level.VERBOSE, exception, message)
+    inline fun debug(message: () -> String) {
+        logIf(Level.DEBUG, message)
     }
 
-    fun verbose(exception: Throwable, format: String, vararg args: Any?) {
-        log(Level.VERBOSE, exception, format, *args)
+    inline fun debug(exception: Throwable, message: () -> String) {
+        logIf(Level.DEBUG, exception, message)
     }
 
-    fun debug(message: String) {
-        log(Level.DEBUG, message)
+    inline fun info(message: () -> String) {
+        logIf(Level.INFO, message)
     }
 
-    fun debug(format: String, vararg args: Any?) {
-        log(Level.DEBUG, format, *args)
-    }
-
-    fun debug(exception: Throwable, message: String) {
-        log(Level.DEBUG, exception, message)
-    }
-
-    fun debug(exception: Throwable, format: String, vararg args: Any?) {
-        log(Level.DEBUG, exception, format, *args)
-    }
-
-    fun info(message: String) {
-        log(Level.INFO, message)
-    }
-
-    fun info(format: String, vararg args: Any?) {
-        log(Level.INFO, format, *args)
-    }
-
-    fun info(exception: Throwable, message: String) {
-        log(Level.INFO, exception, message)
-    }
-
-    fun info(exception: Throwable, format: String, vararg args: Any?) {
-        log(Level.INFO, exception, format, *args)
+    inline fun info(exception: Throwable, message: () -> String) {
+        logIf(Level.INFO, exception, message)
     }
 
     fun warn(message: String) {
         log(Level.WARN, message)
     }
 
-    fun warn(format: String, vararg args: Any?) {
-        log(Level.WARN, format, *args)
-    }
-
     fun warn(exception: Throwable, message: String) {
         log(Level.WARN, exception, message)
-    }
-
-    fun warn(exception: Throwable, format: String, vararg args: Any?) {
-        log(Level.WARN, exception, format, *args)
     }
 
     fun error(message: String) {
         log(Level.ERROR, message)
     }
 
-    fun error(format: String, vararg args: Any?) {
-        log(Level.ERROR, format, *args)
-    }
-
     fun error(exception: Throwable, message: String) {
         log(Level.ERROR, exception, message)
-    }
-
-    fun error(exception: Throwable, format: String, vararg args: Any?) {
-        log(Level.ERROR, exception, format, *args)
     }
 
     enum class Level {
         VERBOSE, DEBUG, INFO, WARN, ERROR
     }
+}
+
+/**
+ * Wraps this [AdbLogger] instance as an [AdbLogger] instance that re-formats all messages
+ * with the given [prefix].
+ */
+fun AdbLogger.withPrefix(prefix: String): AdbLogger {
+    return object : AdbLoggerDelegate(this) {
+        override fun formatMessage(message: String): String {
+            return "$prefix$message"
+        }
+    }
+}
+
+/**
+ * Creates an [AdbLogger] for the class of this instance
+ */
+inline fun <reified T : Any> @Suppress("unused") T.thisLogger(host: AdbLibHost): AdbLogger {
+    return host.loggerFactory.createLogger(T::class.java)
+}
+
+/**
+ * Abstract implementation of [AdbLogger] that delegates to another [AdbLogger] instance after
+ * allowing derived classes to re-format the message by implementing [formatMessage].
+ */
+abstract class AdbLoggerDelegate(private val delegate: AdbLogger) : AdbLogger() {
+
+    abstract fun formatMessage(message: String): String
+
+    override val minLevel: Level
+        get() = delegate.minLevel
+
+    override fun log(level: Level, message: String) {
+        delegate.log(level, formatMessage(message))
+    }
+
+    override fun log(level: Level, exception: Throwable, message: String) {
+        delegate.log(level, exception, formatMessage(message))
+    }
+}
+
+/**
+ * Factory of [AdbLogger] instances.
+ */
+interface AdbLoggerFactory {
+
+    /**
+     * The "root" logger
+     */
+    val logger: AdbLogger
+
+    /**
+     * Creates a [AdbLogger] specific to the given [cls]
+     */
+    fun createLogger(cls: Class<*>): AdbLogger
+
+    /**
+     * Creates a [AdbLogger] with a given [category]
+     */
+    fun createLogger(category: String): AdbLogger
 }

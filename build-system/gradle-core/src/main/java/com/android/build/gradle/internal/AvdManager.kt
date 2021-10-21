@@ -156,7 +156,22 @@ class AvdManager(
                 avdFolder,
                 logger
             )
-            logger.verbose("Verified snapshot created for: $deviceName.")
+
+            if (snapshotHandler.checkSnapshotLoadable(
+                    deviceName,
+                    emulatorExecutable,
+                    avdFolder,
+                    logger
+                )
+            ) {
+                logger.verbose("Verified snapshot created for: $deviceName.")
+            }  else {
+                error("""
+                    Snapshot setup ran successfully, but the snapshot failed to be created. This is
+                    likely to a lack of disk space for the snapshot. Try the cleanManagedDevices
+                    task with the --unused-only flag to remove any unused devices for this project.
+                """.trimIndent())
+            }
         }
     }
 
@@ -187,12 +202,6 @@ class AvdManager(
                 logger.warning("Failed to delete avd: $avdName.")
             }
         }
-    }
-
-    fun deviceSnapshotCreated(deviceName: String): Boolean {
-        val device = avdManager.getAvd(deviceName, false)?: return false
-        val snapshotPath = File(device.dataFolderPath, "snapshots/default_boot/snapshot.pb")
-        return snapshotPath.exists()
     }
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {

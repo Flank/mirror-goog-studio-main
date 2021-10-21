@@ -196,7 +196,8 @@ class AvdManagerTest {
                 any(File::class.java),
                 any(ILogger::class.java),
                 anyString()))
-            .thenReturn(false)
+            // first return false to force generation, then return true to assert success.
+            .thenReturn(false, true)
 
         manager.createOrRetrieveAvd(
             FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),

@@ -93,7 +93,6 @@ import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
@@ -712,7 +711,7 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
 internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
     // First try Kotlin resolving service
     val ktElement = sourcePsi as? KtElement ?: return null
-    val service = ServiceManager.getService(sourcePsi.project, KotlinUastResolveProviderService::class.java)
+    val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
         ?: return null
     val bindingContext = service.getBindingContext(ktElement)
     val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
@@ -726,7 +725,7 @@ internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
  */
 fun getKotlinDelegatePropertyType(sourcePsi: PsiElement?, element: UVariable): PsiType? {
     val ktElement = sourcePsi as? KtElement ?: return null
-    val service = ServiceManager.getService(sourcePsi.project, KotlinUastResolveProviderService::class.java)
+    val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
         ?: return null
     val bindingContext = service.getBindingContext(ktElement)
 
@@ -2299,10 +2298,7 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     // Kotlin? If not, mapping is trivial
     val receiver = call.psi as? KtElement ?: return null
 
-    val service = ServiceManager.getService(
-        receiver.project,
-        KotlinUastResolveProviderService::class.java
-    ) ?: return null
+    val service = receiver.project.getService(KotlinUastResolveProviderService::class.java) ?: return null
     val bindingContext = service.getBindingContext(receiver)
     val parameters = method.parameterList.parameters
     val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null

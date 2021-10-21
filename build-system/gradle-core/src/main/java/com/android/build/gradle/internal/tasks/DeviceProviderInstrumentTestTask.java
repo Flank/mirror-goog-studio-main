@@ -84,6 +84,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.GradleException;
@@ -94,6 +95,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -125,6 +127,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     public abstract static class TestRunnerFactory {
         @Input
         public abstract Property<Boolean> getUnifiedTestPlatform();
+
+        @Internal
+        public abstract Property<Level> getUtpLoggingLevel();
 
         @Input
         public abstract Property<Boolean> getShardBetweenDevices();
@@ -205,7 +210,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         getRetentionConfig().get(),
                         useOrchestrator,
                         getUninstallIncompatibleApks().get(),
-                        utpTestResultListener);
+                        utpTestResultListener,
+                        getUtpLoggingLevel().get());
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -784,6 +790,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         task.getTestRunnerFactory().getUtpDependencies(),
                         task.getProject().getConfigurations());
             }
+
+            boolean infoLoggingEnabled =
+                    Logging.getLogger(DeviceProviderInstrumentTestTask.class).isInfoEnabled();
+            task.getTestRunnerFactory()
+                    .getUtpLoggingLevel()
+                    .set(infoLoggingEnabled ? Level.INFO : Level.WARNING);
 
             task.getTestRunnerFactory()
                     .getUninstallIncompatibleApks()

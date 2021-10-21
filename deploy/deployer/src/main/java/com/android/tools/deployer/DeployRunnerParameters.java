@@ -36,6 +36,7 @@ public class DeployRunnerParameters {
     private boolean forceFullInstall = false;
     private boolean optimisticInstall = false;
     private String installersPath = null;
+    private String adbExecutablePath = null;
 
     private String applicationId;
     private final List<String> targetDevices = new ArrayList<>();
@@ -55,6 +56,8 @@ public class DeployRunnerParameters {
             targetDevices.add(arg.substring("--device=".length()));
         } else if (arg.startsWith("--activate=")) {
             parseComponentToActivate(arg);
+        } else if (arg.startsWith("--adb=")) {
+            adbExecutablePath = arg.substring("--adb=".length());
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -130,6 +133,10 @@ public class DeployRunnerParameters {
 
     public boolean isOptimisticInstall() {
         return optimisticInstall;
+    }
+
+    public String getAdbExecutablePath() {
+        return adbExecutablePath;
     }
 
     @Nullable

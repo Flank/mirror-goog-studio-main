@@ -18,7 +18,7 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
 
 dependencies {
-    implementation project(':apksig')
+    implementation libs.com.android.tools.build.apksig
     implementation project(':base:zipflinger')
     implementation libs.com.android.tools.annotations
 

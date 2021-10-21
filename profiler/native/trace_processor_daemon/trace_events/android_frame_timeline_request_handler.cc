@@ -48,7 +48,10 @@ void AndroidFrameTimelineRequestHandler::PopulateFrameTimeline(
         expected_timeline.Get(2).long_value);
     expected_slice->set_surface_frame_token(
         expected_timeline.Get(3).long_value);
-    expected_slice->set_layer_name(expected_timeline.Get(4).string_value);
+    // The surfaceflinger process doesn't have a layer_name.
+    if (!expected_timeline.Get(4).is_null()) {
+      expected_slice->set_layer_name(expected_timeline.Get(4).string_value);
+    }
   }
 
   // Actual timeline.
@@ -67,7 +70,10 @@ void AndroidFrameTimelineRequestHandler::PopulateFrameTimeline(
     actual_slice->set_duration_nanoseconds(actual_timeline.Get(1).long_value);
     actual_slice->set_display_frame_token(actual_timeline.Get(2).long_value);
     actual_slice->set_surface_frame_token(actual_timeline.Get(3).long_value);
-    actual_slice->set_layer_name(actual_timeline.Get(4).string_value);
+    // The surfaceflinger process doesn't have a layer_name.
+    if (!actual_timeline.Get(4).is_null()) {
+      actual_slice->set_layer_name(actual_timeline.Get(4).string_value);
+    }
     actual_slice->set_present_type(actual_timeline.Get(5).string_value);
     actual_slice->set_jank_type(actual_timeline.Get(6).string_value);
     actual_slice->set_on_time_finish(actual_timeline.Get(7).long_value);

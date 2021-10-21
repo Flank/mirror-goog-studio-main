@@ -119,14 +119,15 @@ dependencies {
     api project(':base:builder')
     api project(':base:builder-model')
     implementation project(':base:sdk-common')
-    implementation project(':base:sdklib')
-    implementation project(':base:repository')
+    implementation libs.com.android.tools.sdklib
+    implementation libs.com.android.tools.repository
     implementation libs.com.android.tools.ddms.ddmlib
     implementation project(':base:build-system:aapt2-proto')
     implementation project(':base:build-system:aaptcompiler')
     implementation libs.com.android.tools.analyticsLibrary.crash
     implementation libs.com.android.tools.analyticsLibrary.shared
     implementation libs.com.android.tools.lint.lintModel
+    implementation libs.com.android.tools.lint.lintTypedefRemover
     api project(':base:gradle-api')
     implementation project(':dataBinding:compilerCommon')
     implementation project(':dataBinding:baseLibrary')

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -281,8 +282,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     }
 
     class CreationAction(
+        creationConfig: ApkCreationConfig,
         enableDexingArtifactTransform: Boolean,
-        creationConfig: ApkCreationConfig
+        variantHasLegacyTransforms: Boolean
     ) : VariantTaskCreationAction<DexArchiveBuilderTask, ApkCreationConfig>(
         creationConfig
     ) {
@@ -307,14 +309,59 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             val transformManager = creationConfig.transformManager
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
-            projectClasses = transformManager.getPipelineOutputAsFileCollection(
-                { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT) },
-                classesFilter
-            )
+            val jacocoTransformEnabled =
+                creationConfig.variantDslInfo.isTestCoverageEnabled &&
+                        !creationConfig.variantType.isForTesting &&
+                        creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
+
+            val jacocoTransformWithLegacyTransformsRegistered =
+                jacocoTransformEnabled && variantHasLegacyTransforms
+
+
+            // The source of project classes depend on whether; Jacoco instrumentation is enabled,
+            // instrumentation is collected using an artifact transform and or
+            // the user registers a transform using the legacy Transform
+            // [com.android.build.api.transform.Transform].
+            //
+            // Cases:
+            // (1) Jacoco Transform is enabled and there are no registered transforms:
+            //     then: Provide the project classes from the artifacts produced by the JacocoTask
+            // (2) Jacoco Transform is enabled and a legacy transform is registered:
+            //     then: No project classes will be provided. Rather, artifacts produced by the
+            //           JacocoTask will be set as the mixed scope classes.
+            // (3) No Jacoco Transforms:
+            //      then: Provide the project classes from the legacy transform API classes.
+
+            projectClasses = if (jacocoTransformEnabled && !variantHasLegacyTransforms) {
+                creationConfig.services.fileCollection(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
+                    ),
+                    creationConfig.services.fileCollection(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS
+                        )
+                    ).asFileTree
+                )
+            }
+            else if (jacocoTransformWithLegacyTransformsRegistered) {
+                // Legacy support (b/195153220)
+                // Do not pass project classes if transform code coverage
+                // is enabled and a legacy transform is applied, the legacy transform supported
+                // JacocoTask artifacts will be passed via the mixed scope classes.
+                creationConfig.services.fileCollection()
+            }
+            else {
+                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                transformManager.getPipelineOutputAsFileCollection(
+                    StreamFilter { _, scopes -> scopes == setOf(QualifiedContent.Scope.PROJECT) },
+                    classesFilter
+                )
+            }
 
             @Suppress("DEPRECATION") // Legacy support (b/195153220)
-            val desugaringClasspathScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> = mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
+            val desugaringClasspathScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
+                mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
                 subProjectsClasses = creationConfig.services.fileCollection()
                 externalLibraryClasses = creationConfig.services.fileCollection()
@@ -348,7 +395,25 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
                 }
                 desugaringClasspathScopes.add(InternalScope.FEATURES)
-            } else {
+            }
+            else if (jacocoTransformWithLegacyTransformsRegistered) {
+                mixedScopeClasses = creationConfig.services.fileCollection(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES),
+                    creationConfig.services.projectInfo.getProject().files(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS
+                        )
+                    ).asFileTree
+                )
+                subProjectsClasses = creationConfig.services.fileCollection()
+                externalLibraryClasses = creationConfig.services.fileCollection()
+                dexExternalLibsInArtifactTransform =
+                    creationConfig.services.projectOptions[
+                            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
+            }
+            else {
+                // legacy Transform API
                 @Suppress("DEPRECATION") // Legacy support (b/195153220)
                 subProjectsClasses =
                     transformManager.getPipelineOutputAsFileCollection(

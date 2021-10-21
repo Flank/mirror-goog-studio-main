@@ -572,7 +572,8 @@ class IncrementalJavaCompileWithAPsTest(
 
         // In incremental mode, the irrelevant original source files should not be recompiled
         if (incrementalMode) {
-            assertFileHasNotChanged(mainActivityClass)
+            // MainActivity references Annotation1GeneratedClass and Annotation1GeneratedClass
+            assertFileHasChanged(mainActivityClass)
             assertFileHasNotChanged(annotation1Class2)
             assertFileHasNotChanged(annotation2Class1)
             assertFileHasNotChanged(annotation2Class2)

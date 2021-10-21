@@ -166,7 +166,8 @@ class UtpConfigFactoryTest {
     private fun createForManagedDevice(
             testData: StaticTestData = this.testData,
             useOrchestrator: Boolean = false,
-            shardConfig: ShardConfig? = null
+            additionalTestOutputDir: File? = null,
+            shardConfig: ShardConfig? = null,
     ): RunnerConfigProto.RunnerConfig {
         val managedDevice = UtpManagedDevice(
                 "deviceName",
@@ -189,6 +190,7 @@ class UtpConfigFactoryTest {
                 mockTmpDir,
                 mockRetentionConfig,
                 mockCoverageOutputDir,
+                additionalTestOutputDir,
                 useOrchestrator,
                 testResultListenerServerMetadata,
                 shardConfig
@@ -503,9 +505,36 @@ class UtpConfigFactoryTest {
             additionalTestOutputDir = mockFile("additionalTestOutputDir")
         )
 
+        // Setting up on device directory for additional test output is not supported on
+        // API level 15 but the plugin can still copy files from TestStorage service.
+        val onHostDir = "additionalTestOutputDir${File.separator}mockDeviceName${File.separator}"
         assertRunnerConfigProto(
             runnerConfigProto,
-            additionalTestOutputConfig = "",
+            additionalTestOutputConfig = """
+               additional_output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(onHostDir)}"
+            """.trimIndent(),
+        )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceWithAdditionalTestOutput() {
+        val runnerConfigProto = createForManagedDevice(
+            additionalTestOutputDir = mockFile("additionalTestOutputDir")
+        )
+
+        val onDeviceDir = "/sdcard/Android/media/com.example.application/additional_test_output"
+        val onHostDir = "additionalTestOutputDir${File.separator}deviceName${File.separator}"
+        assertRunnerConfigProto(
+            runnerConfigProto,
+            deviceId = ":app:deviceNameDebugAndroidTest",
+            useGradleManagedDeviceProvider = true,
+            instrumentationArgs = mapOf(
+                "additionalTestOutputDir" to onDeviceDir,
+            ),
+            additionalTestOutputConfig = """
+               additional_output_directory_on_device: "${onDeviceDir}"
+               additional_output_directory_on_host: "${escapeDoubleQuotesAndBackslashes(onHostDir)}"
+            """
         )
     }
 

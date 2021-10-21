@@ -2898,7 +2898,7 @@
             </d:abi>
             <d:dock></d:dock>
             <d:power-type>battery</d:power-type>
-            <d:skin>pixel_4</d:skin>
+            <d:skin>pixel_5</d:skin>
         </d:hardware>
         <d:software>
             <d:api-level>30</d:api-level>

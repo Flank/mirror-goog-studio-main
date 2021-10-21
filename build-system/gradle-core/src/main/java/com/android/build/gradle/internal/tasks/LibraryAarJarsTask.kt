@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.TypedefRemover
+import com.android.tools.lint.typedefs.TypedefRemover
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -124,8 +124,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             { archivePath: String -> excludePatterns.any {
                 it.matcher(archivePath).matches() }.not() },
             if (typedefRecipe.isPresent) {
-                TypedefRemover()
-                    .setTypedefFile(typedefRecipe.get().asFile)
+                TypedefRemover().setTypedefFile(typedefRecipe.get().asFile)::filter
             } else {
                 null
             },

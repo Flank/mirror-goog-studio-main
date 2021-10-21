@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4c550c057898b61d33e1822f20bb6e19e2916b9dde50cce9114087357205d261
+76e3d6562c433f8fb0f79850e2f4e13ba117d5bd5fe735071d856e26783ceb17
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -122,6 +122,8 @@ com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.function
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
+com.android.build.api.dsl.ApplicationExtension.getPublishing: com.android.build.api.dsl.ApplicationPublishing ()
+com.android.build.api.dsl.ApplicationExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.ApplicationSingleVariant implements com.android.build.api.dsl.SingleVariant
@@ -209,6 +211,8 @@ com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.LibraryExtension.getPublishing: com.android.build.api.dsl.LibraryPublishing ()
+com.android.build.api.dsl.LibraryExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryPublishing, kotlin.Unit>)
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (java.lang.String, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
