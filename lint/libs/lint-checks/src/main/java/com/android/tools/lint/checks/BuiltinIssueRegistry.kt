@@ -411,6 +411,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 TypographyDetector.FRACTIONS,
                 TypographyDetector.OTHER,
                 TypographyDetector.QUOTES,
+                UastImplementationDetector.ISSUE,
                 UnpackedNativeCodeDetector.ISSUE,
                 UnsafeBroadcastReceiverDetector.ACTION_STRING,
                 UnsafeBroadcastReceiverDetector.BROADCAST_SMS,

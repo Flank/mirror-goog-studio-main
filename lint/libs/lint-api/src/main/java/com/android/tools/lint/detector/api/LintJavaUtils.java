@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.psi.KtElement;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.uast.UElement;
+// TODO(kotlin-uast-cleanup): avoid using "internal" utils
 import org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt;
 
 // Class which contains some code which cannot be expressed in Kotlin;
