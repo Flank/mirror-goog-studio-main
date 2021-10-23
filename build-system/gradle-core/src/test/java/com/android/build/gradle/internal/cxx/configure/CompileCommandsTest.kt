@@ -24,16 +24,14 @@ import com.android.testutils.TestResources
 import com.android.utils.cxx.CxxDiagnosticCode.COULD_NOT_EXTRACT_OUTPUT_FILE_FROM_CLANG_COMMAND
 import com.android.utils.cxx.CxxDiagnosticCode.OBJECT_FILE_CANT_BE_CONVERTED_TO_TARGET_NAME
 import com.android.utils.cxx.compileCommandsFileIsCurrentVersion
-import com.android.utils.cxx.streamCompileCommandsV2
+import com.android.utils.cxx.streamCompileCommands
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.nio.channels.FileChannel
 import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 
 class CompileCommandsTest {
     @Rule
@@ -91,7 +89,7 @@ class CompileCommandsTest {
         structuredLog.clear()
         convertCMakeToCompileCommandsBin(json, bin)
         var count = 0
-        streamCompileCommandsV2(bin) {
+        streamCompileCommands(bin) {
             assertThat(target).isEqualTo(expectTarget)
             ++count
         }
@@ -134,7 +132,7 @@ class CompileCommandsTest {
 
         val distinctFlags = mutableSetOf<List<String>>()
         var count = 0
-        streamCompileCommandsV2(bin) {
+        streamCompileCommands(bin) {
             distinctFlags.add(flags)
             ++count
         }

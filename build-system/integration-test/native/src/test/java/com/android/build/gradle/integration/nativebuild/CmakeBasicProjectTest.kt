@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.io.SynchronizeFile
 import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
 import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -61,7 +60,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
-import com.android.utils.cxx.streamCompileCommandsV2
+import com.android.utils.cxx.streamCompileCommands
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Before
@@ -773,7 +772,7 @@ apply plugin: 'com.android.application'
 
         val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.ARMEABI_V7A }
         val outputFiles = mutableListOf<String>()
-        streamCompileCommandsV2(abi.compileCommandsJsonBinFile) {
+        streamCompileCommands(abi.compileCommandsJsonBinFile) {
             outputFiles.add(outputFile.name)
         }
         assertThat(outputFiles).contains("cmake_pch.hxx.pch")

@@ -27,9 +27,10 @@ import com.android.utils.cxx.COMPILE_COMMANDS_CODEC_VERSION
 import com.android.utils.cxx.CompileCommandsEncoder
 import com.android.utils.cxx.compileCommandsFileIsCurrentVersion
 import com.android.utils.cxx.extractFlagArgument
+import com.android.utils.cxx.hasBug201754404
 import com.android.utils.cxx.readCompileCommandsVersionNumber
+import com.android.utils.cxx.streamCompileCommandsV1
 import com.android.utils.cxx.streamCompileCommands
-import com.android.utils.cxx.streamCompileCommandsV2
 import com.android.utils.cxx.stripArgsForIde
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -97,8 +98,7 @@ class CompileCommandsCodecTest {
             val distinctFlags = mutableSetOf<List<String>>()
             val distinctOutputFiles = mutableSetOf<String>()
             val distinctTargets = mutableSetOf<String>()
-            // TODO(201754404) - streamCompileCommandsV2 should be renamed to streamCompileCommandsV2Plus
-            streamCompileCommandsV2(versionRecord) {
+            streamCompileCommands(versionRecord) {
                 distinctSourceFiles += sourceFile.path
                 distinctCompilers += compiler.path
                 distinctFlags += flags
@@ -128,6 +128,69 @@ class CompileCommandsCodecTest {
     }
 
     @Test
+    fun `confirm prior AGP versions can be read`() {
+        fun versionFile(version : String) = testFile(
+            "agp_${version}_compile_commands.json.bin")
+
+        // TODO(201754404) replace "7.1.0-beta01" with release version "7.1.0". It is expected to
+        // have hasBug201754404 == false since the version number was increased.
+        val binVersionToAgpVersionsMap = listOf(
+            1 to listOf("4.2.0", "4.2.1", "4.2.2"),
+            2 to listOf("7.0.0", "7.0.1", "7.0.2", "7.0.3", "7.1.0-beta01"),
+            3 to listOf("7.2.0-alpha02")
+        )
+        val hasBug201754404 = setOf("7.1.0-beta01")
+
+        // Make sure we can stream all 2+ versions
+        for ((binVersion, agpVersions) in binVersionToAgpVersionsMap) {
+            for(agpVersion in agpVersions) {
+                val versionRecord = versionFile(agpVersion)
+                assertThat(hasBug201754404(versionRecord))
+                    .named(agpVersion)
+                    .isEqualTo(hasBug201754404.contains(agpVersion))
+                val readVersion = readCompileCommandsVersionNumber(versionRecord)
+                assertThat(readVersion).isEqualTo(binVersion)
+                val distinctSourceFiles = mutableSetOf<String>()
+                val workingDirectories = mutableSetOf<String>()
+                val distinctCompilers = mutableSetOf<String>()
+                val distinctFlags = mutableSetOf<List<String>>()
+
+                if (readVersion === 1) {
+                    streamCompileCommandsV1(versionRecord) {
+                        sourceFile:File,
+                        compiler:File,
+                        flags:List<String>,
+                        workingDirectory:File ->
+                        distinctSourceFiles += sourceFile.path
+                        distinctCompilers += compiler.path
+                        distinctFlags += flags
+                        workingDirectories += workingDirectory.path
+                    }
+                } else {
+
+                    val distinctOutputFiles = mutableSetOf<String>()
+                    val distinctTargets = mutableSetOf<String>()
+                    streamCompileCommands(versionRecord) {
+                        distinctSourceFiles += sourceFile.path
+                        distinctCompilers += compiler.path
+                        distinctFlags += flags
+                        workingDirectories += workingDirectory.path
+                        distinctOutputFiles += outputFile.path
+                        distinctTargets += target
+                    }
+                    assertThat(distinctTargets.size).isEqualTo(1)
+                    assertThat(distinctOutputFiles.size).isEqualTo(1)
+                }
+                assertThat(distinctSourceFiles.size).isEqualTo(1)
+                assertThat(distinctCompilers.size).isEqualTo(1)
+                assertThat(distinctFlags.size).isEqualTo(1)
+                assertThat(workingDirectories.size).isEqualTo(1)
+
+            }
+        }
+    }
+
+    @Test
     fun singleFile() {
         val folder = tempFolder.newFolder()
         val out = File(folder, "compile_commands.json.bin")
@@ -150,7 +213,7 @@ class CompileCommandsCodecTest {
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommandsV2(out) {
+        streamCompileCommands(out) {
             assertThat(sourceFile).isEqualTo(originalSourceFile)
             assertThat(compiler).isEqualTo(originalCompiler)
             assertThat(flags).isEqualTo(originalFlags)
@@ -165,7 +228,7 @@ class CompileCommandsCodecTest {
     // Check whether we can detect that this version of compile_commands.json.bin supports
     // output file streaming.
     @Test
-    fun `check whether compile_commands json bin supports output file for version 2 file`() {
+    fun `check whether compile_commands json bin supports output file for current version`() {
         val folder = tempFolder.newFolder()
         val out = File(folder, "compile_commands.json.bin")
         val sourceFile = File("my/source/file.cpp")
@@ -191,7 +254,7 @@ class CompileCommandsCodecTest {
     fun `check whether compile_commands json bin supports output file for version 1 file`() {
         val version1 = testFile("version_1_compile_commands.json.bin")
         assertThat(compileCommandsFileIsCurrentVersion(version1)).isFalse()
-        streamCompileCommands(version1) {
+        streamCompileCommandsV1(version1) {
                 _,
                 _,
                 _,
@@ -208,7 +271,7 @@ class CompileCommandsCodecTest {
 
         convertCMakeToCompileCommandsBin(dolphin, dolphinBin)
 
-        streamCompileCommandsV2(dolphinBin) {
+        streamCompileCommands(dolphinBin) {
             val sourceFileName = sourceFile.name
             val outputName = outputFile.name
             assertThat(outputName).isEqualTo("$sourceFileName.o")
@@ -240,7 +303,7 @@ class CompileCommandsCodecTest {
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommandsV2(out) {
+        streamCompileCommands(out) {
             assertThat(sourceFile).isEqualTo(originalSourceFile)
             assertThat(compiler).isEqualTo(originalCompiler)
             assertThat(flags).isEqualTo(originalFlags)
@@ -286,7 +349,7 @@ class CompileCommandsCodecTest {
         var lastWorkingDirectory = File("")
         var lastOutput = File("")
         var lastTarget = ""
-        streamCompileCommandsV2(out) {
+        streamCompileCommands(out) {
             when (count) {
                 0 -> {
                     assertThat(sourceFile).isEqualTo(originalSourceFile1)
@@ -338,7 +401,7 @@ class CompileCommandsCodecTest {
         }
         println("File length ${out.length()}") // Latest observed size was 14.5M
         var streamedFileCount = 0
-        streamCompileCommandsV2(out) {
+        streamCompileCommands(out) {
             assertThat(sourceFile.path).isEqualTo("source-$streamedFileCount.cpp")
             assertThat(compiler.path).isEqualTo("compiler-$streamedFileCount")
             assertThat(flags).isEqualTo(listOf("flags-$streamedFileCount"))
@@ -355,7 +418,7 @@ class CompileCommandsCodecTest {
         val out = File(folder, "compile_commands.json.bin")
         out.writeText("This is an invalid file")
         try {
-            streamCompileCommands(out) { _, _, _, _ -> }
+            streamCompileCommandsV1(out) { _, _, _, _ -> }
         }
         catch (e: Exception) {
             assertThat(e.message).endsWith("is not a valid C/C++ Build Metadata file")
