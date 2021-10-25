@@ -25,6 +25,7 @@ maven_repository(
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/ninepatch:tools.ninepatch",
         "//tools/base/pixelprobe:tools.pixelprobe",
+        "//tools/data-binding:tools.compiler",
     ],
     include_transitive_deps = False,
 )

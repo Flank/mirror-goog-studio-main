@@ -13,19 +13,19 @@ androidx.databinding:databinding-compiler
   pomName=androidx.databinding.databinding-compiler
   description=The annotation processor for Data Binding. Generates binding classes for runtime.
   dependencies:
-    androidx.databinding:databinding-compiler-common (runtime)
     androidx.databinding:databinding-common (runtime)
+    androidx.databinding:databinding-compiler-common (runtime)
     com.android.tools:annotations (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     com.google.auto:auto-common (runtime)
-    com.squareup:javapoet (runtime)
     com.google.code.gson:gson (runtime)
     com.google.guava:guava (runtime)
-    commons-io:commons-io (runtime)
-    commons-codec:commons-codec (runtime)
-    org.antlr:antlr4 (runtime)
     com.googlecode.juniversalchardet:juniversalchardet (runtime)
+    com.squareup:javapoet (runtime)
+    commons-codec:commons-codec (runtime)
+    commons-io:commons-io (runtime)
+    org.antlr:antlr4 (runtime)
     org.glassfish.jaxb:jaxb-runtime (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 androidx.databinding:databinding-compiler-common
   pomName=androidx.databinding.databinding-compiler-common
@@ -33,16 +33,16 @@ androidx.databinding:databinding-compiler-common
   dependencies:
     androidx.databinding:databinding-common (runtime)
     com.android.databinding:baseLibrary (runtime)
-    org.antlr:antlr4 (runtime)
-    commons-io:commons-io (runtime)
-    com.googlecode.juniversalchardet:juniversalchardet (runtime)
-    com.google.guava:guava (runtime)
-    com.squareup:javapoet (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
-    com.google.code.gson:gson (runtime)
-    org.glassfish.jaxb:jaxb-runtime (runtime)
     com.android.tools:annotations (runtime)
     com.android.tools.build.jetifier:jetifier-core (runtime)
+    com.google.code.gson:gson (runtime)
+    com.google.guava:guava (runtime)
+    com.googlecode.juniversalchardet:juniversalchardet (runtime)
+    com.squareup:javapoet (runtime)
+    commons-io:commons-io (runtime)
+    org.antlr:antlr4 (runtime)
+    org.glassfish.jaxb:jaxb-runtime (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 androidx.databinding:databinding-ktx
   pomName=
