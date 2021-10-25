@@ -8,10 +8,6 @@
 #include "slicer/writer.h"
 #include "stdlib.h"
 
-// TODO(b/182023904): it is against best practices to use the same namespace as
-// a dependency (profilerlib)
-using namespace profiler;
-
 /**
  * This agent works as follow:
  * 1. Register a ClassFileLoadHook.
@@ -68,7 +64,8 @@ class JvmtiAllocator : public dex::Writer::Allocator {
     jvmtiError err_num = jvmti_env_->Allocate(size, &alloc);
 
     if (err_num != JVMTI_ERROR_NONE) {
-      Log::E(Log::Tag::COROUTINE_DEBUGGER, "JVMTI error: %d", err_num);
+      profiler::Log::E(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                       "JVMTI error: %d", err_num);
     }
 
     return (void*)alloc;
@@ -82,7 +79,8 @@ class JvmtiAllocator : public dex::Writer::Allocator {
     jvmtiError err_num = jvmti_env_->Deallocate((unsigned char*)ptr);
 
     if (err_num != JVMTI_ERROR_NONE) {
-      Log::E(Log::Tag::COROUTINE_DEBUGGER, "JVMTI error: %d", err_num);
+      profiler::Log::E(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                       "JVMTI error: %d", err_num);
     }
   }
 
@@ -98,7 +96,8 @@ void printStackTrace(JNIEnv* jni) {
     return;
   }
   std::string stringStackTrace = jniutils::stackTraceToString(move(stackTrace));
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
+  profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER, "%s",
+                   stringStackTrace.c_str());
 }
 
 // Check if DebugProbesImpl exists, then calls
@@ -107,23 +106,24 @@ bool installDebugProbes(JNIEnv* jni) {
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesImpl");
   if (klass == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl not found");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "DebugProbesImpl not found");
     return false;
   }
 
   // get DebugProbesImpl constructor
   jmethodID constructor = jni->GetMethodID(klass, "<init>", "()V");
   if (constructor == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "DebugProbesImpl constructor not found");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "DebugProbesImpl constructor not found");
     return false;
   }
 
   // create DebugProbesImpl by calling constructor
   jobject debug_probes_impl_obj = jni->NewObject(klass, constructor);
   if (jni->ExceptionOccurred()) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "DebugProbesImpl constructor threw an exception.");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "DebugProbesImpl constructor threw an exception.");
     printStackTrace(jni);
     return false;
   }
@@ -131,7 +131,8 @@ bool installDebugProbes(JNIEnv* jni) {
   // get install method id
   jmethodID install = jni->GetMethodID(klass, "install", "()V");
   if (install == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install not found");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "DebugProbesImpl#install not found");
     return false;
   }
 
@@ -139,8 +140,8 @@ bool installDebugProbes(JNIEnv* jni) {
   jni->CallVoidMethod(debug_probes_impl_obj, install);
 
   if (jni->ExceptionOccurred()) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "DebugProbesImpl#install threw an exception.");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "DebugProbesImpl#install threw an exception.");
     printStackTrace(jni);
     return false;
   }
@@ -159,8 +160,8 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   dex::Reader reader(class_data, class_data_len);
   auto class_index = reader.FindClassIndex(class_name.c_str());
   if (class_index == dex::kNoIndex) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Could not find class index for %s",
-           class_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Could not find class index for %s", class_name.c_str());
     instrumentedClass.success = false;
     return instrumentedClass;
   }
@@ -181,8 +182,8 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
           ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineCreated",
                        "(Lkotlin/coroutines/Continuation;)Lkotlin/coroutines/"
                        "Continuation;"))) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Error instrumenting DebugProbesKt.probeCoroutineCreated");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Error instrumenting DebugProbesKt.probeCoroutineCreated");
     instrumentedClass.success = false;
     return instrumentedClass;
   }
@@ -195,8 +196,8 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   if (!miResumed.InstrumentMethod(
           ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineResumed",
                        "(Lkotlin/coroutines/Continuation;)V"))) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Error instrumenting DebugProbesKt.probeCoroutineResumed");
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Error instrumenting DebugProbesKt.probeCoroutineResumed");
     instrumentedClass.success = false;
     return instrumentedClass;
   }
@@ -209,8 +210,9 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   if (!miSuspended.InstrumentMethod(
           ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineSuspended",
                        "(Lkotlin/coroutines/Continuation;)V"))) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Error instrumenting DebugProbesKt.probeCoroutineSuspended");
+    profiler::Log::D(
+        profiler::Log::Tag::COROUTINE_DEBUGGER,
+        "Error instrumenting DebugProbesKt.probeCoroutineSuspended");
     instrumentedClass.success = false;
     return instrumentedClass;
   }
@@ -224,8 +226,9 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
 
   if (new_image == nullptr) {
     instrumentedClass.success = false;
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Failed to create new image for class %s", class_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Failed to create new image for class %s",
+                     class_name.c_str());
     return instrumentedClass;
   }
 
@@ -253,8 +256,8 @@ bool setAgentInstallationType(JNIEnv* jni) {
 
   jclass klass_agentInstallationType = jni->FindClass(class_full_name.c_str());
   if (klass_agentInstallationType == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found.",
-           class_full_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER, "%s not found.",
+                     class_full_name.c_str());
     return false;
   }
 
@@ -263,24 +266,26 @@ bool setAgentInstallationType(JNIEnv* jni) {
                                                     "INSTANCE", sig.c_str());
 
   if (instance_filedId == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#INSTANCE not found.",
-           class_full_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "%s#INSTANCE not found.", class_full_name.c_str());
     return false;
   }
 
   jobject obj_agentInstallationType =
       jni->GetStaticObjectField(klass_agentInstallationType, instance_filedId);
   if (obj_agentInstallationType == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Failed to retrieve %s#INSTANCE.",
-           class_full_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Failed to retrieve %s#INSTANCE.",
+                     class_full_name.c_str());
     return false;
   }
 
   jmethodID mid_setIsInstalledStatically = jni->GetMethodID(
       klass_agentInstallationType, method_name.c_str(), "(Z)V");
   if (mid_setIsInstalledStatically == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V not found.",
-           class_name.c_str(), method_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "%s#%s(Z)V not found.", class_name.c_str(),
+                     method_name.c_str());
     return false;
   }
 
@@ -288,8 +293,9 @@ bool setAgentInstallationType(JNIEnv* jni) {
                       true);
 
   if (jni->ExceptionOccurred()) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s(Z)V threw an exception.",
-           class_name.c_str(), method_name.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "%s#%s(Z)V threw an exception.", class_name.c_str(),
+                     method_name.c_str());
     printStackTrace(jni);
     return false;
   }
@@ -340,10 +346,11 @@ bool extractTokensFromSemanticVersion(const std::string& semantic_version,
   // if string is well formed index should be 2 or 3.
   // eg "1.2.3" -> 2 "1.2.3-beta" -> 3
   if (index < 2) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Version of kotlinx-coroutines-core \"%s\" not well formed "
-           "according to semantic versioning.",
-           semantic_version.c_str());
+    profiler::Log::D(
+        profiler::Log::Tag::COROUTINE_DEBUGGER,
+        "Version of kotlinx-coroutines-core \"%s\" not well formed "
+        "according to semantic versioning.",
+        semantic_version.c_str());
     return false;
   }
 
@@ -369,30 +376,33 @@ bool extractTokensFromSemanticVersion(const std::string& semantic_version,
   const char* c_major = string_major.c_str();
   int major = strtol(c_major, &end, 10);
   if (end == c_major) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Version of kotlinx-coroutines-core \"%s\" not well formed "
-           "according to semantic versioning.",
-           semantic_version.c_str());
+    profiler::Log::D(
+        profiler::Log::Tag::COROUTINE_DEBUGGER,
+        "Version of kotlinx-coroutines-core \"%s\" not well formed "
+        "according to semantic versioning.",
+        semantic_version.c_str());
     return false;
   }
 
   const char* c_minor = string_minor.c_str();
   int minor = strtol(c_minor, &end, 10);
   if (end == c_minor) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Version of kotlinx-coroutines-core \"%s\" not well formed "
-           "according to semantic versioning.",
-           semantic_version.c_str());
+    profiler::Log::D(
+        profiler::Log::Tag::COROUTINE_DEBUGGER,
+        "Version of kotlinx-coroutines-core \"%s\" not well formed "
+        "according to semantic versioning.",
+        semantic_version.c_str());
     return false;
   }
 
   const char* c_patch = string_patch.c_str();
   int patch = strtol(c_patch, &end, 10);
   if (end == c_patch) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Version of kotlinx-coroutines-core \"%s\" not well formed "
-           "according to semantic versioning.",
-           semantic_version.c_str());
+    profiler::Log::D(
+        profiler::Log::Tag::COROUTINE_DEBUGGER,
+        "Version of kotlinx-coroutines-core \"%s\" not well formed "
+        "according to semantic versioning.",
+        semantic_version.c_str());
     return false;
   }
 
@@ -463,8 +473,8 @@ bool isUsingSupportedCoroutinesVersion(JNIEnv* jni,
   jobject version_file_url = classloader_get_resource(
       jni, class_loader_object, meta_inf_version_path_jstring);
   if (version_file_url == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found",
-           kMeta_inf_version_path.c_str());
+    profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER, "%s not found",
+                     kMeta_inf_version_path.c_str());
     return false;
   }
 
@@ -554,8 +564,10 @@ void classFileLoadHook_CleanUp(jvmtiEnv* jvmti, JNIEnv* jni,
     // visibility, here and elsewhere
     jni->ExceptionClear();
   }
-  SetEventNotification(jvmti, JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", error_msg.c_str());
+  profiler::SetEventNotification(jvmti, JVMTI_DISABLE,
+                                 JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+  profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER, "%s",
+                   error_msg.c_str());
 }
 
 static void JNICALL
@@ -607,7 +619,8 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // instrument kotlin/coroutines/jvm/internal/DebugProbesKt to call methods in
   // kotlinx/coroutines/debug/internal/DebugProbesKt
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumenting %s", name);
+  profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER, "Instrumenting %s",
+                   name);
   InstrumentedClass instrumentedClass =
       instrumentClass(jvmti, class_name, class_data, class_data_len);
   if (!instrumentedClass.success) {
@@ -621,49 +634,54 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
   *new_class_data_len = instrumentedClass.new_class_data_len;
   *new_class_data = instrumentedClass.new_class_data;
 
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "Successfully instrumented %s", name);
+  profiler::Log::D(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                   "Successfully instrumented %s", name);
 
   // DebugProbesKt is the only class we need to transform, so we can disable
   // events
-  SetEventNotification(jvmti, JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+  profiler::SetEventNotification(jvmti, JVMTI_DISABLE,
+                                 JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
 }
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                                                  void* reserved) {
   // This will attach the current thread to the vm, otherwise CreateJvmtiEnv(vm)
   // below will return JNI_EDETACHED error code.
-  GetThreadLocalJNI(vm);
+  profiler::GetThreadLocalJNI(vm);
 
-  jvmtiEnv* jvmti = CreateJvmtiEnv(vm);
+  jvmtiEnv* jvmti = profiler::CreateJvmtiEnv(vm);
   if (jvmti == nullptr) {
-    Log::E(Log::Tag::COROUTINE_DEBUGGER, "Failed to initialize JVMTI env.");
+    profiler::Log::E(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "Failed to initialize JVMTI env.");
     return -1;
   }
 
   // set JVMTI capabilities
   jvmtiCapabilities capa;
   bool hasError =
-      CheckJvmtiError(jvmti, jvmti->GetPotentialCapabilities(&capa));
+      profiler::CheckJvmtiError(jvmti, jvmti->GetPotentialCapabilities(&capa));
   if (hasError) {
-    Log::E(Log::Tag::COROUTINE_DEBUGGER,
-           "JVMTI GetPotentialCapabilities error.");
+    profiler::Log::E(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "JVMTI GetPotentialCapabilities error.");
     return -1;
   }
-  SetAllCapabilities(jvmti);
+  profiler::SetAllCapabilities(jvmti);
 
   // set JVMTI callbacks
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = &ClassFileLoadHook;
 
-  hasError = CheckJvmtiError(
+  hasError = profiler::CheckJvmtiError(
       jvmti, jvmti->SetEventCallbacks(&callbacks, (jint)sizeof(callbacks)));
   if (hasError) {
-    Log::E(Log::Tag::COROUTINE_DEBUGGER, "JVMTI SetEventCallbacks error");
+    profiler::Log::E(profiler::Log::Tag::COROUTINE_DEBUGGER,
+                     "JVMTI SetEventCallbacks error");
     return -1;
   }
 
-  SetEventNotification(jvmti, JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+  profiler::SetEventNotification(jvmti, JVMTI_ENABLE,
+                                 JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
 
   return JNI_OK;
 }
