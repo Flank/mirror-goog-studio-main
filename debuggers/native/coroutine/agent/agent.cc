@@ -38,21 +38,27 @@ struct SemanticVersion {
   uint32_t patch;
 };
 
-const std::string debug_debugProbesKt =
+struct InstrumentedClass {
+  unsigned char* new_class_data;
+  size_t new_class_data_len;
+  bool success;
+};
+
+const std::string kDebug_debugProbesKt =
     "Lkotlinx/coroutines/debug/internal/DebugProbesKt;";
-const std::string stdlib_debugProbesKt =
+const std::string kStdlib_debugProbesKt =
     "Lkotlin/coroutines/jvm/internal/DebugProbesKt;";
 
-// TODO(b/182023904) constants should start with a k with next character
-// capitalized.
-// TODO(b/182023904) replace version number with 1.6.0,
-// once the new version is released sometimes in October
-const SemanticVersion coroutines_min_supported_version = {
-    .major = 1, .minor = 5, .patch = 2};
-
-const std::string meta_inf_version_path =
+const std::string kMeta_inf_version_path =
     "META-INF/kotlinx_coroutines_core.version";
 
+// TODO(b/182023904) replace version number with 1.6.0,
+// once the new version is released sometimes in October
+const SemanticVersion kCoroutines_min_supported_version = {
+    .major = 1, .minor = 5, .patch = 2};
+
+// Class required by dex::Writer to allocate and free space for new instrumented
+// class
 class JvmtiAllocator : public dex::Writer::Allocator {
  public:
   JvmtiAllocator(jvmtiEnv* jvmti_env) : jvmti_env_(jvmti_env) {}
@@ -84,15 +90,7 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
-struct InstrumentedClass {
-  unsigned char* new_class_data;
-  int new_class_data_len;
-  bool success;
-};
-
-/**
- * Get the exceptions stacktrace and log it.
- */
+// Gets the exceptions stacktrace and logs it.
 void printStackTrace(JNIEnv* jni) {
   std::unique_ptr<jniutils::StackTrace> stackTrace =
       jniutils::getExceptionStackTrace(jni);
@@ -103,8 +101,8 @@ void printStackTrace(JNIEnv* jni) {
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
 }
 
-// check if DebugProbesImpl exists, then call
-// DebugProbesImpl#install
+// Check if DebugProbesImpl exists, then calls
+// DebugProbesImpl#install.
 bool installDebugProbes(JNIEnv* jni) {
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesImpl");
@@ -112,8 +110,6 @@ bool installDebugProbes(JNIEnv* jni) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl not found");
     return false;
   }
-
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl found");
 
   // get DebugProbesImpl constructor
   jmethodID constructor = jni->GetMethodID(klass, "<init>", "()V");
@@ -148,13 +144,11 @@ bool installDebugProbes(JNIEnv* jni) {
     printStackTrace(jni);
     return false;
   }
-
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install called.");
   return true;
 }
 
 /**
- * Instrument DebugProbesKt from kotlin stdlib, to call respective methods in
+ * Instruments DebugProbesKt from kotlin stdlib, to call respective methods in
  * DebugProbesKt from kotlinx-coroutines-core
  */
 InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
@@ -181,10 +175,10 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   // probeCoroutineCreated
   slicer::MethodInstrumenter miCreated(dex_ir);
   miCreated.AddTransformation<slicer::ExitHook>(
-      ir::MethodId(debug_debugProbesKt.c_str(), "probeCoroutineCreated"));
+      ir::MethodId(kDebug_debugProbesKt.c_str(), "probeCoroutineCreated"));
 
   if (!miCreated.InstrumentMethod(
-          ir::MethodId(stdlib_debugProbesKt.c_str(), "probeCoroutineCreated",
+          ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineCreated",
                        "(Lkotlin/coroutines/Continuation;)Lkotlin/coroutines/"
                        "Continuation;"))) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
@@ -196,10 +190,10 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   // probeCoroutineResumed
   slicer::MethodInstrumenter miResumed(dex_ir);
   miResumed.AddTransformation<slicer::EntryHook>(
-      ir::MethodId(debug_debugProbesKt.c_str(), "probeCoroutineResumed"));
+      ir::MethodId(kDebug_debugProbesKt.c_str(), "probeCoroutineResumed"));
 
   if (!miResumed.InstrumentMethod(
-          ir::MethodId(stdlib_debugProbesKt.c_str(), "probeCoroutineResumed",
+          ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineResumed",
                        "(Lkotlin/coroutines/Continuation;)V"))) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "Error instrumenting DebugProbesKt.probeCoroutineResumed");
@@ -210,18 +204,16 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   // probeCoroutineSuspended
   slicer::MethodInstrumenter miSuspended(dex_ir);
   miSuspended.AddTransformation<slicer::EntryHook>(
-      ir::MethodId(debug_debugProbesKt.c_str(), "probeCoroutineSuspended"));
+      ir::MethodId(kDebug_debugProbesKt.c_str(), "probeCoroutineSuspended"));
 
   if (!miSuspended.InstrumentMethod(
-          ir::MethodId(stdlib_debugProbesKt.c_str(), "probeCoroutineSuspended",
+          ir::MethodId(kStdlib_debugProbesKt.c_str(), "probeCoroutineSuspended",
                        "(Lkotlin/coroutines/Continuation;)V"))) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "Error instrumenting DebugProbesKt.probeCoroutineSuspended");
     instrumentedClass.success = false;
     return instrumentedClass;
   }
-
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "instrumentation done");
 
   size_t new_image_size = 0;
   dex::u1* new_image = nullptr;
@@ -301,9 +293,6 @@ bool setAgentInstallationType(JNIEnv* jni) {
     printStackTrace(jni);
     return false;
   }
-
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s#%s set to true.", class_name.c_str(),
-         method_name.c_str());
   return true;
 }
 
@@ -425,16 +414,16 @@ bool is_supported(std::string semantic_version) {
     return false;
   }
 
-  if (lib_semantic_version.major == coroutines_min_supported_version.major) {
-    if (lib_semantic_version.minor == coroutines_min_supported_version.minor) {
+  if (lib_semantic_version.major == kCoroutines_min_supported_version.major) {
+    if (lib_semantic_version.minor == kCoroutines_min_supported_version.minor) {
       return lib_semantic_version.patch >=
-             coroutines_min_supported_version.patch;
+             kCoroutines_min_supported_version.patch;
     } else {
       return lib_semantic_version.minor >
-             coroutines_min_supported_version.minor;
+             kCoroutines_min_supported_version.minor;
     }
   } else {
-    return lib_semantic_version.major > coroutines_min_supported_version.major;
+    return lib_semantic_version.major > kCoroutines_min_supported_version.major;
   }
 }
 
@@ -465,7 +454,7 @@ bool isUsingSupportedCoroutinesVersion(JNIEnv* jni,
                                        jobject class_loader_object) {
   // create jstring containing META-INF/*.version path
   jstring meta_inf_version_path_jstring =
-      jni->NewStringUTF(meta_inf_version_path.c_str());
+      jni->NewStringUTF(kMeta_inf_version_path.c_str());
   if (meta_inf_version_path_jstring == nullptr) {
     return false;
   }
@@ -475,7 +464,7 @@ bool isUsingSupportedCoroutinesVersion(JNIEnv* jni,
       jni, class_loader_object, meta_inf_version_path_jstring);
   if (version_file_url == nullptr) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s not found",
-           meta_inf_version_path.c_str());
+           kMeta_inf_version_path.c_str());
     return false;
   }
 
@@ -557,12 +546,24 @@ bool isUsingSupportedCoroutinesVersion(JNIEnv* jni,
   return is_supported(version_str);
 }
 
+// clears exceptions and disables ClassFileLoadHook
+void classFileLoadHook_CleanUp(jvmtiEnv* jvmti, JNIEnv* jni,
+                               const std::string& error_msg) {
+  if (jni->ExceptionCheck()) {
+    // TODO (b/182023904) consider printing stack trace for better error
+    // visibility, here and elsewhere
+    jni->ExceptionClear();
+  }
+  SetEventNotification(jvmti, JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", error_msg.c_str());
+}
+
 static void JNICALL
 ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
                   jobject loader, const char* name, jobject protection_domain,
                   jint class_data_len, const unsigned char* class_data,
                   jint* new_class_data_len, unsigned char** new_class_data) {
-  // transform DebugProbesKt
+  // do nothing if class is not DebugProbesKt
   const std::string class_name = "L" + std::string(name) + ";";
   if (class_name != "Lkotlin/coroutines/jvm/internal/DebugProbesKt;") {
     return;
@@ -570,52 +571,37 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // check if coroutines version is supported
   if (!isUsingSupportedCoroutinesVersion(jni, loader)) {
-    if (jni->ExceptionCheck()) {
-      // TODO (b/182023904) consider printing stack trace for better error
-      // visibility, here and elsewhere
-      jni->ExceptionClear();
-    }
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "The version of coroutines used by the app is not supported.");
+    classFileLoadHook_CleanUp(
+        jvmti, jni,
+        "The version of coroutines used by the app is not supported.");
     return;
   }
 
   // set AgentInstallationType#isInstalledStatically to true
   bool setAgentInstallationTypeSuccessful = setAgentInstallationType(jni);
   if (!setAgentInstallationTypeSuccessful) {
-    if (jni->ExceptionCheck()) {
-      jni->ExceptionClear();
-    }
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    classFileLoadHook_CleanUp(
+        jvmti, jni,
+        "Can't set AgentInstallationType#isInstalledStatically to true.");
     return;
   }
 
   // call DebugProbesImpl#install
   bool installed = installDebugProbes(jni);
   if (!installed) {
-    if (jni->ExceptionCheck()) {
-      jni->ExceptionClear();
-    }
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    classFileLoadHook_CleanUp(jvmti, jni,
+                              "Can't call DebugProbesImpl#install.");
     return;
   }
 
-  // check if kotlinx/coroutines/debug/internal/DebugProbesKt is loadable.
+  // check if kotlinx/coroutines/debug/internal/DebugProbesKt is loadable
   jclass klass =
       jni->FindClass("kotlinx/coroutines/debug/internal/DebugProbesKt");
   if (klass == nullptr) {
     // clear exception thrown by failed FindClass
-    if (jni->ExceptionCheck()) {
-      jni->ExceptionClear();
-    }
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Can't find class kotlinx/coroutines/debug/internal/DebugProbesKt");
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    classFileLoadHook_CleanUp(
+        jvmti, jni,
+        "Can't find class kotlinx/coroutines/debug/internal/DebugProbesKt");
     return;
   }
 
@@ -625,13 +611,10 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
   InstrumentedClass instrumentedClass =
       instrumentClass(jvmti, class_name, class_data, class_data_len);
   if (!instrumentedClass.success) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumentation of %s failed", name);
-
-    if (jni->ExceptionCheck()) {
-      jni->ExceptionClear();
-    }
-    SetEventNotification(jvmti, JVMTI_DISABLE,
-                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    classFileLoadHook_CleanUp(
+        jvmti, jni,
+        "Instrumentation of kotlin/coroutines/jvm/internal/DebugProbesKt "
+        "failed");
     return;
   }
 
@@ -667,7 +650,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     return -1;
   }
   SetAllCapabilities(jvmti);
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "JVMTI SetAllCapabilities done.");
 
   // set JVMTI callbacks
   jvmtiEventCallbacks callbacks;
@@ -680,7 +662,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     Log::E(Log::Tag::COROUTINE_DEBUGGER, "JVMTI SetEventCallbacks error");
     return -1;
   }
-  Log::D(Log::Tag::COROUTINE_DEBUGGER, "JVMTI SetEventCallbacks done.");
 
   SetEventNotification(jvmti, JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
 
