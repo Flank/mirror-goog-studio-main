@@ -1,4 +1,3 @@
-#include "tools/base/debuggers/native/coroutine/agent/DebugProbesKt.h"
 #include "tools/base/debuggers/native/coroutine/agent/jni_utils.h"
 #include "tools/base/transport/native/jvmti/jvmti_helper.h"
 #include "tools/base/transport/native/utils/log.h"
@@ -17,26 +16,18 @@ using namespace profiler;
  * This agent works as follow:
  * 1. Register a ClassFileLoadHook.
  * 2. Monitor to find kotlin/coroutines/jvm/internal/DebugProbesKt.
- * 3. On found,
- *   3.1 Check if kotlinx/coroutines/debug/internal/DebugProbesKt is loaded or
- *     loadable (it only exists in newer versions of coroutine lib).
- *     3.1.1 If yes, instrument methods in
- *       kotlin/coroutines/jvm/internal/DebugProbesK to call methods in
- *       kotlinx/coroutines/debug/internal/DebugProbesKt.
- *     3.1.2 If not, check that DebugProbesImpl is loaded or loadable.
- *       3.1.2.1 Replace DebugProbesKt class data with
- *         DebugProbesKt from DebugProbesKt.h. DebugProbesKt.h is
- *         created by a genrule, using resource/DebugProbesKt.bindex.
- *         resource/DebugProbesKt.bindex is a dexed version
- *         of DebugProbesKt.bin from kotlinx-coroutines-core.
- *   3.2 Set AgentInstallationType#isInstalledStatically or
- *       AgentPremain#isInstalledStatically to true. This tells
- *       the coroutine lib that DebugProbesKt should not be replaced
- *       lazily when DebugProbesImpl#install is called.
- *       The lazy replacement uses ByteBuddy and Java instrumentation
- *       apis, that are not supported on Android.
- *   3.3 Call `install` on DebugProbesImpl.
- *   3.4 Unregister ClassFileLoadHook.
+ * 3. Check that coroutine lib version is supported (version must be higher
+ * than 1.6.0)
+ * 4. Set AgentInstallationType#isInstalledStatically to true. This tells
+ *    the coroutine lib that DebugProbesKt should not be replaced
+ *    lazily when DebugProbesImpl#install is called.
+ *    The lazy replacement uses ByteBuddy and Java instrumentation
+ *    apis, that are not supported on Android.
+ * 5. Call `install` on DebugProbesImpl.
+ * 6. On found, instrument methods in
+ * kotlin/coroutines/jvm/internal/DebugProbesK to call methods in
+ * kotlinx/coroutines/debug/internal/DebugProbesKt.
+ * 7. Unregister ClassFileLoadHook.
  */
 
 // TODO(b/182023904): remove all calls to LOG:D
@@ -316,56 +307,6 @@ bool setAgentInstallationType(JNIEnv* jni) {
   return true;
 }
 
-/**
- * Try to set kotlinx.coroutines.debug.AgentPremain#isInstalled statically to
- * true.
- */
-bool setAgentPremainInstalledStatically(JNIEnv* jni) {
-  jclass klass_agentPremain =
-      jni->FindClass("kotlinx/coroutines/debug/AgentPremain");
-  if (klass_agentPremain == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain not found.");
-    return false;
-  }
-
-  jfieldID instance_filedId =
-      jni->GetStaticFieldID(klass_agentPremain, "INSTANCE",
-                            "Lkotlinx/coroutines/debug/AgentPremain;");
-  if (instance_filedId == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain#INSTANCE not found.");
-    return false;
-  }
-
-  jobject obj_agentPremain =
-      jni->GetStaticObjectField(klass_agentPremain, instance_filedId);
-  if (obj_agentPremain == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "Failed to retrieve AgentPremain#INSTANCE.");
-    return false;
-  }
-
-  jmethodID mid_setIsInstalledStatically =
-      jni->GetMethodID(klass_agentPremain, "setInstalledStatically", "(Z)V");
-  if (mid_setIsInstalledStatically == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "AgentPremain#setInstalledStatically(Z)V not found.");
-    return false;
-  }
-
-  jni->CallVoidMethod(obj_agentPremain, mid_setIsInstalledStatically, true);
-
-  if (jni->ExceptionOccurred()) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER,
-           "AgentPremain#setInstalledStatically(Z)V threw an exception.");
-    printStackTrace(jni);
-    return false;
-  }
-
-  Log::D(Log::Tag::COROUTINE_DEBUGGER,
-         "AgentPremain#isInstalledStatically set to true.");
-  return true;
-}
-
 // Returns a java.net.URL for the requested resource, or nullptr if something
 // goes wrong
 // Callers of this function are responsible for handling exceptions.
@@ -622,8 +563,8 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
                   jint class_data_len, const unsigned char* class_data,
                   jint* new_class_data_len, unsigned char** new_class_data) {
   // transform DebugProbesKt
-  std::string class_name(name);
-  if (class_name != "kotlin/coroutines/jvm/internal/DebugProbesKt") {
+  const std::string class_name = "L" + std::string(name) + ";";
+  if (class_name != "Lkotlin/coroutines/jvm/internal/DebugProbesKt;") {
     return;
   }
 
@@ -643,31 +584,17 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
 
   // set AgentInstallationType#isInstalledStatically to true
   bool setAgentInstallationTypeSuccessful = setAgentInstallationType(jni);
-
   if (!setAgentInstallationTypeSuccessful) {
     if (jni->ExceptionCheck()) {
       jni->ExceptionClear();
     }
-    // AgentInstallationType#isInstalledStatically was introduced on newer
-    // versions of coroutines
-    // see for more info: https://github.com/Kotlin/kotlinx.coroutines/pull/2912
-    // we should try to set that first, if it fails we can fall back to the
-    // older way, through AgentPremain.
-    bool setSuccessful = setAgentPremainInstalledStatically(jni);
-
-    if (!setSuccessful) {
-      if (jni->ExceptionCheck()) {
-        jni->ExceptionClear();
-      }
-      SetEventNotification(jvmti, JVMTI_DISABLE,
-                           JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
-      return;
-    }
+    SetEventNotification(jvmti, JVMTI_DISABLE,
+                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    return;
   }
 
   // call DebugProbesImpl#install
   bool installed = installDebugProbes(jni);
-
   if (!installed) {
     if (jni->ExceptionCheck()) {
       jni->ExceptionClear();
@@ -685,40 +612,33 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
     if (jni->ExceptionCheck()) {
       jni->ExceptionClear();
     }
-
-    // backward compatible - replace
-    // kotlin/coroutines/jvm/internal/DebugProbesKt with the one from the .bin
-    // bundled with the agent.
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Transforming %s", name);
-
-    *new_class_data_len = kDebugProbesKt_len;
-    *new_class_data = kDebugProbesKt;
-
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Successfully transformed %s", name);
-  } else {
-    // forward compatible - instrument
-    // kotlin/coroutines/jvm/internal/DebugProbesKt to call methods in
-    // kotlinx/coroutines/debug/internal/DebugProbesKt
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumenting %s", name);
-
-    std::string class_name = "L" + std::string(name) + ";";
-    InstrumentedClass instrumentedClass =
-        instrumentClass(jvmti, class_name, class_data, class_data_len);
-    if (!instrumentedClass.success) {
-      Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumentation of %s failed",
-             name);
-
-      if (jni->ExceptionCheck()) {
-        jni->ExceptionClear();
-      }
-      return;
-    }
-
-    *new_class_data_len = instrumentedClass.new_class_data_len;
-    *new_class_data = instrumentedClass.new_class_data;
-
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Successfully instrumented %s", name);
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Can't find class kotlinx/coroutines/debug/internal/DebugProbesKt");
+    SetEventNotification(jvmti, JVMTI_DISABLE,
+                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    return;
   }
+
+  // instrument kotlin/coroutines/jvm/internal/DebugProbesKt to call methods in
+  // kotlinx/coroutines/debug/internal/DebugProbesKt
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumenting %s", name);
+  InstrumentedClass instrumentedClass =
+      instrumentClass(jvmti, class_name, class_data, class_data_len);
+  if (!instrumentedClass.success) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "Instrumentation of %s failed", name);
+
+    if (jni->ExceptionCheck()) {
+      jni->ExceptionClear();
+    }
+    SetEventNotification(jvmti, JVMTI_DISABLE,
+                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
+    return;
+  }
+
+  *new_class_data_len = instrumentedClass.new_class_data_len;
+  *new_class_data = instrumentedClass.new_class_data;
+
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "Successfully instrumented %s", name);
 
   // DebugProbesKt is the only class we need to transform, so we can disable
   // events
@@ -762,9 +682,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "JVMTI SetEventCallbacks done.");
 
-  // enable events notification
-  // TODO(b/182023904): see b/152421535, make sure that this doesn't crash on
-  // pre API 29
   SetEventNotification(jvmti, JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
 
   return JNI_OK;
