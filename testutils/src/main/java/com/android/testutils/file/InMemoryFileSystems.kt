@@ -26,10 +26,10 @@ import java.io.IOException
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.attribute.DosFileAttributeView
 import java.nio.file.attribute.DosFileAttributes
 import java.nio.file.attribute.FileTime
 import java.nio.file.attribute.PosixFilePermission
+import java.util.stream.Stream
 import kotlin.streams.toList
 
 val defaultWorkingDirectory = if (OsType.getHostOs() == OsType.WINDOWS) "D:\\work" else "/work"
@@ -58,7 +58,7 @@ fun createInMemoryFileSystem(): FileSystem {
 fun createInMemoryFileSystemAndFolder(folderName: String): Path {
     val fileSystem = createInMemoryFileSystem()
     // On Windows the folder is created on the last drive.
-    return Files.createDirectory(fileSystem.someRoot.resolve(folderName))
+    return Files.createDirectories(fileSystem.someRoot.resolve(folderName))
 }
 
 /**
@@ -108,10 +108,11 @@ fun Path.recordExistingFile(contents: String? = "") =
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun Path.recordExistingFile(lastModified: Long = 0, contents: ByteArray? = null) {
+fun Path.recordExistingFile(lastModified: Long = 0, contents: ByteArray? = null): Path {
     Files.createDirectories(parent)
     Files.write(this, contents ?: ByteArray(0))
     Files.setLastModifiedTime(this, FileTime.fromMillis(lastModified))
+    return this
 }
 
 /**
@@ -122,7 +123,7 @@ fun Path.recordExistingFile(lastModified: Long = 0, contents: ByteArray? = null)
  */
 fun FileSystem.getExistingFiles(): List<String> {
     return rootDirectories
-        .flatMap { Files.walk(it).use { it.toList() } }
+        .flatMap { Files.walk(it).use(Stream<Path>::toList) }
         .filter { Files.isRegularFile(it) }
         .map { it.toString() }
         .sorted()
@@ -137,7 +138,7 @@ fun FileSystem.getExistingFiles(): List<String> {
  */
 fun FileSystem.getExistingFolders(): List<String> {
     return rootDirectories
-        .flatMap { Files.walk(it).use { it.toList() } }
+        .flatMap { Files.walk(it).use(Stream<Path>::toList) }
         .filter { Files.isDirectory(it) && it.parent != null }
         .map { it.toString() }
         .sorted()

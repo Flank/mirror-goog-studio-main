@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.DosFileAttributeView;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
@@ -83,25 +82,6 @@ public abstract class FileOp {
         permissions.add(PosixFilePermission.GROUP_EXECUTE);
         permissions.add(PosixFilePermission.OTHERS_EXECUTE);
         Files.setPosixFilePermissions(path, permissions);
-    }
-
-    /**
-     * Sets the file or directory as read-only.
-     *
-     * @param file The file or directory to set permissions on.
-     */
-    public final void setReadOnly(@NonNull File file) throws IOException {
-        Path path = toPath(file);
-        if (FileOpUtils.isWindows()) {
-            Files.getFileAttributeView(path, DosFileAttributeView.class).setReadOnly(true);
-        } else {
-            Set<PosixFilePermission> permissions =
-                    EnumSet.copyOf(Files.getPosixFilePermissions(path));
-            permissions.remove(PosixFilePermission.OWNER_WRITE);
-            permissions.remove(PosixFilePermission.GROUP_WRITE);
-            permissions.remove(PosixFilePermission.OTHERS_WRITE);
-            Files.setPosixFilePermissions(path, permissions);
-        }
     }
 
     // TODO: make this final so we can migrate from FileOp to using Paths directly
