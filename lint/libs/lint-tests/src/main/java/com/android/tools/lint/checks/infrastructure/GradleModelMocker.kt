@@ -41,6 +41,7 @@ import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.tools.lint.model.LintModelModuleLoader
+import com.android.tools.lint.model.LintModelModuleSourceSet
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelNamespacingMode
 import com.android.tools.lint.model.LintModelResourceField
@@ -1638,7 +1639,8 @@ class GradleModelMocker @JvmOverloads constructor(
                 provided = false,
                 artifactAddress = "artifacts:$name",
                 lintJar = null,
-                projectPath = name
+                projectPath = name,
+                sourceSet = LintModelModuleSourceSet.MAIN
             )
         )
     }
@@ -2363,7 +2365,8 @@ private data class TestLintModelModuleLibrary(
     override val provided: Boolean,
     override val artifactAddress: String,
     override val lintJar: File?,
-    override val projectPath: String
+    override val projectPath: String,
+    override val sourceSet: LintModelModuleSourceSet
 ) : LintModelModuleLibrary
 
 private fun getMavenName(artifactAddress: String): LintModelMavenName {
