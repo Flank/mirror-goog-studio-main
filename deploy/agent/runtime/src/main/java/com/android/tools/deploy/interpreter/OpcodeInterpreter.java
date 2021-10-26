@@ -677,33 +677,26 @@ class OpcodeInterpreter extends Interpreter<Value> {
 
     @Override
     public Value naryOperation(AbstractInsnNode insn, List<? extends Value> values) {
-        switch (insn.getOpcode()) {
-            case MULTIANEWARRAY:
-                {
-                    MultiANewArrayInsnNode node = (MultiANewArrayInsnNode) insn;
-                    List<Integer> args =
-                            values.stream().map(Value::getInt).collect(Collectors.toList());
-                    return eval.newMultiDimensionalArray(Type.getType(node.desc), args);
-                }
+        if (insn.getOpcode() == MULTIANEWARRAY) {
+            MultiANewArrayInsnNode node = (MultiANewArrayInsnNode) insn;
+            List<Integer> args = values.stream().map(Value::getInt).collect(Collectors.toList());
+            return eval.newMultiDimensionalArray(Type.getType(node.desc), args);
+        }
 
+        MethodDescription method = new MethodDescription((MethodInsnNode) insn);
+        looper.setExitPoint(method);
+        switch (insn.getOpcode()) {
             case INVOKESPECIAL:
-                return eval.invokeSpecial(
-                        values.get(0),
-                        new MethodDescription((MethodInsnNode) insn),
-                        values.subList(1, values.size()));
+                return eval.invokeSpecial(values.get(0), method, values.subList(1, values.size()));
             case INVOKEVIRTUAL:
             case INVOKEINTERFACE:
-                {
-                    return eval.invokeMethod(
-                            values.get(0),
-                            new MethodDescription((MethodInsnNode) insn),
-                            values.subList(1, values.size()),
-                            insn.getOpcode() == INVOKESPECIAL);
-                }
-
+                return eval.invokeMethod(
+                        values.get(0),
+                        method,
+                        values.subList(1, values.size()),
+                        insn.getOpcode() == INVOKESPECIAL);
             case INVOKESTATIC:
-                return eval.invokeStaticMethod(
-                        new MethodDescription((MethodInsnNode) insn), values);
+                return eval.invokeStaticMethod(method, values);
             case INVOKEDYNAMIC:
                 throw new UnsupportedByteCodeException("INDY is not supported");
             default:

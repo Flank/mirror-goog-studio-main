@@ -15,6 +15,7 @@
  */
 package com.android.tools.deploy.liveedit;
 
+import com.android.annotations.VisibleForTesting;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -48,6 +49,11 @@ public class LiveEditContext {
 
     public void addClass(String name, byte[] bytecode) {
         classes.put(name, new LiveEditClass(this, name, bytecode));
+    }
+
+    @VisibleForTesting
+    public void removeClass(String name) {
+        classes.remove(name);
     }
 
     public void addProxyClass(String name, byte[] bytecode, String[] interfaces) {

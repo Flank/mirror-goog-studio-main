@@ -18,6 +18,7 @@ package com.android.tools.deploy.liveedit;
 
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.deploy.asm.ClassReader;
 import java.util.HashSet;
 
@@ -44,10 +45,29 @@ public final class LiveEditStubs {
         }
     }
 
+    @VisibleForTesting
+    public static String keyFrom(String className, String methodName, String methodSignature) {
+        return className + "->" + methodName + methodSignature;
+    }
+
     public static void addToCache(String key, byte[] bytecode) {
         String className = key.substring(0, key.indexOf("->"));
         context.addClass(className, bytecode);
         interpretedMethods.add(key);
+    }
+
+    @VisibleForTesting
+    public static void deleteFromCache(
+            String className, String methodName, String methodSignature) {
+        context.removeClass(className);
+    }
+
+    // className should be the fully qualified class name: com.example.MyClass
+    // methodName should just be the method name: myMethod
+    // methodSignature should be the JNI-style method signature: (Ljava.lang.String;II)V
+    public static void addToCache(
+            String className, String methodName, String methodSignature, byte[] data) {
+        context.addClass(className, data);
     }
 
     public static void addProxiedClass(byte[] bytecode) {
@@ -73,8 +93,7 @@ public final class LiveEditStubs {
                 || interpretedMethods.contains(internalKey);
     }
 
-    // TODO: We don't need to pass the class here; remove once the prologue is updated.
-    public static Object stubL(Class<?> clazz, Object[] parameters) {
+    public static Object doStub(Class<?> clazz, Object[] parameters) {
         // First parameter is the class + method name + signature
         String methodKey = parameters[0].toString().replace('.', '/');
         int idx = methodKey.indexOf("->");
@@ -93,48 +112,52 @@ public final class LiveEditStubs {
         return context.getClass(methodClassName).invokeMethod(methodName, thisObject, arguments);
     }
 
+    public static Object stubL(Class<?> clazz, Object[] parameters) {
+        return doStub(clazz, parameters);
+    }
+
     public static byte stubB(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (byte) value : 0;
     }
 
     public static short stubS(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (short) value : 0;
     }
 
     public static int stubI(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (int) value : 0;
     }
 
     public static long stubJ(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (long) value : 0;
     }
 
     public static float stubF(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (float) value : 0;
     }
 
     public static double stubD(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (double) value : 0;
     }
 
     public static boolean stubZ(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (boolean) value : false;
     }
 
     public static char stubC(Class<?> clazz, Object[] parameters) {
-        Object value = stubL(clazz, parameters);
+        Object value = doStub(clazz, parameters);
         return value != null ? (char) value : 0;
     }
 
     public static void stubV(Class<?> clazz, Object[] parameters) {
-        stubL(clazz, parameters);
+        doStub(clazz, parameters);
     }
 
     private static class AndroidLogger implements Log.Logger {

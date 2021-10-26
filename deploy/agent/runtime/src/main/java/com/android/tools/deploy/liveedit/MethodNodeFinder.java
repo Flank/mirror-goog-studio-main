@@ -27,7 +27,10 @@ import java.util.List;
 /** This class searches the .class bytecode for a methodNode. */
 class MethodNodeFinder extends ClassVisitor {
     private MethodNode target = null;
+    private String filename = null;
     private final String targetName;
+    private String name;
+    private String ownerInternalName;
     private final List<String> visited = new ArrayList<>();
 
     MethodNodeFinder(byte[] classData, String name) {
@@ -35,6 +38,17 @@ class MethodNodeFinder extends ClassVisitor {
         targetName = name;
         ClassReader reader = new ClassReader(classData);
         reader.accept(this, 0);
+    }
+
+    @Override
+    public void visit(
+            final int version,
+            final int access,
+            final String name,
+            final String signature,
+            final String superName,
+            final String[] interfaces) {
+        this.ownerInternalName = name;
     }
 
     @Override
@@ -46,12 +60,30 @@ class MethodNodeFinder extends ClassVisitor {
         if (!targetName.equals(prospect)) {
             return null;
         }
+        this.name = name;
         target = new TryCatchBlockSorter(null, access, name, desc, signature, exceptions);
         return target;
     }
 
+    @Override
+    public void visitSource(String source, String debug) {
+        this.filename = source;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     public MethodNode getTarget() {
         return target;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getOwnerInternalName() {
+        return ownerInternalName;
     }
 
     List<String> getVisited() {

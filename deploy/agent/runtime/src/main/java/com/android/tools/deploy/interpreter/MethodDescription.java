@@ -27,6 +27,8 @@ public class MethodDescription {
     private final String desc;
     private final boolean isStatic;
 
+    public static final MethodDescription EMPTY = new MethodDescription("", "", "", false);
+
     private MethodDescription(
             @NonNull String ownerInternalName,
             @NonNull String name,
