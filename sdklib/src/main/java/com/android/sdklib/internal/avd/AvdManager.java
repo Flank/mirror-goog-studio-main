@@ -818,7 +818,7 @@ public class AvdManager {
      */
     @Slow
     public AvdInfo reloadAvd(@NonNull AvdInfo avdInfo, @NonNull ILogger log) {
-        AvdInfo newInfo = parseAvdInfo(mFop.toPath(avdInfo.getIniFile()), log);
+        AvdInfo newInfo = parseAvdInfo(avdInfo.getIniFile(), log);
         synchronized (mAllAvdList) {
             int index = mAllAvdList.indexOf(avdInfo);
             if (index >= 0) {
@@ -1047,7 +1047,7 @@ public class AvdManager {
             // Create an AVD object from these files
             return new AvdInfo(
                     newAvdName,
-                    mFop.toFile(iniFile),
+                    iniFile,
                     destAvdFolder.toAbsolutePath().toString(),
                     systemImage,
                     configVals);
@@ -1222,7 +1222,7 @@ public class AvdManager {
         try {
             boolean error = false;
 
-            Path f = mFop.toPath(avdInfo.getIniFile());
+            Path f = avdInfo.getIniFile();
             try {
                 Files.deleteIfExists(f);
             } catch (IOException exception) {
@@ -1304,7 +1304,7 @@ public class AvdManager {
             }
 
             if (newName != null) {
-                Path oldIniFile = mFop.toPath(avdInfo.getIniFile());
+                Path oldIniFile = avdInfo.getIniFile();
                 Path newIniFile = AvdInfo.getDefaultIniFile(this, newName);
 
                 log.warning("Moving '%1$s' to '%2$s'.", oldIniFile, newIniFile);
@@ -1469,7 +1469,7 @@ public class AvdManager {
             }
             return new AvdInfo(
                     avdName,
-                    mFop.toFile(iniPath),
+                    iniPath,
                     iniPath.toString(),
                     null,
                     null,
@@ -1599,8 +1599,7 @@ public class AvdManager {
             }
         }
 
-        AvdInfo info =
-                new AvdInfo(name, mFop.toFile(iniPath), avdPath, sysImage, properties, status);
+        AvdInfo info = new AvdInfo(name, iniPath, avdPath, sysImage, properties, status);
 
         if (updateHashV2) {
             try {
@@ -2279,7 +2278,7 @@ public class AvdManager {
         AvdInfo theAvdInfo =
                 new AvdInfo(
                         avdName,
-                        mFop.toFile(iniFile),
+                        iniFile,
                         avdFolder.toAbsolutePath().toString(),
                         systemImage,
                         values);

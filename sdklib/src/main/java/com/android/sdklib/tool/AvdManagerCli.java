@@ -995,9 +995,9 @@ class AvdManagerCli extends CommandLineParser {
                     return;
                 }
 
-                File ini = info.getIniFile();
+                Path ini = info.getIniFile();
                 if (ini.equals(AvdInfo.getDefaultIniFile(avdManager, newName))) {
-                    errorAndExit("The AVD file '%s' is in the way.", ini.getCanonicalPath());
+                    errorAndExit("The AVD file '%s' is in the way.", ini.toRealPath());
                     return;
                 }
             }
