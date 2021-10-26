@@ -28,7 +28,6 @@ import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -64,6 +63,7 @@ import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -83,7 +83,7 @@ import java.util.stream.Stream;
  */
 public class AvdManager {
 
-    private Path mBaseAvdFolder;
+    @NonNull private final Path mBaseAvdFolder;
 
     /**
      * Exception thrown when something is wrong with a target path.
@@ -447,16 +447,13 @@ public class AvdManager {
     private final AndroidSdkHandler mSdkHandler;
     private final Map<ILogger, DeviceManager> mDeviceManagers =
             new HashMap<>();
-    private final FileOp mFop;
 
     protected AvdManager(
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull Path baseAvdFolder,
-            @NonNull ILogger log,
-            @NonNull FileOp fop)
+            @NonNull ILogger log)
             throws AndroidLocationsException {
         mSdkHandler = sdkHandler;
-        mFop = fop;
         mBaseAvdFolder = baseAvdFolder;
         buildAvdList(mAllAvdList, log);
     }
@@ -491,7 +488,6 @@ public class AvdManager {
         }
         synchronized(mManagers) {
             AvdManager manager;
-            FileOp fop = sdkHandler.getFileOp();
             AvdManagerCacheKey key =
                     new AvdManagerCacheKey(sdkHandler.getLocation(), avdHomeFolder);
             WeakReference<AvdManager> ref = mManagers.get(key);
@@ -499,7 +495,7 @@ public class AvdManager {
                 return manager;
             }
             try {
-                manager = new AvdManager(sdkHandler, avdHomeFolder, log, fop);
+                manager = new AvdManager(sdkHandler, avdHomeFolder, log);
             } catch (AndroidLocationsException e) {
                 throw e;
             } catch (Exception e) {
@@ -898,7 +894,7 @@ public class AvdManager {
                 if (newAvdInfo == null) {
                     return null;
                 }
-                avdFolder = mFop.toPath(newAvdInfo.getDataFolderPath());
+                avdFolder = mBaseAvdFolder.resolve(newAvdInfo.getDataFolderPath());
                 configValues.putAll(newAvdInfo.getProperties());
                 // If the hardware config includes an SD Card path in the old directory,
                 // update the path to the new directory
@@ -1487,16 +1483,12 @@ public class AvdManager {
                 };
 
         // load the AVD properties.
-        if (avdPath != null) {
-            configIniFile = new PathFileWrapper(mFop.toPath(avdPath).resolve(CONFIG_INI));
-        }
+        configIniFile = new PathFileWrapper(mBaseAvdFolder.resolve(avdPath).resolve(CONFIG_INI));
 
-        if (configIniFile != null) {
-            if (!configIniFile.exists()) {
-                log.warning("Missing file '%1$s'.",  configIniFile.getOsLocation());
-            } else {
-                properties = parseIniFile(configIniFile, log);
-            }
+        if (!configIniFile.exists()) {
+            log.warning("Missing file '%1$s'.", configIniFile.getOsLocation());
+        } else {
+            properties = parseIniFile(configIniFile, log);
         }
 
         // get name
@@ -1516,7 +1508,7 @@ public class AvdManager {
                 Path sdkLocation = mSdkHandler.getLocation();
                 Path imageDir =
                         sdkLocation == null
-                                ? mFop.toPath(imageSysDir)
+                                ? mBaseAvdFolder.resolve(imageSysDir)
                                 : sdkLocation.resolve(imageSysDir);
                 sysImage = mSdkHandler.getSystemImageManager(progress).getImageAt(imageDir);
             }
@@ -1822,7 +1814,7 @@ public class AvdManager {
     @Slow
     public AvdInfo updateAvd(AvdInfo avd, Map<String, String> newProperties) throws IOException {
         // now write the config file
-        Path configIniFile = mFop.toPath(avd.getDataFolderPath()).resolve(CONFIG_INI);
+        Path configIniFile = mBaseAvdFolder.resolve(avd.getDataFolderPath()).resolve(CONFIG_INI);
         writeIniFile(configIniFile, newProperties, true);
 
         // finally create a new AvdInfo for this unbroken avd and add it to the list.
@@ -2141,7 +2133,7 @@ public class AvdManager {
             wrapper.initCause(exception);
             throw wrapper;
         }
-        if (mFop.getClass().getSimpleName().equals("MockFileOp")) {
+        if (!mBaseAvdFolder.getFileSystem().equals(FileSystems.getDefault())) {
             // We don't have a real filesystem, so we won't be able to run the tool. Skip.
             runMkSdcard = false;
         }
