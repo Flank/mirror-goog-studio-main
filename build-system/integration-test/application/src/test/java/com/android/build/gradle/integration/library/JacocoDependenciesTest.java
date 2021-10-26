@@ -50,6 +50,9 @@ import org.junit.Test;
 /** Test for jacoco agent runtime dependencies. */
 public class JacocoDependenciesTest {
 
+    // AGP keeps an old version of the Jacoco libraries for testing version changes.
+    private final String oldJacocoVersion = "0.7.4.201502262128";
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("projectWithModules").create();
@@ -103,7 +106,7 @@ public class JacocoDependenciesTest {
                         + "apply plugin: 'com.android.library'\n"
                         + "dependencies {\n"
                         + "  implementation "
-                        + "'org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime'\n"
+                        + "'org.jacoco:org.jacoco.agent:" + oldJacocoVersion + ":runtime'\n"
                         + "}\n");
         assertAgentMavenCoordinates(
                 "org.jacoco:org.jacoco.agent:" + JacocoOptions.DEFAULT_VERSION + ":runtime@jar");
@@ -113,8 +116,9 @@ public class JacocoDependenciesTest {
     public void checkAgentRuntimeVersionWhenOverridden() throws IOException {
         TestFileUtils.appendToFile(
                 project.getSubproject("library").getBuildFile(),
-                "\n" + "android.jacoco.version '0.7.4.201502262128'\n");
-        assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime@jar");
+                "\n" + "android.jacoco.version '" + oldJacocoVersion + "'\n");
+        assertAgentMavenCoordinates(
+                "org.jacoco:org.jacoco.agent:" + oldJacocoVersion + ":runtime@jar");
     }
 
     private void assertAgentMavenCoordinates(@NonNull String expected) throws IOException {
