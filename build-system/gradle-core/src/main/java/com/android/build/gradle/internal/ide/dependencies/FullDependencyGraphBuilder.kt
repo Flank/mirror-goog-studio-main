@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.ide.v2.ArtifactDependenciesImpl
 import com.android.build.gradle.internal.ide.v2.GraphItemImpl
 import com.android.build.gradle.internal.ide.v2.UnresolvedDependencyImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.testFixtures.isProjectTestFixturesCapability
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.GraphItem
 import com.android.builder.model.v2.ide.UnresolvedDependency
@@ -133,6 +134,9 @@ class FullDependencyGraphBuilder(
                         variantName = variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
                             ?: "unknown",
                         artifactFile = File("wont/matter"),
+                        isTestFixturesArtifact = variant.capabilities.any {
+                            it.isProjectTestFixturesCapability(owner.projectName)
+                        },
                         extractedFolder = null,
                         publishedLintJar = null,
                         dependencyType = ResolvedArtifact.DependencyType.ANDROID,

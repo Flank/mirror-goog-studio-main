@@ -40,3 +40,12 @@ fun getTestFixturesCapabilityForProject(project: Project): Capability {
         project.dependencies.testFixtures(project) as ProjectDependency
     return dependencyWithTestFixturesCapability.requestedCapabilities.first()
 }
+
+/**
+ * A testFixtures component of a project will have the capability (group = project.group,
+ * name = project.name + "-test-fixtures", version = null)
+ * See [DefaultDependencyHandler.testFixtures](https://github.com/gradle/gradle/blob/master/subprojects/dependency-management/src/main/java/org/gradle/api/internal/artifacts/dsl/dependencies/DefaultDependencyHandler.java)
+ * to know how testFixtures capability is created.
+ */
+fun Capability.isProjectTestFixturesCapability(projectName: String) =
+    version == null && name == "$projectName-$testFixturesClassifier"

@@ -19,10 +19,12 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.DependenciesImpl
+import com.android.build.gradle.internal.testFixtures.isProjectTestFixturesCapability
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Dependencies
 import com.google.common.collect.Lists
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
 fun clone(dependencies: Dependencies, modelLevel: Int): Dependencies {
@@ -46,4 +48,16 @@ fun clone(dependencies: Dependencies, modelLevel: Int): Dependencies {
 
 fun ResolvedArtifactResult.getVariantName(): String? {
     return variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
+}
+
+/**
+ * Checks if the resolved artifact is produced from a local project with testFixtures capability.
+ */
+fun ResolvedArtifactResult.hasProjectTestFixturesCapability(): Boolean {
+    if (id !is ProjectComponentIdentifier) {
+        return false
+    }
+    return variant.capabilities.any {
+        it.isProjectTestFixturesCapability((id as ProjectComponentIdentifier).projectName)
+    }
 }

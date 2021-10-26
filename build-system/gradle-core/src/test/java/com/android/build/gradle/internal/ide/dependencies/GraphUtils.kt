@@ -130,6 +130,7 @@ open class DependencyBuilderImpl: DependencyBuilder {
                 componentIdentifier = componentIdentifier,
                 variant = resolvedVariantResult,
                 variantName = null, //FIXME
+                isTestFixturesArtifact = false,
                 artifactFile = node.file,
                 extractedFolder = null,
                 publishedLintJar = null,

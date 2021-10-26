@@ -42,6 +42,7 @@ data class ResolvedArtifact internal constructor(
     val variant: ResolvedVariantResult,
     val variantName: String?,
     val artifactFile: File,
+    val isTestFixturesArtifact: Boolean,
     /**
      * An optional sub-result that represents the bundle file, when the current result
      * represents an exploded aar
@@ -67,6 +68,7 @@ data class ResolvedArtifact internal constructor(
                 mainArtifactResult.variant,
                 mainArtifactResult.getVariantName(),
                 mainArtifactResult.file,
+                mainArtifactResult.hasProjectTestFixturesCapability(),
                 extractedFolder,
                 publishedLintJar,
                 dependencyType,

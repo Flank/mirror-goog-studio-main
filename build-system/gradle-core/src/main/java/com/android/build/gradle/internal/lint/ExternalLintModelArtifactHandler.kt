@@ -92,6 +92,7 @@ class ExternalLintModelArtifactHandler private constructor(
         projectPath: String,
         buildId: String,
         variantName: String?,
+        isDependencyOnTestFixtures: Boolean,
         aarFile: File,
         lintJar: File?,
         isProvided: Boolean,
