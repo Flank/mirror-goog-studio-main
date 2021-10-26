@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.dependency.ResolutionResultProvider
 import com.android.build.gradle.internal.ide.v2.ArtifactDependenciesImpl
 import com.android.build.gradle.internal.ide.v2.GraphItemImpl
@@ -129,7 +130,8 @@ class FullDependencyGraphBuilder(
                     ResolvedArtifact(
                         variant.owner,
                         variant,
-                        variantName = variant.getVariantName() ?: "unknown",
+                        variantName = variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
+                            ?: "unknown",
                         artifactFile = File("wont/matter"),
                         extractedFolder = null,
                         publishedLintJar = null,

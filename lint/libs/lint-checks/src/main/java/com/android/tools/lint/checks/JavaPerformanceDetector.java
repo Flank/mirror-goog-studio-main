@@ -293,7 +293,8 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
             if (called != null) {
                 PsiClass containingClass = called.getContainingClass();
                 if (containingClass != null) {
-                    return containingClass.getAnnotation("kotlin.jvm.JvmInline") != null;
+                    return containingClass.getAnnotation("kotlin.jvm.JvmInline") != null // 1.5+
+                            || mContext.getEvaluator().isInline(containingClass); // 1.4
                 }
             }
 

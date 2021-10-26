@@ -344,9 +344,25 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .withName("out")
                 .on(InternalArtifactType.JACOCO_INSTRUMENTED_JARS)
         }
+
+        override fun configure(task: JacocoTask) {
+            super.configure(task)
+            task.jacocoAntTaskConfiguration
+                .from(
+                    JacocoConfigurations.getJacocoAntTaskConfiguration(
+                        task.project, getJacocoVersion(creationConfig)
+                    )
+                )
+            task.forceOutOfProcess
+                .set(
+                    creationConfig
+                        .services
+                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
+                )
+        }
         }
 
-    class CreationAction(creationConfig: ComponentCreationConfig) :
+    class CreationActionWithNoTransformAsmClasses(creationConfig: ComponentCreationConfig) :
         AbstractCreationAction(creationConfig) {
 
         override fun configure(task: JacocoTask) {
@@ -364,22 +380,10 @@ abstract class JacocoTask : NewIncrementalTask() {
                         .artifacts
                         .getAll(MultipleArtifact.ALL_CLASSES_DIRS)
                 )
-            task.jacocoAntTaskConfiguration
-                .from(
-                    JacocoConfigurations.getJacocoAntTaskConfiguration(
-                        task.project, getJacocoVersion(creationConfig)
-                    )
-                )
-            task.forceOutOfProcess
-                .set(
-                    creationConfig
-                        .services
-                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
-                )
         }
     }
 
-    class CreationActionWithTransformSupport(creationConfig: ComponentCreationConfig) :
+    class CreationActionWithTransformAsmClasses(creationConfig: ComponentCreationConfig) :
         AbstractCreationAction(creationConfig) {
 
         override fun configure(task: JacocoTask) {
@@ -389,36 +393,17 @@ abstract class JacocoTask : NewIncrementalTask() {
                     creationConfig.artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
                 ).asFileTree
             )
-
             task.classesDir.from(
                 creationConfig.services.fileCollection(
                     creationConfig.artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES)
                 ).asFileTree
             )
-            task.jacocoAntTaskConfiguration
-                .from(
-                    JacocoConfigurations.getJacocoAntTaskConfiguration(
-                        task.project, getJacocoVersion(creationConfig)
-                    )
-                )
-            task.forceOutOfProcess
-                .set(
-                    creationConfig
-                        .services
-                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
-                )
         }
     }
 
     class CreationActionLegacyTransform(
         creationConfig: ComponentCreationConfig, private val transformClasses: FileCollection
-    ) :
-        VariantTaskCreationAction<JacocoTask, ComponentCreationConfig>(creationConfig) {
-
-        override val name: String
-            get() = computeTaskName("jacoco")
-        override val type: Class<JacocoTask>
-            get() = JacocoTask::class.java
+    ) : AbstractCreationAction(creationConfig) {
 
         override fun handleProvider(taskProvider: TaskProvider<JacocoTask>) {
             super.handleProvider(taskProvider)
@@ -446,18 +431,6 @@ abstract class JacocoTask : NewIncrementalTask() {
             task.classesDir.from(classesFromLegacyTransforms.getDirectories(
                 creationConfig.services.projectInfo.getProject().layout.projectDirectory
             ))
-            task.jacocoAntTaskConfiguration
-                .from(
-                    JacocoConfigurations.getJacocoAntTaskConfiguration(
-                        task.project, getJacocoVersion(creationConfig)
-                    )
-                )
-            task.forceOutOfProcess
-                .set(
-                    creationConfig
-                        .services
-                        .projectOptions[BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS]
-                )
         }
     }
     companion object {

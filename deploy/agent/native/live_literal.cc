@@ -434,6 +434,7 @@ std::string LiveLiteral::InstrumentHelper(const std::string& helper) {
   }
 
   jvmtiEventCallbacks callbacks;
+  memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = Agent_LiveLiteralHelperClassFileLoadHook;
 
   CheckJvmti(
