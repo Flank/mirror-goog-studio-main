@@ -67,5 +67,5 @@ data class DefaultLintModelMavenName(
     override val artifactId: String,
     override val version: String = ""
 ) : LintModelMavenName {
-    override fun toString(): String = "$groupId:$artifactId:$version"
+    override fun toString(): String = "$groupId:${artifactId.trimStart(':')}:$version"
 }
