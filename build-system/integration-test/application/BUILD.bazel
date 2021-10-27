@@ -270,6 +270,7 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_1_4_32_prebuilts",
+        "//tools/base/build-system/integration-test:relocated_coroutines_test_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/build-system/previous-versions:3.5.0",
     ],

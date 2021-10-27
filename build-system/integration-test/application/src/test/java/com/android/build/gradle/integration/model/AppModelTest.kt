@@ -833,3 +833,31 @@ class DisabledVariantByFlavorInFlavorAppModelTest: ReferenceModelComparator(
         ensureAndroidDslDeltaIsEmpty()
     }
 }
+
+/**
+ * Tests case where there's an artifact relocated via Gradle metadata
+ */
+class RelocatedArtifactTest: ModelComparator() {
+
+    @get:Rule
+    val project = createGradleProject {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+            }
+        }
+    }
+
+    @Test
+    fun `test models`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels(variantName = "debug")
+
+        with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
+    }
+}

@@ -26,10 +26,13 @@ import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.Depen
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.capabilities.Capability
 import java.io.File
+import java.util.Optional
 
 internal fun buildGraph(
     action: DependencyBuilder.() -> Unit
@@ -45,15 +48,16 @@ interface DependencyBuilder {
     fun project(
         path: String,
         buildName: String = "defaultBuildName",
-        action: DependencyNodeBuilder.() -> Unit
-    ): DependencyNodeBuilder
+        action: ProjectDependencyNodeBuilder.() -> Unit
+    ): ProjectDependencyNodeBuilder
 
     fun module(
         group: String,
         module: String,
         version: String,
-        action: DependencyNodeBuilder.() -> Unit
-    ): DependencyNodeBuilder
+        action: ModuleDependencyNodeBuilder.() -> Unit
+    ): ModuleDependencyNodeBuilder
+
     fun dependency(node: DependencyNodeBuilder?)
 }
 
@@ -65,14 +69,21 @@ interface DependencyNodeBuilder: DependencyBuilder {
     fun <T: Any> attribute(attribute: Attribute<T>, value: T)
 }
 
+interface ProjectDependencyNodeBuilder: DependencyNodeBuilder
+
+interface ModuleDependencyNodeBuilder: DependencyNodeBuilder {
+    var availableAt: ModuleDependencyNodeBuilder?
+    fun setupDefaultCapability()
+}
+
 open class DependencyBuilderImpl: DependencyBuilder {
     protected val children = mutableListOf<DependencyNodeBuilderImpl>()
 
     override fun project(
         path: String,
         buildName: String,
-        action: DependencyNodeBuilder.() -> Unit
-    ): DependencyNodeBuilder {
+        action: ProjectDependencyNodeBuilder.() -> Unit
+    ): ProjectDependencyNodeBuilder {
         return ProjectDependencyBuilderImpl(path, buildName).also {
             action(it)
             children.add(it)
@@ -83,8 +94,8 @@ open class DependencyBuilderImpl: DependencyBuilder {
         group: String,
         module: String,
         version: String,
-        action: DependencyNodeBuilder.() -> Unit
-    ): DependencyNodeBuilder {
+        action: ModuleDependencyNodeBuilder.() -> Unit
+    ): ModuleDependencyNodeBuilder {
         return ModuleDependencyBuilderImpl(group, module, version).also {
             action(it)
             children.add(it)
@@ -112,9 +123,16 @@ open class DependencyBuilderImpl: DependencyBuilder {
         node: DependencyNodeBuilderImpl,
         artifacts: MutableSet<ResolvedArtifact>
     ): DependencyResult {
+        val availableAt = if (node is ModuleDependencyNodeBuilder) node.availableAt else null
+        var externalVariant: ResolvedVariantResult? = null
+
         val newChildren = LinkedHashSet<DependencyResult>()
         for (child in node.children) {
-            newChildren.add(processNode(child, artifacts))
+            val newChild = processNode(child, artifacts)
+            if (child == availableAt) {
+                externalVariant = (newChild as? ResolvedDependencyResult)?.resolvedVariant
+            }
+            newChildren.add(newChild)
         }
 
         val componentIdentifier = node.getComponentIdentifier()
@@ -123,22 +141,27 @@ open class DependencyBuilderImpl: DependencyBuilder {
             owner = componentIdentifier,
             attributes = FakeAttributeContainer(node.attributes),
             capabilities = node.capabilities,
+            externalVariant = Optional.ofNullable(externalVariant)
         )
 
-        artifacts.add(
-            ResolvedArtifact(
-                componentIdentifier = componentIdentifier,
-                variant = resolvedVariantResult,
-                variantName = null, //FIXME
-                isTestFixturesArtifact = false,
-                artifactFile = node.file,
-                extractedFolder = null,
-                publishedLintJar = null,
-                dependencyType = node.dependencyType,
-                isWrappedModule = false, // does not really matter
-                buildMapping = ImmutableMap.of() // does not really matter
+        // if there's an external variant due to relocation then that particular module
+        // will not have a matching artifact.
+        if (externalVariant == null) {
+            artifacts.add(
+                ResolvedArtifact(
+                    componentIdentifier = componentIdentifier,
+                    variant = resolvedVariantResult,
+                    variantName = null, //FIXME
+                    isTestFixturesArtifact = false,
+                    artifactFile = node.file,
+                    extractedFolder = null,
+                    publishedLintJar = null,
+                    dependencyType = node.dependencyType,
+                    isWrappedModule = false, // does not really matter
+                    buildMapping = ImmutableMap.of() // does not really matter
+                )
             )
-        )
+        }
 
         // the proper ResolvedVariantResult that contains the capabilities
 
@@ -177,7 +200,7 @@ abstract class DependencyNodeBuilderImpl: DependencyBuilderImpl(), DependencyNod
 private class ProjectDependencyBuilderImpl(
     val projectPath: String,
     val buildName: String
-): DependencyNodeBuilderImpl() {
+): DependencyNodeBuilderImpl(), ProjectDependencyNodeBuilder {
 
     override fun getComponentIdentifier(): ComponentIdentifier {
         return FakeProjectComponentIdentifier(
@@ -191,7 +214,12 @@ private class ModuleDependencyBuilderImpl(
     val group: String,
     val module: String,
     val version: String
-): DependencyNodeBuilderImpl() {
+): DependencyNodeBuilderImpl(), ModuleDependencyNodeBuilder {
+    override var availableAt: ModuleDependencyNodeBuilder? = null
+
+    override fun setupDefaultCapability() {
+        capability(group, module, version)
+    }
 
     override fun getComponentIdentifier(): ComponentIdentifier {
         return FakeModuleComponentIdentifier(group, module, version)

@@ -154,7 +154,7 @@ class LibraryServiceImpl(
                     }
                 }
                 is OpaqueComponentArtifactIdentifier -> {
-                    libraryInfoForLocalJarsCache.computeIfAbsent(artifact.artifactFile) {
+                    libraryInfoForLocalJarsCache.computeIfAbsent(artifact.artifactFile!!) {
                         LibraryInfoImpl(
                             attributes = mapOf(),
                             capabilities = listOf(),
@@ -198,44 +198,53 @@ class LibraryServiceImpl(
 
         return if (id !is ProjectComponentIdentifier || artifact.isWrappedModule) {
             val libraryInfo = getLibraryInfo(artifact)
-            if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
-                val folder = artifact.extractedFolder
+            when (artifact.dependencyType) {
+                ResolvedArtifact.DependencyType.ANDROID -> {
+                    val folder = artifact.extractedFolder
                         ?: throw RuntimeException("Null extracted folder for artifact: $artifact")
 
-                val apiJar = FileUtils.join(folder, SdkConstants.FN_API_JAR)
-                val runtimeJar = FileUtils.join(
-                    folder,
-                    SdkConstants.FD_JARS,
-                    SdkConstants.FN_CLASSES_JAR
-                )
+                    val apiJar = FileUtils.join(folder, SdkConstants.FN_API_JAR)
+                    val runtimeJar = FileUtils.join(
+                        folder,
+                        SdkConstants.FD_JARS,
+                        SdkConstants.FN_CLASSES_JAR
+                    )
 
-                val runtimeJarFiles = listOf(runtimeJar) + (localJarCache.getLocalJarsForAar(folder) ?: listOf())
-                LibraryImpl.createAndroidLibrary(
-                    key = stringCache.cacheString(libraryInfo.computeKey()),
-                    libraryInfo = libraryInfo,
-                    manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
-                    compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
-                    runtimeJarFiles = runtimeJarFiles,
-                    resFolder = File(folder, SdkConstants.FD_RES),
-                    resStaticLibrary = File(folder, SdkConstants.FN_RESOURCE_STATIC_LIBRARY),
-                    assetsFolder = File(folder, SdkConstants.FD_ASSETS),
-                    jniFolder = File(folder, SdkConstants.FD_JNI),
-                    aidlFolder = File(folder, SdkConstants.FD_AIDL),
-                    renderscriptFolder = File(folder, SdkConstants.FD_RENDERSCRIPT),
-                    proguardRules = File(folder, SdkConstants.FN_PROGUARD_TXT),
-                    externalAnnotations = File(folder, SdkConstants.FN_ANNOTATIONS_ZIP),
-                    publicResources = File(folder, SdkConstants.FN_PUBLIC_TXT),
-                    symbolFile = File(folder, SdkConstants.FN_RESOURCE_TEXT),
+                    val runtimeJarFiles = listOf(runtimeJar) + (localJarCache.getLocalJarsForAar(folder) ?: listOf())
+                    LibraryImpl.createAndroidLibrary(
+                        key = stringCache.cacheString(libraryInfo.computeKey()),
+                        libraryInfo = libraryInfo,
+                        manifest = File(folder, SdkConstants.FN_ANDROID_MANIFEST_XML),
+                        compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
+                        runtimeJarFiles = runtimeJarFiles,
+                        resFolder = File(folder, SdkConstants.FD_RES),
+                        resStaticLibrary = File(folder, SdkConstants.FN_RESOURCE_STATIC_LIBRARY),
+                        assetsFolder = File(folder, SdkConstants.FD_ASSETS),
+                        jniFolder = File(folder, SdkConstants.FD_JNI),
+                        aidlFolder = File(folder, SdkConstants.FD_AIDL),
+                        renderscriptFolder = File(folder, SdkConstants.FD_RENDERSCRIPT),
+                        proguardRules = File(folder, SdkConstants.FN_PROGUARD_TXT),
+                        externalAnnotations = File(folder, SdkConstants.FN_ANNOTATIONS_ZIP),
+                        publicResources = File(folder, SdkConstants.FN_PUBLIC_TXT),
+                        symbolFile = File(folder, SdkConstants.FN_RESOURCE_TEXT),
 
-                    lintJar = artifact.publishedLintJar,
-                    artifact = artifact.artifactFile,
-                )
-            } else {
-                LibraryImpl.createJavaLibrary(
-                    stringCache.cacheString(libraryInfo.computeKey()),
-                    libraryInfo,
-                    artifact.artifactFile,
-                )
+                        lintJar = artifact.publishedLintJar,
+                        artifact = artifact.artifactFile!!,
+                    )
+                }
+                ResolvedArtifact.DependencyType.JAVA -> {
+                    LibraryImpl.createJavaLibrary(
+                        stringCache.cacheString(libraryInfo.computeKey()),
+                        libraryInfo,
+                        artifact.artifactFile!!,
+                    )
+                }
+                ResolvedArtifact.DependencyType.RELOCATED_ARTIFACT -> {
+                    LibraryImpl.createRelocatedLibrary(
+                        stringCache.cacheString(libraryInfo.computeKey()),
+                        libraryInfo,
+                    )
+                }
             }
         } else {
             val projectInfo = getProjectInfo(artifact.variant)

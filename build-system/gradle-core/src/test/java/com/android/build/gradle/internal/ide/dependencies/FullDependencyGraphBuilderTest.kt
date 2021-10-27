@@ -22,8 +22,9 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType.ANDROID
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.builder.errors.FakeIssueReporter
 import com.android.builder.model.v2.ide.ArtifactDependencies
+import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.ide.LibraryType
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.gradle.api.artifacts.ArtifactCollection
@@ -40,10 +41,10 @@ internal class FullDependencyGraphBuilderTest {
 
     @Test
     fun `basic dependency`() {
-        val graphs = buildModelGraph {
+        val (graphs, libraries) = buildModelGraph {
             module("foo", "bar", "1.0") {
                 file = File("path/to/bar-1.0.jar")
-                capability("foo", "bar", "1.0")
+                setupDefaultCapability()
             }
         }
 
@@ -56,10 +57,10 @@ internal class FullDependencyGraphBuilderTest {
 
     @Test
     fun `basic attributes`() {
-        val graphs = buildModelGraph {
+        val (graphs, libraries) = buildModelGraph {
             module("foo", "bar", "1.0") {
                 file = File("path/to/bar-1.0.jar")
-                capability("foo", "bar", "1.0")
+                setupDefaultCapability()
                 attribute(
                     BuildTypeAttr.ATTRIBUTE,
                     objectFactory.named(BuildTypeAttr::class.java, "debug ")
@@ -76,10 +77,10 @@ internal class FullDependencyGraphBuilderTest {
 
     @Test
     fun `graph with java module test fixtures`() {
-        val graphs = buildModelGraph {
+        val (graphs, libraries) = buildModelGraph {
             val mainLib = module("foo", "bar", "1.0") {
                 file = File("path/to/bar-1.0.jar")
-                capability("foo", "bar", "1.0")
+                setupDefaultCapability()
             }
             module("foo", "bar", "1.0") {
                 file = File("path/to/bar-test-fixtures-1.0.jar")
@@ -107,7 +108,7 @@ internal class FullDependencyGraphBuilderTest {
 
     @Test
     fun `graph with android project test fixtures`() {
-        val graphs = buildModelGraph {
+        val (graphs, libraries) = buildModelGraph {
             val mainLib = project(":foo") {
                 dependencyType = ANDROID
                 file = File("path/to/mergedManifest/debug/AndroidManifest.xml")
@@ -138,11 +139,39 @@ internal class FullDependencyGraphBuilderTest {
         Truth.assertThat(fixture.dependencies.single()).isSameInstanceAs(main)
     }
 
+    @Test
+    fun `relocated artifact`() {
+        val (graphs, libraries) = buildModelGraph {
+            module("foo", "bar", "1.0") {
+                setupDefaultCapability()
+
+                availableAt = module("relocated-foo", "bar", "1.0") {
+                    file = File("path/to/bar-1.0.jar")
+                    setupDefaultCapability()
+                }
+            }
+        }
+
+        Truth
+            .assertThat(graphs.compileDependencies.map { it.key })
+            .containsExactly("foo|bar|1.0||foo:bar:1.0")
+
+        val rootLibrary =
+            libraries["foo|bar|1.0||foo:bar:1.0"]
+                ?: throw RuntimeException("Failed to find root library")
+        Truth.assertWithMessage("root library").that(rootLibrary.artifact).isNull()
+        Truth.assertWithMessage("root library").that(rootLibrary.type).isEqualTo(LibraryType.RELOCATED)
+
+        val children = graphs.compileDependencies.single().dependencies
+        Truth
+            .assertThat(children.map { it.key })
+            .containsExactly("relocated-foo|bar|1.0||relocated-foo:bar:1.0")
+    }
 }
 
 // -------------
 
-private fun buildModelGraph(action: DependencyBuilder.() -> Unit): ArtifactDependencies {
+private fun buildModelGraph(action: DependencyBuilder.() -> Unit): Pair<ArtifactDependencies, Map<String, Library>> {
     val stringCache = StringCacheImpl()
     val localJarCache = LocalJarCacheImpl()
     val libraryService = LibraryServiceImpl(stringCache, localJarCache)
@@ -155,7 +184,7 @@ private fun buildModelGraph(action: DependencyBuilder.() -> Unit): ArtifactDepen
         libraryService
     )
 
-    return builder.build()
+    return builder.build() to libraryService.getAllLibraries().associateBy { it.key }
 }
 
 private fun getInputs(artifacts: Set<ResolvedArtifact>): ArtifactCollectionsInputs =

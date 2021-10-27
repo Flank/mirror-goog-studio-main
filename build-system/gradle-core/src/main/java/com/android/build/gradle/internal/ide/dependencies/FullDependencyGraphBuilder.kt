@@ -119,19 +119,42 @@ class FullDependencyGraphBuilder(
         val artifact = artifactMap[variantKey]
 
         val library = if (artifact == null) {
-            // this can happen when resolving a test graph, as one of the roots will be
-            // the same module and this is not included in the other artifact-based API.
+            // There are 2 (currently known) reasons this can happen:
+            // - when resolving a test graph, as one of the roots will be the same module and this
+            //   is not included in the other artifact-based API.
+            // - when an artifact is relocated via Gradle's module "available-at" feature.
+            //
+            // In both case, there are still dependencies, so we need to create a library object,
+            // and traverse the dependencies.
             val owner = variant.owner
-            if (owner is ProjectComponentIdentifier &&
-                inputs.projectPath == owner.projectPath) {
 
+            if (variant.externalVariant.isPresent) {
+                // The presence of an external variant indicates that this is a relocation. We
+                // don't need to point to the relocation, we just need to process this node as is
+                libraryService.getLibrary(
+                    ResolvedArtifact(
+                        owner,
+                        variant,
+                        variantName = "unknown",
+                        artifactFile = null,
+                        isTestFixturesArtifact = false,
+                        extractedFolder = null,
+                        publishedLintJar = null,
+                        dependencyType = ResolvedArtifact.DependencyType.RELOCATED_ARTIFACT,
+                        isWrappedModule = false,
+                        buildMapping = inputs.buildMapping
+                    )
+                )
+            } else if (owner is ProjectComponentIdentifier && inputs.projectPath == owner.projectPath) {
                 // create on the fly a ResolvedArtifact around this project
                 // and get the matching library item
                 libraryService.getLibrary(
                     ResolvedArtifact(
-                        variant.owner,
+                        owner,
                         variant,
-                        variantName = variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
+                        variantName = variant.attributes
+                            .getAttribute(VariantAttr.ATTRIBUTE)
+                            ?.toString()
                             ?: "unknown",
                         artifactFile = File("wont/matter"),
                         isTestFixturesArtifact = variant.capabilities.any {

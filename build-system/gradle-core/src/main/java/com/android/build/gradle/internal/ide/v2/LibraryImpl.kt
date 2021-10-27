@@ -104,6 +104,17 @@ data class LibraryImpl private constructor(
                 symbolFile = symbolFile
             )
         )
+
+        fun createRelocatedLibrary(
+            key: String,
+            libraryInfo: LibraryInfo,
+        ) = LibraryImpl(
+            key = key,
+            type = LibraryType.RELOCATED,
+            libraryInfo = libraryInfo,
+            artifact = null,
+            lintJar = null
+        )
     }
 }
 

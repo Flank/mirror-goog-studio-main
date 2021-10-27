@@ -17,10 +17,28 @@
 package com.android.builder.model.v2.ide
 
 /**
- * The type of a Library dependency.
- *
- * @since 7.0
+ * The type of Library dependency.
  */
 enum class LibraryType {
-    PROJECT, ANDROID_LIBRARY, JAVA_LIBRARY;
+
+    /**
+     * The dependency is a sub-project of the build.
+     */
+    PROJECT,
+
+    /**
+     * The dependency is an external Android Library (AAR)
+     */
+    ANDROID_LIBRARY,
+
+    /**
+     * The dependency is an external Java Library (JAR)
+     */
+    JAVA_LIBRARY,
+
+    /**
+     * The dependency is an external dependency with no artifact, pointing to a different artifact
+     * (via Gradle's available-at feature, and possibly via POM's relocation feature.)
+     */
+    RELOCATED;
 }
