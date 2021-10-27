@@ -84,6 +84,8 @@ android {
     }
 }
 
+import com.android.builder.model.v2.CustomSourceDirectory
+
 public class SourceProviderImpl implements SourceProvider, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -160,6 +162,11 @@ public class SourceProviderImpl implements SourceProvider, Serializable {
 
     @NonNull
     Collection<File> getMlModelsDirectories() {
+        return Collections.emptyList()
+    }
+
+    @NonNull
+    Collection<CustomSourceDirectory> getCustomDirectories() {
         return Collections.emptyList()
     }
 }

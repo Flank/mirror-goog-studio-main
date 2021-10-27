@@ -162,4 +162,28 @@ interface AndroidComponentsExtension<
         dslExtension: DslExtension,
         configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension
     )
+
+    /**
+     * Register a new source type to all source sets.
+     *
+     * The name of the source type will be used to create expected directories names in the various
+     * source sets. For instance, src/main/<name> or src/debug/<name>.
+     *
+     * There is no notion of priorities between the build-type, flavor specific directories, all
+     * the expected directories will be interpreted as a flat namespace.
+     *
+     * Therefore, any [org.gradle.api.Task] that needs access to the entire list of source folders
+     * can just use the [Sources.extras]'s [SourceDirectories.all] method for that source type.
+     *
+     * However, If you need to have overriding priorities between the expected directories and
+     * therefore require a merging activity, you can still use this API but you will need to
+     * create a merging task that will have all sources in input and produce a single output
+     * folder for the merged sources.
+     *
+     * @param name the name of the source type.
+     */
+    @Incubating
+    fun registerSourceType(
+        name: String,
+    )
 }

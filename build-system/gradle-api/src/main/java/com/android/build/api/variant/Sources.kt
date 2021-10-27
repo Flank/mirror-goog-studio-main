@@ -31,4 +31,16 @@ interface Sources {
      * Access to the Java source folders.
      */
     val java: SourceDirectories
+
+    /**
+     * Access (and potentially creates) a new [SourceDirectories] for a custom source type that can
+     * be referenced by its [name].
+     *
+     * The first caller will create the new instance, other callers with the same [name] will get
+     * the same instance returned. Any callers can obtain the final list of the folders registered
+     * under this custom source type by calling [SourceDirectories.all].
+     *
+     * These sources directories are attached to the variant and will be visible to Android Studio.
+     */
+    fun getByName(name: String): SourceDirectories
 }

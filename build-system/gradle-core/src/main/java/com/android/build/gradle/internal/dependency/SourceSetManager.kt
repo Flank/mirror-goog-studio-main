@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dependency
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.Action
@@ -27,7 +26,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -130,11 +128,11 @@ class SourceSetManager(
         }
     }
 
-    fun executeAction(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
+    fun executeAction(action: Action<NamedDomainObjectContainer<out AndroidSourceSet>>) {
         action.execute(sourceSetsContainer)
     }
 
-    fun executeAction(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+    fun executeAction(action: NamedDomainObjectContainer<out AndroidSourceSet>.() -> Unit) {
         action.invoke(sourceSetsContainer)
     }
 

@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.RegularFile
@@ -342,6 +344,8 @@ interface VariantPropertiesApiServices : BaseServices {
 
     fun directoryProperty(): DirectoryProperty
     fun fileTree(): ConfigurableFileTree
+
+    fun <T> domainObjectContainer(type: Class<T>, factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T>
 
     fun lockProperties()
 }

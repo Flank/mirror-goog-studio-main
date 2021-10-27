@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
@@ -356,6 +357,9 @@ class VariantPropertiesApiServicesImpl(
         properties.clear()
         propertiesLockStatus = true
     }
+
+    override fun <T> domainObjectContainer(type: Class<T>, factory: NamedDomainObjectFactory<T>) =
+        projectServices.objectFactory.domainObjectContainer(type, factory)!!
 
     // register a property to be locked later.
     // if the properties have already been locked, the property is locked right away.

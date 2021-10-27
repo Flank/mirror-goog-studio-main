@@ -109,12 +109,12 @@ interface AndroidSourceSet : Named {
     val compileOnlyConfigurationName: String
 
     /**
-     * Returns the name of the implemenation configuration for this source set.
+     * Returns the name of the implementation configuration for this source set.
      */
     val implementationConfigurationName: String
 
     /**
-     * Returns the name of the implemenation configuration for this source set.
+     * Returns the name of the implementation configuration for this source set.
      */
     val runtimeOnlyConfigurationName: String
 
@@ -131,7 +131,7 @@ interface AndroidSourceSet : Named {
     /**
      * Sets the root of the source sets to a given path.
      *
-     * All entries of the soure-setare located under this root directory.
+     * All entries of the source-set are located under this root directory.
      *
      * This method has a return value for legacy reasons.
      *

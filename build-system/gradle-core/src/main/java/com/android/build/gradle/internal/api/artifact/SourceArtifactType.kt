@@ -38,4 +38,5 @@ sealed class SourceArtifactType: Artifact.Single<Directory>(
     object JNI_LIBS : SourceArtifactType()
     object SHADERS : SourceArtifactType()
     object ML_MODELS : SourceArtifactType()
+    object CUSTOMS: SourceArtifactType()
 }

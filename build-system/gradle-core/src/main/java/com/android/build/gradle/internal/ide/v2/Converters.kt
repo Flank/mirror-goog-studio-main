@@ -199,7 +199,8 @@ internal fun DefaultAndroidSourceSet.convert(
         assetsDirectories = assetsDirectories,
         jniLibsDirectories = jniLibsDirectories,
         shadersDirectories = if (features.shaders) shadersDirectories else null,
-        mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null
+        mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
+        customDirectories = emptyList(),
 )
 
 internal fun DefaultAndroidSourceSet.convert(
@@ -219,7 +220,8 @@ internal fun DefaultAndroidSourceSet.convert(
     assetsDirectories = assetsDirectories,
     jniLibsDirectories = jniLibsDirectories,
     shadersDirectories = if (features.shaders) shadersDirectories else null,
-    mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null
+    mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
+    customDirectories = customDirectories,
 )
 
 internal fun AndroidResources.convert() = AaptOptionsImpl(

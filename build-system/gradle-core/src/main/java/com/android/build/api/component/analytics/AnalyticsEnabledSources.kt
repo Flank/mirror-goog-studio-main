@@ -20,6 +20,7 @@ import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
@@ -39,4 +40,10 @@ open class AnalyticsEnabledSources @Inject constructor(
                 stats,
                 objectFactory)
         }
+
+    override fun getByName(name: String): SourceDirectories {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.SOURCES_EXTRAS_ACCESS_VALUE
+        return delegate.getByName(name)
+    }
 }

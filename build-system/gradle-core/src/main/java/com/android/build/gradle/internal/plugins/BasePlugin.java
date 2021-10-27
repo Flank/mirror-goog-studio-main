@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.attribution.BuildAttributionService;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.JacocoInstrumentationService;
@@ -126,6 +127,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -731,6 +733,25 @@ public abstract class BasePlugin<
         BuildFeatureValues buildFeatureValues =
                 variantFactory.createBuildFeatureValues(
                         extension.getBuildFeatures(), projectServices.getProjectOptions());
+
+        // create all registered custom source sets from the user on each AndroidSourceSet
+        variantManager
+                .getVariantApiOperationsRegistrar()
+                .onEachSourceSetExtensions(
+                        name -> {
+                            extension
+                                    .getSourceSets()
+                                    .forEach(
+                                            androidSourceSet -> {
+                                                if (androidSourceSet
+                                                        instanceof DefaultAndroidSourceSet) {
+                                                    ((DefaultAndroidSourceSet) androidSourceSet)
+                                                            .getExtras$gradle_core()
+                                                            .create(name);
+                                                }
+                                            });
+                            return Unit.INSTANCE;
+                        });
 
         variantManager.createVariants(buildFeatureValues);
 

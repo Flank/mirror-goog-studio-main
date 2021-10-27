@@ -1,6 +1,5 @@
 package com.android.build.gradle
 
-import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
@@ -18,7 +17,6 @@ import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
-import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.DefaultDomainObjectSet

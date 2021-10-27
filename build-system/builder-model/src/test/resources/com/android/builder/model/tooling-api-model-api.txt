@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-20c4f237a6a60ccd2938a045675988b615c046e6b4b4e1dd1800eff0441f6dc2
+a631021bddc008500805b84b5b1e5754e42d6b2544b80197e550fa14368aff81
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -383,6 +383,7 @@ com.android.builder.model.SourceProvider.getAidlDirectories: java.util.Collectio
 com.android.builder.model.SourceProvider.getAssetsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getCDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getCppDirectories: java.util.Collection<java.io.File> ()
+com.android.builder.model.SourceProvider.getCustomDirectories: java.util.Collection<com.android.builder.model.v2.CustomSourceDirectory> ()
 com.android.builder.model.SourceProvider.getJavaDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getJniLibsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getKotlinDirectories: java.util.Collection<java.io.File> ()
@@ -481,6 +482,10 @@ com.android.builder.model.level2.Library.getSymbolFile: java.lang.String ()
 com.android.builder.model.level2.Library.getType: int ()
 com.android.builder.model.level2.Library.getVariant: java.lang.String ()
 com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.CustomSourceDirectory
+com.android.builder.model.v2.CustomSourceDirectory.<init>: com.android.builder.model.v2.CustomSourceDirectory (java.lang.String, java.io.File)
+com.android.builder.model.v2.CustomSourceDirectory.getDirectory: java.io.File ()
+com.android.builder.model.v2.CustomSourceDirectory.getSourceTypeName: java.lang.String ()
 com.android.builder.model.v2.ModelSyncFile
 com.android.builder.model.v2.ModelSyncFile$ModelSyncType extends java.lang.Enum
 com.android.builder.model.v2.ModelSyncFile$ModelSyncType.valueOf: com.android.builder.model.v2.ModelSyncFile$ModelSyncType (java.lang.String)
@@ -710,6 +715,7 @@ com.android.builder.model.v2.ide.ProjectType.values: com.android.builder.model.v
 com.android.builder.model.v2.ide.SourceProvider implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.SourceProvider.getAidlDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getAssetsDirectories: java.util.Collection<java.io.File> ()
+com.android.builder.model.v2.ide.SourceProvider.getCustomDirectories: java.util.Collection<com.android.builder.model.v2.CustomSourceDirectory> ()
 com.android.builder.model.v2.ide.SourceProvider.getJavaDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getJniLibsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getKotlinDirectories: java.util.Collection<java.io.File> ()

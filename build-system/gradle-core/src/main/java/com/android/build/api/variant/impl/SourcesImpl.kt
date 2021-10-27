@@ -16,8 +16,11 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import org.gradle.api.file.Directory
 import java.io.File
@@ -68,4 +71,30 @@ class SourcesImpl(
                 variantSourceSet.java?.setSrcDirs(emptyList<File>())
             }
         }
+
+    internal val extras: NamedDomainObjectContainer<SourceDirectoriesImpl> by lazy {
+        variantServices.domainObjectContainer(
+            SourceDirectoriesImpl::class.java,
+            SourceProviderFactory(
+                variantServices,
+                projectDirectory,
+            ),
+        )
+    }
+
+    override fun getByName(name: String): SourceDirectories = extras.maybeCreate(name)
+
+    class SourceProviderFactory(
+        private val variantServices: VariantPropertiesApiServices,
+        private val projectDirectory: Directory,
+    ): NamedDomainObjectFactory<SourceDirectoriesImpl> {
+
+        override fun create(name: String): SourceDirectoriesImpl =
+            SourceDirectoriesImpl(
+                _name = name,
+                projectDirectory = projectDirectory,
+                variantServices = variantServices,
+                variantDslFilters = null
+            )
+    }
 }

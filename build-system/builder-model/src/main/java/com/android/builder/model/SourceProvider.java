@@ -16,6 +16,7 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import com.android.builder.model.v2.CustomSourceDirectory;
 import java.io.File;
 import java.util.Collection;
 
@@ -141,4 +142,13 @@ public interface SourceProvider {
      */
     @NonNull
     Collection<File> getMlModelsDirectories();
+
+    /**
+     * Returns the map of registered custom directories, key is the name provided when registering
+     * the source set, and value is the list of folders for that custom source set.
+     *
+     * @return a map of source set name to source set folders.
+     */
+    @NonNull
+    Collection<CustomSourceDirectory> getCustomDirectories();
 }

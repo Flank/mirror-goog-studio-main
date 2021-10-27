@@ -30,13 +30,13 @@ import java.io.File
  * configuration time.
  *
  * @param directory the directory that exists and contains source files.
- * @param filter filters to apply to the folder.
+ * @param filter optional filters to apply to the folder.
  * @param isUserAdded true if the user added this source folder or false if created by AGP.
  */
 class FileBasedDirectoryEntryImpl(
     override val name: String,
     private val directory: File,
-    override val filter: PatternFilterable,
+    override val filter: PatternFilterable? = null,
     override val isUserAdded: Boolean = false,
 ): DirectoryEntry {
 
@@ -51,7 +51,9 @@ class FileBasedDirectoryEntryImpl(
 
     override fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree): ConfigurableFileTree =
         fileTreeCreator().setDir(directory).also {
-            it.include((filter as PatternSet).asIncludeSpec)
-            it.exclude(filter.asExcludeSpec)
+            if (filter != null) {
+                it.include((filter as PatternSet).asIncludeSpec)
+                it.exclude(filter.asExcludeSpec)
+            }
         }
 }

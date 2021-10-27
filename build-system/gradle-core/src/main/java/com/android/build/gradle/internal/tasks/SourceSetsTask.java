@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import java.io.IOException;
@@ -68,6 +70,19 @@ public class SourceSetsTask extends ProjectBasedReportTask {
                 renderDirectorySet("RenderScript sources", sourceSet.getRenderscript(), project);
                 renderDirectorySet("JNI sources", sourceSet.getJni(), project);
                 renderDirectorySet("JNI libraries", sourceSet.getJniLibs(), project);
+                if (sourceSet instanceof DefaultAndroidSourceSet) {
+                    DefaultAndroidSourceSet androidSourceSet = (DefaultAndroidSourceSet) sourceSet;
+                    if (!androidSourceSet.getExtras$gradle_core().isEmpty()) {
+                        androidSourceSet
+                                .getExtras$gradle_core()
+                                .forEach(
+                                        androidSourceDirectorySet ->
+                                                renderDirectorySet(
+                                                        "Custom sources",
+                                                        androidSourceDirectorySet,
+                                                        project));
+                    }
+                }
             }
 
             renderDirectorySet("Java-style resources", sourceSet.getResources(), project);
@@ -78,10 +93,21 @@ public class SourceSetsTask extends ProjectBasedReportTask {
         mRenderer.complete();
     }
 
-    private void renderDirectorySet(String name, AndroidSourceDirectorySet java, Project project) {
-        String relativePaths = java.getSrcDirs().stream()
-                .map(file -> project.getRootProject().relativePath(file))
-                .collect(Collectors.joining(", "));
+    private void renderDirectorySet(
+            String name, DefaultAndroidSourceDirectorySet sourceDirectorySet, Project project) {
+        String relativePaths =
+                sourceDirectorySet.getSrcDirs().stream()
+                        .map(file -> project.getRootProject().relativePath(file))
+                        .collect(Collectors.joining(", "));
+        renderKeyValue(name + ": ", String.format("[%s]", relativePaths));
+    }
+
+    private void renderDirectorySet(
+            String name, AndroidSourceDirectorySet sourceDirectorySet, Project project) {
+        String relativePaths =
+                sourceDirectorySet.getSrcDirs().stream()
+                        .map(file -> project.getRootProject().relativePath(file))
+                        .collect(Collectors.joining(", "));
         renderKeyValue(name + ": ", String.format("[%s]", relativePaths));
     }
 

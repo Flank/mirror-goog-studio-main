@@ -110,7 +110,6 @@ class TestingElements(val language: ScriptingLanguage) {
                 """compileSdkVersion(29)
                 defaultConfig {
                     minSdkVersion(21)
-                    targetSdkVersion(29)
                 }"""
 
     fun addManifest(builder: VariantApiBaseTest.GivenBuilder) {

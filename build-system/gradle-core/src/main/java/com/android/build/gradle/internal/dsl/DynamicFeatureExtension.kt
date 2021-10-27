@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
@@ -27,7 +26,6 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.builder.core.LibraryRequest
 import com.android.repository.Revision
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 abstract class DynamicFeatureExtension(

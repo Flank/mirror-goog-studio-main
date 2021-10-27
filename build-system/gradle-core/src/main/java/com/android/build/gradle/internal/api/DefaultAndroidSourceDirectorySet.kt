@@ -39,6 +39,7 @@ import java.util.concurrent.Callable
  * Default implementation of the AndroidSourceDirectorySet.
  */
 class DefaultAndroidSourceDirectorySet(
+    private val sourceSetName: String,
     private val name: String,
     private val project: Project,
     private val type: SourceArtifactType
@@ -48,8 +49,10 @@ class DefaultAndroidSourceDirectorySet(
     override val filter = PatternSet()
 
     override fun getName(): String {
-        return name
+        return "$sourceSetName $name"
     }
+
+    fun getSourceSetName() = name
 
     override fun srcDir(srcDir: Any): AndroidSourceDirectorySet {
         source.add(srcDir)

@@ -19,6 +19,7 @@ package com.android.build.api.extension.impl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.tools.r8.internal.it
 
 /**
  * Holder of various [OperationsRegistrar] for all the variant API related operations to a plugin.
@@ -30,4 +31,9 @@ class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()
     internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()
+    internal val sourceSetExtensions = mutableListOf<String>()
+
+    fun onEachSourceSetExtensions(action: (name: String) -> Unit) {
+        sourceSetExtensions.forEach(action)
+    }
 }
