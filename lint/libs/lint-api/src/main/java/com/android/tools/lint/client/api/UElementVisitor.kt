@@ -34,13 +34,13 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
-import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiTypeParameter
+import com.intellij.psi.util.InheritanceUtil
 import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
@@ -447,55 +447,21 @@ internal class UElementVisitor constructor(
             uClass: UClass?,
             node: PsiClass
         ) {
-            ProgressManager.checkCanceled()
+            if (node is PsiTypeParameter) return
 
-            if (node is PsiTypeParameter) {
-                // Not included: explained in javadoc for JavaPsiScanner#checkClass
-                return
-            }
+            val superClasses = InheritanceUtil.getSuperClasses(node)
+            superClasses.add(node) // Include self.
 
-            var cls: PsiClass? = node
-            var depth = 0
-            while (cls != null) {
-                var list: List<VisitingDetector>? = superClassDetectors[cls.qualifiedName]
-                if (list != null) {
-                    for (v in list) {
-                        val uastScanner = v.uastScanner
-                        if (uClass != null) {
-                            uastScanner.visitClass(context, uClass)
-                        } else {
-                            assert(lambda != null)
-                            uastScanner.visitClass(context, lambda!!)
-                        }
+            for (superClass in superClasses) {
+                val fqName = superClass.qualifiedName ?: continue
+                val detectors = superClassDetectors[fqName] ?: continue
+                for (detector in detectors) {
+                    if (uClass != null) {
+                        detector.uastScanner.visitClass(context, uClass)
+                    } else {
+                        check(lambda != null)
+                        detector.uastScanner.visitClass(context, lambda)
                     }
-                }
-
-                // Check interfaces too
-                val interfaceNames = getInterfaceNames(null, cls)
-                if (interfaceNames != null) {
-                    for (name in interfaceNames) {
-                        list = superClassDetectors[name]
-                        if (list != null) {
-                            for (v in list) {
-                                val uastScanner = v.uastScanner
-                                if (uClass != null) {
-                                    uastScanner.visitClass(context, uClass)
-                                } else {
-                                    assert(lambda != null)
-                                    uastScanner.visitClass(context, lambda!!)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                cls = cls.superClass
-                depth++
-                if (depth == 500) {
-                    // Shouldn't happen in practice; this prevents the IDE from
-                    // hanging if the user has accidentally typed in an incorrect
-                    // super class which creates a cycle.
-                    break
                 }
             }
         }
@@ -1246,28 +1212,5 @@ internal class UElementVisitor constructor(
          * a given node type.
          */
         private const val SAME_TYPE_COUNT = 8
-
-        private fun getInterfaceNames(
-            addTo: MutableSet<String>?,
-            cls: PsiClass
-        ): Set<String>? {
-            var target = addTo
-            for (resolvedInterface in cls.interfaces) {
-                val name = resolvedInterface.qualifiedName ?: continue
-                if (target == null) {
-                    target = Sets.newHashSet()
-                } else if (target.contains(name)) {
-                    // Superclasses can explicitly implement the same interface,
-                    // so keep track of visited interfaces as we traverse up the
-                    // super class chain to avoid checking the same interface
-                    // more than once.
-                    continue
-                }
-                target!!.add(name)
-                getInterfaceNames(target, resolvedInterface)
-            }
-
-            return target
-        }
     }
 }
