@@ -66,6 +66,8 @@ maven_library(
         "//tools/base/sdk-common:model.sync",
     ],
     coordinates = "com.android.tools:sdk-common:" + BASE_VERSION,
+    description = "sdk-common library used by other Android tools libraries.",
+    module_name = "sdk-common",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/sdk-common",
     resources = [":tools.resources"],
@@ -137,22 +139,9 @@ kotlin_test(
     ],
 )
 
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-        "src/main/proto/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
-)
-
 java_proto_library(
     name = "model.sync",
     srcs = glob(["src/main/proto/*.proto"]),
-    visibility = ["//visibility:public"],
+    resource_strip_prefix = "tools/base/sdk-common/src/main/proto",
+    resources = glob(["src/main/proto/*.proto"]),
 )

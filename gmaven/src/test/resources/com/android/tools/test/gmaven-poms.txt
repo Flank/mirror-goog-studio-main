@@ -198,23 +198,23 @@ com.android.tools:sdk-common
   pomName=com.android.tools.sdk-common
   description=sdk-common library used by other Android tools libraries.
   dependencies:
-    com.android.tools:sdklib (runtime)
+    com.android.tools.analytics-library:shared (runtime)
+    com.android.tools:common (runtime)
     com.android.tools.ddms:ddmlib (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
-    com.android.tools:common (runtime)
-    com.android.tools.analytics-library:shared (runtime)
-    org.bouncycastle:bcpkix-jdk15on (runtime)
-    org.bouncycastle:bcprov-jdk15on (runtime)
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
-    com.google.guava:guava (runtime)
-    org.glassfish.jaxb:jaxb-runtime (runtime)
+    com.android.tools:sdklib (runtime)
+    com.android.tools.build:aapt2-proto (runtime)
     com.google.code.gson:gson (runtime)
-    org.jetbrains.kotlin:kotlin-reflect (runtime)
+    com.google.guava:guava (runtime)
     com.google.protobuf:protobuf-java (runtime)
     javax.inject:javax.inject (runtime)
     net.sf.kxml:kxml2 (runtime)
+    org.bouncycastle:bcpkix-jdk15on (runtime)
+    org.bouncycastle:bcprov-jdk15on (runtime)
+    org.glassfish.jaxb:jaxb-runtime (runtime)
     org.jetbrains.intellij.deps:trove4j (runtime)
-    com.android.tools.build:aapt2-proto (runtime)
+    org.jetbrains.kotlin:kotlin-reflect (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     xerces:xercesImpl (runtime)
 
 com.android.tools:sdklib

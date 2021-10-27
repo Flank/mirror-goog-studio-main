@@ -8,7 +8,7 @@ project.distZip.archiveBaseName.set(archivesBaseName)
 project.startScripts.applicationName = archivesBaseName
 
 dependencies {
-    implementation project(':base:sdk-common')
+    implementation libs.com.android.tools.sdkCommon
     implementation libs.com.android.tools.common
     implementation libs.com.android.tools.annotations
     testImplementation project(':base:testutils')

@@ -26,7 +26,7 @@ dependencies {
     testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
-    testImplementation project(':base:sdk-common')
+    testImplementation libs.com.android.tools.sdkCommon
     testImplementation project(':base:testutils')
 
     testImplementation libs.kotlin_stdlib

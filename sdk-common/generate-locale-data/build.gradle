@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile project(':base:sdk-common')
+    compile libs.com.android.tools.sdkCommon
     compile 'com.google.guava:guava:17.0'
     compile 'com.ibm.icu:icu4j:54.1.1'
 }
