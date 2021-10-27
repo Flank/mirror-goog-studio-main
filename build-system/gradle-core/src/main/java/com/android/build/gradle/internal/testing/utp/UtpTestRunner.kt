@@ -47,10 +47,10 @@ class UtpTestRunner @JvmOverloads constructor(
         private val configFactory: UtpConfigFactory = UtpConfigFactory(),
         private val runUtpTestSuiteAndWaitFunc: (
             List<UtpRunnerConfig>, String, String, File, ILogger
-        ) -> List<Boolean> = { runnerConfigs, projectName, variantName, resultsDir, logger ->
+        ) -> List<UtpTestRunResult> = { runnerConfigs, projectName, variantName, resultsDir, logger ->
             runUtpTestSuiteAndWait(
                 runnerConfigs, workerExecutor, projectName, variantName, resultsDir, logger,
-                utpTestResultListener, utpDependencies).map(UtpTestRunResult::testPassed)
+                utpTestResultListener, utpDependencies)
         }
 )
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {
@@ -120,9 +120,24 @@ class UtpTestRunner @JvmOverloads constructor(
             logger
         )
 
-        return testSuiteResults.map { testSuitePassed ->
+        val resultProtos = testSuiteResults
+            .map(UtpTestRunResult::resultsProto)
+            .filterNotNull()
+        if (resultProtos.isNotEmpty()) {
+            val mergedTestResultPbFile = File(resultsDir, TEST_RESULT_PB_FILE_NAME)
+            val resultsMerger = UtpTestSuiteResultMerger()
+            resultProtos.forEach(resultsMerger::merge)
+            resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
+            logger.quiet(
+                "\nTest results saved as ${mergedTestResultPbFile.toURI()}. " +
+                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
+                        "From File from the menu bar and importing test-result.pb."
+            )
+        }
+
+        return testSuiteResults.map { testRunResult ->
             TestResult().apply {
-                testResult = if (testSuitePassed) {
+                testResult = if (testRunResult.testPassed) {
                     TestResult.Result.SUCCEEDED
                 } else {
                     TestResult.Result.FAILED
