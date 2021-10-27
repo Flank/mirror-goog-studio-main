@@ -37,7 +37,8 @@ val defaultWorkingDirectory = if (OsType.getHostOs() == OsType.WINDOWS) "D:\\wor
 /**
  * Creates an in-memory file system with a configuration appropriate for the current platform.
  */
-fun createInMemoryFileSystem(): FileSystem {
+@JvmOverloads
+fun createInMemoryFileSystem(maxSize: Long? = null): FileSystem {
     var config = Configuration.forCurrentPlatform()
     config = config.toBuilder().apply {
         if (OsType.getHostOs() == OsType.WINDOWS) {
@@ -47,6 +48,7 @@ fun createInMemoryFileSystem(): FileSystem {
             setAttributeViews("posix")
         }
         setWorkingDirectory(defaultWorkingDirectory)
+        maxSize?.let { setMaxSize(it) }
     }.build()
     return Jimfs.newFileSystem(config)
 }

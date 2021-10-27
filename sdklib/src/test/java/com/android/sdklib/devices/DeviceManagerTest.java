@@ -604,7 +604,7 @@ public class DeviceManagerTest {
         AndroidSdkHandler handler = sdkManager.getSdkHandler();
         Path sdkPath = handler.getLocation();
         FakePackage.FakeLocalPackage p =
-                new FakePackage.FakeLocalPackage("sample", sdkManager.getSdkHandler().getFileOp());
+                new FakePackage.FakeLocalPackage("sample", sdkManager.getFileOp());
 
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();

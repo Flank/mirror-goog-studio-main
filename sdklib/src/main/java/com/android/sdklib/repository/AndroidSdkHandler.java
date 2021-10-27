@@ -811,17 +811,6 @@ public final class AndroidSdkHandler {
         return BuildToolInfo.fromLocalPackage(p);
     }
 
-    /**
-     * Gets our {@link FileOp}. Useful so both the sdk handler and file op don't both have to be
-     * injected everywhere.
-     *
-     * @deprecated
-     */
-    @NonNull
-    public FileOp getFileOp() {
-        return mFop;
-    }
-
     /** Converts a {@code File} into a {@code Path} on the {@code FileSystem} used by this SDK. */
     @NonNull
     public Path toCompatiblePath(@NonNull File file) {

@@ -710,7 +710,7 @@ class AvdManagerCli extends CommandLineParser {
             String paramFolderPath = getParamLocationPath();
             Path avdFolder;
             if (paramFolderPath != null) {
-                avdFolder = mSdkHandler.getFileOp().toPath(paramFolderPath);
+                avdFolder = mSdkHandler.toCompatiblePath(paramFolderPath);
             } else {
                 avdFolder = AvdInfo.getDefaultAvdFolder(avdManager, avdName, false);
             }
@@ -1426,7 +1426,7 @@ class AvdManagerCli extends CommandLineParser {
         mSdkHandler = sdkHandler;
         mOsSdkFolder = sdkRoot;
         mInput = input;
-        mAvdFolder = sdkHandler.getFileOp().toPath(avdRoot);
+        mAvdFolder = sdkHandler.toCompatiblePath(avdRoot);
     }
 
     private AvdManagerCli(ILogger logger) {

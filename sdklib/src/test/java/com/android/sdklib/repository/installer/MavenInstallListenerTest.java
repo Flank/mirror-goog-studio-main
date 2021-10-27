@@ -130,9 +130,7 @@ public class MavenInstallListenerTest {
                 .get("m2repository;com;android;group1;artifact1;1.2.3");
         // Install
         BasicInstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(
-                new FakeInstallListenerFactory(
-                        new MavenInstallListener(new AndroidSdkHandler(root, null, fop))));
+        factory.setListenerFactory(new FakeInstallListenerFactory(new MavenInstallListener()));
         Installer installer = factory.createInstaller(p, mgr, downloader);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -143,10 +141,7 @@ public class MavenInstallListenerTest {
         Path mavenMetadata = artifactRoot.resolve("maven-metadata.xml");
         MavenInstallListener.MavenMetadata metadata =
                 MavenInstallListener.unmarshal(
-                        fop.toFile(mavenMetadata),
-                        MavenInstallListener.MavenMetadata.class,
-                        progress,
-                        fop);
+                        mavenMetadata, MavenInstallListener.MavenMetadata.class, progress);
 
         assertEquals("artifact1", metadata.artifactId);
         assertEquals("com.android.group1", metadata.groupId);
@@ -254,9 +249,7 @@ public class MavenInstallListenerTest {
 
         // Install
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(
-                new FakeInstallListenerFactory(
-                        new MavenInstallListener(new AndroidSdkHandler(root, null, fop))));
+        factory.setListenerFactory(new FakeInstallListenerFactory(new MavenInstallListener()));
         Installer installer = factory.createInstaller(remotePackage, mgr, downloader);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -267,10 +260,7 @@ public class MavenInstallListenerTest {
         Path mavenMetadata = artifactRoot.resolve("maven-metadata.xml");
         MavenInstallListener.MavenMetadata metadata =
                 MavenInstallListener.unmarshal(
-                        fop.toFile(mavenMetadata),
-                        MavenInstallListener.MavenMetadata.class,
-                        progress,
-                        fop);
+                        mavenMetadata, MavenInstallListener.MavenMetadata.class, progress);
         progress.assertNoErrorsOrWarnings();
         assertEquals("artifact1", metadata.artifactId);
         assertEquals("com.android.group1", metadata.groupId);
@@ -399,17 +389,17 @@ public class MavenInstallListenerTest {
         LocalPackage p = locals.get("m2repository;com;android;group1;artifact1;1.2.3");
         assertNotNull(p);
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(
-                new FakeInstallListenerFactory(
-                        new MavenInstallListener(new AndroidSdkHandler(root, null, fop))));
+        factory.setListenerFactory(new FakeInstallListenerFactory(new MavenInstallListener()));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
         progress.assertNoErrorsOrWarnings();
-        MavenInstallListener.MavenMetadata metadata = MavenInstallListener
-                .unmarshal(new File(metadataPath), MavenInstallListener.MavenMetadata.class,
-                        progress, fop);
+        MavenInstallListener.MavenMetadata metadata =
+                MavenInstallListener.unmarshal(
+                        fop.toPath(metadataPath),
+                        MavenInstallListener.MavenMetadata.class,
+                        progress);
         progress.assertNoErrorsOrWarnings();
         assertNotNull(metadata);
         assertEquals(ImmutableList.of("1.0.0"), metadata.versioning.versions.version);
@@ -482,9 +472,7 @@ public class MavenInstallListenerTest {
         LocalPackage p = locals.get("m2repository;com;android;group1;artifact1;1.2.3");
         assertNotNull(p);
         InstallerFactory factory = new BasicInstallerFactory();
-        factory.setListenerFactory(
-                new FakeInstallListenerFactory(
-                        new MavenInstallListener(new AndroidSdkHandler(root, null, fop))));
+        factory.setListenerFactory(new FakeInstallListenerFactory(new MavenInstallListener()));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);

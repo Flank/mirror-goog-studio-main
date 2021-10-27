@@ -12,7 +12,7 @@ import static com.android.ide.common.rendering.HardwareConfigHelper.isWear;
 import static com.android.ide.common.rendering.HardwareConfigHelper.nexusRank;
 import static com.android.ide.common.rendering.HardwareConfigHelper.sortNexusListByRank;
 
-import com.android.repository.testframework.MockFileOp;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -26,7 +26,8 @@ import junit.framework.TestCase;
 public class HardwareConfigHelperTest extends TestCase {
     private static DeviceManager getDeviceManager() {
         return DeviceManager.createInstance(
-                new AndroidSdkHandler(null, null, new MockFileOp()), new StdLogger(StdLogger.Level.INFO));
+                AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, null),
+                new StdLogger(StdLogger.Level.INFO));
     }
 
     public void testNexus() {
