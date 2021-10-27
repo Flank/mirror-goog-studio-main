@@ -93,7 +93,11 @@ void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
   // Execute the simpleperf record command.
   Log::D(Log::Tag::PROFILER, "Running Simpleperf: '%s'",
          record_command.c_str());
-  execvp(*argv, argv);
+  int result = execvp(*argv, argv);
+  // execvp() returns only if an error has occurred.
+  Log::E(Log::Tag::PROFILER,
+         "Running Simpleperf execvp() failed: result=%d '%s'", result,
+         strerror(errno));
 }
 
 bool Simpleperf::ReportSample(const string& input_path,
