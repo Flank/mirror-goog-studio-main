@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.build
 
-import com.android.builder.testing.api.DeviceConfigProvider
 import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
@@ -23,29 +22,6 @@ import java.io.File
 import java.util.Collections
 
 object GenericBuiltArtifactsSplitOutputMatcher {
-
-    /**
-     * Determines and return the list of APKs to use based on given device abis.
-     *
-     * @param deviceConfigProvider the device configuration.
-     * @param builtArtifacts the tested variant built artifacts.
-     * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     * of the outputs, if there is a single output with no abi filters. If the list is null or
-     * empty, then the variant does not restrict ABI packaging.
-     * @return the list of APK files to install.
-     */
-    fun computeBestOutputs(
-        deviceConfigProvider: DeviceConfigProvider,
-        builtArtifacts: GenericBuiltArtifacts,
-        variantAbiFilters: Collection<String>
-    ): List<File> {
-        // now look for a matching output file
-        return computeBestOutput(
-            builtArtifacts,
-            variantAbiFilters,
-            deviceConfigProvider.abis
-        )
-    }
 
     /**
      * Determines and return the list of APKs to use based on given device abis.

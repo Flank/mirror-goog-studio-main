@@ -16,14 +16,11 @@
 
 package com.android.ide.common.build
 
-import com.android.builder.testing.api.DeviceConfigProvider
 import com.google.common.collect.Sets
 import junit.framework.TestCase
 import org.junit.Test
-import org.mockito.Mockito
 import java.io.File
 import java.util.ArrayList
-import java.util.Arrays
 
 /**
  * Tests for [GenericBuiltArtifactsSplitOutputMatcher]
@@ -35,15 +32,10 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         outputs: List<GenericBuiltArtifact>,
         vararg deviceAbis: String
     ): List<File> {
-        val deviceConfigProvider = Mockito.mock(
-            DeviceConfigProvider::class.java
-        )
-        Mockito.`when`(deviceConfigProvider.abis)
-            .thenReturn(Arrays.asList(*deviceAbis))
-        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutputs(
-            deviceConfigProvider,
-            wrap(outputs),
-            setOf() /* variantAbiFilters */
+        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
+            outputs = wrap(outputs),
+            variantAbiFilters = setOf(),
+            deviceAbis = listOf(*deviceAbis)
         )
     }
 
@@ -52,15 +44,10 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         deviceAbis: Set<String>,
         vararg variantAbiFilters: String
     ): List<File> {
-        val deviceConfigProvider = Mockito.mock(
-            DeviceConfigProvider::class.java
-        )
-        Mockito.`when`(deviceConfigProvider.abis)
-            .thenReturn(ArrayList(deviceAbis))
-        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutputs(
-            deviceConfigProvider,
-            wrap(outputs),
-            listOf(*variantAbiFilters)
+        return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
+            outputs = wrap(outputs),
+            variantAbiFilters = listOf(*variantAbiFilters),
+            deviceAbis = deviceAbis.toList(),
         )
     }
 

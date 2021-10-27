@@ -199,7 +199,6 @@ com.android.tools:sdk-common
   description=sdk-common library used by other Android tools libraries.
   dependencies:
     com.android.tools:sdklib (runtime)
-    com.android.tools.build:builder-test-api (runtime)
     com.android.tools.ddms:ddmlib (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
     com.android.tools:common (runtime)

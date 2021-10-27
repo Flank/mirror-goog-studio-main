@@ -33,7 +33,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:kxml2",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:mockito[test]",
-        "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
         "//tools/adt/idea/.idea/libraries:easymock[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
@@ -73,7 +72,6 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

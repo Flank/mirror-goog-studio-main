@@ -15,7 +15,6 @@ licenseReport {
 
 dependencies {
     implementation libs.com.android.tools.sdklib
-    implementation project(':base:builder-test-api')
     implementation libs.com.android.tools.ddms.ddmlib
     implementation libs.com.android.tools.layoutlib.layoutlibApi
     implementation libs.com.android.tools.common
