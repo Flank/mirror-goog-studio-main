@@ -73,7 +73,6 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",
-        "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",

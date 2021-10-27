@@ -200,7 +200,6 @@ com.android.tools:sdk-common
   dependencies:
     com.android.tools:sdklib (runtime)
     com.android.tools.build:builder-test-api (runtime)
-    com.android.tools.build:builder-model (runtime)
     com.android.tools.ddms:ddmlib (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
     com.android.tools:common (runtime)
