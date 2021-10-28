@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
-
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -657,9 +657,18 @@ public class InstrumentationResultParser extends MultiLineReceiver
             // no results
             handleTestRunFailed(NO_TEST_RESULTS_MSG);
         } else if (mNumTestsExpected > mNumTestsRun) {
-            final String message =
-                String.format("%1$s. Expected %2$d tests, received %3$d",
-                        INCOMPLETE_RUN_ERR_MSG_PREFIX, mNumTestsExpected, mNumTestsRun);
+            String message =
+                    String.format(
+                            "%1$s. Expected %2$d tests, received %3$d",
+                            INCOMPLETE_RUN_ERR_MSG_PREFIX, mNumTestsExpected, mNumTestsRun);
+            if (mTestRunFinished) {
+                // If test run did complete but the count doesn't match report it.
+                message =
+                        String.format(
+                                Locale.US,
+                                "Instrumentation reported numtests=%d but only ran %d",
+                                mNumTestsExpected, mNumTestsRun);
+            }
             handleTestRunFailed(message);
         } else {
             if (!mTestStartReported) {
