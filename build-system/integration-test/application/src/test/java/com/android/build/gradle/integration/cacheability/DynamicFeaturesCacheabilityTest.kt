@@ -115,7 +115,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeExtDexDebug",
                     ":feature1:mergeLibDexDebug",
                     ":feature1:mergeProjectDexDebug",
-                    ":feature1:processApplicationManifestDebugForBundle",
                     ":feature1:processDebugMainManifest",
                     ":feature1:processDebugManifest",
                     ":feature1:processDebugManifestForPackage",
@@ -141,7 +140,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeExtDexDebug",
                     ":feature2:mergeLibDexDebug",
                     ":feature2:mergeProjectDexDebug",
-                    ":feature2:processApplicationManifestDebugForBundle",
                     ":feature2:processDebugMainManifest",
                     ":feature2:processDebugManifest",
                     ":feature2:processDebugManifestForPackage",
@@ -188,6 +186,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:mergeDebugResources",
                     ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
+                    ":feature1:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
 
                     ":feature2:createDebugApkListingFileRedirect",
                     ":feature2:extractProguardFiles", // intentionally not cacheable
@@ -196,6 +195,8 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugResources",
                     ":feature2:mergeDebugJavaResource",
                     ":feature2:packageDebug",
+                    ":feature2:processApplicationManifestDebugForBundle", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.ProcessManifestForBundleTask] */
+
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                             setOf(":app:mapDebugSourceSetPaths",
