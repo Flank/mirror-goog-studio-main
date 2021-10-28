@@ -383,6 +383,10 @@ public class GmavenZipTest {
         URL resource = this.getClass().getResource(name);
         String expected = Resources.asCharSource(resource, StandardCharsets.UTF_8).read();
         if (UPDATE_TEST_SNAPSHOTS != null) {
+            if (UPDATE_TEST_SNAPSHOTS.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "UPDATE_TEST_SNAPSHOTS must point to the workspace location");
+            }
             Path expectationFile =
                     Paths.get(UPDATE_TEST_SNAPSHOTS).resolve(EXPECTATION_RESOURCE_DIR + name);
             System.err.println("Updating " + expectationFile);
@@ -411,7 +415,9 @@ public class GmavenZipTest {
                                     + "    --nocache_test_results \\\n"
                                     + "    --strategy=TestRunner=standalone \\\n"
                                     + "    --jvmopt=\"-DUPDATE_TEST_SNAPSHOTS=$(bazel info workspace)\" \\\n"
-                                    + "    --test_output=streamed\n")
+                                    + "    --test_output=streamed\n"
+                                    + "\n"
+                                    + "NB: All the commands above assume 'tools/base/bazel' is on your path.")
                     .that(actual)
                     .named(name)
                     .isEqualTo(expected);

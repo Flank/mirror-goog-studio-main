@@ -45,6 +45,7 @@ open class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
     override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
         NativeBuildSystem.CMAKE -> Stl.LIBCXX_STATIC
         NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
+        else -> error("$buildSystem")
     }
 
     override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {

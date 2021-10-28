@@ -180,6 +180,16 @@ class ArtProfileMultipleLibrariesTest {
                 ArtProfile(ByteArrayInputStream(binaryProfile.readBytes()))
         ).isNotNull()
 
+        val binaryProfileMetadata = FileUtils.join(
+            project.getSubproject(":app").buildDir,
+            SdkConstants.FD_INTERMEDIATES,
+            InternalArtifactType.BINARY_ART_PROFILE_METADATA.getFolderName(),
+            "release",
+            SdkConstants.FN_BINARY_ART_PROFILE_METADATA,
+        )
+
+        Truth.assertThat(binaryProfileMetadata.exists())
+
         // check APK packaging.
         project.getSubproject(":app").getApk(GradleTestProject.ApkType.RELEASE).also {
             ArtProfileSingleLibraryTest.checkAndroidArtifact(tempFolder, it, apkEntryName) { fileContent ->
@@ -189,6 +199,10 @@ class ArtProfileMultipleLibrariesTest {
                 val artProfileEntry = jarFile.getEntry(
                     "${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK}/${SdkConstants.FN_BINARY_ART_PROFILE}")
                 Truth.assertThat(artProfileEntry.method).isEqualTo(ZipEntry.STORED)
+
+                val artProfileMetadataEntry = jarFile.getEntry(
+                    "${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK}/${SdkConstants.FN_BINARY_ART_PROFILE_METADATA}")
+                Truth.assertThat(artProfileMetadataEntry.method).isEqualTo(ZipEntry.STORED)
             }
         }
 

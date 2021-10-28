@@ -97,8 +97,9 @@ class Aapt2DaemonManagerTest {
                             manifestFile = File(""),
                             androidJarPath = "",
                             options = AaptOptions(),
-                            variantType = VariantTypeImpl.BASE_APK
-                    ),
+                            variantType = VariantTypeImpl.BASE_APK,
+                            resourceOutputApk = File(""),
+                        ),
                     NoErrorsOrWarningsLogger()
             )
             manager.maintain()

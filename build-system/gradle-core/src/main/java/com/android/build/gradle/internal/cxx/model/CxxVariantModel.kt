@@ -130,30 +130,6 @@ val CxxVariantModel.cppFlags
     get() = cppFlagsList.joinToString(" ")
 
 /**
- * Return true if this is a CMake project.
- */
-val CxxVariantModel.isCMake
-    get() = (module.buildSystem == NativeBuildSystem.CMAKE)
-
-/**
- * Call [compute] if this is a CMake build.
- */
-fun <T> CxxVariantModel.ifCMake(compute : () -> T?) =
-        if (isCMake) compute() else null
-
-/**
- * Return true if this is a CMake project.
- */
-val CxxVariantModel.isNdkBuild
-    get() = (module.buildSystem == NativeBuildSystem.NDK_BUILD)
-
-/**
- * Call [compute] if this is an ndk-build build.
- */
-fun <T> CxxVariantModel.ifNdkBuild(compute : () -> T?) =
-    if (isNdkBuild) compute() else null
-
-/**
  * Return true if we should log native clean to lifecycle log
  */
 val CxxVariantModel.logNativeCleanToLifecycle : Boolean get() =

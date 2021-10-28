@@ -20,9 +20,13 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.testutils.MockitoKt.any
+import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
 import java.io.File
 import java.util.logging.Level
@@ -69,6 +73,7 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private lateinit var mockUtpDependencies: UtpDependencies
+    private lateinit var outputDirectory: File
 
     private lateinit var capturedRunnerConfigs: List<UtpRunnerConfig>
 
@@ -125,12 +130,13 @@ class ManagedDeviceTestRunnerTest {
             Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
             capturedRunnerConfigs = runnerConfigs
-            runnerConfigs.map { result }.toList()
+            runnerConfigs.map { UtpTestRunResult(result, TestSuiteResult.getDefaultInstance()) }
         }
 
+        outputDirectory = temporaryFolderRule.newFolder("results")
         return runner.runTests(
             mockManagedDevice,
-            temporaryFolderRule.newFolder("results"),
+            outputDirectory,
             mockCoverageOutputDir,
             mockAdditionalTestOutputDir,
             "projectPath",
@@ -187,5 +193,6 @@ class ManagedDeviceTestRunnerTest {
         assertThat(capturedRunnerConfigs[1].shardConfig).isEqualTo(ShardConfig(2, 1))
 
         assertThat(result).isTrue()
+        assertThat(File(outputDirectory, TEST_RESULT_PB_FILE_NAME)).exists()
     }
 }

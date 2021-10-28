@@ -26,5 +26,6 @@ open class NdkR17Info(root: File) : NdkR14Info(root) {
     override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
         NativeBuildSystem.CMAKE -> Stl.LIBCXX_STATIC
         NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
+        else -> error("$buildSystem")
     }
 }

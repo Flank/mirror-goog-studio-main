@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.utils.TokenizedCommandLineMap
+import com.android.utils.cxx.COMPILE_COMMANDS_CODEC_VERSION
 import com.android.utils.cxx.CompileCommandsEncoder
 import com.android.utils.cxx.CxxDiagnosticCode.COULD_NOT_EXTRACT_OUTPUT_FILE_FROM_CLANG_COMMAND
 import com.android.utils.cxx.CxxDiagnosticCode.OBJECT_FILE_CANT_BE_CONVERTED_TO_TARGET_NAME

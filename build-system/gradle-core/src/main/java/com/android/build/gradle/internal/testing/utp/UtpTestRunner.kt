@@ -50,7 +50,7 @@ class UtpTestRunner @JvmOverloads constructor(
         ) -> List<Boolean> = { runnerConfigs, projectName, variantName, resultsDir, logger ->
             runUtpTestSuiteAndWait(
                 runnerConfigs, workerExecutor, projectName, variantName, resultsDir, logger,
-                utpTestResultListener, utpDependencies)
+                utpTestResultListener, utpDependencies).map(UtpTestRunResult::testPassed)
         }
 )
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {

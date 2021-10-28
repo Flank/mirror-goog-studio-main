@@ -200,18 +200,6 @@ val CxxModuleModel.cmakeGenerator : String
     }
 
 /**
- * Call [compute] if this is a CMake build.
- */
-fun <T> CxxModuleModel.ifCMake(compute : () -> T?) =
-        if (buildSystem == CMAKE) compute() else null
-
-/**
- * Call [compute] if this is an ndk-build build.
- */
-fun <T> CxxModuleModel.ifNdkBuild(compute : () -> T?) =
-        if (buildSystem == NDK_BUILD) compute() else null
-
-/**
  * Call [compute] if logging native configure to lifecycle
  */
 fun <T> CxxModuleModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
@@ -283,6 +271,51 @@ fun CxxModuleModel.determineUsedStlForNdkBuild(arguments: List<CommandLineArgume
 /**
  * Determine which STL is used based on command-line arguments from the user.
  */
-fun CxxModuleModel.determineUsedStl(arguments: List<String>) =
-        ifCMake { determineUsedStlForCmake(arguments.toCmakeArguments()) }
-                ?: determineUsedStlForNdkBuild(arguments.toNdkBuildArguments())
+fun CxxModuleModel.determineUsedStlFromArguments(arguments: List<CommandLineArgument>): Stl {
+    return when(buildSystem) {
+        CMAKE -> determineUsedStlForCmake(arguments)
+        NDK_BUILD -> determineUsedStlForNdkBuild(arguments)
+        else -> error("$buildSystem")
+    }
+}
+
+/**
+ * Determine which STL is used based on command-line arguments from the user.
+ */
+fun CxxModuleModel.determineUsedStl(arguments: List<String>): Stl {
+    return when(buildSystem) {
+        CMAKE -> determineUsedStlForCmake(arguments.toCmakeArguments())
+        NDK_BUILD -> determineUsedStlForNdkBuild(arguments.toNdkBuildArguments())
+        else -> error("$buildSystem")
+    }
+}
+
+/**
+ * Return a descriptive string for the build system to use in log messages.
+ */
+val CxxModuleModel.buildSystemTag : String get() = when (buildSystem) {
+    CMAKE -> "cmake"
+    NativeBuildSystem.CUSTOM -> "custom"
+    NDK_BUILD -> "ndkBuild"
+}
+
+/**
+ * Return a descriptive string for the build system to name tasks.
+ */
+val CxxModuleModel.buildSystemNameForTasks : String get() = when (buildSystem) {
+    CMAKE -> "CMake"
+    NativeBuildSystem.CUSTOM -> "Custom"
+    NDK_BUILD -> "NdkBuild"
+}
+
+
+/**
+ * Folder name suffix for particular build systems.
+ */
+val CxxModuleModel.intermediatesParentDirSuffix : String get() = when(buildSystem) {
+    CMAKE -> "obj"
+    NDK_BUILD -> "obj/local"
+    else -> error("$buildSystem")
+}
+
+

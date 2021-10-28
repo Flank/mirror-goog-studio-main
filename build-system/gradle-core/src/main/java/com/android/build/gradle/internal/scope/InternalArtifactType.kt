@@ -528,6 +528,7 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // binary art profile artifacts.
     object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
+    object BINARY_ART_PROFILE_METADATA: InternalArtifactType<RegularFile>(FILE)
 
 
     // Sync dynamic properties file artifacts

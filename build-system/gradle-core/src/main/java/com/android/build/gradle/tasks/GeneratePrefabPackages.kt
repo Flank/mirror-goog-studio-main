@@ -33,6 +33,7 @@ fun generatePrefabPackages(
     val buildSystem = when (abiModel.variant.module.buildSystem) {
         NativeBuildSystem.NDK_BUILD -> "ndk-build"
         NativeBuildSystem.CMAKE -> "cmake"
+        else -> error("${abiModel.variant.module.buildSystem}")
     }
 
     val osVersion = abiModel.abiPlatformVersion

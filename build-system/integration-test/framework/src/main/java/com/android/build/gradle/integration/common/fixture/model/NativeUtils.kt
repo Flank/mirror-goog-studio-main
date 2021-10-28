@@ -65,7 +65,7 @@ fun File.readAsFileIndex(normalizer: FileNormalizer): List<String> =
 
 fun File.readCompileCommandsJsonBin(normalizer: FileNormalizer): List<CompileCommandsJsonBinEntry> {
     val entries = mutableListOf<CompileCommandsJsonBinEntry>()
-    streamCompileCommands(this) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+    streamCompileCommands(this) {
         var jsonArray = JsonArray()
         flags.forEach(jsonArray::add)
         jsonArray = normalizer.normalize(jsonArray).asJsonArray

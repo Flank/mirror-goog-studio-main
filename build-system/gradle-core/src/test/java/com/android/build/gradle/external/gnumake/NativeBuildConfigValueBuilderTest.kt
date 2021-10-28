@@ -412,7 +412,7 @@ class NativeBuildConfigValueBuilderTest {
             skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
-        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+        streamCompileCommands(compileCommandsJsonBinFile) {
             entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
         }
         Truth.assertThat(entries).containsExactly(
@@ -472,7 +472,7 @@ class NativeBuildConfigValueBuilderTest {
             skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
-        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+        streamCompileCommands(compileCommandsJsonBinFile) {
             entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
         }
         Truth.assertThat(entries).containsExactly(
@@ -531,7 +531,7 @@ class NativeBuildConfigValueBuilderTest {
             skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
-        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+        streamCompileCommands(compileCommandsJsonBinFile) {
             entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
         }
         Truth.assertThat(entries).containsExactly(
@@ -596,7 +596,7 @@ class NativeBuildConfigValueBuilderTest {
             skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
-        streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
+        streamCompileCommands(compileCommandsJsonBinFile) {
             entries.add(CompileCommandJsonEntry(sourceFile, compiler, flags, workingDirectory))
         }
         Truth.assertThat(entries).containsExactly(

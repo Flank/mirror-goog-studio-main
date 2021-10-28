@@ -184,8 +184,6 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   // the kernel, which is in nanoseconds. So 1 event count of cpu-clock is 1 ns.
   command << " -e cpu-clock";
 
-  command << " --exit-with-parent";
-
   // --log-to-android-buffer adds simpleperf logs in logcat. It's available in
   // the system's builtin simpleperf of R+. The profiler always invokes a
   // sideloaded simpleperf that supports it, which is sufficient for debuggable

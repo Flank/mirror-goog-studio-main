@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
-import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
@@ -57,6 +56,8 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_INTERMEDIATES_PARENT_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_CMAKE_EXECUTABLE
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
+import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.google.common.annotations.VisibleForTesting
@@ -114,10 +115,12 @@ private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash() : CxxAbiMode
             // Instantiate ${...} macro values in the argument
             .map { argument -> rewriteConfig.reifier(argument) }
             // Parse the argument
-            .map { argument ->
-                ifCMake {
-                    argument.toCmakeArgument()
-                } ?: argument.toNdkBuildArgument()
+            // Parse the argument
+            .map { argument -> when(variant.module.buildSystem) {
+                    CMAKE -> argument.toCmakeArgument()
+                    NDK_BUILD -> argument.toNdkBuildArgument()
+                    else -> error("${variant.module.buildSystem}")
+                }
             }
             // Get rid of arguments that are irrelevant because they were superseded
             .removeSubsumedArguments()
@@ -190,13 +193,17 @@ fun CxxAbiModel.getAbiRewriteConfiguration() : RewriteConfiguration {
             allSettings.getConfiguration(TRADITIONAL_CONFIGURATION_NAME)!!
                     .withConfigurationsFrom(allSettings.getConfiguration(variant.cmakeSettingsConfiguration))
 
-    val builtInCommandLineArguments =
-            ifCMake { configuration.getCmakeCommandLineArguments() }
-                    ?: getNdkBuildCommandLineArguments()
+    val builtInCommandLineArguments = when(variant.module.buildSystem) {
+        CMAKE -> configuration.getCmakeCommandLineArguments()
+        NDK_BUILD -> getNdkBuildCommandLineArguments()
+        else -> error("${variant.module.buildSystem}")
+    }
 
-    val buildGradleCommandLineArguments =
-            ifCMake { variant.buildSystemArgumentList.toCmakeArguments() }
-                    ?: variant.buildSystemArgumentList.toNdkBuildArguments()
+    val buildGradleCommandLineArguments =  when(variant.module.buildSystem) {
+        CMAKE -> variant.buildSystemArgumentList.toCmakeArguments()
+        NDK_BUILD -> variant.buildSystemArgumentList.toNdkBuildArguments()
+        else -> error("${variant.module.buildSystem}")
+    }
 
     val arguments =
             (builtInCommandLineArguments + buildGradleCommandLineArguments).removeSubsumedArguments()

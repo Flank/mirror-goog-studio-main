@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.PackageAndroidArtifact
-import com.android.sdklib.AndroidVersion
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.ArtProfileSerializer
 import com.android.tools.profgen.DexFile
@@ -34,9 +33,7 @@ import com.android.tools.profgen.HumanReadableProfile
 import com.android.tools.profgen.ObfuscationMap
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -67,6 +64,9 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
     @get: OutputFile
     abstract val binaryArtProfile: RegularFileProperty
 
+    @get: OutputFile
+    abstract val binaryArtProfileMetadata: RegularFileProperty
+
     abstract class CompileArtProfileWorkAction:
             ProfileAwareWorkAction<CompileArtProfileWorkAction.Parameters>() {
 
@@ -74,7 +74,8 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             abstract val mergedArtProfile: RegularFileProperty
             abstract val dexFolders: ConfigurableFileCollection
             abstract val obfuscationMappingFile: RegularFileProperty
-            abstract val outputFile: RegularFileProperty
+            abstract val binaryArtProfileOutputFile: RegularFileProperty
+            abstract val binaryArtProfileMetadataOutputFile: RegularFileProperty
         }
 
         override fun run() {
@@ -100,8 +101,13 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                     }
             )
             // the P compiler is always used, the server side will transcode if necessary.
-            parameters.outputFile.get().asFile.outputStream().use {
+            parameters.binaryArtProfileOutputFile.get().asFile.outputStream().use {
                 artProfile.save(it, ArtProfileSerializer.V0_1_0_P)
+            }
+
+            // create the metadata for N and above.
+            parameters.binaryArtProfileMetadataOutputFile.get().asFile.outputStream().use {
+                artProfile.save(it, ArtProfileSerializer.METADATA_FOR_N)
             }
         }
     }
@@ -115,7 +121,8 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             it.mergedArtProfile.set(mergedArtProfile)
             it.dexFolders.from(dexFolders)
             it.obfuscationMappingFile.set(obfuscationMappingFile)
-            it.outputFile.set(binaryArtProfile)
+            it.binaryArtProfileOutputFile.set(binaryArtProfile)
+            it.binaryArtProfileMetadataOutputFile.set(binaryArtProfileMetadata)
         }
     }
 
@@ -135,6 +142,12 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                     CompileArtProfileTask::binaryArtProfile
             ).withName(SdkConstants.FN_BINARY_ART_PROFILE
             ).on(InternalArtifactType.BINARY_ART_PROFILE)
+
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                CompileArtProfileTask::binaryArtProfileMetadata
+            ).withName(SdkConstants.FN_BINARY_ART_PROFILE_METADATA
+            ).on(InternalArtifactType.BINARY_ART_PROFILE_METADATA)
         }
 
         override fun configure(task: CompileArtProfileTask) {

@@ -187,6 +187,7 @@ val CxxAbiModel.objFolder: File
     get() = when(variant.module.buildSystem) {
         CMAKE -> join(cxxBuildFolder, "CMakeFiles")
         NDK_BUILD -> soFolder
+        else -> error("${variant.module.buildSystem}")
     }
 
 /**
@@ -307,18 +308,6 @@ fun CxxAbiModel.buildIsPrefabCapable(): Boolean = variant.module.project.isPrefa
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean = buildIsPrefabCapable()
         && variant.prefabPackageDirectoryListFileCollection != null
         && !variant.prefabPackageDirectoryListFileCollection.isEmpty
-
-/**
- * Call [compute] if this is a CMake build.
- */
-fun <T> CxxAbiModel.ifCMake(compute : () -> T?) =
-    if (variant.module.buildSystem == CMAKE) compute() else null
-
-/**
- * Call [compute] if this is an ndk-build build.
- */
-fun <T> CxxAbiModel.ifNdkBuild(compute : () -> T?) =
-        if (variant.module.buildSystem == NDK_BUILD) compute() else null
 
 /**
  * Call [compute] if logging native configure to lifecycle

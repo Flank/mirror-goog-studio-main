@@ -71,6 +71,7 @@ public class AvdManagerCliTest {
     private AvdManagerCli mCli;
     private AvdManager mAvdManager;
     private ISystemImage mGapiImage;
+    private ISystemImage mGPlayImage;
 
     @Before
     public void setUp() throws Exception {
@@ -88,26 +89,38 @@ public class AvdManagerCliTest {
         mFileOp.recordExistingFile(p1.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         mFileOp.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
 
-        String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
-        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(wearPath, mFileOp);
+        String gPlayPath = "system-images;android-25;google_apis_playstore;x86";
+        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(gPlayPath, mFileOp);
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
-        details2.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
-        details2.setAbi("armeabi-v7a");
-        details2.setApiLevel(26);
-        details2.setExtensionLevel(5);
-        details2.setBaseExtension(false);
-        p2.setTypeDetails((TypeDetails)details2);
+        details2.getTags().add(IdDisplay.create("google_apis_playstore", "Google Play"));
+        details2.setAbi("x86");
+        details2.setVendor(IdDisplay.create("google", "Google"));
+        details2.setApiLevel(25);
+        p2.setTypeDetails((TypeDetails) details2);
         mFileOp.recordExistingFile(p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
         mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
+        String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
+        FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(wearPath, mFileOp);
+        DetailsTypes.SysImgDetailsType details3 =
+                AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
+        details3.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
+        details3.setAbi("armeabi-v7a");
+        details3.setApiLevel(26);
+        details3.setExtensionLevel(5);
+        details3.setBaseExtension(false);
+        p3.setTypeDetails((TypeDetails)details3);
+        mFileOp.recordExistingFile(p3.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        mFileOp.recordExistingFile(p3.getLocation().resolve(AvdManager.USERDATA_IMG));
+
         // Create a representative hardware configuration file
         String emuPath = "emulator";
-        FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(emuPath, mFileOp);
+        FakePackage.FakeLocalPackage p4 = new FakePackage.FakeLocalPackage(emuPath, mFileOp);
         File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
         createHardwarePropertiesFile(hardwareDefs.getPath());
 
-        packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3));
+        packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3, p4));
 
         RepoManager mgr = new FakeRepoManager(mFileOp.toPath(SDK_LOCATION), packages);
 
@@ -125,10 +138,13 @@ public class AvdManagerCliTest {
         mGapiImage =
                 systemImageManager.getImageAt(
                         mSdkHandler.getLocalPackage(gApiPath, progress).getLocation());
+        mGPlayImage =
+                systemImageManager.getImageAt(
+                        mSdkHandler.getLocalPackage(gPlayPath, progress).getLocation());
     }
 
     @Test
-    public void createAvd() throws Exception {
+    public void createAvd_withoutPlayStore() throws Exception {
         mCli.run(
                 new String[] {
                     "create", "avd",
@@ -151,6 +167,37 @@ public class AvdManagerCliTest {
         assertEquals("123", config.get("integerPropName"));
         assertEquals("none", config.get("runtime.network.latency"));
         assertEquals("full", config.get("runtime.network.speed"));
+        assertEquals("false", config.get("PlayStore.enabled"));
+        assertEquals(new Storage(1536, Storage.Unit.MiB), Storage.getStorageFromString(config.get("hw.ramSize")));
+        assertEquals(new Storage(512, Storage.Unit.MiB), Storage.getStorageFromString(config.get("sdcard.size")));
+        assertEquals(new Storage(384, Storage.Unit.MiB), Storage.getStorageFromString(config.get("vm.heapSize")));
+    }
+
+    @Test
+    public void createAvd_withPlayStore() throws Exception {
+        mCli.run(
+                new String[] {
+                        "create", "avd",
+                        "--name", "testAvd",
+                        "-k", "system-images;android-25;google_apis_playstore;x86",
+                        "-d", "Nexus 6P"
+                });
+        mAvdManager.reloadAvds(mLogger);
+        AvdInfo info = mAvdManager.getAvd("testAvd", true);
+        assertEquals("x86", info.getAbiType());
+        assertEquals("Google", info.getDeviceManufacturer());
+        assertEquals(new AndroidVersion(25, null), info.getAndroidVersion());
+        assertEquals(mGPlayImage, info.getSystemImage());
+
+        Path avdConfigFile = mFileOp.toPath(info.getDataFolderPath()).resolve("config.ini");
+        assertTrue(
+                "Expected config.ini in " + info.getDataFolderPath(), Files.exists(avdConfigFile));
+        Map<String, String> config =
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
+        assertEquals("123", config.get("integerPropName"));
+        assertEquals("none", config.get("runtime.network.latency"));
+        assertEquals("full", config.get("runtime.network.speed"));
+        assertEquals("true", config.get("PlayStore.enabled"));
         assertEquals(new Storage(1536, Storage.Unit.MiB), Storage.getStorageFromString(config.get("hw.ramSize")));
         assertEquals(new Storage(512, Storage.Unit.MiB), Storage.getStorageFromString(config.get("sdcard.size")));
         assertEquals(new Storage(384, Storage.Unit.MiB), Storage.getStorageFromString(config.get("vm.heapSize")));
@@ -464,6 +511,7 @@ public class AvdManagerCliTest {
 
         assertEquals(
                 "E Package path (-k) not specified. Valid system image paths are:\n"
+                        + "system-images;android-25;google_apis_playstore;x86\n"
                         + "system-images;android-26;android-wear;armeabi-v7a\n"
                         + "system-images;android-25;google_apis;x86",
                 Joiner.on("").join(mLogger.getMessages()));
@@ -480,6 +528,7 @@ public class AvdManagerCliTest {
 
         assertEquals(
                 "E Package path is not valid. Valid system image paths are:\n"
+                        + "system-images;android-25;google_apis_playstore;x86\n"
                         + "system-images;android-26;android-wear;armeabi-v7a\n"
                         + "system-images;android-25;google_apis;x86",
                 Joiner.on("").join(mLogger.getMessages()));

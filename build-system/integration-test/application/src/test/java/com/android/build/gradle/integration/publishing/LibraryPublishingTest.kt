@@ -28,6 +28,8 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.io.Resources
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.junit.Before
@@ -252,7 +254,21 @@ class LibraryPublishingTest {
         )
         library.execute("clean", "publish")
         app.execute("clean", "assembleFreeDebug")
-
+        val module = project.projectDir
+            .resolve("testrepo/com/example/android/myLib/1.0/myLib-1.0.module")
+        assertThat(module).exists()
+        assertThat(module).contains("""
+            |    {
+            |      "name": "freeDebugVariantCustomApiPublication",
+            |      "attributes": {
+            |        "com.android.build.api.attributes.BuildTypeAttr": "debug",
+            |        "com.android.build.api.attributes.ProductFlavor:version": "free",
+            |        "org.gradle.category": "library",
+            |        "org.gradle.dependency.bundling": "external",
+            |        "org.gradle.libraryelements": "aar",
+            |        "org.gradle.usage": "java-api"
+            |      },
+            """.trimMargin())
         val failure = app.executor().expectFailure().run("clean", "assembleInternalDebug")
         failure.stderr.use {
             ScannerSubject.assertThat(it).contains("Could not resolve com.example.android:myLib:1.0")

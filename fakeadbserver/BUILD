@@ -27,6 +27,8 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools.fakeadbserver:fakeadbserver:" + BASE_VERSION,
+    description = "Library implementing the ADB Server protocol",
+    module_name = "fakeadbserver",
     notice = "NOTICE",
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],
@@ -50,17 +52,4 @@ coverage_java_test(
         "@maven//:com.google.guava.guava",
         "@maven//:junit.junit",
     ],
-)
-
-filegroup(
-    name = "agp_gradle_build_files",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/main/**/*.kt",
-        "src/main/resources/**",
-    ]) + [
-        "build.gradle",
-        "NOTICE",
-    ],
-    visibility = ["//tools/base/build-system:__pkg__"],
 )

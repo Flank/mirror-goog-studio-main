@@ -88,9 +88,8 @@ class UtpTestUtilsTest {
     private fun runUtp(
         shardConfig: ShardConfig? = null,
         stubUtpAction: UtpTestResultListener.() -> Unit = { stubTestSuitePassing() }
-    ): List<Boolean> {
+    ): List<UtpTestRunResult> {
         val utpOutputDir = temporaryFolderRule.newFolder()
-        val utpTmpDir = temporaryFolderRule.newFolder()
         utpResultDir = temporaryFolderRule.newFolder()
         val config = UtpRunnerConfig(
             "deviceName",
@@ -233,7 +232,7 @@ class UtpTestUtilsTest {
     fun failedToReceiveUtpResults() {
         val results = runUtp() { /* Do nothing after the work is posted. */ }
 
-        assertThat(results).containsExactly(false)
+        assertThat(results).containsExactly(UtpTestRunResult(false, null))
         verify(mockLogger).error(
             nullable(Throwable::class.java),
             contains("Failed to receive the UTP test results"))
@@ -243,7 +242,7 @@ class UtpTestUtilsTest {
     fun runSuccessfully() {
         val results = runUtp()
 
-        assertThat(results).containsExactly(true)
+        assertThat(results).containsExactly(UtpTestRunResult(true, createStubResultProto()))
 
         verifyTestListenerIsInvoked()
 
@@ -262,7 +261,7 @@ class UtpTestUtilsTest {
     fun runSuccessfullyWithSharding() {
         val results = runUtp(ShardConfig(totalCount = 2, index = 0))
 
-        assertThat(results).containsExactly(true)
+        assertThat(results).containsExactly(UtpTestRunResult(true, createStubResultProto()))
 
         verifyTestListenerIsInvoked()
 

@@ -19,11 +19,9 @@ import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.text
 import com.android.testutils.TestUtils
-import com.android.utils.cxx.streamCompileCommandsV2
-import com.google.common.truth.Truth
+import com.android.utils.cxx.streamCompileCommands
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -365,7 +363,7 @@ class CmakeFileApiV1Test {
             compileCommandsJsonBinFile = compileCommandsJsonBin,
             buildTargetsCommand = listOf()
         )
-        streamCompileCommandsV2(compileCommandsJsonBin) {
+        streamCompileCommands(compileCommandsJsonBin) {
         }
     }
 
@@ -385,7 +383,7 @@ class CmakeFileApiV1Test {
             compileCommandsJsonBinFile = compileCommandsJsonBin,
             buildTargetsCommand = listOf()
         )
-        streamCompileCommandsV2(compileCommandsJsonBin) {
+        streamCompileCommands(compileCommandsJsonBin) {
         }
     }
 
@@ -405,7 +403,7 @@ class CmakeFileApiV1Test {
             compileCommandsJsonBinFile = compileCommandsJsonBin,
             buildTargetsCommand = listOf()
         )
-        streamCompileCommandsV2(compileCommandsJsonBin) {
+        streamCompileCommands(compileCommandsJsonBin) {
         }
     }
 

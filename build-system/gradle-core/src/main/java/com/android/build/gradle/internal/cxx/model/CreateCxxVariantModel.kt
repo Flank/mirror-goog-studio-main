@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
-import com.android.utils.FileUtils.join
 import java.io.File
 import java.util.Locale
 
@@ -45,10 +44,8 @@ fun createCxxVariantModel(
     }
     with(module) {
         val arguments = configurationParameters.nativeVariantConfig.arguments
-        val build = ifCMake { "cmake" } ?: "ndkBuild"
         val isDebuggable = configurationParameters.isDebuggable
         val variantName = configurationParameters.variantName
-        val intermediates = join(intermediatesFolder, build, variantName)
 
         return CxxVariantModel(
                 buildTargetSet = configurationParameters.nativeVariantConfig.targets,

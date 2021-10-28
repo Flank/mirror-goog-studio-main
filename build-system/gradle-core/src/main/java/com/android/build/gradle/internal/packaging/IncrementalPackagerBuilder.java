@@ -132,6 +132,7 @@ public class IncrementalPackagerBuilder {
     @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
     @NonNull private List<SerializableChange> changedAppMetadata = new ArrayList<>();
     @NonNull private List<SerializableChange> changedArtProfile = new ArrayList<>();
+    @NonNull private List<SerializableChange> changedArtProfileMetadata = new ArrayList<>();
 
     /** Creates a new builder. */
     public IncrementalPackagerBuilder(@NonNull BuildType buildType) {
@@ -443,6 +444,12 @@ public class IncrementalPackagerBuilder {
         return this;
     }
 
+    public IncrementalPackagerBuilder withChangedArtProfileMetadata(
+            @NonNull Collection<SerializableChange> changedArtProfileMetadata) {
+        this.changedArtProfileMetadata = ImmutableList.copyOf(changedArtProfileMetadata);
+        return this;
+    }
+
     /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
@@ -483,7 +490,8 @@ public class IncrementalPackagerBuilder {
                     changedAndroidResources,
                     changedNativeLibs,
                     changedAppMetadata,
-                    changedArtProfile);
+                    changedArtProfile,
+                    changedArtProfileMetadata);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

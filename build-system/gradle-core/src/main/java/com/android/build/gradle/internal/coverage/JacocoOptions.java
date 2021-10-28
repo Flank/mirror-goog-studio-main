@@ -25,7 +25,7 @@ import javax.inject.Inject;
 public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions, TestCoverage {
 
     /** Default JaCoCo version. */
-    public static final String DEFAULT_VERSION = "0.8.3";
+    public static final String DEFAULT_VERSION = "0.8.7";
 
     @Inject
     public JacocoOptions() {}

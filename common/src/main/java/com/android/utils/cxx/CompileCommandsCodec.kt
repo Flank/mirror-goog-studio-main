@@ -431,14 +431,14 @@ private fun ByteBuffer.readStringListsTable(
  *
  * All of these parameters are interned and do not need to be re-interned on the receiving side.
  */
-fun streamCompileCommands(file: File,
+fun streamCompileCommandsV1(file: File,
     action : (
         sourceFile:File,
         compiler:File,
         flags:List<String>,
         workingDirectory:File) -> Unit) {
-    streamCompileCommandsImpl(file) { command ->
-        action(command.sourceFile, command.compiler, command.flags, command.workingDirectory)
+    streamCompileCommands(file) {
+        action(sourceFile, compiler, flags, workingDirectory)
     }
 }
 
@@ -452,18 +452,6 @@ data class CompileCommand(
         val sourceFileIndex:Int,
         val sourceFileCount:Int)
 
-/**
- * Stream compile_commands.json.bin file, returning all information from V2
- * format.
- */
-fun streamCompileCommandsV2(file: File, action : CompileCommand.() -> Unit) {
-    assert(readCompileCommandsVersionNumber(file) >= 2) {
-        "Caller is responsible for checking whether '$file' supports version 2"
-    }
-    streamCompileCommandsImpl(file) { command ->
-        action(command)
-    }
-}
 
 // These are fallback placeholder values to use when a V1 file is read.
 // They shouldn't be able to leak into V2. Give them easily searchable
@@ -472,55 +460,193 @@ private val VERSION_FALLBACK_OUTPUT_FILE = File("compile-commands-fallback-outpu
 private const val VERSION_FALLBACK_TARGET = "compile-commands-fallback-targets-list"
 
 /**
- * Implementation class that streams all information for the current version.
- * When earlier-than-current files are read in, fallback nonsense values are used.
+ * Methods for streaming over compile commands messages and converting ordinals to Strings and
+ * String lists.
  */
-private fun streamCompileCommandsImpl(file: File, action : (CompileCommand) -> Unit) {
-    FileChannel.open(file.toPath()).use { fc ->
-        val map = ByteBuffer.allocate(file.length().toInt())
-        fc.read(map)
-        val (start, version) = map.positionAfterMagicAndVersion()
+private class CompileCommandsInputStream(private val file: File) : AutoCloseable {
+    private val fileChannel = FileChannel.open(file.toPath())
+    private val size = file.length().toInt()
+    private val map = ByteBuffer.allocate(size)
+    private val internedFiles: MutableMap<Int, File> = mutableMapOf()
+    private val start: Int
+    val version: Int
+    private val positionAfterLastMessage: Int
+    private val strings: Array<String?>
+    private val stringLists: Array<List<String>>
+    val sourceMessagesCount : Int
+
+    init {
+        fileChannel.read(map)
+        val startAndVersion: Pair<Int, Int> = map.positionAfterMagicAndVersion()
+        start = startAndVersion.first
+        version = startAndVersion.second
         if (start == 0 || version == 0) {
             error("$file is not a valid C/C++ Build Metadata file")
         }
-        val strings = map.readStringTable(start)
-        val stringLists = map.readStringListsTable(start, strings)
-        val internedFiles = mutableMapOf<Int, File>()
-        fun internFile(index: Int) : File? {
-            return if (index == 0) null
-            else internedFiles.computeIfAbsent(index) {
-                File(strings[index]!!)
-            }
-        }
+        map.seekSection(start, StringTable)
+        positionAfterLastMessage = map.position()
+
+        strings = map.readStringTable(start)
+        stringLists = map.readStringListsTable(start, strings)
         map.seekSection(start, CompileCommands)
-        val sourceMessagesCount = map.int
-        val sourceFilesCount = if (version >= 2) map.int else -1
-        lateinit var lastCompiler: File
-        var lastFlags = listOf<String>()
-        var lastWorkingDirectory = File("")
-        var lastTarget = ""
-        var sourceFileIndex = 0
+        sourceMessagesCount = int()
+    }
+
+    /**
+     * Read a Byte from the stream.
+     */
+    fun byte(): Byte = map.get()
+
+    /**
+     * Read an Int from the stream.
+     */
+    fun int(): Int = map.int
+
+    /**
+     * Read a File from the stream.
+     */
+    fun file(): File {
+        val index = map.int
+        if (index == 0) error("Null file name seen in '$file'")
+        return internedFiles.computeIfAbsent(index) {
+            File(strings[index]!!)
+        }
+    }
+
+    /**
+     * Read an Int from the stream and look it up in the string table.
+     */
+    fun string(): String = strings[map.int]!!
+
+    /**
+     * Read an Int from the stream and look it up in the string table. Return null if the int is
+     * out-of-range of the string table.
+     */
+    fun stringOrNull() : String? {
+        val index = map.int
+        if (index == 0) return null
+        if (index > strings.size) return null
+        return strings[index]
+    }
+
+    /**
+     * Read an Int from the stream and look it up in the string list table.
+     */
+    fun stringList(): List<String> = stringLists[map.int]
+
+    /**
+     * Read an Int from the stream and look it up in the string list table. Return null if the int
+     * is out-of-range of the string list table.
+     */
+    fun stringListOrNull() : List<String>? {
+        val index = map.int
+        if (index > stringLists.size) return null
+        return stringLists[index]
+    }
+
+    /**
+     * Return true if the current position is at the position right after the list of messages.
+     */
+    fun isEndOfMessages() : Boolean {
+        val current = map.position()
+        return current == positionAfterLastMessage
+    }
+
+    override fun close() {
+        fileChannel.close()
+    }
+}
+
+/**
+ * Open and use a [CompileCommandsInputStream] to execute action.
+ * Inline and return T so that 'return' can be called inside the [action] block.
+ */
+private inline fun <T> indexCompileCommands(file : File, action: CompileCommandsInputStream.() -> T): T {
+    return CompileCommandsInputStream(file).use { action(it) }
+}
+
+/**
+ * Check for the presence of b/201754404.
+ * This is a variant that version 2 the mistakenly did not have the version number bumped up.
+ *
+ * Differences between V2 and V2' (the one with the bug):
+ *   In the header, V2 has no source file count but V2' does
+ *   In the message COMPILE_COMMAND_CONTEXT_MESSAGE, V2 had 'outputFile'. In V2' it was replaced
+ *     with 'target' name.
+ *   In the message COMPILE_COMMAND_FILE_MESSAGE, V2' added 'outputFile'.
+ *
+ *   V3 and V2' are identical aside from version number written into the file.
+ *
+ *   This function checks for the presence of V2' by trying to step through the file's
+ *   messages as if the file was V2. Once an invalid message, string, or string list is
+ *   encountered the function returns 'true' indicating the bug is present.
+ *
+ *   Note that it isn't possible to construct a file that can be parsed as both V2 and V2'
+ *   because there is an exact number of messages to be read. The COMPILE_COMMAND_FILE_MESSAGE has
+ *   changed size from 4 to 8 (because output file was added).
+ */
+fun hasBug201754404(file: File) : Boolean {
+    indexCompileCommands(file) {
+        if (version != 2) return false
         repeat(sourceMessagesCount) {
-            when(map.get()) {
+            when(byte()) {
                 COMPILE_COMMAND_CONTEXT_MESSAGE -> {
-                    lastCompiler = File(strings[map.int]!!)
-                    lastFlags = stringLists[map.int]
-                    lastWorkingDirectory = internFile(map.int)!!
-                    lastTarget = if (version >= 2) {
-                        strings[map.int]!!
-                    } else VERSION_FALLBACK_TARGET
+                    stringOrNull() ?: return true // Compiler
+                    stringListOrNull() ?: return true  // Flags
+                    stringOrNull() ?: return true // WorkingDirectory
+                    stringOrNull() ?: return true// Output File (if V2) or Target (if V2')
                 }
                 COMPILE_COMMAND_FILE_MESSAGE -> {
-                    val sourceFile = internFile(map.int)!!
-                    val outputFile = if (version >= 2) {
-                        internFile(map.int)!!
-                    } else VERSION_FALLBACK_OUTPUT_FILE
+                    stringOrNull() ?: return true // Source File
+                    // Not reading OutputFile here because it is needed by V2' but not V2.
+                    // This function is reading the file as if it was V2 and will return true
+                    // if the file can't be read as V2.
+                }
+                else -> return true
+            }
+        }
+        return !isEndOfMessages() // Make sure we reached the end of messages.
+    }
+}
+
+/**
+ * Implementation class that streams all information for the current version.
+ * When earlier-than-current files are read in, fallback nonsense values are used.
+ */
+fun streamCompileCommands(file: File, action : CompileCommand.() -> Unit) {
+    val hasBug201754404 = hasBug201754404(file)
+
+    indexCompileCommands(file) {
+        val sourceFilesCount = if (version > 2 || (version == 2 && hasBug201754404)) int() else -1
+        lateinit var lastCompiler: File
+        lateinit var lastFlags : List<String>
+        lateinit var lastWorkingDirectory : File
+        var lastTarget = VERSION_FALLBACK_TARGET
+        var lastOutputFile = VERSION_FALLBACK_OUTPUT_FILE
+        var sourceFileIndex = 0
+        repeat(sourceMessagesCount) {
+            when(byte()) {
+                COMPILE_COMMAND_CONTEXT_MESSAGE -> {
+                    lastCompiler = file()
+                    lastFlags = stringList()
+                    lastWorkingDirectory = file()
+                    if (version > 2 || hasBug201754404) {
+                        lastTarget = string()
+                    } else if (version == 2) {
+                        lastOutputFile = file()
+                    }
+                }
+                COMPILE_COMMAND_FILE_MESSAGE -> {
+                    val sourceFile = file()
+                    if (version > 2 || hasBug201754404) {
+                        lastOutputFile = file()
+                    }
                     action(CompileCommand(
                         sourceFile = sourceFile,
                         compiler = lastCompiler,
                         flags = lastFlags,
                         workingDirectory = lastWorkingDirectory,
-                        outputFile = outputFile,
+                        outputFile = lastOutputFile,
                         target = lastTarget,
                         sourceFileIndex = sourceFileIndex,
                         sourceFileCount = sourceFilesCount

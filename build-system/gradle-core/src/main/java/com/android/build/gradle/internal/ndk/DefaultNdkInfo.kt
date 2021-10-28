@@ -202,6 +202,7 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
     override fun getDefaultStl(buildSystem: NativeBuildSystem): Stl = when (buildSystem) {
         NativeBuildSystem.CMAKE -> Stl.GNUSTL_STATIC
         NativeBuildSystem.NDK_BUILD -> Stl.SYSTEM
+        else -> error("$buildSystem")
     }
 
     override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {

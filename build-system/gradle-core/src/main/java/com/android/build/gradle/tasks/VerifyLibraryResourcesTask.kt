@@ -65,6 +65,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
@@ -144,6 +145,10 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         abstract val workerExecutor: WorkerExecutor
 
         override fun run() {
+            val tempOutput = parameters.compiledDirectory.get().asFile
+            val compiledResources = tempOutput.resolve("compiled")
+            Files.createDirectories(compiledResources.toPath())
+
             val aapt2Input = parameters.aapt2.get()
             WorkerExecutorResourceCompilationService(
                 projectPath = parameters.projectPath,
@@ -154,7 +159,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             ).use { compilationService ->
                 compileResources(
                     inputs = parameters.inputs.get(),
-                    outDirectory = parameters.compiledDirectory.get().asFile,
+                    outDirectory = compiledResources,
                     compilationService = compilationService,
                     mergeBlameFolder = parameters.mergeBlameFolder.get().asFile
                 )
@@ -164,10 +169,12 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 parameters.compiledDependenciesResources.reversed()
             val identifiedSourceSetMap =
                     mergeIdentifiedSourceSetFiles(parameters.sourceSetMaps.files.filterNotNull())
+            val linkedApk = tempOutput.resolve("linked.apk")
             val config = AaptPackageConfig.Builder()
                 .setManifestFile(manifestFile = parameters.manifestFile.get().asFile)
+                .setResourceOutputApk(linkedApk)
                 .addResourceDirectories(compiledDependenciesResourcesDirs)
-                .addResourceDir(resourceDir = parameters.compiledDirectory.get().asFile)
+                .addResourceDir(resourceDir = compiledResources)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
                 .setOptions(AaptOptions())
                 .setVariantType(VariantTypeImpl.LIBRARY)
@@ -178,13 +185,17 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 .build()
 
             workerExecutor.await() // All compilation must be done before linking.
-            processResources(
-                aapt = aapt2Input.getLeasingAapt2(),
-                aaptConfig = config,
-                rJar = null,
-                logger = Logging.getLogger(this::class.java),
-                errorFormatMode = aapt2Input.buildService.get().parameters.errorFormatMode.get()
-            )
+            try {
+                processResources(
+                    aapt = aapt2Input.getLeasingAapt2(),
+                    aaptConfig = config,
+                    rJar = null,
+                    logger = Logging.getLogger(this::class.java),
+                    errorFormatMode = aapt2Input.buildService.get().parameters.errorFormatMode.get()
+                )
+            } finally {
+                Files.deleteIfExists(linkedApk.toPath())
+            }
         }
     }
 
