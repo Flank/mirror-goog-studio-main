@@ -190,8 +190,7 @@ class VariantManager<
                 .collect(
                         Collectors.toMap(
                                 { entry: Map.Entry<String, DimensionRequest> ->
-                                    Attribute.of(entry.key,
-                                            ProductFlavorAttr::class.java)
+                                    ProductFlavorAttr.of(entry.key)
                                 }
                         ) { entry: Map.Entry<String, DimensionRequest> ->
                             factory.named(

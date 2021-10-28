@@ -7,6 +7,9 @@ com.android.build.api.AndroidPluginVersion.dev: com.android.build.api.AndroidPlu
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ASSETS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
+com.android.build.api.attributes.ProductFlavorAttr$Companion
+com.android.build.api.attributes.ProductFlavorAttr$Companion.of: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.ProductFlavorAttr> (java.lang.String)
+com.android.build.api.attributes.ProductFlavorAttr.of: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.ProductFlavorAttr> (java.lang.String)
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AarMetadata.getMinAgpVersion: java.lang.String ()
 com.android.build.api.dsl.AarMetadata.setMinAgpVersion: void (java.lang.String)

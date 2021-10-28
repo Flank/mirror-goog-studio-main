@@ -820,6 +820,36 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 + "+     val c1 = Character.valueOf('c');");
     }
 
+    public void testInlineClasses() {
+        // Regression test for
+        // 203387678: "DrawAllocation" warning reported for value classes
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint\n"
+                                        + "import android.graphics.Canvas\n"
+                                        + "import android.widget.TextView\n"
+                                        + "\n"
+                                        + "@JvmInline\n"
+                                        + "value class Minute(val value: Int) {\n"
+                                        + "    init {\n"
+                                        + "        require(value in 0..59)\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "@SuppressLint(\"ViewConstructor\", \"AppCompatCustomView\")\n"
+                                        + "class InlineTest() : TextView(null) {\n"
+                                        + "    override fun onDraw(canvas: Canvas?) {\n"
+                                        + "        val minute = Minute(0)\n"
+                                        + "        super.onDraw(canvas)\n"
+                                        + "    }\n"
+                                        + "}"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mLongSparseArray =
             java(

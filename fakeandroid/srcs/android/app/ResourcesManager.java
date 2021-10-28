@@ -36,7 +36,7 @@ public class ResourcesManager {
     }
 
     // Exists on API 31 and above
-    public void applyNewResourceDirs(final ApplicationInfo appInfo, final String[] oldPaths) {
+    public void applyNewResourceDirsLocked(final String[] oldPaths, final ApplicationInfo appInfo) {
         if (Build.VERSION.SDK_INT < 30) {
             throw new RuntimeException("Method does not exist on API 30 and below");
         }

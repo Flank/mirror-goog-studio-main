@@ -119,10 +119,10 @@ public class TestActivity extends Activity {
     }
 
     public void updateResourceDirs() {
-        if (Build.VERSION.SDK_INT > 30) {
-            new ResourcesManager().applyNewResourceDirs(null, null);
+        if (Build.VERSION.SDK_INT < 31) {
+            new ResourcesManager().applyNewResourceDirsLocked(null, new String[0]);
         } else {
-            new ResourcesManager().applyNewResourceDirsLocked(null, null);
+            new ResourcesManager().applyNewResourceDirsLocked(new String[0], null);
         }
     }
 

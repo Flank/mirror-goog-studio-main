@@ -131,8 +131,8 @@ TEST(SimpleperfTest, RecordCommandParamsForRPlus) {
   EXPECT_THAT(record_command, HasArgument("-f 10000"));
   // always use cpu-clock event flag
   EXPECT_THAT(record_command, HasArgument("-e cpu-clock"));
-  // --exit-with-parent flag
-  EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
+  // TODO(203714971): add --exit-with-parent flag back.
+  EXPECT_THAT(record_command, Not(HasArgument("--exit-with-parent")));
   // --log-to-android-buffer flag
   EXPECT_THAT(record_command, HasArgument("--log-to-android-buffer"));
 }
@@ -189,8 +189,8 @@ TEST(SimpleperfTest, UserBuildAlwaysUsesRunAs) {
 
   // Record should not be run as root
   EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
-  // PID should not be present as it's not available
-  EXPECT_THAT(record_command, Not(HasArgument("-p")));
+  // PID should be present
+  EXPECT_THAT(record_command, HasArgument("-p 20"));
   // package name should be present
   EXPECT_THAT(record_command, HasArgument("--app my.package"));
 }

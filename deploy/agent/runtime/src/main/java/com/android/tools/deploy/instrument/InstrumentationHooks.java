@@ -114,9 +114,19 @@ public final class InstrumentationHooks {
         return resources;
     }
 
-    // Called on swap; overlays swapped resources onto the application.
+    // Called on swap; overlays swapped resources onto the application. Pre-API 31 signature.
     public static void addResourceOverlays(
             Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) throws Exception {
+        try {
+            ResourceOverlays.addResourceOverlays(resourcesManager);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
+    }
+
+    // Called on swap; overlays swapped resources onto the application. Post-API 31 signature.
+    public static void addResourceOverlays(
+            Object resourcesManager, String[] oldPaths, ApplicationInfo appInfo) throws Exception {
         try {
             ResourceOverlays.addResourceOverlays(resourcesManager);
         } catch (Exception e) {

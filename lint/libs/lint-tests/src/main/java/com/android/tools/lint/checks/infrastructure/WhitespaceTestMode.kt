@@ -24,8 +24,10 @@ import com.intellij.psi.PsiImportList
 import com.intellij.psi.PsiPackageStatement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.KtNodeTypes
 import org.jetbrains.kotlin.psi.KtAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtContainerNode
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtPackageDirective
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
@@ -74,7 +76,18 @@ class WhitespaceTestMode : SourceTransformationTestMode(
         root.sourcePsi.accept(
             object : PsiRecursiveElementVisitor() {
                 override fun visitElement(element: PsiElement) {
+                    val next = element.nextSibling
+                    if (element is KtContainerNode && element.node.elementType == KtNodeTypes.LABEL_QUALIFIER ||
+                        next is KtContainerNode && next.node.elementType == KtNodeTypes.LABEL_QUALIFIER
+                    ) {
+                        // This covers the two adjacent parts of a label reference expression, which
+                        // (for example) consists of "this" and "@label" or "continue" and "@label" etc. We
+                        // want to make sure we don't add in a space between these.
+                        return
+                    }
+
                     checkElement(element)
+
                     when (element) {
                         is PsiComment,
                         is PsiWhiteSpace,

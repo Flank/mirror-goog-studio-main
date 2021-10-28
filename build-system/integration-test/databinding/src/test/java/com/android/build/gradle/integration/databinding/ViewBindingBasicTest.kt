@@ -60,6 +60,7 @@ class ViewBindingBasicTest {
         Truth.assertThat(layoutBindingFiles!!).hasLength(1)
         Truth.assertThat(layoutBindingFiles[0].name).isEqualTo("AppLayoutBinding.java")
     }
+
     @Test
     fun `check non-transitive R classes`() {
         project.executor()
