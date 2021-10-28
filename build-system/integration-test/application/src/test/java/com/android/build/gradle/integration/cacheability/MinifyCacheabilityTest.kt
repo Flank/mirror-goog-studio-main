@@ -69,7 +69,6 @@ class MinifyCacheabilityTest {
             ":processMinifiedMainManifest",
             ":processMinifiedManifest",
             ":processMinifiedManifestForPackage",
-            ":validateSigningMinified",
 
         ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
@@ -86,6 +85,7 @@ class MinifyCacheabilityTest {
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
+            ":validateSigningMinified", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.ValidateSigningTask] */
             ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
             ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
         ).plus(

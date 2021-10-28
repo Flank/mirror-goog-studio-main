@@ -33,10 +33,10 @@ import com.google.common.base.Preconditions.checkState
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -49,8 +49,11 @@ import java.util.concurrent.ExecutionException
  *
  * This task has no explicit inputs, but is forced to run if the signing config keystore file is
  * not present.
+ *
+ * As the task has no Inputs or Outputs, enabling caching serves no useful purpose. So it is
+ * disabled by default.
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class ValidateSigningTask : NonIncrementalTask() {
 
     /**
