@@ -447,15 +447,20 @@ internal class UElementVisitor constructor(
             uClass: UClass?,
             node: PsiClass
         ) {
-            if (node is PsiTypeParameter) return
+            if (node is PsiTypeParameter) return // See Javadoc for SourceCodeScanner.visitClass.
 
             val superClasses = InheritanceUtil.getSuperClasses(node)
             superClasses.add(node) // Include self.
+
+            // The current class may inherit from multiple superclasses listed by a
+            // single detector, so we need to avoid double-visiting.
+            val detectorsUsed = mutableSetOf<VisitingDetector>()
 
             for (superClass in superClasses) {
                 val fqName = superClass.qualifiedName ?: continue
                 val detectors = superClassDetectors[fqName] ?: continue
                 for (detector in detectors) {
+                    if (!detectorsUsed.add(detector)) continue
                     if (uClass != null) {
                         detector.uastScanner.visitClass(context, uClass)
                     } else {
