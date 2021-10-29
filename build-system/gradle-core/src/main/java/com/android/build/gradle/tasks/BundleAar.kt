@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
@@ -234,7 +235,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     .getOutputPath(
                         creationConfig.artifacts.buildDirectory,
                         creationConfig.name,
-                        "out.aar"
+                        "out-${testFixturesClassifier}.aar"
                     )
             task.archiveFileName.set(outputFile.name)
             task.destinationDirectory.set(outputFile.parentFile)
