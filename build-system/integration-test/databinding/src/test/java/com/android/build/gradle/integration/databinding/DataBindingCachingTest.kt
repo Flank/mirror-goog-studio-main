@@ -63,7 +63,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":compileDebugRenderscript" to SKIPPED,
         ":createDebugCompatibleScreenManifests" to FROM_CACHE,
         ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
-        ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
+        ":dataBindingMergeDependencyArtifactsDebug" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask] */
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
         ":dataBindingTriggerDebug" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask] */
         ":extractDeepLinksDebug" to FROM_CACHE,
