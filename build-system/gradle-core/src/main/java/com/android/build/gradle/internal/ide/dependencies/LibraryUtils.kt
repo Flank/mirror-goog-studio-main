@@ -54,10 +54,12 @@ fun ResolvedArtifactResult.getVariantName(): String? {
  * Checks if the resolved artifact is produced from a local project with testFixtures capability.
  */
 fun ResolvedArtifactResult.hasProjectTestFixturesCapability(): Boolean {
-    if (id !is ProjectComponentIdentifier) {
+    if (id.componentIdentifier !is ProjectComponentIdentifier) {
         return false
     }
     return variant.capabilities.any {
-        it.isProjectTestFixturesCapability((id as ProjectComponentIdentifier).projectName)
+        it.isProjectTestFixturesCapability(
+            (id.componentIdentifier as ProjectComponentIdentifier).projectName
+        )
     }
 }
