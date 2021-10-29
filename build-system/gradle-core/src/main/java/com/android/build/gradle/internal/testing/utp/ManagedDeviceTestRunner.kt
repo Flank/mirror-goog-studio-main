@@ -128,18 +128,13 @@ class ManagedDeviceTestRunner(
             // test, a result pb file is generated in a subdirectory per shard. If it's a
             // non-sharded test, a result pb is generated in the outputDirectory so we
             // don't need to create a merged result here.
-            val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
             if (numShards != null) {
                 val resultsMerger = UtpTestSuiteResultMerger()
                 resultProtos.forEach(resultsMerger::merge)
+
+                val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
                 resultsMerger.result.writeTo(mergedTestResultPbFile.outputStream())
             }
-
-            logger.quiet(
-                "\nTest results saved as ${mergedTestResultPbFile.toURI()}. " +
-                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                        "From File from the menu bar and importing test-result.pb."
-            )
         }
 
         return results.all(UtpTestRunResult::testPassed)
