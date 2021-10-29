@@ -21,7 +21,6 @@ import com.android.build.api.dsl.Lint
 import com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule
 import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.LintOptions
@@ -52,10 +51,10 @@ import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
-import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -64,7 +63,6 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.attributes.Category
 import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.component.ConfigurationVariantDetails
 import org.gradle.api.component.SoftwareComponent
@@ -266,34 +264,34 @@ abstract class LintPlugin : Plugin<Project> {
                 mainSourceSet.apiElementsConfigurationName
             ).forEach { configurationName ->
                 project.configurations.getByName(configurationName) { configuration ->
-                    val androidLintCategory =
-                        projectServices.objectFactory.named(Category::class.java, "android-lint")
+
                     publishArtifactToConfiguration(
                         configuration,
                         artifacts.get(InternalArtifactType.LINT_MODEL),
                         AndroidArtifacts.ArtifactType.LINT_MODEL,
-                        AndroidAttributes(category = androidLintCategory)
                     )
                     publishArtifactToConfiguration(
                         configuration,
                         artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
                         AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
-                        AndroidAttributes(category = androidLintCategory)
                     )
                     publishArtifactToConfiguration(
                         configuration,
                         artifacts.get(InternalArtifactType.LINT_MODEL_METADATA),
                         AndroidArtifacts.ArtifactType.LINT_MODEL_METADATA,
-                        AndroidAttributes(category = androidLintCategory)
                     )
                     // We don't want to publish the lint models or partial results to repositories.
                     // Remove them.
+                    fun isLintInternal(variant: ConfigurationVariantDetails) =
+                        variant.configurationVariant.artifacts.any { artifact ->
+                            artifact.type == AndroidArtifacts.ArtifactType.LINT_MODEL.type ||
+                                    artifact.type == AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS.type ||
+                                    artifact.type == AndroidArtifacts.ArtifactType.LINT_MODEL_METADATA.type
+                        }
                     project.components.all { component: SoftwareComponent ->
                         if (component.name == "java" && component is AdhocComponentWithVariants) {
                             component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->
-                                val category =
-                                    variant.configurationVariant.attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
-                                if (category == androidLintCategory) {
+                                if (isLintInternal(variant)) {
                                     variant.skip()
                                 }
                             }
