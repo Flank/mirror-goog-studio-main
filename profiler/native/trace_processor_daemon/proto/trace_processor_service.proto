@@ -418,5 +418,7 @@ message AndroidFrameTimelineResult {
     bool on_time_finish = 8;
     // Whether the frame was composited by the GPU or not.
     bool gpu_composition = 9;
+    // Depth of the slice along the vertical axis for UI layout.
+    int32 layout_depth = 10;
   }
 }

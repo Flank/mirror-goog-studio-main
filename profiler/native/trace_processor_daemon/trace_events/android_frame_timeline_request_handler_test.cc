@@ -82,6 +82,11 @@ TEST(AndroidFrameTimelineRequestHandlerTest, PopulateFrameTimeline) {
   EXPECT_EQ(actual_slice.jank_type(), "None");
   EXPECT_EQ(actual_slice.on_time_finish(), true);
   EXPECT_EQ(actual_slice.gpu_composition(), false);
+  EXPECT_EQ(actual_slice.layout_depth(), 0);
+
+  // Verify overlapping slices have different layout_depth.
+  EXPECT_EQ(result.actual_slice(99).layout_depth(), 1);
+  EXPECT_EQ(result.actual_slice(414).layout_depth(), 2);
 }
 
 TEST(AndroidFrameTimelineRequestHandlerTest,
